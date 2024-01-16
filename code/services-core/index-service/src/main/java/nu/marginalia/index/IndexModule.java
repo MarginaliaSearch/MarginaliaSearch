@@ -6,14 +6,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.linkdb.dlinks.DomainLinkDb;
-import nu.marginalia.linkdb.dlinks.FileDomainLinkDb;
 import nu.marginalia.linkdb.dlinks.SelectingDomainLinkDb;
-import nu.marginalia.linkdb.dlinks.SqlDomainLinkDb;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.config.RankingSettings;
-import nu.marginalia.WmsaHome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +24,6 @@ public class IndexModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(IndexModule.class);
 
     public void configure() {
-    }
-
-    @Provides
-    public RankingSettings rankingSettings() {
-        Path dir = WmsaHome.getHomePath().resolve("conf/ranking-settings.yaml");
-        return RankingSettings.from(dir);
     }
 
     @Provides

@@ -43,13 +43,16 @@ public class IndexOpsService {
         if (!run(searchSetService::recalculateAll)) {
             Spark.halt(503, "Operations busy");
         }
+
         return "OK";
     }
 
     public Object reindexEndpoint(Request request, Response response) throws Exception {
+
         if (!run(index::switchIndex).isPresent()) {
             Spark.halt(503, "Operations busy");
         }
+
         return "OK";
     }
 

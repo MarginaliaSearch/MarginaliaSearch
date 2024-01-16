@@ -24,17 +24,17 @@ public class RankingSearchSet implements SearchSet {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final IntOpenHashSet set;
-    public final SearchSetIdentifier identifier;
+    public final String name;
     public final Path source;
 
-    public RankingSearchSet(SearchSetIdentifier identifier, Path source, IntOpenHashSet set) {
-        this.identifier = identifier;
+    public RankingSearchSet(String name, Path source, IntOpenHashSet set) {
+        this.name = name;
         this.source = source;
         this.set = set;
     }
 
-    public RankingSearchSet(SearchSetIdentifier identifier, Path source) throws IOException {
-        this.identifier = identifier;
+    public RankingSearchSet(String name, Path source) throws IOException {
+        this.name = name;
         this.source = source;
 
         if (!Files.exists(source)) {
@@ -45,7 +45,7 @@ public class RankingSearchSet implements SearchSet {
         }
 
         if (set.isEmpty()) {
-            logger.warn("Search set {} is empty", identifier);
+            logger.warn("Search set {} is empty", name);
         }
     }
 
@@ -87,6 +87,6 @@ public class RankingSearchSet implements SearchSet {
     }
 
     public String toString() {
-        return identifier.toString();
+        return name;
     }
 }

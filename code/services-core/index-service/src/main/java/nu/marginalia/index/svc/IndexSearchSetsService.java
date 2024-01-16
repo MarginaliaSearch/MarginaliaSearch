@@ -4,10 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TIntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import lombok.SneakyThrows;
+import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.searchset.SearchSet;
+import nu.marginalia.ranking.RankingAlgorithm;
 import nu.marginalia.ranking.ReversePageRank;
 import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.accumulator.RankingResultHashMapAccumulator;
@@ -16,31 +17,32 @@ import nu.marginalia.ranking.data.RankingDomainFetcher;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.index.svc.searchset.RankingSearchSet;
 import nu.marginalia.index.svc.searchset.SearchSetAny;
-import nu.marginalia.index.config.RankingSettings;
 import nu.marginalia.ranking.DomainRankings;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.db.DbUpdateRanks;
+import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class IndexSearchSetsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DomainTypes domainTypes;
     private final ServiceHeartbeat heartbeat;
+    private final IndexServicesFactory indexServicesFactory;
+    private final ServiceEventLog eventLog;
+    private final DomainRankingSetsService domainRankingSetsService;
     private final DbUpdateRanks dbUpdateRanks;
     private final RankingDomainFetcher similarityDomains;
-    private final RankingSettings rankingSettings;
+    private final RankingDomainFetcher linksDomains;
 
-
+    private final ConcurrentHashMap<String, SearchSet> rankingSets = new ConcurrentHashMap<>();
     // Below are binary indices that are used to constrain a search
-    private volatile RankingSearchSet popularSet;
-    private volatile RankingSearchSet smallWebSet;
-    private volatile RankingSearchSet academiaSet;
-    private volatile RankingSearchSet blogsSet;
     private final SearchSet anySet = new SearchSetAny();
 
     // The ranking value of the domains used in sorting the domains
@@ -51,29 +53,36 @@ public class IndexSearchSetsService {
                                   ServiceHeartbeat heartbeat,
                                   RankingDomainFetcher rankingDomains,
                                   RankingDomainFetcherForSimilarityData similarityDomains,
-                                  RankingSettings rankingSettings,
-                                  IndexServicesFactory servicesFactory,
+                                  IndexServicesFactory indexServicesFactory,
+                                  ServiceEventLog eventLog,
+                                  DomainRankingSetsService domainRankingSetsService,
                                   DbUpdateRanks dbUpdateRanks) throws IOException {
         this.domainTypes = domainTypes;
         this.heartbeat = heartbeat;
+        this.indexServicesFactory = indexServicesFactory;
+        this.eventLog = eventLog;
+        this.domainRankingSetsService = domainRankingSetsService;
 
         this.dbUpdateRanks = dbUpdateRanks;
 
         if (similarityDomains.hasData()) {
             this.similarityDomains = similarityDomains;
+            this.linksDomains = rankingDomains;
         }
         else {
             // on test environments the cosine similarity graph may not be present
             logger.info("Domain similarity is not present, falling back on link graph");
             this.similarityDomains = rankingDomains;
+            this.linksDomains = rankingDomains;
         }
 
-        this.rankingSettings = rankingSettings;
-
-        smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, servicesFactory.getSearchSetsBase().resolve("small-web.dat"));
-        academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, servicesFactory.getSearchSetsBase().resolve("academia.dat"));
-        popularSet = new RankingSearchSet(SearchSetIdentifier.POPULAR, servicesFactory.getSearchSetsBase().resolve("popular.dat"));
-        blogsSet = new RankingSearchSet(SearchSetIdentifier.BLOGS, servicesFactory.getSearchSetsBase().resolve("blogs.dat"));
+        for (var rankingSet : domainRankingSetsService.getAll()) {
+            rankingSets.put(rankingSet.name(),
+                    new RankingSearchSet(rankingSet.name(),
+                            rankingSet.fileName(indexServicesFactory.getSearchSetsBase())
+                    )
+            );
+        }
     }
 
     public DomainRankings getDomainRankings() {
@@ -86,51 +95,79 @@ public class IndexSearchSetsService {
             return anySet;
         }
 
-        return switch (searchSetIdentifier) {
-            case "POPULAR" -> popularSet;
-            case "ACADEMIA" -> academiaSet;
-            case "SMALLWEB" -> smallWebSet;
-            case "BLOGS" -> blogsSet;
-            case "NONE", "" -> anySet;
-            default -> throw new IllegalArgumentException("Unknown search set");
-        };
+        if ("NONE".equals(searchSetIdentifier) || "".equals(searchSetIdentifier)) {
+            return anySet;
+        }
+
+        return Objects.requireNonNull(rankingSets.get(searchSetIdentifier), "Unknown search set");
     }
 
-    enum RepartitionSteps {
-        UPDATE_ACADEMIA,
-        UPDATE_POPULAR,
-        UPDATE_SMALL_WEB,
-        UPDATE_BLOGS,
-        UPDATE_RANKINGS,
-        FINISHED
-    }
     public void recalculateAll() {
-        try (var processHeartbeat = heartbeat.createServiceTaskHeartbeat(RepartitionSteps.class, "repartitionAll")) {
-
-            processHeartbeat.progress(RepartitionSteps.UPDATE_ACADEMIA);
-            updateAcademiaDomainsSet();
-
-            processHeartbeat.progress(RepartitionSteps.UPDATE_POPULAR);
-            updatePopularDomainsSet();
-
-            processHeartbeat.progress(RepartitionSteps.UPDATE_SMALL_WEB);
-            updateSmallWebDomainsSet();
-
-            processHeartbeat.progress(RepartitionSteps.UPDATE_BLOGS);
-            updateBlogsSet();
-
-            processHeartbeat.progress(RepartitionSteps.UPDATE_RANKINGS);
-            updateDomainRankings();
-
-            processHeartbeat.progress(RepartitionSteps.FINISHED);
+        for (var rankingSet : domainRankingSetsService.getAll()) {
+            try {
+                if (DomainRankingSetsService.DomainSetAlgorithm.SPECIAL.equals(rankingSet.algorithm())) {
+                    switch (rankingSet.name()) {
+                        case "BLOGS" -> recalculateBlogsSet(rankingSet);
+                        case "RANK" -> updateDomainRankings(rankingSet);
+                        case "NONE" -> {}
+                    }
+                } else {
+                    recalculateNornal(rankingSet);
+                }
+            }
+            catch (Exception ex) {
+                logger.warn("Failed to recalculate ranking set {}", rankingSet.name(), ex);
+            }
+            eventLog.logEvent("RANKING-SET-RECALCULATED", rankingSet.name());
         }
     }
 
-    private void updateDomainRankings() {
-        var entry = rankingSettings.ranking;
+    private void recalculateNornal(DomainRankingSetsService.DomainRankingSet rankingSet) {
+        String[] domains = rankingSet.domains();
 
-        var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
-        var ranks = spr.pageRankWithPeripheralNodes(entry.max, () -> new RankingResultHashMapAccumulator(100_000));
+        RankingAlgorithm rankingAlgorithm = switch (rankingSet.algorithm()) {
+            case LINKS_PAGERANK -> new StandardPageRank(linksDomains, domains);
+            case LINKS_CHEIRANK -> new ReversePageRank(linksDomains, domains);
+            case ADJACENCY_PAGERANK -> new StandardPageRank(similarityDomains, domains);
+            case ADJACENCY_CHEIRANK -> new ReversePageRank(similarityDomains, domains);
+            default -> throw new IllegalStateException("Unexpected value: " + rankingSet.algorithm());
+        };
+
+        var data = rankingAlgorithm.pageRankWithPeripheralNodes(rankingSet.depth(), RankingResultHashSetAccumulator::new);
+
+        var set = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexServicesFactory.getSearchSetsBase()), data);
+        rankingSets.put(rankingSet.name(), set);
+
+        try {
+            set.write();
+        }
+        catch (IOException ex) {
+            logger.warn("Failed to write search set", ex);
+        }
+    }
+
+
+
+    private void recalculateBlogsSet(DomainRankingSetsService.DomainRankingSet rankingSet) throws SQLException, IOException {
+        TIntList knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
+
+        if (knownDomains.isEmpty()) {
+            // FIXME: We don't want to reload the entire list every time, but we do want to do it sometimes. Actor maybe?
+            domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
+            knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
+        }
+
+        synchronized (this) {
+            var blogSet = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexServicesFactory.getSearchSetsBase()), new IntOpenHashSet(knownDomains.toArray()));
+            rankingSets.put(rankingSet.name(), blogSet);
+            blogSet.write();
+        }
+    }
+
+    private void updateDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
+
+        var spr = new StandardPageRank(similarityDomains, rankingSet.domains());
+        var ranks = spr.pageRankWithPeripheralNodes(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
 
         synchronized (this) {
             domainRankings = new DomainRankings(ranks);
@@ -141,60 +178,4 @@ public class IndexSearchSetsService {
         dbUpdateRanks.execute(ranks);
     }
 
-    @SneakyThrows
-    public void updatePopularDomainsSet() {
-        var entry = rankingSettings.retro;
-
-        var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
-
-        synchronized (this) {
-            popularSet = new RankingSearchSet(SearchSetIdentifier.POPULAR, popularSet.source, data);
-            popularSet.write();
-        }
-    }
-
-    @SneakyThrows
-    public void updateSmallWebDomainsSet() {
-        var entry = rankingSettings.small;
-
-        var rpr = new ReversePageRank(similarityDomains,  entry.domains.toArray(String[]::new));
-        rpr.setMaxKnownUrls(750);
-        var data = rpr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
-
-        synchronized (this) {
-            smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, smallWebSet.source, data);
-            smallWebSet.write();
-        }
-    }
-
-    @SneakyThrows
-    public void updateBlogsSet() {
-        TIntList knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
-
-        if (knownDomains.isEmpty()) {
-            // FIXME: We don't want to reload the entire list every time, but we do want to do it sometimes. Actor maybe?
-            domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
-            knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
-        }
-
-        synchronized (this) {
-            blogsSet = new RankingSearchSet(SearchSetIdentifier.BLOGS, blogsSet.source, new IntOpenHashSet(knownDomains.toArray()));
-            blogsSet.write();
-        }
-    }
-
-
-    @SneakyThrows
-    public void updateAcademiaDomainsSet() {
-        var entry = rankingSettings.academia;
-
-        var spr =  new StandardPageRank(similarityDomains,  entry.domains.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
-
-        synchronized (this) {
-            academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, academiaSet.source, data);
-            academiaSet.write();
-        }
-    }
 }
