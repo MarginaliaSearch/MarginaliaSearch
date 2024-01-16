@@ -63,6 +63,9 @@ public class DomainRankingSetsService {
             stmt.setInt(4, domainRankingSet.depth());
             stmt.setString(5, domainRankingSet.definition());
             stmt.executeUpdate();
+
+            if (!conn.getAutoCommit())
+                conn.commit();
         }
         catch (SQLException ex) {
             logger.error("Failed to update domain set", ex);
@@ -78,6 +81,9 @@ public class DomainRankingSetsService {
         {
             stmt.setString(1, domainRankingSet.name());
             stmt.executeUpdate();
+
+            if (!conn.getAutoCommit())
+                conn.commit();
         }
         catch (SQLException ex) {
             logger.error("Failed to delete domain set", ex);
@@ -150,6 +156,10 @@ public class DomainRankingSetsService {
                     .filter(s -> !s.isBlank())
                     .filter(s -> !s.startsWith("#"))
                     .toArray(String[]::new);
+        }
+
+        public boolean isSpecial() {
+            return algorithm() == DomainSetAlgorithm.SPECIAL;
         }
 
     }

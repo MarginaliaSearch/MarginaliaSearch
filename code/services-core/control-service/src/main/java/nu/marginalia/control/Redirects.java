@@ -8,6 +8,7 @@ public class Redirects {
     public static final HtmlRedirect redirectToOverview = new HtmlRedirect("/");
     public static final HtmlRedirect redirectToBlacklist = new HtmlRedirect("/blacklist");
     public static final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
+    public static final HtmlRedirect redirectToRankingDataSets = new HtmlRedirect("/domain-ranking-sets");
     public static final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
 
     public static class HtmlRedirect implements ResponseTransformer {

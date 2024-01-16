@@ -53,6 +53,7 @@ public class ControlService extends Service {
                           RandomExplorationService randomExplorationService,
                           DataSetsService dataSetsService,
                           ControlNodeService controlNodeService,
+                          ControlDomainRankingSetsService controlDomainRankingSetsService,
                           ControlActorService controlActorService
                       ) throws IOException {
 
@@ -66,6 +67,7 @@ public class ControlService extends Service {
         messageQueueService.register();
         sysActionsService.register();
         dataSetsService.register();
+        controlDomainRankingSetsService.register();
 
         // node
         controlFileStorageService.register();

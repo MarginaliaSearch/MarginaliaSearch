@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Domain Ranking Sets</h1>
+    <div class="border my-3 p-3 bg-light">
+        Domain ranking sets configure the ranking algorithms used to determine the importance of a domain.
+    </div>
+
+    <table class="table">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Algorithm</th>
+            <th>Depth</th>
+        </tr>
+        {{#each rankingSets}}
+        <tr>
+            <td><a href="/domain-ranking-sets/{{name}}">{{name}}</td></td>
+            <td>{{description}}</td>
+            <td>{{algorithm}}</td>
+            <td>{{depth}}</td>
+        </tr>
+        {{/each}}
+    </table>
+
+    <div class="my-3">
+        <a href="/domain-ranking-sets/new" class="btn btn-primary">New Domain Ranking Set</a>
+    </div>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

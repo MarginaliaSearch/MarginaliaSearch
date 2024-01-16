@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+{{#with rankingSet}}
+    <h1 class="my-3">Domain Ranking Set: {{name}}</h1>
+    <form method="post" action="?act=update">
+    <table class="table" id="update-form">
+        <tr>
+            <th>Name</th>
+            <td>
+                {{#if special}}<input type="hidden" name="name" value="{{name}}" />{{/if}}
+                <input type="text" value="{{name}}" id="name" name="name" {{#if special}}disabled{{/if}} />
+                <div>
+                    <small class="text-muted">The name is how the ranking set is identified in the query parameters,
+                        and also decides the file name of the persisted ranking set definition. Keep it simple.</small>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>Algorithm</th>
+            <td>
+                {{#if special}}<input type="hidden" name="algorithm" value="{{algorithm}}" />{{/if}}
+                <select id="algorithm" name="algorithm" {{#if special}}disabled{{/if}}>
+                    {{#with algorithm}}
+                    <option value="SPECIAL" disabled {{#if selectedAlgo.special}}selected{{/if}}>SPECIAL</option>
+                    <option value="LINKS_PAGERANK" {{#if selectedAlgo.links_pagerank}}selected{{/if}}>LINKS_PAGERANK</option>
+                    <option value="LINKS_CHEIRANK" {{#if selectedAlgo.links_cheirank}}selected{{/if}}>LINKS_CHEIRANK</option>
+                    <option value="ADJACENCY_PAGERANK" {{#if selectedAlgo.adjacency_pagerank}}selected{{/if}}>ADJACENCY_PAGERANK</option>
+                    <option value="ADJACENCY_CHEIRANK" {{#if selectedAlgo.adjacency_cheirank}}selected{{/if}}>ADJACENCY_CHEIRANK</option>
+                    {{/with}}
+                </select>
+                <div>
+                    <small class="text-muted">
+                        The algorithm used to rank the domains.  The LINKS algorithms use the link graph, and the ADJACENCY
+                        algorithms use the adjacency graph. CheiRank is a variant of PageRank that uses the reversed graph.
+                    </small>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>
+                {{#if special}}<input type="hidden" name="description" value="{{description}}" />{{/if}}
+                <input type="text" value="{{description}}" id="description" name="description" {{#if special}}disabled{{/if}} />
+                <div>
+                    <small class="text-muted">This is purely to help keep track of what this ranking set does.</small>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>Depth</th>
+            <td>
+                <input type="text" value="{{depth}}" id="depth" name="depth" />
+                <div>
+                    <small class="text-muted">Up to this number of domains are ranked, the rest are excluded.</small>
+                </div>
+            </td>
+        </tr>
+        <tr><th colspan="2">Definition</th></tr>
+        <tr><td colspan="2">
+            <textarea name="definition" id="definition" rows="10" style="width: 100%">{{definition}}</textarea>
+            <div>
+                <small class="text-muted">A list of domain names, one per line, possibly globbed with SQL-style '%' wildcards.
+                    These are used as the origin point for the Personalized PageRank algorithm, and will be considered
+                    the central points of the link or adjacency graph.  If no domains are specified, the entire domain space is used, as per the PageRank paper.
+                </small>
+            </div>
+        </td></tr>
+    </table>
+
+    </form>
+    <form method="post" action="?act=delete" id="delete-form"></form>
+
+    <button type="submit" class="btn btn-danger" form="delete-form" style="float:right" {{#if special}}disabled title="Cannot delete special sets!"{{/if}} onclick="return confirm('Confirm deletion of ranking set')">Delete</button>
+    <button type="submit" class="btn btn-primary" form="update-form">Update</button>
+
+
+{{/with}}
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>
