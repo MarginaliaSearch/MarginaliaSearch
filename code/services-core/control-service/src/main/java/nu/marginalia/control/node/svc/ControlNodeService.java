@@ -360,22 +360,29 @@ public class ControlNodeService {
     }
 
     private List<FileStorageBaseWithStorage> makeFileStorageBaseWithStorage(List<FileStorageId> storageIds) throws SQLException {
-
         Map<FileStorageBaseId, FileStorageBase> fileStorageBaseByBaseId = new HashMap<>();
-        Map<FileStorageBaseId, List<FileStorageWithActions>> fileStoragByBaseId = new HashMap<>();
+        Map<FileStorageBaseId, List<FileStorageWithActions>> fileStorageByBaseId = new HashMap<>();
 
         for (var id : storageIds) {
             var storage = fileStorageService.getStorage(id);
             fileStorageBaseByBaseId.computeIfAbsent(storage.base().id(), k -> storage.base());
-            fileStoragByBaseId.computeIfAbsent(storage.base().id(), k -> new ArrayList<>()).add(new FileStorageWithActions(storage));
+            fileStorageByBaseId.computeIfAbsent(storage.base().id(), k -> new ArrayList<>()).add(new FileStorageWithActions(storage));
         }
 
         List<FileStorageBaseWithStorage> result = new ArrayList<>();
-        for (var baseId : fileStorageBaseByBaseId.keySet()) {
-            result.add(new FileStorageBaseWithStorage(fileStorageBaseByBaseId.get(baseId),
-                    fileStoragByBaseId.get(baseId)
 
-            ));
+        for (var baseId : fileStorageBaseByBaseId.keySet()) {
+            var base = fileStorageBaseByBaseId.get(baseId);
+            var items = fileStorageByBaseId.get(baseId);
+
+            // Sort by timestamp, then by relPath
+            // this ensures that the newest file is listed last
+            items.sort(Comparator
+                    .comparing(FileStorageWithActions::getTimestamp)
+                    .thenComparing(FileStorageWithActions::getRelPath)
+            );
+
+            result.add(new FileStorageBaseWithStorage(base, items));
         }
 
         return result;

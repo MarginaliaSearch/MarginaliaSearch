@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service: Error</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Error: {{title}}</h1>
+    <div class="my-3 p-3 border bg-light">
+        <p>{{messageLong}}</p>
+        <a href="{{redirect}}">Go back</a>
+    </div>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+<script>
+    window.setInterval(() => {
+        refresh(["processes", "services", "jobs", "events"]);
+    }, 2000);
+</script>
+</html>

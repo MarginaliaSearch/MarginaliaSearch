@@ -53,7 +53,9 @@ public class ControlService extends Service {
                           RandomExplorationService randomExplorationService,
                           DataSetsService dataSetsService,
                           ControlNodeService controlNodeService,
-                          ControlActorService controlActorService
+                          ControlDomainRankingSetsService controlDomainRankingSetsService,
+                          ControlActorService controlActorService,
+                          ControlErrorHandler errorHandler
                       ) throws IOException {
 
         super(params);
@@ -66,6 +68,7 @@ public class ControlService extends Service {
         messageQueueService.register();
         sysActionsService.register();
         dataSetsService.register();
+        controlDomainRankingSetsService.register();
 
         // node
         controlFileStorageService.register();
@@ -78,6 +81,8 @@ public class ControlService extends Service {
         apiKeyService.register();
         domainComplaintService.register();
         randomExplorationService.register();
+
+        errorHandler.register();
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var eventsRenderer = rendererFactory.renderer("control/sys/events");
@@ -103,6 +108,7 @@ public class ControlService extends Service {
         Spark.get("/public/screenshot/:id", screenshotService::serveScreenshotRequest);
 
         Spark.get("/public/:resource", this::serveStatic);
+
 
         monitors.subscribe(this::logMonitorStateChange);
 

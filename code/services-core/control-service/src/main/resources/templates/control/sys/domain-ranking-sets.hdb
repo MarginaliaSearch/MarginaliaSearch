@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Domain Ranking Sets</h1>
+    <div class="border my-3 p-3 bg-light">
+        Domain ranking sets configure the ranking algorithms used to determine the importance of a domain.
+    </div>
+
+    <table class="table">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Algorithm</th>
+            <th>Depth</th>
+        </tr>
+        {{#each rankingSets}}
+        <tr>
+            <td><a href="/domain-ranking-sets/{{name}}">{{name}}</td></td>
+            <td>{{description}}</td>
+            <td>{{algorithm}}</td>
+            <td>{{depth}}</td>
+        </tr>
+        {{/each}}
+    </table>
+
+    <div class="my-3">
+        <a href="/domain-ranking-sets/new" class="btn btn-primary">New Domain Ranking Set</a>
+    </div>
+
+
+    <div class="border my-3 p-3 bg-light">
+        <p>Several reserved ranking sets are available for use in the query parameters.</p>
+        <dl>
+            <dt>NONE</dt><dd>Placeholder for no restriction on the domains returned.
+                             Does nothing, and exists only to prevent a new ranking
+                             set from being created with this name.</dd>
+            <dt>RANK</dt><dd>Used to calculate the domain ranking for a given domain.
+                This affects the order they are stored in the index, and increases the odds they'll
+                even be considered within the time restrictions of the query.</dd>
+            <dt>BLOGS</dt><dd>Returns a fixed list of domains, configurable in <a href="/datasets">Datasets</a>.
+                Changes to this list will not be reflected in the index until the next time the index is rebuilt.</dd>
+        </dl>
+    </div>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

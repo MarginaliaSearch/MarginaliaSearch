@@ -69,7 +69,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             bind(ProcessHeartbeat.class).toInstance(new FakeProcessHeartbeat());
 
             IndexSearchSetsService setsServiceMock = Mockito.mock(IndexSearchSetsService.class);
-            when(setsServiceMock.getSearchSetByName(SearchSetIdentifier.NONE)).thenReturn(new SearchSetAny());
+            when(setsServiceMock.getSearchSetByName("NONE")).thenReturn(new SearchSetAny());
             when(setsServiceMock.getDomainRankings()).thenReturn(new DomainRankings());
             bind(IndexSearchSetsService.class).toInstance(setsServiceMock);
 

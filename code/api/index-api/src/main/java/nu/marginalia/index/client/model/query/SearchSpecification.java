@@ -15,7 +15,7 @@ public class SearchSpecification {
     /** If present and not empty, limit the search to these domain IDs */
     public List<Integer> domains;
 
-    public SearchSetIdentifier searchSetIdentifier;
+    public String searchSetIdentifier;
 
     public final String humanQuery;
 

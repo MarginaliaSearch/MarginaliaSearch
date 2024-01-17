@@ -79,7 +79,7 @@ public class SearchToBanService {
     private Object executeQuery(Context ctx, String query) {
         return queryClient.search(ctx, new QueryParams(
                 query, new QueryLimits(2, 200, 250, 8192),
-                SearchSetIdentifier.NONE
+                "NONE"
         ));
     }
 }

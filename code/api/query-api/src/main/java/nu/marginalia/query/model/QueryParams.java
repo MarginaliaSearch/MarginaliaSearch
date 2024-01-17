@@ -23,10 +23,10 @@ public record QueryParams(
         SpecificationLimit domainCount,
         List<Integer> domainIds,
         QueryLimits limits,
-        SearchSetIdentifier identifier
+        String identifier
 )
 {
-    public QueryParams(String query, QueryLimits limits, SearchSetIdentifier identifier) {
+    public QueryParams(String query, QueryLimits limits, String identifier) {
         this(query, null,
                 List.of(),
                 List.of(),

@@ -431,7 +431,7 @@ public class IndexQueryServiceIntegrationTest {
                 .domainCount(SpecificationLimit.none())
                 .rankingParams(ResultRankingParameters.sensibleDefaults())
                 .domains(new ArrayList<>())
-                .searchSetIdentifier(SearchSetIdentifier.NONE)
+                .searchSetIdentifier("NONE")
                 .subqueries(List.of());
 
         return mutator.apply(builder).build();
