@@ -1,6 +1,7 @@
 package nu.marginalia.contenttype;
 
 import crawlercommons.mimetypes.MimeTypeDetector;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
@@ -35,10 +36,12 @@ public class ContentTypeParser {
         if (contentType == null)
             return Optional.empty();
 
-        if (!contentType.contains(";"))
-            return Optional.empty();
+        var parts = StringUtils.split(contentType, ';');
 
-        var parts = contentType.split(";");
+        if (parts.length != 2) {
+            return Optional.empty();
+        }
+
         var content = parts[0].trim();
         var extra = parts[1].trim();
 
