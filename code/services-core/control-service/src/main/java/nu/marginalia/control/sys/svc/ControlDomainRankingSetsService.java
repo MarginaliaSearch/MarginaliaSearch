@@ -3,6 +3,7 @@ package nu.marginalia.control.sys.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.ControlRendererFactory;
+import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.db.DomainRankingSetsService;
 import spark.Request;
@@ -41,6 +42,7 @@ public class ControlDomainRankingSetsService {
     private Object alterSetModel(Request request, Response response) throws SQLException {
         final String act = request.queryParams("act");
         final String id = request.params("id");
+
         if ("update".equals(act)) {
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
                     id,
@@ -54,18 +56,26 @@ public class ControlDomainRankingSetsService {
         else if ("delete".equals(act)) {
             var model = domainRankingSetsService.get(id).orElseThrow();
             if (model.isSpecial()) {
-                throw new IllegalArgumentException("Cannot delete special ranking set");
+                throw new ControlValidationError("Cannot delete special ranking set",
+                        """
+                                SPECIAL data sets are reserved by the system and can not be deleted.
+                                """,
+                        "/domain-ranking-sets");
             }
             domainRankingSetsService.delete(model);
             return "";
         }
         else if ("create".equals(act)) {
             if (domainRankingSetsService.get(request.queryParams("name")).isPresent()) {
-                throw new IllegalArgumentException("Ranking set with that name already exists");
+                throw new ControlValidationError("Ranking set with that name already exists",
+                        """
+                                Ensure the new data set has a unique name and try again.
+                                """,
+                        "/domain-ranking-sets");
             }
 
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
-                    request.queryParams("name"),
+                    request.queryParams("name").toUpperCase(),
                     request.queryParams("description"),
                     DomainRankingSetsService.DomainSetAlgorithm.valueOf(request.queryParams("algorithm")),
                     Integer.parseInt(request.queryParams("depth")),
@@ -74,7 +84,10 @@ public class ControlDomainRankingSetsService {
             return "";
         }
 
-        throw new UnsupportedOperationException();
+        throw new ControlValidationError("Unknown action", """
+                An unknown action was requested and the system does not understand how to act on it.
+                """,
+            "/domain-ranking-sets");
     }
 
     private Object rankingSetsModel(Request request, Response response) {

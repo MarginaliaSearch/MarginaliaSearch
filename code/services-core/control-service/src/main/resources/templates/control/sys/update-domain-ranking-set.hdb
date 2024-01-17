@@ -12,7 +12,7 @@
     <form method="post" action="?act=update">
     <table class="table" id="update-form">
         <tr>
-            <th>Name</th>
+            <th><label for="name">Name</label></th>
             <td>
                 {{#if special}}<input type="hidden" name="name" value="{{name}}" />{{/if}}
                 <input type="text" value="{{name}}" id="name" name="name" {{#if special}}disabled{{/if}} />
@@ -23,7 +23,7 @@
             </td>
         </tr>
         <tr>
-            <th>Algorithm</th>
+            <th><label for="algorithm">Algorithm</label></th>
             <td>
                 {{#if special}}<input type="hidden" name="algorithm" value="{{algorithm}}" />{{/if}}
                 <select id="algorithm" name="algorithm" {{#if special}}disabled{{/if}}>
@@ -44,7 +44,7 @@
             </td>
         </tr>
         <tr>
-            <th>Description</th>
+            <th><label for="description">Description</label></th>
             <td>
                 {{#if special}}<input type="hidden" name="description" value="{{description}}" />{{/if}}
                 <input type="text" value="{{description}}" id="description" name="description" {{#if special}}disabled{{/if}} />
@@ -54,15 +54,15 @@
             </td>
         </tr>
         <tr>
-            <th>Depth</th>
+            <th><label for="depth">Depth</label></th>
             <td>
                 <input type="text" value="{{depth}}" id="depth" name="depth" />
                 <div>
-                    <small class="text-muted">Up to this number of domains are ranked, the rest are excluded.</small>
+                    <small class="text-muted">Number.  Up to this number of domains are ranked, the rest are excluded.</small>
                 </div>
             </td>
         </tr>
-        <tr><th colspan="2">Definition</th></tr>
+        <tr><th colspan="2"><label for="definition">Definition</label></th></tr>
         <tr><td colspan="2">
             <textarea name="definition" id="definition" rows="10" style="width: 100%">{{definition}}</textarea>
             <div>

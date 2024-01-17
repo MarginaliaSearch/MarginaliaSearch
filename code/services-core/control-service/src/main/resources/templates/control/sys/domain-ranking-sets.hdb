@@ -32,6 +32,21 @@
     <div class="my-3">
         <a href="/domain-ranking-sets/new" class="btn btn-primary">New Domain Ranking Set</a>
     </div>
+
+
+    <div class="border my-3 p-3 bg-light">
+        <p>Several reserved ranking sets are available for use in the query parameters.</p>
+        <dl>
+            <dt>NONE</dt><dd>Placeholder for no restriction on the domains returned.
+                             Does nothing, and exists only to prevent a new ranking
+                             set from being created with this name.</dd>
+            <dt>RANK</dt><dd>Used to calculate the domain ranking for a given domain.
+                This affects the order they are stored in the index, and increases the odds they'll
+                even be considered within the time restrictions of the query.</dd>
+            <dt>BLOGS</dt><dd>Returns a fixed list of domains, configurable in <a href="/datasets">Datasets</a>.
+                Changes to this list will not be reflected in the index until the next time the index is rebuilt.</dd>
+        </dl>
+    </div>
 </div>
 </body>
 {{> control/partials/foot-includes }}
