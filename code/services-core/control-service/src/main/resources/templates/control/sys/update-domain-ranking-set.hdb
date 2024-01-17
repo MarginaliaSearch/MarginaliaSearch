@@ -9,8 +9,8 @@
 <div class="container">
 {{#with rankingSet}}
     <h1 class="my-3">Domain Ranking Set: {{name}}</h1>
-    <form method="post" action="?act=update">
-    <table class="table" id="update-form">
+    <form method="post" action="?act=update" id="update-form">
+    <table class="table">
         <tr>
             <th><label for="name">Name</label></th>
             <td>
@@ -56,7 +56,7 @@
         <tr>
             <th><label for="depth">Depth</label></th>
             <td>
-                <input type="text" value="{{depth}}" id="depth" name="depth" />
+                <input pattern="\d+" type="text" value="{{depth}}" id="depth" name="depth" />
                 <div>
                     <small class="text-muted">Number.  Up to this number of domains are ranked, the rest are excluded.</small>
                 </div>
