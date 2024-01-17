@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.Executors;
 
 import static nu.marginalia.index.forward.ForwardIndexParameters.*;
 
@@ -113,5 +112,9 @@ public class ForwardIndexReader {
     public void close() {
         if (data != null)
             data.close();
+    }
+
+    public boolean isLoaded() {
+        return data != null;
     }
 }

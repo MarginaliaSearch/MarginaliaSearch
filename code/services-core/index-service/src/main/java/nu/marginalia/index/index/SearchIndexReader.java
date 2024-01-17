@@ -93,4 +93,10 @@ public class SearchIndexReader {
         }
         logger.error("Failed to close index");
     }
+
+    /** Returns true if index data is available */
+    public boolean isLoaded() {
+        // We only need to check one of the readers, as they are either all loaded or none are
+        return forwardIndexReader.isLoaded();
+    }
 }

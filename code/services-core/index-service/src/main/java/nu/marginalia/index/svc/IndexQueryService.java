@@ -265,6 +265,11 @@ public class IndexQueryService extends IndexApiImplBase {
     }
     private SearchResultSet executeSearch(SearchParameters params) throws SQLException {
 
+        if (!index.isLoaded()) {
+            // Short-circuit if the index is not loaded, as we trivially know that there can be no results
+            return new SearchResultSet(List.of());
+        }
+
         var rankingContext = createRankingContext(params.rankingParams, params.subqueries);
 
         logger.info(queryMarker, "{}", params.queryParams);

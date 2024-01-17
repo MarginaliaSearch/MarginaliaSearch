@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepFromPredicate;
-import nu.marginalia.index.svc.IndexSearchSetsService;
 import nu.marginalia.service.control.ServiceEventLog;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -96,14 +95,20 @@ public class SearchIndex {
     }
 
 
+    /** Returns true if the service has initialized */
     public boolean isAvailable() {
         return indexReader != null;
+    }
+
+    /** Stronger version of isAvailable() that also checks that the index is loaded */
+    public boolean isLoaded() {
+        return indexReader != null && indexReader.isLoaded();
     }
 
 
     public List<IndexQuery> createQueries(SearchIndexSearchTerms terms, IndexQueryParams params, LongPredicate includePred) {
 
-        if (!isAvailable()) {
+        if (!isLoaded()) {
             logger.warn("Index reader not ready");
             return Collections.emptyList();
         }
@@ -188,10 +193,10 @@ public class SearchIndex {
     public long[] getTermMetadata(long termId, long[] docs) {
         return indexReader.getMetadata(termId, docs);
     }
-
     public long getDocumentMetadata(long docId) {
         return indexReader.getDocumentMetadata(docId);
     }
+
     public int getHtmlFeatures(long docId) {
         return indexReader.getHtmlFeatures(docId);
     }
@@ -199,10 +204,10 @@ public class SearchIndex {
     public int getTotalDocCount() {
         return indexReader.totalDocCount();
     }
-
     public int getTermFrequency(long id) {
         return (int) indexReader.numHits(id);
     }
+
     public int getTermFrequencyPrio(long id) {
         return (int) indexReader.numHitsPrio(id);
     }
