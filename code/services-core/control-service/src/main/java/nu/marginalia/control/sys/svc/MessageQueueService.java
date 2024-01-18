@@ -322,35 +322,54 @@ public class MessageQueueService {
         }
     }
 
+    /** Get all messages related to a given message, including the given message itself */
     public List<MessageQueueEntry> getRelatedMessages(long relatedId) {
+        NavigableSet<Long> newRelatedIds = new TreeSet<>();
+        Set<Long> addedIds = new HashSet<>();
+        Set<Long> queriedIds = new HashSet<>();
+        newRelatedIds.add(relatedId);
+
+        List<MessageQueueEntry> entries = new ArrayList<>();
+
+        // This is not a very performant way of doing this, but it's not a very common operation either
+        // and only available within the operator user interface.
         try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
-                     (SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+             var ps = conn.prepareStatement("""
+                     SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                      FROM MESSAGE_QUEUE
-                     WHERE RELATED_ID = ?
+                     WHERE ID = ? OR RELATED_ID = ?
                      ORDER BY ID DESC
-                     LIMIT 100)
-                     UNION
-                     (SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
-                     FROM MESSAGE_QUEUE
-                     WHERE ID = (SELECT RELATED_ID FROM MESSAGE_QUEUE WHERE ID=?)
-                     ORDER BY ID DESC
-                     LIMIT 100)
                      """)) {
 
-            query.setLong(1, relatedId);
-            query.setLong(2, relatedId);
+            while (!newRelatedIds.isEmpty()) {
+                var nextId = newRelatedIds.pollFirst();
 
-            List<MessageQueueEntry> entries = new ArrayList<>(100);
-            var rs = query.executeQuery();
-            while (rs.next()) {
-                entries.add(newEntry(rs));
+                if (nextId == null || !queriedIds.add(nextId))
+                    continue;
+
+                ps.setLong(1, nextId);
+                ps.setLong(2, nextId);
+
+                var rs = ps.executeQuery();
+                while (rs.next()) {
+                    var entry = newEntry(rs);
+
+                    if (addedIds.add(entry.id()))
+                        entries.add(entry);
+
+                    if (!queriedIds.contains(entry.id()))
+                        newRelatedIds.add(entry.id());
+                    if (entry.hasRelatedMessage() && !queriedIds.contains(entry.relatedId()))
+                        newRelatedIds.add(entry.relatedId());
+                }
             }
-            return entries;
         }
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
+
+        entries.sort(Comparator.comparingLong(MessageQueueEntry::id).reversed());
+        return entries;
     }
 
     private MessageQueueEntry newEntry(ResultSet rs) throws SQLException {

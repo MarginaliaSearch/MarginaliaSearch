@@ -19,6 +19,7 @@
                         Filter
                     </button>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/message-queue">Show All</a></li>
                     {{#each inboxes}}
                         <li><a class="dropdown-item" href="/message-queue?inbox={{this}}">{{this}}</a></li>
                     {{/each}}
