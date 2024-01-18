@@ -16,15 +16,12 @@ import java.util.Map;
 @Singleton
 public class DataSetsService {
 
-    private final HikariDataSource dataSource;
     private final ControlRendererFactory rendererFactory;
     private final DomainTypes domainTypes;
 
     @Inject
-    public DataSetsService(HikariDataSource dataSource,
-                           ControlRendererFactory rendererFactory,
+    public DataSetsService(ControlRendererFactory rendererFactory,
                            DomainTypes domainTypes) {
-        this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;
         this.domainTypes = domainTypes;
     }

@@ -14,6 +14,7 @@ import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 
 import java.io.OutputStream;
@@ -21,7 +22,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ExecutorClient extends AbstractDynamicClient {
@@ -97,13 +97,13 @@ public class ExecutorClient extends AbstractDynamicClient {
                 .blockingSubscribe();
     }
 
-    public void exportAtags(Context ctx, int node, String fid) {
+    public void exportAtags(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/export/atags?fid="+fid, "").blockingSubscribe();
     }
-    public void exportRssFeeds(Context ctx, int node, String fid) {
+    public void exportRssFeeds(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/export/feeds?fid="+fid, "").blockingSubscribe();
     }
-    public void exportTermFrequencies(Context ctx, int node, String fid) {
+    public void exportTermFrequencies(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/export/termfreq?fid="+fid, "").blockingSubscribe();
     }
 
@@ -111,7 +111,7 @@ public class ExecutorClient extends AbstractDynamicClient {
         post(ctx, node, "/export/data", "").blockingSubscribe();
     }
 
-    public void restoreBackup(Context context, int node, String fid) {
+    public void restoreBackup(Context context, int node, FileStorageId fid) {
         post(context, node, "/backup/" + fid + "/restore", "").blockingSubscribe();
     }
 

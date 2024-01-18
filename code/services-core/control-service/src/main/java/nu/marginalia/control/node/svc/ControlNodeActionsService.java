@@ -3,6 +3,7 @@ package nu.marginalia.control.node.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.client.Context;
+import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.executor.model.load.LoadParameters;
@@ -87,12 +88,16 @@ public class ControlNodeActionsService {
         );
     }
 
-    public Object sideloadEncyclopedia(Request request, Response response) throws Exception {
+    public Object sideloadEncyclopedia(Request request, Response response) {
 
-        Path sourcePath = Path.of(request.queryParams("source"));
+        String source = request.queryParams("source");
         String baseUrl = request.queryParams("baseUrl");
+        int nodeId = Integer.parseInt(request.params("node"));
 
-        final int nodeId = Integer.parseInt(request.params("node"));
+        if (baseUrl == null)
+            throw new ControlValidationError("No baseUrl specified", "A baseUrl must be specified", "..");
+
+        Path sourcePath = parseSourcePath(source);
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD ENCYCLOPEDIA " + nodeId);
 
@@ -101,10 +106,11 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    public Object sideloadDirtree(Request request, Response response) throws Exception {
+    public Object sideloadDirtree(Request request, Response response) {
 
-        Path sourcePath = Path.of(request.queryParams("source"));
         final int nodeId = Integer.parseInt(request.params("node"));
+
+        Path sourcePath = parseSourcePath(request.queryParams("source"));
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD DIRTREE " + nodeId);
 
@@ -113,10 +119,10 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    public Object sideloadWarc(Request request, Response response) throws Exception {
+    public Object sideloadWarc(Request request, Response response) {
 
-        Path sourcePath = Path.of(request.queryParams("source"));
         final int nodeId = Integer.parseInt(request.params("node"));
+        Path sourcePath = parseSourcePath(request.queryParams("source"));
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD WARC " + nodeId);
 
@@ -124,10 +130,14 @@ public class ControlNodeActionsService {
 
         return "";
     }
-    public Object sideloadStackexchange(Request request, Response response) throws Exception {
+    public Object sideloadStackexchange(Request request, Response response) {
 
-        Path sourcePath = Path.of(request.queryParams("source"));
         final int nodeId = Integer.parseInt(request.params("node"));
+
+        String source = request.queryParams("source");
+        if (source == null)
+            throw new ControlValidationError("No source specified", "A source file/directory must be specified", "..");
+        Path sourcePath = Path.of(source);
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD STACKEXCHANGE " + nodeId);
 
@@ -143,7 +153,8 @@ public class ControlNodeActionsService {
 
     private Object triggerAutoRecrawl(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
-        var toCrawl = FileStorageId.parse(request.queryParams("source"));
+
+        var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_DATA, toCrawl);
 
@@ -159,7 +170,7 @@ public class ControlNodeActionsService {
     private Object triggerNewCrawl(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
-        var toCrawl = FileStorageId.parse(request.queryParams("source"));
+        var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_SPEC, toCrawl);
 
@@ -174,7 +185,8 @@ public class ControlNodeActionsService {
 
     private Object triggerAutoProcess(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
-        var toProcess = FileStorageId.parse(request.queryParams("source"));
+
+        var toProcess = parseSourceFileStorageId(request.queryParams("source"));
 
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, toProcess);
 
@@ -188,6 +200,10 @@ public class ControlNodeActionsService {
     private Object triggerLoadSelected(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
         String[] values = request.queryParamsValues("source");
+
+        if (values.length == 0) {
+            throw new ControlValidationError("No source specified", "At least one source storage must be specified", "..");
+        }
 
         List<FileStorageId> ids = Arrays.stream(values).map(FileStorageId::parse).toList();
 
@@ -204,10 +220,13 @@ public class ControlNodeActionsService {
     private Object triggerRestoreBackup(Request request, Response response) {
         int nodeId = Integer.parseInt(request.params("id"));
 
-        executorClient.restoreBackup(Context.fromRequest(request), nodeId, request.queryParams("source"));
+        var toLoad = parseSourceFileStorageId(request.queryParams("source"));
+
+        executorClient.restoreBackup(Context.fromRequest(request), nodeId, toLoad);
 
         return "";
     }
+
 
     /** Change the active storage for a node of a particular type. */
     private void changeActiveStorage(int nodeId, FileStorageType type, FileStorageId... newActiveStorage) throws SQLException {
@@ -231,6 +250,10 @@ public class ControlNodeActionsService {
         final String url = request.queryParams("url");
         int nodeId = Integer.parseInt(request.params("id"));
 
+        if (url == null || url.isBlank()) {
+            throw new ControlValidationError("No url specified", "A url must be specified", "..");
+        }
+
         executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
 
         return "";
@@ -244,21 +267,41 @@ public class ControlNodeActionsService {
 
     private Object exportFromCrawlData(Request req, Response rsp) {
         String exportType = req.queryParams("exportType");
-        String source = req.queryParams("source");
+        FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
 
-        if (exportType.equals("atags")) {
-            executorClient.exportAtags(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
-        }
-        else if (exportType.equals("rss")) {
-            executorClient.exportRssFeeds(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
-        }
-        else if (exportType.equals("termFreq")) {
-            executorClient.exportTermFrequencies(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
-        }
-        else {
-            rsp.status(404);
+        switch (exportType) {
+            case "atags" -> executorClient.exportAtags(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+            case "rss" -> executorClient.exportRssFeeds(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+            case "termFreq" -> executorClient.exportTermFrequencies(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+            default -> throw new ControlValidationError("No export type specified", "An export type must be specified", "..");
         }
 
         return "";
+    }
+
+
+
+    private Path parseSourcePath(String source) {
+        if (source == null) {
+            throw new ControlValidationError("No source specified",
+                    "A source file/directory must be specified",
+                    "..");
+        }
+        return Path.of(source);
+    }
+
+    private FileStorageId parseSourceFileStorageId(String source) {
+        if (source == null) {
+            throw new ControlValidationError("No source specified",
+                    "A source file storage must be specified",
+                    "..");
+        }
+
+        try {
+            return FileStorageId.parse(source);
+        }
+        catch (Exception e) { // Typically NumberFormatException
+            throw new ControlValidationError("Invalid source specified", "The source file storage is invalid", "..");
+        }
     }
 }
