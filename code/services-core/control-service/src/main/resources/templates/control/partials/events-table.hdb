@@ -9,24 +9,38 @@
         <th>Message</th>
     </tr>
     <tr>
-
-        <form method="GET" action="/events">
             <td>
-            <select name="service" id="service">
-                {{#each services}}<option value="{{value}}" {{#if current}}selected{{/if}} >{{name}}</option>{{/each}}
-            </select>
+                {{#if services}}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{#if serviceParam}}{{serviceParam}}{{else}}Filter{{/if}}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?type={{typeParam}}&after={{afterParam}}">Show All</a></li>
+                            {{#each services}}
+                                <li><a class="dropdown-item" href="?service={{name}}&type={{typeParam}}&after={{afterParam}}">{{name}} {{#if current}}*{{/if}}</a></li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                {{/if}}
             </td>
             <td colspan="2"></td>
             <td>
-            <select name="type" id="type">
-                {{#each types}}<option value="{{value}}" {{#if current}}selected{{/if}} >{{name}}</option>{{/each}}
-            </select>
+            {{#if types}}
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{#if typeParam}}{{typeParam}}{{else}}Filter{{/if}}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?service={{serviceParam}}&after={{afterParam}}">Show All</a></li>
+                        {{#each types}}
+                            <li><a class="dropdown-item" href="?type={{value}}&service={{serviceParam}}&after={{afterParam}}">{{name}} {{#if current}}*{{/if}}</a></li>
+                        {{/each}}
+                    </ul>
+                </div>
+            {{/if}}
             </td>
-            <td>
-            <input type="submit" value="Filter Results">
-            </td>
-        </form>
-
+            <td></td>
     </tr>
     {{#each events}}
     <tr>

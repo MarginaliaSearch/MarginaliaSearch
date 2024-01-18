@@ -20,7 +20,7 @@
                     </button>
                     <ul class="dropdown-menu">
                     {{#each inboxes}}
-                        <li><a class="dropdown-item" href="/message-queue?inbox={{this}}">{{this}}&nbsp;</a></li>
+                        <li><a class="dropdown-item" href="/message-queue?inbox={{this}}">{{this}}</a></li>
                     {{/each}}
                     </ul>
                 </div>

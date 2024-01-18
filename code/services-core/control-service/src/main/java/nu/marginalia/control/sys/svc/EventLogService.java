@@ -12,10 +12,7 @@ import spark.Response;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Singleton
 public class EventLogService {
@@ -41,7 +38,6 @@ public class EventLogService {
 
         List<EventLogTypeFilter> typeFilterList = new ArrayList<>();
         List<String> typenames = getTypeNames();
-        typeFilterList.add(new EventLogTypeFilter("Show All", "", typeParam == null));
         for (String typename : typenames) {
             typeFilterList.add(new EventLogTypeFilter(typename, typename,
                     typename.equalsIgnoreCase(typeParam)));
@@ -49,7 +45,6 @@ public class EventLogService {
 
         List<EventLogServiceFilter> serviceFilterList = new ArrayList<>();
         List<String> serviceNames = getServiceNames();
-        serviceFilterList.add(new EventLogServiceFilter("Show All", "", serviceParam == null));
         for (String serviceName : serviceNames) {
             serviceFilterList.add(new EventLogServiceFilter(serviceName, serviceName,
                     serviceName.equalsIgnoreCase(serviceParam)));
@@ -84,6 +79,9 @@ public class EventLogService {
                 "events", entries,
                 "types", typeFilterList,
                 "services", serviceFilterList,
+                "serviceParam", Objects.requireNonNullElse(serviceParam, ""),
+                "typeParam", Objects.requireNonNullElse(typeParam, ""),
+                "afterParam", Objects.requireNonNullElse(afterParam, ""),
                 "next", next,
                 "elFilter", elFilter);
 
