@@ -122,6 +122,7 @@ public class MqOutbox {
                 gson.toJson(request),
                 null);
     }
+
     /** Blocks until a response arrives for the given message id (possibly forever) */
     public MqMessage waitResponse(long id) throws Exception {
         synchronized (pendingResponses) {

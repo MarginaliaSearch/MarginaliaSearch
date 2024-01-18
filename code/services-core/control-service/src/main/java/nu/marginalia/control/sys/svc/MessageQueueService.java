@@ -180,7 +180,7 @@ public class MessageQueueService {
     public List<MessageQueueEntry> getLastEntries(int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 ORDER BY ID DESC
                 LIMIT ?
@@ -202,7 +202,7 @@ public class MessageQueueService {
     public MessageQueueEntry getMessage(long id) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID=?
                 """)) {
@@ -223,7 +223,7 @@ public class MessageQueueService {
     public Object getLastEntriesForInbox(String inbox, int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE RECIPIENT_INBOX=?
                 ORDER BY ID DESC
@@ -247,7 +247,7 @@ public class MessageQueueService {
     public List<MessageQueueEntry> getEntriesForInbox(String inbox, long afterId, int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID < ? AND (RECIPIENT_INBOX = ? OR SENDER_INBOX = ?)
                 ORDER BY ID DESC
@@ -274,7 +274,7 @@ public class MessageQueueService {
     public List<MessageQueueEntry> getEntriesForInstance(String instance, long afterId, int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID < ? AND OWNER_INSTANCE = ?
                 ORDER BY ID DESC
@@ -300,7 +300,7 @@ public class MessageQueueService {
     public List<MessageQueueEntry> getEntries(long afterId, int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID < ?
                 ORDER BY ID DESC
@@ -335,9 +335,10 @@ public class MessageQueueService {
         // and only available within the operator user interface.
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
-                     SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                     SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                      FROM MESSAGE_QUEUE
-                     WHERE ID = ? OR RELATED_ID = ?
+                     WHERE (ID = ? OR RELATED_ID = ? OR AUDIT_RELATED_ID = ?)
+                     AND STATE != 'DEAD' AND FUNCTION != 'MONITOR'
                      ORDER BY ID DESC
                      """)) {
 
@@ -349,6 +350,7 @@ public class MessageQueueService {
 
                 ps.setLong(1, nextId);
                 ps.setLong(2, nextId);
+                ps.setLong(3, nextId);
 
                 var rs = ps.executeQuery();
                 while (rs.next()) {
@@ -361,6 +363,8 @@ public class MessageQueueService {
                         newRelatedIds.add(entry.id());
                     if (entry.hasRelatedMessage() && !queriedIds.contains(entry.relatedId()))
                         newRelatedIds.add(entry.relatedId());
+                    if (entry.hasAuditRelation() && !queriedIds.contains(entry.auditRelatedId()))
+                        newRelatedIds.add(entry.auditRelatedId());
                 }
             }
         }
@@ -376,6 +380,7 @@ public class MessageQueueService {
         return new MessageQueueEntry(
                 rs.getLong("ID"),
                 rs.getLong("RELATED_ID"),
+                rs.getLong("AUDIT_RELATED_ID"),
                 rs.getString("SENDER_INBOX"),
                 rs.getString("RECIPIENT_INBOX"),
                 rs.getString("FUNCTION"),

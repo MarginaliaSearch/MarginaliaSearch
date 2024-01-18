@@ -5,6 +5,7 @@ import java.time.LocalDate;
 public record MessageQueueEntry (
         long id,
         long relatedId,
+        long auditRelatedId,
         String senderInbox,
         String recipientInbox,
         String function,
@@ -19,6 +20,9 @@ public record MessageQueueEntry (
 {
     public boolean hasRelatedMessage() {
         return relatedId > 0;
+    }
+    public boolean hasAuditRelation() {
+        return auditRelatedId > 0;
     }
 
     public String stateCode() {

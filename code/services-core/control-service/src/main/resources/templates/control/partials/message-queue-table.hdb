@@ -50,11 +50,9 @@
     <tr>
         <td>{{ttl}}</td>
         <td>
-        {{#if hasRelatedMessage}}
-        <a href="/message-queue/{{relatedId}}">{{relatedId}}</a>
-        {{else}}
-            {{relatedId}}
-        {{/if}}
+        {{#if hasRelatedMessage}}<a href="/message-queue/{{relatedId}}">{{relatedId}}</a>{{else}}{{relatedId}}{{/if}}
+        /
+        {{#if hasAuditRelation}}<a href="/message-queue/{{auditRelatedId}}">{{auditRelatedId}}</a>{{else}}{{auditRelatedId}}{{/if}}
         </td>
         <td><a href="/message-queue?inbox={{senderInbox}}">{{senderInbox}}</a></td>
         <td style="word-break: break-all; font-family: monospace;">{{payload}}</td>

@@ -3,6 +3,7 @@ package nu.marginalia.mq.inbox;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.mq.persistence.MqPersistence;
 
 import java.sql.SQLException;
@@ -45,7 +46,11 @@ public class MqSingleShotInbox {
 
             var messages = persistence.pollInbox(inboxName, instanceUUID, i, 1);
 
-            if (messages.size() > 0) {
+            if (!messages.isEmpty()) {
+                for (var message : messages) {
+                    MqMessageHandlerRegistry.register(message.msgId());
+                }
+
                 return Optional.of(messages.iterator().next());
             }
 

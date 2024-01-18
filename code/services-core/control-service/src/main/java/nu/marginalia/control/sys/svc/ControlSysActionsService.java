@@ -57,7 +57,7 @@ public class ControlSysActionsService {
      */
     private MqOutbox createApiOutbox(MessageQueueFactory mqFactory) {
         String inboxName = ServiceId.Api.name + ":" + "0";
-        String outboxName = System.getProperty("service-name", UUID.randomUUID().toString());
+        String outboxName = "pp:"+System.getProperty("service-name", UUID.randomUUID().toString());
         return mqFactory.createOutbox(inboxName, 0, outboxName, 0, UUID.randomUUID());
     }
 

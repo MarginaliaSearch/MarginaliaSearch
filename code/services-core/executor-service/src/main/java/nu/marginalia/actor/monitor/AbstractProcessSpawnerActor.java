@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.*;
+import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
@@ -59,6 +60,9 @@ public class AbstractProcessSpawnerActor extends RecordActorPrototype {
                         }
                         // else continue
                     } else {
+                        // Special: Associate this thread with the message so that we can get tracking
+                        MqMessageHandlerRegistry.register(messages.getFirst().msgId());
+
                         yield new Run(0);
                     }
                 }

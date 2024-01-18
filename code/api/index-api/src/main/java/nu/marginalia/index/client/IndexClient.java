@@ -20,6 +20,7 @@ import nu.marginalia.service.id.ServiceId;
 import java.util.List;
 
 import javax.annotation.CheckReturnValue;
+import java.util.ServiceConfigurationError;
 import java.util.UUID;
 
 @Singleton
@@ -39,7 +40,7 @@ public class IndexClient extends AbstractDynamicClient {
         this.messageQueueFactory = messageQueueFactory;
 
         String inboxName = ServiceId.Index.name;
-        String outboxName = System.getProperty("service-name:"+nodeId, UUID.randomUUID().toString());
+        String outboxName = "pp:"+System.getProperty("service-name", UUID.randomUUID().toString());
         outbox = messageQueueFactory.createOutbox(inboxName, nodeId, outboxName, nodeId, UUID.randomUUID());
         setTimeout(30);
     }

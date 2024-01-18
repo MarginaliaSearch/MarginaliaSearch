@@ -2,6 +2,7 @@ package nu.marginalia.mq.inbox;
 
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.mq.persistence.MqPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,10 @@ public class MqSynchronousInbox implements MqInboxIf {
 
     private void handleMessageWithSubscriber(MqSubscription subscriber, MqMessage msg) {
         try {
+            MqMessageHandlerRegistry.register(msg.msgId());
+
             final var rsp = subscriber.onRequest(msg);
+
             if (msg.expectsResponse()) {
                 sendResponse(msg, rsp.state(), rsp.message());
             }
@@ -91,6 +95,9 @@ public class MqSynchronousInbox implements MqInboxIf {
         } catch (Exception ex) {
             logger.error("Message Queue subscriber threw exception", ex);
             registerResponse(msg, MqMessageState.ERR);
+        }
+        finally {
+            MqMessageHandlerRegistry.deregister();
         }
     }
 

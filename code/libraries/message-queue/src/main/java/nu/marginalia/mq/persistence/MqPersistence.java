@@ -55,8 +55,8 @@ public class MqPersistence {
                                ) throws Exception {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     INSERT INTO MESSAGE_QUEUE(RECIPIENT_INBOX, SENDER_INBOX, RELATED_ID, FUNCTION, PAYLOAD, TTL)
-                     VALUES(?, ?, ?, ?, ?, ?)
+                     INSERT INTO MESSAGE_QUEUE(RECIPIENT_INBOX, SENDER_INBOX, RELATED_ID, AUDIT_RELATED_ID, FUNCTION, PAYLOAD, TTL)
+                     VALUES(?, ?, ?, ?, ?, ?, ?)
                      """);
              var lastIdQuery = conn.prepareStatement("SELECT LAST_INSERT_ID()")) {
 
@@ -67,11 +67,12 @@ public class MqPersistence {
 
             // Translate null to -1, as 0 is a valid id
             stmt.setLong(3, Objects.requireNonNullElse(relatedMessageId, -1L));
+            stmt.setLong(4, MqMessageHandlerRegistry.getOriginMessage());
 
-            stmt.setString(4, function);
-            stmt.setString(5, payload);
-            if (ttl == null) stmt.setNull(6, java.sql.Types.BIGINT);
-            else stmt.setLong(6, ttl.toSeconds());
+            stmt.setString(5, function);
+            stmt.setString(6, payload);
+            if (ttl == null) stmt.setNull(7, java.sql.Types.BIGINT);
+            else stmt.setLong(7, ttl.toSeconds());
 
             stmt.executeUpdate();
 

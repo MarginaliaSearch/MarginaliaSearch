@@ -22,11 +22,10 @@
         <tr><td>state</td><td>{{state}}</td><td><a href="{{id}}/edit">[Edit&nbsp;State]</a></td></tr>
         <tr><td>senderInbox</td><td><a href="/message-queue?inbox={{senderInbox}}">{{senderInbox}}</a></td><td>{{#if senderInbox}}<a href="{{id}}/reply">[Reply]</a>{{/if}}</td></tr>
         <tr><td>relatedId</td><td>
-            {{#if hasRelatedMessage}}
-            <a href="{{relatedId}}">{{relatedId}}</a>
-            {{else}}
-            {{relatedId}}
-            {{/if}}
+            {{#if hasRelatedMessage}} <a href="{{relatedId}}">{{relatedId}}</a> {{else}} {{relatedId}} {{/if}}
+        </td><td></td></tr>
+        <tr><td>auditRelatedId</td><td>
+            {{#if hasAuditRelation}}<a href="/message-queue/{{auditRelatedId}}">{{auditRelatedId}}</a>{{else}}{{auditRelatedId}}{{/if}}
         </td><td></td></tr>
         <tr><td>function</td><td>{{function}}</td><td></td></tr>
         <tr><td>payload</td><td>
@@ -42,20 +41,25 @@
     <h2>Related Messages</h2>
     <table class="table">
         <tr>
-            <th>ID</th>
+            <th>ID/RelatedID</th>
             <th>Recipient Inbox</th>
-            <th>Sender Inbox</th>
             <th>Function</th>
             <th>State</th>
         </tr>
+        <tr>
+            <th colspan="4">Payload</th>
+        </tr>
         {{#each relatedMessages}}
         <tr>
-            <td><a href="{{id}}">{{id}}</a></td>
+            <td>
+                <a {{#eq id message.id}}style="font-weight: bold"{{/eq}} href="{{id}}">{{id}}</a>
+                {{#if hasRelatedMessage}}/ <a href="{{relatedId}}" {{#eq relatedId message.id}}style="font-weight: bold"{{/eq}}>{{relatedId}}</a>{{/if}}
+            </td>
             <td><a href="/message-queue?inbox={{recipientInbox}}">{{recipientInbox}}</a></td>
-            <td><a href="/message-queue?inbox={{senderInbox}}">{{senderInbox}}</a></td>
             <td>{{function}}</td>
             <td>{{state}}</td>
         </tr>
+        <tr><td colspan="4" style="word-break: break-all; font-family: monospace;">{{payload}}</td> </tr>
         {{/each}}
     </table>
     {{/if}}
