@@ -45,7 +45,7 @@
                 {{#if isStatusNew}}
                     <form method="post" action="/nodes/{{node.id}}/storage/reset-state/{{storage.id}}" onsubmit="return confirm('Confirm removal of \'NEW\' state for {{storage.path}}')">
                         <tr>
-                            <td>Remove 'NEW' state (use this if the generating process stopped)</td>
+                            <td>Remove 'CREATING' state (use this if the generating process stopped)</td>
                             <td><button class="btn btn-primary" type="submit">Reset State</button></td>
                         </tr>
                     </form>
