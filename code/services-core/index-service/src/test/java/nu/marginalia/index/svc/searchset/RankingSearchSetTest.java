@@ -22,10 +22,10 @@ class RankingSearchSetTest {
         bm.add(7);
         bm.add(9);
 
-        RankingSearchSet set = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, p, bm);
+        RankingSearchSet set = new RankingSearchSet("ACADEMIA", p, bm);
         set.write();
 
-        RankingSearchSet set2 = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, p);
+        RankingSearchSet set2 = new RankingSearchSet("ACADEMIA", p);
         assertTrue(set2.contains(1, 0));
         assertTrue(set2.contains(5, 0));
         assertTrue(set2.contains(7, 0));
