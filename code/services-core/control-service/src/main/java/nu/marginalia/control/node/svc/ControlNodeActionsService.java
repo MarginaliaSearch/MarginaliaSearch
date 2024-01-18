@@ -68,7 +68,7 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:id/actions/recrawl", this::triggerAutoRecrawl,
                 redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
         );
-        Spark.post("/public/nodes/:id/actions/process", this::triggerAutoProcess,
+        Spark.post("/public/nodes/:id/actions/process", this::triggerProcess,
                 redirectControl.renderRedirectAcknowledgement("Processing", "..")
         );
         Spark.post("/public/nodes/:id/actions/load", this::triggerLoadSelected,
@@ -183,16 +183,23 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object triggerAutoProcess(Request request, Response response) throws SQLException {
+    private Object triggerProcess(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
-
+        boolean isAutoload = "on".equalsIgnoreCase(request.queryParams("autoload"));
         var toProcess = parseSourceFileStorageId(request.queryParams("source"));
 
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, toProcess);
 
-        executorClient.triggerConvertAndLoad(Context.fromRequest(request),
-                nodeId,
-                toProcess);
+        if (isAutoload) {
+            executorClient.triggerConvertAndLoad(Context.fromRequest(request),
+                    nodeId,
+                    toProcess);
+        }
+        else {
+            executorClient.triggerConvert(Context.fromRequest(request),
+                    nodeId,
+                    toProcess);
+        }
 
         return "";
     }

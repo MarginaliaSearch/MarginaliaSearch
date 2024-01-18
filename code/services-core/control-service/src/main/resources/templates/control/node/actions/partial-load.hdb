@@ -7,7 +7,7 @@
 {{#if allProcessedData}}
     <div class="my-3 p-3 border bg-light">
     This will load <a href="storage/processed">processed data</a> on Node {{node.id}}.  This isn't typically necessary for crawled data,
-    but is needed for sideloaded data.  Select the processed data to load below.
+    but is necessary for sideloaded data.  Select the processed data to be loaded below.
     </div>
 
     <form method="post" action="actions/load">

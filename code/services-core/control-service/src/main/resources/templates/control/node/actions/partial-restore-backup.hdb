@@ -1,8 +1,8 @@
 <h1 class="my-3">Load</h1>
 
 {{#unless allBackups}}
-    No <a href="storage/backups">processed data</a> exist on this node.  Backups are created when loading data into
-    the index.
+    No <a href="storage/backups">backups</a> exist on this node.  Backups are created when loading data into
+    the index.  Either no data has been ever been loaded, or the backups have been deleted.
 {{/unless}}
 
 {{#if allBackups}}

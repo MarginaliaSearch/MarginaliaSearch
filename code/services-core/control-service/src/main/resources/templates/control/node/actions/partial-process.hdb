@@ -6,9 +6,7 @@
     </p>
     <p>
         The reprocessing will extract keywords, titles, and other metadata from the raw crawl data
-        and generate parquet files that can be loaded into the index.  This loading will be done automatically,
-        and unless the node is <a href="/nodes/{{node.id}}/configuration">configured</a>  to keep the processed data,
-        the processed data will be deleted after loading to save disk space.
+        and generate parquet files that can be loaded into the index.
     </p>
 </div>
 
@@ -33,6 +31,18 @@
         </tr>
     {{/each}}
 </table>
+    <div class="form-group mt-3 mb-5">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="autoload" id="autoload" checked>
+            <label for="autoload">Load Automatically</label>
+        </div>
+        <small class="text-muted mt-3">
+            If <em>enabled</em>, the data will be loaded into the search engine automatically after it is created.  Depending on how the
+            node is <a href="/nodes/{{node.id}}/configuration">configured</a>, the intermediate processed data may be deleted
+            after loading.  If <em>disabled</em>, the data will be processed, but loading needs to be <a href="?view=load">triggered manually</a>.
+            This is useful if multiple data sets are to be loaded, such as when intermingling crawled data with sideloaded data.
+        </small>
+    </div>
 
     <button
             class="btn btn-primary me-md-2"

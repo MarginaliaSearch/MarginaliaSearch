@@ -15,8 +15,9 @@
         <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=new-crawl">New Crawl</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=re-crawl">Re-crawl</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=process">Process Crawl Data</a></li>
-            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=load">Load Crawl Data</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=load">Load Processed Data</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=repartition">Repartition Index</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-encyclopedia">Sideload Encyclopedia</a></li>
@@ -25,6 +26,7 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-db-data">Export Database Data</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-from-crawl-data">Export From Crawl Data</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=restore-backup">Restore Index Backup</a></li>
         </ul>
     </li>
