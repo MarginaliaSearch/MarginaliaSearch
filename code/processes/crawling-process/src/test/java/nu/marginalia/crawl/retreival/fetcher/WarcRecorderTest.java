@@ -73,10 +73,11 @@ class WarcRecorderTest {
     public void flagAsSkipped() throws IOException, URISyntaxException {
 
         try (var recorder = new WarcRecorder(fileNameWarc)) {
-            recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
+            recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
-                    "<?doctype html><html><body>test</body></html>");
+                    "<?doctype html><html><body>test</body></html>",
+                    ContentTags.empty());
         }
 
         try (var reader = new WarcReader(fileNameWarc)) {
@@ -95,10 +96,11 @@ class WarcRecorderTest {
     public void flagAsSkippedNullBody() throws IOException, URISyntaxException {
 
         try (var recorder = new WarcRecorder(fileNameWarc)) {
-            recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
+            recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
-                    null);
+                    null,
+                    ContentTags.empty());
         }
 
     }
@@ -106,10 +108,11 @@ class WarcRecorderTest {
     @Test
     public void testSaveImport() throws URISyntaxException, IOException {
         try (var recorder = new WarcRecorder(fileNameWarc)) {
-            recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
+            recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
-                    "<?doctype html><html><body>test</body></html>");
+                    "<?doctype html><html><body>test</body></html>",
+                    ContentTags.empty());
         }
 
         try (var reader = new WarcReader(fileNameWarc)) {

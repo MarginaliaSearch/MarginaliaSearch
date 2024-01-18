@@ -103,6 +103,8 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         ));
     }
 
+    private CrawledDocumentParquetRecord previousRecord = null;
+
     private void createDocumentRecord(CrawledDocumentParquetRecord nextRecord) {
         String bodyString = "";
         CrawlerDocumentStatus status = CrawlerDocumentStatus.OK;
@@ -130,6 +132,24 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
             status = CrawlerDocumentStatus.ERROR;
         }
 
+        String etag = nextRecord.etagHeader;
+        String lastModified = nextRecord.lastModifiedHeader;
+
+        // If we have a previous record, and it was a 304, and this one is a 200, we'll use the ETag and Last-Modified
+        // from the previous record, as it's not guaranteed the reference copy will have the same headers due to a bug
+        // in the crawler.  The bug is fixed, but we still need to support old crawls.
+        //
+        // This was added in 2024-01-18, so we can remove it in a few months.
+
+        if (previousRecord != null
+            && previousRecord.url.equals(nextRecord.url)
+            && previousRecord.httpStatus == 304
+            && nextRecord.httpStatus == 200)
+        {
+            etag = previousRecord.etagHeader;
+            lastModified = previousRecord.lastModifiedHeader;
+        }
+
         nextQ.add(new CrawledDocument("",
                 nextRecord.url,
                 nextRecord.contentType,
@@ -144,11 +164,14 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 null,
                 "",
                 nextRecord.cookies,
-                nextRecord.lastModifiedHeader,
-                nextRecord.etagHeader));
+                lastModified,
+                etag));
+
+        previousRecord = nextRecord;
     }
 
     public void close() throws IOException {
+        previousRecord = null;
     }
 
     @Override

@@ -5,6 +5,7 @@ import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
+import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeUrl;
@@ -84,7 +85,12 @@ public class CrawlerRevisitor {
                 }
 
                 // Add a WARC record so we don't repeat this
-                warcRecorder.flagAsSkipped(url, doc.contentType, doc.httpStatus, doc.documentBody);
+                warcRecorder.writeReferenceCopy(url,
+                        doc.contentType,
+                        doc.httpStatus,
+                        doc.documentBody,
+                        new ContentTags(doc.etagMaybe, doc.lastModifiedMaybe)
+                );
             }
             else {
                 // GET the document with the stored document as a reference

@@ -2,7 +2,6 @@ package nu.marginalia.crawl.retreival.fetcher.warc;
 
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
 import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.model.EdgeDomain;
@@ -253,15 +252,6 @@ public class WarcRecorder implements AutoCloseable {
         } catch (URISyntaxException | IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Flag the given URL as skipped by the crawler, so that it will not be retried.
-     * Which URLs were skipped is still important when resynchronizing on the WARC file,
-     * so that the crawler can avoid re-fetching them.
-     */
-    public void flagAsSkipped(EdgeUrl url, String contentType, int statusCode, String documentBody) {
-        saveOldResponse(url, contentType, statusCode, documentBody, ContentTags.empty());
     }
 
     /**
