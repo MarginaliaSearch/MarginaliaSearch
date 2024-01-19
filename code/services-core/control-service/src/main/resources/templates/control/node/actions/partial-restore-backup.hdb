@@ -1,4 +1,4 @@
-<h1 class="my-3">Load</h1>
+<h1 class="my-3">Restore Backup</h1>
 
 {{#unless allBackups}}
     No <a href="storage/backups">backups</a> exist on this node.  Backups are created when loading data into
