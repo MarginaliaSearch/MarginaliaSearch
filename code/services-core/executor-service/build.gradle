@@ -45,6 +45,7 @@ dependencies {
     implementation project(':code:api:query-api')
     implementation project(':code:api:process-mqapi')
     implementation project(':code:api:executor-api')
+    implementation project(':third-party:encyclopedia-marginalia-nu')
 
     implementation libs.bundles.slf4j
 

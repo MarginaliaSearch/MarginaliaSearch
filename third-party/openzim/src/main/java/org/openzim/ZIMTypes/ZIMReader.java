@@ -221,7 +221,7 @@ public class ZIMReader {
 
 	// Gives the minimum required information needed for the given articleName
 	public DirectoryEntry forEachArticles(BiConsumer<String, String> consumer, Predicate<Integer> blobPred)
-			throws IOException {
+			throws IOException, InterruptedException {
 
 		int numberOfArticles = mFile.getArticleCount();
 		long beg = mFile.getTitlePtrPos();
@@ -237,6 +237,10 @@ public class ZIMReader {
 		for (long i = beg; i < end; i+=4) {
 			var entry = getDirectoryInfoAtTitlePosition(i);
 
+			if (Thread.interrupted()) {
+				throw new InterruptedException();
+			}
+
 			if (((i-beg)%100_000) == 0) {
 				System.out.printf("%f%%\n", ((i-beg) * 100.) / (end-beg));
 			}
@@ -249,21 +253,25 @@ public class ZIMReader {
 
 		System.out.println("Iterating over " + data.keySet().stream().mapToInt(Integer::intValue).max() + "clusters");
 
-		data.forEach((pos,blobs) -> {
-			if (!blobPred.test(pos)) {
-				return;
-			}
+		var iter = data.entrySet().iterator();
+		while (iter.hasNext()) {
+			if (Thread.interrupted()) throw new InterruptedException();
+
+			var next = iter.next();
+			int pos = next.getKey();
+
+			if (!blobPred.test(pos)) continue;
+			Map<Integer, String> blobs = next.getValue();
 
 			try {
 				getArticleData(consumer, pos, blobs);
 			}
 			catch (Exception ex) {
-				ex.printStackTrace();
+				throw new RuntimeException(ex);
 			}
-		});
+		}
 
 		return null;
-
 	}
 
 

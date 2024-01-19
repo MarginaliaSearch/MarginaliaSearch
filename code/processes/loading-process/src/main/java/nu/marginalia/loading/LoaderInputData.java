@@ -2,6 +2,8 @@ package nu.marginalia.loading;
 
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.worklog.BatchingWorkLogInspector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -10,13 +12,21 @@ import java.util.*;
 
 public class LoaderInputData {
     private final List<Path> sourceDirectories;
+    private static final Logger logger = LoggerFactory.getLogger(LoaderInputData.class);
     private final Map<Path, Integer> lastGoodBatch = new HashMap<>();
 
     public LoaderInputData(List<Path> sourceDirectories) throws IOException {
         this.sourceDirectories = sourceDirectories;
 
         for (var source : sourceDirectories) {
-            lastGoodBatch.put(source, BatchingWorkLogInspector.getValidBatches(source.resolve("processor.log")));
+            int lastGoodBatch = BatchingWorkLogInspector.getValidBatches(source.resolve("processor.log"));
+
+            this.lastGoodBatch.put(source, lastGoodBatch);
+
+            if (lastGoodBatch == 0) {
+                // This is useful diagnostic information, so we log it as a warning
+                logger.warn("No valid batches found in {}", source);
+            }
         }
 
     }

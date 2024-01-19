@@ -7,6 +7,7 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
+import nu.marginalia.encyclopedia.EncyclopediaConverter;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
@@ -16,21 +17,27 @@ import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.mqapi.converting.ConvertRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.CRC32;
 
 @Singleton
 public class ConvertActor extends RecordActorPrototype {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConvertActor.class);
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
     private final FileStorageService storageService;
-    private final Gson gson;
 
     public record Convert(FileStorageId fid) implements ActorStep {};
     public record ConvertEncyclopedia(String source, String baseUrl) implements ActorStep {};
+    public record PredigestEncyclopedia(String source, String dest, String baseUrl) implements ActorStep {};
     public record ConvertDirtree(String source) implements ActorStep {};
     public record ConvertWarc(String source) implements ActorStep {};
     public record ConvertStackexchange(String source) implements ActorStep {};
@@ -100,6 +107,19 @@ public class ConvertActor extends RecordActorPrototype {
                 if (!Files.exists(sourcePath))
                     yield new Error("Source path does not exist: " + sourcePath);
 
+                if (source.toLowerCase().endsWith(".zim")) {
+                    // If we're fed a ZIM file, we need to convert it to a sqlite database first
+                    String hash = getCrc32FileHash(sourcePath);
+
+                    // To avoid re-converting the same file, we'll assign the file a name based on its hash
+                    // and the original filename. This way, if we're fed the same file again, we'll be able to just
+                    // re-use the predigested database file.
+                    yield new PredigestEncyclopedia(source, STR."\{source}.\{hash}.db", baseUrl);
+                } else if (!source.endsWith(".db")) {
+                    yield new Error("Source path must be a ZIM or pre-digested sqlite database file (.db)");
+                }
+
+
                 String fileName = sourcePath.toFile().getName();
 
                 var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
@@ -113,6 +133,36 @@ public class ConvertActor extends RecordActorPrototype {
                         processedArea.id(),
                         mqConverterOutbox.sendAsync(ConvertRequest.forEncyclopedia(sourcePath, baseUrl, processedArea.id()))
                 );
+            }
+            case PredigestEncyclopedia(String source, String dest, String baseUrl) -> {
+                Path sourcePath = Path.of(source);
+
+                if (!Files.exists(sourcePath)) {
+                    yield new Error("Source path does not exist: " + sourcePath);
+                }
+
+                Path destPath = Path.of(dest);
+                if (Files.exists(destPath)) {
+                    // Already predigested, go straight to convert step
+                    yield new ConvertEncyclopedia(dest, baseUrl);
+                }
+
+                Path tempFile = Files.createTempFile(destPath.getParent(), "encyclopedia", "db.tmp");
+
+                try {
+                    EncyclopediaConverter.convert(sourcePath, tempFile);
+                    Files.move(tempFile, destPath);
+                }
+                catch (Exception e) {
+                    logger.error("Failed to convert ZIM file to sqlite database", e);
+                    Files.deleteIfExists(tempFile);
+                    Files.deleteIfExists(destPath);
+
+                    yield new Error("Failed to convert ZIM file to sqlite database: " + e.getMessage());
+                }
+
+                // Go back to convert step with the new database file
+                yield new ConvertEncyclopedia(dest, baseUrl);
             }
             case ConvertStackexchange(String source) -> {
 
@@ -150,6 +200,22 @@ public class ConvertActor extends RecordActorPrototype {
         };
     }
 
+    private String getCrc32FileHash(Path file) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(8192);
+
+        try (var channel = Files.newByteChannel(file)) {
+            CRC32 crc = new CRC32();
+
+            while (channel.read(buffer) > 0) {
+                buffer.flip();
+                crc.update(buffer);
+                buffer.clear();
+            }
+
+            return Long.toHexString(crc.getValue());
+        }
+    }
+
     @Override
     public String describe() {
         return "Convert a set of crawl data into a format suitable for loading into the database.";
@@ -165,6 +231,5 @@ public class ConvertActor extends RecordActorPrototype {
         this.processWatcher = processWatcher;
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.storageService = storageService;
-        this.gson = gson;
     }
 }

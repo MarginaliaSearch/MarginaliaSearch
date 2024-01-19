@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation libs.jsoup
+    implementation libs.notnull
+    implementation libs.bundles.gson
+    implementation libs.zstd
+    implementation libs.bundles.slf4j
+
+    implementation project(':code:libraries:blocking-thread-pool')
+
+    implementation project(':third-party:xz')
+    implementation project(':third-party:openzim')
+}
+
+test {
+    useJUnitPlatform()
+}

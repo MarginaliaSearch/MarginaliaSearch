@@ -1,11 +1,17 @@
 <h1 class="my-3">Sideload Encyclopedia</h1>
 
 <div class="my-3 p-3 border bg-light">
-<p>This will sideload a pre-converted MediaWiki-style OpenZim data set.
-    See the <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/sideloading-howto.md">sideloading howto</a>
-    for instructions how to produce this file. </p>
-<p>Place an articles.db file in the upload directory on the server, and select it from the list
-    below.  </p>
+<p>This will side-load a MediaWiki-style OpenZim data set.  Place a zim file in the uploads directory.
+    For Wikipedia, the zim file can be downloaded from <a href="https://download.kiwix.org/zim/wikipedia/">https://download.kiwix.org/zim/wikipedia/</a>.
+    The en_all_nopic sets are recommended for wikipedia, since they are smaller and do not contain images
+    (which are not used anyway).   For testing, the _mini or _en_100 sets are good choices.
+   <p></p>
+   The zim file will be converted to a sqlite database (.db-file) with a similar name to
+   the zim file, which then automatically is turned into processed data.
+   <p></p>
+   Since the first stage of processing is very time-consuming, the sqlite database can
+   also be loaded from this form.
+</p>
 </div>
 <form method="post" action="actions/sideload-encyclopedia" onsubmit="return confirm('Confirm sideloading')">
     <div class="my-3 py-3">
