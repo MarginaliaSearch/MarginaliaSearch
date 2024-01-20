@@ -7,6 +7,7 @@ The system will look for a properties file in `conf/properties/system.properties
 within the install dir, as specified by `$WMSA_HOME`.
 
 A template is available in [../run/template/conf/properties/system.properties](../run/template/conf/properties/system.properties).
+
 ## Global
 
 | flag        | values     | description                          |
@@ -16,12 +17,16 @@ A template is available in [../run/template/conf/properties/system.properties](.
 
 ## Crawler Properties
 
-| flag                        | values     | description                                                                              |
-|-----------------------------|------------|------------------------------------------------------------------------------------------|
-| crawler.userAgentString     | string | Sets the user agent string used by the crawler                                           |
-| crawler.userAgentIdentifier | string | Sets the user agent identifier used by the crawler, e.g. what it looks for in robots.txt |
-| crawler.poolSize            | integer | Sets the number of threads used by the crawler, more is faster, but uses more RAM |
-| ip-blocklist.disabled       | boolean | Disables the IP blocklist |
+| flag                         | values     | description                                                                                 |
+|------------------------------|------------|---------------------------------------------------------------------------------------------|
+| crawler.userAgentString      | string | Sets the user agent string used by the crawler                                              |
+| crawler.userAgentIdentifier  | string | Sets the user agent identifier used by the crawler, e.g. what it looks for in robots.txt    |
+| crawler.poolSize             | integer | Sets the number of threads used by the crawler, more is faster, but uses more RAM           |
+| crawler.initialUrlsPerDomain | integer | Sets the initial number of URLs to crawl per domain  (when crawling from spec)              |
+| crawler.maxUrlsPerDomain     | integer | Sets the maximum number of URLs to crawl per domain  (when recrawling)                      |
+| crawler.minUrlsPerDomain     | integer | Sets the minimum number of URLs to crawl per domain  (when recrawling)                      |
+| crawler.crawlSetGrowthFactor | double | If 100 documents were fetched last crawl, increase the goal to 100 x (this value) this time |
+| ip-blocklist.disabled        | boolean | Disables the IP blocklist                                                                   |
 
 ## Converter Properties
 

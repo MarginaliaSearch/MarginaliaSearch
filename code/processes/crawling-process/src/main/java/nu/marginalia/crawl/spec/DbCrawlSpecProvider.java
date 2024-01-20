@@ -20,6 +20,10 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(DbCrawlSpecProvider.class);
 
+    private static final double URL_GROWTH_FACTOR = Double.parseDouble(System.getProperty("crawler.crawlSetGrowthFactor", "1.25"));
+    private static final int MIN_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 100);
+    private static final int MAX_URLS_PER_DOMAIN = Integer.getInteger("crawler.maxUrlsPerDomain", 10_000);
+
     @Inject
     public DbCrawlSpecProvider(HikariDataSource dataSource,
                                ProcessConfiguration processConfiguration
@@ -48,7 +52,7 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
             while (rs.next()) {
                 domains.add(new CrawlSpecRecord(
                                 rs.getString(1),
-                                Math.clamp((int) (1.25 * rs.getInt(2)), 250, 10_000),
+                                Math.clamp((int) (URL_GROWTH_FACTOR * rs.getInt(2)), MIN_URLS_PER_DOMAIN, MAX_URLS_PER_DOMAIN),
                                 List.of()
                         ));
             }

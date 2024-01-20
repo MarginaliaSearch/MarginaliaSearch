@@ -12,6 +12,7 @@ import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,9 +23,10 @@ import static nu.marginalia.crawlspec.CrawlSpecGenerator.*;
 @Singleton
 public class CrawlJobExtractorActor extends RecordActorPrototype {
 
+    private static final int INITIAL_URLS_PER_DOMAIN = Integer.getInteger("crawler.initialUrlsPerDomain", 250);
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private final FileStorageService fileStorageService;
+
     @Inject
     public CrawlJobExtractorActor(Gson gson,
                                   FileStorageService fileStorageService
@@ -44,12 +46,10 @@ public class CrawlJobExtractorActor extends RecordActorPrototype {
 
                 Path urlsTxt = storage.asPath().resolve("urls.txt");
 
-                try (var os = Files.newOutputStream(urlsTxt, StandardOpenOption.CREATE_NEW);
-                     var is = new URL(url).openStream())
-                {
-                    is.transferTo(os);
+                try {
+                    downloadToFile(url, urlsTxt);
                 }
-                catch (Exception ex) {
+                catch (IOException ex) {
                     fileStorageService.flagFileForDeletion(storage.id());
                     yield new Error("Error downloading " + url);
                 }
@@ -59,7 +59,7 @@ public class CrawlJobExtractorActor extends RecordActorPrototype {
                 generateCrawlSpec(
                         path,
                         DomainSource.fromFile(urlsTxt),
-                        KnownUrlsCountSource.fixed(200),
+                        KnownUrlsCountSource.fixed(INITIAL_URLS_PER_DOMAIN),
                         KnownUrlsListSource.justIndex()
                 );
 
@@ -67,6 +67,14 @@ public class CrawlJobExtractorActor extends RecordActorPrototype {
             }
             default -> new Error();
         };
+    }
+
+    private void downloadToFile(String url, Path urlsTxt) throws IOException {
+        try (var os = Files.newOutputStream(urlsTxt, StandardOpenOption.CREATE_NEW);
+             var is = new URL(url).openStream())
+        {
+            is.transferTo(os);
+        }
     }
 
     @Override
