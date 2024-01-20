@@ -33,6 +33,14 @@ class DomainRankingSetsServiceTest {
         dataSource = new HikariDataSource(config);
 
         TestMigrationLoader.flywayMigration(dataSource);
+
+        // The migration SQL will insert a few default values, we want to remove them
+        wipeDomainRankingSets(dataSource);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        wipeDomainRankingSets(dataSource);
     }
 
     @AfterAll
@@ -44,10 +52,6 @@ class DomainRankingSetsServiceTest {
     @Test
     public void testScenarios() throws Exception {
         var service = new DomainRankingSetsService(dataSource);
-
-        // Clean up default values
-        service.get("BLOGS").ifPresent(service::delete);
-        service.get("NONE").ifPresent(service::delete);
 
         var newValue = new DomainRankingSetsService.DomainRankingSet(
                 "test",
@@ -80,5 +84,10 @@ class DomainRankingSetsServiceTest {
 
         allValues = service.getAll();
         assertEquals(0, allValues.size());
+    }
+
+    private static void wipeDomainRankingSets(HikariDataSource dataSource) {
+        var service = new DomainRankingSetsService(dataSource);
+        service.getAll().forEach(service::delete);
     }
 }
