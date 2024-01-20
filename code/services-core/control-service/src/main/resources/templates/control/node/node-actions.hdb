@@ -18,6 +18,7 @@
     {{#if view.sideload-encyclopedia}} {{> control/node/actions/partial-sideload-encyclopedia }} {{/if}}
     {{#if view.sideload-stackexchange}} {{> control/node/actions/partial-sideload-stackexchange }} {{/if}}
     {{#if view.sideload-warc}} {{> control/node/actions/partial-sideload-warc }} {{/if}}
+    {{#if view.sideload-dirtree}} {{> control/node/actions/partial-sideload-dirtree }} {{/if}}
     {{#if view.export-db-data}} {{> control/node/actions/partial-export-db-data }} {{/if}}
     {{#if view.export-from-crawl-data}} {{> control/node/actions/partial-export-from-crawl-data }} {{/if}}
     {{#if view.restore-backup}} {{> control/node/actions/partial-restore-backup }} {{/if}}

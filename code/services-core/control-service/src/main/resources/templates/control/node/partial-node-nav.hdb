@@ -23,6 +23,7 @@
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-encyclopedia">Sideload Encyclopedia</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-stackexchange">Sideload Stackexchange</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-warc">Sideload WARC Files</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-dirtree">Sideload Dirtree</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-db-data">Export Database Data</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-from-crawl-data">Export From Crawl Data</a></li>
