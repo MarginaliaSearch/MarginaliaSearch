@@ -35,7 +35,10 @@
     <input type="hidden" name="query" value="{{specs.humanQuery}}" />
     <table class="table">
     {{#each results}}
-        <tr><td><input type="checkbox" name="{{url}}"><th>{{title}}</th></tr>
+        <tr>
+            <td><input id="{{url}}" type="checkbox" name="{{url}}"></td>
+            <th><label for="{{url}}">{{title}}</label></th>
+        </tr>
         <tr><td colspan="2"><a href="{{url}}">{{url}}</a></td></tr>
         <tr><td colspan="2">{{description}}</td></tr>
     {{/each}}
