@@ -73,6 +73,16 @@ public class ActorProcessWatcher {
 
                 // Maybe the process died, wait a moment for it to restart
                 if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
+
+                    // Check if the process has already responded, but we missed it
+                    // This infrequently happens if we get unlucky with the timing of the process terminating
+                    // and the polling thread...
+
+                    var maybeResponse = outbox.pollResponse(msgId);
+                    if (maybeResponse.isPresent()) {
+                        return maybeResponse.get();
+                    }
+
                     throw new ActorControlFlowException("Process " + processId + " died and did not re-launch");
                 }
             }
