@@ -1,10 +1,9 @@
 <h1 class="my-3">Sideload Stackexchange</h1>
 
 <div class="my-3 p-3 border bg-light">
-This will load a set of pre-converted stackexchange .db files
-<p>
-See the <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/sideloading-howto.md">sideloading howto</a>
-for instructions how to produce this file. </p>
+This will load stackexchange data from a directory on the server.
+See the <a href="https://docs.marginalia.nu/">docs</a> detailed
+information how to do this.
 </div>
 
 <form method="post" action="actions/sideload-stackexchange" onsubmit="return confirm('Confirm sideloading')">
