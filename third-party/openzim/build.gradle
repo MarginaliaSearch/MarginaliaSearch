@@ -16,7 +16,7 @@ dependencies {
     implementation libs.databind
     implementation libs.bundles.gson
 
-    implementation project(':third-party:xz')
+    implementation libs.xz
 }
 
 test {

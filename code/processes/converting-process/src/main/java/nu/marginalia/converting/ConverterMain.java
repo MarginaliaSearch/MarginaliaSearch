@@ -240,50 +240,57 @@ public class ConverterMain extends ProcessMainClass {
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.converting.ConvertRequest.class.getSimpleName());
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
 
-        var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
+        try {
+            var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
 
-        return switch(request.action) {
-            case ConvertCrawlData -> {
-                var crawlData = fileStorageService.getStorage(request.crawlStorage);
-                var processData = fileStorageService.getStorage(request.processedDataStorage);
+            return switch (request.action) {
+                case ConvertCrawlData -> {
+                    var crawlData = fileStorageService.getStorage(request.crawlStorage);
+                    var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                var plan = new CrawlPlan(null,
-                        new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
-                        new CrawlPlan.WorkDir(processData.path(), "processor.log"));
+                    var plan = new CrawlPlan(null,
+                            new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
+                            new CrawlPlan.WorkDir(processData.path(), "processor.log"));
 
-                yield new ConvertCrawlDataAction(plan, msg, inbox);
-            }
-            case SideloadEncyclopedia -> {
-                var processData = fileStorageService.getStorage(request.processedDataStorage);
+                    yield new ConvertCrawlDataAction(plan, msg, inbox);
+                }
+                case SideloadEncyclopedia -> {
+                    var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource), request.baseUrl),
-                        processData.asPath(),
-                        msg, inbox);
-            }
-            case SideloadDirtree -> {
-                var processData = fileStorageService.getStorage(request.processedDataStorage);
+                    yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource), request.baseUrl),
+                            processData.asPath(),
+                            msg, inbox);
+                }
+                case SideloadDirtree -> {
+                    var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(
-                        sideloadSourceFactory.sideloadDirtree(Path.of(request.inputSource)),
-                        processData.asPath(),
-                        msg, inbox);
-            }
-            case SideloadWarc -> {
-                var processData = fileStorageService.getStorage(request.processedDataStorage);
+                    yield new SideloadAction(
+                            sideloadSourceFactory.sideloadDirtree(Path.of(request.inputSource)),
+                            processData.asPath(),
+                            msg, inbox);
+                }
+                case SideloadWarc -> {
+                    var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(
-                        sideloadSourceFactory.sideloadWarc(Path.of(request.inputSource)),
-                        processData.asPath(),
-                        msg, inbox);
-            }
-            case SideloadStackexchange -> {
-                var processData = fileStorageService.getStorage(request.processedDataStorage);
+                    yield new SideloadAction(
+                            sideloadSourceFactory.sideloadWarc(Path.of(request.inputSource)),
+                            processData.asPath(),
+                            msg, inbox);
+                }
+                case SideloadStackexchange -> {
+                    var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(Path.of(request.inputSource)),
-                        processData.asPath(),
-                        msg, inbox);
-            }
-        };
+                    yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(Path.of(request.inputSource)),
+                            processData.asPath(),
+                            msg, inbox);
+                }
+            };
+        }
+        catch (Exception ex) {
+            inbox.sendResponse(msg, MqInboxResponse.err(STR."\{ex.getClass().getSimpleName()}: \{ex.getMessage()}"));
+
+            throw ex;
+        }
     }
 
     private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {

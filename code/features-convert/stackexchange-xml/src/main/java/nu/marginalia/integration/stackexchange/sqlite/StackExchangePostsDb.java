@@ -36,8 +36,8 @@ public class StackExchangePostsDb {
     public static void create(String domain,
                               Path sqliteFile,
                               Path stackExchange7zFile) {
-        if (Files.exists(sqliteFile))
-            Files.delete(sqliteFile);
+        Files.deleteIfExists(sqliteFile);
+
         String connStr = "jdbc:sqlite:" + sqliteFile;
 
         try (var connection = DriverManager.getConnection(connStr);

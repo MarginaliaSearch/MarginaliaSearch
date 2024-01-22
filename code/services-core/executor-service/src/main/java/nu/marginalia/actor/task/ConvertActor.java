@@ -10,6 +10,8 @@ import nu.marginalia.actor.state.Resume;
 import nu.marginalia.encyclopedia.EncyclopediaConverter;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
+import nu.marginalia.sideload.SideloadHelper;
+import nu.marginalia.sideload.StackExchangeSideloadHelper;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
@@ -21,11 +23,8 @@ import nu.marginalia.mqapi.converting.ConvertRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.zip.CRC32;
 
 @Singleton
 public class ConvertActor extends RecordActorPrototype {
@@ -109,7 +108,7 @@ public class ConvertActor extends RecordActorPrototype {
 
                 if (source.toLowerCase().endsWith(".zim")) {
                     // If we're fed a ZIM file, we need to convert it to a sqlite database first
-                    String hash = getCrc32FileHash(sourcePath);
+                    String hash = SideloadHelper.getCrc32FileHash(sourcePath);
 
                     // To avoid re-converting the same file, we'll assign the file a name based on its hash
                     // and the original filename. This way, if we're fed the same file again, we'll be able to just
@@ -179,6 +178,10 @@ public class ConvertActor extends RecordActorPrototype {
 
                 storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
+                // Convert stackexchange data to sqlite database
+                // (we can't use a Predigest- step here because the conversion is too complicated)
+                StackExchangeSideloadHelper.convertStackexchangeData(sourcePath);
+
                 // Pre-send convert request
 
                 yield new ConvertWait(
@@ -200,21 +203,7 @@ public class ConvertActor extends RecordActorPrototype {
         };
     }
 
-    private String getCrc32FileHash(Path file) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(8192);
 
-        try (var channel = Files.newByteChannel(file)) {
-            CRC32 crc = new CRC32();
-
-            while (channel.read(buffer) > 0) {
-                buffer.flip();
-                crc.update(buffer);
-                buffer.clear();
-            }
-
-            return Long.toHexString(crc.getValue());
-        }
-    }
 
     @Override
     public String describe() {

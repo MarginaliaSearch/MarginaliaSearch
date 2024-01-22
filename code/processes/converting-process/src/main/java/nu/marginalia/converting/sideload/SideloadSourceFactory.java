@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 public class SideloadSourceFactory {
     private final Gson gson;
@@ -57,14 +58,21 @@ public class SideloadSourceFactory {
         return warcSideloadFactory.createSideloaders(pathToWarcFiles);
     }
 
-    /** Do not use, this code isn't finished */
     public Collection<? extends SideloadSource> sideloadStackexchange(Path pathToDbFileRoot) throws IOException {
-        try (var dirs = Files.walk(pathToDbFileRoot)) {
-            return dirs
-                .filter(Files::isRegularFile)
-                .filter(f -> f.toFile().getName().endsWith(".db"))
-                .map(dbFile -> new StackexchangeSideloader(dbFile, sentenceExtractorProvider, documentKeywordExtractor))
-                .toList();
+        if (Files.isRegularFile(pathToDbFileRoot)) {
+            return List.of(new StackexchangeSideloader(pathToDbFileRoot, sentenceExtractorProvider, documentKeywordExtractor));
+        }
+        else if (Files.isDirectory(pathToDbFileRoot)) {
+            try (var dirs = Files.walk(pathToDbFileRoot)) {
+                return dirs
+                        .filter(Files::isRegularFile)
+                        .filter(f -> f.toFile().getName().endsWith(".db"))
+                        .map(dbFile -> new StackexchangeSideloader(dbFile, sentenceExtractorProvider, documentKeywordExtractor))
+                        .toList();
+            }
+        }
+        else { // unix socket, etc
+            throw new IllegalArgumentException("Path to stackexchange db file(s) must be a file or directory");
         }
     }
 }

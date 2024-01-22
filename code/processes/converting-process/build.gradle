@@ -95,8 +95,6 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 
-    implementation 'org.tukaani:xz:1.8'
-
     testImplementation project(':code:processes:test-data')
     testImplementation project(':code:processes:crawling-process')
 }

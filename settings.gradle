@@ -85,11 +85,9 @@ include 'code:tools:term-frequency-extractor'
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
-include 'code:tools:stackexchange-converter'
 include 'code:tools:crawl-data-unfcker'
 
 include 'third-party:porterstemmer'
-include 'third-party:xz'
 include 'third-party:symspell'
 include 'third-party:rdrpostagger'
 include 'third-party:openzim'
@@ -164,7 +162,7 @@ dependencyResolutionManagement {
             library('httpcomponents.client','org.apache.httpcomponents','httpclient').version('4.5.13')
             library('commons.net', 'commons-net','commons-net').version('3.9.0')
             library('commons.lang3', 'org.apache.commons','commons-lang3').version('3.12.0')
-            library('commons.compress','org.apache.commons','commons-compress').version('1.21')
+            library('commons.compress','org.apache.commons','commons-compress').version('1.25.0')
             library('commons.io','commons-io','commons-io').version('2.11.0')
             library('commons.codec', 'commons-codec', 'commons-codec').version('1.16.0')
 
@@ -185,6 +183,7 @@ dependencyResolutionManagement {
 
             library('zstd','com.github.luben','zstd-jni').version('1.5.2-2')
             library('lz4','org.lz4','lz4-java').version('1.8.0')
+            library('xz','org.tukaani','xz').version('1.9')
 
             library('flyway.core','org.flywaydb','flyway-core').version('10.4.1')
             library('flyway.mysql','org.flywaydb','flyway-mysql').version('10.4.1')

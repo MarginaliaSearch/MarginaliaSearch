@@ -21,23 +21,33 @@ public class WarcSideloadFactory {
     }
 
     public Collection<? extends SideloadSource> createSideloaders(Path pathToWarcFiles) throws IOException {
-        final List<Path> files = new ArrayList<>();
 
-        try (var stream = Files.list(pathToWarcFiles)) {
-            stream
-                    .filter(Files::isRegularFile)
-                    .filter(this::isWarcFile)
-                    .forEach(files::add);
-
+        if (Files.isRegularFile(pathToWarcFiles)) {
+            return List.of(new WarcSideloader(pathToWarcFiles, processing));
         }
+        else if (Files.isDirectory(pathToWarcFiles)) {
 
-        List<WarcSideloader> sources = new ArrayList<>();
+            final List<Path> files = new ArrayList<>();
 
-        for (Path file : files) {
-            sources.add(new WarcSideloader(file, processing));
+            try (var stream = Files.list(pathToWarcFiles)) {
+                stream
+                        .filter(Files::isRegularFile)
+                        .filter(this::isWarcFile)
+                        .forEach(files::add);
+
+            }
+
+            List<WarcSideloader> sources = new ArrayList<>();
+
+            for (Path file : files) {
+                sources.add(new WarcSideloader(file, processing));
+            }
+
+            return sources;
         }
-
-        return sources;
+        else {
+            throw new IllegalArgumentException("Path " + pathToWarcFiles + " is neither a file nor a directory");
+        }
     }
 
     private boolean isWarcFile(Path path) {
