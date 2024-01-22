@@ -13,12 +13,21 @@ The long term plan is to refine the search engine so that it provide enough publ
 that the project can be funded through grants, donations and commercial API licenses 
 (non-commercial share-alike is always free).
 
+The system can both be run as a copy of Marginalia Search, or as a white-label search engine
+for your own data (either crawled or side-loaded).  At present the logic isn't very configurable, and a lot of the judgements
+made are based on the Marginalia project's goals, but additional configurability is being
+worked on!
+
 ## Set up
 
-Start by running [⚙️ run/setup.sh](run/setup.sh). This will download supplementary model data that is necessary to run the code. 
+To set up a local test environment, follow the instructions in [📄 run/readme.md](run/readme.md)!
+
+Further documentation is available at [🌎&nbsp;https://docs.marginalia.nu/](https://docs.marginalia.nu/).
+
+Before compiling, it's necessary to run [⚙️ run/setup.sh](run/setup.sh). 
+This will download supplementary model data that is necessary to run the code. 
 These are also necessary to run the tests. 
 
-To set up a local test environment, follow the instructions in [📄 run/readme.md](run/readme.md)!
 
 ## Hardware Requirements
 
