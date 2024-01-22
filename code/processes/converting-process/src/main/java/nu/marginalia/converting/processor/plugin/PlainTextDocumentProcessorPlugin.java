@@ -54,7 +54,14 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
     @Override
     public boolean isApplicable(CrawledDocument doc) {
-        return doc.contentType.equalsIgnoreCase("text/plain");
+        String contentType = doc.contentType.toLowerCase();
+
+        if (contentType.equals("text/plain"))
+            return true;
+        if (contentType.startsWith("text/plain;")) // charset=blabla
+            return true;
+
+        return false;
     }
 
     @Override
