@@ -288,6 +288,11 @@ public class ActorStateMachine {
             logger.error("Error in state machine transition", e);
             setErrorState();
         }
+        catch (Error e) {
+            setErrorState();
+            logger.error("Error in state machine transition", e);
+            throw e;
+        }
     }
 
     private void setErrorState() {

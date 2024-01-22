@@ -133,8 +133,11 @@ public class MqSynchronousInbox implements MqInboxIf {
                         currentTask = executorService.submit(() -> handleMessage(msg));
                         currentTask.get();
                     }
-                    catch (Exception ex) {
+                    catch (InterruptedException ex) {
                         logger.error("Inbox task was aborted");
+                    }
+                    catch (Exception ex) {
+                        logger.error("Exception handling inbox task", ex);
                     }
                     finally {
                         currentTask = null;
