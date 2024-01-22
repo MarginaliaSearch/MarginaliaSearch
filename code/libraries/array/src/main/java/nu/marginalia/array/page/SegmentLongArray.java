@@ -1,6 +1,5 @@
 package nu.marginalia.array.page;
 
-import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 
@@ -172,16 +171,6 @@ public class SegmentLongArray implements PartitionPage, LongArray {
             }
         }
 
-    }
-
-    @Override
-    public void advice(NativeIO.Advice advice) throws IOException {
-//        NativeIO.madvise((MappedByteBuffer) byteBuffer, advice);
-    }
-
-    @Override
-    public void advice(NativeIO.Advice advice, long start, long end) throws IOException {
-//        NativeIO.madviseRange((MappedByteBuffer) byteBuffer, advice, (int) start, (int) (end-start));
     }
 
 }

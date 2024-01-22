@@ -1,6 +1,5 @@
 package nu.marginalia.array;
 
-import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.array.algo.IntArrayBase;
 import nu.marginalia.array.algo.IntArraySearch;
 import nu.marginalia.array.algo.IntArraySort;
@@ -29,10 +28,6 @@ public interface IntArray extends IntArrayBase, IntArrayTransformations, IntArra
     ArrayRangeReference<IntArray> directRangeIfPossible(long start, long end);
 
     void force();
-
-
-    void advice(NativeIO.Advice advice) throws IOException;
-    void advice(NativeIO.Advice advice, long start, long end) throws IOException;
 
     default void close() { }
 }

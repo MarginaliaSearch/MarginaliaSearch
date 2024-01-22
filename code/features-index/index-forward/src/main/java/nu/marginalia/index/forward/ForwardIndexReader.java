@@ -1,6 +1,5 @@
 package nu.marginalia.index.forward;
 
-import com.upserve.uppend.blobs.NativeIO;
 import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
@@ -65,12 +64,7 @@ public class ForwardIndexReader {
     }
 
     private static LongArray loadData(Path dataFile) throws IOException {
-        var data = LongArrayFactory.mmapForReadingShared(dataFile);
-
-        // Total data is small, try to keep it in RAM for speed
-        data.advice(NativeIO.Advice.WillNeed);
-
-        return data;
+        return LongArrayFactory.mmapForReadingShared(dataFile);
     }
 
     public long getDocMeta(long docId) {

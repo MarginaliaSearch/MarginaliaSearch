@@ -1,8 +1,6 @@
 package nu.marginalia.array.page;
 
-import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.array.ArrayRangeReference;
-import nu.marginalia.array.IntArray;
 import nu.marginalia.array.IntArray;
 
 import javax.annotation.Nullable;
@@ -11,7 +9,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
@@ -174,16 +171,6 @@ public class SegmentIntArray implements PartitionPage, IntArray {
             }
         }
 
-    }
-
-    @Override
-    public void advice(NativeIO.Advice advice) throws IOException {
-//        NativeIO.madvise((MappedByteBuffer) byteBuffer, advice);
-    }
-
-    @Override
-    public void advice(NativeIO.Advice advice, long start, long end) throws IOException {
-//        NativeIO.madviseRange((MappedByteBuffer) byteBuffer, advice, (int) start, (int) (end-start));
     }
 
 }

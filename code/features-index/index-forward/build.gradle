@@ -19,8 +19,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:process')
 
-    implementation project(':third-party:uppend')
-
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus

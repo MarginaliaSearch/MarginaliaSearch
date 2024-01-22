@@ -1,6 +1,5 @@
 package nu.marginalia.array;
 
-import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.array.algo.LongArrayBase;
 import nu.marginalia.array.algo.LongArraySearch;
 import nu.marginalia.array.algo.LongArraySort;
@@ -8,7 +7,6 @@ import nu.marginalia.array.algo.LongArrayTransformations;
 import nu.marginalia.array.delegate.ShiftedLongArray;
 import nu.marginalia.array.page.SegmentLongArray;
 
-import java.io.IOException;
 import java.lang.foreign.Arena;
 
 
@@ -32,7 +30,4 @@ public interface LongArray extends LongArrayBase, LongArrayTransformations, Long
 
     void force();
     void close();
-
-    void advice(NativeIO.Advice advice) throws IOException;
-    void advice(NativeIO.Advice advice, long start, long end) throws IOException;
 }

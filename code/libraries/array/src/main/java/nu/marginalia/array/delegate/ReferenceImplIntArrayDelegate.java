@@ -1,6 +1,5 @@
 package nu.marginalia.array.delegate;
 
-import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.IntArray;
 
@@ -51,14 +50,4 @@ public class ReferenceImplIntArrayDelegate implements IntArray {
         delegate.force();
     }
 
-
-    @Override
-    public void advice(NativeIO.Advice advice) throws IOException {
-        delegate.advice(advice);
-    }
-
-    @Override
-    public void advice(NativeIO.Advice advice, long start, long end) throws IOException {
-        delegate.advice(advice, start, end);
-    }
 }
