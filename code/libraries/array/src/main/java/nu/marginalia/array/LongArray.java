@@ -6,6 +6,7 @@ import nu.marginalia.array.algo.LongArraySort;
 import nu.marginalia.array.algo.LongArrayTransformations;
 import nu.marginalia.array.delegate.ShiftedLongArray;
 import nu.marginalia.array.page.SegmentLongArray;
+import nu.marginalia.array.page.UnsafeLongArray;
 
 import java.lang.foreign.Arena;
 
@@ -15,7 +16,7 @@ public interface LongArray extends LongArrayBase, LongArrayTransformations, Long
 
     @Deprecated
     static LongArray allocate(long size) {
-        return SegmentLongArray.onHeap(Arena.ofShared(), size);
+        return UnsafeLongArray.onHeap(Arena.ofShared(), size);
     }
 
     default LongArray shifted(long offset) {
