@@ -122,9 +122,6 @@ public class DocumentValuator {
         if (quality + adjustment > 0) {
             return 0;
         }
-        if (quality + adjustment < -15) {
-            return -15;
-        }
 
         return quality + adjustment;
     }

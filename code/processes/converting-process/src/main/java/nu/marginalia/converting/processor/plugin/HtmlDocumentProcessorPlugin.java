@@ -63,6 +63,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final HtmlProcessorSpecializations htmlProcessorSpecializations;
 
+    private static final int MAX_DOCUMENT_LENGTH_BYTES = Integer.getInteger("converter.max-body-length",128_000);
+
     @Inject
     public HtmlDocumentProcessorPlugin(
             @Named("min-document-quality") Double minDocumentQuality,
@@ -108,8 +110,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
         }
 
-        if (documentBody.length() > 128_000) { // 128kb
-            documentBody = documentBody.substring(0, 128_000);
+        if (documentBody.length() > MAX_DOCUMENT_LENGTH_BYTES) { // 128kb
+            documentBody = documentBody.substring(0, MAX_DOCUMENT_LENGTH_BYTES);
         }
 
         Document doc = Jsoup.parse(documentBody);
@@ -143,18 +145,17 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.standard = standard;
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
 
-        // don't move this up! it uses title and quality
-        // and is run before the heavy computations below
         documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
 
-        if (isDisqualified(documentClass, url, ret)) {
-            throw new DisqualifiedException(DisqualificationReason.QUALITY);
-        }
-
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, dld);
+
         ret.features = features;
         ret.quality = documentValuator.adjustQuality(quality, features);
         ret.hashCode = dld.localitySensitiveHashCode();
+
+        if (isDisqualified(documentClass, url, quality, ret.title)) {
+            throw new DisqualifiedException(DisqualificationReason.QUALITY);
+        }
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, standard, true);
 
@@ -211,16 +212,19 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
     private static final GuardedRegex mastodonFeedRegex = GuardedRegexFactory.startsWith("/@", "^/@[^/]+/?$");
 
-    private boolean isDisqualified(DocumentClass documentClass, EdgeUrl url, ProcessedDocumentDetails ret) {
+    private boolean isDisqualified(DocumentClass documentClass,
+                                   EdgeUrl url,
+                                   double quality,
+                                   String title) {
 
         if (documentClass.enforceQualityLimits()
-            && ret.quality < minDocumentQuality)
+            && quality < minDocumentQuality)
         {
             return true;
         }
 
         // These pages shouldn't be publicly accessible
-        if ("phpinfo()".equals(ret.title)) {
+        if ("phpinfo()".equals(title)) {
             return true;
         }
 
