@@ -5,9 +5,11 @@ import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.ParamMatchingQueryFilter;
 import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
+import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -69,29 +71,29 @@ public class SearchIndexReader {
     }
 
     public void close() throws InterruptedException {
-        tryClose(forwardIndexReader::close);
-        tryClose(reverseIndexFullReader::close);
-        tryClose(reverseIndexPriorityReader::close);
+       /* Delay the invocation of close method to allow for a clean shutdown of the service.
+        *
+        * This is especially important when using Unsafe-based LongArrays, since we have
+        * concurrent access to the underlying memory-mapped file.  If pull the rug from
+        * under the caller by closing the file, we'll get a SIGSEGV.  Even with MemorySegment,
+        * we'll get ugly stacktraces if we close the file while a thread is still accessing it.
+        */
+
+        delayedCall(forwardIndexReader::close, Duration.ofMinutes(1));
+        delayedCall(reverseIndexFullReader::close, Duration.ofMinutes(1));
+        delayedCall(reverseIndexPriorityReader::close, Duration.ofMinutes(1));
     }
 
-    /* Try to close the given resource, retrying a few times if it fails.
-     *  There is a small but non-zero chance we're closing during a query,
-     *  which will cause an IllegalStateException to be thrown.  We don't
-     *  want to add synchronization to the query code, so we just retry a
-     *  few times, fingers crossed.  If worse comes to worst, and we leak resources,
-     *  the GC will clean this up eventually...
-     * */
-    private void tryClose(Runnable closeMethod) throws InterruptedException {
-        for (int i = 0; i < 5; i++) {
+
+    private void delayedCall(Runnable call, Duration delay) throws InterruptedException {
+        Thread.ofPlatform().start(() -> {
             try {
-                closeMethod.run();
-                return;
-            } catch (Exception ex) {
-                logger.error("Error closing", ex);
+                TimeUnit.SECONDS.sleep(delay.toSeconds());
+                call.run();
+            } catch (InterruptedException e) {
+                logger.error("Interrupted", e);
             }
-            TimeUnit.MILLISECONDS.sleep(50);
-        }
-        logger.error("Failed to close index");
+        });
     }
 
     /** Returns true if index data is available */
