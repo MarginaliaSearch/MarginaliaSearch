@@ -46,7 +46,7 @@ public class AnchorTextKeywords {
         return ret;
     }
 
-    public List<String> getAnchorTextKeywords(DomainLinks links, EdgeUrl url) {
+    public Map<String, Integer> getAnchorTextKeywords(DomainLinks links, EdgeUrl url) {
         var keywordsRaw = links.forUrl(url);
 
         // Extract and count keywords from anchor text
@@ -62,10 +62,10 @@ public class AnchorTextKeywords {
         }
 
         // Filter out keywords that appear infrequently
-        final List<String> keywords = new ArrayList<>(wordsWithCount.size());
+        final Map<String, Integer> keywords = new HashMap<>(wordsWithCount.size());
         for (var wordEntry : wordsWithCount.entrySet()) {
             if (wordEntry.getValue() > 2) {
-                keywords.add(wordEntry.getKey());
+                keywords.put(wordEntry.getKey(), wordEntry.getValue());
             }
         }
 
