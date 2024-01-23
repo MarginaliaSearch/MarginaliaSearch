@@ -17,7 +17,7 @@ public enum ExecutorActor {
     EXPORT_FEEDS,
     PROC_INDEX_CONSTRUCTOR_SPAWNER,
     CONVERT,
-    RESTORE_BACKUP;
+    RESTORE_BACKUP, EXPORT_SAMPLE_DATA;
 
     public String id() {
         return "fsm:" + name().toLowerCase();

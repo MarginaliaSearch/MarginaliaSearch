@@ -30,6 +30,7 @@ dependencies {
     implementation libs.guice
     implementation libs.trove
     implementation libs.commons.lang3
+    implementation libs.commons.compress
     implementation libs.notnull
     implementation libs.jsoup
 

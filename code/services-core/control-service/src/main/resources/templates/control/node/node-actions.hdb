@@ -21,6 +21,7 @@
     {{#if view.sideload-dirtree}} {{> control/node/actions/partial-sideload-dirtree }} {{/if}}
     {{#if view.export-db-data}} {{> control/node/actions/partial-export-db-data }} {{/if}}
     {{#if view.export-from-crawl-data}} {{> control/node/actions/partial-export-from-crawl-data }} {{/if}}
+    {{#if view.export-sample-data}} {{> control/node/actions/partial-export-sample-data }} {{/if}}
     {{#if view.restore-backup}} {{> control/node/actions/partial-restore-backup }} {{/if}}
     <div class="mt-10">&nbsp;</div>
 </div>

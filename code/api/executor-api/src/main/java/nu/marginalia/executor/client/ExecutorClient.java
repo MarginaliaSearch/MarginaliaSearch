@@ -100,6 +100,10 @@ public class ExecutorClient extends AbstractDynamicClient {
     public void exportAtags(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/export/atags?fid="+fid, "").blockingSubscribe();
     }
+    public void exportSampleData(Context ctx, int node, FileStorageId fid, int size, String name) {
+        post(ctx, node, "/export/sample-data?fid="+fid+"&size="+size+"&name="+URLEncoder.encode(name, StandardCharsets.UTF_8), "").blockingSubscribe();
+    }
+
     public void exportRssFeeds(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/export/feeds?fid="+fid, "").blockingSubscribe();
     }

@@ -45,6 +45,7 @@ public class ExecutorActorControlService {
                                        ExportDataActor exportDataActor,
                                        ExportAtagsActor exportAtagsActor,
                                        ExportFeedsActor exportFeedsActor,
+                                       ExportSampleDataActor exportSampleDataActor,
                                        ExportTermFreqActor exportTermFrequenciesActor,
                                        ExecutorActorStateMachines stateMachines) {
         this.messageQueueFactory = messageQueueFactory;
@@ -68,10 +69,12 @@ public class ExecutorActorControlService {
 
         register(ExecutorActor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
         register(ExecutorActor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
+
         register(ExecutorActor.EXPORT_DATA, exportDataActor);
         register(ExecutorActor.EXPORT_ATAGS, exportAtagsActor);
-        register(ExecutorActor.EXPORT_TERM_FREQUENCIES, exportTermFrequenciesActor);
         register(ExecutorActor.EXPORT_FEEDS, exportFeedsActor);
+        register(ExecutorActor.EXPORT_SAMPLE_DATA, exportSampleDataActor);
+        register(ExecutorActor.EXPORT_TERM_FREQUENCIES, exportTermFrequenciesActor);
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {

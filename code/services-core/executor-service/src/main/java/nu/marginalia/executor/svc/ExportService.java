@@ -6,6 +6,7 @@ import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.ConvertActor;
 import nu.marginalia.actor.task.ExportAtagsActor;
 import nu.marginalia.actor.task.ExportDataActor;
+import nu.marginalia.actor.task.ExportSampleDataActor;
 import nu.marginalia.storage.model.FileStorageId;
 import spark.Request;
 import spark.Response;
@@ -21,6 +22,15 @@ public class ExportService {
     public Object exportData(Request request, Response response) throws Exception {
          actorControlService.startFrom(ExecutorActor.EXPORT_DATA, new ExportDataActor.Export());
          return "";
+    }
+
+    public Object exportSampleData(Request request, Response response) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_SAMPLE_DATA, new ExportSampleDataActor.Export(
+                FileStorageId.parse(request.queryParams("fid")),
+                Integer.parseInt(request.queryParams("size")),
+                request.queryParams("name")
+        ));
+        return "";
     }
 
     public Object exportAtags(Request request, Response response) throws Exception {

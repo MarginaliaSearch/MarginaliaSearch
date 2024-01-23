@@ -27,11 +27,12 @@ public record WorkLogEntry(String id, String ts, String path, int cnt) {
         return path;
     }
 
+    /** Return the path relative to the crawl root */
     public String relPath() {
         // Compatibility trick!
 
         String relPath = fileName();
 
-        return relPath.substring(0, 2) + "/" + relPath.substring(2, 4) + "/" + relPath;
+        return STR."\{relPath.substring(0, 2)}/\{relPath.substring(2, 4)}/\{relPath}";
     }
 }

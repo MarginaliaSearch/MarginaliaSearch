@@ -86,6 +86,9 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:id/actions/export-from-crawl-data", this::exportFromCrawlData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
+        Spark.post("/public/nodes/:id/actions/export-sample-data", this::exportSampleData,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
+        );
     }
 
     public Object sideloadEncyclopedia(Request request, Response response) {
@@ -286,6 +289,15 @@ public class ControlNodeActionsService {
         return "";
     }
 
+    private Object exportSampleData(Request req, Response rsp) {
+        FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
+        int size = Integer.parseInt(req.queryParams("size"));
+        String name = req.queryParams("name");
+
+        executorClient.exportSampleData(Context.fromRequest(req), Integer.parseInt(req.params("id")), source, size, name);
+
+        return "";
+    }
 
 
     private Path parseSourcePath(String source) {

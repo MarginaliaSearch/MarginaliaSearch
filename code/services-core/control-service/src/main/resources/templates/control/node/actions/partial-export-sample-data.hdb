@@ -1,0 +1,52 @@
+<h1 class="my-3">Export Sample Data</h1>
+
+<div class="my-3 p-3 border bg-light">
+    This will create a set of sample crawl data form a larger set of crawl data.
+    The generated data will be available as an <a href="/nodes/{{node.id}}/storage/exports">export object</a>.
+</div>
+
+<form method="post" action="actions/export-sample-data" onsubmit="return confirm('Confirm export')">
+    <h2>Select a source</h2>
+
+    <table class="table">
+        <tr>
+            <th>Use</th>
+            <th>Path</th>
+            <th>Description</th>
+            <th>Details</th>
+        </tr>
+        {{#each allCrawlData}}
+            <tr>
+                <td><input {{#if active}}checked{{/if}}  {{#if new}}disabled{{/if}} {{#if delete}}disabled{{/if}}  class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
+                <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
+                <td>{{description}}
+                    <span class="text-danger">{{#if new}}[CREATING]{{/if}}</span>
+                    <span class="text-danger">{{#if delete}}[DELETING]{{/if}}</span>
+                </td>
+                <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
+            </tr>
+        {{/each}}
+    </table>
+
+    <h2>Parameters</h2>
+
+    <div class="mb-3">
+        <label for="size">Size</label>
+        <div><input type="text" name="size" id="size" pattern="\d+" /></div>
+        <small class="text-muted">How many domains to include in the sample set</small>
+    </div>
+    <div class="mb-3">
+        <label for="name">Name</label>
+        <div><input type="text" name="name" id="name" /></div>
+        <small class="text-muted">A name for the sample set.  This name will show up in the
+                                  description of the crawl data when it's imported.</small>
+    </div>
+
+    <div class="my-3 py-3">
+        <div class="row">
+            <div class="col">
+                <button type="submit" class="btn btn-primary">Export</button>
+            </div>
+        </div>
+    </div>
+</form>
