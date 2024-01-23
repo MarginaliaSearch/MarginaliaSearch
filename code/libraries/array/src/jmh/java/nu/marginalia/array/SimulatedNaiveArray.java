@@ -1,7 +1,5 @@
 package nu.marginalia.array;
 
-import com.upserve.uppend.blobs.NativeIO;
-
 import java.io.IOException;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
@@ -32,12 +30,6 @@ public class SimulatedNaiveArray implements LongArray {
     @Override
     public void close() {
     }
-
-    @Override
-    public void advice(NativeIO.Advice advice) throws IOException {}
-
-    @Override
-    public void advice(NativeIO.Advice advice, long start, long end) throws IOException {}
 
     @Override
     public long get(long pos) {
