@@ -76,7 +76,8 @@ class DomainListRefreshServiceTest {
                         "memex.marginalia.nu", 1,
                         "encyclopedia.marginalia.nu", 1,
                         "search.marginalia.nu", 1,
-                        "www.marginalia.nu", 1
+                        "www.marginalia.nu", 1,
+                        "docs.marginalia.nu", 1
                         ),
                 result);
     }
