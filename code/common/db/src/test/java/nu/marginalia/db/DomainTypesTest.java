@@ -56,10 +56,10 @@ public class DomainTypesTest {
 
         var downloadedDomains = new HashSet<>(domainTypes.getAllDomainsByType(DomainTypes.Type.TEST));
 
-        var expectedDomains = Set.of("www.marginalia.nu", "search.marginalia.nu",
+        var expectedDomains = Set.of("www.marginalia.nu", "search.marginalia.nu", "docs.marginalia.nu",
                                      "encyclopedia.marginalia.nu", "memex.marginalia.nu");
 
-        assertEquals(4, downloadedDomains.size());
+        assertEquals(expectedDomains.size(), downloadedDomains.size());
         assertEquals(Set.of(), Sets.symmetricDifference(expectedDomains, downloadedDomains));
     }
 

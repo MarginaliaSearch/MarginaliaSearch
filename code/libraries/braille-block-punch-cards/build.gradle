@@ -10,9 +10,7 @@ java {
 
 dependencies {
     implementation libs.bundles.slf4j
-
     implementation libs.notnull
-
     implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test
