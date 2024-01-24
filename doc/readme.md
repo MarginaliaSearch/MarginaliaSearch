@@ -13,6 +13,7 @@ Operational documentation is available at [🌎&nbsp;https://docs.marginalia.nu/
 ## Set-up
 
 * [📁 ../run/](../run/) - Set-up instructions
+* [📄 ide-configuration.md](ide-configuration.md) - How to set up an IDE for development
 
 ## Documents
 
