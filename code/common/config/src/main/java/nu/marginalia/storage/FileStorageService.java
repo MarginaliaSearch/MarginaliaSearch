@@ -337,7 +337,9 @@ public class FileStorageService {
     public List<FileStorage> getStorage(List<FileStorageId> ids) throws SQLException {
         List<FileStorage> ret = new ArrayList<>();
         for (var id : ids) {
-            ret.add(getStorage(id));
+            var storage = getStorage(id);
+            if (storage == null) continue;
+            ret.add(storage);
         }
         return ret;
     }

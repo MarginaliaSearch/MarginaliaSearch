@@ -33,9 +33,12 @@
 				<li class="nav-item dropdown">
 					<a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">System</a>
 					<ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/actions" title="System actions">Actions</a></li>
                         <li><a class="dropdown-item" href="/datasets" title="View and update the data sets">Data Sets</a></li>
                         <li><a class="dropdown-item" href="/domain-ranking-sets" title="View and update domain rankings ">Domain Ranking Sets</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/aborted-processes" title="View and restart aborted processes">Aborted Processes</a></li>
+                        <li><a class="dropdown-item" href="/actions" title="System actions">Actions</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/events" title="View the event log">Events</a></li>
 						<li><a class="dropdown-item" href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>
 					</ul>

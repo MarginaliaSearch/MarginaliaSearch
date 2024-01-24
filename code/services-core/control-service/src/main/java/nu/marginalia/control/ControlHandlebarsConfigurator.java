@@ -3,14 +3,36 @@ package nu.marginalia.control;
 import com.github.jknack.handlebars.*;
 import nu.marginalia.renderer.config.HandlebarsConfigurator;
 
-import java.io.IOException;
+import java.time.LocalDate;
 
 public class ControlHandlebarsConfigurator implements HandlebarsConfigurator {
     @Override
     public void configure(Handlebars handlebars) {
         handlebars.registerHelper("readableUUID", new UUIDHelper());
+        handlebars.registerHelper("shortTimestamp", new ShortTimestampHelper());
+    }
+
+}
+
+class ShortTimestampHelper implements Helper<Object> {
+    @Override
+    public Object apply(Object context, Options options) {
+        if (context == null) return "";
+        String ts = context.toString();
+
+        String retDateBase = ts.replace('T', ' ');
+
+        // if another day, return date, hour and minute
+        if (!ts.startsWith(LocalDate.now().toString())) {
+            // return hour minute and seconds
+            return retDateBase.substring(0, "YYYY-MM-DDTHH:MM".length());
+        }
+        else { // return date, hour and minute but not seconds or ms
+            return retDateBase.substring("YYYY-MM-DDT".length(), "YYYY-MM-DDTHH:MM:SS".length());
+        }
     }
 }
+
 
 /** Helper for rendering UUIDs in a more readable way */
 class UUIDHelper implements Helper<Object> {

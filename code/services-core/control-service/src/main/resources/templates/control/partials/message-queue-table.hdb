@@ -45,7 +45,7 @@
         <td><a href="/message-queue?inbox={{recipientInbox}}">{{recipientInbox}}</a></td>
         <td>{{function}}</td>
         <td>{{{readableUUID ownerInstanceFull}}}</td>
-        <td title="{{createdTimeFull}}">{{createdTime}}</td>
+        <td title="{{createdTime}}">{{shortTimestamp createdTime}}</td>
     </tr>
     <tr>
         <td>{{ttl}}</td>
@@ -57,7 +57,7 @@
         <td><a href="/message-queue?inbox={{senderInbox}}">{{senderInbox}}</a></td>
         <td style="word-break: break-all; font-family: monospace;">{{payload}}</td>
         <td>{{ownerTick}}</td>
-        <td title="{{updatedTimeFull}}">{{updatedTime}}</td>
+        <td title="{{updatedTime}}">{{shortTimestamp updatedTime}}</td>
     </tr>
     {{/each}}
     <tfoot>

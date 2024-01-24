@@ -31,8 +31,8 @@
         <tr><td>payload</td><td>
             <textarea disabled rows="6" cols="40" id="payload" name="payload">{{payload}}</textarea>
         </td><td></td></tr>
-        <tr><td>Created</td><td>{{createdTime}}</td></td><td></td></tr>
-        <tr><td>Updated</td><td>{{updatedTime}}</td></td><td></td></tr>
+        <tr><td>Created</td><td title="{{createdTime}}">{{shortTimestamp createdTime}}</td></td><td></td></tr>
+        <tr><td>Updated</td><td title="{{updatedTime}}">{{shortTimestamp updatedTime}}</td></td><td></td></tr>
         </tr>
     </table>
     {{/with}}

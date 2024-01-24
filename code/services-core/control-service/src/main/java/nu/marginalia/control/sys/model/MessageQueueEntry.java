@@ -13,8 +13,8 @@ public record MessageQueueEntry (
         String ownerInstanceFull,
         long ownerTick,
         String state,
-        String createdTimeFull,
-        String updatedTimeFull,
+        String createdTime,
+        String updatedTime,
         int ttl
 )
 {
@@ -37,31 +37,5 @@ public record MessageQueueEntry (
             case "DEAD" -> "\uD83D\uDC80";
             default -> "";
         };
-    }
-
-    public String getCreatedTime() {
-        String retDateBase = createdTimeFull.replace('T', ' ');
-
-        // if another day, return date, hour and minute
-        if (!createdTimeFull.startsWith(LocalDate.now().toString())) {
-            // return hour minute and seconds
-            return retDateBase.substring(0, "YYYY-MM-DDTHH:MM".length());
-        }
-        else { // return date, hour and minute but not seconds or ms
-            return retDateBase.substring("YYYY-MM-DDT".length(), "YYYY-MM-DDTHH:MM:SS".length());
-        }
-    }
-
-    public String getUpdatedTime() {
-        String retDateBase = updatedTimeFull.replace('T', ' ');
-
-        // if another day, return date, hour and minute
-        if (!updatedTimeFull.startsWith(LocalDate.now().toString())) {
-            // return hour minute and seconds
-            return retDateBase.substring(0, "YYYY-MM-DDTHH:MM".length());
-        }
-        else { // return date, hour and minute but not seconds or ms
-            return retDateBase.substring("YYYY-MM-DDT".length(), "YYYY-MM-DDTHH:MM:SS".length());
-        }
     }
 }

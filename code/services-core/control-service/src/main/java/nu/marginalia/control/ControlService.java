@@ -55,6 +55,7 @@ public class ControlService extends Service {
                           ControlNodeService controlNodeService,
                           ControlDomainRankingSetsService controlDomainRankingSetsService,
                           ControlActorService controlActorService,
+                          AbortedProcessService abortedProcessService,
                           ControlErrorHandler errorHandler
                       ) throws IOException {
 
@@ -69,6 +70,7 @@ public class ControlService extends Service {
         sysActionsService.register();
         dataSetsService.register();
         controlDomainRankingSetsService.register();
+        abortedProcessService.register();
 
         // node
         controlFileStorageService.register();

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+  {{> control/partials/nav}}
+  <div class="container">
+  <h1 class="my-3">Aborted Processes</h1>
+
+      <div class="p-3 my-3 border bg-light">
+          <p>
+            This form will let you restart a process that has
+            been manually aborted.  If additional automatic processing
+            was configured, it may not be restarted.  The progress
+            estimation of the restarted process may be inaccurate.
+          </p>
+          <p>
+              Items will vanish from this list after a few days
+          </p>
+      </div>
+
+      {{#unless abortedProcesses}}
+      <table class="table">
+        <tr>
+            <td colspan="3">No aborted processes</td>
+        </tr>
+      </table>
+      {{/unless}}
+
+      {{#each abortedProcesses}}
+      <table class="table border-bottom">
+          <tr>
+              <th>Name: </th><td>{{name}}</td>
+              <td>
+              <form method="post" action="/aborted-processes/{{msgId}}">
+                  <button type="submit" class="btn btn-danger" onclick="return confirm('Confirm restarting of {{name}}')">Restart</button>
+              </form>
+              </td>
+          </tr>
+          <tr>
+              <th>msgId</th>
+              <td colspan="2">
+                  <a href="/message-queue/{{msgId}}">{{msgId}}</a>
+              </td>
+          </tr>
+          <tr>
+              <th>Run Time: </th>
+              <td title="{{startDateTime}}">{{shortTimestamp startDateTime}}</td>
+              <td title="{{stopDateTime}}">{{shortTimestamp stopDateTime}}</td>
+          </tr>
+          {{#if associatedStorages}}
+          <tr><th colspan="3">Associated storages</th></tr>
+          <tr><td colspan="3">
+          <table class="table">
+          {{#each associatedStorages}}
+              <tr>
+                    <td>{{type}}</td>
+                    <td><a href="/nodes/{{base.node}}/storage/details?fid={{id}}">{{path}}</a></td>
+                    <td>{{description}}</td>
+              </tr>
+          {{/each}}
+          </table>
+          </td></tr>
+          {{/if}}
+      </table>
+      {{/each}}
+
+  </div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

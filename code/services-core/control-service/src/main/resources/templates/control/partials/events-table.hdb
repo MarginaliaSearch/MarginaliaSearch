@@ -46,7 +46,7 @@
     <tr>
         <td>{{serviceName}}</td>
         <td>{{{readableUUID instanceFull}}}</td>
-        <td title="{{eventDateTime}}">{{eventTime}}</td>
+        <td title="{{eventDateTime}}">{{shortTimestamp eventDateTime}}</td>
         <td>{{eventType}}</td>
         <td>{{eventMessage}}</td>
     </tr>
