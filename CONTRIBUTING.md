@@ -15,3 +15,6 @@ Search is essentially a fractal of interesting
 problems, so even if you don't have an idea,
 just a skillset (really any), odds are there's
 something interesting I could point you to.
+
+Make sure you check out the [ide-configuration guide](doc/ide-configuration.md)
+to get your IDE set up quickly and easily.

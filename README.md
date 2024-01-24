@@ -28,6 +28,7 @@ Before compiling, it's necessary to run [⚙️ run/setup.sh](run/setup.sh).
 This will download supplementary model data that is necessary to run the code. 
 These are also necessary to run the tests. 
 
+If you wish to hack on the code, check out [📄&nbsp;doc/ide-configuration.md](doc/ide-configuration.md).
 
 ## Hardware Requirements
 
