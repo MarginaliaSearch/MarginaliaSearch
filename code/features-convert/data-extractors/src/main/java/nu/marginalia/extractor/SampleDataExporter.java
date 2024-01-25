@@ -37,7 +37,14 @@ public class SampleDataExporter {
         List<WorkLogEntry> entriesAll = new ArrayList<>(100_000);
 
         for (var item : WorkLog.iterable(crawlerLogFile)) {
-            if (item.cnt() < 2) continue;
+            if (item.cnt() < 2) // this one's too small
+                continue;
+            if (item.cnt() > 5000) // this one's too big
+                continue;
+            if (item.relPath().length() > 90) // this one's too long
+                continue; // TAR file name limit is 100, but we add some extra for good measure
+
+            // this one's just right
             entriesAll.add(item);
         }
 
