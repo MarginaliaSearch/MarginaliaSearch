@@ -38,14 +38,15 @@ INSTALL_DIR=$(realpath ${1})
 
 echo "Would you like to set up a:"
 echo
-echo "1) barebones instance"
-echo "2) full Marginalia Search instance?"
-read -p "Enter 1 or 2: " INSTANCE_TYPE
+echo "1) barebones instance (1 node)"
+echo "2) barebones instance (2 nodes)"
+echo "3) full Marginalia Search instance?"
+read -p "Enter 1, 2 or 2: " INSTANCE_TYPE
 
 ## Validate
-if [ "${INSTANCE_TYPE}" != "1" ] && [ "${INSTANCE_TYPE}" != "2" ]; then
+if [ "${INSTANCE_TYPE}" != "1" ] && [ "${INSTANCE_TYPE}" != "2" ] && [ "${INSTANCE_TYPE}" != "3" ]; then
   echo
-  echo "ERROR: Invalid instance type, choose 1 or 2"
+  echo "ERROR: Invalid instance type, choose 1, 2 or 3"
   exit 1
 fi
 
@@ -91,6 +92,8 @@ done
 # for barebones, tell the control service to hide the marginalia app specific stuff
 if [ "${INSTANCE_TYPE}" == "1" ]; then
   echo "control.hideMarginaliaApp=true" > ${INSTALL_DIR}/conf/properties/control-service.properties
+elif [ "${INSTANCE_TYPE}" == "2" ]; then
+  echo "control.hideMarginaliaApp=true" > ${INSTALL_DIR}/conf/properties/control-service.properties
 fi
 
 echo "** Copying settings files"
@@ -100,7 +103,9 @@ echo "** Creating directories"
 mkdir -p ${INSTALL_DIR}/logs
 mkdir -p ${INSTALL_DIR}/db
 mkdir -p ${INSTALL_DIR}/index-1/{work,index,backup,storage,uploads}
-mkdir -p ${INSTALL_DIR}/index-2/{work,index,backup,storage,uploads}
+if [ "${INSTANCE_TYPE}" == "2" ] || [ "${INSTANCE_TYPE}" == "3" ]; then
+  mkdir -p ${INSTALL_DIR}/index-2/{work,index,backup,storage,uploads}
+fi
 
 echo "** Updating settings files"
 
@@ -116,7 +121,9 @@ export pval="\$\$MARIADB_PASSWORD"
 export INSTALL_DIR
 
 if [ "${INSTANCE_TYPE}" == "1" ]; then
-  envsubst < install/docker-compose-barebones.yml.template >${INSTALL_DIR}/docker-compose.yml
+  envsubst < install/docker-compose-barebones-1.yml.template >${INSTALL_DIR}/docker-compose.yml
+elif [ "${INSTANCE_TYPE}" == "2" ]; then
+  envsubst < install/docker-compose-barebones-2.yml.template >${INSTALL_DIR}/docker-compose.yml
 else
   envsubst < install/docker-compose-marginalia.yml.template >${INSTALL_DIR}/docker-compose.yml
 fi

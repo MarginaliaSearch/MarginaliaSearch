@@ -1,0 +1,186 @@
+x-svc: &service
+  env_file:
+    - "${INSTALL_DIR}/env/service.env"
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+  networks:
+    - wmsa
+  healthcheck:
+      test: curl -f http://localhost:80/internal/ping || exit 1
+      start_period: 1s
+      interval: 5s
+      timeout: 5s
+      retries: 60
+x-p1: &partition-1
+  env_file:
+    - "${INSTALL_DIR}/env/service.env"
+  healthcheck:
+      test: curl -f http://localhost:80/internal/ping || exit 1
+      start_period: 1s
+      interval: 5s
+      timeout: 5s
+      retries: 60
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+    - index-1:/idx
+    - work-1:/work
+    - backup-1:/backup
+    - storage-1:/storage
+    - uploads-1:/uploads
+  networks:
+    - wmsa
+  environment:
+    - "WMSA_SERVICE_NODE=1"
+services:
+  index-service-1:
+    <<: *partition-1
+    image: "marginalia/index-service"
+    container_name: "index-service-1"
+    depends_on:
+        control-service:
+          condition: service_healthy
+  executor-service-1:
+    <<: *partition-1
+    image: "marginalia/executor-service"
+    container_name: "executor-service-1"
+    depends_on:
+        control-service:
+          condition: service_healthy
+  query-service:
+    <<: *service
+    image: "marginalia/query-service"
+    container_name: "query-service"
+    depends_on:
+        control-service:
+          condition: service_healthy
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.search-service.entrypoints=search"
+    - "traefik.http.routers.search-service.middlewares=add-xpublic"
+    - "traefik.http.routers.search-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
+  control-service:
+    <<: *service
+    image: "marginalia/control-service"
+    container_name: "control-service"
+    depends_on:
+        mariadb:
+          condition: service_healthy
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.control-service.entrypoints=control"
+    - "traefik.http.routers.control-service.middlewares=add-xpublic"
+    - "traefik.http.routers.control-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
+  mariadb:
+    image: "mariadb:lts"
+    container_name: "mariadb"
+    env_file: "${INSTALL_DIR}/env/mariadb.env"
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    ports:
+      - "127.0.0.1:3306:3306/tcp"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u ${uval} --password=${pval}
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - wmsa
+  traefik:
+    image: "traefik:v2.10"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.search.address=:80"
+      - "--entrypoints.control.address=:81"
+    ports:
+      - "127.0.0.1:8080:80"
+      - "127.0.0.1:8081:81"
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - wmsa
+networks:
+  wmsa:
+volumes:
+  db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/db
+  logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/logs
+  model:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/model
+  conf:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/conf
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/data
+  storage-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-1/storage
+  uploads-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-1/uploads
+  index-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-1/index
+  work-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-1/work
+  backup-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-1/backup
