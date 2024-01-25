@@ -18,6 +18,8 @@
     crawl spec.  If the document has changed, it will be re-crawled.  If it has not changed, it will be skipped,
     and the previous data will be retained.  This is both faster and easier on the target server.
     </p>
+    <p><span class="text-danger">Warning</span> Ensure <a href="?view=download-sample-data">downloaded sample data</a>
+        has not been loaded onto this instance before performing this action, otherwise those domains will also be crawled!</p>
 </div>
 
 <form method="post" action="actions/recrawl">

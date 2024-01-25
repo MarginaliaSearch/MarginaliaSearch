@@ -1,8 +1,15 @@
 <h1 class="my-3">Download Sample Data</h1>
 
 <div class="my-3 p-3 border bg-light">
-This will download sample crawl data from <a href="https://downloads.marginalia.nu">downloads.marginalia.nu</a> onto Node {{node.id}}.
+<p>This will download sample crawl data from <a href="https://downloads.marginalia.nu">downloads.marginalia.nu</a> onto Node {{node.id}}.
 This is a sample of real crawl data.  It is intended for demo, testing and development purposes.  Several sets are available.
+</p>
+
+<p>
+    <span class="text-danger">Warning</span> While processing the sample data, the domains associated with it will be loaded
+    into the domain database.  This means that if you run the re-crawl action on this machine, regardless of which crawl data
+    is specified, the domains in the sample data will be crawled!
+</p>
 </div>
 
 <form method="post" action="actions/download-sample-data">
