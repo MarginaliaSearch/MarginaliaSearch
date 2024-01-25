@@ -13,7 +13,6 @@ import nu.marginalia.process.ProcessService;
 import nu.marginalia.sideload.SideloadHelper;
 import nu.marginalia.sideload.StackExchangeSideloadHelper;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
@@ -49,8 +48,7 @@ public class ConvertActor extends RecordActorPrototype {
         return switch (self) {
             case Convert (FileStorageId fid) -> {
                 var toProcess = storageService.getStorage(fid);
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var processedArea = storageService.allocateTemporaryStorage(base,
+                var processedArea = storageService.allocateStorage(
                         FileStorageType.PROCESSED_DATA, "processed-data",
                         "Processed Data; " + toProcess.description());
 
@@ -69,8 +67,7 @@ public class ConvertActor extends RecordActorPrototype {
 
                 String fileName = sourcePath.toFile().getName();
 
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var processedArea = storageService.allocateTemporaryStorage(base,
+                var processedArea = storageService.allocateStorage(
                         FileStorageType.PROCESSED_DATA, "processed-data",
                         "Processed Dirtree Data; " + fileName);
 
@@ -88,8 +85,7 @@ public class ConvertActor extends RecordActorPrototype {
 
                 String fileName = sourcePath.toFile().getName();
 
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var processedArea = storageService.allocateTemporaryStorage(base,
+                var processedArea = storageService.allocateStorage(
                         FileStorageType.PROCESSED_DATA, "processed-data",
                         "Processed Warc Data; " + fileName);
 
@@ -121,8 +117,7 @@ public class ConvertActor extends RecordActorPrototype {
 
                 String fileName = sourcePath.toFile().getName();
 
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var processedArea = storageService.allocateTemporaryStorage(base,
+                var processedArea = storageService.allocateStorage(
                         FileStorageType.PROCESSED_DATA, "processed-data",
                         "Processed Encylopedia Data; " + fileName);
 
@@ -171,8 +166,7 @@ public class ConvertActor extends RecordActorPrototype {
 
                 String fileName = sourcePath.toFile().getName();
 
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var processedArea = storageService.allocateTemporaryStorage(base,
+                var processedArea = storageService.allocateStorage(
                         FileStorageType.PROCESSED_DATA, "processed-data",
                         "Processed Stackexchange Data; " + fileName);
 

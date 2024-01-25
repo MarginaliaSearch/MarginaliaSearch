@@ -7,7 +7,6 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +40,7 @@ public class CrawlJobExtractorActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case CreateFromUrl(String description, String url) -> {
-                var base = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var storage = fileStorageService.allocateTemporaryStorage(base, FileStorageType.CRAWL_SPEC, "crawl-spec", description);
+                var storage = fileStorageService.allocateStorage(FileStorageType.CRAWL_SPEC, "crawl-spec", description);
 
                 Path urlsTxt = storage.asPath().resolve("urls.txt");
 

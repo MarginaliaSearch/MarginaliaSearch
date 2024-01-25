@@ -10,7 +10,6 @@ import nu.marginalia.actor.state.Resume;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
@@ -43,9 +42,7 @@ public class CrawlActor extends RecordActorPrototype {
                 if (storage == null) yield new Error("Bad storage id");
                 if (storage.type() != FileStorageType.CRAWL_SPEC) yield new Error("Bad storage type " + storage.type());
 
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var dataArea = storageService.allocateTemporaryStorage(
-                        base,
+                var dataArea = storageService.allocateStorage(
                         FileStorageType.CRAWL_DATA,
                         "crawl-data",
                         storage.description());

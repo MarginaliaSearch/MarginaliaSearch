@@ -8,7 +8,6 @@ import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.extractor.ExporterIf;
 import nu.marginalia.extractor.TermFrequencyExporter;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
@@ -25,8 +24,7 @@ public class ExportTermFreqActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Export(FileStorageId crawlId) -> {
-                var storageBase = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT, "term-freq-export", "Term Frequencies " + LocalDateTime.now());
+                var storage = storageService.allocateStorage(FileStorageType.EXPORT, "term-freq-export", "Term Frequencies " + LocalDateTime.now());
 
                 if (storage == null) yield new Error("Bad storage id");
                 yield new Run(crawlId, storage.id());

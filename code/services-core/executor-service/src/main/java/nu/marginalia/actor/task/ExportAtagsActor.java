@@ -23,8 +23,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Export(FileStorageId crawlId) -> {
-                var storageBase = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT, "atag-export", "Anchor Tags " + LocalDateTime.now());
+                var storage = storageService.allocateStorage(FileStorageType.EXPORT, "atag-export", "Anchor Tags " + LocalDateTime.now());
 
                 if (storage == null) yield new Error("Bad storage id");
                 yield new Run(crawlId, storage.id());

@@ -5,7 +5,6 @@ import com.github.luben.zstd.ZstdOutputStream;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginallia.index.journal.IndexJournalFileNames;
@@ -45,11 +44,9 @@ public class BackupService {
      * This backup can later be dehydrated and quickly loaded into _LIVE.
      * */
     public void createBackupFromStaging(List<FileStorageId> associatedIds) throws SQLException, IOException {
-        var backupBase = storageService.getStorageBase(FileStorageBaseType.BACKUP);
-
         String desc = "Pre-load backup snapshot " + LocalDateTime.now();
 
-        var backupStorage = storageService.allocateTemporaryStorage(backupBase,
+        var backupStorage = storageService.allocateStorage(
                 FileStorageType.BACKUP, "snapshot", desc);
 
         for (var associatedId : associatedIds) {

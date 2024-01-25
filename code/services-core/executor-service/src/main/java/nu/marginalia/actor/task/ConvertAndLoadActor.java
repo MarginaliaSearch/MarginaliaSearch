@@ -17,14 +17,12 @@ import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.svc.BackupService;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
 import nu.marginalia.mqapi.index.IndexName;
@@ -96,8 +94,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 if (storage.type() != FileStorageType.CRAWL_DATA) yield new Error("Bad storage type " + storage.type());
 
 
-                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
+                var processedArea = storageService.allocateStorage(FileStorageType.PROCESSED_DATA, "processed-data",
                         "Processed Data; " + storage.description());
 
                 storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);

@@ -8,7 +8,6 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
@@ -43,8 +42,7 @@ public class ExportDataActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Export() -> {
-                var storageBase = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT, "db-export", "DB Exports " + LocalDateTime.now());
+                var storage = storageService.allocateStorage(FileStorageType.EXPORT, "db-export", "DB Exports " + LocalDateTime.now());
 
                 if (storage == null) yield new Error("Bad storage id");
                 yield new ExportBlacklist(storage.id());

@@ -13,17 +13,13 @@ import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Testcontainers
 @Execution(ExecutionMode.SAME_THREAD)
@@ -124,8 +120,7 @@ public class FileStorageServiceTest {
 
         var storage = new FileStorageService(dataSource, 0);
 
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.STORAGE);
-        var fileStorage = storage.allocateTemporaryStorage(base, FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");
+        var fileStorage = storage.allocateStorage(FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");
         System.out.println("Allocated " + fileStorage.asPath());
         Assertions.assertTrue(Files.exists(fileStorage.asPath()));
         tempDirs.add(fileStorage.asPath());

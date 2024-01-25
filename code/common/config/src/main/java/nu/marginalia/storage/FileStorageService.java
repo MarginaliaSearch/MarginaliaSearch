@@ -223,14 +223,12 @@ public class FileStorageService {
         return maybePath;
     }
 
-    /** Allocate a temporary storage of the given type */
-    public FileStorage allocateTemporaryStorage(FileStorageBase base,
-                                                FileStorageType type,
-                                                String prefix,
-                                                String description) throws IOException, SQLException
+    /** Allocate a storage area of the given type */
+    public FileStorage allocateStorage(FileStorageType type,
+                                       String prefix,
+                                       String description) throws IOException, SQLException
     {
-        if (!base.type().permitsStorageType(type))
-            throw new RuntimeException("Attempting to allocate storage of type " + type + " in base of type " + base.type());
+        var base = getStorageBase(FileStorageBaseType.forFileStorageType(type));
 
         Path newDir = allocateDirectory(base.asPath(), prefix);
 

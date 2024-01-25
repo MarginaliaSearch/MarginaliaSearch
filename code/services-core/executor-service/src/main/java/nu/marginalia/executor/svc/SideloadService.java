@@ -5,8 +5,11 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.ConvertActor;
+import nu.marginalia.actor.task.DownloadSampleActor;
 import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.executor.upload.UploadDirItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -18,6 +21,7 @@ import java.util.List;
 
 public class SideloadService {
     private final ExecutorActorControlService actorControlService;
+    private static final Logger logger = LoggerFactory.getLogger(SideloadService.class);
 
     @Inject
     public SideloadService(ExecutorActorControlService actorControlService) {
@@ -56,4 +60,11 @@ public class SideloadService {
 
     }
 
+    public Object downloadSampleData(Request request, Response response) throws Exception {
+        String sampleSet = request.queryParams("set");
+
+        actorControlService.startFrom(ExecutorActor.DOWNLOAD_SAMPLE, new DownloadSampleActor.Run(sampleSet));
+
+        return "";
+    }
 }

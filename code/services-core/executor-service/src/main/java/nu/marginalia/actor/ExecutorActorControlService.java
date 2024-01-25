@@ -47,6 +47,7 @@ public class ExecutorActorControlService {
                                        ExportFeedsActor exportFeedsActor,
                                        ExportSampleDataActor exportSampleDataActor,
                                        ExportTermFreqActor exportTermFrequenciesActor,
+                                       DownloadSampleActor downloadSampleActor,
                                        ExecutorActorStateMachines stateMachines) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -75,6 +76,8 @@ public class ExecutorActorControlService {
         register(ExecutorActor.EXPORT_FEEDS, exportFeedsActor);
         register(ExecutorActor.EXPORT_SAMPLE_DATA, exportSampleDataActor);
         register(ExecutorActor.EXPORT_TERM_FREQUENCIES, exportTermFrequenciesActor);
+
+        register(ExecutorActor.DOWNLOAD_SAMPLE, downloadSampleActor);
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {

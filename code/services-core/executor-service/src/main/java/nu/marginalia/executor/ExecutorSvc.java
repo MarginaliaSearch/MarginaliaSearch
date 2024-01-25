@@ -71,6 +71,8 @@ public class ExecutorSvc extends Service {
         Spark.post("/sideload/stackexchange", sideloadService::sideloadStackexchange);
         Spark.post("/sideload/encyclopedia", sideloadService::sideloadEncyclopedia);
 
+        Spark.post("/action/download-sample-data", sideloadService::downloadSampleData);
+
         Spark.post("/export/atags", exportService::exportAtags);
         Spark.post("/export/sample-data", exportService::exportSampleData);
         Spark.post("/export/feeds", exportService::exportFeeds);

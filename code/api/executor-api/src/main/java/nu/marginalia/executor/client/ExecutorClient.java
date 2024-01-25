@@ -71,7 +71,6 @@ public class ExecutorClient extends AbstractDynamicClient {
         post(ctx, node,
                 "/sideload/encyclopedia?path="+ URLEncoder.encode(sourcePath.toString(), StandardCharsets.UTF_8) + "&baseUrl=" + URLEncoder.encode(baseUrl, StandardCharsets.UTF_8),
                 "").blockingSubscribe();
-
     }
 
     public void sideloadDirtree(Context ctx, int node, Path sourcePath) {
@@ -109,6 +108,10 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
     public void exportTermFrequencies(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/export/termfreq?fid="+fid, "").blockingSubscribe();
+    }
+
+    public void downloadSampleData(Context ctx, int node, String sampleSet) {
+        post(ctx, node, "/action/download-sample-data?set="+URLEncoder.encode(sampleSet, StandardCharsets.UTF_8), "").blockingSubscribe();
     }
 
     public void exportData(Context ctx, int node) {
@@ -166,4 +169,5 @@ public class ExecutorClient extends AbstractDynamicClient {
     public void yieldDomain(Context context, int node, TransferItem item) {
         post(context, node, "/transfer/yield", item).blockingSubscribe();
     }
+
 }

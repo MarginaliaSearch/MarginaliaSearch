@@ -5,11 +5,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
-import nu.marginalia.extractor.ExporterIf;
-import nu.marginalia.extractor.FeedExporter;
 import nu.marginalia.extractor.SampleDataExporter;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
@@ -30,8 +27,7 @@ public class ExportSampleDataActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Export(FileStorageId crawlId, int size, String name) -> {
-                var storageBase = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT,
+                var storage = storageService.allocateStorage(FileStorageType.EXPORT,
                         "crawl-sample-export",
                         STR."Crawl Data Sample \{name}/\{size} \{LocalDateTime.now()}"
                 );

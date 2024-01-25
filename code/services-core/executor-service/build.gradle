@@ -61,6 +61,7 @@ dependencies {
     implementation libs.zstd
     implementation libs.jsoup
     implementation libs.commons.io
+    implementation libs.commons.compress
     implementation libs.commons.lang3
     implementation libs.bundles.mariadb
 

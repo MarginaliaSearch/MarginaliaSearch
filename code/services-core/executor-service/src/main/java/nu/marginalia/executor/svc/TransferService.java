@@ -15,7 +15,6 @@ import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.apache.commons.io.FileUtils;
@@ -187,8 +186,7 @@ public class TransferService {
 
         // Ensure crawl data exists to receive into
         if (storages.isEmpty()) {
-            var storage = fileStorageService.allocateTemporaryStorage(
-                    fileStorageService.getStorageBase(FileStorageBaseType.STORAGE),
+            var storage = fileStorageService.allocateStorage(
                     FileStorageType.CRAWL_DATA,
                     "crawl-data",
                     "Crawl Data"

@@ -13,6 +13,8 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -21,9 +23,11 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class ControlNodeActionsService {
+    private static final Logger logger = LoggerFactory.getLogger(ControlNodeActionsService.class);
     private final IndexClient indexClient;
     private final RedirectControl redirectControl;
     private final FileStorageService fileStorageService;
@@ -62,6 +66,9 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
+        Spark.post("/public/nodes/:node/actions/download-sample-data", this::downloadSampleData,
+                redirectControl.renderRedirectAcknowledgement("Downloading", "..")
+        );
         Spark.post("/public/nodes/:id/actions/new-crawl", this::triggerNewCrawl,
                 redirectControl.renderRedirectAcknowledgement("Crawling", "..")
         );
@@ -89,6 +96,21 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:id/actions/export-sample-data", this::exportSampleData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
+    }
+
+    private Object downloadSampleData(Request request, Response response) {
+        String set = request.queryParams("sample");
+
+        if (set == null)
+            throw new ControlValidationError("No sample specified", "A sample data set must be specified", "..");
+        if (!Set.of("sample-s", "sample-m", "sample-l", "sample-xl").contains(set))
+            throw new ControlValidationError("Invalid sample specified", "A valid sample data set must be specified", "..");
+
+        executorClient.downloadSampleData(Context.fromRequest(request), Integer.parseInt(request.params("node")), set);
+
+        logger.info("Downloading sample data set {}", set);
+
+        return "";
     }
 
     public Object sideloadEncyclopedia(Request request, Response response) {
