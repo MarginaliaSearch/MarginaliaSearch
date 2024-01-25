@@ -41,7 +41,7 @@ echo
 echo "1) barebones instance (1 node)"
 echo "2) barebones instance (2 nodes)"
 echo "3) full Marginalia Search instance?"
-read -p "Enter 1, 2 or 2: " INSTANCE_TYPE
+read -p "Enter 1, 2 or 3: " INSTANCE_TYPE
 
 ## Validate
 if [ "${INSTANCE_TYPE}" != "1" ] && [ "${INSTANCE_TYPE}" != "2" ] && [ "${INSTANCE_TYPE}" != "3" ]; then
