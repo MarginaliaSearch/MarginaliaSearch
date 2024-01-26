@@ -20,8 +20,6 @@ worked on!
 
 Here's a demo of the set-up and operation of the self-hostable barebones mode of the search engine: [🌎&nbsp;https://www.youtube.com/watch?v=PNwMkenQQ24](https://www.youtube.com/watch?v=PNwMkenQQ24)
 
-The search engine also powers [Marginalia Search](https://search.marginalia.nu).
-
 ## Set up
 
 To set up a local test environment, follow the instructions in [📄 run/readme.md](run/readme.md)!
