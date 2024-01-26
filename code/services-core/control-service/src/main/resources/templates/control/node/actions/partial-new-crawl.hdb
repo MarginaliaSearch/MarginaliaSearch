@@ -2,7 +2,7 @@
 
 {{#unless allCrawlSpecs}}
     No crawling specifications have been created.  You must create a crawl spec before you can crawl.
-    <a href="?view=new-crawl-spadaecs">Create a crawl spec</a>.
+    <a href="?view=new-crawl-specs">Create a crawl spec</a>.
 {{/unless}}
 
 {{#if allCrawlSpecs}}
