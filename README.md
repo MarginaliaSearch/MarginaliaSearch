@@ -18,6 +18,10 @@ for your own data (either crawled or side-loaded).  At present the logic isn't v
 made are based on the Marginalia project's goals, but additional configurability is being
 worked on!
 
+Here's a demo of the set-up and operation of the self-hostable barebones mode of the search engine: [🌎&nbsp;https://www.youtube.com/watch?v=PNwMkenQQ24](https://www.youtube.com/watch?v=PNwMkenQQ24)
+
+The search engine also powers [Marginalia Search](https://search.marginalia.nu).
+
 ## Set up
 
 To set up a local test environment, follow the instructions in [📄 run/readme.md](run/readme.md)!
