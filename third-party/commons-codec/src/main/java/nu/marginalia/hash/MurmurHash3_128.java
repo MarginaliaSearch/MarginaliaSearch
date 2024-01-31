@@ -21,6 +21,8 @@ package nu.marginalia.hash;
  *  that minimizes allocations.
  * */
 public class MurmurHash3_128 {
+    private static final boolean NO_FLATTEN_UNICODE =
+            Boolean.getBoolean("system.noFlattenUnicode");
 
     /**
      * A default seed to use for the murmur hash algorithm.
@@ -53,6 +55,18 @@ public class MurmurHash3_128 {
      */
     public long hashNearlyASCII(String data) {
         return hash64(data, 0, data.length(), data.hashCode());
+    }
+
+    /** Select the hash function appropriate for keywords based system configuration,
+     * and hash the keyword.
+     */
+    public long hashKeyword(String data) {
+        if (NO_FLATTEN_UNICODE) {
+            return hash64(data, 0, data.length(), DEFAULT_SEED);
+        }
+        else {
+            return hashNearlyASCII(data);
+        }
     }
 
     /** Hash the bytes; fold the 128 bit hash into 64 bits by xor:ing msw and lsw */

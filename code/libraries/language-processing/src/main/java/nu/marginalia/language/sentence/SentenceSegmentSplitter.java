@@ -23,8 +23,26 @@ public class SentenceSegmentSplitter {
     }
 
     private static final CharMatcher noiseCharacterMatcher = CharMatcher.anyOf("/*-");
-    private static final Pattern wordBreakPattern = Pattern.compile("([^/_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
 
+    private static final Pattern wordBreakPattern;
+
+    static {
+        if (Boolean.getBoolean("system.noFlattenUnicode")) {
+            // If we don't flatten unicode, we split words on whitespace and punctuation.
+            wordBreakPattern = Pattern.compile("(\\s+|[|]|([.,;\\-]+(\\s+|$)))");
+        }
+        else {
+            // If we flatten unicode, we do this...
+            // FIXME: This can almost definitely be cleaned up and simplified.
+            wordBreakPattern = Pattern.compile("([^/_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
+        }
+    }
+
+    /** Split a sentence into words and separators.
+     *
+     * @param segment The sentence to split
+     * @return A list of words and separators
+     */
     public static SeparatedSentence splitSegment(String segment) {
         String flatSegment = AsciiFlattener.flattenUnicode(segment);
 

@@ -1,6 +1,5 @@
 package nu.marginalia.index.svc;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
@@ -83,6 +82,6 @@ public class SearchTermsService {
 
     static MurmurHash3_128 hasher = new MurmurHash3_128();
     public long getWordId(String s) {
-        return hasher.hashNearlyASCII(s);
+        return hasher.hashKeyword(s);
     }
 }

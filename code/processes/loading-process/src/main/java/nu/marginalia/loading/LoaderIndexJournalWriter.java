@@ -76,7 +76,7 @@ public class LoaderIndexJournalWriter {
             while (i < buffer.length
                 && pointer.advancePointer())
             {
-                final long hashedKeyword = hasher.hashNearlyASCII(pointer.getKeyword());
+                final long hashedKeyword = hasher.hashKeyword(pointer.getKeyword());
 
                 buffer[i++] = hashedKeyword;
                 buffer[i++] = pointer.getMetadata();

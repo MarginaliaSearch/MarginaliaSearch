@@ -2,7 +2,12 @@ package nu.marginalia.language.encoding;
 
 public class AsciiFlattener {
 
+    private static final boolean NO_FLATTEN_UNICODE =
+            Boolean.getBoolean("system.noFlattenUnicode");
+
     public static String flattenUnicode(String s) {
+        if (NO_FLATTEN_UNICODE)
+            return s;
 
         if (isPlainAscii(s)) {
             return s;
