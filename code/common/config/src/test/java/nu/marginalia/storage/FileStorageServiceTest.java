@@ -118,6 +118,10 @@ public class FileStorageServiceTest {
     public void testAllocateTemp() throws IOException, SQLException {
         String name = "test-" + UUID.randomUUID();
 
+        // ensure a base exists
+        var base = fileStorageService.createStorageBase(name, createTempDir(), FileStorageBaseType.STORAGE);
+        tempDirs.add(base.asPath());
+
         var storage = new FileStorageService(dataSource, 0);
 
         var fileStorage = storage.allocateStorage(FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");

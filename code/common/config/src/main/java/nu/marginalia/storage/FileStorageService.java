@@ -230,6 +230,9 @@ public class FileStorageService {
     {
         var base = getStorageBase(FileStorageBaseType.forFileStorageType(type));
 
+        if (null == base)
+            throw new IllegalStateException("No storage base for type " + type + " on node " + node);
+
         Path newDir = allocateDirectory(base.asPath(), prefix);
 
         String relDir = base.asPath().relativize(newDir).normalize().toString();
