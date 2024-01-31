@@ -28,7 +28,7 @@ public class LanguageFilter {
 
     /** Returns the probability the language is in English */
     public double dictionaryAgreement(DocumentLanguageData dld) {
-        if(LANGUAGE_DETECTION_MODEL_VERSION == -1) return 1.0;
+        if(LANGUAGE_DETECTION_MODEL_VERSION < 0) return 1.0;
 
         if (LANGUAGE_DETECTION_MODEL_VERSION == 1) {
             return languagePredictionModel2.predictEnglish(dld);
