@@ -79,6 +79,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
+    // For testing
+    public DomainCrawlFrontier getCrawlFrontier() {
+        return crawlFrontier;
+    }
+
     public int fetch() {
         return fetch(new DomainLinks(), new CrawlDataReference());
     }

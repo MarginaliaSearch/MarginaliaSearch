@@ -284,6 +284,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         for (var frame : doc.getElementsByTag("iframe")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
         }
+        for (var meta : doc.select("meta[http-equiv=refresh]")) {
+            linkParser.parseMetaRedirect(baseUrl, meta).ifPresent(lp::accept);
+        }
         for (var link : doc.select("link[rel=alternate]")) {
             feedExtractor
                     .getFeedFromAlternateTag(baseUrl, link)

@@ -111,6 +111,10 @@ public class DomainCrawlFrontier {
         long hashCode = hasher.hashNearlyASCII(url.toString());
         return visited.contains(hashCode);
     }
+    public boolean isKnown(EdgeUrl url) {
+        long hashCode = hasher.hashNearlyASCII(url.toString());
+        return known.contains(hashCode);
+    }
 
     public boolean filterLink(EdgeUrl url) {
         return linkFilter.test(url);
@@ -161,6 +165,9 @@ public class DomainCrawlFrontier {
         }
         for (var link : parsed.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, link).ifPresent(this::addToQueue);
+        }
+        for (var meta : parsed.select("meta[http-equiv=refresh]")) {
+            linkParser.parseMetaRedirect(baseUrl, meta).ifPresent(this::addToQueue);
         }
         for (var link : parsed.getElementsByTag("iframe")) {
             linkParser.parseFrame(baseUrl, link).ifPresent(this::addToQueue);

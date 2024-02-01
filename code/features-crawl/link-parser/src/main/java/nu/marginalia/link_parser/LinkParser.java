@@ -20,9 +20,11 @@ import java.util.regex.Pattern;
 public class LinkParser {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final List<String> blockPrefixList = List.of(
+    // These are schemas that we don't want to try to index
+    private final List<String> blockedSchemaList = List.of(
             "mailto:", "javascript:", "tel:", "itpc:", "#", "file:");
 
+    // These are file suffixes we suspect may be a binary file
     private final List<String> binarySuffixList = List.of(
             ".pdf", ".mp3", ".wmv", ".avi", ".zip", ".7z",
             ".mpv", ".mp4", ".avi", ".mkv", ".tiff", ".dat", ".tar",
@@ -94,6 +96,30 @@ public class LinkParser {
                 .map(URI::normalize)
                 .map(this::renormalize)
                 .flatMap(this::createEdgeUrl);
+    }
+
+    @Contract(pure=true)
+    public Optional<EdgeUrl> parseMetaRedirect(EdgeUrl baseUrl, Element meta) {
+        return Optional.of(meta)
+                .map(l -> l.attr("content"))
+                .flatMap(this::getMetaRedirectUrl)
+                .map(link -> resolveRelativeUrl(baseUrl, link))
+                .flatMap(this::createURI)
+                .map(URI::normalize)
+                .map(this::renormalize)
+                .flatMap(this::createEdgeUrl);
+    }
+
+    // Matches the format of a meta http-equiv=refresh content tag, e.g. '10; url=http://example.com/'
+    private static Pattern metaRedirectPattern = Pattern.compile("^\\d+\\s*;\\s*url=(\\S+)\\s*$");
+    /** Parse the URL from a meta refresh tag, returning only the URL part and
+     * discarding the rest.  Returns Optional.empty() on parse error. */
+    private Optional<String> getMetaRedirectUrl(String content) {
+        var matcher = metaRedirectPattern.matcher(content);
+
+        if (!matcher.find())
+            return Optional.empty();
+        return Optional.ofNullable(matcher.group(1));
     }
 
     @SneakyThrows
@@ -191,7 +217,7 @@ public class LinkParser {
         }
         href = href.toLowerCase();
 
-        if (blockPrefixList.stream().anyMatch(href::startsWith)) {
+        if (blockedSchemaList.stream().anyMatch(href::startsWith)) {
             return false;
         }
         if (hasBinarySuffix(href)) {

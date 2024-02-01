@@ -17,18 +17,19 @@ import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.netpreserve.jwarc.*;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("slow")
 class CrawlerRetreiverTest {
@@ -206,6 +207,62 @@ class CrawlerRetreiverTest {
         data.stream().filter(CrawledDocument.class::isInstance)
                 .map(CrawledDocument.class::cast)
                 .forEach(doc -> System.out.println(doc.url + "\t" + doc.crawlerStatus + "\t" + doc.httpStatus));
+
+    }
+
+    @Test
+    public void testRedirect() throws IOException, URISyntaxException {
+        var specs = CrawlSpecRecord
+                .builder()
+                .crawlDepth(3)
+                .domain("www.marginalia.nu")
+                .urls(List.of(
+                        "https://www.marginalia.nu/log/06-optimization.gmi"
+                        ))
+                .build();
+
+        List<SerializableCrawlData> data = new ArrayList<>();
+
+        tempFileWarc1 = Files.createTempFile("crawling-process", ".warc");
+
+        DomainCrawlFrontier frontier = doCrawl(tempFileWarc1, specs);
+
+        assertTrue(frontier.isVisited(new EdgeUrl("https://www.marginalia.nu/log/06-optimization.gmi/")));
+        assertTrue(frontier.isVisited(new EdgeUrl("https://www.marginalia.nu/log/06-optimization.gmi")));
+        assertTrue(frontier.isVisited(new EdgeUrl("https://www.marginalia.nu/")));
+
+        assertFalse(frontier.isVisited(new EdgeUrl("https://www.marginalia.nu/log/06-optimization/")));
+        assertTrue(frontier.isKnown(new EdgeUrl("https://www.marginalia.nu/log/06-optimization/")));
+
+        convertToParquet(tempFileWarc1, tempFileParquet1);
+
+        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1)) {
+            while (stream.hasNext()) {
+                if (stream.next() instanceof CrawledDocument doc) {
+                    data.add(doc);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // The URL https://www.marginalia.nu/log/06-optimization.gmi
+        // redirects to https://www.marginalia.nu/log/06-optimization.gmi/  (note the trailing slash)
+        //
+        // Ensure that the redirect is followed, and that the trailing slash is added
+        // to the url as reported in the parquet file.
+
+        var fetchedUrls =
+                data.stream()
+                        .filter(CrawledDocument.class::isInstance)
+                        .map(CrawledDocument.class::cast)
+                        .peek(doc -> System.out.println(doc.url))
+                        .map(doc -> doc.url)
+                        .collect(Collectors.toSet());
+
+        assertEquals(Set.of("https://www.marginalia.nu/",
+                            "https://www.marginalia.nu/log/06-optimization.gmi/"),
+                    fetchedUrls);
 
     }
 
@@ -418,11 +475,15 @@ class CrawlerRetreiverTest {
         }
     }
 
-    private void doCrawl(Path tempFileWarc1, CrawlSpecRecord specs) {
+    @NotNull
+    private DomainCrawlFrontier doCrawl(Path tempFileWarc1, CrawlSpecRecord specs) {
         try (var recorder = new WarcRecorder(tempFileWarc1)) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).fetch();
+            var crawler = new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder);
+            crawler.fetch();
+            return crawler.getCrawlFrontier();
         } catch (IOException ex) {
             Assertions.fail(ex);
+            return null; // unreachable
         }
     }
 }
