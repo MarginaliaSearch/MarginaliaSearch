@@ -4,11 +4,19 @@ The crawling process downloads HTML and saves them into per-domain snapshots.  T
 and ignores other types of documents, such as PDFs.  Crawling is done on a domain-by-domain basis, and the crawler
 does not follow links to other domains within a single job.
 
+The crawler stores data from crawls in-progress in a WARC file.  Once the crawl is complete, the WARC file is
+converted to a parquet file, which is then used by the [converting process](../converting-process/).  The intermediate
+WARC file is not used by any other process, but kept to be able to recover the state of a crawl in case of a crash or
+other failure.
+
+If configured so, these crawls may be retained.  This is not the default behavior, as the WARC format is not very dense,
+and the parquet files are much more efficient.  However, the WARC files are useful for debugging and integration with
+other tools.
+
 ## Robots Rules
 
 A significant part of the crawler is dealing with `robots.txt` and similar, rate limiting headers; especially when these
-are not served in a standard way (which is very common).  [RFC9390](https://www.rfc-editor.org/rfc/rfc9309.html) as well 
-as Google's [Robots.txt Specifications](https://developers.google.com/search/docs/advanced/robots/robots_txt) are good references.
+are not served in a standard way (which is very common).  [RFC9390](https://www.rfc-editor.org/rfc/rfc9309.html) as well as Google's [Robots.txt Specifications](https://developers.google.com/search/docs/advanced/robots/robots_txt) are good references.
 
 ## Re-crawling
 
@@ -20,7 +28,6 @@ documents from each domain, to avoid wasting time and resources on domains that 
 ## Sitemaps and rss-feeds
 
 On top of organic links, the crawler can use sitemaps and rss-feeds to discover new documents.
-
 
 ## Central Classes
 
