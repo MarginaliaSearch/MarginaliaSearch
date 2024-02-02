@@ -56,9 +56,16 @@ public class SideloaderProcessing {
                 null
         );
 
+        // Give the document processing preferential treatment if this is a sideloaded wiki, since we
+        // truncate the document to the first paragraph, which typically is too short to be included
+        // on its own.
+        final DocumentClass documentClass;
+        if (type == GeneratorType.WIKI) documentClass = DocumentClass.SIDELOAD;
+        else documentClass = DocumentClass.NORMAL;
+
         var ret = new ProcessedDocument();
         try {
-            var details = htmlProcessorPlugin.createDetails(crawledDoc, DocumentClass.NORMAL);
+            var details = htmlProcessorPlugin.createDetails(crawledDoc, documentClass);
 
             ret.words = details.words();
 

@@ -6,10 +6,16 @@ package nu.marginalia.converting.processor;
 public enum DocumentClass {
     NORMAL,
     EXTERNALLY_LINKED_ONCE,
-    EXTERNALLY_LINKED_MULTI;
+    EXTERNALLY_LINKED_MULTI,
+    /** A document that is not linked to, but is sideloaded.  Ignore most inclusion checks. */
+    SIDELOAD;
 
     public boolean enforceQualityLimits() {
-        return this != EXTERNALLY_LINKED_MULTI;
+        if (this == SIDELOAD)
+            return false;
+        if (this == EXTERNALLY_LINKED_MULTI)
+            return false;
+        return true;
     }
 
     /** This factor is multiplied onto the length of the document
@@ -20,6 +26,7 @@ public enum DocumentClass {
             case NORMAL -> 1.0;
             case EXTERNALLY_LINKED_ONCE -> 2.;
             case EXTERNALLY_LINKED_MULTI -> 10.;
+            case SIDELOAD -> 25.;
         };
     }
 }
