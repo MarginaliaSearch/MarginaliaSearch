@@ -36,6 +36,8 @@ unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP
 download_model data/asn-data-raw-table https://thyme.apnic.net/current/data-raw-table
 download_model data/asn-used-autnums https://thyme.apnic.net/current/data-used-autnums
 
+download_model data/public_suffix_list.dat https://publicsuffix.org/list/public_suffix_list.dat
+
 download_model data/adblock.txt https://downloads.marginalia.nu/data/adblock.txt
 if [ ! -f data/suggestions.txt ]; then
   download_model data/suggestions.txt.gz https://downloads.marginalia.nu/data/suggestions.txt.gz
