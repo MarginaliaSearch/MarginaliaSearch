@@ -26,7 +26,7 @@ public class IndexJournalWriterPagingImpl implements IndexJournalWriter {
      *
      * The limit is set to 1,000,000, which amounts to about 1 GB on disk.
      */
-    private static final int SWITCH_LIMIT = 1_000_000;
+    private static final int SWITCH_LIMIT = Integer.getInteger("loader.journal-page-size", 1_000_000);
 
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
