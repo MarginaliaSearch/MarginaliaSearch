@@ -53,30 +53,37 @@ public class IndexResultDecorator {
 
         List<DecoratedSearchResultItem> decoratedItems = new ArrayList<>();
         for (var result : rawResults) {
-            var linkData = urlDetailsById.get(result.getDocumentId());
-            decoratedItems.add(createCombinedItem(result, linkData, rankingContext));
+            var docData = urlDetailsById.get(result.getDocumentId());
+
+            if (null == docData) {
+                logger.warn("No data for document id {}", result.getDocumentId());
+                continue;
+            }
+
+            decoratedItems.add(createCombinedItem(result, docData, rankingContext));
         }
 
-        assert decoratedItems.size() == rawResults.size() : "Result list shrunk during decoration?";
+        if (decoratedItems.size() != rawResults.size())
+            logger.warn("Result list shrunk during decoration?");
 
         return decoratedItems;
     }
 
     private DecoratedSearchResultItem createCombinedItem(SearchResultItem result,
-                                                         DocdbUrlDetail linkData,
+                                                         DocdbUrlDetail docData,
                                                          ResultRankingContext rankingContext) {
         return new DecoratedSearchResultItem(
                 result,
-                linkData.url(),
-                linkData.title(),
-                linkData.description(),
-                linkData.urlQuality(),
-                linkData.format(),
-                linkData.features(),
-                linkData.pubYear(),
-                linkData.dataHash(),
-                linkData.wordsTotal(),
-                valuator.calculateSearchResultValue(result.keywordScores, linkData.wordsTotal(), rankingContext)
+                docData.url(),
+                docData.title(),
+                docData.description(),
+                docData.urlQuality(),
+                docData.format(),
+                docData.features(),
+                docData.pubYear(),
+                docData.dataHash(),
+                docData.wordsTotal(),
+                valuator.calculateSearchResultValue(result.keywordScores, docData.wordsTotal(), rankingContext)
         );
 
     }
