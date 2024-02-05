@@ -41,14 +41,14 @@ public class ReversePreindex {
      */
     public static ReversePreindex constructPreindex(IndexJournalReader reader,
                                                     DocIdRewriter docIdRewriter,
-                                                    Path destDir) throws IOException
+                                                    Path workDir) throws IOException
     {
-        Path segmentWordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
-        Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
-        Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
+        Path segmentWordsFile = Files.createTempFile(workDir, "segment_words", ".dat");
+        Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
+        Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
         var segments = ReversePreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, docIdRewriter, segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, segments);
         return new ReversePreindex(segments, docs);
     }
 

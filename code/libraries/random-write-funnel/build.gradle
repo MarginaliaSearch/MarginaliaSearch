@@ -9,6 +9,8 @@ java {
 }
 
 dependencies {
+    implementation project(':code:libraries:array')
+
     implementation libs.bundles.slf4j
 
     testImplementation libs.bundles.slf4j.test

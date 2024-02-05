@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.rwf.RandomFileAssembler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ public class ReversePreindexDocuments {
     final Path file;
     public  final LongArray documents;
     private static final int RECORD_SIZE_LONGS = 2;
-    private static final Logger logger= LoggerFactory.getLogger(ReversePreindexDocuments.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReversePreindexDocuments.class);
 
     public ReversePreindexDocuments(LongArray documents, Path file) {
         this.documents = documents;
@@ -32,11 +33,12 @@ public class ReversePreindexDocuments {
 
     public static ReversePreindexDocuments construct(
             Path docsFile,
+            Path workDir,
             IndexJournalReader reader,
             DocIdRewriter docIdRewriter,
             ReversePreindexWordSegments segments) throws IOException {
 
-        createUnsortedDocsFile(docsFile, reader, segments, docIdRewriter);
+        createUnsortedDocsFile(docsFile, workDir, reader, segments, docIdRewriter);
 
         LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
         sortDocsFile(docsFileMap, segments);
@@ -58,12 +60,14 @@ public class ReversePreindexDocuments {
     }
 
     private static void createUnsortedDocsFile(Path docsFile,
+                                               Path workDir,
                                                IndexJournalReader reader,
                                                ReversePreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
-        long fileSize = RECORD_SIZE_LONGS * segments.totalSize();
 
-        try (LongArray outArray = LongArrayFactory.onHeapConfined(fileSize)) {
+        long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
+
+        try (RandomFileAssembler assembly = RandomFileAssembler.create(workDir, fileSizeLongs)) {
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
@@ -77,12 +81,12 @@ public class ReversePreindexDocuments {
 
                     long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
 
-                    outArray.set(offset + 0, rankEncodedId);
-                    outArray.set(offset + 1, wordMeta);
+                    assembly.put(offset + 0, rankEncodedId);
+                    assembly.put(offset + 1, wordMeta);
                 }
             }
 
-            outArray.write(docsFile);
+            assembly.write(docsFile);
         }
     }
 

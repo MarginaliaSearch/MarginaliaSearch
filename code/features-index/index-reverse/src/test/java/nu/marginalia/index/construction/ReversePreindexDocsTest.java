@@ -1,6 +1,5 @@
 package nu.marginalia.index.construction;
 
-import nu.marginalia.array.algo.SortingContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +53,7 @@ class ReversePreindexDocsTest {
         );
 
         var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(-100, 0, 2, new long[] { -0xF00BA3L, 0 }),
@@ -83,7 +82,7 @@ class ReversePreindexDocsTest {
         );
 
         var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(4, 0, 4, new long[] { -0xF00BA3L, 0, -0xF00BA3L, 0 })
@@ -109,7 +108,7 @@ class ReversePreindexDocsTest {
         );
 
         var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(-100, 0, 4, new long[] { -0xF00BA3L, 0, 0xF00BA4L, 0 }),

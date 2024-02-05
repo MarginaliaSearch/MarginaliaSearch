@@ -26,7 +26,7 @@ public class RandomWriteFunnel implements AutoCloseable {
     private final Path tempDir;
     private final int binSize;
 
-    public RandomWriteFunnel(Path tempDir, int binSize) throws IOException {
+    RandomWriteFunnel(Path tempDir, int binSize) throws IOException {
         this.binSize = binSize;
         this.tempDir = tempDir;
 
