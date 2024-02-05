@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -53,6 +54,9 @@ public class RandomWriteFunnel implements AutoCloseable {
     public void write(ByteChannel o) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocateDirect(binSize*8);
 
+        // This is crucial for compatibility other construction methods:
+        buffer.order(ByteOrder.nativeOrder());
+
         for (var bin : bins) {
             buffer.clear();
             bin.eval(buffer);
@@ -78,6 +82,7 @@ public class RandomWriteFunnel implements AutoCloseable {
 
         DataBin(Path tempDir, int size) throws IOException {
             buffer = ByteBuffer.allocateDirect(360_000);
+
             this.size = size;
             file = Files.createTempFile(tempDir, "scatter-writer", ".dat").toFile();
             channel = (FileChannel) Files.newByteChannel(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.READ);

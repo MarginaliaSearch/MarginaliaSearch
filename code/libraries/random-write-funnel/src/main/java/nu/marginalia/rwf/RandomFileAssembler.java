@@ -26,7 +26,7 @@ public interface RandomFileAssembler extends AutoCloseable {
                                       long totalSize) throws IOException {
         // If the system is configured to conserve memory, we use temp files
         if (Boolean.getBoolean("system.conserve-memory")) {
-            return ofTempFiles(workDir);
+            return ofTempFiles(workDir, totalSize);
         }
 
         // If the file is small, we use straight mmap
@@ -44,7 +44,7 @@ public interface RandomFileAssembler extends AutoCloseable {
      *  This has negligible memory overhead, but is slower than in-memory
      *  or mmap for small files.
      */
-    static RandomFileAssembler ofTempFiles(Path workDir) throws IOException {
+    static RandomFileAssembler ofTempFiles(Path workDir, long sizeInLongs) throws IOException {
 
         return new RandomFileAssembler() {
             private final RandomWriteFunnel funnel = new RandomWriteFunnel(workDir, 10_000_000);
@@ -57,6 +57,9 @@ public interface RandomFileAssembler extends AutoCloseable {
             public void write(Path file) throws IOException {
                 try (var channel = Files.newByteChannel(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
                     funnel.write(channel);
+
+                    // It's very likely we'll have overshot the size a bit, truncate to the correct size
+                    channel.truncate(8 * sizeInLongs);
                 }
             }
 
