@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +57,10 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
         };
     }
 
+    /** The file has a non-compressed header at the beginning of the file.
+     * Write a placeholder first to reserve the bytes, and position the
+     * channel after the header
+     */
     private static void writeHeaderPlaceholder(FileChannel fileStream) throws IOException {
         var buffer = ByteBuffer.allocate(IndexJournalReader.FILE_HEADER_SIZE_BYTES);
 
@@ -72,7 +75,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
 
     @Override
     @SneakyThrows
-    public void put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
+    public int put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
         if (dataBuffer.capacity() - dataBuffer.position() < 3*8) {
             dataBuffer.flip();
             compressingStream.compress(dataBuffer);
@@ -98,6 +101,10 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
         }
 
         numEntries++;
+
+        final int bytesWritten = 8 * ( /*header = 3 longs */ 3 + entry.size());
+
+        return bytesWritten;
     }
 
     public void close() throws IOException {
@@ -113,8 +120,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
         compressingStream.close();
 
 
-        // Finalize the file by writing a header
-
+        // Finalize the file by writing a header in the beginning
         ByteBuffer header = ByteBuffer.allocate(16);
         header.putLong(numEntries);
         header.putLong(0);

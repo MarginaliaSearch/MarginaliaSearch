@@ -18,20 +18,20 @@ public class IndexJournalWriterPagingImpl implements IndexJournalWriter {
     private final Path outputDir;
     private int fileNumber = 0;
 
-    /* Number of entries to write to each file before switching to the next.
+    /** The maximum size of a journal file, in uncompressed bytes.
+     *  This should be safely below 2 GB, since we assume in the construction
+     *  of the index that this is the case!  The smaller these files are, the
+     *  slower the index construction will be, but at the same time, if 2 GB
+     *  is exceeded, the index construction will *quietly* fail.
      *
-     * A large limit increases the memory foot print of the index, but reduces
-     * the construction time.  A small number increases the memory footprint, but
-     * reduces the construction time.
-     *
-     * The limit is set to 1,000,000, which amounts to about 1 GB on disk.
+     *  Flap flap, Icarus!
      */
-    private static final int SWITCH_LIMIT = Integer.getInteger("loader.journal-page-size", 1_000_000);
+    private static final long sizeLimitBytes = 1_000_000_000; // 1 GB
 
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private IndexJournalWriter currentWriter = null;
-    private int inputsForFile = 0;
+    private long bytesWritten = 0;
 
     public IndexJournalWriterPagingImpl(Path outputDir) throws IOException {
         this.outputDir = outputDir;
@@ -49,12 +49,16 @@ public class IndexJournalWriterPagingImpl implements IndexJournalWriter {
 
     @Override
     @SneakyThrows
-    public void put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
-        if (++inputsForFile > SWITCH_LIMIT) {
-            inputsForFile = 0;
+    public int put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
+        if (bytesWritten >= sizeLimitBytes) {
+            bytesWritten = 0;
             switchToNextWriter();
         }
-        currentWriter.put(header, entry);
+
+        int writtenNow = currentWriter.put(header, entry);
+        bytesWritten += writtenNow;
+
+        return writtenNow;
     }
 
     public void close() throws IOException {

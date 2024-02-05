@@ -12,9 +12,16 @@ import java.io.IOException;
  * @see IndexJournalWriterPagingImpl
  */
 public interface IndexJournalWriter extends AutoCloseable {
-    void put(IndexJournalEntryHeader header, IndexJournalEntryData entry);
-    default void put(IndexJournalEntry entry) {
-        put(entry.header(), entry.data());
+    /** Write an entry to the journal.
+     *
+     * @param header the header of the entry
+     * @param entry the data of the entry
+     *
+     * @return the number of bytes written
+     */
+    int put(IndexJournalEntryHeader header, IndexJournalEntryData entry);
+    default int put(IndexJournalEntry entry) {
+        return put(entry.header(), entry.data());
     }
 
     void close() throws IOException;
