@@ -3,6 +3,17 @@
 The converting process reads crawl data and extracts information to be fed into the index,
 such as keywords, metadata, urls, descriptions...
 
+The converter reads crawl data in the form of parquet files, and writes the extracted data to parquet 
+files on a different format.  These files are then passed to the loader process, which does additional 
+processing needed to feed the data into the index.
+
+The reason for splitting the process into two parts is that the heavier converting process can be terminated
+and restarted without losing progress, while the lighter loader process needs to be run in a single
+go (or restarted if it crashes/terminates).
+
+The converter output is also in general more portable and can be used for different tasks, meanwhile the
+loader's output is heavily tailored to the index and not much use for anything else.
+
 ## Structure
 
 Most information is extracted from the document itself within `DocumentProcessor`, but some information is extracted from the
