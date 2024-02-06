@@ -18,4 +18,3 @@ or lack an artifact, or to override some default that is inappropriate for the t
 
 ### Monkey Patched
 * [Stanford OpenNLP](monkey-patch-opennlp/) - Apache-2.0
-* [GSON](monkey-patch-gson/) - Apache-2.0
