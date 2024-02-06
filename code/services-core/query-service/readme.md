@@ -1,4 +1,5 @@
-The query service parses search queries and delegates work to the index service.
+The query service parses search queries and delegates work to the 
+index services.
 
 The [index-service](../index-service) speaks a lower level query specification language
 that is difficult to build an application out of.  The query service exists as an interpreter

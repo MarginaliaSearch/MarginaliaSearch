@@ -45,10 +45,7 @@ the executor service, which is controlled by the control service.
 * * [crawling-process](processes/crawling-process)
 * * [converting-process](processes/converting-process)
 * * [loading-process](processes/loading-process)
-
-#### Tools
-
-* * [term-frequency-extractor](tools/term-frequency-extractor)
+* * [index-constructor-process](processes/index-constructor-process)
 
 ### Features
 
