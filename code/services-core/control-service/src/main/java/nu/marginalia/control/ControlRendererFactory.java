@@ -34,6 +34,7 @@ public class ControlRendererFactory {
             baseRenderer.render(context,
                     Map.of("global-context",
                             Map.of(
+                            "appBorder", System.getProperty("control.appBorder", "none;"),
                             "nodes", nodeConfigurationService.getAll(),
                             "hideMarginaliaApp", Boolean.getBoolean("control.hideMarginaliaApp")
                             )

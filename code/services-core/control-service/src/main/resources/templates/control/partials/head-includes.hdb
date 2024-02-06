@@ -2,3 +2,8 @@
 <link rel="stylesheet" href="/tables.css" />
 <link rel="stylesheet" href="/noanimation.css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style type="text/css">
+body {
+    border: {{{global-context.appBorder}}};
+}
+</style>
