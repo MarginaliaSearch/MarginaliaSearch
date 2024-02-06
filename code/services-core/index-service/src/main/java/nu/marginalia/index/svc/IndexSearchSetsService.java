@@ -50,6 +50,8 @@ public class IndexSearchSetsService {
     // The ranking value of the domains used in sorting the domains
     private volatile DomainRankings domainRankings = new DomainRankings();
 
+    private static final String primaryRankingSet = "RANK";
+
     @Inject
     public IndexSearchSetsService(DomainTypes domainTypes,
                                   ServiceConfiguration serviceConfiguration,
@@ -110,8 +112,8 @@ public class IndexSearchSetsService {
      * changing their sort order, so it's important to run this before reconstructing the indices. */
     public void recalculatePrimaryRank() {
         try {
-            domainRankingSetsService.get("RANK").ifPresent(this::updateDomainRankings);
-            eventLog.logEvent("RANKING-SET-RECALCULATED", "RANK");
+            domainRankingSetsService.get(primaryRankingSet).ifPresent(this::updateDomainRankings);
+            eventLog.logEvent("RANKING-SET-RECALCULATED", primaryRankingSet);
         } catch (SQLException e) {
             logger.warn("Failed to primary ranking set", e);
         }
@@ -119,11 +121,14 @@ public class IndexSearchSetsService {
 
     public void recalculateSecondary() {
         for (var rankingSet : domainRankingSetsService.getAll()) {
+            if (primaryRankingSet.equals(rankingSet.name())) { // Skip the primary ranking set
+                continue;
+            }
+
             try {
                 if (DomainRankingSetsService.DomainSetAlgorithm.SPECIAL.equals(rankingSet.algorithm())) {
                     switch (rankingSet.name()) {
                         case "BLOGS" -> recalculateBlogsSet(rankingSet);
-                        case "RANK" -> {} // Skipped, handled via recalculatePrimaryRank()
                         case "NONE" -> {} // No-op
                     }
                 } else {
