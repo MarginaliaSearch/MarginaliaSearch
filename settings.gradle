@@ -81,7 +81,6 @@ include 'code:process-models:work-log'
 include 'code:process-models:crawl-spec'
 include 'code:process-models:processed-data'
 
-include 'code:tools:term-frequency-extractor'
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
