@@ -97,7 +97,7 @@ public class IndexConstructorMain extends ProcessMainClass {
         heartbeat.start();
 
         switch (instructions.name) {
-            case FORWARD -> createForwardIndex();
+            case FORWARD      -> createForwardIndex();
             case REVERSE_FULL -> createFullReverseIndex();
             case REVERSE_PRIO -> createPrioReverseIndex();
         }

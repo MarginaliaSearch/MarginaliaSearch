@@ -85,4 +85,12 @@ public class IndexClient extends AbstractDynamicClient {
                 null
         );
     }
+
+    public long triggerRerank(int node) throws Exception {
+        return messageQueueFactory.sendSingleShotRequest(
+                ServiceId.Index.withNode(node),
+                IndexMqEndpoints.INDEX_RERANK,
+                null
+        );
+    }
 }

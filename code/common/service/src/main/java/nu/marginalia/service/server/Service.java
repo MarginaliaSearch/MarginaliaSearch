@@ -53,7 +53,7 @@ public class Service {
         logger.info("Inbox name: {}", inboxName);
 
         var mqInboxFactory = params.messageQueueInboxFactory;
-        messageQueueInbox = mqInboxFactory.createAsynchronousInbox(inboxName, config.node(), config.instanceUuid());
+        messageQueueInbox = mqInboxFactory.createSynchronousInbox(inboxName, config.node(), config.instanceUuid());
         messageQueueInbox.subscribe(new ServiceMqSubscription(this));
 
         serviceName = System.getProperty("service-name");

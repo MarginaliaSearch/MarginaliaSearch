@@ -97,6 +97,14 @@ public class IndexService extends Service {
 
     volatile boolean initialized = false;
 
+    @MqRequest(endpoint = IndexMqEndpoints.INDEX_RERANK)
+    public String rerank(String message) {
+        if (!opsService.rerank()) {
+            throw new IllegalStateException("Ops lock busy");
+        }
+        return "ok";
+    }
+
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_REPARTITION)
     public String repartition(String message) {
         if (!opsService.repartition()) {

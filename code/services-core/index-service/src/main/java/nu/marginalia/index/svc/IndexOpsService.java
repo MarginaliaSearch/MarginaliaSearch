@@ -30,9 +30,14 @@ public class IndexOpsService {
         return opsLock.isLocked();
     }
 
-    public boolean repartition() {
-        return run(searchSetService::recalculateAll);
+    public boolean rerank() {
+        return run(searchSetService::recalculatePrimaryRank);
     }
+
+    public boolean repartition() {
+        return run(searchSetService::recalculateSecondary);
+    }
+
     public boolean switchIndex() throws Exception {
         return run(index::switchIndex).isPresent();
     }
@@ -40,7 +45,7 @@ public class IndexOpsService {
 
     public Object repartitionEndpoint(Request request, Response response) throws Exception {
 
-        if (!run(searchSetService::recalculateAll)) {
+        if (!run(searchSetService::recalculateSecondary)) {
             Spark.halt(503, "Operations busy");
         }
 

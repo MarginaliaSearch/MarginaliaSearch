@@ -21,6 +21,7 @@ import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.db.DbUpdateRanks;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +45,14 @@ public class IndexSearchSetsService {
     private final ConcurrentHashMap<String, SearchSet> rankingSets = new ConcurrentHashMap<>();
     // Below are binary indices that are used to constrain a search
     private final SearchSet anySet = new SearchSetAny();
+    private final int nodeId;
 
     // The ranking value of the domains used in sorting the domains
     private volatile DomainRankings domainRankings = new DomainRankings();
 
     @Inject
     public IndexSearchSetsService(DomainTypes domainTypes,
+                                  ServiceConfiguration serviceConfiguration,
                                   ServiceHeartbeat heartbeat,
                                   RankingDomainFetcher rankingDomains,
                                   RankingDomainFetcherForSimilarityData similarityDomains,
@@ -57,6 +60,7 @@ public class IndexSearchSetsService {
                                   ServiceEventLog eventLog,
                                   DomainRankingSetsService domainRankingSetsService,
                                   DbUpdateRanks dbUpdateRanks) throws IOException {
+        this.nodeId = serviceConfiguration.node();
         this.domainTypes = domainTypes;
         this.heartbeat = heartbeat;
         this.indexServicesFactory = indexServicesFactory;
@@ -102,14 +106,25 @@ public class IndexSearchSetsService {
         return Objects.requireNonNull(rankingSets.get(searchSetIdentifier), "Unknown search set");
     }
 
-    public void recalculateAll() {
+    /** Recalculates the primary ranking set.  This gets baked into the identifiers in the index, effectively
+     * changing their sort order, so it's important to run this before reconstructing the indices. */
+    public void recalculatePrimaryRank() {
+        try {
+            domainRankingSetsService.get("RANK").ifPresent(this::updateDomainRankings);
+            eventLog.logEvent("RANKING-SET-RECALCULATED", "RANK");
+        } catch (SQLException e) {
+            logger.warn("Failed to primary ranking set", e);
+        }
+    }
+
+    public void recalculateSecondary() {
         for (var rankingSet : domainRankingSetsService.getAll()) {
             try {
                 if (DomainRankingSetsService.DomainSetAlgorithm.SPECIAL.equals(rankingSet.algorithm())) {
                     switch (rankingSet.name()) {
                         case "BLOGS" -> recalculateBlogsSet(rankingSet);
-                        case "RANK" -> updateDomainRankings(rankingSet);
-                        case "NONE" -> {}
+                        case "RANK" -> {} // Skipped, handled via recalculatePrimaryRank()
+                        case "NONE" -> {} // No-op
                     }
                 } else {
                     recalculateNornal(rankingSet);
@@ -173,9 +188,13 @@ public class IndexSearchSetsService {
             domainRankings = new DomainRankings(ranks);
         }
 
-        // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
-        // make sense
-        dbUpdateRanks.execute(ranks);
+        domainRankings.save(indexServicesFactory.getSearchSetsBase());
+
+        if (nodeId == 1) {
+            // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
+            // make sense, but only do this on the primary node to avoid excessive db locks
+            dbUpdateRanks.execute(ranks);
+        }
     }
 
 }

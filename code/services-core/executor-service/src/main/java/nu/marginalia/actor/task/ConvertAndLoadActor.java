@@ -38,7 +38,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
 
     // STATES
 
-    public static final String REPARTITION = "REPARTITION";
+    public static final String RERANK = "RERANK";
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;
@@ -46,7 +46,6 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     private final MqOutbox indexOutbox;
     private final FileStorageService storageService;
     private final BackupService backupService;
-    private final Gson gson;
     private final NodeConfigurationService nodeConfigurationService;
 
     private final int nodeId;
@@ -74,14 +73,14 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Backup(List<FileStorageId> processedIds) implements ActorStep { }
     @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Repartition(long id) implements ActorStep { public Repartition() { this(-1); } }
+    public record Rerank(long id) implements ActorStep { public Rerank() { this(-1); } }
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ReindexFwd(long id) implements ActorStep {  public ReindexFwd() { this(-1); } }
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ReindexFull(long id) implements ActorStep {  public ReindexFull() { this(-1); } }
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ReindexPrio(long id) implements ActorStep {  public ReindexPrio() { this(-1); } }
-    public record SwitchOver() implements ActorStep {}
+    public record SwitchIndex() implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
@@ -129,11 +128,11 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case Backup(List<FileStorageId> processedIds) -> {
                 backupService.createBackupFromStaging(processedIds);
-                yield new Repartition();
+                yield new Rerank();
             }
-            case Repartition(long id) when id < 0 ->
-                    new Repartition(indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REPARTITION, ""));
-            case Repartition(long id) -> {
+            case Rerank(long id) when id < 0 ->
+                    new Rerank(indexOutbox.sendAsync(IndexMqEndpoints.INDEX_RERANK, ""));
+            case Rerank(long id) -> {
                 var rsp = indexOutbox.waitResponse(id);
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Repartition failed");
@@ -166,12 +165,15 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Repartition failed");
                 else
-                    yield new SwitchOver();
+                    yield new SwitchIndex();
             }
 
-            case SwitchOver() -> {
-                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, ":^D");
-                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_LINKDB, ":-)");
+            case SwitchIndex() -> {
+                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, "here");
+                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_LINKDB, "we");
+
+                // Defer repartitioning the domains until after the index has been switched
+                indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, "go");
                 yield new End();
             }
 
@@ -207,7 +209,6 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
         this.mqIndexConstructorOutbox = processOutboxes.getIndexConstructorOutbox();
         this.storageService = storageService;
         this.backupService = backupService;
-        this.gson = gson;
         this.nodeConfigurationService = nodeConfigurationService;
 
         this.nodeId = serviceConfiguration.node();

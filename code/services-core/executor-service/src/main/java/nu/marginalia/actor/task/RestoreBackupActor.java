@@ -29,7 +29,7 @@ public class RestoreBackupActor extends RecordActorPrototype {
                         ExecutorActor.CONVERT_AND_LOAD.id(node),
                         null,
                         null,
-                        ConvertAndLoadActor.REPARTITION,
+                        ConvertAndLoadActor.RERANK,
                         "",
                         null);
 
