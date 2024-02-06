@@ -39,7 +39,7 @@ class RandomWriteFunnelTest {
 
         try (var in = new RandomAccessFile(testFile.toFile(), "r")) {
             for (int i = 0; i < 10_000; i++) {
-                assertEquals(10_000-i, in.readLong());
+                assertEquals(10_000-i, Long.reverseBytes(in.readLong()));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -61,16 +61,16 @@ class RandomWriteFunnelTest {
             }
 
             try (var in = new RandomAccessFile(testFile.toFile(), "r")) {
-                assertEquals(0, in.readLong());
-                assertEquals(9, in.readLong());
-                assertEquals(0, in.readLong());
-                assertEquals(7, in.readLong());
-                assertEquals(0, in.readLong());
-                assertEquals(5, in.readLong());
-                assertEquals(0, in.readLong());
-                assertEquals(3, in.readLong());
-                assertEquals(0, in.readLong());
-                assertEquals(1, in.readLong());
+                assertEquals(0, Long.reverseBytes(in.readLong()));
+                assertEquals(9, Long.reverseBytes(in.readLong()));
+                assertEquals(0, Long.reverseBytes(in.readLong()));
+                assertEquals(7, Long.reverseBytes(in.readLong()));
+                assertEquals(0, Long.reverseBytes(in.readLong()));
+                assertEquals(5, Long.reverseBytes(in.readLong()));
+                assertEquals(0, Long.reverseBytes(in.readLong()));
+                assertEquals(3, Long.reverseBytes(in.readLong()));
+                assertEquals(0, Long.reverseBytes(in.readLong()));
+                assertEquals(1, Long.reverseBytes(in.readLong()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
