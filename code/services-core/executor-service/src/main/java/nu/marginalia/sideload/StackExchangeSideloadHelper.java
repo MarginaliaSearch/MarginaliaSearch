@@ -74,15 +74,15 @@ public class StackExchangeSideloadHelper {
 
     private static Optional<String> getStackexchangeDomainFromFilename(String fileName) {
         // We are only interested in .tld.7z files
-        if (!fileName.endsWith(".7z") && fileName.length() > 7)
+        if (!fileName.endsWith(".7z") || fileName.length() < 7)
             return Optional.empty();
 
 
         // Stackoverflow is special, because it has one 7z file per site
         // (we only want Posts)
 
-        if (fileName.equals("stackoverflow-Posts.7z"))
-            return Optional.of("stackoverflow.com");
+        if (fileName.equals("stackoverflow.com-Posts.7z"))
+            return Optional.of("www.stackoverflow.com");
         else if (fileName.startsWith("stackoverflow.com-")) {
             return Optional.empty();
         }
