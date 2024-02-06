@@ -80,14 +80,11 @@ public class StackExchangeSideloadHelper {
 
         // Stackoverflow is special, because it has one 7z file per site
         // (we only want Posts)
-
-        if (fileName.equals("stackoverflow.com-Posts.7z"))
+        if (fileName.equals("stackoverflow.com-Posts.7z")) {
             return Optional.of("www.stackoverflow.com");
-        else if (fileName.startsWith("stackoverflow.com-")) {
+        } else if (fileName.startsWith("stackoverflow.com-")) {
             return Optional.empty();
         }
-
-        // For stackexchange, we filter out the meta archives
 
         // We are not interested in the meta files
         if (fileName.startsWith("meta."))
