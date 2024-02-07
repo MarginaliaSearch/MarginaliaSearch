@@ -1,29 +1,32 @@
 # Array Library
 
-The array library offers easy allocation of large [memory mapped files](https://en.wikipedia.org/wiki/Memory-mapped_file) 
-with much less performance overhead than the traditional `buffers[pos/size].get(pos%size)`-style constructions
-java often leads to given its suffocating 2 Gb ByteBuffer size limitation. 
+The array library offers easy allocation of large [memory mapped files](https://en.wikipedia.org/wiki/Memory-mapped_file)
+and off-heap memory, along with helper functions for accessing and using such memory.
 
-It accomplishes this by delegating block oerations down to the appropriate page. If the operation
-crosses a page boundary, it is not delegated and a bit slower.
+Historically this used ByteBuffers, but has been updated to use the new [MemorySegment](https://openjdk.org/jeps/454) 
+API.  By default, it uses sun.misc.Unsafe to access the memory, but it can be configured to use the new MemorySegment access
+methods instead by setting the system property `system.noSunMiscUnsafe` to true.  This is quite a bit slower, but 
+use-after-free results in a harmless exception rather than a SIGSEGV.
 
-The library is written in a fairly unidiomatic way to accomplish diamond inheritance. 
+Internally the array objects use Arena allocators to manage memory, and need to be closed to free the memory.  Both
+confined and shared memory can be allocated, as per the MemorySegment API.
+
+The library is implemented in a fairly unidiomatic way using interfaces to accomplish diamond inheritance. 
 
 ## Quick demo:
 ```java
-var array = LongArray.mmapForWriting(Path.of("/tmp/test"), 1<<16);
-
-array.transformEach(50, 1000, (pos, val) -> Long.hashCode(pos));
-array.quickSort(50, 1000);
-if (array.binarySearch(array.get(100), 50, 1000) >= 0) {
-    System.out.println("Nevermind, I found it!");
+try (var array = LongArrayFactory.mmapForWritingConfined(Path.of("/tmp/test"), 1<<16)) {
+    array.transformEach(50, 1000, (pos, val) -> Long.hashCode(pos));
+    array.quickSort(50, 1000);
+    if (array.binarySearch(array.get(100), 50, 1000) >= 0) {
+        System.out.println("Nevermind, I found it!");
+    }
+    
+    array.range(50, 1000).fill(0, 950, 1);
+    array.forEach(0, 100, (pos, val) -> {
+        System.out.println(pos + ":" + val);
+    });
 }
-
-array.range(50, 1000).fill(0, 950, 1);
-array.forEach(0, 100, (pos, val) -> {
-    System.out.println(pos + ":" + val);
-});
-
 ```
 
 
