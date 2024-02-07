@@ -22,6 +22,6 @@ public record ServiceConfiguration(ServiceId serviceId,
                                    int metricsPort,
                                    UUID instanceUuid) {
     public String serviceName() {
-        return serviceId.name;
+        return serviceId.serviceName;
     }
 }

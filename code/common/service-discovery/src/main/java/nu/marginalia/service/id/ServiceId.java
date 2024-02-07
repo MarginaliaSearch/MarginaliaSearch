@@ -14,18 +14,19 @@ public enum ServiceId {
     Dating("dating-service"),
     Explorer("explorer-service");
 
-    public final String name;
-    ServiceId(String name) {
-        this.name = name;
+    public final String serviceName;
+
+    ServiceId(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public String withNode(int node) {
-        return name + ":" + node;
+        return serviceName + ":" + node;
     }
 
     public static ServiceId byName(String name) {
         for (ServiceId id : values()) {
-            if (id.name.equals(name)) {
+            if (id.serviceName.equals(name)) {
                 return id;
             }
         }

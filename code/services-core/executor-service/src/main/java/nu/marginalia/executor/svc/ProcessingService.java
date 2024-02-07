@@ -5,10 +5,12 @@ import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.*;
+import nu.marginalia.executor.api.RpcCrawlSpecFromDownload;
+import nu.marginalia.executor.api.RpcFileStorageId;
+import nu.marginalia.executor.api.RpcFileStorageIds;
 import nu.marginalia.storage.model.FileStorageId;
-import nu.marginalia.executor.model.load.LoadParameters;
-import spark.Request;
-import spark.Response;
+
+import java.util.stream.Collectors;
 
 public class ProcessingService {
     private final ExecutorActorControlService actorControlService;
@@ -21,64 +23,44 @@ public class ProcessingService {
         this.gson = gson;
     }
 
-    public Object startRecrawl(Request request, Response response) throws Exception {
-        var crawlId = gson.fromJson(request.body(), FileStorageId.class);
-
-        actorControlService.startFrom(
-                ExecutorActor.RECRAWL,
-                new RecrawlActor.Initial(crawlId, false)
-        );
-
-        return "";
+    public void startRecrawl(RpcFileStorageId request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.RECRAWL,
+                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
     }
 
-    public Object startCrawl(Request request, Response response) throws Exception {
+    public void startCrawl(RpcFileStorageId request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CRAWL,
-                new CrawlActor.Initial(FileStorageId.parse(request.params("fid"))));
-
-        return "";
+                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
     }
 
-    public Object startConversion(Request request, Response response) throws Exception {
+    public void startConversion(RpcFileStorageId request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT,
-                new ConvertActor.Convert(FileStorageId.parse(request.params("fid"))));
-
-        return "";
+                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
     }
 
-    public Object startConvertLoad(Request request, Response response) throws Exception {
-        actorControlService.startFrom(
-                ExecutorActor.CONVERT_AND_LOAD,
-                new ConvertAndLoadActor.Initial(FileStorageId.parse(request.params("fid")))
+    public void startConvertLoad(RpcFileStorageId request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.CONVERT_AND_LOAD,
+                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
+    }
+
+    public void startLoad(RpcFileStorageIds request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.CONVERT_AND_LOAD,
+                new ConvertAndLoadActor.Load(request.getFileStorageIdsList()
+                        .stream()
+                            .map(FileStorageId::of)
+                            .collect(Collectors.toList()))
         );
-
-        return "";
     }
 
-
-    public Object startLoad(Request request, Response response) throws Exception {
-        var params = gson.fromJson(request.body(), LoadParameters.class);
-
-        // Start the FSM from the intermediate state that triggers the load
-        actorControlService.startFrom(
-                ExecutorActor.CONVERT_AND_LOAD,
-                new ConvertAndLoadActor.Load(params.ids())
-        );
-
-        return "";
-    }
-
-    public Object startAdjacencyCalculation(Request request, Response response) throws Exception {
+    public void startAdjacencyCalculation() throws Exception {
         actorControlService.startFrom(ExecutorActor.ADJACENCY_CALCULATION, new TriggerAdjacencyCalculationActor.Run());
-        return "";
     }
 
-    public Object createCrawlSpecFromDownload(Request request, Response response) throws Exception {
+    public void createCrawlSpecFromDownload(RpcCrawlSpecFromDownload request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CRAWL_JOB_EXTRACTOR,
                 new CrawlJobExtractorActor.CreateFromUrl(
-                        request.queryParamOrDefault("description", ""),
-                        request.queryParamOrDefault("url", ""))
+                        request.getDescription(),
+                        request.getUrl())
         );
-        return "";
     }
 }

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'jvm-test-suite'
+    id "com.google.protobuf" version "0.9.4"
 }
 
 java {
@@ -8,6 +9,18 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
+
+apply from: "$rootProject.projectDir/protobuf.gradle"
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/protobuf'
+        }
+    }
+}
+
+
 
 dependencies {
     implementation project(':code:common:model')
@@ -25,6 +38,8 @@ dependencies {
     implementation libs.guice
     implementation libs.rxjava
     implementation libs.protobuf
+    implementation libs.bundles.grpc
+    implementation libs.javax.annotation
     implementation libs.gson
 
     testImplementation libs.bundles.slf4j.test

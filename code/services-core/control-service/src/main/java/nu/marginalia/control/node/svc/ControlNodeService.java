@@ -279,9 +279,9 @@ public class ControlNodeService {
         int nodeId = Integer.parseInt(request.params("id"));
         var config = nodeConfigurationService.get(nodeId);
 
-        var actors = executorClient.getActorStates(Context.fromRequest(request), nodeId).states();
-
-        actors.removeIf(actor -> actor.state().equals("MONITOR"));
+        var actors = executorClient.getActorStates(Context.fromRequest(request), nodeId).states()
+                .stream().filter(actor -> !actor.state().equals("MONITOR"))
+                .toList();
 
         return Map.of(
                 "node", nodeConfigurationService.get(nodeId),
@@ -308,7 +308,7 @@ public class ControlNodeService {
     }
 
     private List<EventLogEntry> getEvents(int nodeId) {
-        List<String> services = List.of(ServiceId.Index.name+":"+nodeId, ServiceId.Executor.name+":"+nodeId);
+        List<String> services = List.of(ServiceId.Index.serviceName +":"+nodeId, ServiceId.Executor.serviceName +":"+nodeId);
         List<EventLogEntry> events = new ArrayList<>(20);
         for (var service :services) {
             events.addAll(eventLogService.getLastEntriesForService(service, Long.MAX_VALUE, 10));

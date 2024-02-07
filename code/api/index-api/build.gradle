@@ -17,6 +17,9 @@ sourceSets {
         }
     }
 }
+
+apply from: "$rootProject.projectDir/protobuf.gradle"
+
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
@@ -42,30 +45,5 @@ dependencies {
     testImplementation libs.mockito
 }
 
-protobuf {
-    protoc {
-        if (osdetector.os == "osx") {
-            artifact = "com.google.protobuf:protoc:3.0.2:osx-x86_64"
-        } else {
-            artifact = "com.google.protobuf:protoc:3.0.2"
-        }
-    }
-    plugins {
-        grpc {
-            if (osdetector.os == "osx") {
-                artifact = "io.grpc:protoc-gen-grpc-java:1.1.2:osx-x86_64"
-            } else {
-                artifact = "io.grpc:protoc-gen-grpc-java:1.1.2"
-            }
-        }
-    }
 
-    generateProtoTasks {
-        all().each { task ->
-            task.plugins {
-                grpc {}
-            }
-        }
-    }
-}
 
