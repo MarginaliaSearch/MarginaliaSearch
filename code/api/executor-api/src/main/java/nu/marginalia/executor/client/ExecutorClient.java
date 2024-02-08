@@ -1,7 +1,7 @@
 package nu.marginalia.executor.client;
 
 import com.google.inject.Inject;
-import jakarta.inject.Singleton;
+import com.google.inject.Singleton;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.grpc.GrpcStubPool;

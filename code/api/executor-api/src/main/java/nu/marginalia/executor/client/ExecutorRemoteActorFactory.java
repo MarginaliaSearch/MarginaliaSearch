@@ -1,7 +1,7 @@
 package nu.marginalia.executor.client;
 
 import com.google.inject.Inject;
-import jakarta.inject.Singleton;
+import com.google.inject.Singleton;
 import nu.marginalia.model.gson.GsonFactory;
 import com.google.gson.Gson;
 import nu.marginalia.mq.MqMessage;

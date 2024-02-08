@@ -1,7 +1,7 @@
 package nu.marginalia.actor;
 
 import com.google.gson.Gson;
-import jakarta.inject.Singleton;
+import com.google.inject.Singleton;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.model.gson.GsonFactory;
