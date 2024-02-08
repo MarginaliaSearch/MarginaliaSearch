@@ -8,7 +8,7 @@ public class ServiceDescriptor {
 
     public ServiceDescriptor(ServiceId id) {
         this.id = id;
-        this.name = id.name;
+        this.name = id.serviceName;
     }
 
     public ServiceDescriptor(ServiceId id, String host) {

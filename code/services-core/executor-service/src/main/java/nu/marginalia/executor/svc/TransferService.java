@@ -5,11 +5,12 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.client.Context;
+import nu.marginalia.executor.api.RpcFileStorageContent;
+import nu.marginalia.executor.api.RpcFileStorageEntry;
+import nu.marginalia.executor.api.RpcFileStorageId;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.executor.model.transfer.TransferItem;
 import nu.marginalia.executor.model.transfer.TransferSpec;
-import nu.marginalia.executor.storage.FileStorageContent;
-import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.process.log.WorkLog;
@@ -74,30 +75,31 @@ public class TransferService {
     }
 
 
-    public FileStorageContent listFiles(Request request, Response response) throws SQLException, IOException {
-        FileStorageId fileStorageId = FileStorageId.parse(request.params("fid"));
+    public RpcFileStorageContent listFiles(RpcFileStorageId request) throws SQLException, IOException {
+        FileStorageId fileStorageId = FileStorageId.of(request.getFileStorageId());
 
         var storage = fileStorageService.getStorage(fileStorageId);
 
-        List<FileStorageFile> files;
+        var builder = RpcFileStorageContent.newBuilder();
+
 
         try (var fs = Files.list(storage.asPath())) {
-            files = fs.filter(Files::isRegularFile)
+            fs.filter(Files::isRegularFile)
                     .map(this::createFileModel)
-                    .sorted(Comparator.comparing(FileStorageFile::name))
-                    .toList();
+                    .sorted(Comparator.comparing(RpcFileStorageEntry::getName))
+                    .forEach(builder::addEntries);
         }
 
-        return new FileStorageContent(files);
+        return builder.build();
     }
 
     @SneakyThrows
-    private FileStorageFile createFileModel(Path path) {
-        return new FileStorageFile(
-                path.toFile().getName(),
-                Files.size(path),
-                Files.getLastModifiedTime(path).toInstant().toString()
-        );
+    private RpcFileStorageEntry createFileModel(Path path) {
+        return RpcFileStorageEntry.newBuilder()
+                .setName(path.toFile().getName())
+                .setSize(Files.size(path))
+                .setLastModifiedTime(Files.getLastModifiedTime(path).toInstant().toString())
+                .build();
     }
 
     public TransferSpec getTransferSpec(Request request, Response response) throws SQLException {

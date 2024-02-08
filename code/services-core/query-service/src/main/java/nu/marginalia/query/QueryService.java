@@ -12,7 +12,6 @@ import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.query.model.QueryResponse;
-import nu.marginalia.query.svc.NodeConfigurationWatcher;
 import nu.marginalia.query.svc.QueryFactory;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;

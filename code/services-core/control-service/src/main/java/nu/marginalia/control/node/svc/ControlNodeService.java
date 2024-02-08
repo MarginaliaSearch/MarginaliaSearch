@@ -107,13 +107,13 @@ public class ControlNodeService {
     }
 
     public Object startFsm(Request req, Response rsp) throws Exception {
-        executorClient.startFsm(Context.fromRequest(req), Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
+        executorClient.startFsm(Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
 
         return redirectToOverview(req);
     }
 
     public Object stopFsm(Request req, Response rsp) throws Exception {
-        executorClient.stopFsm(Context.fromRequest(req), Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
+        executorClient.stopFsm(Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
 
         return redirectToOverview(req);
     }
@@ -132,7 +132,7 @@ public class ControlNodeService {
         int nodeId = Integer.parseInt(request.params("id"));
         String processBase = request.params("processBase");
 
-        executorClient.stopProcess(Context.fromRequest(request), nodeId, processBase);
+        executorClient.stopProcess(nodeId, processBase);
 
         return "";
     }
@@ -153,7 +153,7 @@ public class ControlNodeService {
         return Map.of(
                 "tab", Map.of("actors", true),
                 "node", nodeConfigurationService.get(nodeId),
-                "actors", executorClient.getActorStates(Context.fromRequest(request), nodeId).states()
+                "actors", executorClient.getActorStates(nodeId).states()
         );
     }
 
@@ -164,7 +164,7 @@ public class ControlNodeService {
                 "tab", Map.of("actions", true),
                 "node", nodeConfigurationService.get(nodeId),
                 "view", Map.of(request.queryParams("view"), true),
-                "uploadDirContents", executorClient.listSideloadDir(Context.fromRequest(request), nodeId),
+                "uploadDirContents", executorClient.listSideloadDir(nodeId),
                 "allBackups",
                         fileStorageService.getEachFileStorage(nodeId, FileStorageType.BACKUP),
                 "allCrawlData",
@@ -279,9 +279,9 @@ public class ControlNodeService {
         int nodeId = Integer.parseInt(request.params("id"));
         var config = nodeConfigurationService.get(nodeId);
 
-        var actors = executorClient.getActorStates(Context.fromRequest(request), nodeId).states();
-
-        actors.removeIf(actor -> actor.state().equals("MONITOR"));
+        var actors = executorClient.getActorStates(nodeId).states()
+                .stream().filter(actor -> !actor.state().equals("MONITOR"))
+                .toList();
 
         return Map.of(
                 "node", nodeConfigurationService.get(nodeId),
@@ -308,7 +308,7 @@ public class ControlNodeService {
     }
 
     private List<EventLogEntry> getEvents(int nodeId) {
-        List<String> services = List.of(ServiceId.Index.name+":"+nodeId, ServiceId.Executor.name+":"+nodeId);
+        List<String> services = List.of(ServiceId.Index.serviceName +":"+nodeId, ServiceId.Executor.serviceName +":"+nodeId);
         List<EventLogEntry> events = new ArrayList<>(20);
         for (var service :services) {
             events.addAll(eventLogService.getLastEntriesForService(service, Long.MAX_VALUE, 10));
@@ -399,7 +399,7 @@ public class ControlNodeService {
 
         List<FileStorageFileModel> files = new ArrayList<>();
 
-        for (var execFile : executorClient.listFileStorage(context, node, fileId).files()) {
+        for (var execFile : executorClient.listFileStorage(node, fileId).files()) {
             files.add(new FileStorageFileModel(
                     execFile.name(),
                     execFile.modTime(),

@@ -3,13 +3,10 @@ package nu.marginalia.executor.svc;
 import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
-import nu.marginalia.actor.task.ConvertActor;
-import nu.marginalia.actor.task.ExportAtagsActor;
-import nu.marginalia.actor.task.ExportDataActor;
-import nu.marginalia.actor.task.ExportSampleDataActor;
+import nu.marginalia.actor.task.*;
+import nu.marginalia.executor.api.RpcExportSampleData;
+import nu.marginalia.executor.api.RpcFileStorageId;
 import nu.marginalia.storage.model.FileStorageId;
-import spark.Request;
-import spark.Response;
 
 public class ExportService {
     private final ExecutorActorControlService actorControlService;
@@ -19,33 +16,36 @@ public class ExportService {
         this.actorControlService = actorControlService;
     }
 
-    public Object exportData(Request request, Response response) throws Exception {
+    public void exportData() throws Exception {
          actorControlService.startFrom(ExecutorActor.EXPORT_DATA, new ExportDataActor.Export());
-         return "";
     }
 
-    public Object exportSampleData(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.EXPORT_SAMPLE_DATA, new ExportSampleDataActor.Export(
-                FileStorageId.parse(request.queryParams("fid")),
-                Integer.parseInt(request.queryParams("size")),
-                request.queryParams("name")
-        ));
-        return "";
+    public void exportSampleData(RpcExportSampleData request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_SAMPLE_DATA,
+                new ExportSampleDataActor.Export(
+                    FileStorageId.of(request.getFileStorageId()),
+                    request.getSize(),
+                    request.getName()
+            )
+        );
     }
 
-    public Object exportAtags(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.EXPORT_ATAGS, new ExportAtagsActor.Export(FileStorageId.parse(request.queryParams("fid"))));
-        return "";
+    public void exportAtags(RpcFileStorageId request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_ATAGS,
+                new ExportAtagsActor.Export(FileStorageId.of(request.getFileStorageId()))
+        );
     }
 
-    public Object exportFeeds(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.EXPORT_FEEDS, new ExportAtagsActor.Export(FileStorageId.parse(request.queryParams("fid"))));
-        return "";
-    }
-    public Object exportTermFrequencies(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.EXPORT_TERM_FREQUENCIES, new ExportAtagsActor.Export(FileStorageId.parse(request.queryParams("fid"))));
-        return "";
+    public void exportFeeds(RpcFileStorageId request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_FEEDS,
+                new ExportFeedsActor.Export(FileStorageId.of(request.getFileStorageId()))
+        );
     }
 
+    public void exportTermFrequencies(RpcFileStorageId request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_TERM_FREQUENCIES,
+                new ExportTermFreqActor.Export(FileStorageId.of(request.getFileStorageId()))
+        );
+    }
 
 }

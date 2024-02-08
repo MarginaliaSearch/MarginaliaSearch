@@ -1,7 +1,7 @@
 package nu.marginalia.service.server;
 
 import com.google.inject.name.Named;
-import jakarta.inject.Inject;
+import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;

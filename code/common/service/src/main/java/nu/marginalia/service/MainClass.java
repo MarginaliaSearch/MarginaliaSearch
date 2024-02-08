@@ -51,10 +51,10 @@ public abstract class MainClass {
     protected static void init(ServiceId id, String... args) {
         System.setProperty("log4j2.isThreadContextMapInheritable", "true");
         System.setProperty("isThreadContextMapInheritable", "true");
-        System.setProperty("service-name", id.name);
+        System.setProperty("service-name", id.serviceName);
 
         ConfigLoader.loadConfig(
-                ConfigLoader.getConfigPath(id.name)
+                ConfigLoader.getConfigPath(id.serviceName)
         );
 
         initJdbc();

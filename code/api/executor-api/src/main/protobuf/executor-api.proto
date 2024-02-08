@@ -1,0 +1,105 @@
+syntax="proto3";
+package actorapi;
+
+option java_package="nu.marginalia.executor.api";
+option java_multiple_files=true;
+
+service ExecutorApi {
+  rpc startFsm(RpcFsmName) returns (Empty) {}
+  rpc stopFsm(RpcFsmName) returns (Empty) {}
+
+  rpc stopProcess(RpcProcessId) returns (Empty) {}
+
+  rpc triggerCrawl(RpcFileStorageId) returns (Empty) {}
+  rpc triggerRecrawl(RpcFileStorageId) returns (Empty) {}
+  rpc triggerConvert(RpcFileStorageId) returns (Empty) {}
+  rpc triggerConvertAndLoad(RpcFileStorageId) returns (Empty) {}
+  rpc loadProcessedData(RpcFileStorageIds) returns (Empty) {}
+  rpc calculateAdjacencies(Empty) returns (Empty) {}
+
+  rpc sideloadEncyclopedia(RpcSideloadEncyclopedia) returns (Empty) {}
+  rpc sideloadDirtree(RpcSideloadDirtree) returns (Empty) {}
+  rpc sideloadWarc(RpcSideloadWarc) returns (Empty) {}
+  rpc sideloadStackexchange(RpcSideloadStackexchange) returns (Empty) {}
+
+  rpc createCrawlSpecFromDownload(RpcCrawlSpecFromDownload) returns (Empty) {}
+  rpc exportAtags(RpcFileStorageId) returns (Empty) {}
+  rpc exportSampleData(RpcExportSampleData) returns (Empty) {}
+  rpc exportRssFeeds(RpcFileStorageId) returns (Empty) {}
+  rpc exportTermFrequencies(RpcFileStorageId) returns (Empty) {}
+  rpc downloadSampleData(RpcDownloadSampleData) returns (Empty) {}
+  rpc exportData(Empty) returns (Empty) {}
+  rpc restoreBackup(RpcFileStorageId) returns (Empty) {}
+  rpc getActorStates(Empty) returns (RpcActorRunStates) {}
+  rpc listSideloadDir(Empty) returns (RpcUploadDirContents) {}
+  rpc listFileStorage(RpcFileStorageId) returns (RpcFileStorageContent) {}
+}
+
+message Empty {}
+message RpcFsmName {
+  string actorName = 1;
+}
+message RpcProcessId {
+  string processId = 1;
+}
+message RpcFileStorageId {
+  int64 fileStorageId = 1;
+}
+message RpcFileStorageIds {
+  repeated int64 fileStorageIds = 1;
+}
+message RpcSideloadEncyclopedia {
+  string sourcePath = 1;
+  string baseUrl = 2;
+}
+message RpcSideloadDirtree {
+  string sourcePath = 1;
+}
+message RpcSideloadWarc {
+  string sourcePath = 1;
+}
+message RpcSideloadStackexchange {
+  string sourcePath = 1;
+}
+message RpcCrawlSpecFromDownload {
+  string description = 1;
+  string url = 2;
+}
+message RpcExportSampleData {
+  int64 fileStorageId = 1;
+  int32 size = 2;
+  string name = 3;
+}
+message RpcDownloadSampleData {
+  string sampleSet = 1;
+}
+message RpcActorRunStates {
+  int32 node = 1;
+  repeated RpcActorRunState actorRunStates = 2;
+}
+message RpcActorRunState {
+  string actorName = 1;
+  string state = 2;
+  string actorDescription = 3;
+  string stateDescription = 4;
+  bool terminal = 5;
+  bool canStart = 6;
+}
+message RpcUploadDirContents {
+  string path = 1;
+  repeated RpcUploadDirEntry entries = 2;
+}
+message RpcUploadDirEntry {
+  string name = 1;
+  string lastModifiedTime = 2;
+  bool isDirectory = 3;
+  int64 size = 4;
+}
+message RpcFileStorageContent {
+  repeated RpcFileStorageEntry entries = 1;
+}
+message RpcFileStorageEntry {
+  string name = 1;
+  int64 size = 2;
+  string lastModifiedTime = 3;
+}

@@ -114,7 +114,7 @@ public class ServiceMonitors {
 
     public boolean isServiceUp(ServiceId serviceId, int node) {
         synchronized (runningServices) {
-            return runningServices.contains(new ServiceNode(serviceId.name, node));
+            return runningServices.contains(new ServiceNode(serviceId.serviceName, node));
         }
     }
 

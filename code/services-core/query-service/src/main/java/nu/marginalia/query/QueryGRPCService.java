@@ -4,11 +4,12 @@ import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
+import nu.marginalia.client.grpc.GrpcStubPool;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.query.svc.NodeConfigurationWatcher;
 import nu.marginalia.query.svc.QueryFactory;
+import nu.marginalia.service.id.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,22 +27,28 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
-    private final QueryGrpcStubPool<IndexApiGrpc.IndexApiBlockingStub> stubPool;
+    private final GrpcStubPool<IndexApiGrpc.IndexApiBlockingStub> stubPool;
 
     private final QueryFactory queryFactory;
     private final DomainBlacklist blacklist;
-    private final NodeConfigurationWatcher nodeConfigurationWatcher;
 
     @Inject
-    public QueryGRPCService(QueryFactory queryFactory, DomainBlacklist blacklist, NodeConfigurationWatcher nodeConfigurationWatcher) {
+    public QueryGRPCService(QueryFactory queryFactory,
+                            DomainBlacklist blacklist,
+                            NodeConfigurationWatcher nodeConfigurationWatcher)
+    {
         this.queryFactory = queryFactory;
         this.blacklist = blacklist;
-        this.nodeConfigurationWatcher = nodeConfigurationWatcher;
 
-        stubPool = new QueryGrpcStubPool<>(nodeConfigurationWatcher) {
+        stubPool = new GrpcStubPool<>(ServiceId.Index) {
             @Override
             public IndexApiGrpc.IndexApiBlockingStub createStub(ManagedChannel channel) {
                 return IndexApiGrpc.newBlockingStub(channel);
+            }
+
+            @Override
+            public List<Integer> getEligibleNodes() {
+                return nodeConfigurationWatcher.getQueryNodes();
             }
         };
     }

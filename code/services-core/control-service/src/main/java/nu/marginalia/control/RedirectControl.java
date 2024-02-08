@@ -1,6 +1,6 @@
 package nu.marginalia.control;
 
-import jakarta.inject.Inject;
+import com.google.inject.Inject;
 import spark.ResponseTransformer;
 
 import java.io.IOException;

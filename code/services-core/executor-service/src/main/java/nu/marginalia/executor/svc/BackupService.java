@@ -4,9 +4,8 @@ import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.RestoreBackupActor;
+import nu.marginalia.executor.api.RpcFileStorageId;
 import nu.marginalia.storage.model.FileStorageId;
-import spark.Request;
-import spark.Response;
 
 public class BackupService {
     private final ExecutorActorControlService actorControlService;
@@ -16,9 +15,8 @@ public class BackupService {
         this.actorControlService = actorControlService;
     }
 
-    public Object restore(Request request, Response response) throws Exception {
-        var fid = FileStorageId.parse(request.params("fid"));
+    public void restore(RpcFileStorageId request) throws Exception {
+        var fid = FileStorageId.of(request.getFileStorageId());
         actorControlService.startFrom(ExecutorActor.RESTORE_BACKUP, new RestoreBackupActor.Restore(fid));
-        return "";
     }
 }

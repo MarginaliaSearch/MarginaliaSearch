@@ -2,11 +2,9 @@ package nu.marginalia.control.node.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.client.Context;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.executor.model.load.LoadParameters;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
@@ -106,7 +104,7 @@ public class ControlNodeActionsService {
         if (!Set.of("sample-s", "sample-m", "sample-l", "sample-xl").contains(set))
             throw new ControlValidationError("Invalid sample specified", "A valid sample data set must be specified", "..");
 
-        executorClient.downloadSampleData(Context.fromRequest(request), Integer.parseInt(request.params("node")), set);
+        executorClient.downloadSampleData(Integer.parseInt(request.params("node")), set);
 
         logger.info("Downloading sample data set {}", set);
 
@@ -126,7 +124,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD ENCYCLOPEDIA " + nodeId);
 
-        executorClient.sideloadEncyclopedia(Context.fromRequest(request), nodeId, sourcePath, baseUrl);
+        executorClient.sideloadEncyclopedia(nodeId, sourcePath, baseUrl);
 
         return "";
     }
@@ -139,7 +137,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD DIRTREE " + nodeId);
 
-        executorClient.sideloadDirtree(Context.fromRequest(request), nodeId, sourcePath);
+        executorClient.sideloadDirtree(nodeId, sourcePath);
 
         return "";
     }
@@ -151,7 +149,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD WARC " + nodeId);
 
-        executorClient.sideloadWarc(Context.fromRequest(request), nodeId, sourcePath);
+        executorClient.sideloadWarc(nodeId, sourcePath);
 
         return "";
     }
@@ -166,7 +164,8 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD STACKEXCHANGE " + nodeId);
 
-        executorClient.sideloadStackexchange(Context.fromRequest(request), nodeId, sourcePath);
+        executorClient.sideloadStackexchange(nodeId, sourcePath);
+
         return "";
     }
 
@@ -184,7 +183,6 @@ public class ControlNodeActionsService {
         changeActiveStorage(nodeId, FileStorageType.CRAWL_DATA, toCrawl);
 
         executorClient.triggerRecrawl(
-                Context.fromRequest(request),
                 nodeId,
                 toCrawl
         );
@@ -199,11 +197,7 @@ public class ControlNodeActionsService {
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_SPEC, toCrawl);
 
-        executorClient.triggerCrawl(
-                Context.fromRequest(request),
-                nodeId,
-                toCrawl
-        );
+        executorClient.triggerCrawl(nodeId, toCrawl);
 
         return "";
     }
@@ -216,14 +210,10 @@ public class ControlNodeActionsService {
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, toProcess);
 
         if (isAutoload) {
-            executorClient.triggerConvertAndLoad(Context.fromRequest(request),
-                    nodeId,
-                    toProcess);
+            executorClient.triggerConvertAndLoad(nodeId, toProcess);
         }
         else {
-            executorClient.triggerConvert(Context.fromRequest(request),
-                    nodeId,
-                    toProcess);
+            executorClient.triggerConvert(nodeId, toProcess);
         }
 
         return "";
@@ -241,10 +231,7 @@ public class ControlNodeActionsService {
 
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, ids.toArray(new FileStorageId[0]));
 
-        executorClient.loadProcessedData(Context.fromRequest(request),
-                nodeId,
-                new LoadParameters(ids)
-        );
+        executorClient.loadProcessedData(nodeId, ids);
 
         return "";
     }
@@ -254,7 +241,7 @@ public class ControlNodeActionsService {
 
         var toLoad = parseSourceFileStorageId(request.queryParams("source"));
 
-        executorClient.restoreBackup(Context.fromRequest(request), nodeId, toLoad);
+        executorClient.restoreBackup(nodeId, toLoad);
 
         return "";
     }
@@ -286,13 +273,13 @@ public class ControlNodeActionsService {
             throw new ControlValidationError("No url specified", "A url must be specified", "..");
         }
 
-        executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
+        executorClient.createCrawlSpecFromDownload(nodeId, description, url);
 
         return "";
     }
 
     private Object exportDbData(Request req, Response rsp) {
-        executorClient.exportData(Context.fromRequest(req), Integer.parseInt(req.params("id")));
+        executorClient.exportData(Integer.parseInt(req.params("id")));
 
         return "";
     }
@@ -302,9 +289,9 @@ public class ControlNodeActionsService {
         FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
 
         switch (exportType) {
-            case "atags" -> executorClient.exportAtags(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
-            case "rss" -> executorClient.exportRssFeeds(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
-            case "termFreq" -> executorClient.exportTermFrequencies(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+            case "atags" -> executorClient.exportAtags(Integer.parseInt(req.params("id")), source);
+            case "rss" -> executorClient.exportRssFeeds(Integer.parseInt(req.params("id")), source);
+            case "termFreq" -> executorClient.exportTermFrequencies(Integer.parseInt(req.params("id")), source);
             default -> throw new ControlValidationError("No export type specified", "An export type must be specified", "..");
         }
 
@@ -316,7 +303,7 @@ public class ControlNodeActionsService {
         int size = Integer.parseInt(req.queryParams("size"));
         String name = req.queryParams("name");
 
-        executorClient.exportSampleData(Context.fromRequest(req), Integer.parseInt(req.params("id")), source, size, name);
+        executorClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, name);
 
         return "";
     }

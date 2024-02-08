@@ -2,7 +2,6 @@ package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.client.Context;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.actor.ControlActor;
@@ -56,7 +55,7 @@ public class ControlSysActionsService {
      * and lacks a proper internal API
      */
     private MqOutbox createApiOutbox(MessageQueueFactory mqFactory) {
-        String inboxName = ServiceId.Api.name + ":" + "0";
+        String inboxName = ServiceId.Api.serviceName + ":" + "0";
         String outboxName = "pp:"+System.getProperty("service-name", UUID.randomUUID().toString());
         return mqFactory.createOutbox(inboxName, 0, outboxName, 0, UUID.randomUUID());
     }
@@ -119,7 +118,7 @@ public class ControlSysActionsService {
         // This is technically not a partitioned operation, but we execute it at node 1
         // and let the effects be global :-)
 
-        executorClient.calculateAdjacencies(Context.fromRequest(request), 1);
+        executorClient.calculateAdjacencies(1);
 
         return "";
     }
