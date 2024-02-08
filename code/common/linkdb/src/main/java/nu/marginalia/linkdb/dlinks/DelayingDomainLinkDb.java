@@ -1,9 +1,7 @@
 package nu.marginalia.linkdb.dlinks;
 
 import com.google.inject.name.Named;
-import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.array.TIntArrayList;
-import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,18 +10,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-/** DomainLinkDb that delegates to either a FileDomainLinkDb or a SqlDomainLinkDb,
- * depending on whether the file exists.  This is part of the migration path to
- * always using FileDomainLinkDb.
+/** DomainLinkDb that delegates a FileDomainLinkDb, but handles the case where the database
+ * is not yet loaded.  This speeds up the startup of the index service, as the database is
+ * loaded in a separate thread.
  */
-public class SelectingDomainLinkDb implements DomainLinkDb {
-    private final static Logger logger = LoggerFactory.getLogger(SelectingDomainLinkDb.class);
+public class DelayingDomainLinkDb implements DomainLinkDb {
+    private final static Logger logger = LoggerFactory.getLogger(DelayingDomainLinkDb.class);
 
     private volatile DomainLinkDb currentDb;
     private final Path filename;
-    public SelectingDomainLinkDb(@Named("domain-linkdb-file") Path filename,
-                                 ServiceConfiguration serviceConfiguration,
-                                 HikariDataSource dataSource) {
+
+    public DelayingDomainLinkDb(@Named("domain-linkdb-file") Path filename) {
         this.filename = filename;
 
         // Load the database in a separate thread, so that the constructor can return
@@ -32,12 +29,7 @@ public class SelectingDomainLinkDb implements DomainLinkDb {
 
         Thread.ofPlatform().start(() -> {
             try {
-                if (Files.exists(filename)) {
-                    currentDb = new FileDomainLinkDb(filename);
-                }
-                else {
-                    currentDb = new SqlDomainLinkDb(filename, dataSource, serviceConfiguration);
-                }
+                currentDb = new FileDomainLinkDb(filename);
                 logger.info("Loaded linkdb");
             } catch (Exception e) {
                 logger.error("Failed to load linkdb", e);

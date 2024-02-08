@@ -38,10 +38,22 @@ public class RankingDomainFetcher {
     public void getDomains(Consumer<RankingDomainData> consumer) {
         String query;
         if (getNames) {
-            query = "SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID WHERE NODE_AFFINITY>0 GROUP BY EC_DOMAIN.ID";
+            query = """
+                    SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,KNOWN_URLS
+                    FROM EC_DOMAIN
+                    INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
+                    WHERE NODE_AFFINITY>0
+                    GROUP BY EC_DOMAIN.ID
+                    """;
         }
         else {
-            query = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID WHERE NODE_AFFINITY>0 GROUP BY EC_DOMAIN.ID";
+            query = """
+                    SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS
+                    FROM EC_DOMAIN
+                    INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
+                    WHERE NODE_AFFINITY>0
+                    GROUP BY EC_DOMAIN.ID
+                    """;
         }
 
         getDomains(query, consumer);
@@ -51,10 +63,24 @@ public class RankingDomainFetcher {
     public void getPeripheralDomains(Consumer<RankingDomainData> consumer) {
         String query;
         if (getNames) {
-            query = "SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID  LEFT JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND EC_DOMAIN_LINK.ID IS NULL GROUP BY EC_DOMAIN.ID";
+            query = """
+                SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,KNOWN_URLS
+                FROM EC_DOMAIN
+                INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
+                WHERE ((INDEXED>1 AND IS_ALIVE)
+                    OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0))
+                GROUP BY EC_DOMAIN.ID
+                """;
         }
         else {
-            query = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID  LEFT JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND EC_DOMAIN_LINK.ID IS NULL GROUP BY EC_DOMAIN.ID";
+            query = """
+                SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS
+                FROM EC_DOMAIN
+                INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
+                WHERE ((INDEXED>1 AND IS_ALIVE)
+                    OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0))
+                GROUP BY EC_DOMAIN.ID
+                """;
         }
 
         getDomains(query, consumer);

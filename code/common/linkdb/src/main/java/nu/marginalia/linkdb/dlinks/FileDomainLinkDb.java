@@ -23,7 +23,9 @@ public class FileDomainLinkDb implements DomainLinkDb {
     public FileDomainLinkDb(@Named("domain-linkdb-file") Path filename) throws IOException {
         this.filename = filename;
 
-        loadInput(filename);
+        if (Files.exists(filename)) {
+            loadInput(filename);
+        }
     }
 
     @Override
