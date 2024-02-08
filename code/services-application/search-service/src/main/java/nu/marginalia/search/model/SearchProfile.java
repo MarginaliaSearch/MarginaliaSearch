@@ -35,7 +35,7 @@ public enum SearchProfile {
     private final static SearchProfile[] values = values();
     public static SearchProfile getSearchProfile(String param) {
         if (null == param) {
-            return POPULAR;
+            return NO_FILTER;
         }
 
         for (var profile : values) {
@@ -44,7 +44,7 @@ public enum SearchProfile {
             }
         }
 
-        return POPULAR;
+        return NO_FILTER;
     }
 
     public void addTacitTerms(SearchSubquery subquery) {
