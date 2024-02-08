@@ -21,6 +21,7 @@ public class BangCommand implements SearchCommandInterface {
     {
         bangsToPattern.put("!g", "https://www.google.com/search?q=%s");
         bangsToPattern.put("!ddg", "https://duckduckgo.com/search?q=%s");
+        bangsToPattern.put("!w", "https://search.marginalia.nu/search?query=%s%20site:en.wikipedia.org&profile=wiki");
     }
 
     @Override
@@ -41,18 +42,25 @@ public class BangCommand implements SearchCommandInterface {
         return Optional.empty();
     }
 
-    private Optional<String> matchBangPattern(String query, String bangKey) {
+    /** If the query contains the bang pattern bangKey, return the query with the bang pattern removed. */
+    Optional<String> matchBangPattern(String query, String bangKey) {
         var bm = new BangMatcher(query);
 
         while (bm.findNext(bangKey)) {
 
-            if (bm.isRelativeSpaceOrInvalid(-1))
+            if (!bm.isRelativeSpaceOrInvalid(-1))
                 continue;
-            if (bm.isRelativeSpaceOrInvalid(bangKey.length()))
+            if (!bm.isRelativeSpaceOrInvalid(bangKey.length()))
                 continue;
 
-            String queryWithoutBang = bm.prefix().trim() + " " + bm.suffix(bangKey.length()).trim();
-            return Optional.of(queryWithoutBang);
+            StringBuilder ret = new StringBuilder(bm.prefix().trim());
+
+            if (!ret.isEmpty())
+                ret.append(" ");
+
+            ret.append(bm.suffix(bangKey.length()).trim());
+
+            return Optional.of(ret.toString());
         }
 
         return Optional.empty();
