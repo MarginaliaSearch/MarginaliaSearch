@@ -2,7 +2,6 @@ package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.client.Context;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.actor.ControlActor;
@@ -119,7 +118,7 @@ public class ControlSysActionsService {
         // This is technically not a partitioned operation, but we execute it at node 1
         // and let the effects be global :-)
 
-        executorClient.calculateAdjacencies(Context.fromRequest(request), 1);
+        executorClient.calculateAdjacencies(1);
 
         return "";
     }

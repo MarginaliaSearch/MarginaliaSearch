@@ -9,7 +9,6 @@ import nu.marginalia.executor.api.*;
 import nu.marginalia.executor.api.ExecutorApiGrpc.ExecutorApiBlockingStub;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
-import nu.marginalia.executor.model.load.LoadParameters;
 import nu.marginalia.executor.model.transfer.TransferItem;
 import nu.marginalia.executor.model.transfer.TransferSpec;
 import nu.marginalia.executor.storage.FileStorageContent;
@@ -59,76 +58,76 @@ public class ExecutorClient extends AbstractDynamicClient {
         };
     }
 
-    public void startFsm(Context ctx, int node, String actorName) {
-        var rs = stubPool.apiForNode(node).startFsm(
+    public void startFsm(int node, String actorName) {
+        stubPool.apiForNode(node).startFsm(
                 RpcFsmName.newBuilder()
                         .setActorName(actorName)
                         .build()
         );
     }
 
-    public void stopFsm(Context ctx, int node, String actorName) {
-        var rs = stubPool.apiForNode(node).stopFsm(
+    public void stopFsm(int node, String actorName) {
+        stubPool.apiForNode(node).stopFsm(
                 RpcFsmName.newBuilder()
                         .setActorName(actorName)
                         .build()
         );
     }
 
-    public void stopProcess(Context ctx, int node, String id) {
-        var rs = stubPool.apiForNode(node).stopProcess(
+    public void stopProcess(int node, String id) {
+        stubPool.apiForNode(node).stopProcess(
                 RpcProcessId.newBuilder()
                         .setProcessId(id)
                         .build()
         );
     }
 
-    public void triggerCrawl(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).triggerCrawl(
+    public void triggerCrawl(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).triggerCrawl(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
 
-    public void triggerRecrawl(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).triggerRecrawl(
+    public void triggerRecrawl(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).triggerRecrawl(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
 
-    public void triggerConvert(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).triggerConvert(
+    public void triggerConvert(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).triggerConvert(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
 
-    public void triggerConvertAndLoad(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).triggerConvertAndLoad(
+    public void triggerConvertAndLoad(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).triggerConvertAndLoad(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
 
-    public void loadProcessedData(Context ctx, int node, LoadParameters ids) {
-        var rs = stubPool.apiForNode(node).loadProcessedData(
+    public void loadProcessedData(int node, List<FileStorageId> ids) {
+        stubPool.apiForNode(node).loadProcessedData(
                 RpcFileStorageIds.newBuilder()
-                        .addAllFileStorageIds(ids.ids().stream().map(FileStorageId::id).toList())
+                        .addAllFileStorageIds(ids.stream().map(FileStorageId::id).toList())
                         .build()
         );
     }
 
-    public void calculateAdjacencies(Context ctx, int node) {
-        var rs = stubPool.apiForNode(node).calculateAdjacencies(Empty.getDefaultInstance());
+    public void calculateAdjacencies(int node) {
+        stubPool.apiForNode(node).calculateAdjacencies(Empty.getDefaultInstance());
     }
 
-    public void sideloadEncyclopedia(Context ctx, int node, Path sourcePath, String baseUrl) {
-        var rs = stubPool.apiForNode(node).sideloadEncyclopedia(
+    public void sideloadEncyclopedia(int node, Path sourcePath, String baseUrl) {
+        stubPool.apiForNode(node).sideloadEncyclopedia(
                 RpcSideloadEncyclopedia.newBuilder()
                         .setBaseUrl(baseUrl)
                         .setSourcePath(sourcePath.toString())
@@ -136,32 +135,32 @@ public class ExecutorClient extends AbstractDynamicClient {
         );
     }
 
-    public void sideloadDirtree(Context ctx, int node, Path sourcePath) {
-        var rs = stubPool.apiForNode(node).sideloadDirtree(
+    public void sideloadDirtree(int node, Path sourcePath) {
+        stubPool.apiForNode(node).sideloadDirtree(
                 RpcSideloadDirtree.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
         );
     }
 
-    public void sideloadWarc(Context ctx, int node, Path sourcePath) {
-        var rs = stubPool.apiForNode(node).sideloadWarc(
+    public void sideloadWarc(int node, Path sourcePath) {
+        stubPool.apiForNode(node).sideloadWarc(
                 RpcSideloadWarc.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
         );
     }
 
-    public void sideloadStackexchange(Context ctx, int node, Path sourcePath) {
-        var rs = stubPool.apiForNode(node).sideloadStackexchange(
+    public void sideloadStackexchange(int node, Path sourcePath) {
+        stubPool.apiForNode(node).sideloadStackexchange(
                 RpcSideloadStackexchange.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
         );
     }
 
-    public void createCrawlSpecFromDownload(Context context, int node, String description, String url) {
-        var rs = stubPool.apiForNode(node).createCrawlSpecFromDownload(
+    public void createCrawlSpecFromDownload(int node, String description, String url) {
+        stubPool.apiForNode(node).createCrawlSpecFromDownload(
                 RpcCrawlSpecFromDownload.newBuilder()
                         .setDescription(description)
                         .setUrl(url)
@@ -169,15 +168,15 @@ public class ExecutorClient extends AbstractDynamicClient {
         );
     }
 
-    public void exportAtags(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).exportAtags(
+    public void exportAtags(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).exportAtags(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
-    public void exportSampleData(Context ctx, int node, FileStorageId fid, int size, String name) {
-        var rs = stubPool.apiForNode(node).exportSampleData(
+    public void exportSampleData(int node, FileStorageId fid, int size, String name) {
+        stubPool.apiForNode(node).exportSampleData(
                 RpcExportSampleData.newBuilder()
                         .setFileStorageId(fid.id())
                         .setSize(size)
@@ -186,42 +185,42 @@ public class ExecutorClient extends AbstractDynamicClient {
         );
     }
 
-    public void exportRssFeeds(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).exportRssFeeds(
+    public void exportRssFeeds(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).exportRssFeeds(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
-    public void exportTermFrequencies(Context ctx, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).exportTermFrequencies(
+    public void exportTermFrequencies(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).exportTermFrequencies(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
 
-    public void downloadSampleData(Context ctx, int node, String sampleSet) {
-        var rs = stubPool.apiForNode(node).downloadSampleData(
+    public void downloadSampleData(int node, String sampleSet) {
+        stubPool.apiForNode(node).downloadSampleData(
                 RpcDownloadSampleData.newBuilder()
                         .setSampleSet(sampleSet)
                         .build()
         );
     }
 
-    public void exportData(Context ctx, int node) {
-        var rs = stubPool.apiForNode(node).exportData(Empty.getDefaultInstance());
+    public void exportData(int node) {
+        stubPool.apiForNode(node).exportData(Empty.getDefaultInstance());
     }
 
-    public void restoreBackup(Context context, int node, FileStorageId fid) {
-        var rs = stubPool.apiForNode(node).restoreBackup(
+    public void restoreBackup(int node, FileStorageId fid) {
+        stubPool.apiForNode(node).restoreBackup(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
 
-    public ActorRunStates getActorStates(Context context, int node) {
+    public ActorRunStates getActorStates(int node) {
         try {
             var rs = stubPool.apiForNode(node).getActorStates(Empty.getDefaultInstance());
             var states = rs.getActorRunStatesList().stream()
@@ -245,7 +244,7 @@ public class ExecutorClient extends AbstractDynamicClient {
         }
     }
 
-    public UploadDirContents listSideloadDir(Context context, int node) {
+    public UploadDirContents listSideloadDir(int node) {
         try {
             var rs = stubPool.apiForNode(node).listSideloadDir(Empty.getDefaultInstance());
             var items = rs.getEntriesList().stream()
@@ -261,7 +260,7 @@ public class ExecutorClient extends AbstractDynamicClient {
         }
     }
 
-    public FileStorageContent listFileStorage(Context context, int node, FileStorageId fileId) {
+    public FileStorageContent listFileStorage(int node, FileStorageId fileId) {
         try {
             var rs = stubPool.apiForNode(node).listFileStorage(
                     RpcFileStorageId.newBuilder()
