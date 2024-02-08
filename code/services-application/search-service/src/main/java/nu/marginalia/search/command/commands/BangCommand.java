@@ -53,14 +53,13 @@ public class BangCommand implements SearchCommandInterface {
             if (!bm.isRelativeSpaceOrInvalid(bangKey.length()))
                 continue;
 
-            StringBuilder ret = new StringBuilder(bm.prefix().trim());
+            String prefix = bm.prefix().trim();
+            String suffix = bm.suffix(bangKey.length()).trim();
 
-            if (!ret.isEmpty())
-                ret.append(" ");
+            String ret = STR."\{prefix} \{suffix}".trim();
 
-            ret.append(bm.suffix(bangKey.length()).trim());
-
-            return Optional.of(ret.toString());
+            return Optional.of(ret)
+                    .filter(s -> !s.isBlank());
         }
 
         return Optional.empty();

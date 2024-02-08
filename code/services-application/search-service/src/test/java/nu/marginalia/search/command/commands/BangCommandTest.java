@@ -34,4 +34,20 @@ class BangCommandTest {
         assertEquals(match.get(), "test");
     }
 
+    @Test
+    public void testMatchPattern2() {
+        var match = bangCommand.matchBangPattern("test !g", "!g");
+
+        assertTrue(match.isPresent());
+        assertEquals(match.get(), "test");
+    }
+
+    @Test
+    public void testMatchPattern3() {
+        var match = bangCommand.matchBangPattern("hello !g world", "!g");
+
+        assertTrue(match.isPresent());
+        assertEquals(match.get(), "hello world");
+    }
+
 }
