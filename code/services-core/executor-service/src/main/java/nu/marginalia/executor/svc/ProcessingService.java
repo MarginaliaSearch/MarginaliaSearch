@@ -1,6 +1,5 @@
 package nu.marginalia.executor.svc;
 
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
@@ -14,18 +13,15 @@ import java.util.stream.Collectors;
 
 public class ProcessingService {
     private final ExecutorActorControlService actorControlService;
-    private final Gson gson;
 
     @Inject
-    public ProcessingService(ExecutorActorControlService actorControlService,
-                             Gson gson) {
+    public ProcessingService(ExecutorActorControlService actorControlService) {
         this.actorControlService = actorControlService;
-        this.gson = gson;
     }
 
     public void startRecrawl(RpcFileStorageId request) throws Exception {
         actorControlService.startFrom(ExecutorActor.RECRAWL,
-                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
+                new RecrawlActor.Initial(FileStorageId.of(request.getFileStorageId()), false));
     }
 
     public void startCrawl(RpcFileStorageId request) throws Exception {
@@ -35,12 +31,12 @@ public class ProcessingService {
 
     public void startConversion(RpcFileStorageId request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT,
-                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
+                new ConvertActor.Convert(FileStorageId.of(request.getFileStorageId())));
     }
 
     public void startConvertLoad(RpcFileStorageId request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT_AND_LOAD,
-                new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
+                new ConvertAndLoadActor.Initial(FileStorageId.of(request.getFileStorageId())));
     }
 
     public void startLoad(RpcFileStorageIds request) throws Exception {

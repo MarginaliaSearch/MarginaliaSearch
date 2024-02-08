@@ -70,6 +70,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void triggerCrawl(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.startCrawl(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -81,6 +82,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void triggerRecrawl(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.startRecrawl(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -92,6 +94,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void triggerConvert(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.startConversion(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -103,6 +106,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void triggerConvertAndLoad(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.startConvertLoad(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -114,6 +118,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void loadProcessedData(RpcFileStorageIds request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.startLoad(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -125,6 +130,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void calculateAdjacencies(Empty request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.startAdjacencyCalculation();
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -136,6 +142,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void sideloadEncyclopedia(RpcSideloadEncyclopedia request, StreamObserver<Empty> responseObserver) {
         try {
             sideloadService.sideloadEncyclopedia(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -147,6 +154,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void sideloadDirtree(RpcSideloadDirtree request, StreamObserver<Empty> responseObserver) {
         try {
             sideloadService.sideloadDirtree(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -158,6 +166,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void sideloadWarc(RpcSideloadWarc request, StreamObserver<Empty> responseObserver) {
         try {
             sideloadService.sideloadWarc(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -169,6 +178,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void sideloadStackexchange(RpcSideloadStackexchange request, StreamObserver<Empty> responseObserver) {
         try {
             sideloadService.sideloadStackexchange(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -180,6 +190,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void createCrawlSpecFromDownload(RpcCrawlSpecFromDownload request, StreamObserver<Empty> responseObserver) {
         try {
             processingService.createCrawlSpecFromDownload(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -191,6 +202,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void exportAtags(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             exportService.exportAtags(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -202,6 +214,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void exportSampleData(RpcExportSampleData request, StreamObserver<Empty> responseObserver) {
         try {
             exportService.exportSampleData(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -213,6 +226,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void exportRssFeeds(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             exportService.exportFeeds(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -224,6 +238,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void exportTermFrequencies(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             exportService.exportTermFrequencies(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -235,6 +250,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void downloadSampleData(RpcDownloadSampleData request, StreamObserver<Empty> responseObserver) {
         try {
             sideloadService.downloadSampleData(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -246,6 +262,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void exportData(Empty request, StreamObserver<Empty> responseObserver) {
         try {
             exportService.exportData();
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
@@ -258,6 +275,7 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     public void restoreBackup(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             backupService.restore(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         }
         catch (Exception e) {
