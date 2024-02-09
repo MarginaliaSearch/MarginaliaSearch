@@ -4,11 +4,8 @@ import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.ContentTypeParser;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.zip.GZIPInputStream;
 
 public class DocumentBodyExtractor {
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
@@ -55,12 +52,6 @@ public class DocumentBodyExtractor {
     public static DocumentBodyResult<byte[]> asBytes(HttpFetchResult.ResultOk rsp) {
         try {
             var byteStream = rsp.getInputStream();
-
-            if ("gzip".equals(rsp.header("Content-Encoding"))) {
-                byteStream = new GZIPInputStream(byteStream);
-            }
-            byteStream = new BOMInputStream(byteStream);
-
             var contentTypeHeader = rsp.header("Content-Type");
 
             byte[] data = byteStream.readAllBytes(); // size is limited by WarcRecorder

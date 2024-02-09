@@ -30,13 +30,14 @@ import java.util.*;
  * be reconstructed.
  */
 public class WarcRecorder implements AutoCloseable {
-    private static final int MAX_TIME = 30_000;
-    private static final int MAX_SIZE = 1024 * 1024 * 10;
+    /** Maximum time we'll wait on a single request */
+    static final int MAX_TIME = 30_000;
+    /** Maximum (decompressed) size we'll fetch */
+    static final int MAX_SIZE = 1024 * 1024 * 10;
+
     private final WarcWriter writer;
     private final Path warcFile;
     private static final Logger logger = LoggerFactory.getLogger(WarcRecorder.class);
-
-    private final static ThreadLocal<byte[]> bufferThreadLocal = ThreadLocal.withInitial(() -> new byte[MAX_SIZE]);
 
     private boolean temporaryFile = false;
 
@@ -82,40 +83,27 @@ public class WarcRecorder implements AutoCloseable {
 
         String ip;
         Instant date = Instant.now();
-        long startMillis = date.toEpochMilli();
 
         var call = client.newCall(request);
 
-        int totalLength = 0;
-
-        WarcTruncationReason truncationReason = null;
-
-        ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
-
         cookieInformation.update(client, request.url());
 
-        try (var response = call.execute()) {
-            var body = response.body();
-            InputStream inputStream;
+        try (var response = call.execute();
+             WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response))
+        {
+            String responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size());
 
-            if (body == null) {
-                inputStream = null;
-                truncationReason = WarcTruncationReason.DISCONNECT;
-            }
-            else {
-                inputStream = body.byteStream();
-            }
+            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length());
+            InputStream inputStream = inputBuffer.read();
 
             ip = IpInterceptingNetworkInterceptor.getIpFromResponse(response);
-
-            String responseHeaders = WarcProtocolReconstructor.getResponseHeader(response);
 
             responseDataBuffer.put(responseHeaders);
             responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseDataBuffer.length());
 
             int dataStart = responseDataBuffer.pos();
 
-            while (inputStream != null) {
+            for (;;) {
                 int remainingLength = responseDataBuffer.remaining();
                 if (remainingLength == 0)
                     break;
@@ -128,16 +116,6 @@ public class WarcRecorder implements AutoCloseable {
 
                 responseDataBuffer.updateDigest(responseDigestBuilder, startPos, n);
                 responseDataBuffer.updateDigest(payloadDigestBuilder, startPos, n);
-                totalLength += n;
-
-                if (MAX_TIME > 0 && System.currentTimeMillis() - startMillis > MAX_TIME) {
-                    truncationReason = WarcTruncationReason.TIME;
-                    break;
-                }
-                if (MAX_SIZE > 0 && totalLength >= MAX_SIZE) {
-                    truncationReason = WarcTruncationReason.LENGTH;
-                    break;
-                }
             }
 
             // It looks like this might be the same as requestUri, but it's not;
@@ -154,9 +132,7 @@ public class WarcRecorder implements AutoCloseable {
             if (ip != null) responseBuilder.ipAddress(InetAddress.getByName(ip));
 
             responseBuilder.payloadDigest(payloadDigestBuilder.build());
-
-            if (truncationReason != null)
-                responseBuilder.truncated(truncationReason);
+            responseBuilder.truncated(inputBuffer.truncationReason());
 
             // Build and write the response
 
@@ -178,12 +154,13 @@ public class WarcRecorder implements AutoCloseable {
                     .body(MediaType.HTTP_REQUEST, httpRequestString.getBytes())
                     .concurrentTo(warcResponse.id())
                     .build();
+
             warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
             writer.write(warcRequest);
 
             return new HttpFetchResult.ResultOk(responseUri,
                     response.code(),
-                    response.headers(),
+                    inputBuffer.headers(),
                     ip,
                     responseDataBuffer.data,
                     dataStart,
@@ -217,7 +194,6 @@ public class WarcRecorder implements AutoCloseable {
 
             fakeHeadersBuilder.add(STR."Content-Type: \{contentType}");
             fakeHeadersBuilder.add(STR."Content-Length: \{bytes.length}");
-            fakeHeadersBuilder.add(STR."Content-Encoding: UTF-8");
             if (contentTags.etag() != null) {
                 fakeHeadersBuilder.add(STR."ETag: \{contentTags.etag()}");
             }
@@ -226,7 +202,7 @@ public class WarcRecorder implements AutoCloseable {
             }
 
             String header = WarcProtocolReconstructor.getResponseHeader(fakeHeadersBuilder.toString(), statusCode);
-            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
+            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(bytes.length + header.length());
             responseDataBuffer.put(header);
 
             responseDigestBuilder.update(header);
@@ -348,8 +324,8 @@ public class WarcRecorder implements AutoCloseable {
         private int length = 0;
         private int pos = 0;
 
-        public ResponseDataBuffer() {
-            data = bufferThreadLocal.get();
+        public ResponseDataBuffer(int size) {
+            data = new byte[size];
         }
 
         public int pos() {
@@ -380,7 +356,7 @@ public class WarcRecorder implements AutoCloseable {
         }
 
         public int remaining() {
-            return MAX_SIZE - pos;
+            return data.length - pos;
         }
 
         public void updateDigest(WarcDigestBuilder digestBuilder, int startPos, int n) {
@@ -388,9 +364,10 @@ public class WarcRecorder implements AutoCloseable {
         }
 
         public byte[] copyBytes() {
-            byte[] copy = new byte[length];
-            System.arraycopy(data, 0, copy, 0, length);
-            return copy;
+            if (length < data.length)
+                return Arrays.copyOf(data, length);
+            else
+                return data;
         }
 
     }
@@ -405,3 +382,4 @@ public class WarcRecorder implements AutoCloseable {
         }
     }
 }
+

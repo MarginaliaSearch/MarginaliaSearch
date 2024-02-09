@@ -64,13 +64,13 @@ public class WarcProtocolReconstructor {
         return STR."HTTP/\{version} \{statusCode} \{statusMessage}\r\n\{headerString}\r\n\r\n";
     }
 
-    static String getResponseHeader(Response response) {
+    static String getResponseHeader(Response response, long size) {
         String version = response.protocol() == Protocol.HTTP_1_1 ? "1.1" : "2.0";
 
         String statusCode = String.valueOf(response.code());
         String statusMessage = STATUS_CODE_MAP.getOrDefault(response.code(), "Unknown");
 
-        String headerString = getHeadersAsString(response);
+        String headerString = getHeadersAsString(response, size);
 
         return STR."HTTP/\{version} \{statusCode} \{statusMessage}\r\n\{headerString}\r\n\r\n";
     }
@@ -137,7 +137,7 @@ public class WarcProtocolReconstructor {
         return joiner.toString();
     }
 
-    static private String getHeadersAsString(Response response) {
+    static private String getHeadersAsString(Response response, long responseSize) {
         StringJoiner joiner = new StringJoiner("\r\n");
 
         response.headers().toMultimap().forEach((k, values) -> {
@@ -147,15 +147,24 @@ public class WarcProtocolReconstructor {
             if (headerCapitalized.startsWith("X-Marginalia"))
                 return;
 
-            // Omit Transfer-Encoding header, as we'll be using Content-Length
-            // instead in the warc file, despite what the server says
-            if (headerCapitalized.startsWith("Transfer-Encoding"))
+            // Omit Transfer-Encoding and Content-Encoding headers
+            if (headerCapitalized.equals("Transfer-Encoding"))
+                return;
+            if (headerCapitalized.equals("Content-Encoding"))
+                return;
+
+            // Since we're transparently decoding gzip, we need to update the Content-Length header
+            // to reflect the actual size of the response body. We'll do this at the end.
+            if (headerCapitalized.equals("Content-Length"))
                 return;
 
             for (var value : values) {
                 joiner.add(headerCapitalized + ": " + value);
             }
         });
+
+        joiner.add("Content-Length: " + responseSize);
+
         return joiner.toString();
     }
 
