@@ -19,6 +19,10 @@ class WarcDigestBuilder {
         update(bytes, bytes.length);
     }
 
+    public void update(byte[] bytes) {
+        update(bytes, bytes.length);
+    }
+
     public void update(byte[] buffer, int n) {
         update(buffer, 0, n);
     }

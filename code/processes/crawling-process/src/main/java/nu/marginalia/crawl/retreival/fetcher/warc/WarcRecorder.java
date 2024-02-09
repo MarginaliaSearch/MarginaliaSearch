@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
@@ -91,15 +92,15 @@ public class WarcRecorder implements AutoCloseable {
         try (var response = call.execute();
              WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response))
         {
-            String responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size());
+            byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
 
-            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length());
+            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length);
             InputStream inputStream = inputBuffer.read();
 
             ip = IpInterceptingNetworkInterceptor.getIpFromResponse(response);
 
             responseDataBuffer.put(responseHeaders);
-            responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseDataBuffer.length());
+            responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseHeaders.length);
 
             int dataStart = responseDataBuffer.pos();
 
@@ -201,8 +202,10 @@ public class WarcRecorder implements AutoCloseable {
                 fakeHeadersBuilder.add(STR."Last-Modified: \{contentTags.lastMod()}");
             }
 
-            String header = WarcProtocolReconstructor.getResponseHeader(fakeHeadersBuilder.toString(), statusCode);
-            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(bytes.length + header.length());
+            byte[] header = WarcProtocolReconstructor
+                                        .getResponseHeader(fakeHeadersBuilder.toString(), statusCode)
+                                        .getBytes(StandardCharsets.UTF_8);
+            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(bytes.length + header.length);
             responseDataBuffer.put(header);
 
             responseDigestBuilder.update(header);
@@ -335,8 +338,7 @@ public class WarcRecorder implements AutoCloseable {
             return length;
         }
 
-        public void put(String s) {
-            byte[] bytes = s.getBytes();
+        public void put(byte[] bytes) {
             put(bytes, 0, bytes.length);
         }
 
