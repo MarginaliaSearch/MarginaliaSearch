@@ -25,7 +25,7 @@ public interface RandomFileAssembler extends AutoCloseable {
     static RandomFileAssembler create(Path workDir,
                                       long totalSize) throws IOException {
         // If the system is configured to conserve memory, we use temp files
-        if (Boolean.getBoolean("system.conserve-memory")) {
+        if (Boolean.getBoolean("system.conserveMemory")) {
             return ofTempFiles(workDir, totalSize);
         }
 
