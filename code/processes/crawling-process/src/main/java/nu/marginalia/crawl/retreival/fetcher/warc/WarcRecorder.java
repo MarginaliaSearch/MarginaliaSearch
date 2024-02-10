@@ -145,14 +145,16 @@ public class WarcRecorder implements AutoCloseable {
 
             WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
 
-            String httpRequestString = WarcProtocolReconstructor.getHttpRequestString(response.request(), requestUri);
+            byte[] httpRequestString = WarcProtocolReconstructor
+                    .getHttpRequestString(response.request(), requestUri)
+                    .getBytes();
 
             requestDigestBuilder.update(httpRequestString);
 
             WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
                     .blockDigest(requestDigestBuilder.build())
                     .date(date)
-                    .body(MediaType.HTTP_REQUEST, httpRequestString.getBytes())
+                    .body(MediaType.HTTP_REQUEST, httpRequestString)
                     .concurrentTo(warcResponse.id())
                     .build();
 
@@ -322,7 +324,7 @@ public class WarcRecorder implements AutoCloseable {
         }
     }
 
-    private class ResponseDataBuffer {
+    private static class ResponseDataBuffer {
         private final byte[] data;
         private int length = 0;
         private int pos = 0;

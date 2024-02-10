@@ -14,11 +14,6 @@ class WarcDigestBuilder {
         this.digest = MessageDigest.getInstance(digestAlgorithm);
     }
 
-    public void update(String s) {
-        byte[] bytes = s.getBytes();
-        update(bytes, bytes.length);
-    }
-
     public void update(byte[] bytes) {
         update(bytes, bytes.length);
     }
