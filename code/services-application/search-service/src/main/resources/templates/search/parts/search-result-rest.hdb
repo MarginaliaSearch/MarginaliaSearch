@@ -7,7 +7,7 @@
 
 {{/with}}
 <div class="utils">
-  Also from <a href="/site/{{first.url.domain}}">{{first.url.domain}}</a>
+  Also from {{first.url.domain}}
 </div>
 <ul class="additional-results">
 {{#each rest}}
