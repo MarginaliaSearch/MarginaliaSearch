@@ -1,7 +1,6 @@
 package nu.marginalia.search;
 
 import nu.marginalia.query.model.QueryResponse;
-import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.ClusteredUrlDetails;
 import nu.marginalia.search.model.UrlDetails;
 
@@ -46,7 +45,6 @@ public class SearchResultClusterer {
                 )
                 .values().stream()
                 .map(ClusteredUrlDetails::new)
-                .mapMulti(ClusteredUrlDetails::splitSmallClusters) // split small clusters into singletons
                 .sorted()
                 .limit(total)
                 .toList();

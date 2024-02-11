@@ -6,7 +6,6 @@ import nu.marginalia.model.idx.WordFlags;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /** A class to hold a list of UrlDetails, grouped by domain, where the first one is the main result
@@ -71,20 +70,6 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
     @NotNull
     @Getter
     public final List<UrlDetails> rest;
-
-    public void splitSmallClusters(Consumer<ClusteredUrlDetails> consumer) {
-        if (rest.isEmpty())
-            consumer.accept(this);
-        else if (rest.size() < 2) { // Only one additional result
-            consumer.accept(new ClusteredUrlDetails(first));
-            rest.stream()
-                    .map(ClusteredUrlDetails::new)
-                    .forEach(consumer);
-        }
-        else {
-            consumer.accept(this);
-        }
-    }
 
     public EdgeDomain getDomain() {
         return first.url.getDomain();
