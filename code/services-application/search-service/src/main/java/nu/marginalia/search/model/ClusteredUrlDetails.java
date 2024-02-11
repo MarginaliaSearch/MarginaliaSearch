@@ -2,10 +2,12 @@ package nu.marginalia.search.model;
 
 import lombok.Getter;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.idx.WordFlags;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /** A class to hold a list of UrlDetails, grouped by domain, where the first one is the main result
  * and the rest are additional results, for summary display. */
@@ -34,10 +36,27 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
 
             this.rest = queue
                     .stream()
+                    .filter(this::isEligbleForInclusion)
                     .takeWhile(next -> next.termScore <= scoreLimit)
                     .toList();
         }
 
+    }
+
+    private boolean isEligbleForInclusion(UrlDetails urlDetails) {
+        return urlDetails.resultItem.keywordScores.stream()
+                .filter(score -> !score.keyword.contains(":"))
+                .collect(Collectors.toMap(
+                        score -> score.subquery,
+                        score -> score.hasTermFlag(WordFlags.Title)
+                               | score.hasTermFlag(WordFlags.ExternalLink)
+                               | score.hasTermFlag(WordFlags.UrlDomain)
+                               | score.hasTermFlag(WordFlags.UrlPath)
+                               | score.hasTermFlag(WordFlags.Subjects)
+                        ,
+                        (a, b) -> a && b
+                ))
+                .containsValue(Boolean.TRUE);
     }
 
     public ClusteredUrlDetails(@NotNull UrlDetails onlyFirst) {
@@ -52,17 +71,6 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
     @NotNull
     @Getter
     public final List<UrlDetails> rest;
-
-    public void forEachSingle(Consumer<ClusteredUrlDetails> consumer) {
-        if (rest.isEmpty())
-            consumer.accept(this);
-        else {
-            consumer.accept(new ClusteredUrlDetails(first));
-            rest.stream()
-                    .map(ClusteredUrlDetails::new)
-                    .forEach(consumer);
-        }
-    }
 
     public void splitSmallClusters(Consumer<ClusteredUrlDetails> consumer) {
         if (rest.isEmpty())

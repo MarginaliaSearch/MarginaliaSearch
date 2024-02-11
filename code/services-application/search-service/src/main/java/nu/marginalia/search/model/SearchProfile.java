@@ -101,15 +101,5 @@ public enum SearchProfile {
         else return SpecificationLimit.none();
     }
 
-    public boolean clusterResults() {
-        if (this == FORUM)
-            return true;
-        if (this == WIKI)
-            return true;
-        if (this == DOCS)
-            return true;
-        return false;
-    }
-
 }
 

@@ -1,4 +1,11 @@
-<section class="card search-result">
+
+<section data-ms-rank="{{first.matchRank}}" class="card search-result" >
+{{#with first}}
+<div class="url"><a rel="nofollow external" href="{{url}}">{{url}}</a></div>
+<h2> <a tabindex="-1" class="title" rel="nofollow external" href="{{url}}">{{title}}</a> </h2>
+<p class="description">{{description}}</p>
+
+{{/with}}
 <div class="utils">
   Also from <a href="/site/{{first.url.domain}}">{{first.url.domain}}</a>
 </div>
@@ -7,11 +14,17 @@
 <li><a href="{{url}}">{{title}}</a></li>
 {{/each}}
 </ul>
-{{#if remainingCount}}
+{{#with first}}
 <div class="utils">
-  <a href="/site-search/{{first.url.domain}}/{{query}}?profile={{profile}}">{{remainingCount}}</a> more</li>
+    <a href="/site/{{url.domain}}" title="Domain Information">Info</a>
+    <a href="/site-search/{{url.domain}}/{{query}}?profile={{profile}}" title="More results from this domain">{{resultsFromSameDomain}}+</a>
+    <div class="meta">
+        {{#if problemCount}} <span class="problems" title="{{problems}}"> ⚠ {{problemCount}} </span> {{/if}}
+        <span aria-hidden="true" class="meta positions"
+              title="Positions where keywords were found within the document">{{positions}}</span>
+    </div>
 </div>
-{{/if}}
+{{/with}}
 </section>
 
 <hr class="w3m-helper" />

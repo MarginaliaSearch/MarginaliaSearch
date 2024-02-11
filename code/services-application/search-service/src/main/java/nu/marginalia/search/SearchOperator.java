@@ -104,7 +104,7 @@ public class SearchOperator {
         String evalResult = getFutureOrDefault(eval, "");
 
         List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
-                .selectStrategy(queryResponse, userParams)
+                .selectStrategy(queryResponse)
                 .clusterResults(queryResults, 25);
 
         return DecoratedSearchResults.builder()

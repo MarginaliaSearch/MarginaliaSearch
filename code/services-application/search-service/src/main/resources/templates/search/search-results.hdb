@@ -25,8 +25,13 @@
             </div>
         {{/if}}
         {{#each results}}
-            {{#with first}} {{>search/parts/search-result}} {{/with}}
-            {{#if hasMultiple}} {{>search/parts/search-result-rest}} {{/if}}
+            {{#if hasMultiple}}
+                {{>search/parts/search-result-rest}}
+            {{else}}
+            {{#with first}}
+                {{>search/parts/search-result}}
+            {{/with}}
+            {{/if}}
         {{/each}}
     </section>
 

@@ -16,14 +16,11 @@ public class SearchResultClusterer {
         List<ClusteredUrlDetails> clusterResults(List<UrlDetails> results, int total);
     }
 
-    public static SearchResultClusterStrategy selectStrategy(QueryResponse response, SearchParameters params) {
+    public static SearchResultClusterStrategy selectStrategy(QueryResponse response) {
         if (response.domain() != null && !response.domain().isBlank())
             return SearchResultClusterer::noOp;
 
-        if (params.profile().clusterResults())
-            return SearchResultClusterer::byDomain;
-
-        return SearchResultClusterer::clusterThenSplit;
+        return SearchResultClusterer::byDomain;
     }
 
     /** No clustering, just return the results as is */
@@ -50,25 +47,6 @@ public class SearchResultClusterer {
                 .values().stream()
                 .map(ClusteredUrlDetails::new)
                 .mapMulti(ClusteredUrlDetails::splitSmallClusters) // split small clusters into singletons
-                .sorted()
-                .limit(total)
-                .toList();
-    }
-
-    /** Cluster the results by domain to find the best result for each domain,
-     * then split the clusters into singletons, and return the top "total" clusters
-     */
-    private static List<ClusteredUrlDetails> clusterThenSplit(List<UrlDetails> results, int total) {
-        if (results.isEmpty())
-            return List.of();
-
-        return results.stream()
-                .collect(
-                        Collectors.groupingBy(details -> details.domainId)
-                )
-                .values().stream()
-                .map(ClusteredUrlDetails::new)
-                .mapMulti(ClusteredUrlDetails::forEachSingle)
                 .sorted()
                 .limit(total)
                 .toList();
