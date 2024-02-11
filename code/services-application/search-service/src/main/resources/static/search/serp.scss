@@ -607,6 +607,16 @@ footer {
     padding: 1ch;
     margin: 0;
   }
+
+  ul.additional-results {
+    background-color: $fg-light;
+    padding: 1ch;
+    list-style: none;
+    margin: 0;
+    a {
+        color: $fg-dark;
+    }
+  }
 }
 
 .search-result[data-ms-rank="1"] {  .url, h2 { filter: grayscale(0%); } }

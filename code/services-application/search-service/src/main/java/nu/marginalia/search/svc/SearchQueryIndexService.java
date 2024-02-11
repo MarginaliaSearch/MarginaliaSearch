@@ -10,7 +10,6 @@ import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.query.model.QueryResponse;
-import nu.marginalia.search.model.PageScoreAdjustment;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.UrlDeduplicator;
 import org.slf4j.Logger;
@@ -22,7 +21,6 @@ import java.util.*;
 
 @Singleton
 public class SearchQueryIndexService {
-    private final Comparator<UrlDetails> resultListComparator;
     private final SearchQueryCountService searchVisitorCount;
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -30,11 +28,6 @@ public class SearchQueryIndexService {
     @Inject
     public SearchQueryIndexService(SearchQueryCountService searchVisitorCount) {
         this.searchVisitorCount = searchVisitorCount;
-
-        resultListComparator = Comparator.comparing(UrlDetails::getTermScore)
-                .thenComparing(UrlDetails::getRanking)
-                .thenComparing(UrlDetails::getId);
-
     }
 
     public List<UrlDetails> getResultsFromQuery(QueryResponse queryResponse) {
@@ -46,7 +39,8 @@ public class SearchQueryIndexService {
 
         // Decorate and sort the results
         List<UrlDetails> urlDetails = getAllUrlDetails(results);
-        urlDetails.sort(resultListComparator);
+
+        urlDetails.sort(Comparator.naturalOrder());
 
         return urlDetails;
     }
@@ -81,6 +75,7 @@ public class SearchQueryIndexService {
     @SneakyThrows
     public List<UrlDetails> getAllUrlDetails(List<DecoratedSearchResultItem> resultSet) {
         List<UrlDetails> ret = new ArrayList<>(resultSet.size());
+
         for (var detail : resultSet) {
             ret.add(new UrlDetails(
                     detail.documentId(),
@@ -88,21 +83,14 @@ public class SearchQueryIndexService {
                     detail.url,
                     detail.title,
                     detail.description,
-                    detail.urlQuality,
-                    detail.wordsTotal,
                     detail.format,
                     detail.features,
-                    "",
                     DomainIndexingState.ACTIVE,
-                    detail.dataHash,
-                    PageScoreAdjustment.zero(), // urlQualityAdjustment
-                    detail.rankingId(),
                     detail.rankingScore, // termScore
                     detail.resultsFromDomain(),
                     getPositionsString(detail.rawIndexResult),
                     detail.rawIndexResult,
-                    detail.rawIndexResult.keywordScores,
-                    0L
+                    detail.rawIndexResult.keywordScores
             ));
         }
 

@@ -1,5 +1,6 @@
-<section data-rs-rank="{{logRank}}" data-ms-rank="{{matchRank}}"
-        class="card search-result" >
+<!-- {{termScore}} -->
+<section data-ms-rank="{{matchRank}}" class="card search-result" >
+
 <div class="url"><a rel="nofollow external" href="{{url}}">{{url}}</a></div>
 <h2> <a tabindex="-1" class="title" rel="nofollow external" href="{{url}}">{{title}}</a> </h2>
 <p class="description">{{description}}</p>

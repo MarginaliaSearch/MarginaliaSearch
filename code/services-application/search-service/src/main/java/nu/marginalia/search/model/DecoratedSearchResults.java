@@ -13,7 +13,7 @@ public class DecoratedSearchResults {
     private final List<String> problems;
     private final String evalResult;
 
-    public final List<UrlDetails> results;
+    public final List<ClusteredUrlDetails> results;
 
     private final String focusDomain;
     private final int focusDomainId;

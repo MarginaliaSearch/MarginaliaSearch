@@ -1,0 +1,17 @@
+<section class="card search-result">
+<div class="utils">
+  Also from <a href="/site/{{first.url.domain}}">{{first.url.domain}}</a>
+</div>
+<ul class="additional-results">
+{{#each rest}}
+<li><a href="{{url}}">{{title}}</a></li>
+{{/each}}
+</ul>
+{{#if remainingCount}}
+<div class="utils">
+  <a href="/site-search/{{first.url.domain}}/{{query}}?profile={{profile}}">{{remainingCount}}</a> more</li>
+</div>
+{{/if}}
+</section>
+
+<hr class="w3m-helper" />

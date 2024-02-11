@@ -11,11 +11,8 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.query.model.QueryResponse;
 import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.search.model.SearchFilters;
-import nu.marginalia.search.model.SearchProfile;
-import nu.marginalia.search.model.UrlDetails;
+import nu.marginalia.search.model.*;
 import nu.marginalia.client.Context;
-import nu.marginalia.search.model.DecoratedSearchResults;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 import org.apache.logging.log4j.util.Strings;
@@ -106,11 +103,15 @@ public class SearchOperator {
 
         String evalResult = getFutureOrDefault(eval, "");
 
+        List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
+                .selectStrategy(queryResponse, userParams)
+                .clusterResults(queryResults, 25);
+
         return DecoratedSearchResults.builder()
                 .params(userParams)
                 .problems(getProblems(ctx, evalResult, queryResults, queryResponse))
                 .evalResult(evalResult)
-                .results(queryResults)
+                .results(clusteredResults)
                 .filters(new SearchFilters(websiteUrl, userParams))
                 .focusDomain(queryResponse.domain())
                 .focusDomainId(getDomainId(queryResponse.domain()))

@@ -7,31 +7,24 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.StringJoiner;
 
+/** A class to hold details about a single search result. */
 @AllArgsConstructor @NoArgsConstructor @With @Getter @ToString
-public class UrlDetails {
+public class UrlDetails implements Comparable<UrlDetails> {
     public long id;
     public int domainId;
+
     public EdgeUrl url;
     public String title;
     public String description;
 
-    public double urlQuality;
-
-    public int words;
     public String format;
     public int features;
 
-    public String ip;
     public DomainIndexingState domainState;
 
-    public long dataHash;
-
-    public PageScoreAdjustment urlQualityAdjustment;
-    public long rankingId;
     public double termScore;
 
     public int resultsFromSameDomain;
@@ -39,7 +32,6 @@ public class UrlDetails {
     public String positions;
     public SearchResultItem resultItem;
     public List<SearchResultKeywordScore> keywordScores;
-    public long combinedId;
 
     public boolean hasMoreResults() {
         return resultsFromSameDomain > 1;
@@ -69,6 +61,13 @@ public class UrlDetails {
         return Long.hashCode(id);
     }
 
+    @Override
+    public int compareTo(UrlDetails other) {
+        int result = Double.compare(getTermScore(), other.getTermScore());
+        if (result == 0) result = Long.compare(getId(), other.getId());
+        return result;
+    }
+
     public boolean equals(Object other) {
         if (other == null) {
             return false;
@@ -81,6 +80,7 @@ public class UrlDetails {
         }
         return false;
     }
+
     public String getTitle() {
         if (title == null || title.isBlank()) {
             return url.toString();
@@ -88,22 +88,11 @@ public class UrlDetails {
         return title;
     }
 
-    public String getQualityPercent() {
-        return String.format("%2.2f%%", 100*Math.exp(urlQuality+urlQualityAdjustment.getScore()));
-    }
-
-    public double getRanking() {
-        double lengthAdjustment = Math.max(1, words / (words + 10000.));
-        return getFeatureScore()*Math.sqrt(1+rankingId)/Math.max(1E-10, lengthAdjustment *(0.7+0.3*Math.exp(urlQualityAdjustment.getScore())));
-    }
-
     public boolean isPlainText() {
          return "PLAIN".equals(format);
     }
 
     public int getProblemCount() {
-        int numProblems = 0;
-
         int mask = HtmlFeature.JS.getFeatureBit()
                 | HtmlFeature.COOKIES.getFeatureBit()
                 | HtmlFeature.TRACKING.getFeatureBit()
@@ -153,8 +142,6 @@ public class UrlDetails {
     }
     public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.TRACKING_ADTECH); }
 
-    public int getLogRank() { return (int) Math.round(Math.min(Math.log(1+rankingId),10)); }
-
     public int getMatchRank() {
         if (termScore <= 1) return 1;
         if (termScore <= 2) return 2;
@@ -162,24 +149,5 @@ public class UrlDetails {
         if (termScore <= 5) return 5;
 
         return 10;
-    }
-
-    public double getFeatureScore() {
-        double score = 1;
-        if (isScripts()) {
-            score+=1;
-        } else if(!"HTML5".equals(format)) {
-            score+=0.5;
-        }
-        if (isAffiliate()) {
-            score += 2.5;
-        }
-        if (isTracking()) {
-            score += 1.5;
-        }
-        if (isCookies()) {
-            score += 1.5;
-        }
-        return score;
     }
 }

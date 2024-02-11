@@ -23,9 +23,11 @@
             <div class="infobox">
                 Showing search results from <a href="/site/{{focusDomain}}">{{focusDomain}}</a>.
             </div>
-
         {{/if}}
-        {{#each results}}{{>search/parts/search-result}}{{/each}}
+        {{#each results}}
+            {{#with first}} {{>search/parts/search-result}} {{/with}}
+            {{#if hasMultiple}} {{>search/parts/search-result-rest}} {{/if}}
+        {{/each}}
     </section>
 
     {{#with filters}}
