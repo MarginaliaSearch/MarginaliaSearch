@@ -44,10 +44,11 @@ public class QueryBasicInterface {
         }
 
         int count = request.queryParams("count") == null ? 10 : Integer.parseInt(request.queryParams("count"));
+        int domainCount = request.queryParams("domainCount") == null ? 5 : Integer.parseInt(request.queryParams("domainCount"));
         String set = request.queryParams("set") == null ? "" : request.queryParams("set");
 
         var query = queryFactory.createQuery(new QueryParams(queryParam, new QueryLimits(
-                1, count, 250, 8192
+                domainCount, count, 250, 8192
         ), set));
 
         var rsp = indexClient.query(

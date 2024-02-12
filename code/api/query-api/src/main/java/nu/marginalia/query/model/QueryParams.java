@@ -1,7 +1,5 @@
 package nu.marginalia.query.model;
 
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
-import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 

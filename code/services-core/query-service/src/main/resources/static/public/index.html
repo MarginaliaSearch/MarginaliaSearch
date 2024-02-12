@@ -27,12 +27,39 @@
         The same endpoint is available as a web API with JSON-results when the
         'Accept: application/json'-header is sent by the client.</p>
 
+    <h3 class="my-3">Query parameters</h3>
 
-    <h3>Minimal integration with the API:</h3>
+    <p>
+        The following query parameters are available:
+    </p>
+
+    <table>
+        <tr>
+            <th>Parameter</th><th>Description</th>
+        </tr>
+        <tr>
+            <td><code>q</code></td>
+            <td>The query to perform.</td>
+        </tr>
+        <tr>
+            <td><code>count</code></td>
+            <td>Limit the number of results returned.  Default is 10.</td>
+        </tr>
+        <tr>
+            <td><code>domainCount</code></td>
+            <td>Max number of results per domain</td>
+        </tr>
+        <tr>
+            <td><code>set</code></td>
+            <td>Ranking Set (<a href="https://docs.marginalia.nu/3_configuration_options/3_ranking_sets/">documentation</a>)</td>
+        </tr>
+    </table>
+
+    <h3 class="my-3">Minimal integration with the API:</h3>
     <dl>
         <dt>Curl</dt>
         <dd>
-            <code>$ curl -H 'Accept: application/json' 'http://localhost:8080/search?q=test'</code>
+            <code>$ curl -H 'Accept: application/json' 'http://localhost:8080/search?q=test&count=20'</code>
         </dd>
         <dt>
             Python 3
