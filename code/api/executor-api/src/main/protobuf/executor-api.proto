@@ -20,6 +20,7 @@ service ExecutorApi {
   rpc sideloadEncyclopedia(RpcSideloadEncyclopedia) returns (Empty) {}
   rpc sideloadDirtree(RpcSideloadDirtree) returns (Empty) {}
   rpc sideloadWarc(RpcSideloadWarc) returns (Empty) {}
+  rpc sideloadReddit(RpcSideloadReddit) returns (Empty) {}
   rpc sideloadStackexchange(RpcSideloadStackexchange) returns (Empty) {}
 
   rpc createCrawlSpecFromDownload(RpcCrawlSpecFromDownload) returns (Empty) {}
@@ -56,6 +57,9 @@ message RpcSideloadDirtree {
   string sourcePath = 1;
 }
 message RpcSideloadWarc {
+  string sourcePath = 1;
+}
+message RpcSideloadReddit {
   string sourcePath = 1;
 }
 message RpcSideloadStackexchange {

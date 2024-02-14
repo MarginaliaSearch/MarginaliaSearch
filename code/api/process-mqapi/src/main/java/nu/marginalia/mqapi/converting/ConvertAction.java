@@ -5,5 +5,6 @@ public enum ConvertAction {
     SideloadEncyclopedia,
     SideloadDirtree,
     SideloadWarc,
+    SideloadReddit,
     SideloadStackexchange
 }

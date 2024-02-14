@@ -163,6 +163,18 @@ public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
     }
 
     @Override
+    public void sideloadReddit(RpcSideloadReddit request, StreamObserver<Empty> responseObserver) {
+        try {
+            sideloadService.sideloadReddit(request);
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void sideloadWarc(RpcSideloadWarc request, StreamObserver<Empty> responseObserver) {
         try {
             sideloadService.sideloadWarc(request);

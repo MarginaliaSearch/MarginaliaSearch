@@ -41,6 +41,7 @@ dependencies {
     implementation project(':code:features-crawl:link-parser')
     implementation project(':code:features-convert:data-extractors')
     implementation project(':code:features-convert:stackexchange-xml')
+    implementation project(':code:features-convert:reddit-json')
     implementation project(':code:features-index:index-journal')
     implementation project(':code:api:index-api')
     implementation project(':code:api:query-api')

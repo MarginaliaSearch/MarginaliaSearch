@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation libs.bundles.slf4j
+
+    implementation project(':code:libraries:blocking-thread-pool')
+    implementation project(':code:common:model')
+    implementation libs.notnull
+
+    implementation libs.jsoup
+    implementation libs.sqlite
+
+    implementation libs.guice
+    implementation libs.guava
+    implementation libs.gson
+    implementation libs.zstd
+    implementation libs.trove
+    implementation libs.commons.compress
+    implementation libs.xz
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}

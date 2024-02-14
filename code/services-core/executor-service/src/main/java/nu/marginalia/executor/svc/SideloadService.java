@@ -32,6 +32,12 @@ public class SideloadService {
         );
     }
 
+    public void sideloadReddit(RpcSideloadReddit request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.CONVERT,
+                new ConvertActor.ConvertReddit(request.getSourcePath())
+        );
+    }
+
     public void sideloadWarc(RpcSideloadWarc request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT,
                 new ConvertActor.ConvertWarc(request.getSourcePath())

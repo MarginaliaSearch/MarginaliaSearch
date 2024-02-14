@@ -35,9 +35,9 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
     private final EdgeDomain domain;
 
 
+    @SneakyThrows
     public WarcSideloader(Path warcFile,
                           SideloaderProcessing sideloaderProcessing)
-    throws IOException
     {
         this.sideloaderProcessing = sideloaderProcessing;
         this.reader = new WarcReader(warcFile);
