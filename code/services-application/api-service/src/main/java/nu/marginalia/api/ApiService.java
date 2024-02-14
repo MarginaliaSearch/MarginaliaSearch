@@ -98,19 +98,16 @@ public class ApiService extends Service {
 
         response.type("application/json");
 
+        // Check if we have a cached response
         var cachedResponse = responseCache.getResults(license, args[0], request.queryString());
         if (cachedResponse.isPresent()) {
             wmsa_api_cache_hit_count.labels(license.key).inc();
             return cachedResponse.get();
         }
 
+        // When no cached response, do the search and cache the result
         var result = doSearch(license, args[0], request);
         responseCache.putResults(license, args[0], request.queryString(), result);
-
-        // We set content type late because in the case of error, we don't want to tell the client
-        // that the error message  is JSON when it is plain text.
-
-
         return result;
     }
 
