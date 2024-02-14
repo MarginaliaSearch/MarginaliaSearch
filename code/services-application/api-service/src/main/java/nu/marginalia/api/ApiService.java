@@ -26,7 +26,6 @@ public class ApiService extends Service {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
-    private final QueryClient queryClient;
 
     private final ResponseCache responseCache;
     private final LicenseService licenseService;
@@ -56,7 +55,6 @@ public class ApiService extends Service {
 
     @Inject
     public ApiService(BaseServiceParams params,
-                      QueryClient queryClient,
                       ResponseCache responseCache,
                       LicenseService licenseService,
                       RateLimiterService rateLimiterService,
@@ -65,7 +63,6 @@ public class ApiService extends Service {
 
         super(params);
 
-        this.queryClient = queryClient;
         this.responseCache = responseCache;
         this.licenseService = licenseService;
         this.rateLimiterService = rateLimiterService;
