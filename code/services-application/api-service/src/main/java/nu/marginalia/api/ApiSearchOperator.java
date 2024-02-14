@@ -40,7 +40,7 @@ public class ApiSearchOperator {
                 rsp.results()
                 .stream()
                 .map(this::convert)
-                .sorted(Comparator.comparing(ApiSearchResult::getQuality).reversed())
+                .sorted(Comparator.comparing(ApiSearchResult::getQuality))
                 .limit(count)
                 .collect(Collectors.toList()));
     }
