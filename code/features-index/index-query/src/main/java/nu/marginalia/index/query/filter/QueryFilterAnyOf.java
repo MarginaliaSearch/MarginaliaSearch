@@ -28,10 +28,13 @@ public class QueryFilterAnyOf implements QueryFilterStepIf {
 
 
     public void apply(LongQueryBuffer buffer) {
+        if (steps.isEmpty())
+            return;
+
         int start;
         int end = buffer.end;
 
-        steps.get(0).apply(buffer);
+        steps.getFirst().apply(buffer);
 
         // The filter functions will partition the data in the buffer from 0 to END,
         // and update END to the length of the retained items, keeping the retained
