@@ -156,9 +156,9 @@ public class SearchFilters {
         }
 
         public SearchTitleOption(SearchParameters parameters) {
-            this.value = parameters.title();
+            this.value = parameters.searchTitle();
 
-            var toggledValue = switch (parameters.title()) {
+            var toggledValue = switch (parameters.searchTitle()) {
                 case TITLE -> SearchTitleParameter.DEFAULT;
                 default -> SearchTitleParameter.TITLE;
             };
