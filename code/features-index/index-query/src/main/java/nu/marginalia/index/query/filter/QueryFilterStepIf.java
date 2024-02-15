@@ -36,13 +36,5 @@ public interface QueryFilterStepIf extends Comparable<QueryFilterStepIf> {
         buffer.finalizeFiltering();
     }
 
-    static QueryFilterStepIf noPass() {
-        return QueryFilterNoPass.instance;
-    }
-    static QueryFilterStepIf anyOf(List<? extends QueryFilterStepIf> steps) {
-        return new QueryFilterAnyOf(steps);
-    }
-
-
 }
 

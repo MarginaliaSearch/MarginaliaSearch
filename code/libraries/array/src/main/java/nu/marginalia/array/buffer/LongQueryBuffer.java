@@ -89,6 +89,15 @@ public class LongQueryBuffer {
         return ++read < end;
     }
 
+    /** Retains all values in the buffer, and updates
+     * the read and write pointer to the end pointer,
+     * as though all values were retained.
+     */
+    public void retainAll() {
+        write = end;
+        read = end;
+    }
+
     public boolean hasMore() {
         return read < end;
     }
@@ -146,5 +155,6 @@ public class LongQueryBuffer {
             ",end = " + end +
             ",data = [" + Arrays.toString(Arrays.copyOf(data, end)) + "]]";
     }
+
 
 }
