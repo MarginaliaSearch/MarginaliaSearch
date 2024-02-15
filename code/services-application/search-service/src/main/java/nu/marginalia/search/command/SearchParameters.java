@@ -14,7 +14,7 @@ public record SearchParameters(String query,
                                SearchProfile profile,
                                SearchJsParameter js,
                                SearchRecentParameter recent,
-                               SearchTitleParameter title,
+                               SearchTitleParameter searchTitle,
                                SearchAdtechParameter adtech
                                ) {
     public String profileStr() {
@@ -22,18 +22,18 @@ public record SearchParameters(String query,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(query, profile, js, recent, title, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(query, profile, js, recent, title, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(query, profile, js, recent, title, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(query, profile, js, recent, title, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
@@ -47,7 +47,7 @@ public record SearchParameters(String query,
                 URLEncoder.encode(js.value, StandardCharsets.UTF_8),
                 URLEncoder.encode(adtech.value, StandardCharsets.UTF_8),
                 URLEncoder.encode(recent.value, StandardCharsets.UTF_8),
-                URLEncoder.encode(title.value, StandardCharsets.UTF_8)
+                URLEncoder.encode(searchTitle.value, StandardCharsets.UTF_8)
                 );
 
         return baseUrl.withPath(path);
@@ -65,7 +65,7 @@ public record SearchParameters(String query,
     }
 
     public QueryStrategy strategy() {
-        if (title == SearchTitleParameter.TITLE) {
+        if (searchTitle == SearchTitleParameter.TITLE) {
             return QueryStrategy.REQUIRE_FIELD_TITLE;
         }
 
