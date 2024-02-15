@@ -7,7 +7,7 @@ import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
-import nu.marginallia.index.journal.IndexJournalFileNames;
+import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.apache.commons.io.IOUtils;
 
 import com.google.inject.Inject;

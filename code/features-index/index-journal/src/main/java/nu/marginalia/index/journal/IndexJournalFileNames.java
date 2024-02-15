@@ -1,4 +1,4 @@
-package nu.marginallia.index.journal;
+package nu.marginalia.index.journal;
 
 import java.io.IOException;
 import java.nio.file.Files;

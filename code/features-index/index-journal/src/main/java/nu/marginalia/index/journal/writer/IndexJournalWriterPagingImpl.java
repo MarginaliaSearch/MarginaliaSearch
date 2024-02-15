@@ -3,7 +3,7 @@ package nu.marginalia.index.journal.writer;
 import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginallia.index.journal.IndexJournalFileNames;
+import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

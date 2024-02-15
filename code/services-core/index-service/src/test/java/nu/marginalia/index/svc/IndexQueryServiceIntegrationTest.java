@@ -7,7 +7,6 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.ReverseIndexFullFileNames;
 import nu.marginalia.index.ReverseIndexPrioFileNames;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;

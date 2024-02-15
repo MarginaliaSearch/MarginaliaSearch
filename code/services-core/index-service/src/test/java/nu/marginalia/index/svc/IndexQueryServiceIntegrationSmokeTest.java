@@ -10,7 +10,6 @@ import nu.marginalia.index.ReverseIndexFullFileNames;
 import nu.marginalia.index.ReverseIndexPrioFileNames;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReverseIndexConstructor;

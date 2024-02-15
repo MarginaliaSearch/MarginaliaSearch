@@ -12,7 +12,7 @@ import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginallia.index.journal.IndexJournalFileNames;
+import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

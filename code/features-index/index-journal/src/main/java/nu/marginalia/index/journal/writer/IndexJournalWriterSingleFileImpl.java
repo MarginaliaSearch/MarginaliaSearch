@@ -123,7 +123,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
         // Finalize the file by writing a header in the beginning
         ByteBuffer header = ByteBuffer.allocate(16);
         header.putLong(numEntries);
-        header.putLong(0);
+        header.putLong(0);  // reserved for future use
         header.flip();
 
         while (header.position() < header.limit()) {

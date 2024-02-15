@@ -1,11 +1,22 @@
 package nu.marginalia.index.journal.model;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.model.idx.WordMetadata;
+
 import java.util.Arrays;
 import java.util.Iterator;
 
+/** The keyword data of an index journal entry.
+ *  The data itself is an interleaved array of
+ *  word ids and metadata.
+ * <p>
+ *  Odd entries are term ids, even entries are encoded WordMetadata records.
+ *  </p>
+ *  <p>The civilized way of reading the journal data is to use an IndexJournalReader</p>
+ *
+ * @see WordMetadata
+ * @see IndexJournalReader
+ */
 public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Record> {
     private final int size;
     public final long[] underlyingArray;

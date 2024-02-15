@@ -5,14 +5,11 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 /** A pair of file-backed arrays of sorted wordIds
  * and the count of documents associated with each wordId.

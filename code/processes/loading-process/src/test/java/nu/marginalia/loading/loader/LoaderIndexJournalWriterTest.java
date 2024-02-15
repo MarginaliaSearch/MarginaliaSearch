@@ -7,7 +7,7 @@ import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginallia.index.journal.IndexJournalFileNames;
+import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

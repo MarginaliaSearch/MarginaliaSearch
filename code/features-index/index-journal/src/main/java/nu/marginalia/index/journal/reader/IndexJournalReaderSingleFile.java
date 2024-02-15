@@ -76,7 +76,7 @@ class SingleFileJournalPointer implements IndexJournalPointer {
         recordIdx = -2;
         entryData = null;
 
-        if (++docIdx < fileHeader.fileSize()) {
+        if (++docIdx < fileHeader.fileSizeRecords()) {
             entry = IndexJournalReadEntry.read(dataInputStream);
             return true;
         }

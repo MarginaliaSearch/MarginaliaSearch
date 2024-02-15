@@ -13,7 +13,6 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.svc.searchset.SearchSetAny;
 import nu.marginalia.index.util.TestUtil;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.service.control.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;

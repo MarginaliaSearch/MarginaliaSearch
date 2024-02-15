@@ -6,7 +6,6 @@ import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReversePreindex;
 import nu.marginalia.index.construction.TestJournalFactory;
 import nu.marginalia.index.construction.TestJournalFactory.EntryDataWithWordMeta;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package nu.marginalia.index.journal.reader;
 
 import nu.marginalia.index.journal.reader.pointer.IndexJournalPointer;
-import nu.marginallia.index.journal.IndexJournalFileNames;
+import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
