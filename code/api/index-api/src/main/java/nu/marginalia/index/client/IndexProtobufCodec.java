@@ -88,14 +88,15 @@ public class IndexProtobufCodec {
                 params.getBm25FullWeight(),
                 params.getBm25PrioWeight(),
                 params.getTcfWeight(),
-                ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().name()),
+                ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight()
         );
     };
 
-    public static RpcResultRankingParameters convertRankingParameterss(ResultRankingParameters rankingParams) {
-        return
-                RpcResultRankingParameters.newBuilder()
+    public static RpcResultRankingParameters convertRankingParameterss(ResultRankingParameters rankingParams,
+                                                                       RpcTemporalBias temporalBias)
+    {
+        var builder = RpcResultRankingParameters.newBuilder()
                         .setFullB(rankingParams.fullParams.b())
                         .setFullK(rankingParams.fullParams.k())
                         .setPrioB(rankingParams.prioParams.b())
@@ -109,9 +110,16 @@ public class IndexProtobufCodec {
                         .setBm25FullWeight(rankingParams.bm25FullWeight)
                         .setBm25PrioWeight(rankingParams.bm25PrioWeight)
                         .setTcfWeight(rankingParams.tcfWeight)
-                        .setTemporalBias(RpcResultRankingParameters.TEMPORAL_BIAS.valueOf(rankingParams.temporalBias.name()))
-                        .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
-                        .build();
+                        .setTemporalBiasWeight(rankingParams.temporalBiasWeight);
+        if (temporalBias != null && temporalBias.getBias() != RpcTemporalBias.Bias.NONE) {
+            builder.setTemporalBias(temporalBias);
+        }
+        else {
+            builder.setTemporalBias(RpcTemporalBias.newBuilder()
+                    .setBias(RpcTemporalBias.Bias.valueOf(rankingParams.temporalBias.name())));
+        }
+
+        return builder.build();
     }
 
 }

@@ -1,5 +1,6 @@
 package nu.marginalia.index.client;
 
+import nu.marginalia.index.api.RpcTemporalBias;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
@@ -23,7 +24,7 @@ class IndexProtobufCodecTest {
     @Test
     public void testRankingParameters() {
         verifyIsIdentityTransformation(ResultRankingParameters.sensibleDefaults(),
-                p -> IndexProtobufCodec.convertRankingParameterss(IndexProtobufCodec.convertRankingParameterss(p)));
+                p -> IndexProtobufCodec.convertRankingParameterss(IndexProtobufCodec.convertRankingParameterss(p, null)));
     }
 
     @Test

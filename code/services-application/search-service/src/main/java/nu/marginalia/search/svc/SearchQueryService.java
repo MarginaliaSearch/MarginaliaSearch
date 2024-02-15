@@ -1,7 +1,6 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.*;
@@ -61,7 +60,9 @@ public class SearchQueryService {
                     SearchProfile.getSearchProfile(request.queryParams("profile")),
                     SearchJsParameter.parse(request.queryParams("js")),
                     SearchRecentParameter.parse(request.queryParams("recent")),
-                    SearchAdtechParameter.parse(request.queryParams("adtech")));
+                    SearchTitleParameter.parse(request.queryParams("searchTitle")),
+                    SearchAdtechParameter.parse(request.queryParams("adtech"))
+            );
         }
         catch (Exception ex) {
             // Bots keep sending bad requests, suppress the error otherwise it will

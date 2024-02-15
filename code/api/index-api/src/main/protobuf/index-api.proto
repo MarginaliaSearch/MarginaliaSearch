@@ -51,7 +51,8 @@ message RpcQsQuery {
   repeated int32 domainIds = 12;
   RpcQueryLimits queryLimits = 13;
   string searchSetIdentifier = 14;
-
+  string queryStrategy = 15;      // Named query configuration
+  RpcTemporalBias temporalBias = 16;
 }
 
 /* Query service query response */
@@ -61,6 +62,15 @@ message RpcQsResponse {
     repeated string searchTermsHuman = 3;
     repeated string problems = 4;
     string domain = 5;
+}
+
+message RpcTemporalBias {
+  enum Bias {
+    NONE = 0;
+    RECENT = 1;
+    OLD = 2;
+  }
+  Bias bias = 1;
 }
 
 /* Index service query request */
@@ -146,14 +156,8 @@ message RpcResultRankingParameters {
   double bm25FullWeight = 11;
   double bm25PrioWeight = 12;
   double tcfWeight = 13;
-  TEMPORAL_BIAS temporalBias = 14;
+  RpcTemporalBias temporalBias = 14;
   double temporalBiasWeight = 15;
-
-  enum TEMPORAL_BIAS {
-      NONE = 0;
-      RECENT = 1; // Prefer recent documents
-      OLD = 2; // Prefer older documents
-  }
 }
 
 /* Defines a single subquery */

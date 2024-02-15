@@ -3,7 +3,9 @@ package nu.marginalia.query.svc;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.language.EnglishDictionary;
@@ -49,7 +51,9 @@ public class QueryFactoryTest {
                         SpecificationLimit.none(),
                         null,
                         new QueryLimits(100, 100, 100, 100),
-                        "NONE")).specs;
+                        "NONE",
+                        QueryStrategy.AUTO,
+                        ResultRankingParameters.TemporalBias.NONE)).specs;
     }
 
     @Test

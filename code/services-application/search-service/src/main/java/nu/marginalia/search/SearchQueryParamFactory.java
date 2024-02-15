@@ -2,7 +2,9 @@ package nu.marginalia.search;
 
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.search.command.SearchParameters;
@@ -19,8 +21,6 @@ public class SearchQueryParamFactory {
         userParams.js().addTacitTerms(prototype);
         userParams.adtech().addTacitTerms(prototype);
 
-        SpecificationLimit yearLimit = userParams.recent().yearLimit();
-
         return new QueryParams(
                 userParams.query(),
                 null,
@@ -29,13 +29,15 @@ public class SearchQueryParamFactory {
                 prototype.searchTermsPriority,
                 prototype.searchTermsAdvice,
                 profile.getQualityLimit(),
-                yearLimit,
+                SpecificationLimit.none(),
                 profile.getSizeLimit(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(5, 100, 200, 8192),
-                profile.searchSetIdentifier.name()
+                profile.searchSetIdentifier.name(),
+                userParams.strategy(),
+                userParams.temporalBias()
         );
 
     }
@@ -54,7 +56,9 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(count, count, 100, 512),
-                SearchSetIdentifier.NONE.name()
+                SearchSetIdentifier.NONE.name(),
+                QueryStrategy.AUTO,
+                ResultRankingParameters.TemporalBias.NONE
         );
     }
 
@@ -72,7 +76,9 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(100, 100, 100, 512),
-                SearchSetIdentifier.NONE.name()
+                SearchSetIdentifier.NONE.name(),
+                QueryStrategy.AUTO,
+                ResultRankingParameters.TemporalBias.NONE
         );
     }
 
@@ -90,7 +96,9 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(100, 100, 100, 512),
-                SearchSetIdentifier.NONE.name()
+                SearchSetIdentifier.NONE.name(),
+                QueryStrategy.AUTO,
+                ResultRankingParameters.TemporalBias.NONE
         );
     }
 }

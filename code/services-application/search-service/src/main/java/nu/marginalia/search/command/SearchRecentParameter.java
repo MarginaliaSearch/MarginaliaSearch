@@ -1,11 +1,6 @@
 package nu.marginalia.search.command;
 
-import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.query.limit.SpecificationLimit;
-
 import javax.annotation.Nullable;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 
 public enum SearchRecentParameter {
     DEFAULT("default"),
@@ -23,11 +18,4 @@ public enum SearchRecentParameter {
         return DEFAULT;
     }
 
-    public SpecificationLimit yearLimit() {
-        if (this == RECENT) {
-            return SpecificationLimit.greaterThan(LocalDateTime.now().getYear() - 1);
-        } else {
-            return SpecificationLimit.none();
-        }
-    }
 }

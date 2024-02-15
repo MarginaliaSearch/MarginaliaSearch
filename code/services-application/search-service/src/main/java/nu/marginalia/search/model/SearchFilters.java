@@ -2,10 +2,7 @@ package nu.marginalia.search.model;
 
 import lombok.Getter;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.SearchAdtechParameter;
-import nu.marginalia.search.command.SearchJsParameter;
-import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.search.command.SearchRecentParameter;
+import nu.marginalia.search.command.*;
 
 import java.util.List;
 
@@ -23,6 +20,8 @@ public class SearchFilters {
     public final ReduceAdtechOption reduceAdtechOption;
     @Getter
     public final ShowRecentOption showRecentOption;
+    @Getter
+    public final SearchTitleOption searchTitleOption;
 
     @Getter
     public final List<List<Filter>> filterGroups;
@@ -35,6 +34,7 @@ public class SearchFilters {
         removeJsOption = new RemoveJsOption(parameters);
         reduceAdtechOption = new ReduceAdtechOption(parameters);
         showRecentOption = new ShowRecentOption(parameters);
+        searchTitleOption = new SearchTitleOption(parameters);
 
 
         currentFilter = parameters.profile().filterId;
@@ -138,6 +138,32 @@ public class SearchFilters {
             };
 
             this.url = parameters.withRecent(toggledValue).renderUrl(SearchFilters.this.url);
+        }
+    }
+
+    public class SearchTitleOption {
+        private final SearchTitleParameter value;
+
+        @Getter
+        public final String url;
+
+        public boolean isSet() {
+            return value.equals(SearchTitleParameter.TITLE);
+        }
+
+        public String name() {
+            return "Search In Title";
+        }
+
+        public SearchTitleOption(SearchParameters parameters) {
+            this.value = parameters.title();
+
+            var toggledValue = switch (parameters.title()) {
+                case TITLE -> SearchTitleParameter.DEFAULT;
+                default -> SearchTitleParameter.TITLE;
+            };
+
+            this.url = parameters.withTitle(toggledValue).renderUrl(SearchFilters.this.url);
         }
     }
 

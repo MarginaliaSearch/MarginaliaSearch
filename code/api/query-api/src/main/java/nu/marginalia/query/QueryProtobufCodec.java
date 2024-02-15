@@ -3,10 +3,10 @@ package nu.marginalia.query;
 import lombok.SneakyThrows;
 import nu.marginalia.index.api.*;
 import nu.marginalia.index.client.IndexProtobufCodec;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.index.query.limit.QueryStrategy;
@@ -41,8 +41,14 @@ public class QueryProtobufCodec {
         builder.setDomainCount(convertSpecLimit(query.specs.domainCount));
 
         builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
-        builder.setQueryStrategy(query.specs.queryStrategy.name());
-        builder.setParameters(IndexProtobufCodec.convertRankingParameterss(query.specs.rankingParams));
+
+        // Query strategy may be overridden by the query, but if not, use the one from the request
+        if (query.specs.queryStrategy != null && query.specs.queryStrategy != QueryStrategy.AUTO)
+            builder.setQueryStrategy(query.specs.queryStrategy.name());
+        else
+            builder.setQueryStrategy(request.getQueryStrategy());
+
+        builder.setParameters(IndexProtobufCodec.convertRankingParameterss(query.specs.rankingParams, request.getTemporalBias()));
 
         return builder.build();
     }
@@ -62,7 +68,10 @@ public class QueryProtobufCodec {
                 convertSpecLimit(request.getDomainCount()),
                 request.getDomainIdsList(),
                 IndexProtobufCodec.convertQueryLimits(request.getQueryLimits()),
-                request.getSearchSetIdentifier());
+                request.getSearchSetIdentifier(),
+                QueryStrategy.valueOf(request.getQueryStrategy()),
+                ResultRankingParameters.TemporalBias.valueOf(request.getTemporalBias().getBias().name())
+        );
     }
 
 
@@ -159,7 +168,11 @@ public class QueryProtobufCodec {
                 .setYear(convertSpecLimit(params.year()))
                 .setSize(convertSpecLimit(params.size()))
                 .setRank(convertSpecLimit(params.rank()))
-                .setSearchSetIdentifier(params.identifier());
+                .setSearchSetIdentifier(params.identifier())
+                .setQueryStrategy(params.queryStrategy().name())
+                .setTemporalBias(RpcTemporalBias.newBuilder()
+                        .setBias(RpcTemporalBias.Bias.valueOf(params.temporalBias().name()))
+                        .build());
 
         if (params.nearDomain() != null)
             builder.setNearDomain(params.nearDomain());

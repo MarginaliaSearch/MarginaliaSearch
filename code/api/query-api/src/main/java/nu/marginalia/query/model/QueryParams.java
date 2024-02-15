@@ -1,6 +1,8 @@
 package nu.marginalia.query.model;
 
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 
 import javax.annotation.Nullable;
@@ -21,7 +23,9 @@ public record QueryParams(
         SpecificationLimit domainCount,
         List<Integer> domainIds,
         QueryLimits limits,
-        String identifier
+        String identifier,
+        QueryStrategy queryStrategy,
+        ResultRankingParameters.TemporalBias temporalBias
 )
 {
     public QueryParams(String query, QueryLimits limits, String identifier) {
@@ -37,7 +41,9 @@ public record QueryParams(
                 SpecificationLimit.none(),
                 List.of(),
                 limits,
-                identifier
+                identifier,
+                QueryStrategy.AUTO,
+                ResultRankingParameters.TemporalBias.NONE
                 );
     }
 }

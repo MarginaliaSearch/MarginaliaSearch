@@ -52,7 +52,7 @@ public class ResultRankingParameters {
                 .bm25PrioWeight(1.)
                 .tcfWeight(2.)
                 .temporalBias(TemporalBias.NONE)
-                .temporalBiasWeight(1. / (10.))
+                .temporalBiasWeight(1. / (5.))
                 .build();
     }
 
