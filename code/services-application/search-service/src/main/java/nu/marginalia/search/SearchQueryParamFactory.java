@@ -21,6 +21,7 @@ public class SearchQueryParamFactory {
         userParams.js().addTacitTerms(prototype);
         userParams.adtech().addTacitTerms(prototype);
 
+
         return new QueryParams(
                 userParams.query(),
                 null,
@@ -29,8 +30,8 @@ public class SearchQueryParamFactory {
                 prototype.searchTermsPriority,
                 prototype.searchTermsAdvice,
                 profile.getQualityLimit(),
-                SpecificationLimit.none(),
-                profile.getSizeLimit(),
+                profile.getYearLimit(),
+                userParams.yearLimit(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(),
