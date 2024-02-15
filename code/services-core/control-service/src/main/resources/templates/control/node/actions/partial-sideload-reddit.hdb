@@ -1,7 +1,7 @@
 <h1 class="my-3">Sideload Reddit</h1>
 
 <div class="my-3 p-3 border bg-light">
-This will index a pushshift.io dump from the Reddit API into index.
+This will index a pushshift.io "top-n subreddits" dump from the Reddit API into index.
 </div>
 <form method="post" action="actions/sideload-reddit" onsubmit="return confirm('Confirm sideloading')">
     <div class="my-3 py-3">
@@ -14,7 +14,7 @@ This will index a pushshift.io dump from the Reddit API into index.
                         <label class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
                     </td>
                     <td>{{#unless directory}}{{size}}{{/unless}}</td>
-                    <td>{{lastModifiedTime}}</td>
+                    <td title={{lastModifiedTime}}>{{shortTimestamp lastModifiedTime}}</td>
                 </tr>
             {{/each}}
             {{#unless uploadDirContents.items}}

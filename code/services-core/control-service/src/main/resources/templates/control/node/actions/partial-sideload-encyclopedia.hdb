@@ -25,7 +25,7 @@
                         <label class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
                     </td>
                     <td>{{#unless directory}}{{size}}{{/unless}}</td>
-                    <td>{{lastModifiedTime}}</td>
+                    <td title={{lastModifiedTime}}>{{shortTimestamp lastModifiedTime}}</td>
                 </tr>
             {{/each}}
             {{#unless uploadDirContents.items}}
