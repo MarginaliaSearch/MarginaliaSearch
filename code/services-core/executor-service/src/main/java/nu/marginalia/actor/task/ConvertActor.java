@@ -10,6 +10,7 @@ import nu.marginalia.actor.state.Resume;
 import nu.marginalia.encyclopedia.EncyclopediaConverter;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
+import nu.marginalia.sideload.RedditSideloadHelper;
 import nu.marginalia.sideload.SideloadHelper;
 import nu.marginalia.sideload.StackExchangeSideloadHelper;
 import nu.marginalia.storage.FileStorageService;
@@ -38,6 +39,7 @@ public class ConvertActor extends RecordActorPrototype {
     public record PredigestEncyclopedia(String source, String dest, String baseUrl) implements ActorStep {};
     public record ConvertDirtree(String source) implements ActorStep {};
     public record ConvertWarc(String source) implements ActorStep {};
+    public record ConvertReddit(String source) implements ActorStep {};
     public record ConvertStackexchange(String source) implements ActorStep {};
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ConvertWait(FileStorageId destFid,
@@ -94,6 +96,28 @@ public class ConvertActor extends RecordActorPrototype {
                 yield new ConvertWait(
                         processedArea.id(),
                         mqConverterOutbox.sendAsync(ConvertRequest.forWarc(sourcePath, processedArea.id()))
+                );
+            }
+            case ConvertReddit(String source) -> {
+                Path sourcePath = Path.of(source);
+                if (!Files.exists(sourcePath))
+                    yield new Error("Source path does not exist: " + sourcePath);
+
+                String fileName = sourcePath.toFile().getName();
+
+                var processedArea = storageService.allocateStorage(
+                        FileStorageType.PROCESSED_DATA, "processed-data",
+                        "Processed Reddit Data; " + fileName);
+
+                storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
+
+                // Convert reddit data to sqlite database
+                // (we can't use a Predigest- step here because the conversion is too complicated)
+                RedditSideloadHelper.convertRedditData(sourcePath);
+
+                yield new ConvertWait(
+                        processedArea.id(),
+                        mqConverterOutbox.sendAsync(ConvertRequest.forReddit(sourcePath, processedArea.id()))
                 );
             }
             case ConvertEncyclopedia(String source, String baseUrl) -> {

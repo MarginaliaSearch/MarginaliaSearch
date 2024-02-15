@@ -58,6 +58,9 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
+        Spark.post("/public/nodes/:node/actions/sideload-reddit", this::sideloadReddit,
+                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
+        );
         Spark.post("/public/nodes/:node/actions/sideload-warc", this::sideloadWarc,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
@@ -141,7 +144,18 @@ public class ControlNodeActionsService {
 
         return "";
     }
+    public Object sideloadReddit(Request request, Response response) {
 
+        final int nodeId = Integer.parseInt(request.params("node"));
+
+        Path sourcePath = parseSourcePath(request.queryParams("source"));
+
+        eventLog.logEvent("USER-ACTION", "SIDELOAD REDDIT " + nodeId);
+
+        executorClient.sideloadReddit(nodeId, sourcePath);
+
+        return "";
+    }
     public Object sideloadWarc(Request request, Response response) {
 
         final int nodeId = Integer.parseInt(request.params("node"));

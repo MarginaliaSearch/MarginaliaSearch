@@ -142,7 +142,13 @@ public class ExecutorClient extends AbstractDynamicClient {
                         .build()
         );
     }
-
+    public void sideloadReddit(int node, Path sourcePath) {
+        stubPool.apiForNode(node).sideloadReddit(
+                RpcSideloadReddit.newBuilder()
+                        .setSourcePath(sourcePath.toString())
+                        .build()
+        );
+    }
     public void sideloadWarc(int node, Path sourcePath) {
         stubPool.apiForNode(node).sideloadWarc(
                 RpcSideloadWarc.newBuilder()

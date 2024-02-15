@@ -28,6 +28,7 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -247,6 +248,9 @@ public class ConverterMain extends ProcessMainClass {
         try {
             var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
 
+            // will be null on ConvertCrawlData
+            final Path inputPath = request.getInputPath();
+
             return switch (request.action) {
                 case ConvertCrawlData -> {
                     var crawlData = fileStorageService.getStorage(request.crawlStorage);
@@ -261,7 +265,8 @@ public class ConverterMain extends ProcessMainClass {
                 case SideloadEncyclopedia -> {
                     var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                    yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource), request.baseUrl),
+                    yield new SideloadAction(
+                            sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(inputPath, request.baseUrl),
                             processData.asPath(),
                             msg, inbox);
                 }
@@ -269,7 +274,7 @@ public class ConverterMain extends ProcessMainClass {
                     var processData = fileStorageService.getStorage(request.processedDataStorage);
 
                     yield new SideloadAction(
-                            sideloadSourceFactory.sideloadDirtree(Path.of(request.inputSource)),
+                            sideloadSourceFactory.sideloadDirtree(inputPath),
                             processData.asPath(),
                             msg, inbox);
                 }
@@ -277,14 +282,23 @@ public class ConverterMain extends ProcessMainClass {
                     var processData = fileStorageService.getStorage(request.processedDataStorage);
 
                     yield new SideloadAction(
-                            sideloadSourceFactory.sideloadWarc(Path.of(request.inputSource)),
+                            sideloadSourceFactory.sideloadWarc(inputPath),
+                            processData.asPath(),
+                            msg, inbox);
+                }
+                case SideloadReddit -> {
+                    var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                    yield new SideloadAction(
+                            sideloadSourceFactory.sideloadReddit(inputPath),
                             processData.asPath(),
                             msg, inbox);
                 }
                 case SideloadStackexchange -> {
                     var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                    yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(Path.of(request.inputSource)),
+                    yield new SideloadAction(
+                            sideloadSourceFactory.sideloadStackexchange(inputPath),
                             processData.asPath(),
                             msg, inbox);
                 }

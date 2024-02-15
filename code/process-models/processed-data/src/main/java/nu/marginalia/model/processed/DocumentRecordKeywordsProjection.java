@@ -1,22 +1,14 @@
 package nu.marginalia.model.processed;
 
-import blue.strategic.parquet.Dehydrator;
 import blue.strategic.parquet.Hydrator;
-import blue.strategic.parquet.ValueWriter;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.Types;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import static org.apache.parquet.schema.LogicalTypeAnnotation.stringType;
-import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.*;
 
 @Getter
 @Setter

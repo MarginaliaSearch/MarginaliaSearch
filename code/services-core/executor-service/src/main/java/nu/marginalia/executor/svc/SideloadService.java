@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 
 public class SideloadService {
     private final ExecutorActorControlService actorControlService;
@@ -29,6 +30,12 @@ public class SideloadService {
     public void sideloadDirtree(RpcSideloadDirtree request) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT,
                 new ConvertActor.ConvertDirtree(request.getSourcePath())
+        );
+    }
+
+    public void sideloadReddit(RpcSideloadReddit request) throws Exception {
+        actorControlService.startFrom(ExecutorActor.CONVERT,
+                new ConvertActor.ConvertReddit(request.getSourcePath())
         );
     }
 
@@ -55,7 +62,10 @@ public class SideloadService {
     public RpcUploadDirContents listUploadDir() throws IOException {
         Path uploadDir = WmsaHome.getUploadDir();
 
-        try (var items = Files.list(uploadDir)) {
+        try (var items = Files.list(uploadDir).sorted(
+                Comparator.comparing((Path d) -> Files.isDirectory(d)).reversed()
+                          .thenComparing(path -> path.getFileName().toString())
+        )) {
             var builder = RpcUploadDirContents.newBuilder().setPath(uploadDir.toString());
 
             var iter = items.iterator();

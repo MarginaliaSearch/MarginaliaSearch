@@ -12,10 +12,10 @@ for more information on how to set this up.
                 <tr>
                     <td><input {{#if directory}}disabled{{/if}} class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
                     <td {{#if directory}}class="text-muted"{{/if}}>
-                        <label class="form-check-label" for="inlineRadio1">{{name}}{{#if directory}}/{{/if}}</label>
+                        <label class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
                     </td>
                     <td>{{#unless directory}}{{size}}{{/unless}}</td>
-                    <td>{{lastModifiedTime}}</td>
+                    <td title={{lastModifiedTime}}>{{shortTimestamp lastModifiedTime}}</td>
                 </tr>
             {{/each}}
             {{#unless uploadDirContents.items}}
