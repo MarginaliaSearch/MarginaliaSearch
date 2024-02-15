@@ -31,7 +31,7 @@ public class SearchQueryParamFactory {
                 prototype.searchTermsAdvice,
                 profile.getQualityLimit(),
                 profile.getYearLimit(),
-                userParams.yearLimit(),
+                profile.getSizeLimit(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(),
