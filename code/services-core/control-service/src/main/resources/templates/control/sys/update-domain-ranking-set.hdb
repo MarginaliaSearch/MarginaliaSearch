@@ -23,18 +23,6 @@
             </td>
         </tr>
         <tr>
-            <th><label for="algorithm">Algorithm</label></th>
-            <td>
-                {{#if special}}<input type="hidden" name="algorithm" value="{{algorithm}}" />{{/if}}
-                <div>
-                    <small class="text-muted">
-                        The algorithm used to rank the domains.  The LINKS algorithms use the link graph, and the ADJACENCY
-                        algorithms use the adjacency graph. CheiRank is a variant of PageRank that uses the reversed graph.
-                    </small>
-                </div>
-            </td>
-        </tr>
-        <tr>
             <th><label for="description">Description</label></th>
             <td>
                 {{#if special}}<input type="hidden" name="description" value="{{description}}" />{{/if}}

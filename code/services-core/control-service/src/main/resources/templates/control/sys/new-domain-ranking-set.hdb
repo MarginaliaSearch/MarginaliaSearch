@@ -22,23 +22,6 @@
             </td>
         </tr>
         <tr>
-            <th><label for="algorithm">Algorithm</label></th>
-            <td>
-                <select id="algorithm" name="algorithm">
-                    <option value="LINKS_PAGERANK">LINKS_PAGERANK</option>
-                    <option value="LINKS_CHEIRANK">LINKS_CHEIRANK</option>
-                    <option value="ADJACENCY_PAGERANK">ADJACENCY_PAGERANK</option>
-                    <option value="ADJACENCY_CHEIRANK">ADJACENCY_CHEIRANK</option>
-                </select>
-                <div>
-                    <small class="text-muted">
-                        The algorithm used to rank the domains.  The LINKS algorithms use the link graph, and the ADJACENCY
-                        algorithms use the adjacency graph. CheiRank is a variant of PageRank that uses the reversed graph.
-                    </small>
-                </div>
-            </td>
-        </tr>
-        <tr>
             <th><label for="description">Description</label></th>
             <td>
                 <input type="text" value="{{description}}" id="description" name="description" {{#if special}}disabled{{/if}} />
