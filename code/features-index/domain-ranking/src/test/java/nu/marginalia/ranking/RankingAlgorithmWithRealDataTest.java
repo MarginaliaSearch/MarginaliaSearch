@@ -1,11 +1,14 @@
 package nu.marginalia.ranking;
 
 import nu.marginalia.ranking.accumulator.RankingResultListAccumulator;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-// Test the ranking algorithm with prod data.
+// Test the ranking algorithm with prod data.  Will not run if the data is not available.
+// It's not feasible to include the data in the git repo, as it's ~6 GB of data.
+@Disabled
 class RankingAlgorithmWithRealDataTest {
 
     @Test

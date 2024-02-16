@@ -18,7 +18,6 @@ import nu.marginalia.ranking.data.GraphSource;
 import nu.marginalia.ranking.data.LinkGraphSource;
 import nu.marginalia.ranking.data.SimilarityGraphSource;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,13 +121,13 @@ public class IndexSearchSetsService {
             }
 
             try {
-                if (DomainRankingSetsService.DomainSetAlgorithm.SPECIAL.equals(rankingSet.algorithm())) {
+                if (rankingSet.isSpecial()) {
                     switch (rankingSet.name()) {
                         case "BLOGS" -> recalculateBlogsSet(rankingSet);
                         case "NONE" -> {} // No-op
                     }
                 } else {
-                    recalculateNornal(rankingSet);
+                    recalculateNormal(rankingSet);
                 }
             }
             catch (Exception ex) {
@@ -138,16 +137,17 @@ public class IndexSearchSetsService {
         }
     }
 
-    private void recalculateNornal(DomainRankingSetsService.DomainRankingSet rankingSet) {
-        String[] domains = rankingSet.domains();
+    private void recalculateNormal(DomainRankingSetsService.DomainRankingSet rankingSet) {
+        List<String> domains = List.of(rankingSet.domains());
 
-        GraphSource graphSource = switch (rankingSet.algorithm()) {
-            case LINKS_PAGERANK, LINKS_CHEIRANK -> linksDomains;
-            case ADJACENCY_PAGERANK, ADJACENCY_CHEIRANK -> similarityDomains;
-            default -> throw new IllegalStateException("Unexpected value: " + rankingSet.algorithm());
-        };
+        GraphSource source;
 
-        var data = new PageRankDomainRanker(linksDomains, linksDomains.domainIds(List.of(domains)))
+        // Similarity ranking does not behave well with an empty set of domains
+        if (domains.isEmpty()) source = linksDomains;
+        else source = similarityDomains;
+
+        var data = PageRankDomainRanker
+                .forDomainNames(source, domains)
                 .calculate(rankingSet.depth(), RankingResultHashSetAccumulator::new);
 
         var set = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexServicesFactory.getSearchSetsBase()), data);
@@ -180,9 +180,21 @@ public class IndexSearchSetsService {
     }
 
     private void updateDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
+        List<String> domains = List.of(rankingSet.domains());
 
-        var ranks = new PageRankDomainRanker(similarityDomains, similarityDomains.domainIds(List.of(rankingSet.domains())))
-                            .calculate(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
+        final GraphSource source;
+
+        if (domains.isEmpty()) {
+            // Similarity ranking does not behave well with an empty set of domains
+            source = linksDomains;
+        }
+        else {
+            source = similarityDomains;
+        }
+
+        var ranks = PageRankDomainRanker
+                        .forDomainNames(source, domains)
+                        .calculate(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
 
         synchronized (this) {
             domainRankings = new DomainRankings(ranks);

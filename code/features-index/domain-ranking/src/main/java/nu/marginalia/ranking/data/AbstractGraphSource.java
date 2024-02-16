@@ -4,8 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.jgrapht.Graph;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public abstract class AbstractGraphSource implements GraphSource {
     protected final HikariDataSource dataSource;
@@ -39,17 +38,23 @@ public abstract class AbstractGraphSource implements GraphSource {
              var stmt = conn.prepareStatement("""
                 SELECT ID 
                 FROM EC_DOMAIN 
-                WHERE DOMAIN_NAME IN (?)
+                WHERE DOMAIN_NAME LIKE ?
                 """))
         {
-            stmt.setArray(1, conn.createArrayOf("VARCHAR", domainNameList.toArray()));
-            try (var rs = stmt.executeQuery()) {
-                var result = new ArrayList<Integer>();
-                while (rs.next()) {
-                    result.add(rs.getInt(1));
+            Set<Integer> retSet = new HashSet<>();
+
+            for (String domainName : domainNameList) {
+                stmt.setString(1, domainName);
+                try (var rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        retSet.add(rs.getInt(1));
+                    }
                 }
-                return result;
             }
+
+            var ret = new ArrayList<>(retSet);
+            ret.sort(Comparator.naturalOrder());
+            return ret;
         }
         catch (SQLException ex) {
             throw new RuntimeException(ex);

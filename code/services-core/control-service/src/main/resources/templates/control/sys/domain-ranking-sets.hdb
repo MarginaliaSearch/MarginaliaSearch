@@ -16,14 +16,12 @@
         <tr>
             <th>Name</th>
             <th>Description</th>
-            <th>Algorithm</th>
             <th>Depth</th>
         </tr>
         {{#each rankingSets}}
         <tr>
             <td><a href="/domain-ranking-sets/{{name}}">{{name}}</td></td>
             <td>{{description}}</td>
-            <td>{{algorithm}}</td>
             <td>{{depth}}</td>
         </tr>
         {{/each}}

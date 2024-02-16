@@ -25,6 +25,12 @@ public class PageRankDomainRanker implements RankingAlgorithm {
         this.graph = source.getGraph();
     }
 
+    public static PageRankDomainRanker forDomainNames(GraphSource source,
+                                                      List<String> influenceSet)
+    {
+        return new PageRankDomainRanker(source, source.domainIds(influenceSet));
+    }
+
     @Override
     public <T> T calculate(int resultCount, Supplier<RankingResultAccumulator<T>> accumulatorP) {
         VertexScoringAlgorithm<Integer, Double> pageRank;
