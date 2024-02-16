@@ -44,8 +44,12 @@
             <textarea name="definition" id="definition" rows="10" style="width: 100%">{{definition}}</textarea>
             <div>
                 <small class="text-muted">A list of domain names, one per line, possibly globbed with SQL-style '%' wildcards.
-                    These are used as the origin point for the Personalized PageRank algorithm, and will be considered
-                    the central points of the link or adjacency graph.  If no domains are specified, the entire domain space is used, as per the PageRank paper.
+                    If provided, these are used as the origin point for the Personalized PageRank algorithm, and will be considered
+                    the central points of the link or adjacency graph.  If no domains are specified, the entire domain space is used,
+                    as per the PageRank paper.
+                    <br><br>
+                    If similarity data is available and domains are specified, the similarity data is used as basis for the ranking
+                    calculation instead, providing a much more coherent ranking.
                 </small>
             </div>
         </td></tr>
