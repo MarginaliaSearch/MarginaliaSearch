@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -59,6 +60,11 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
         }
 
         logger.info("Loaded {} domains", domains.size());
+
+        // Shuffle the domains to ensure we get a good mix of domains in each crawl,
+        // so that e.g. the big domains don't get all crawled at once, or we end up
+        // crawling the same server in parallel from different subdomains...
+        Collections.shuffle(domains);
 
         return domains;
     }
