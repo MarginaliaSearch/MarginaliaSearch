@@ -198,13 +198,16 @@ public class ConvertActor extends RecordActorPrototype {
 
                 // Convert stackexchange data to sqlite database
                 // (we can't use a Predigest- step here because the conversion is too complicated)
-                StackExchangeSideloadHelper.convertStackexchangeData(sourcePath);
+                var preprocessedPath = StackExchangeSideloadHelper.convertStackexchangeData(sourcePath);
+
+                if (preprocessedPath.isEmpty())
+                    yield new Error("Failed to convert stackexchange 7z file to sqlite database");
 
                 // Pre-send convert request
 
                 yield new ConvertWait(
                         processedArea.id(),
-                        mqConverterOutbox.sendAsync(ConvertRequest.forStackexchange(sourcePath, processedArea.id()))
+                        mqConverterOutbox.sendAsync(ConvertRequest.forStackexchange(preprocessedPath.get(), processedArea.id()))
                 );
             }
             case ConvertWait(FileStorageId destFid, long msgId) -> {

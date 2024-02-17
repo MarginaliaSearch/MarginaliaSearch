@@ -19,33 +19,46 @@ public class StackExchangeSideloadHelper {
      *  The function is idempotent, so it is safe to call it multiple times on the same path
      *  (it will not re-convert files that have already been successfully converted)
      * */
-    public static void convertStackexchangeData(Path sourcePath) {
+    public static Optional<Path> convertStackexchangeData(Path sourcePath) {
         if (Files.isDirectory(sourcePath)) {
             try (var contents = Files.list(sourcePath)) {
                 contents.filter(Files::isRegularFile)
                         .parallel()
                         .forEach(StackExchangeSideloadHelper::convertSingleStackexchangeFile);
+
+                // If we process a directory, then the converter step will find the .db files automatically
+                return Optional.of(sourcePath);
             } catch (IOException ex) {
                 logger.warn("Failed to convert stackexchange 7z file to sqlite database", ex);
             }
         } else if (Files.isRegularFile(sourcePath)) {
-            convertSingleStackexchangeFile(sourcePath);
+            // If we process a single file, then we need to alter the input path to the converted file's name
+            return convertSingleStackexchangeFile(sourcePath);
         }
+
+        return Optional.empty();
     }
 
-    private static void convertSingleStackexchangeFile(Path sourcePath) {
+    /** Converts a single stackexchange 7z file to a sqlite database.
+     *  The function is idempotent, so it is safe to call it multiple times on the same file
+     *  (it will not re-convert files that have already been successfully converted)
+     *
+     * @return The path to the converted sqlite database, or an empty optional if the conversion failed
+     * */
+    private static Optional<Path> convertSingleStackexchangeFile(Path sourcePath) {
         String fileName = sourcePath.toFile().getName();
 
-        if (fileName.endsWith(".db")) return;
-        if (!fileName.endsWith(".7z")) return;
+        if (fileName.endsWith(".db")) return Optional.of(sourcePath);
+        if (!fileName.endsWith(".7z")) return Optional.empty();
 
         Optional<String> domain = getStackexchangeDomainFromFilename(fileName);
         if (domain.isEmpty())
-            return;
+            return Optional.empty();
 
         try {
             Path destPath = getStackexchangeDbPath(sourcePath);
-            if (Files.exists(destPath)) return;
+            if (Files.exists(destPath))
+                return Optional.of(destPath);
 
             Path tempFile = Files.createTempFile(destPath.getParent(), "processed", "db.tmp");
             try {
@@ -53,6 +66,8 @@ public class StackExchangeSideloadHelper {
                 StackExchangePostsDb.create(domain.get(), tempFile, sourcePath);
                 logger.info("Finished converting stackexchange 7z file {} to sqlite database", sourcePath);
                 Files.move(tempFile, destPath, StandardCopyOption.REPLACE_EXISTING);
+
+                return Optional.of(destPath);
             } catch (Exception e) {
                 logger.error("Failed to convert stackexchange 7z file to sqlite database", e);
                 Files.deleteIfExists(tempFile);
@@ -61,6 +76,7 @@ public class StackExchangeSideloadHelper {
         } catch (IOException ex) {
             logger.warn("Failed to convert stackexchange 7z file to sqlite database", ex);
         }
+        return Optional.empty();
     }
 
     private static Path getStackexchangeDbPath(Path sourcePath) throws IOException {
