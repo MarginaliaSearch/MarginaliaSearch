@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
-import nu.marginalia.client.grpc.GrpcStubPool;
+import nu.marginalia.client.grpc.GrpcChannelPool;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -27,7 +27,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
-    private final GrpcStubPool<IndexApiGrpc.IndexApiBlockingStub> stubPool;
+    private final GrpcChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
 
     private final QueryFactory queryFactory;
     private final DomainBlacklist blacklist;
@@ -40,7 +40,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         this.queryFactory = queryFactory;
         this.blacklist = blacklist;
 
-        stubPool = new GrpcStubPool<>(ServiceId.Index) {
+        channelPool = new GrpcChannelPool<>(ServiceId.Index) {
             @Override
             public IndexApiGrpc.IndexApiBlockingStub createStub(ManagedChannel channel) {
                 return IndexApiGrpc.newBlockingStub(channel);
@@ -89,7 +89,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     @SneakyThrows
     private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
-        return stubPool.invokeAll(stub -> new QueryTask(stub, indexRequest))
+        return channelPool.invokeAll(stub -> new QueryTask(stub, indexRequest))
                 .stream()
                 .filter(f -> f.state() == Future.State.SUCCESS)
                 .map(Future::resultNow)

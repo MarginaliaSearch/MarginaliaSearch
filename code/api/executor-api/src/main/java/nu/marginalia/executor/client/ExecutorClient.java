@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
-import nu.marginalia.client.grpc.GrpcStubPool;
+import nu.marginalia.client.grpc.GrpcChannelPool;
 import nu.marginalia.executor.api.*;
 import nu.marginalia.executor.api.ExecutorApiGrpc.ExecutorApiBlockingStub;
 import nu.marginalia.executor.model.ActorRunState;
@@ -35,14 +35,14 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ExecutorClient extends AbstractDynamicClient {
-    private final GrpcStubPool<ExecutorApiBlockingStub> stubPool;
+    private final GrpcChannelPool<ExecutorApiBlockingStub> channelPool;
     private static final Logger logger = LoggerFactory.getLogger(ExecutorClient.class);
 
     @Inject
     public ExecutorClient(ServiceDescriptors descriptors, NodeConfigurationService nodeConfigurationService) {
         super(descriptors.forId(ServiceId.Executor), GsonFactory::get);
 
-        stubPool = new GrpcStubPool<>(ServiceId.Executor) {
+        channelPool = new GrpcChannelPool<>(ServiceId.Executor) {
             @Override
             public ExecutorApiBlockingStub createStub(ManagedChannel channel) {
                 return ExecutorApiGrpc.newBlockingStub(channel);
@@ -59,7 +59,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void startFsm(int node, String actorName) {
-        stubPool.apiForNode(node).startFsm(
+        channelPool.apiForNode(node).startFsm(
                 RpcFsmName.newBuilder()
                         .setActorName(actorName)
                         .build()
@@ -67,7 +67,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void stopFsm(int node, String actorName) {
-        stubPool.apiForNode(node).stopFsm(
+        channelPool.apiForNode(node).stopFsm(
                 RpcFsmName.newBuilder()
                         .setActorName(actorName)
                         .build()
@@ -75,7 +75,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void stopProcess(int node, String id) {
-        stubPool.apiForNode(node).stopProcess(
+        channelPool.apiForNode(node).stopProcess(
                 RpcProcessId.newBuilder()
                         .setProcessId(id)
                         .build()
@@ -83,7 +83,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void triggerCrawl(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).triggerCrawl(
+        channelPool.apiForNode(node).triggerCrawl(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
@@ -91,7 +91,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void triggerRecrawl(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).triggerRecrawl(
+        channelPool.apiForNode(node).triggerRecrawl(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
@@ -99,7 +99,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void triggerConvert(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).triggerConvert(
+        channelPool.apiForNode(node).triggerConvert(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
@@ -107,7 +107,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void triggerConvertAndLoad(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).triggerConvertAndLoad(
+        channelPool.apiForNode(node).triggerConvertAndLoad(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
@@ -115,7 +115,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void loadProcessedData(int node, List<FileStorageId> ids) {
-        stubPool.apiForNode(node).loadProcessedData(
+        channelPool.apiForNode(node).loadProcessedData(
                 RpcFileStorageIds.newBuilder()
                         .addAllFileStorageIds(ids.stream().map(FileStorageId::id).toList())
                         .build()
@@ -123,11 +123,11 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void calculateAdjacencies(int node) {
-        stubPool.apiForNode(node).calculateAdjacencies(Empty.getDefaultInstance());
+        channelPool.apiForNode(node).calculateAdjacencies(Empty.getDefaultInstance());
     }
 
     public void sideloadEncyclopedia(int node, Path sourcePath, String baseUrl) {
-        stubPool.apiForNode(node).sideloadEncyclopedia(
+        channelPool.apiForNode(node).sideloadEncyclopedia(
                 RpcSideloadEncyclopedia.newBuilder()
                         .setBaseUrl(baseUrl)
                         .setSourcePath(sourcePath.toString())
@@ -136,21 +136,21 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void sideloadDirtree(int node, Path sourcePath) {
-        stubPool.apiForNode(node).sideloadDirtree(
+        channelPool.apiForNode(node).sideloadDirtree(
                 RpcSideloadDirtree.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
         );
     }
     public void sideloadReddit(int node, Path sourcePath) {
-        stubPool.apiForNode(node).sideloadReddit(
+        channelPool.apiForNode(node).sideloadReddit(
                 RpcSideloadReddit.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
         );
     }
     public void sideloadWarc(int node, Path sourcePath) {
-        stubPool.apiForNode(node).sideloadWarc(
+        channelPool.apiForNode(node).sideloadWarc(
                 RpcSideloadWarc.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
@@ -158,7 +158,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void sideloadStackexchange(int node, Path sourcePath) {
-        stubPool.apiForNode(node).sideloadStackexchange(
+        channelPool.apiForNode(node).sideloadStackexchange(
                 RpcSideloadStackexchange.newBuilder()
                         .setSourcePath(sourcePath.toString())
                         .build()
@@ -166,7 +166,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void createCrawlSpecFromDownload(int node, String description, String url) {
-        stubPool.apiForNode(node).createCrawlSpecFromDownload(
+        channelPool.apiForNode(node).createCrawlSpecFromDownload(
                 RpcCrawlSpecFromDownload.newBuilder()
                         .setDescription(description)
                         .setUrl(url)
@@ -175,14 +175,14 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void exportAtags(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).exportAtags(
+        channelPool.apiForNode(node).exportAtags(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
     public void exportSampleData(int node, FileStorageId fid, int size, String name) {
-        stubPool.apiForNode(node).exportSampleData(
+        channelPool.apiForNode(node).exportSampleData(
                 RpcExportSampleData.newBuilder()
                         .setFileStorageId(fid.id())
                         .setSize(size)
@@ -192,14 +192,14 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void exportRssFeeds(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).exportRssFeeds(
+        channelPool.apiForNode(node).exportRssFeeds(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
         );
     }
     public void exportTermFrequencies(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).exportTermFrequencies(
+        channelPool.apiForNode(node).exportTermFrequencies(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
@@ -207,7 +207,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void downloadSampleData(int node, String sampleSet) {
-        stubPool.apiForNode(node).downloadSampleData(
+        channelPool.apiForNode(node).downloadSampleData(
                 RpcDownloadSampleData.newBuilder()
                         .setSampleSet(sampleSet)
                         .build()
@@ -215,11 +215,11 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public void exportData(int node) {
-        stubPool.apiForNode(node).exportData(Empty.getDefaultInstance());
+        channelPool.apiForNode(node).exportData(Empty.getDefaultInstance());
     }
 
     public void restoreBackup(int node, FileStorageId fid) {
-        stubPool.apiForNode(node).restoreBackup(
+        channelPool.apiForNode(node).restoreBackup(
                 RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
                         .build()
@@ -228,7 +228,7 @@ public class ExecutorClient extends AbstractDynamicClient {
 
     public ActorRunStates getActorStates(int node) {
         try {
-            var rs = stubPool.apiForNode(node).getActorStates(Empty.getDefaultInstance());
+            var rs = channelPool.apiForNode(node).getActorStates(Empty.getDefaultInstance());
             var states = rs.getActorRunStatesList().stream()
                     .map(r -> new ActorRunState(
                             r.getActorName(),
@@ -252,7 +252,7 @@ public class ExecutorClient extends AbstractDynamicClient {
 
     public UploadDirContents listSideloadDir(int node) {
         try {
-            var rs = stubPool.apiForNode(node).listSideloadDir(Empty.getDefaultInstance());
+            var rs = channelPool.apiForNode(node).listSideloadDir(Empty.getDefaultInstance());
             var items = rs.getEntriesList().stream()
                     .map(i -> new UploadDirItem(i.getName(), i.getLastModifiedTime(), i.getIsDirectory(), i.getSize()))
                     .toList();
@@ -268,7 +268,7 @@ public class ExecutorClient extends AbstractDynamicClient {
 
     public FileStorageContent listFileStorage(int node, FileStorageId fileId) {
         try {
-            var rs = stubPool.apiForNode(node).listFileStorage(
+            var rs = channelPool.apiForNode(node).listFileStorage(
                     RpcFileStorageId.newBuilder()
                             .setFileStorageId(fileId.id())
                             .build()

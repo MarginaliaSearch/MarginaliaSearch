@@ -3,7 +3,7 @@ package nu.marginalia.query;
 import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
-import nu.marginalia.client.grpc.GrpcStubPool;
+import nu.marginalia.client.grpc.GrpcChannelPool;
 import nu.marginalia.index.api.IndexDomainLinksApiGrpc;
 import nu.marginalia.index.api.RpcDomainIdCount;
 import nu.marginalia.index.api.RpcDomainIdList;
@@ -17,11 +17,11 @@ import java.util.List;
 
 public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDomainLinksApiImplBase {
     private static final Logger logger = LoggerFactory.getLogger(QueryGRPCDomainLinksService.class);
-    private final GrpcStubPool<IndexDomainLinksApiGrpc.IndexDomainLinksApiBlockingStub> stubPool;
+    private final GrpcChannelPool<IndexDomainLinksApiGrpc.IndexDomainLinksApiBlockingStub> channelPool;
 
     @Inject
     public QueryGRPCDomainLinksService(NodeConfigurationWatcher nodeConfigurationWatcher) {
-        stubPool = new GrpcStubPool<>(ServiceId.Index) {
+        channelPool = new GrpcChannelPool<>(ServiceId.Index) {
             @Override
             public IndexDomainLinksApiGrpc.IndexDomainLinksApiBlockingStub createStub(ManagedChannel channel) {
                 return IndexDomainLinksApiGrpc.newBlockingStub(channel);
@@ -37,7 +37,7 @@ public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDo
     @Override
     public void getAllLinks(nu.marginalia.index.api.Empty request,
                             StreamObserver<RpcDomainIdPairs> responseObserver) {
-        stubPool.callEachSequential(stub -> stub.getAllLinks(request))
+        channelPool.callEachSequential(stub -> stub.getAllLinks(request))
                 .forEach(
                         iter -> iter.forEachRemaining(responseObserver::onNext)
                 );
@@ -50,7 +50,7 @@ public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDo
                                    StreamObserver<RpcDomainIdList> responseObserver) {
         var rspBuilder = RpcDomainIdList.newBuilder();
 
-        stubPool.callEachSequential(stub -> stub.getLinksFromDomain(request))
+        channelPool.callEachSequential(stub -> stub.getLinksFromDomain(request))
                 .map(RpcDomainIdList::getDomainIdList)
                 .forEach(rspBuilder::addAllDomainId);
 
@@ -63,7 +63,7 @@ public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDo
                                  StreamObserver<RpcDomainIdList> responseObserver) {
         var rspBuilder = RpcDomainIdList.newBuilder();
 
-        stubPool.callEachSequential(stub -> stub.getLinksToDomain(request))
+        channelPool.callEachSequential(stub -> stub.getLinksToDomain(request))
                 .map(RpcDomainIdList::getDomainIdList)
                 .forEach(rspBuilder::addAllDomainId);
 
@@ -75,7 +75,7 @@ public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDo
     public void countLinksFromDomain(nu.marginalia.index.api.RpcDomainId request,
                                      StreamObserver<RpcDomainIdCount> responseObserver) {
 
-        int sum = stubPool.callEachSequential(stub -> stub.countLinksFromDomain(request))
+        int sum = channelPool.callEachSequential(stub -> stub.countLinksFromDomain(request))
                 .mapToInt(RpcDomainIdCount::getIdCount)
                 .sum();
 
@@ -89,7 +89,7 @@ public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDo
     public void countLinksToDomain(nu.marginalia.index.api.RpcDomainId request,
                                    io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcDomainIdCount> responseObserver) {
 
-        int sum = stubPool.callEachSequential(stub -> stub.countLinksToDomain(request))
+        int sum = channelPool.callEachSequential(stub -> stub.countLinksToDomain(request))
                 .mapToInt(RpcDomainIdCount::getIdCount)
                 .sum();
 

@@ -10,11 +10,12 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static io.grpc.ConnectivityState.SHUTDOWN;
+
 /** A pool of gRPC stubs for a service, with a separate stub for each node.
  * Manages broadcast-style request. */
-public abstract class GrpcStubPool<STUB> {
-    public GrpcStubPool(String serviceName) {
-
+public abstract class GrpcChannelPool<STUB> {
+    public GrpcChannelPool(String serviceName) {
         this.serviceName = serviceName;
     }
 
@@ -25,25 +26,34 @@ public abstract class GrpcStubPool<STUB> {
     }
 
     private final Map<ServiceAndNode, ManagedChannel> channels = new ConcurrentHashMap<>();
-    private final Map<ServiceAndNode, STUB> apis = new ConcurrentHashMap<>();
     private final ExecutorService virtualExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
     private final String serviceName;
 
-    public GrpcStubPool(ServiceId serviceId) {
+    public GrpcChannelPool(ServiceId serviceId) {
         this.serviceName = serviceId.serviceName;
     }
 
     /** Get an API stub for the given node */
     public STUB apiForNode(int node) {
-        var san = new ServiceAndNode(serviceName, node);
-        return apis.computeIfAbsent(san, n ->
-                createStub(channels.computeIfAbsent(san, this::createChannel))
+        return createStub(
+            channels.compute(
+                new ServiceAndNode(serviceName, node),
+                this::refreshChannel)
         );
     }
 
+    private ManagedChannel refreshChannel(ServiceAndNode serviceAndNode, ManagedChannel old) {
+        if (old == null || old.getState(true) != SHUTDOWN) {
+            return createChannel(serviceAndNode);
+        }
+        return old;
+    }
+
     protected ManagedChannel createChannel(ServiceAndNode serviceAndNode) {
-        return ManagedChannelBuilder.forAddress(serviceAndNode.getHostName(), 81).usePlaintext().build();
+        return ManagedChannelBuilder.forAddress(serviceAndNode.getHostName(), 81)
+                .usePlaintext()
+                .build();
     }
 
     /** Invoke a function on each node, returning a list of futures in a terminal state, as per
