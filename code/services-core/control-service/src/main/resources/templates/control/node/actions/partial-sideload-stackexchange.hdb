@@ -13,8 +13,8 @@ information how to do this.
             <th></th><th>Filename</th><th>Size</th><th>Last Modified</th>
             {{#each uploadDirContents.items}}
                 <tr>
-                    <td><input class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
-                    <td>
+                    <td><input {{#unless isStackexchange7z}}disabled{{/unless}} class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
+                    <td {{#unless isStackexchange7z}}class="text-muted"{{/unless}}>
                         <label class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
                     </td>
                     <td>{{#unless directory}}{{size}}{{/unless}}</td>

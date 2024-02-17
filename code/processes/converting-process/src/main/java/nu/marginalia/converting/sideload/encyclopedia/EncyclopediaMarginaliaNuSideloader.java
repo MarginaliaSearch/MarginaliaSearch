@@ -10,6 +10,7 @@ import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.model.EdgeDomain;
@@ -27,6 +28,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 
@@ -115,6 +117,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                 .append("<!DOCTYPE html><html><head><title>")
                 .append(title)
                 .append("</title></head><body>")
+                .append("<script src=\"https://www.example.com/dummy.js\" type=\"text/javascript\"></script>")
                 .append("<div class=\"mw-content-text\">");
 
         for (String part : parts) {
@@ -131,6 +134,8 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         List.of("encyclopedia", "wiki"),
                         domainLinks,
                         GeneratorType.WIKI,
+                        DocumentClass.SIDELOAD,
+                        LocalDate.now().getYear(),
                         10_000_000);
 
         // Add anchor text keywords

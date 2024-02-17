@@ -65,7 +65,8 @@ public class SideloadSourceFactory {
     public SideloadSource sideloadReddit(Path pathToDbFiles) throws IOException {
         return sideload(pathToDbFiles,
                 new PathSuffixPredicate(".db"),
-                (List<Path> paths) -> new RedditSideloader(paths, sentenceExtractorProvider, documentKeywordExtractor));
+                (List<Path> paths) -> new RedditSideloader(paths,
+                        anchorTagsSourceFactory, anchorTextKeywords, sideloaderProcessing));
     }
 
     public Collection<? extends SideloadSource> sideloadStackexchange(Path pathToDbFileRoot) throws IOException {

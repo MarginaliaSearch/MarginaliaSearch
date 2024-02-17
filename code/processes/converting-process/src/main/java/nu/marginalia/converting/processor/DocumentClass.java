@@ -7,7 +7,9 @@ public enum DocumentClass {
     NORMAL,
     EXTERNALLY_LINKED_ONCE,
     EXTERNALLY_LINKED_MULTI,
-    /** A document that is not linked to, but is sideloaded.  Ignore most inclusion checks. */
+    /** A document that is not known to be linked to,
+     * but is sideloaded. This excludes most inclusion
+     * checks and always loads the document as-is */
     SIDELOAD;
 
     public boolean enforceQualityLimits() {

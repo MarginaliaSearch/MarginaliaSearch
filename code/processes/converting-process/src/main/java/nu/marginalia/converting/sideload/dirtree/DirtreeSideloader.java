@@ -5,6 +5,7 @@ import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.model.EdgeDomain;
@@ -13,6 +14,7 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -83,6 +85,8 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
         return sideloaderProcessing
                 .processDocument(url, body, extraKeywords, new DomainLinks(),
                         GeneratorType.DOCS,
+                        DocumentClass.NORMAL,
+                        LocalDate.now().getYear(),
                         10_000);
     }
 

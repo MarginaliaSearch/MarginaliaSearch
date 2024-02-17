@@ -105,6 +105,9 @@ public class StackexchangeSideloader implements SideloadSource {
 
         StringBuilder fullHtml = new StringBuilder();
         fullHtml.append("<!DOCTYPE html><html><head><title>").append(post.title()).append("</title></head><body>");
+        // Add a bogus script tag to make sure we get the JS flag
+        fullHtml.append("<script src=\"https://www.example.com/dummy.js\" type=\"text/javascript\"></script>");
+
         fullHtml.append("<p>").append(post.title()).append("</p>");
         for (var comment : post.bodies()) {
             fullHtml.append("<p>").append(comment).append("</p>");

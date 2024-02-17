@@ -7,6 +7,7 @@ import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.model.EdgeDomain;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -130,8 +132,13 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
         }
 
         return Optional.of(sideloaderProcessing
-                .processDocument(url, body.get(), List.of(), new DomainLinks(),
+                .processDocument(url,
+                        body.get(),
+                        List.of(),
+                        new DomainLinks(),
                         GeneratorType.DOCS,
+                        DocumentClass.SIDELOAD,
+                        LocalDate.now().getYear(), // TODO: This should be the actual year of the document
                         10_000));
     }
 

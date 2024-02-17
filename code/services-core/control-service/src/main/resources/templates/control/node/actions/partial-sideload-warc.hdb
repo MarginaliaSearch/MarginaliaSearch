@@ -12,9 +12,9 @@ A warc export can be created using e.g. wget: <p>
             <th></th><th>Filename</th><th>Size</th><th>Last Modified</th>
             {{#each uploadDirContents.items}}
                 <tr>
-                    <td><input class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
+                    <td><input {{#unless isWarc}}disabled{{/unless}} class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
                     <td>
-                        <label class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
+                        <label {{#unless isWarc}}class="text-muted"{{/unless}} class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
                     </td>
                     <td>{{#unless directory}}{{size}}{{/unless}}</td>
                     <td title={{lastModifiedTime}}>{{shortTimestamp lastModifiedTime}}</td>

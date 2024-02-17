@@ -36,9 +36,11 @@ public class SideloaderProcessing {
                                              List<String> extraKeywords,
                                              DomainLinks domainLinks,
                                              GeneratorType type,
+                                             DocumentClass documentClass,
+                                             int pubYear,
                                              int size) throws URISyntaxException {
         var crawledDoc = new CrawledDocument(
-                "encyclopedia.marginalia.nu",
+                "synthetic",
                 url,
                 "text/html",
                 LocalDateTime.now().toString(),
@@ -59,9 +61,6 @@ public class SideloaderProcessing {
         // Give the document processing preferential treatment if this is a sideloaded wiki, since we
         // truncate the document to the first paragraph, which typically is too short to be included
         // on its own.
-        final DocumentClass documentClass;
-        if (type == GeneratorType.WIKI) documentClass = DocumentClass.SIDELOAD;
-        else documentClass = DocumentClass.NORMAL;
 
         var ret = new ProcessedDocument();
         try {
@@ -72,11 +71,13 @@ public class SideloaderProcessing {
             for (String keyword : extraKeywords)
                 ret.words.add(keyword, WordFlags.Subjects.asBit());
 
-            if (type == GeneratorType.WIKI)
-                ret.words.add("generator:wiki", WordFlags.Subjects.asBit());
-            else if (type == GeneratorType.DOCS)
-                ret.words.add("generator:docs", WordFlags.Subjects.asBit());
-
+            if (type == GeneratorType.WIKI) {
+                ret.words.addAllSyntheticTerms(List.of("generator:wiki"));
+            } else if (type == GeneratorType.DOCS) {
+                ret.words.addAllSyntheticTerms(List.of("generator:docs"));
+            } else if (type == GeneratorType.FORUM) {
+                ret.words.addAllSyntheticTerms(List.of("generator:forum"));
+            }
             ret.details = details.details();
 
             // Add a few things that we know about the document
@@ -84,14 +85,14 @@ public class SideloaderProcessing {
             // so stripped down
 
             ret.details.standard = HtmlStandard.HTML5;
-            ret.details.pubYear = LocalDateTime.now().getYear();
+            ret.details.pubYear = pubYear;
             ret.details.features.add(HtmlFeature.JS);
             ret.details.features.add(HtmlFeature.TRACKING);
             ret.details.quality = -4.5;
             ret.details.generator = type;
 
             ret.details.metadata = new DocumentMetadata(3,
-                            PubDate.toYearByte(ret.details.pubYear),
+                            PubDate.toYearByte(pubYear),
                             (int) -ret.details.quality,
                             switch (type) {
                                 case WIKI -> EnumSet.of(DocumentFlags.GeneratorWiki, DocumentFlags.Sideloaded);
