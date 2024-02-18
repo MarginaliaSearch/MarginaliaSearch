@@ -8,25 +8,23 @@ import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.searchset.SearchSet;
-import nu.marginalia.ranking.RankingAlgorithm;
-import nu.marginalia.ranking.ReversePageRank;
-import nu.marginalia.ranking.StandardPageRank;
+import nu.marginalia.ranking.*;
 import nu.marginalia.ranking.accumulator.RankingResultHashMapAccumulator;
 import nu.marginalia.ranking.accumulator.RankingResultHashSetAccumulator;
-import nu.marginalia.ranking.data.RankingDomainFetcher;
-import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.index.svc.searchset.RankingSearchSet;
 import nu.marginalia.index.svc.searchset.SearchSetAny;
-import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.db.DbUpdateRanks;
+import nu.marginalia.ranking.data.GraphSource;
+import nu.marginalia.ranking.data.LinkGraphSource;
+import nu.marginalia.ranking.data.SimilarityGraphSource;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,13 +32,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class IndexSearchSetsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DomainTypes domainTypes;
-    private final ServiceHeartbeat heartbeat;
     private final IndexServicesFactory indexServicesFactory;
     private final ServiceEventLog eventLog;
     private final DomainRankingSetsService domainRankingSetsService;
     private final DbUpdateRanks dbUpdateRanks;
-    private final RankingDomainFetcher similarityDomains;
-    private final RankingDomainFetcher linksDomains;
+    private final GraphSource similarityDomains;
+    private final GraphSource linksDomains;
 
     private final ConcurrentHashMap<String, SearchSet> rankingSets = new ConcurrentHashMap<>();
     // Below are binary indices that are used to constrain a search
@@ -55,23 +52,21 @@ public class IndexSearchSetsService {
     @Inject
     public IndexSearchSetsService(DomainTypes domainTypes,
                                   ServiceConfiguration serviceConfiguration,
-                                  ServiceHeartbeat heartbeat,
-                                  RankingDomainFetcher rankingDomains,
-                                  RankingDomainFetcherForSimilarityData similarityDomains,
+                                  LinkGraphSource rankingDomains,
+                                  SimilarityGraphSource similarityDomains,
                                   IndexServicesFactory indexServicesFactory,
                                   ServiceEventLog eventLog,
                                   DomainRankingSetsService domainRankingSetsService,
                                   DbUpdateRanks dbUpdateRanks) throws IOException {
         this.nodeId = serviceConfiguration.node();
         this.domainTypes = domainTypes;
-        this.heartbeat = heartbeat;
         this.indexServicesFactory = indexServicesFactory;
         this.eventLog = eventLog;
         this.domainRankingSetsService = domainRankingSetsService;
 
         this.dbUpdateRanks = dbUpdateRanks;
 
-        if (similarityDomains.hasData()) {
+        if (similarityDomains.isAvailable()) {
             this.similarityDomains = similarityDomains;
             this.linksDomains = rankingDomains;
         }
@@ -126,13 +121,13 @@ public class IndexSearchSetsService {
             }
 
             try {
-                if (DomainRankingSetsService.DomainSetAlgorithm.SPECIAL.equals(rankingSet.algorithm())) {
+                if (rankingSet.isSpecial()) {
                     switch (rankingSet.name()) {
                         case "BLOGS" -> recalculateBlogsSet(rankingSet);
                         case "NONE" -> {} // No-op
                     }
                 } else {
-                    recalculateNornal(rankingSet);
+                    recalculateNormal(rankingSet);
                 }
             }
             catch (Exception ex) {
@@ -142,18 +137,18 @@ public class IndexSearchSetsService {
         }
     }
 
-    private void recalculateNornal(DomainRankingSetsService.DomainRankingSet rankingSet) {
-        String[] domains = rankingSet.domains();
+    private void recalculateNormal(DomainRankingSetsService.DomainRankingSet rankingSet) {
+        List<String> domains = List.of(rankingSet.domains());
 
-        RankingAlgorithm rankingAlgorithm = switch (rankingSet.algorithm()) {
-            case LINKS_PAGERANK -> new StandardPageRank(linksDomains, domains);
-            case LINKS_CHEIRANK -> new ReversePageRank(linksDomains, domains);
-            case ADJACENCY_PAGERANK -> new StandardPageRank(similarityDomains, domains);
-            case ADJACENCY_CHEIRANK -> new ReversePageRank(similarityDomains, domains);
-            default -> throw new IllegalStateException("Unexpected value: " + rankingSet.algorithm());
-        };
+        GraphSource source;
 
-        var data = rankingAlgorithm.pageRankWithPeripheralNodes(rankingSet.depth(), RankingResultHashSetAccumulator::new);
+        // Similarity ranking does not behave well with an empty set of domains
+        if (domains.isEmpty()) source = linksDomains;
+        else source = similarityDomains;
+
+        var data = PageRankDomainRanker
+                .forDomainNames(source, domains)
+                .calculate(rankingSet.depth(), RankingResultHashSetAccumulator::new);
 
         var set = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexServicesFactory.getSearchSetsBase()), data);
         rankingSets.put(rankingSet.name(), set);
@@ -185,9 +180,21 @@ public class IndexSearchSetsService {
     }
 
     private void updateDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
+        List<String> domains = List.of(rankingSet.domains());
 
-        var spr = new StandardPageRank(similarityDomains, rankingSet.domains());
-        var ranks = spr.pageRankWithPeripheralNodes(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
+        final GraphSource source;
+
+        if (domains.isEmpty()) {
+            // Similarity ranking does not behave well with an empty set of domains
+            source = linksDomains;
+        }
+        else {
+            source = similarityDomains;
+        }
+
+        var ranks = PageRankDomainRanker
+                        .forDomainNames(source, domains)
+                        .calculate(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
 
         synchronized (this) {
             domainRankings = new DomainRankings(ranks);

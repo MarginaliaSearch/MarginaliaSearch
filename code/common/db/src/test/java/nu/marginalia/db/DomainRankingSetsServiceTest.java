@@ -56,14 +56,12 @@ class DomainRankingSetsServiceTest {
         var newValue = new DomainRankingSetsService.DomainRankingSet(
                 "test",
                 "Test domain set",
-                DomainRankingSetsService.DomainSetAlgorithm.ADJACENCY_CHEIRANK,
                 10,
                 "test\\.nu"
         );
         var newValue2 = new DomainRankingSetsService.DomainRankingSet(
                 "test2",
                 "Test domain set 2",
-                DomainRankingSetsService.DomainSetAlgorithm.LINKS_PAGERANK,
                 20,
                 "test\\.nu 2"
         );
