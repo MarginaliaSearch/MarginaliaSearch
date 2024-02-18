@@ -151,22 +151,22 @@ public class CrawlerMain extends ProcessMainClass {
         System.exit(0);
     }
 
-    public void run(CrawlSpecProvider specProvider, Path outputDir) throws InterruptedException, IOException {
+    public void run(CrawlSpecProvider specProvider, Path outputDir) throws Exception {
 
         heartbeat.start();
+
+        // First a validation run to ensure the file is all good to parse
+        totalTasks = specProvider.totalCount();
+        if (totalTasks == 0) {
+            // This is an error state, and we should make noise about it
+            throw new IllegalStateException("No crawl tasks found, refusing to continue");
+        }
+        logger.info("Queued {} crawl tasks, let's go", totalTasks);
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
         ) {
-
-            // First a validation run to ensure the file is all good to parse
-            logger.info("Validating JSON");
-
-            totalTasks = specProvider.totalCount();
-
-            logger.info("Queued {} crawl tasks, let's go", totalTasks);
-
             try (var specStream = specProvider.stream()) {
                 specStream
                         .takeWhile((e) -> abortMonitor.isAlive())
@@ -332,7 +332,13 @@ public class CrawlerMain extends ProcessMainClass {
 
         if (request.specStorage != null) {
             var specData = fileStorageService.getStorage(request.specStorage);
-            specProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));
+            var parquetProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));;
+
+            // Ensure the parquet domains are loaded into the database to avoid
+            // rare data-loss scenarios
+            dbCrawlSpecProvider.ensureParquetDomainsLoaded(parquetProvider);
+
+            specProvider = parquetProvider;
         }
         else {
             specProvider = dbCrawlSpecProvider;

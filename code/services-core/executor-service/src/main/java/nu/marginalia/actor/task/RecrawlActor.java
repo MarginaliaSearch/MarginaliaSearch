@@ -20,6 +20,7 @@ import nu.marginalia.mqapi.crawling.CrawlRequest;
 import nu.marginalia.svc.DomainListRefreshService;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Singleton
 public class RecrawlActor extends RecordActorPrototype {
@@ -49,7 +50,12 @@ public class RecrawlActor extends RecordActorPrototype {
                 if (crawlStorage == null) yield new Error("Bad storage id");
                 if (crawlStorage.type() != FileStorageType.CRAWL_DATA) yield new Error("Bad storage type " + crawlStorage.type());
 
-                Files.deleteIfExists(crawlStorage.asPath().resolve("crawler.log"));
+                Path crawlLogPath = crawlStorage.asPath().resolve("crawler.log");
+                if (Files.exists(crawlLogPath)) {
+                    // Save the old crawl log
+                    Path crawlLogBackup = crawlStorage.asPath().resolve("crawler.log-" + System.currentTimeMillis());
+                    Files.move(crawlLogPath, crawlLogBackup);
+                }
 
                 refreshService.synchronizeDomainList();
 
