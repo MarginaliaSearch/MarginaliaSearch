@@ -12,11 +12,13 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class DomainBlacklistImpl implements DomainBlacklist {
-    private volatile TIntHashSet spamDomainSet = new TIntHashSet();
-    private final HikariDataSource dataSource;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final boolean blacklistDisabled = Boolean.getBoolean("blacklist.disable");
 
+    private final HikariDataSource dataSource;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+
+    private volatile TIntHashSet spamDomainSet = new TIntHashSet();
     private volatile boolean isLoaded = false;
 
     @Inject
@@ -63,19 +65,24 @@ public class DomainBlacklistImpl implements DomainBlacklist {
         }
     }
 
+
+
     /** Block until the blacklist has been loaded */
-    public boolean waitUntilLoaded() throws InterruptedException {
+    @Override
+    public void waitUntilLoaded() throws InterruptedException {
+        if (blacklistDisabled)
+            return;
+
         if (!isLoaded) {
+            logger.info("Waiting for blacklist to be loaded");
             synchronized (this) {
                 while (!isLoaded) {
                     wait(5000);
                 }
             }
+            logger.info("Blacklist loaded, size = {}", spamDomainSet.size());
         }
-
-        return true;
     }
-
 
     public TIntHashSet getSpamDomains() {
         final TIntHashSet result = new TIntHashSet(1_000_000);

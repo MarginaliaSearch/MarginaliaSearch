@@ -9,4 +9,5 @@ public interface DomainBlacklist {
     default TIntHashSet getSpamDomains() {
         return new TIntHashSet();
     }
+    void waitUntilLoaded() throws InterruptedException;
 }
