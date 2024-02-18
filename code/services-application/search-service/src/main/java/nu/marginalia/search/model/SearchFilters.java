@@ -42,7 +42,7 @@ public class SearchFilters {
         filterGroups = List.of(
                             List.of(
                                     new Filter("No Filter", SearchProfile.NO_FILTER, parameters),
-                                    new Filter("Popular", SearchProfile.POPULAR, parameters),
+//                                    new Filter("Popular", SearchProfile.POPULAR, parameters),
                                     new Filter("Small Web", SearchProfile.SMALLWEB, parameters),
                                     new Filter("Blogosphere", SearchProfile.BLOGOSPHERE, parameters),
                                     new Filter("Academia", SearchProfile.ACADEMIA, parameters)
