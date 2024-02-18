@@ -94,5 +94,9 @@ public class WmsaHome {
         return getHomePath().resolve("data/atags.parquet");
     }
 
+    public static Path getPublicSuffixListPath() {
+        return getHomePath().resolve("data/public_suffix_list.dat");
+    }
+
 
 }
