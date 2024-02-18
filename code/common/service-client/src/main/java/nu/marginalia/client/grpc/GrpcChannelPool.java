@@ -44,9 +44,16 @@ public abstract class GrpcChannelPool<STUB> {
     }
 
     private ManagedChannel refreshChannel(ServiceAndNode serviceAndNode, ManagedChannel old) {
-        if (old == null || old.getState(true) != SHUTDOWN) {
+        if (old == null)
+            return createChannel(serviceAndNode);
+
+        // If the channel is in SHUTDOWN state, we need to create a new one
+        // (shouldn't really happen in practice, but it's a good idea to be safe)
+        if (old.getState(true) == SHUTDOWN) {
+            old.shutdown();
             return createChannel(serviceAndNode);
         }
+
         return old;
     }
 
