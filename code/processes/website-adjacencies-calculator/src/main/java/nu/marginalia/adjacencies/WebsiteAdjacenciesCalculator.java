@@ -1,5 +1,6 @@
 package nu.marginalia.adjacencies;
 
+import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
@@ -9,9 +10,7 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.MainClass;
-import nu.marginalia.service.NodeConfigurationWatcher;
-import nu.marginalia.service.client.GrpcChannelPoolFactory;
-import nu.marginalia.service.discovery.FixedServiceRegistry;
+import nu.marginalia.service.ServiceDiscoveryModule;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -83,48 +81,6 @@ public class WebsiteAdjacenciesCalculator extends MainClass {
         System.out.println("Waiting for wrap-up");
         loader.stop();
     }
-
-    private static class ProgressPrinter {
-
-        private final AtomicInteger progress;
-        private final int total;
-        volatile boolean running = false;
-        private Thread printerThread;
-
-        private ProgressPrinter(int total) {
-            this.total = total;
-            this.progress = new AtomicInteger(0);
-        }
-
-        public void advance() {
-            progress.incrementAndGet();
-        }
-
-        private void run() {
-            while (running) {
-                double value = 100 * progress.get() / (double) total;
-                System.out.printf("\u001b[2K\r%3.2f%%", value);
-                try {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }
-        public void start() {
-            running = true;
-            printerThread = new Thread(this::run);
-            printerThread.setDaemon(true);
-            printerThread.start();
-        }
-
-        public void stop() throws InterruptedException {
-            running = false;
-            printerThread.join();
-            System.out.println();
-        }
-    }
-
 
     public void findAdjacent(int domainId, Consumer<DomainSimilarities> andThen) {
         findAdjacentDtoS(domainId, andThen);
@@ -191,14 +147,13 @@ public class WebsiteAdjacenciesCalculator extends MainClass {
 
 
     public static void main(String[] args) throws SQLException {
-        DatabaseModule dm = new DatabaseModule(false);
+        var injector = Guice.createInjector(
+                new DatabaseModule(false),
+                new ServiceDiscoveryModule());
 
-        var dataSource = dm.provideConnection();
 
-        // FIXME: we should use zookeeper when configured here:
-        var qc = new QueryClient(new GrpcChannelPoolFactory(
-                new NodeConfigurationWatcher(dataSource),
-                new FixedServiceRegistry(dataSource)));
+        var dataSource = injector.getInstance(HikariDataSource.class);
+        var qc = injector.getInstance(QueryClient.class);
 
         var main = new WebsiteAdjacenciesCalculator(qc, dataSource);
 
@@ -236,13 +191,6 @@ public class WebsiteAdjacenciesCalculator extends MainClass {
             }
         }
 
-//
-//        if (args.length == 0) {
-//            main.loadAll();
-//        }
-//        else {
-//            main.tryDomains(args);
-//        }
     }
 
 }
