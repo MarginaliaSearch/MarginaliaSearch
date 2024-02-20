@@ -47,10 +47,11 @@ public class QueryClient  {
 
     @CheckReturnValue
     public QueryResponse search(QueryParams params) {
+        var query = QueryProtobufCodec.convertQueryParams(params);
+
         return wmsa_qs_api_search_time.time(
                 () ->  QueryProtobufCodec.convertQueryResponse(queryApiPool
-                        .api()
-                        .query(QueryProtobufCodec.convertQueryParams(params))
+                        .importantCall((api) -> api.query(query))
                 )
         );
     }

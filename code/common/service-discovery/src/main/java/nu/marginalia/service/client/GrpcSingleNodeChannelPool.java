@@ -98,6 +98,22 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         return stubConstructor.apply(getChannel());
     }
 
+    /** Try to make the call go through.  The function will cycle through
+     * available routes until exhaustion, and only then will it give up
+     */
+    public <T> T importantCall(Function<STUB, T> function) {
+        for (int i = 0; i < channels.size(); i++) {
+            try {
+                return function.apply(api());
+            }
+            catch (Exception e) {
+                logger.error("API Exception", e);
+            }
+        }
+
+        throw new ServiceNotAvailableException(serviceId);
+    }
+
     /** Get the channel that is most ready to use */
     public ManagedChannel getChannel() {
         return channels
