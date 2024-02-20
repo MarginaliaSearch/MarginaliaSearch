@@ -19,6 +19,8 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:api:query-api')
 
+    implementation 'org.jgrapht:jgrapht-core:1.5.2'
+
     implementation libs.bundles.slf4j
     implementation libs.bundles.mariadb
     implementation libs.guice
@@ -26,8 +28,17 @@ dependencies {
     implementation libs.roaringbitmap
     implementation libs.trove
     implementation libs.fastutil
+    implementation libs.hll
 
+    testImplementation project(':code:libraries:array')
+
+    testImplementation libs.commons.lang3
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
 }

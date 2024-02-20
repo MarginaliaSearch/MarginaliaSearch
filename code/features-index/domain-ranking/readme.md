@@ -1,19 +1,34 @@
 # Domain Ranking
 
-Contains domain ranking algorithms.
+Contains domain ranking algorithms.  The domain ranking algorithms are based on 
+the JGraphT library.  
+
+Two principal algorithms are available, the standard PageRank algorithm,
+and personalized pagerank; each are available for two graphs, the link graph
+and a similarity graph where each edge corresponds to the similarity between
+the sets of incident links to two domains, their cosine similarity acting as
+the weight of the links.
+
+With the standard PageRank algorithm, the similarity graph does not produce
+anything useful, but something magical happens when you apply Personalized PageRank 
+to this graph.  It turns into a very good "vibe"-sensitive ranking algorithm.
+
+It's unclear if this is a well known result, but it's a very interesting one
+for creating a ranking algorithm that is focused on a particular segment of the web.
 
 ## Central Classes
 
-### Algorithms
-* [RankingAlgorithm](src/main/java/nu/marginalia/ranking/RankingAlgorithm.java)
-* [StandardPageRank](src/main/java/nu/marginalia/ranking/StandardPageRank.java) 
-* [ReversePageRank](src/main/java/nu/marginalia/ranking/ReversePageRank.java) "CheiRank"
+* [PageRankDomainRanker](src/main/java/nu/marginalia/ranking/PageRankDomainRanker.java) - Ranks domains using the 
+ PageRank or Personalized PageRank algorithm depending on whether a list of influence domains is provided.
 
 ### Data sources
 
-* [RankingDomainFetcher](src/main/java/nu/marginalia/ranking/data/RankingDomainFetcher.java) fetches link data. 
-* [RankingDomainFetcherForSimilarityData](src/main/java/nu/marginalia/ranking/data/RankingDomainFetcherForSimilarityData.java) fetches website similarity data.
+* [LinkGraphSource](src/main/java/nu/marginalia/ranking/data/LinkGraphSource.java) - fetches the link graph
+* [InvertedLinkGraphSource](src/main/java/nu/marginalia/ranking/data/InvertedLinkGraphSource.java) - fetches the inverted link graph
+* [SimilarityGraphSource](src/main/java/nu/marginalia/ranking/data/SimilarityGraphSource.java) - fetches the similarity graph from the database 
 
+Note that the similarity graph needs to be precomputed and stored in the database for
+the similarity graph source to be available.
 
 ## See Also
 

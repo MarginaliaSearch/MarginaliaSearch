@@ -15,15 +15,12 @@ import java.sql.SQLException;
 import java.util.Map;
 
 public class ControlDomainRankingSetsService {
-    private final HikariDataSource dataSource;
     private final ControlRendererFactory rendererFactory;
     private final DomainRankingSetsService domainRankingSetsService;
 
     @Inject
-    public ControlDomainRankingSetsService(HikariDataSource dataSource,
-                                           ControlRendererFactory rendererFactory,
+    public ControlDomainRankingSetsService(ControlRendererFactory rendererFactory,
                                            DomainRankingSetsService domainRankingSetsService) {
-        this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;
         this.domainRankingSetsService = domainRankingSetsService;
     }
@@ -47,7 +44,6 @@ public class ControlDomainRankingSetsService {
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
                     id,
                     request.queryParams("description"),
-                    DomainRankingSetsService.DomainSetAlgorithm.valueOf(request.queryParams("algorithm")),
                     Integer.parseInt(request.queryParams("depth")),
                     request.queryParams("definition")
             ));
@@ -77,7 +73,6 @@ public class ControlDomainRankingSetsService {
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
                     request.queryParams("name").toUpperCase(),
                     request.queryParams("description"),
-                    DomainRankingSetsService.DomainSetAlgorithm.valueOf(request.queryParams("algorithm")),
                     Integer.parseInt(request.queryParams("depth")),
                     request.queryParams("definition")
             ));
@@ -95,17 +90,6 @@ public class ControlDomainRankingSetsService {
     }
     private Object rankingSetModel(Request request, Response response) throws SQLException {
         var model = domainRankingSetsService.get(request.params("id")).orElseThrow();
-        return Map.of("rankingSet", model,
-                "selectedAlgo", Map.of(
-                        "special", model.algorithm() == DomainRankingSetsService.DomainSetAlgorithm.SPECIAL,
-                        "adjacency_cheirank", model.algorithm() == DomainRankingSetsService.DomainSetAlgorithm.ADJACENCY_CHEIRANK,
-                        "adjacency_pagerank", model.algorithm() == DomainRankingSetsService.DomainSetAlgorithm.ADJACENCY_PAGERANK,
-                        "links_cheirank", model.algorithm() == DomainRankingSetsService.DomainSetAlgorithm.LINKS_CHEIRANK,
-                        "links_pagerank", model.algorithm() == DomainRankingSetsService.DomainSetAlgorithm.LINKS_PAGERANK)
-        );
-
-
-
-
+        return Map.of("rankingSet", model);
     }
 }

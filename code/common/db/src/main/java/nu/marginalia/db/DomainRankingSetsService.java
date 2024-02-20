@@ -25,7 +25,7 @@ public class DomainRankingSetsService {
     public Optional<DomainRankingSet> get(String name) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT NAME, DESCRIPTION, ALGORITHM, DEPTH, DEFINITION
+                     SELECT NAME, DESCRIPTION, DEPTH, DEFINITION
                      FROM CONF_DOMAIN_RANKING_SET
                      WHERE NAME = ?
                      """)) {
@@ -39,7 +39,6 @@ public class DomainRankingSetsService {
             return Optional.of(new DomainRankingSet(
                     rs.getString("NAME"),
                     rs.getString("DESCRIPTION"),
-                    DomainSetAlgorithm.valueOf(rs.getString("ALGORITHM")),
                     rs.getInt("DEPTH"),
                     rs.getString("DEFINITION")
             ));
@@ -53,15 +52,14 @@ public class DomainRankingSetsService {
     public void upsert(DomainRankingSet domainRankingSet) {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                        REPLACE INTO CONF_DOMAIN_RANKING_SET(NAME, DESCRIPTION, ALGORITHM, DEPTH, DEFINITION)
-                        VALUES (?, ?, ?, ?, ?)
+                        REPLACE INTO CONF_DOMAIN_RANKING_SET(NAME, DESCRIPTION, DEPTH, DEFINITION)
+                        VALUES (?, ?, ?, ?)
                         """))
         {
             stmt.setString(1, domainRankingSet.name());
             stmt.setString(2, domainRankingSet.description());
-            stmt.setString(3, domainRankingSet.algorithm().name());
-            stmt.setInt(4, domainRankingSet.depth());
-            stmt.setString(5, domainRankingSet.definition());
+            stmt.setInt(3, domainRankingSet.depth());
+            stmt.setString(4, domainRankingSet.definition());
             stmt.executeUpdate();
 
             if (!conn.getAutoCommit())
@@ -94,7 +92,7 @@ public class DomainRankingSetsService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT NAME, DESCRIPTION, ALGORITHM, DEPTH, DEFINITION
+                     SELECT NAME, DESCRIPTION, DEPTH, DEFINITION
                      FROM CONF_DOMAIN_RANKING_SET
                      """)) {
             var rs = stmt.executeQuery();
@@ -105,7 +103,6 @@ public class DomainRankingSetsService {
                     new DomainRankingSet(
                         rs.getString("NAME"),
                         rs.getString("DESCRIPTION"),
-                        DomainSetAlgorithm.valueOf(rs.getString("ALGORITHM")),
                         rs.getInt("DEPTH"),
                         rs.getString("DEFINITION"))
                 );
@@ -118,31 +115,16 @@ public class DomainRankingSetsService {
         }
     }
 
-    public enum DomainSetAlgorithm {
-        /** Use link graph, do a pagerank */
-        LINKS_PAGERANK,
-        /** Use link graph, do a cheirank */
-        LINKS_CHEIRANK,
-        /** Use adjacency graph, do a pagerank */
-        ADJACENCY_PAGERANK,
-        /** Use adjacency graph, do a cheirank */
-        ADJACENCY_CHEIRANK,
-        /** For reserved names.  Use special algorithm, function of name */
-        SPECIAL
-    }
-
     /** Defines a domain ranking set, parameters for the ranking algorithms.
      *
      * @param name Key and name of the set
      * @param description Human-readable description
-     * @param algorithm Algorithm to use
      * @param depth Depth of the algorithm
      * @param definition Definition of the set, typically a list of domains or globs for domain-names
     * */
     @With
     public record DomainRankingSet(String name,
                                    String description,
-                                   DomainSetAlgorithm algorithm,
                                    int depth,
                                    String definition)
     {
@@ -159,7 +141,7 @@ public class DomainRankingSetsService {
         }
 
         public boolean isSpecial() {
-            return algorithm() == DomainSetAlgorithm.SPECIAL;
+            return name().equals("BLOGS") || name().equals("NONE") || name().equals("RANK");
         }
 
     }

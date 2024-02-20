@@ -23,27 +23,6 @@
             </td>
         </tr>
         <tr>
-            <th><label for="algorithm">Algorithm</label></th>
-            <td>
-                {{#if special}}<input type="hidden" name="algorithm" value="{{algorithm}}" />{{/if}}
-                <select id="algorithm" name="algorithm" {{#if special}}disabled{{/if}}>
-                    {{#with algorithm}}
-                    <option value="SPECIAL" disabled {{#if selectedAlgo.special}}selected{{/if}}>SPECIAL</option>
-                    <option value="LINKS_PAGERANK" {{#if selectedAlgo.links_pagerank}}selected{{/if}}>LINKS_PAGERANK</option>
-                    <option value="LINKS_CHEIRANK" {{#if selectedAlgo.links_cheirank}}selected{{/if}}>LINKS_CHEIRANK</option>
-                    <option value="ADJACENCY_PAGERANK" {{#if selectedAlgo.adjacency_pagerank}}selected{{/if}}>ADJACENCY_PAGERANK</option>
-                    <option value="ADJACENCY_CHEIRANK" {{#if selectedAlgo.adjacency_cheirank}}selected{{/if}}>ADJACENCY_CHEIRANK</option>
-                    {{/with}}
-                </select>
-                <div>
-                    <small class="text-muted">
-                        The algorithm used to rank the domains.  The LINKS algorithms use the link graph, and the ADJACENCY
-                        algorithms use the adjacency graph. CheiRank is a variant of PageRank that uses the reversed graph.
-                    </small>
-                </div>
-            </td>
-        </tr>
-        <tr>
             <th><label for="description">Description</label></th>
             <td>
                 {{#if special}}<input type="hidden" name="description" value="{{description}}" />{{/if}}
@@ -67,8 +46,12 @@
             <textarea name="definition" id="definition" rows="10" style="width: 100%">{{definition}}</textarea>
             <div>
                 <small class="text-muted">A list of domain names, one per line, possibly globbed with SQL-style '%' wildcards.
-                    These are used as the origin point for the Personalized PageRank algorithm, and will be considered
-                    the central points of the link or adjacency graph.  If no domains are specified, the entire domain space is used, as per the PageRank paper.
+                      If provided, these are used as the origin point for the Personalized PageRank algorithm, and will be considered
+                      the central points of the link or adjacency graph.  If no domains are specified, the entire domain space is used,
+                      as per the PageRank paper.
+                      <br><br>
+                      If similarity data is available and domains are specified, the similarity data is used as basis for the ranking
+                      calculation instead, providing a much more coherent ranking.
                 </small>
             </div>
         </td></tr>
