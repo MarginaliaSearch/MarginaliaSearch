@@ -40,6 +40,11 @@ public class GrpcMultiNodeChannelPool<STUB> {
         this.channelConstructor = channelConstructor;
         this.stubConstructor = stubConstructor;
         this.nodeConfigurationWatcher = nodeConfigurationWatcher;
+
+        // Warm up the pool to reduce latency for the initial request
+        for (var node : nodeConfigurationWatcher.getQueryNodes()) {
+            apiForNode(node);
+        }
     }
 
 
