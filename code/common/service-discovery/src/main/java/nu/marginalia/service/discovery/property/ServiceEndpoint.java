@@ -40,7 +40,7 @@ public sealed interface ServiceEndpoint {
 
         @SneakyThrows
         public URL toURL(String endpoint, String query) {
-            return new URI("http", null, host, port, endpoint, null, null)
+            return new URI("http", null, host, port, endpoint, query, null)
                     .toURL();
         }
 
