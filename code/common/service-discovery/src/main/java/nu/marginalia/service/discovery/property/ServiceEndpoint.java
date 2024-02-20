@@ -3,9 +3,7 @@ package nu.marginalia.service.discovery.property;
 
 import lombok.SneakyThrows;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.util.UUID;
 
 public sealed interface ServiceEndpoint {
@@ -15,6 +13,22 @@ public sealed interface ServiceEndpoint {
     URL toURL(String endpoint, String query);
     default InetSocketAddress toInetSocketAddress() {
          return new InetSocketAddress(host(), port());
+    }
+
+    /** Validate the host by checking if it is a valid IP address or a hostname that can be resolved.
+     *
+     * @return true if the host is a valid
+     */
+    default boolean validateHost() {
+        try {
+            // Throws UnknownHostException if the host is not a valid IP address or hostname
+            // (this should not be slow since the DNS lookup should be local, and if it isn't;
+            // should be cached by the OS or the JVM)
+            InetAddress.getByName(host());
+            return true;
+        } catch (UnknownHostException e) {
+            return false;
+        }
     }
 
     static ServiceEndpoint forSchema(ApiSchema schema, String host, int port) {

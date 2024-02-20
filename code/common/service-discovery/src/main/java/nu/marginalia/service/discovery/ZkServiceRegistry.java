@@ -192,10 +192,18 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                         .getData()
                         .forPath(ZKPaths.makePath(restRoot, uuid));
                 String hostAndPort = new String(data);
-                ret.add(RestEndpoint
+                var address = RestEndpoint
                         .parse(hostAndPort)
-                        .asInstance(UUID.fromString(uuid))
-                );
+                        .asInstance(UUID.fromString(uuid));
+
+                // Ensure that the address is resolvable
+                // (this reduces the risk of exceptions when trying to connect to the service)
+                if (!address.endpoint().validateHost()) {
+                    logger.warn("Omitting stale address {}, address does not resolve", address);
+                    continue;
+                }
+
+                ret.add(address);
 
             }
 
@@ -221,11 +229,20 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                 byte[] data = curatorFramework
                         .getData()
                         .forPath(ZKPaths.makePath(restRoot, uuid));
+
                 String hostAndPort = new String(data);
-                ret.add(GrpcEndpoint
+                var address = GrpcEndpoint
                         .parse(hostAndPort)
-                        .asInstance(UUID.fromString(uuid))
-                );
+                        .asInstance(UUID.fromString(uuid));
+
+                // Ensure that the address is resolvable
+                // (this reduces the risk of exceptions when trying to connect to the service)
+                if (!address.endpoint().validateHost()) {
+                    logger.warn("Omitting stale address {}, address does not resolve", address);
+                    continue;
+                }
+
+                ret.add(address);
 
             }
 
