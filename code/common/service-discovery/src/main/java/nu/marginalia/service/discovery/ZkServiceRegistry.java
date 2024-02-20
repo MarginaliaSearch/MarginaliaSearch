@@ -79,7 +79,7 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
             }
         }
 
-        logger.info("Registering {} -> {}", path, instanceUUID);
+        logger.info("Registering {} -> {}", path, endpoint);
 
         ephemeralProperty.forPath(path, payload);
 
