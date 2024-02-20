@@ -21,7 +21,7 @@ import java.util.function.Function;
  * Manages unicast-style requests */
 public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Map<InstanceAddress<?>, ManagedChannel> channels = new ConcurrentHashMap<>();
-    private volatile Set<InstanceAddress<?>> routes = Set.of();
+    private final Map<Integer, Set<InstanceAddress<?>>> routes = new ConcurrentHashMap<>();
 
     private static final Logger logger = LoggerFactory.getLogger(GrpcSingleNodeChannelPool.class);
 
@@ -68,31 +68,25 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private void refreshNode(int node) {
 
         Set<InstanceAddress<?>> newRoutes = serviceRegistryIf.getEndpoints(ApiSchema.GRPC, serviceId, node);
-        Set<InstanceAddress<?>> oldRoutes = routes;
+        Set<InstanceAddress<?>> oldRoutes = routes.getOrDefault(node, Set.of());
 
-        if (!oldRoutes.equals(newRoutes)) {
-            // Find the routes that have been added or removed
-            for (var route : Sets.symmetricDifference(oldRoutes, newRoutes)) {
+        // Find the routes that have been added or removed
+        for (var route : Sets.symmetricDifference(oldRoutes, newRoutes)) {
 
-                ManagedChannel oldChannel;
+            ManagedChannel oldChannel;
 
-                if (newRoutes.contains(route)) {
-                    logger.info(STR."Adding channel for \{serviceId.serviceName}-\{node} \{route.host()}:\{route.port()}");
-
-                    var newChannel = channelConstructor.apply(route);
-                    oldChannel = channels.put(route, newChannel);
-                } else {
-                    logger.info(STR."Removing channel for \{serviceId.serviceName}-\{node} \{route.host()}:\{route.port()}");
-
-                    oldChannel = channels.remove(route);
-                }
-
-                if (oldChannel != null)
-                    oldChannel.shutdown();
+            if (newRoutes.contains(route)) {
+                var newChannel = channelConstructor.apply(route);
+                oldChannel = channels.put(route, newChannel);
+            } else {
+                oldChannel = channels.remove(route);
             }
 
-            routes = newRoutes;
+            if (oldChannel != null)
+                oldChannel.shutdown();
         }
+
+        routes.put(node, newRoutes);
     }
 
     public boolean hasChannel() {
