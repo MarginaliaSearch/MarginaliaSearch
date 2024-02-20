@@ -3,6 +3,7 @@ package nu.marginalia.service.discovery.property;
 
 import lombok.SneakyThrows;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
 import java.util.UUID;
@@ -12,6 +13,9 @@ public sealed interface ServiceEndpoint {
     int port();
 
     URL toURL(String endpoint, String query);
+    default InetSocketAddress toInetSocketAddress() {
+         return new InetSocketAddress(host(), port());
+    }
 
     static ServiceEndpoint forSchema(ApiSchema schema, String host, int port) {
         return switch (schema) {

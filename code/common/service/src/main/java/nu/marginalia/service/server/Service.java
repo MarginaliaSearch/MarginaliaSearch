@@ -1,7 +1,7 @@
 package nu.marginalia.service.server;
 
-import io.grpc.BindableService;
-import io.grpc.ServerBuilder;
+import io.grpc.*;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
@@ -108,7 +108,8 @@ public class Service {
                     config.externalAddress()
             );
 
-            var grpcServerBuilder = ServerBuilder.forPort(grpcEndpoint.port());
+            // Start the gRPC server
+            var grpcServerBuilder = NettyServerBuilder.forAddress(grpcEndpoint.toInetSocketAddress());
             for (var grpcService : grpcServices) {
                 grpcServerBuilder.addService(grpcService);
             }
