@@ -61,20 +61,7 @@ for (var endpoint : endpoints) {
 It's also possible to subscribe to changes in the registry, so that
 the caller can be notified when a service comes or goes, with `registry.registerMonitor()`.
 
-## gRPC Channel Pool
-
-From the GrpcChannelPoolFactory, two types of channel pools can be created
-that are aware of the service registry:
-
-* GrpcMultiNodeChannelPool - This pool permits 1-n style communication with partitioned services
-* GrpcSingleNodeChannelPool - This pool permits 1-1 style communication with non-partitioned services
-
-The pools manage the lifecycle of the gRPC channels, and will permit the caller
-to access Stub interfaces for the services.
-
-# Central Classes
-
-## Service Registry
+### Central Classes
 
 * [ServiceRegistryIf](src/main/java/nu/marginalia/service/discovery/ServiceRegistryIf.java)
 * [ZkServiceRegistry](src/main/java/nu/marginalia/service/discovery/ZkServiceRegistry.java)
@@ -82,6 +69,13 @@ to access Stub interfaces for the services.
 
 ## gRPC Channel Pool
 
-* [GrpcChannelPoolFactory](src/main/java/nu/marginalia/service/client/GrpcChannelPoolFactory.java)
-* [GrpcMultiNodeChannelPool](src/main/java/nu/marginalia/service/client/GrpcMultiNodeChannelPool.java)
-* [GrpcSingleNodeChannelPool](src/main/java/nu/marginalia/service/client/GrpcSingleNodeChannelPool.java)
+From the [GrpcChannelPoolFactory](src/main/java/nu/marginalia/service/client/GrpcChannelPoolFactory.java), two types of channel pools can be created
+that are aware of the service registry:
+
+* [GrpcMultiNodeChannelPool](src/main/java/nu/marginalia/service/client/GrpcMultiNodeChannelPool.java) - This pool permits 1-n style communication with partitioned services
+* [GrpcSingleNodeChannelPool](src/main/java/nu/marginalia/service/client/GrpcSingleNodeChannelPool.java) - This pool permits 1-1 style communication with non-partitioned services.
+   if multiple instances are running, it will use one of them and fall back
+   to another if the first is not available.
+
+The pools manage the lifecycle of the gRPC channels, and will permit the caller
+to access Stub interfaces for the services.
