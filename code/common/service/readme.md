@@ -39,7 +39,7 @@ public class FoobarService extends Service {
 
     @Inject
     public FoobarService(BaseServiceParams params) {
-        super(params);
+        super(params, List.of(/* grpc services */));
         
         // set up Spark endpoints here
     }
