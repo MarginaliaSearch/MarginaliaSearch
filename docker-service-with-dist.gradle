@@ -25,6 +25,9 @@ ADD index-construction-process.tar /dist
 
 RUN mkdir /wmsa
 
+# This will make the service grab the hostname from the HOSTNAME variable
+ENV WMSA_IN_DOCKER true
+
 ENTRYPOINT WMSA_HOME=/wmsa /${application.applicationName}/bin/${application.applicationName} \${arg0} \${arg1}
 """
     }
