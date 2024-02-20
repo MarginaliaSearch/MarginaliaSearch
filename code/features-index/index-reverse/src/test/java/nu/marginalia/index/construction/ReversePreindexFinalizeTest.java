@@ -1,7 +1,6 @@
 
 package nu.marginalia.index.construction;
 
-import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.btree.BTreeReader;

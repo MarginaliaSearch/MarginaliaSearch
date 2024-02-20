@@ -34,16 +34,23 @@ public class ConvertActor extends RecordActorPrototype {
     private final MqOutbox mqConverterOutbox;
     private final FileStorageService storageService;
 
-    public record Convert(FileStorageId fid) implements ActorStep {};
-    public record ConvertEncyclopedia(String source, String baseUrl) implements ActorStep {};
-    public record PredigestEncyclopedia(String source, String dest, String baseUrl) implements ActorStep {};
-    public record ConvertDirtree(String source) implements ActorStep {};
-    public record ConvertWarc(String source) implements ActorStep {};
-    public record ConvertReddit(String source) implements ActorStep {};
-    public record ConvertStackexchange(String source) implements ActorStep {};
+    public record Convert(FileStorageId fid) implements ActorStep {}
+
+    public record ConvertEncyclopedia(String source, String baseUrl) implements ActorStep {}
+
+    public record PredigestEncyclopedia(String source, String dest, String baseUrl) implements ActorStep {}
+
+    public record ConvertDirtree(String source) implements ActorStep {}
+
+    public record ConvertWarc(String source) implements ActorStep {}
+
+    public record ConvertReddit(String source) implements ActorStep {}
+
+    public record ConvertStackexchange(String source) implements ActorStep {}
+
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ConvertWait(FileStorageId destFid,
-                              long msgId) implements ActorStep {};
+                              long msgId) implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {

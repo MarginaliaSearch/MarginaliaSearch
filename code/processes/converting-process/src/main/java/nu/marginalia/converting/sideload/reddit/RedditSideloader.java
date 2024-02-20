@@ -175,5 +175,5 @@ public class RedditSideloader implements SideloadSource {
 
 
         return doc;
-    };
+    }
 }

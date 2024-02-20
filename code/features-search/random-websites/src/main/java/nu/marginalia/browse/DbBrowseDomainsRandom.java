@@ -38,7 +38,7 @@ public class DbBrowseDomainsRandom {
         List<BrowseResult> domains = new ArrayList<>(count);
         try (var conn = dataSource.getConnection()) {
             try (var stmt = conn.prepareStatement(q)) {
-                stmt.setInt(1, set);;
+                stmt.setInt(1, set);
                 stmt.setInt(2, count);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {

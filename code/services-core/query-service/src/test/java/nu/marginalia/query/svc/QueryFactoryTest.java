@@ -1,7 +1,6 @@
 package nu.marginalia.query.svc;
 
 import nu.marginalia.WmsaHome;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;

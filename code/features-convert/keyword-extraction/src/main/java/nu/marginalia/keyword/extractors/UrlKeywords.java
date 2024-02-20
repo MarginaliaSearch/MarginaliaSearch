@@ -1,7 +1,6 @@
 package nu.marginalia.keyword.extractors;
 
 import ca.rmen.porterstemmer.PorterStemmer;
-import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.Arrays;

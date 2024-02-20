@@ -5,7 +5,6 @@ import nu.marginalia.array.algo.LongArraySearch;
 import nu.marginalia.array.algo.LongArraySort;
 import nu.marginalia.array.algo.LongArrayTransformations;
 import nu.marginalia.array.delegate.ShiftedLongArray;
-import nu.marginalia.array.page.SegmentLongArray;
 import nu.marginalia.array.page.UnsafeLongArray;
 
 import java.lang.foreign.Arena;

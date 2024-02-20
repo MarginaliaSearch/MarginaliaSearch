@@ -58,9 +58,9 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
         public List<FileStorageId> processedStorageId = null;
         public long converterMsgId = 0L;
         public long loaderMsgId = 0L;
-    };
+    }
 
-    public record Initial(FileStorageId fid) implements ActorStep {};
+    public record Initial(FileStorageId fid) implements ActorStep {}
 
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Convert(FileStorageId crawlId, FileStorageId  processedId, long msgId) implements ActorStep {
@@ -69,7 +69,8 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Load(List<FileStorageId> processedId, long msgId) implements ActorStep {
         public Load(List<FileStorageId> processedId) { this(processedId, -1); }
-    };
+    }
+
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Backup(List<FileStorageId> processedIds) implements ActorStep { }
     @Resume(behavior = ActorResumeBehavior.RETRY)

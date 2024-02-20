@@ -1,7 +1,5 @@
 package nu.marginalia.bigstring;
 
-import java.nio.charset.StandardCharsets;
-
 public class PlainBigString implements BigString {
     private final String value;
 

@@ -1,9 +1,6 @@
 package nu.marginalia.search.svc;
 
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.assistant.client.AssistantClient;
-import nu.marginalia.client.exception.RemoteException;
-import nu.marginalia.client.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +8,10 @@ import javax.annotation.CheckForNull;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -28,10 +28,10 @@ public class SearchUnitConversionService {
         this.assistantClient = assistantClient;
     }
 
-    public Optional<String> tryConversion(Context context, String query) {
+    public Optional<String> tryConversion(String query) {
         var matcher = conversionPattern.matcher(query);
         if (!matcher.matches())
-                return Optional.empty();
+            return Optional.empty();
 
         String value = matcher.group(1);
         String from = matcher.group(3);
@@ -40,24 +40,22 @@ public class SearchUnitConversionService {
         logger.info("{} -> '{}' '{}' '{}'", query, value, from, to);
 
         try {
-            return Optional.of(assistantClient.unitConversion(context, value, from, to).blockingFirst());
+            var resultFuture = assistantClient.unitConversion(value, from, to);
+            return Optional.of(
+                    resultFuture.get(100, TimeUnit.MILLISECONDS)
+            );
+        } catch (ExecutionException e) {
+            logger.error("Error in unit conversion", e);
+        } catch (InterruptedException e) {
+            logger.error("Interrupted while waiting for unit conversion", e);
+        } catch (TimeoutException e) {
+            // Ignore
         }
-        catch (RemoteException ex) {
-            return Optional.empty();
-        }
+        return Optional.empty();
     }
 
-    public boolean isNumeric(String str) {
-        try {
-            Double.parseDouble(str);
-            return true;
-        }
-        catch (NumberFormatException ex) {
-            return false;
-        }
-    }
 
-    public @CheckForNull Future<String> tryEval(Context context, String query) {
+    public @CheckForNull Future<String> tryEval(String query) {
         if (!evalPredicate.test(query)) {
             return null;
         }
@@ -70,11 +68,6 @@ public class SearchUnitConversionService {
 
         logger.info("eval({})", expr);
 
-        try {
-            return assistantClient.evalMath(context, expr).subscribeOn(Schedulers.io()).toFuture();
-        }
-        catch (RemoteException ex) {
-            return null;
-        }
+        return assistantClient.evalMath(expr);
     }
 }

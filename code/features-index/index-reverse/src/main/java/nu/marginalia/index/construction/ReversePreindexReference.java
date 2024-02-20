@@ -1,6 +1,5 @@
 package nu.marginalia.index.construction;
 
-import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 
 import java.io.IOException;

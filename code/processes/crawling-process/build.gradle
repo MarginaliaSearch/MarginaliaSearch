@@ -30,7 +30,6 @@ dependencies {
     implementation project(':code:api:index-api')
     implementation project(':code:api:process-mqapi')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:easy-lsh')
@@ -55,7 +54,6 @@ dependencies {
     implementation libs.okhttp3
     implementation libs.jsoup
     implementation libs.opencsv
-    implementation libs.rxjava
     implementation libs.fastutil
 
     implementation libs.bundles.mariadb

@@ -3,7 +3,6 @@ package nu.marginalia.search.command.commands;
 import com.google.inject.Inject;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.client.Context;
 import nu.marginalia.search.exceptions.RedirectException;
 import spark.Response;
 
@@ -25,7 +24,7 @@ public class BangCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
+    public Optional<Object> process(Response response, SearchParameters parameters) {
 
         for (var entry : bangsToPattern.entrySet()) {
             String bangPattern = entry.getKey();

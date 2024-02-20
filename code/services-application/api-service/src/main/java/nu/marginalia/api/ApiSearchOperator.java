@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import nu.marginalia.api.model.ApiSearchResult;
 import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
-import nu.marginalia.client.Context;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
@@ -29,12 +28,11 @@ public class ApiSearchOperator {
         this.queryClient = queryClient;
     }
 
-    public ApiSearchResults query(Context context,
-                                  String query,
+    public ApiSearchResults query(String query,
                                   int count,
                                   int index)
     {
-        var rsp = queryClient.search(context, createParams(query, count, index));
+        var rsp = queryClient.search(createParams(query, count, index));
 
         return new ApiSearchResults("RESTRICTED", query,
                 rsp.results()

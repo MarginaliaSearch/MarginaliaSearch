@@ -8,7 +8,6 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.inbox.MqSynchronousInbox;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

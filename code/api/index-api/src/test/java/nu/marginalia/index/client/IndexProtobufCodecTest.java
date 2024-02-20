@@ -1,6 +1,5 @@
 package nu.marginalia.index.client;
 
-import nu.marginalia.index.api.RpcTemporalBias;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;

@@ -106,7 +106,7 @@ public sealed interface HttpFetchResult {
             return headers.get(name);
         }
 
-    };
+    }
 
     /** This is a special case where the document was not fetched
      * because it was already in the database.  In this case, we
@@ -128,14 +128,14 @@ public sealed interface HttpFetchResult {
                 return Optional.empty();
             }
         }
-    };
+    }
 
     /** Fetching resulted in an exception */
     record ResultException(Exception ex) implements HttpFetchResult {
         public boolean isOk() {
             return false;
         }
-    };
+    }
 
     /** Fetching resulted in a HTTP 304, the remote content is identical to
      * our reference copy.  This will be replaced with a Result304ReplacedWithReference
@@ -147,7 +147,7 @@ public sealed interface HttpFetchResult {
         public boolean isOk() {
             return false;
         }
-    };
+    }
 
     /** No result.  This is typically injected at a later stage
      * of processing, e.g. after filtering out irrelevant responses.
@@ -156,5 +156,5 @@ public sealed interface HttpFetchResult {
         public boolean isOk() {
             return false;
         }
-    };
+    }
 }

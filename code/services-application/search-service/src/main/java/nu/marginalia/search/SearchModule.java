@@ -25,7 +25,7 @@ public class SearchModule extends AbstractModule {
     @Provides
     public FeedlotClient provideFeedlotClient() {
         return new FeedlotClient(
-                System.getProperty("ext-svc-feedlot-host", "feedlot"),
+                System.getProperty("ext-svc-feedlot-bindAddress", "feedlot"),
                 Integer.getInteger("ext-svc-feedlot-port", 80),
                 GsonFactory.get(),
                 Duration.ofMillis(250),

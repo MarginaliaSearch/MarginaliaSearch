@@ -1,13 +1,11 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
-import nu.marginalia.client.Context;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.DecoratedSearchResults;
-import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import spark.Response;
@@ -33,8 +31,8 @@ public class SearchCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
-        DecoratedSearchResults results = searchOperator.doSearch(ctx, parameters);
+    public Optional<Object> process(Response response, SearchParameters parameters) {
+        DecoratedSearchResults results = searchOperator.doSearch(parameters);
 
         return Optional.of(searchResultsRenderer.render(results));
     }

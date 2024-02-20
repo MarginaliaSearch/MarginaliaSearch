@@ -1,6 +1,5 @@
 package nu.marginalia.index.svc;
 
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
@@ -11,7 +10,6 @@ import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.index.api.*;
 import nu.marginalia.index.api.IndexApiGrpc.IndexApiImplBase;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultItem;
@@ -28,7 +26,6 @@ import nu.marginalia.index.results.IndexResultValuator;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.results.IndexResultDomainDeduplicator;
 import nu.marginalia.index.svc.searchset.SmallSearchSet;
-import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.service.module.ServiceConfiguration;
@@ -36,10 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import spark.HaltException;
 import spark.Request;
 import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -72,7 +67,6 @@ public class IndexQueryService extends IndexApiImplBase {
             .register();
 
     private final IndexQueryExecutor queryExecutor;
-    private final Gson gson = GsonFactory.get();
 
     private final SearchIndex index;
     private final IndexResultDecorator resultDecorator;
@@ -125,52 +119,6 @@ public class IndexQueryService extends IndexApiImplBase {
 
         return Long.toHexString(searchTermsSvc.getWordId(word));
     }
-
-    public Object search(Request request, Response response) {
-        final String json = request.body();
-        final SearchSpecification specsSet = gson.fromJson(json, SearchSpecification.class);
-
-        if (!index.isAvailable()) {
-            Spark.halt(503, "Index is not loaded");
-        }
-
-        final String nodeName = Integer.toString(nodeId);
-
-        try {
-            return wmsa_query_time
-                    .labels(nodeName, "REST")
-                    .time(() -> {
-                var params = new SearchParameters(specsSet, getSearchSet(specsSet));
-
-                SearchResultSet results = executeSearch(params);
-
-                logger.info(queryMarker, "Index Result Count: {}", results.size());
-
-                wmsa_query_cost
-                        .labels(nodeName, "REST")
-                        .set(params.getDataCost());
-
-                if (!params.hasTimeLeft()) {
-                    wmsa_query_timeouts
-                            .labels(nodeName, "REST")
-                            .inc();
-                }
-
-                return results;
-            });
-        }
-        catch (HaltException ex) {
-            logger.warn("Halt", ex);
-            throw ex;
-        }
-        catch (Exception ex) {
-            logger.info("Error during search {}({}) (query: {})", ex.getClass().getSimpleName(), ex.getMessage(), json);
-            logger.info("Error", ex);
-            Spark.halt(500, "Error");
-            return null;
-        }
-    }
-
 
     // GRPC endpoint
     @SneakyThrows

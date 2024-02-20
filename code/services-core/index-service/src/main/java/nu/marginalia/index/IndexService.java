@@ -2,8 +2,6 @@ package nu.marginalia.index;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import io.grpc.ServerBuilder;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.svc.IndexDomainLinksService;
@@ -21,18 +19,14 @@ import nu.marginalia.service.server.mq.MqRequest;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 import spark.Spark;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
-import static spark.Spark.get;
 
 public class IndexService extends Service {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -48,6 +42,7 @@ public class IndexService extends Service {
     private final ServiceEventLog eventLog;
 
 
+    @SneakyThrows
     @Inject
     public IndexService(BaseServiceParams params,
                         IndexOpsService opsService,
@@ -57,8 +52,9 @@ public class IndexService extends Service {
                         DocumentDbReader documentDbReader,
                         DomainLinkDb domainLinkDb,
                         IndexDomainLinksService indexDomainLinksService,
-                        ServiceEventLog eventLog) throws IOException {
-        super(params);
+                        ServiceEventLog eventLog)
+    {
+        super(params, List.of(indexQueryService, indexDomainLinksService));
 
         this.opsService = opsService;
         this.searchIndex = searchIndex;
@@ -71,14 +67,6 @@ public class IndexService extends Service {
 
         this.init = params.initialization;
 
-        var grpcServer = ServerBuilder.forPort(params.configuration.port() + 1)
-                .addService(indexQueryService)
-                .addService(indexDomainLinksService)
-                .build();
-        grpcServer.start();
-
-        Spark.post("/search/", indexQueryService::search, gson::toJson);
-
         Spark.get("/public/debug/docmeta", indexQueryService::debugEndpointDocMetadata, gson::toJson);
         Spark.get("/public/debug/wordmeta", indexQueryService::debugEndpointWordMetadata, gson::toJson);
         Spark.get("/public/debug/word", indexQueryService::debugEndpointWordEncoding, gson::toJson);
@@ -86,13 +74,7 @@ public class IndexService extends Service {
         Spark.post("/ops/repartition", opsService::repartitionEndpoint);
         Spark.post("/ops/reindex", opsService::reindexEndpoint);
 
-        get("/is-blocked", this::isBlocked, gson::toJson);
-
-        Schedulers.newThread().scheduleDirect(this::initialize, 1, TimeUnit.MICROSECONDS);
-    }
-
-    private Object isBlocked(Request request, Response response) {
-        return !initialized || opsService.isBusy();
+        Thread.ofPlatform().name("initialize-index").start(this::initialize);
     }
 
     volatile boolean initialized = false;

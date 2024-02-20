@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.sys.model.ProcessHeartbeat;
 import nu.marginalia.control.sys.model.ServiceHeartbeat;
 import nu.marginalia.control.sys.model.TaskHeartbeat;
-import nu.marginalia.service.control.ServiceEventLog;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

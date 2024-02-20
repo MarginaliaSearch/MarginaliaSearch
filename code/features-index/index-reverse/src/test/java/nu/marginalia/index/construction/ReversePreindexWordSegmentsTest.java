@@ -1,7 +1,6 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.algo.SortingContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

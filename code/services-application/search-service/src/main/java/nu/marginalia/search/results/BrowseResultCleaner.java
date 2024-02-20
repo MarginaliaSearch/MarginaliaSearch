@@ -2,7 +2,6 @@ package nu.marginalia.search.results;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.screenshot.ScreenshotService;
 

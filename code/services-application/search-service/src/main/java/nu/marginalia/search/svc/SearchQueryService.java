@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.*;
 import nu.marginalia.search.model.SearchProfile;
-import nu.marginalia.client.Context;
 import nu.marginalia.search.exceptions.RedirectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +30,15 @@ public class SearchQueryService {
 
     @SneakyThrows
     public Object pathSearch(Request request, Response response) {
-
-        final var ctx = Context.fromRequest(request);
-
         try {
-            return searchCommandEvaulator.eval(ctx, response, parseParameters(request));
+            return searchCommandEvaulator.eval(response, parseParameters(request));
         }
         catch (RedirectException ex) {
             response.redirect(ex.newUrl);
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            errorPageService.serveError(ctx, request, response);
+            errorPageService.serveError(request, response);
         }
 
         return "";

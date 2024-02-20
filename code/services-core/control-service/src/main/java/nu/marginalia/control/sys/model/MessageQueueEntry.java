@@ -1,7 +1,5 @@
 package nu.marginalia.control.sys.model;
 
-import java.time.LocalDate;
-
 public record MessageQueueEntry (
         long id,
         long relatedId,

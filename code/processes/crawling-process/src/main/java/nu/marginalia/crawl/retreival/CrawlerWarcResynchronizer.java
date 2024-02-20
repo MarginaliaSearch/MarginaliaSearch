@@ -1,7 +1,6 @@
 package nu.marginalia.crawl.retreival;
 
 import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
@@ -10,8 +9,6 @@ import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
 /**

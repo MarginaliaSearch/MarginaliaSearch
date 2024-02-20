@@ -211,7 +211,7 @@ public class MqPersistence {
                      AND OWNER_INSTANCE IS NULL AND STATE='NEW'
                      ORDER BY ID ASC
                      LIMIT ?
-                     """);
+                     """)
         ) {
             updateStmt.setString(1, instanceUUID);
             updateStmt.setLong(2, tick);

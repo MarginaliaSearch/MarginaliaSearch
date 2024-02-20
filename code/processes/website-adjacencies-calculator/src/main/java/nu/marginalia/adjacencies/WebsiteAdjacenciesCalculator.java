@@ -9,6 +9,9 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.MainClass;
+import nu.marginalia.service.NodeConfigurationWatcher;
+import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.discovery.FixedServiceRegistry;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,8 +141,9 @@ public class WebsiteAdjacenciesCalculator extends MainClass {
         return weightedProduct(weights, a, b) / Math.sqrt(a.mulAndSum(weights) * b.mulAndSum(weights));
     }
 
-    public record DomainSimilarities(int domainId, List<DomainSimilarity> similarities) {};
-    public record DomainSimilarity(int domainId, double value) {};
+    public record DomainSimilarities(int domainId, List<DomainSimilarity> similarities) {}
+
+    public record DomainSimilarity(int domainId, double value) {}
 
     @SneakyThrows
     private void findAdjacentDtoS(int domainId, Consumer<DomainSimilarities> andThen) {
@@ -190,7 +194,11 @@ public class WebsiteAdjacenciesCalculator extends MainClass {
         DatabaseModule dm = new DatabaseModule(false);
 
         var dataSource = dm.provideConnection();
-        var qc = new QueryClient();
+
+        // FIXME: we should use zookeeper when configured here:
+        var qc = new QueryClient(new GrpcChannelPoolFactory(
+                new NodeConfigurationWatcher(dataSource),
+                new FixedServiceRegistry(dataSource)));
 
         var main = new WebsiteAdjacenciesCalculator(qc, dataSource);
 

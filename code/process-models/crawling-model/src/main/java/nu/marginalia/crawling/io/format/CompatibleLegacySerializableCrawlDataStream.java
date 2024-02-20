@@ -10,7 +10,6 @@ import nu.marginalia.crawling.model.SerializableCrawlData;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.Objects;
 
 import static java.util.Objects.*;
 

@@ -30,7 +30,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
 
     implementation project(':code:features-search:screenshots')
 
@@ -41,9 +40,9 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus
+    implementation libs.bundles.grpc
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.rxjava
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove

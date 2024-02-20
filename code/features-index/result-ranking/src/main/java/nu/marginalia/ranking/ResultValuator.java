@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Math.min;
-
 @Singleton
 public class ResultValuator {
     final static double scalingFactor = 500.;

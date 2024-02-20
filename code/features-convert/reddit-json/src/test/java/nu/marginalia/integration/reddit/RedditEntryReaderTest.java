@@ -5,9 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 
 class RedditEntryReaderTest {
     /** This test case exists for debugging, reddit sideloading.  It requires local reddit data,

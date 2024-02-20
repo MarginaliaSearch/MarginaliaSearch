@@ -3,7 +3,6 @@ package nu.marginalia.crawling.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.ToString;
-import nu.marginalia.bigstring.BigString;
 import nu.marginalia.model.EdgeUrl;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;

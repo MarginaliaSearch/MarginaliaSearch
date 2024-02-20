@@ -1,7 +1,6 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.client.Context;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.SearchOperator;
@@ -43,8 +42,8 @@ public class SearchCrosstalkService {
             parts[i] = parts[i].trim();
         }
 
-        var resAtoB = searchOperator.doLinkSearch(Context.fromRequest(request), parts[0], parts[1]);
-        var resBtoA = searchOperator.doLinkSearch(Context.fromRequest(request), parts[1], parts[0]);
+        var resAtoB = searchOperator.doLinkSearch(parts[0], parts[1]);
+        var resBtoA = searchOperator.doLinkSearch(parts[1], parts[0]);
 
         var model = new CrosstalkResult(parts[0], parts[1], resAtoB, resBtoA);
 

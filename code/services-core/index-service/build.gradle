@@ -51,7 +51,6 @@ dependencies {
     implementation libs.bundles.httpcomponents
     implementation libs.roaringbitmap
     implementation libs.snakeyaml
-    implementation libs.rxjava
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove

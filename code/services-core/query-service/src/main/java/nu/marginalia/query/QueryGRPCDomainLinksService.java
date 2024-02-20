@@ -1,37 +1,25 @@
 package nu.marginalia.query;
 
 import com.google.inject.Inject;
-import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
-import nu.marginalia.client.grpc.GrpcChannelPool;
+import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.index.api.IndexDomainLinksApiGrpc;
 import nu.marginalia.index.api.RpcDomainIdCount;
 import nu.marginalia.index.api.RpcDomainIdList;
 import nu.marginalia.index.api.RpcDomainIdPairs;
+import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.id.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 
 public class QueryGRPCDomainLinksService extends IndexDomainLinksApiGrpc.IndexDomainLinksApiImplBase {
     private static final Logger logger = LoggerFactory.getLogger(QueryGRPCDomainLinksService.class);
-    private final GrpcChannelPool<IndexDomainLinksApiGrpc.IndexDomainLinksApiBlockingStub> channelPool;
+    private final GrpcMultiNodeChannelPool<IndexDomainLinksApiGrpc.IndexDomainLinksApiBlockingStub> channelPool;
 
     @Inject
-    public QueryGRPCDomainLinksService(NodeConfigurationWatcher nodeConfigurationWatcher) {
-        channelPool = new GrpcChannelPool<>(ServiceId.Index) {
-            @Override
-            public IndexDomainLinksApiGrpc.IndexDomainLinksApiBlockingStub createStub(ManagedChannel channel) {
-                return IndexDomainLinksApiGrpc.newBlockingStub(channel);
-            }
-
-            @Override
-            public List<Integer> getEligibleNodes() {
-                return nodeConfigurationWatcher.getQueryNodes();
-            }
-        };
+    public QueryGRPCDomainLinksService(GrpcChannelPoolFactory channelPoolFactory) {
+        channelPool = channelPoolFactory.createMulti(ServiceId.Index, IndexDomainLinksApiGrpc::newBlockingStub);
     }
 
     @Override

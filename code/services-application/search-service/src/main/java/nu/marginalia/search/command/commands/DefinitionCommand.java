@@ -2,10 +2,8 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.assistant.client.model.DictionaryResponse;
-import nu.marginalia.client.Context;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.renderer.MustacheRenderer;
@@ -17,6 +15,7 @@ import spark.Response;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -39,12 +38,12 @@ public class DefinitionCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
+    public Optional<Object> process(Response response, SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
 
-        var results = lookupDefinition(ctx, parameters.query());
+        var results = lookupDefinition(parameters.query());
 
         return Optional.of(dictionaryRenderer.render(results,
                 Map.of("query", parameters.query(),
@@ -53,17 +52,19 @@ public class DefinitionCommand implements SearchCommandInterface {
     }
 
 
-    @SneakyThrows
-    private DictionaryResponse lookupDefinition(Context ctx, String humanQuery) {
+    private DictionaryResponse lookupDefinition(String humanQuery) {
         String definePrefix = "define:";
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
-        logger.info("Defining: {}", word);
-        var results = assistantClient
-                .dictionaryLookup(ctx, word)
-                .blockingFirst();
-        logger.debug("Results = {}", results);
+        try {
+            return assistantClient
+                    .dictionaryLookup(word)
+                    .get(100, TimeUnit.MILLISECONDS);
+        }
+        catch (Exception e) {
+            logger.error("Failed to lookup definition for word: " + word, e);
 
-        return results;
+            throw new RuntimeException(e);
+        }
     }
 }

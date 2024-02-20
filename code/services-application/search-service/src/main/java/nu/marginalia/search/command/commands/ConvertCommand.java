@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.svc.SearchUnitConversionService;
-import nu.marginalia.client.Context;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import spark.Response;
@@ -27,8 +26,8 @@ public class ConvertCommand implements SearchCommandInterface {
 
     @Override
     @SneakyThrows
-    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
-        var conversion = searchUnitConversionService.tryConversion(ctx, parameters.query());
+    public Optional<Object> process(Response response, SearchParameters parameters) {
+        var conversion = searchUnitConversionService.tryConversion(parameters.query());
         return conversion.map(s -> conversionRenderer.render(Map.of(
                 "query", parameters.query(),
                 "result", s,

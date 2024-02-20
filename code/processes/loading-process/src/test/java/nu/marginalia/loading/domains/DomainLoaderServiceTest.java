@@ -11,11 +11,8 @@ import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
 import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
-import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;

@@ -18,7 +18,6 @@ dependencies {
 
     implementation libs.prometheus
     implementation libs.notnull
-    implementation libs.rxjava
     implementation libs.guava
     implementation libs.trove
     implementation libs.zstd

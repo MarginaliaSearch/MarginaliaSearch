@@ -332,7 +332,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         if (request.specStorage != null) {
             var specData = fileStorageService.getStorage(request.specStorage);
-            var parquetProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));;
+            var parquetProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));
 
             // Ensure the parquet domains are loaded into the database to avoid
             // rare data-loss scenarios

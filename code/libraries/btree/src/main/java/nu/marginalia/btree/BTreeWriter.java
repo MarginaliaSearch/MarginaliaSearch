@@ -1,7 +1,6 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.delegate.ShiftedLongArray;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
 

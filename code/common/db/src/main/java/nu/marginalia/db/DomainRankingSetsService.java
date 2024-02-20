@@ -129,7 +129,7 @@ public class DomainRankingSetsService {
         ADJACENCY_CHEIRANK,
         /** For reserved names.  Use special algorithm, function of name */
         SPECIAL
-    };
+    }
 
     /** Defines a domain ranking set, parameters for the ranking algorithms.
      *

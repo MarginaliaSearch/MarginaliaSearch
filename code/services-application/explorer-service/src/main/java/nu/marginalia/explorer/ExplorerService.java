@@ -136,9 +136,9 @@ public class ExplorerService extends Service {
                 GROUP BY NV.DOMAIN_ID
                 ORDER BY NV.RELATEDNESS DESC
                 """
-             );
+             )
 
-             ) {
+        ) {
 
             stmt.setInt(1, domainIdInformation.domainId);
             stmt.setInt(2, domainIdInformation.aliasId);

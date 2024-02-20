@@ -1,7 +1,6 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.IntArray;
-import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import nu.marginalia.util.test.TestUtil;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeEach;

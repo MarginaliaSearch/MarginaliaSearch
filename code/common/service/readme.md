@@ -21,8 +21,7 @@ public class FoobarMain extends MainClass {
         Injector injector = Guice.createInjector(
                 new FoobarModule(), /* optional custom bindings go here */
                 new DatabaseModule(),
-                new ConfigurationModule(SearchServiceDescriptors.descriptors, 
-                        ServiceId.Foobar));
+                new ConfigurationModule(ServiceId.Foobar));
 
         injector.getInstance(FoobarMain.class);
         

@@ -1,10 +1,10 @@
 package nu.marginalia.assistant.domains;
 
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.assistant.api.RpcDomainInfoResponse;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.assistant.client.model.DomainInformation;
 import nu.marginalia.query.client.QueryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class DomainInformationService {
     }
 
 
-    public Optional<DomainInformation> domainInfo(int domainId) {
+    public Optional<RpcDomainInfoResponse> domainInfo(int domainId) {
 
         Optional<EdgeDomain> domain = dbDomainQueries.getDomain(domainId);
         if (domain.isEmpty()) {
@@ -46,9 +46,9 @@ public class DomainInformationService {
         }
 
 
-        var builder = DomainInformation.builder();
+        var builder = RpcDomainInfoResponse.newBuilder();
         try (var connection = dataSource.getConnection();
-             var stmt = connection.createStatement();
+             var stmt = connection.createStatement()
         ) {
             boolean inCrawlQueue;
             int outboundLinks = 0;
@@ -63,18 +63,18 @@ public class DomainInformationService {
             if (rs.next()) {
                 String ip = rs.getString("IP");
 
-                builder.ip(ip);
+                builder.setIp(ip);
                 geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
-                    builder.asn(asnInfo.asn());
-                    builder.asnOrg(asnInfo.org());
-                    builder.asnCountry(asnInfo.country());
+                    builder.setAsn(asnInfo.asn());
+                    builder.setAsnOrg(asnInfo.org());
+                    builder.setAsnCountry(asnInfo.country());
                 });
-                builder.ipCountry(geoIpDictionary.getCountry(ip));
+                builder.setIpCountry(geoIpDictionary.getCountry(ip));
 
-                builder.nodeAffinity(rs.getInt("NODE_AFFINITY"));
-                builder.domain(new EdgeDomain(rs.getString("DOMAIN_NAME")));
-                builder.state(rs.getString("STATE"));
-                builder.ranking(Math.round(100.0*(1.0-rs.getDouble("RANK"))));
+                builder.setNodeAffinity(rs.getInt("NODE_AFFINITY"));
+                builder.setDomain(rs.getString("DOMAIN_NAME"));
+                builder.setState(rs.getString("STATE"));
+                builder.setRanking(Math.round(100.0*(1.0-rs.getDouble("RANK"))));
             }
             rs = stmt.executeQuery(STR."""
                     SELECT 1 FROM CRAWL_QUEUE
@@ -82,10 +82,10 @@ public class DomainInformationService {
                     WHERE EC_DOMAIN.ID=\{domainId}
                        """);
             inCrawlQueue = rs.next();
-            builder.inCrawlQueue(inCrawlQueue);
+            builder.setInCrawlQueue(inCrawlQueue);
 
-            builder.incomingLinks(queryClient.countLinksToDomain(domainId));
-            builder.outboundLinks(queryClient.countLinksFromDomain(domainId));
+            builder.setIncomingLinks(queryClient.countLinksToDomain(domainId));
+            builder.setOutboundLinks(queryClient.countLinksFromDomain(domainId));
 
             rs = stmt.executeQuery(STR."""
                     SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=\{domainId}
@@ -93,12 +93,12 @@ public class DomainInformationService {
             if (rs.next()) {
                 pagesVisited = rs.getInt("VISITED_URLS");
 
-                builder.pagesKnown(rs.getInt("KNOWN_URLS"));
-                builder.pagesIndexed(rs.getInt("GOOD_URLS"));
-                builder.pagesFetched(rs.getInt("VISITED_URLS"));
+                builder.setPagesKnown(rs.getInt("KNOWN_URLS"));
+                builder.setPagesIndexed(rs.getInt("GOOD_URLS"));
+                builder.setPagesFetched(rs.getInt("VISITED_URLS"));
             }
 
-            builder.suggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue));
+            builder.setSuggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue));
 
             return Optional.of(builder.build());
         }

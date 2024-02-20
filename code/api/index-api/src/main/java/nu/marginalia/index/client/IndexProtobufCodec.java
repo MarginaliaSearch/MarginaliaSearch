@@ -91,7 +91,7 @@ public class IndexProtobufCodec {
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight()
         );
-    };
+    }
 
     public static RpcResultRankingParameters convertRankingParameterss(ResultRankingParameters rankingParams,
                                                                        RpcTemporalBias temporalBias)

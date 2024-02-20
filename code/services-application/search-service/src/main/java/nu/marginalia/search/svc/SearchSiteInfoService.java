@@ -3,7 +3,6 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.assistant.client.model.SimilarDomain;
-import nu.marginalia.client.Context;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.feedlot.model.FeedItems;
 import nu.marginalia.model.EdgeDomain;
@@ -24,6 +23,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class SearchSiteInfoService {
     private static final Logger logger = LoggerFactory.getLogger(SearchSiteInfoService.class);
@@ -64,14 +67,12 @@ public class SearchSiteInfoService {
             return null;
         }
 
-        var ctx = Context.fromRequest(request);
-
         var model = switch (view) {
-            case "links" -> listLinks(ctx, domainName);
-            case "docs" -> listDocs(ctx, domainName);
-            case "info" -> listInfo(ctx, domainName);
-            case "report" -> reportSite(ctx, domainName);
-            default -> listInfo(ctx, domainName);
+            case "links" -> listLinks(domainName);
+            case "docs" -> listDocs(domainName);
+            case "info" -> listInfo(domainName);
+            case "report" -> reportSite(domainName);
+            default -> listInfo(domainName);
         };
 
         return renderer.render(model);
@@ -105,7 +106,7 @@ public class SearchSiteInfoService {
         return renderer.render(model);
     }
 
-    private Object reportSite(Context ctx, String domainName) throws SQLException {
+    private Object reportSite(String domainName) throws SQLException {
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
         var existingComplaints = flagSiteService.getExistingComplaints(domainId);
 
@@ -117,40 +118,37 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(Context ctx, String domainName) {
+    private Backlinks listLinks(String domainName) {
         return new Backlinks(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doBacklinkSearch(ctx, domainName));
+                searchOperator.doBacklinkSearch(domainName));
     }
 
-    private SiteInfoWithContext listInfo(Context ctx, String domainName) {
+    private SiteInfoWithContext listInfo(String domainName) {
 
         final int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
 
-        final DomainInformation domainInfo;
-        final List<SimilarDomain> similarSet;
-        final List<SimilarDomain> linkingDomains;
-        String url = "https://" + domainName + "/";;
+        final Future<DomainInformation> domainInfoFuture;
+        final Future<List<SimilarDomain>> similarSetFuture;
+        final Future<List<SimilarDomain>> linkingDomainsFuture;
+
+        String url = "https://" + domainName + "/";
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
 
         var feedItemsFuture = feedlotClient.getFeedItems(domainName);
         if (domainId < 0 || !assistantClient.isAccepting()) {
-            domainInfo = createDummySiteInfo(domainName);
-            similarSet = List.of();
-            linkingDomains = List.of();
+            domainInfoFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
+            similarSetFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
+            linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
         }
         else {
-            domainInfo = assistantClient.domainInformation(ctx, domainId).blockingFirst();
-            similarSet = assistantClient
-                    .similarDomains(ctx, domainId, 25)
-                    .blockingFirst();
-            linkingDomains = assistantClient
-                    .linkedDomains(ctx, domainId, 25)
-                    .blockingFirst();
+            domainInfoFuture = assistantClient.domainInformation(domainId);
+            similarSetFuture = assistantClient.similarDomains(domainId, 25);
+            linkingDomainsFuture = assistantClient.linkedDomains(domainId, 25);
         }
 
-        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(ctx, domainName, 5);
+        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, 5);
         if (!sampleResults.isEmpty()) {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
@@ -166,26 +164,35 @@ public class SearchSiteInfoService {
                 domainId,
                 url,
                 hasScreenshot,
-                domainInfo,
-                similarSet,
-                linkingDomains,
+                waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
+                waitForFuture(similarSetFuture, List::of),
+                waitForFuture(linkingDomainsFuture, List::of),
                 feedItems,
                 sampleResults
         );
     }
 
-    private DomainInformation createDummySiteInfo(String domainName) {
-        return DomainInformation.builder()
-                .domain(new EdgeDomain(domainName))
-                .suggestForCrawling(true)
-                .unknownDomain(true)
-                .build();
+    private <T> T waitForFuture(Future<T> future, Supplier<T> fallback) {
+        try {
+            return future.get(50, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            logger.info("Failed to get domain data: {}", e.getMessage());
+            return fallback.get();
+        }
     }
 
-    private Docs listDocs(Context ctx, String domainName) {
+    private DomainInformation createDummySiteInfo(String domainName) {
+        return DomainInformation.builder()
+                    .domain(new EdgeDomain(domainName))
+                    .suggestForCrawling(true)
+                    .unknownDomain(true)
+                    .build();
+    }
+
+    private Docs listDocs(String domainName) {
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doSiteSearch(ctx, domainName, 100));
+                searchOperator.doSiteSearch(domainName, 100));
     }
 
     public record Docs(Map<String, Boolean> view,

@@ -9,7 +9,6 @@ import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
-import nu.marginalia.tools.Experiment;
 import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
 

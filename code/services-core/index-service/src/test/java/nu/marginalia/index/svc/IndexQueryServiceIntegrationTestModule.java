@@ -82,7 +82,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
                     ServiceId.Index,
                     0,
                     "127.0.0.1",
-                    randomPort(),
+                    "127.0.0.1",
                     randomPort(),
                     UUID.randomUUID()
             ));

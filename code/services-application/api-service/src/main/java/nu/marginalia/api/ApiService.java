@@ -9,9 +9,7 @@ import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
 import nu.marginalia.api.svc.ResponseCache;
-import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.server.*;
 import nu.marginalia.service.server.mq.MqRequest;
 import org.slf4j.Logger;
@@ -126,7 +124,7 @@ public class ApiService extends Service {
                 .labels(license.key)
                 .time(() ->
                         searchOperator
-                        .query(Context.fromRequest(request), query, count, index)
+                        .query(query, count, index)
                         .withLicense(license.getLicense())
                 );
     }

@@ -10,10 +10,6 @@ import spark.staticfiles.MimeType;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Map;
-import java.util.TreeMap;
-
-import static java.util.Map.entry;
 
 public class StaticResources {
     private final long startTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);

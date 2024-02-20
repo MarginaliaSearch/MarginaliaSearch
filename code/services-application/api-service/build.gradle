@@ -27,7 +27,6 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:config')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
     implementation project(':code:api:query-api')
     implementation project(':code:api:index-api')
     implementation project(':code:features-index:index-query')
@@ -37,7 +36,6 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.rxjava
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove

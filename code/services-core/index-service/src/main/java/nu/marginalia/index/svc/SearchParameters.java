@@ -2,21 +2,16 @@ package nu.marginalia.index.svc;
 
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.api.RpcIndexQuery;
-import nu.marginalia.index.api.RpcSpecLimit;
 import nu.marginalia.index.client.IndexProtobufCodec;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.client.model.results.Bm25Parameters;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryParams;
 import nu.marginalia.index.query.IndexSearchBudget;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.searchset.SearchSet;
 
 import java.util.ArrayList;

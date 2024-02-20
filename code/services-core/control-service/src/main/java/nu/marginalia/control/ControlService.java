@@ -2,7 +2,7 @@ package nu.marginalia.control;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.service.ServiceMonitors;
 import nu.marginalia.control.actor.ControlActorService;
 import nu.marginalia.control.app.svc.*;
 import nu.marginalia.control.node.svc.ControlNodeActionsService;

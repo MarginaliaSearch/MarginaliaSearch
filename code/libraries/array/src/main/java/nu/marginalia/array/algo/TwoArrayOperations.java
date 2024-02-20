@@ -2,8 +2,6 @@ package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
 
-import java.util.function.LongBinaryOperator;
-
 
 /** Functions for operating on pairs of arrays.
  */

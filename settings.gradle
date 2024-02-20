@@ -53,7 +53,6 @@ include 'code:features-index:index-forward'
 include 'code:features-index:index-reverse'
 include 'code:features-index:domain-ranking'
 
-include 'code:api:actor-api'
 include 'code:api:query-api'
 include 'code:api:index-api'
 include 'code:api:assistant-api'
@@ -61,7 +60,6 @@ include 'code:api:process-mqapi'
 include 'code:api:executor-api'
 
 include 'code:common:service-discovery'
-include 'code:common:service-client'
 include 'code:common:db'
 include 'code:common:linkdb'
 include 'code:common:service'
@@ -131,7 +129,6 @@ dependencyResolutionManagement {
             library('grpc-protobuf', 'io.grpc', 'grpc-protobuf').version('1.49.2')
             library('grpc-stub', 'io.grpc', 'grpc-stub').version('1.49.2')
             library('grpc-netty', 'io.grpc', 'grpc-netty-shaded').version('1.49.2')
-            library('rxjava', 'io.reactivex.rxjava3', 'rxjava').version('3.1.6')
 
             library('prometheus', 'io.prometheus', 'simpleclient').version('0.16.0')
             library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
@@ -201,8 +198,12 @@ dependencyResolutionManagement {
 
             library('sqlite','org.xerial','sqlite-jdbc').version('3.41.2.2')
             library('javax.annotation','javax.annotation','javax.annotation-api').version('1.3.2')
+
             library('parquet-column', 'org.apache.parquet','parquet-column').version('1.13.1')
             library('parquet-hadoop', 'org.apache.parquet','parquet-hadoop').version('1.13.1')
+
+            library('curator-framework', 'org.apache.curator','curator-framework').version('5.6.0')
+            library('curator-x-discovery', 'org.apache.curator','curator-x-discovery').version('5.6.0')
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
             bundle('slf4j.test', ['slf4j.jdk14'])
@@ -217,6 +218,8 @@ dependencyResolutionManagement {
             bundle('parquet', ['parquet-column', 'parquet-hadoop'])
             bundle('junit', ['junit.jupiter', 'junit.jupiter.engine'])
             bundle('flyway', ['flyway.core', 'flyway.mysql'])
+
+            bundle('curator', ['curator-framework', 'curator-x-discovery'])
         }
 
 

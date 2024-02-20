@@ -53,6 +53,37 @@ public class QueryProtobufCodec {
         return builder.build();
     }
 
+    public static RpcIndexQuery convertQuery(String humanQuery, ProcessedQuery query) {
+        var builder = RpcIndexQuery.newBuilder();
+
+        for (var subquery : query.specs.subqueries) {
+            builder.addSubqueries(IndexProtobufCodec.convertSearchSubquery(subquery));
+        }
+
+        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
+        builder.setHumanQuery(humanQuery);
+
+        builder.setQuality(convertSpecLimit(query.specs.quality));
+        builder.setYear(convertSpecLimit(query.specs.year));
+        builder.setSize(convertSpecLimit(query.specs.size));
+        builder.setRank(convertSpecLimit(query.specs.rank));
+        builder.setDomainCount(convertSpecLimit(query.specs.domainCount));
+
+        builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
+
+        // Query strategy may be overridden by the query, but if not, use the one from the request
+        builder.setQueryStrategy(query.specs.queryStrategy.name());
+
+        builder.setParameters(IndexProtobufCodec.convertRankingParameterss(
+                query.specs.rankingParams,
+                RpcTemporalBias.newBuilder().setBias(
+                        RpcTemporalBias.Bias.NONE)
+                        .build())
+        );
+
+        return builder.build();
+    }
+
     public static QueryParams convertRequest(RpcQsQuery request) {
         return new QueryParams(
                 request.getHumanQuery(),
@@ -178,5 +209,22 @@ public class QueryProtobufCodec {
             builder.setNearDomain(params.nearDomain());
 
         return builder.build();
+    }
+
+    @SneakyThrows
+    public static DecoratedSearchResultItem convertQueryResult(RpcDecoratedResultItem rpcDecoratedResultItem) {
+        return new DecoratedSearchResultItem(
+                convertRawResult(rpcDecoratedResultItem.getRawItem()),
+                new EdgeUrl(rpcDecoratedResultItem.getUrl()),
+                rpcDecoratedResultItem.getTitle(),
+                rpcDecoratedResultItem.getDescription(),
+                rpcDecoratedResultItem.getUrlQuality(),
+                rpcDecoratedResultItem.getFormat(),
+                rpcDecoratedResultItem.getFeatures(),
+                rpcDecoratedResultItem.getPubYear(),
+                rpcDecoratedResultItem.getDataHash(),
+                rpcDecoratedResultItem.getWordsTotal(),
+                rpcDecoratedResultItem.getRankingScore()
+        );
     }
 }

@@ -2,7 +2,6 @@ package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.browse.model.BrowseResultSet;
-import nu.marginalia.client.Context;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.command.SearchCommandInterface;
@@ -35,12 +34,12 @@ public class BrowseCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
+    public Optional<Object> process(Response response, SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
 
-        var model = browseSite(ctx, parameters.query());
+        var model = browseSite(parameters.query());
 
         if (null == model)
             return Optional.empty();
@@ -53,7 +52,7 @@ public class BrowseCommand implements SearchCommandInterface {
     }
 
 
-    private BrowseResultSet browseSite(Context ctx, String humanQuery) {
+    private BrowseResultSet browseSite(String humanQuery) {
         String definePrefix = "browse:";
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
@@ -66,7 +65,7 @@ public class BrowseCommand implements SearchCommandInterface {
                 return browseService.getRandomEntries(set);
             }
             else {
-                return browseService.getRelatedEntries(ctx, word);
+                return browseService.getRelatedEntries(word);
             }
         }
         catch (Exception ex) {

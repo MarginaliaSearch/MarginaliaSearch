@@ -5,8 +5,6 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.client.Context;
-import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
@@ -75,7 +73,7 @@ public class SearchService extends Service {
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
             wmsa_search_service_error_count.labels(p.pathInfo(), p.requestMethod()).inc();
-            errorPageService.serveError(Context.fromRequest(p), p, q);
+            errorPageService.serveError(p, q);
         });
 
         Spark.awaitInitialization();

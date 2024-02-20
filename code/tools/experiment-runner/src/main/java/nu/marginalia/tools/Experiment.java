@@ -1,7 +1,6 @@
 package nu.marginalia.tools;
 
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.CrawledDomain;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -14,7 +13,7 @@ public abstract class Experiment {
         for (String domain : args) {
             domains.add(domain.toLowerCase());
         }
-    };
+    }
 
     public abstract boolean process(SerializableCrawlDataStream dataStream) throws IOException;
 

@@ -5,6 +5,6 @@ public enum UrlIndexingState {
     OK,
     REDIRECT,
     DEAD,
-    DISQUALIFIED;
+    DISQUALIFIED
 
 }

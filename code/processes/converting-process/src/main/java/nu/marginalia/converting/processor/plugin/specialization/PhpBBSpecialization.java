@@ -4,11 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.summary.SummaryExtractor;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 @Singleton
 public class PhpBBSpecialization extends DefaultSpecialization {

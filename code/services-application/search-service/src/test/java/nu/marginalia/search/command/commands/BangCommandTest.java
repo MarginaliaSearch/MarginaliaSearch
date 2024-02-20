@@ -1,6 +1,5 @@
 package nu.marginalia.search.command.commands;
 
-import nu.marginalia.client.Context;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.exceptions.RedirectException;
 import org.junit.jupiter.api.Assertions;
@@ -14,8 +13,7 @@ class BangCommandTest {
     @Test
     public void testG() {
         try {
-            bangCommand.process(Context.internal(),
-                    null,
+            bangCommand.process(null,
                     new SearchParameters(" !g test",
                     null, null, null, null, null)
             );

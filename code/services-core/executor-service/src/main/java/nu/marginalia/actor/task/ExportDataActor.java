@@ -54,7 +54,7 @@ public class ExportDataActor extends RecordActorPrototype {
 
                 try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))));
                      var conn = dataSource.getConnection();
-                     var stmt = conn.prepareStatement("SELECT URL_DOMAIN FROM EC_DOMAIN_BLACKLIST");
+                     var stmt = conn.prepareStatement("SELECT URL_DOMAIN FROM EC_DOMAIN_BLACKLIST")
                 )
                 {
                     stmt.setFetchSize(1000);
@@ -82,7 +82,7 @@ public class ExportDataActor extends RecordActorPrototype {
 
                 try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))));
                      var conn = dataSource.getConnection();
-                     var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, ID, INDEXED, STATE FROM EC_DOMAIN");
+                     var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, ID, INDEXED, STATE FROM EC_DOMAIN")
                 )
                 {
                     stmt.setFetchSize(1000);

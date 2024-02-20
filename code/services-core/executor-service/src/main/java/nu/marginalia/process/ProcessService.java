@@ -54,7 +54,7 @@ public class ProcessService {
         ProcessId(String path) {
             this.path = path;
         }
-    };
+    }
 
     @Inject
     public ProcessService(BaseServiceParams params,

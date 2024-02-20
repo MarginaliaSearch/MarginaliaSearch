@@ -1,7 +1,6 @@
 package nu.marginalia.converting.writer;
 
 import lombok.SneakyThrows;
-import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.worklog.BatchingWorkLog;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

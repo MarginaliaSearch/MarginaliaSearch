@@ -5,7 +5,6 @@ import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.ParamMatchingQueryFilter;
 import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
-import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

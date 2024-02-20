@@ -81,5 +81,5 @@ public class SearchFlagSiteService {
 
     public record CategoryItem(String categoryName, String categoryDesc) {}
     public record FlagSiteComplaintModel(String category, String submitTime, boolean isReviewed, String decision) {}
-    public record FlagSiteFormData(int domainId, String category, String description, String sampleQuery) {};
+    public record FlagSiteFormData(int domainId, String category, String description, String sampleQuery) {}
 }

@@ -1,12 +1,8 @@
 package nu.marginalia;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public class ProcessConfigurationModule extends AbstractModule {

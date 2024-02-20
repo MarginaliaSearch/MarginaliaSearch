@@ -19,7 +19,7 @@ public class ReverseIndexFullFileNames {
     public enum FileVersion {
         CURRENT,
         NEXT
-    };
+    }
 
     public enum FileIdentifier {
         WORDS,

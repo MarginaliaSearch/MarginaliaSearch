@@ -8,6 +8,7 @@ import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import nu.marginalia.assistant.api.RpcSimilarDomain;
 import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.query.client.QueryClient;
@@ -168,7 +169,7 @@ public class SimilarDomainsService {
     }
 
 
-    public List<SimilarDomain> getSimilarDomains(int domainId, int count) {
+    public List<RpcSimilarDomain> getSimilarDomains(int domainId, int count) {
         int domainIdx = domainIdToIdx.get(domainId);
 
         TIntList allIdsList = domainNeighbors[domainIdx];
@@ -204,23 +205,30 @@ public class SimilarDomainsService {
                 .limit(count)
                 .toArray();
 
-        List<SimilarDomain> domains = new ArrayList<>();
+        List<RpcSimilarDomain> domains = new ArrayList<>();
+
         for (int idx : resultIds) {
             int id = domainIdxToId[idx];
 
-            domains.add(new SimilarDomain(
-                    new EdgeDomain(domainNames[idx]).toRootUrl(),
-                    id,
-                    getRelatedness(domainId, id),
-                    domainRanks[idx],
-                    indexedDomains.get(idx),
-                    activeDomains.get(idx),
-                    screenshotDomains.get(idx),
-                    SimilarDomain.LinkType.find(
-                            linkingIdsStoD.contains(idx),
-                            linkingIdsDtoS.contains(idx)
-                    )
-            ));
+            if (domainNames[idx].length() > 32)
+                continue;
+
+            var linkType = SimilarDomain.LinkType.find(
+                    linkingIdsStoD.contains(idx),
+                    linkingIdsDtoS.contains(idx)
+            );
+
+            domains.add(RpcSimilarDomain.newBuilder()
+                    .setDomainId(id)
+                    .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
+                    .setRelatedness(getRelatedness(domainId, id))
+                    .setRank(domainRanks[idx])
+                    .setIndexed(indexedDomains.get(idx))
+                    .setActive(activeDomains.get(idx))
+                    .setScreenshot(screenshotDomains.get(idx))
+                    .setLinkType(RpcSimilarDomain.LINK_TYPE.valueOf(linkType.name()))
+                    .build());
+
         }
 
         domains.removeIf(this::shouldRemove);
@@ -228,21 +236,18 @@ public class SimilarDomainsService {
         return domains;
     }
 
-    private boolean shouldRemove(SimilarDomain domainResult) {
-        if (domainResult.url().domain.toString().length() > 32)
-            return true;
-
+    private boolean shouldRemove(RpcSimilarDomain domainResult) {
         // Remove domains that have a relatively high likelihood of being dead links
         // or not very interesting
-        if (!(domainResult.indexed() && domainResult.active())
-            && domainResult.relatedness() <= 50)
+        if (!(domainResult.getIndexed() && domainResult.getActive())
+            && domainResult.getRelatedness() <= 50)
         {
             return true;
         }
 
         // Remove domains that are not very similar if there is no mutual link
-        if (domainResult.linkType() == SimilarDomain.LinkType.NONE
-         && domainResult.relatedness() <= 25)
+        if (domainResult.getLinkType() == RpcSimilarDomain.LINK_TYPE.NONE
+         && domainResult.getRelatedness() <= 25)
             return true;
 
         return false;
@@ -268,7 +273,7 @@ public class SimilarDomainsService {
         return items;
     }
 
-    public List<SimilarDomain> getLinkingDomains(int domainId, int count) {
+    public List<RpcSimilarDomain> getLinkingDomains(int domainId, int count) {
         int domainIdx = domainIdToIdx.get(domainId);
 
         TIntSet linkingIdsDtoS = getLinkingIdsDToS(domainIdx);
@@ -286,7 +291,7 @@ public class SimilarDomainsService {
 
         double[] ranksArray = new double[idsArray.length];
         for (int i = 0; i < idxArray.length; i++) {
-            ranksArray[i] = domainRanks[idxArray[i]];
+            ranksArray[i] = this.domainRanks[idxArray[i]];
         }
         double[] relatednessArray = new double[idsArray.length];
         for (int i = 0; i < idsArray.length; i++) {
@@ -316,23 +321,29 @@ public class SimilarDomainsService {
                 .limit(count)
                 .toArray();
 
-        List<SimilarDomain> domains = new ArrayList<>();
+        List<RpcSimilarDomain> domains = new ArrayList<>();
         for (int id : resultIds) {
             int idx = domainIdToIdx.get(id);
 
-            domains.add(new SimilarDomain(
-                    new EdgeDomain(domainNames[idx]).toRootUrl(),
-                    id,
-                    getRelatedness(domainId, id),
-                    domainRanks[idx],
-                    indexedDomains.get(idx),
-                    activeDomains.get(idx),
-                    screenshotDomains.get(idx),
-                    SimilarDomain.LinkType.find(
-                            linkingIdsStoD.contains(idx),
-                            linkingIdsDtoS.contains(idx)
-                    )
-            ));
+            if (domainNames[idx].length() > 32)
+                continue;
+
+            var linkType = SimilarDomain.LinkType.find(
+                    linkingIdsStoD.contains(idx),
+                    linkingIdsDtoS.contains(idx)
+            );
+
+            domains.add(RpcSimilarDomain.newBuilder()
+                            .setDomainId(id)
+                            .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
+                            .setRelatedness(getRelatedness(domainId, id))
+                            .setRank(domainRanks[idx])
+                            .setIndexed(indexedDomains.get(idx))
+                            .setActive(activeDomains.get(idx))
+                            .setScreenshot(screenshotDomains.get(idx))
+                            .setLinkType(RpcSimilarDomain.LINK_TYPE.valueOf(linkType.name()))
+                    .build());
+
         }
 
         domains.removeIf(this::shouldRemove);

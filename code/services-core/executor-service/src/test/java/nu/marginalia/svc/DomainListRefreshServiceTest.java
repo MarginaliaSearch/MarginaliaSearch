@@ -15,7 +15,6 @@ import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -55,7 +54,7 @@ class DomainListRefreshServiceTest {
     void downloadDomainsList() throws SQLException {
         DomainTypes domainTypes = new DomainTypes(dataSource);
         DomainListRefreshService service = new DomainListRefreshService(dataSource,
-                domainTypes, new ServiceConfiguration(null, 1, null, -1, -1, null));
+                domainTypes, new ServiceConfiguration(null, 1, null, null, -1, null));
 
         domainTypes.updateUrlForSelection(DomainTypes.Type.CRAWL, "https://downloads.marginalia.nu/domain-list-test.txt");
         service.synchronizeDomainList();

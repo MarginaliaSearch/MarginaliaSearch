@@ -13,8 +13,6 @@ import nu.marginalia.linkdb.dlinks.DomainLinkDbWriter;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.service.SearchServiceDescriptors;
-import nu.marginalia.service.descriptor.ServiceDescriptors;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,8 +28,6 @@ public class LoaderModule extends AbstractModule {
     }
 
     public void configure() {
-        bind(ServiceDescriptors.class).toInstance(SearchServiceDescriptors.descriptors);
-
         bind(Gson.class).toProvider(this::createGson);
         bind(Path.class).annotatedWith(Names.named("local-index-path")).toInstance(Path.of(System.getProperty("local-index-path", "/vol")));
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());

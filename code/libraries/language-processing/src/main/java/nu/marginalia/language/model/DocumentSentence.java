@@ -8,8 +8,6 @@ import java.lang.ref.SoftReference;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
     public final String originalSentence;

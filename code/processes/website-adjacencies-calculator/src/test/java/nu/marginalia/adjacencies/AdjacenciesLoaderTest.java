@@ -70,7 +70,7 @@ public class AdjacenciesLoaderTest {
         }
 
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("SELECT * FROM EC_DOMAIN_NEIGHBORS_2 WHERE DOMAIN_ID=1");
+             var stmt = conn.prepareStatement("SELECT * FROM EC_DOMAIN_NEIGHBORS_2 WHERE DOMAIN_ID=1")
         ) {
             var rs = stmt.executeQuery();
             Assertions.assertTrue(rs.next());

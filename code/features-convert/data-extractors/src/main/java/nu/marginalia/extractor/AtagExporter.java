@@ -48,7 +48,7 @@ public class AtagExporter implements ExporterIf {
 
         Path inputDir = storageService.getStorage(crawlId).asPath();
 
-        try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))));
+        try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))))
         )
         {
             Path crawlerLogFile = inputDir.resolve("crawler.log");

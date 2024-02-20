@@ -1,0 +1,119 @@
+syntax="proto3";
+package assistantapi;
+
+option java_package="nu.marginalia.assistant.api";
+option java_multiple_files=true;
+
+service AssistantApi {
+  /** Looks up a word in the dictionary. */
+  rpc dictionaryLookup(RpcDictionaryLookupRequest) returns (RpcDictionaryLookupResponse) {}
+  /** Checks the spelling of a text. */
+  rpc spellCheck(RpcSpellCheckRequest) returns (RpcSpellCheckResponse) {}
+  /** Converts a unit from one to another. */
+  rpc unitConversion(RpcUnitConversionRequest) returns (RpcUnitConversionResponse) {}
+  /** Evaluates a mathematical expression. */
+  rpc evalMath(RpcEvalMathRequest) returns (RpcEvalMathResponse) {}
+
+  /** Fetches information about a domain. */
+  rpc getDomainInfo(RpcDomainId) returns (RpcDomainInfoResponse) {}
+
+  /** Fetches similar domains to the given domain. */
+  rpc getSimilarDomains(RpcDomainLinksRequest) returns (RpcSimilarDomains) {}
+
+  /** Fetches domains with links to or from the given domain. */
+  rpc getLinkingDomains(RpcDomainLinksRequest) returns (RpcSimilarDomains) {}
+}
+
+message RpcDomainLinksRequest {
+  int32 domainId = 1;
+  int32 count = 2;
+}
+
+message RpcDomainId {
+  int32 domainId = 1;
+}
+
+message RpcDictionaryLookupRequest {
+  string word = 1;
+}
+
+message RpcDictionaryLookupResponse {
+  string word = 1;
+  repeated RpcDictionaryEntry entries = 2;
+}
+
+message RpcDictionaryEntry {
+  string type = 1;
+  string word = 2;
+  string definition = 3;
+}
+
+message RpcSpellCheckRequest {
+  string text = 1;
+}
+
+message RpcSpellCheckResponse {
+  repeated string suggestions = 1;
+}
+
+message RpcUnitConversionRequest {
+  string unit = 1;
+  string from = 2;
+  string to = 3;
+}
+
+message RpcUnitConversionResponse {
+  string result = 1;
+}
+
+message RpcEvalMathRequest {
+  string expression = 1;
+}
+
+message RpcEvalMathResponse {
+  string result = 1;
+}
+
+message RpcDomainInfoResponse {
+  int32 domainId = 1;
+  string domain = 2;
+  bool blacklisted = 3;
+  int32 pagesKnown = 4;
+  int32 pagesFetched = 5;
+  int32 pagesIndexed = 6;
+  int32 incomingLinks = 7;
+  int32 outboundLinks = 8;
+  int32 nodeAffinity = 9;
+  double ranking = 10;
+  bool suggestForCrawling = 11;
+  bool inCrawlQueue = 12;
+  bool unknownDomain = 13;
+  string ip = 14;
+  int32 asn = 15;
+  string asnOrg = 16;
+  string asnCountry = 17;
+  string ipCountry = 18;
+  string state = 19;
+}
+
+message RpcSimilarDomains {
+  repeated RpcSimilarDomain domains = 1;
+}
+
+message RpcSimilarDomain {
+  string url = 1;
+  int32 domainId = 2;
+  double relatedness = 3;
+  double rank = 4;
+  bool indexed = 5;
+  bool active = 6;
+  bool screenshot = 7;
+  LINK_TYPE linkType = 8;
+
+  enum LINK_TYPE {
+      BACKWARD = 0;
+      FOWARD = 1;
+      BIDIRECTIONAL = 2;
+      NONE = 3;
+  };
+}

@@ -5,7 +5,6 @@ import nu.marginalia.adblock.AdblockSimulator;
 import nu.marginalia.converting.processor.DocumentProcessor;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.tools.Experiment;
 import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

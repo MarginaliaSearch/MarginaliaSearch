@@ -24,7 +24,7 @@ public class DomainTypes {
         BLOG,
         CRAWL,
         TEST
-    };
+    }
 
     private final Logger logger = LoggerFactory.getLogger(DomainTypes.class);
 

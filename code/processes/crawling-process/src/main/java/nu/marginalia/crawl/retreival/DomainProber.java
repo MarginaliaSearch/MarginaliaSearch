@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawling.model.CrawlerDomainStatus;
-import nu.marginalia.ip_blocklist.GeoIpBlocklist;
 import nu.marginalia.ip_blocklist.IpBlockList;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -57,7 +56,7 @@ public class DomainProber {
         return new ProbeResultError(CrawlerDomainStatus.ERROR, "Bad status");
     }
 
-    public sealed interface ProbeResult permits ProbeResultError, ProbeResultRedirect, ProbeResultOk {};
+    public sealed interface ProbeResult permits ProbeResultError, ProbeResultRedirect, ProbeResultOk {}
 
     /** The probing failed for one reason or another
      * @param status  Machine readable status

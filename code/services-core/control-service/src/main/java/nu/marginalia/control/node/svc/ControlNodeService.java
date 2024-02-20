@@ -3,8 +3,7 @@ package nu.marginalia.control.node.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.client.Context;
-import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.service.ServiceMonitors;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
@@ -211,7 +210,7 @@ public class ControlNodeService {
 
     private Object nodeStorageDetailsModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
-        var storage = getFileStorageWithRelatedEntries(Context.fromRequest(request), nodeId, FileStorageId.parse(request.queryParams("fid")));
+        var storage = getFileStorageWithRelatedEntries(nodeId, FileStorageId.parse(request.queryParams("fid")));
 
         String view = switch(storage.type()) {
             case BACKUP -> "backup";
@@ -390,7 +389,6 @@ public class ControlNodeService {
 
 
     public FileStorageWithRelatedEntries getFileStorageWithRelatedEntries(
-            Context context,
             int node,
             FileStorageId fileId
     ) throws SQLException {

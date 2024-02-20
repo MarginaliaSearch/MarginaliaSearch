@@ -1,6 +1,5 @@
 package nu.marginalia.control.sys.model;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 
 public record EventLogEntry(

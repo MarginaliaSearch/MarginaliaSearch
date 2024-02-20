@@ -3,7 +3,6 @@ package nu.marginalia.control.node.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
-import nu.marginalia.client.Context;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.storage.FileStorageService;
@@ -16,8 +15,6 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 
 @Singleton
@@ -75,7 +72,7 @@ public class ControlFileStorageService {
         else
             response.type("application/octet-stream");
 
-        executorClient.transferFile(Context.fromRequest(request), nodeId, fileStorageId, path, response.raw().getOutputStream());
+        executorClient.transferFile(nodeId, fileStorageId, path, response.raw().getOutputStream());
 
         return "";
     }

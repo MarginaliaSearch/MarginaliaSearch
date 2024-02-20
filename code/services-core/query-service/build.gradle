@@ -27,7 +27,6 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:service')
     implementation project(':code:common:renderer')
-    implementation project(':code:common:service-client')
     implementation project(':code:api:index-api')
     implementation project(':code:api:query-api')
     implementation project(':code:common:service-discovery')
@@ -44,7 +43,6 @@ dependencies {
     implementation libs.notnull
     implementation libs.guice
     implementation libs.protobuf
-    implementation libs.rxjava
     implementation libs.bundles.mariadb
     implementation libs.bundles.grpc
 

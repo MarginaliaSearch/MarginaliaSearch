@@ -3,8 +3,6 @@ package nu.marginalia.array.algo;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.buffer.LongQueryBuffer;
-import nu.marginalia.array.page.SegmentLongArray;
-import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

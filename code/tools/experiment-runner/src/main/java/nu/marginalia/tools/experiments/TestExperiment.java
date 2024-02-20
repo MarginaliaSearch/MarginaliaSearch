@@ -1,7 +1,6 @@
 package nu.marginalia.tools.experiments;
 
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.tools.Experiment;
 import nu.marginalia.tools.LegacyExperiment;
 
 public class TestExperiment extends LegacyExperiment {

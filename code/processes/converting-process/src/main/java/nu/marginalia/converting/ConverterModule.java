@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.gson.GsonFactory;
 

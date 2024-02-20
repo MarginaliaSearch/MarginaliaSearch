@@ -58,5 +58,5 @@ public class ResultRankingParameters {
 
     public enum TemporalBias {
         RECENT, OLD, NONE
-    };
+    }
 }

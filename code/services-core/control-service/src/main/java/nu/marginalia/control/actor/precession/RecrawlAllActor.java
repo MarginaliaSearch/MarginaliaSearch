@@ -9,7 +9,6 @@ import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.control.actor.PrecessionNodes;
 import nu.marginalia.executor.client.ExecutorRemoteActorFactory;
-import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageType;
 

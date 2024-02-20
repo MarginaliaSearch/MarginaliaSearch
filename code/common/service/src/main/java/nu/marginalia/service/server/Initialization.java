@@ -8,9 +8,14 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A class for delayed initialization of services.
+ * <p></p>
+ * This is useful for tasks that need to be performed after the service has been
+ * fully initialized, such as registering with a service registry.
+ */
 @Singleton
 public class Initialization {
-    boolean initialized;
+    private boolean initialized;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final List<Runnable> callbacks = new ArrayList<>();
 
@@ -25,7 +30,6 @@ public class Initialization {
             logger.info("Initialized");
             initialized = true;
             notifyAll();
-
         }
 
         callbacks.forEach(Runnable::run);

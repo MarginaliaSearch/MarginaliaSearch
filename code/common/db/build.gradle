@@ -40,7 +40,6 @@ dependencies {
 
     implementation libs.trove
 
-    implementation libs.rxjava
     implementation libs.bundles.mariadb
     flywayMigration 'org.flywaydb:flyway-mysql:10.0.1'
 

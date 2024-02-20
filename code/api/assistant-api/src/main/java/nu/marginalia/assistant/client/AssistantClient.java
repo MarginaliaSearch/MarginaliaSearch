@@ -1,95 +1,159 @@
 package nu.marginalia.assistant.client;
 
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.reactivex.rxjava3.core.Observable;
+import nu.marginalia.assistant.api.AssistantApiGrpc;
 import nu.marginalia.assistant.client.model.DictionaryResponse;
 import nu.marginalia.assistant.client.model.DomainInformation;
 import nu.marginalia.assistant.client.model.SimilarDomain;
-import nu.marginalia.client.AbstractDynamicClient;
-import nu.marginalia.client.exception.RouteNotConfiguredException;
-import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.service.descriptor.ServiceDescriptors;
+import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.client.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+
+import static nu.marginalia.assistant.client.AssistantProtobufCodec.*;
 
 @Singleton
-public class AssistantClient extends AbstractDynamicClient {
+public class AssistantClient {
+    private static final Logger logger = LoggerFactory.getLogger(AssistantClient.class);
 
+    private final GrpcSingleNodeChannelPool<AssistantApiGrpc.AssistantApiBlockingStub> channelPool;
+    private final ExecutorService virtualExecutorService = Executors.newVirtualThreadPerTaskExecutor();
     @Inject
-    public AssistantClient(ServiceDescriptors descriptors) {
-        super(descriptors.forId(ServiceId.Assistant), GsonFactory::get);
+    public AssistantClient(GrpcChannelPoolFactory factory) {
+        this.channelPool = factory.createSingle(ServiceId.Assistant, AssistantApiGrpc::newBlockingStub);
+
     }
 
-    public Observable<DictionaryResponse> dictionaryLookup(Context ctx, String word) {
-        try {
-            return super.get(ctx, 0, "/dictionary/" + URLEncoder.encode(word, StandardCharsets.UTF_8), DictionaryResponse.class);
-        }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
-        }
+    public Future<DictionaryResponse> dictionaryLookup(String word) {
+        return virtualExecutorService.submit(() -> {
+            var rsp = channelPool.api().dictionaryLookup(
+                    DictionaryLookup.createRequest(word)
+            );
+
+            return DictionaryLookup.convertResponse(rsp);
+        });
     }
 
     @SuppressWarnings("unchecked")
-    public Observable<List<String>> spellCheck(Context ctx, String word) {
-        try {
-            return (Observable<List<String>>) (Object) super.get(ctx, 0, "/spell-check/" +  URLEncoder.encode(word, StandardCharsets.UTF_8), List.class);
-        }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
-        }
-    }
-    public Observable<String> unitConversion(Context ctx, String value, String from, String to) {
-        try {
-            return super.get(ctx, 0, "/unit-conversion?value=" + value + "&from=" + from + "&to=" + to);
-        }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
-        }
+    public Future<List<String>> spellCheck(String word) {
+        return virtualExecutorService.submit(() -> {
+            var rsp = channelPool.api().spellCheck(
+                SpellCheck.createRequest(word)
+            );
+
+            return SpellCheck.convertResponse(rsp);
+        });
     }
 
-    public Observable<String> evalMath(Context ctx, String expression) {
-        try {
-            return super.get(ctx, 0, "/eval-expression?value=" +  URLEncoder.encode(expression, StandardCharsets.UTF_8));
+    public Map<String, List<String>> spellCheck(List<String> words, Duration timeout) throws InterruptedException {
+        List<Callable<Map.Entry<String, List<String>>>> tasks = new ArrayList<>();
+
+        for (String w : words) {
+            tasks.add(() -> {
+                var rsp = channelPool.api().spellCheck(
+                        SpellCheck.createRequest(w)
+                );
+
+                return Map.entry(w, SpellCheck.convertResponse(rsp));
+            });
         }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
+
+        var futures = virtualExecutorService.invokeAll(tasks, timeout.toMillis(), TimeUnit.MILLISECONDS);
+        Map<String, List<String>> results = new HashMap<>();
+
+        for (var f : futures) {
+            if (!f.isDone())
+                continue;
+
+            var entry = f.resultNow();
+
+            results.put(entry.getKey(), entry.getValue());
         }
+
+        return results;
     }
 
-    public Observable<ArrayList<SimilarDomain>> similarDomains(Context ctx, int domainId, int count) {
-        try {
-            return super.get(ctx, 0, STR."/domain/\{domainId}/similar?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {})
-                    .onErrorResumeWith(Observable.just(new ArrayList<>()));
-        }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
-        }
+    public Future<String> unitConversion(String value, String from, String to) {
+        return virtualExecutorService.submit(() -> {
+            var rsp = channelPool.api().unitConversion(
+                    UnitConversion.createRequest(from, to, value)
+            );
+
+            return UnitConversion.convertResponse(rsp);
+        });
     }
 
-    public Observable<ArrayList<SimilarDomain>> linkedDomains(Context ctx, int domainId, int count) {
-        try {
-            return super.get(ctx, 0, STR."/domain/\{domainId}/linking?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {})
-                    .onErrorResumeWith(Observable.just(new ArrayList<>()));
-        }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
-        }
+    public Future<String> evalMath(String expression) {
+        return virtualExecutorService.submit(() -> {
+            var rsp = channelPool.api().evalMath(
+                    EvalMath.createRequest(expression)
+            );
+
+            return EvalMath.convertResponse(rsp);
+        });
     }
 
-    public Observable<DomainInformation> domainInformation(Context ctx, int domainId) {
-        try {
-            return super.get(ctx, 0, STR."/domain/\{domainId}/info", DomainInformation.class)
-                    .onErrorResumeWith(Observable.just(new DomainInformation()));
-        }
-        catch (RouteNotConfiguredException ex) {
-            return Observable.empty();
-        }
+    public Future<List<SimilarDomain>> similarDomains(int domainId, int count) {
+        return virtualExecutorService.submit(() -> {
+            try {
+                var rsp = channelPool.api().getSimilarDomains(
+                        DomainQueries.createRequest(domainId, count)
+                );
+
+                return DomainQueries.convertResponse(rsp);
+            }
+            catch (Exception e) {
+                logger.warn("Failed to get similar domains", e);
+
+                throw e;
+            }
+        });
+    }
+
+    public Future<List<SimilarDomain>> linkedDomains(int domainId, int count) {
+        return virtualExecutorService.submit(() -> {
+            try {
+                var rsp = channelPool.api().getLinkingDomains(
+                        DomainQueries.createRequest(domainId, count)
+                );
+
+                return DomainQueries.convertResponse(rsp);
+            }
+            catch (Exception e) {
+                logger.warn("Failed to get linked domains", e);
+                throw e;
+            }
+        });
+
+    }
+
+    public Future<DomainInformation> domainInformation(int domainId) {
+        return virtualExecutorService.submit(() -> {
+            try {
+                var rsp = channelPool.api().getDomainInfo(
+                        DomainInfo.createRequest(domainId)
+                );
+
+                return DomainInfo.convertResponse(rsp);
+            }
+            catch (Exception e) {
+                logger.warn("Failed to get domain information", e);
+
+                throw e;
+            }
+        });
+    }
+
+    public boolean isAccepting() {
+        return channelPool.hasChannel();
     }
 }

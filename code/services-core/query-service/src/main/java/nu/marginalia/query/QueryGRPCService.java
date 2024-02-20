@@ -1,14 +1,15 @@
 package nu.marginalia.query;
 
 import com.google.inject.Inject;
-import io.grpc.ManagedChannel;
+import com.google.inject.Singleton;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
-import nu.marginalia.client.grpc.GrpcChannelPool;
+import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.query.svc.QueryFactory;
+import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.id.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 
+@Singleton
 public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private final Logger logger = LoggerFactory.getLogger(QueryGRPCService.class);
@@ -27,30 +29,19 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
-    private final GrpcChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
+    private final GrpcMultiNodeChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
 
     private final QueryFactory queryFactory;
     private final DomainBlacklist blacklist;
 
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
-                            DomainBlacklist blacklist,
-                            NodeConfigurationWatcher nodeConfigurationWatcher)
+                            GrpcChannelPoolFactory channelPoolFactory,
+                            DomainBlacklist blacklist)
     {
         this.queryFactory = queryFactory;
         this.blacklist = blacklist;
-
-        channelPool = new GrpcChannelPool<>(ServiceId.Index) {
-            @Override
-            public IndexApiGrpc.IndexApiBlockingStub createStub(ManagedChannel channel) {
-                return IndexApiGrpc.newBlockingStub(channel);
-            }
-
-            @Override
-            public List<Integer> getEligibleNodes() {
-                return nodeConfigurationWatcher.getQueryNodes();
-            }
-        };
+        this.channelPool = channelPoolFactory.createMulti(ServiceId.Index, IndexApiGrpc::newBlockingStub);
     }
 
     public void query(nu.marginalia.index.api.RpcQsQuery request,
@@ -88,7 +79,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
     @SneakyThrows
-    private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
+    List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
         return channelPool.invokeAll(stub -> new QueryTask(stub, indexRequest))
                 .stream()
                 .filter(f -> f.state() == Future.State.SUCCESS)

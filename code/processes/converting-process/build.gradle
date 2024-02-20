@@ -34,7 +34,6 @@ dependencies {
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
 
     implementation project(':code:libraries:guarded-regex')
     implementation project(':code:libraries:easy-lsh')

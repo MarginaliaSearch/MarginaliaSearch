@@ -1,7 +1,6 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.client.Context;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
@@ -27,7 +26,7 @@ public class SearchErrorPageService {
         this.indexClient = indexClient;
     }
 
-    public void serveError(Context ctx, Request request, Response rsp) {
+    public void serveError(Request request, Response rsp) {
         rsp.body(renderError(request, "Internal error",
                 """
                     An error occurred when communicating with the search engine index.

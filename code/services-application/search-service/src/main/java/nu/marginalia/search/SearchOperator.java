@@ -2,8 +2,7 @@ package nu.marginalia.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.model.EdgeDomain;
@@ -12,7 +11,6 @@ import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.query.model.QueryResponse;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.*;
-import nu.marginalia.client.Context;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 import org.apache.logging.log4j.util.Strings;
@@ -22,6 +20,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -64,37 +63,35 @@ public class SearchOperator {
         this.searchUnitConversionService = searchUnitConversionService;
     }
 
-    public List<UrlDetails> doSiteSearch(Context ctx,
-                                        String domain,
+    public List<UrlDetails> doSiteSearch(String domain,
                                         int count) {
 
         var queryParams = paramFactory.forSiteSearch(domain, count);
-        var queryResponse = queryClient.search(ctx, queryParams);
+        var queryResponse = queryClient.search(queryParams);
 
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
 
-    public List<UrlDetails> doBacklinkSearch(Context ctx,
-                                         String domain) {
+    public List<UrlDetails> doBacklinkSearch(String domain) {
 
         var queryParams = paramFactory.forBacklinkSearch(domain);
-        var queryResponse = queryClient.search(ctx, queryParams);
+        var queryResponse = queryClient.search(queryParams);
 
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
 
-    public List<UrlDetails> doLinkSearch(Context context, String source, String dest) {
+    public List<UrlDetails> doLinkSearch(String source, String dest) {
         var queryParams = paramFactory.forLinkSearch(source, dest);
-        var queryResponse = queryClient.search(context, queryParams);
+        var queryResponse = queryClient.search(queryParams);
 
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
 
-    public DecoratedSearchResults doSearch(Context ctx, SearchParameters userParams) {
+    public DecoratedSearchResults doSearch(SearchParameters userParams) {
 
-        Future<String> eval = searchUnitConversionService.tryEval(ctx, userParams.query());
+        Future<String> eval = searchUnitConversionService.tryEval(userParams.query());
         var queryParams = paramFactory.forRegularSearch(userParams);
-        var queryResponse = queryClient.search(ctx, queryParams);
+        var queryResponse = queryClient.search(queryParams);
 
         List<UrlDetails> queryResults = searchQueryService.getResultsFromQuery(queryResponse);
 
@@ -109,7 +106,7 @@ public class SearchOperator {
 
         return DecoratedSearchResults.builder()
                 .params(userParams)
-                .problems(getProblems(ctx, evalResult, queryResults, queryResponse))
+                .problems(getProblems(evalResult, queryResults, queryResponse))
                 .evalResult(evalResult)
                 .results(clusteredResults)
                 .filters(new SearchFilters(websiteUrl, userParams))
@@ -139,13 +136,13 @@ public class SearchOperator {
         return domainQueries.tryGetDomainId(new EdgeDomain(domain)).orElse(-1);
     }
 
-    private List<String> getProblems(Context ctx, String evalResult, List<UrlDetails> queryResults, QueryResponse response) {
+    private List<String> getProblems(String evalResult, List<UrlDetails> queryResults, QueryResponse response) {
         final List<String> problems = new ArrayList<>(response.problems());
         boolean siteSearch = response.domain() != null;
 
         if (!siteSearch) {
             if (queryResults.size() <= 5 && null == evalResult) {
-                spellCheckTerms(ctx, response).forEach(problems::add);
+                spellCheckTerms(response);
             }
 
             if (queryResults.size() <= 5) {
@@ -163,30 +160,22 @@ public class SearchOperator {
     }
 
 
-    private Iterable<String> spellCheckTerms(Context ctx, QueryResponse response) {
-        return Observable.fromIterable(response.searchTermsHuman())
-                .subscribeOn(Schedulers.io())
-                .flatMap(term -> assistantClient.spellCheck(ctx, term)
-                        .onErrorReturn(e -> Collections.emptyList())
-                        .filter(results -> hasSpellSuggestions(term, results))
-                        .map(suggestions -> searchTermToProblemDescription(term, suggestions))
-                )
-                .blockingIterable();
-    }
+    @SneakyThrows
+    private void spellCheckTerms(QueryResponse response) {
+        var suggestions = assistantClient
+                .spellCheck(response.searchTermsHuman(), Duration.ofMillis(20));
 
-    private boolean hasSpellSuggestions(String term, List<String> results) {
-        if (results.size() > 1) {
-            return true;
-        }
-        else if (results.size() == 1) {
-            return !term.equalsIgnoreCase(results.get(0));
-        }
-        return false;
+        suggestions.entrySet()
+                .stream()
+                .filter(e -> e.getValue().size() > 1)
+                .map(e -> searchTermToProblemDescription(e.getKey(), e.getValue()))
+                .forEach(response.problems()::add);
     }
 
     private String searchTermToProblemDescription(String term, List<String> suggestions) {
-        return "\"" + term + "\" could be spelled " +
-                suggestions.stream().map(s -> "\""+s+"\"").collect(Collectors.joining(", "));
+        String suggestionsStr = suggestions.stream().map(s -> STR."\"\{s}\"").collect(Collectors.joining(", "));
+
+        return STR."\"\{term}\" could be spelled \{suggestionsStr}";
     }
 
 

@@ -7,7 +7,6 @@ import nu.marginalia.array.algo.IntArrayTransformations;
 import nu.marginalia.array.delegate.ShiftedIntArray;
 import nu.marginalia.array.page.SegmentIntArray;
 
-import java.io.IOException;
 import java.lang.foreign.Arena;
 
 public interface IntArray extends IntArrayBase, IntArrayTransformations, IntArraySearch, IntArraySort {

@@ -6,7 +6,6 @@ import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
-import nu.marginalia.client.Context;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
@@ -16,6 +15,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static java.util.Collections.shuffle;
 
@@ -48,16 +50,21 @@ public class SearchBrowseService {
         return new BrowseResultSet(results);
     }
 
-    public BrowseResultSet getRelatedEntries(Context ctx, String domainName) {
+    public BrowseResultSet getRelatedEntries(String domainName) throws ExecutionException, InterruptedException, TimeoutException {
         var domain = domainQueries.getDomainId(new EdgeDomain(domainName));
 
-        var neighbors = assistantClient.similarDomains(ctx, domain, 50).blockingFirst();
+        var neighbors = assistantClient.similarDomains(domain, 50)
+                .get(100, TimeUnit.MILLISECONDS);
+
         neighbors.removeIf(sd -> !sd.screenshot());
 
         // If the results are very few, supplement with the alternative shitty algorithm
         if (neighbors.size() < 25) {
             Set<SimilarDomain> allNeighbors = new HashSet<>(neighbors);
-            allNeighbors.addAll(assistantClient.linkedDomains(ctx, domain, 50).blockingFirst());
+            allNeighbors.addAll(assistantClient
+                    .linkedDomains(domain, 50)
+                    .get(100, TimeUnit.MILLISECONDS)
+            );
 
             neighbors.clear();
             neighbors.addAll(allNeighbors);

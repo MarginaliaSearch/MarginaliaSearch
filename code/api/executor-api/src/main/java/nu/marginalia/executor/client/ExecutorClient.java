@@ -2,60 +2,44 @@ package nu.marginalia.executor.client;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.client.AbstractDynamicClient;
-import nu.marginalia.client.Context;
-import nu.marginalia.client.grpc.GrpcChannelPool;
+import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.executor.api.*;
 import nu.marginalia.executor.api.ExecutorApiGrpc.ExecutorApiBlockingStub;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
-import nu.marginalia.executor.model.transfer.TransferItem;
-import nu.marginalia.executor.model.transfer.TransferSpec;
 import nu.marginalia.executor.storage.FileStorageContent;
 import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.executor.upload.UploadDirItem;
-import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.nodecfg.model.NodeConfiguration;
-import nu.marginalia.service.descriptor.ServiceDescriptors;
+import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.discovery.ServiceRegistryIf;
+import nu.marginalia.service.discovery.property.ApiSchema;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.storage.model.FileStorageId;
 
-import io.grpc.ManagedChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ExecutorClient extends AbstractDynamicClient {
-    private final GrpcChannelPool<ExecutorApiBlockingStub> channelPool;
+public class ExecutorClient {
+    private final GrpcMultiNodeChannelPool<ExecutorApiBlockingStub> channelPool;
     private static final Logger logger = LoggerFactory.getLogger(ExecutorClient.class);
+    private final ServiceRegistryIf registry;
 
     @Inject
-    public ExecutorClient(ServiceDescriptors descriptors, NodeConfigurationService nodeConfigurationService) {
-        super(descriptors.forId(ServiceId.Executor), GsonFactory::get);
-
-        channelPool = new GrpcChannelPool<>(ServiceId.Executor) {
-            @Override
-            public ExecutorApiBlockingStub createStub(ManagedChannel channel) {
-                return ExecutorApiGrpc.newBlockingStub(channel);
-            }
-
-            @Override
-            public List<Integer> getEligibleNodes() {
-                return nodeConfigurationService.getAll()
-                        .stream()
-                        .map(NodeConfiguration::node)
-                        .toList();
-            }
-        };
+    public ExecutorClient(ServiceRegistryIf registry,
+                          GrpcChannelPoolFactory grpcChannelPoolFactory)
+    {
+        this.registry = registry;
+        this.channelPool = grpcChannelPoolFactory
+                .createMulti(ServiceId.Executor, ExecutorApiGrpc::newBlockingStub);
     }
 
     public void startFsm(int node, String actorName) {
@@ -286,22 +270,20 @@ public class ExecutorClient extends AbstractDynamicClient {
         }
     }
 
-    public void transferFile(Context context, int node, FileStorageId fileId, String path, OutputStream destOutputStream) {
-        String endpoint = "/transfer/file/%d?path=%s".formatted(fileId.id(), URLEncoder.encode(path, StandardCharsets.UTF_8));
+    public void transferFile(int node, FileStorageId fileId, String path, OutputStream destOutputStream) {
+        String uriPath = STR."/transfer/file/\{fileId.id()}";
+        String uriQuery = STR."path=\{URLEncoder.encode(path, StandardCharsets.UTF_8)}";
 
-        get(context, node, endpoint,
-                destOutputStream)
-                .blockingSubscribe();
+        var service = registry.getEndpoints(ApiSchema.REST, ServiceId.Executor, node)
+                .stream().findFirst().orElseThrow();
+
+        try (var urlStream = service.endpoint().toURL(uriPath, uriQuery).openStream()) {
+            urlStream.transferTo(destOutputStream);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
-    public TransferSpec getTransferSpec(Context context, int node, int count) {
-        return get(context, node, "/transfer/spec?count="+count, TransferSpec.class)
-                .timeout(30, TimeUnit.MINUTES)
-                .blockingFirst();
-    }
-
-    public void yieldDomain(Context context, int node, TransferItem item) {
-        post(context, node, "/transfer/yield", item).blockingSubscribe();
-    }
 
 }

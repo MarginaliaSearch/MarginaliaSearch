@@ -3,7 +3,6 @@ package nu.marginalia.io.processed;
 import blue.strategic.parquet.HydratorSupplier;
 import blue.strategic.parquet.ParquetReader;
 import nu.marginalia.model.processed.DomainLinkRecord;
-import nu.marginalia.model.processed.DomainRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

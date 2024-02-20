@@ -2,7 +2,6 @@ package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.db.DomainTypes;
 import spark.Request;

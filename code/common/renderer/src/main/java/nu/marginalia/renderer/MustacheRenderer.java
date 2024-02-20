@@ -8,10 +8,8 @@ import lombok.SneakyThrows;
 import nu.marginalia.renderer.config.HandlebarsConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 

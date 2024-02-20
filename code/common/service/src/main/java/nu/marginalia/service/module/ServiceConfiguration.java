@@ -10,15 +10,14 @@ import java.util.UUID;
  *
  * @param serviceId   - service descriptor
  * @param node - always 0 for now, for future service partitioning
- * @param host - the bind address of the service
- * @param port - main port of the service
+ * @param bindAddress - the bind address of the service
  * @param metricsPort - prometheus metrics server port
  * @param instanceUuid - unique identifier for this instance of the service
  */
 public record ServiceConfiguration(ServiceId serviceId,
                                    int node,
-                                   String host,
-                                   int port,
+                                   String bindAddress,
+                                   String externalAddress,
                                    int metricsPort,
                                    UUID instanceUuid) {
     public String serviceName() {

@@ -1,9 +1,7 @@
 package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.client.Context;
 import nu.marginalia.control.ControlRendererFactory;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.nodecfg.NodeConfigurationService;
@@ -49,17 +47,17 @@ public class SearchToBanService {
         if (Objects.equals(request.requestMethod(), "POST")) {
             executeBlacklisting(request);
 
-            return findResults(Context.fromRequest(request), request.queryParams("query"));
+            return findResults(request.queryParams("query"));
         }
 
-        return findResults(Context.fromRequest(request), request.queryParams("q"));
+        return findResults(request.queryParams("q"));
     }
 
-    private Object findResults(Context ctx, String q) {
+    private Object findResults(String q) {
         if (q == null || q.isBlank()) {
             return Map.of();
         } else {
-            return executeQuery(ctx, q);
+            return executeQuery(q);
         }
     }
 
@@ -76,8 +74,8 @@ public class SearchToBanService {
         }
     }
 
-    private Object executeQuery(Context ctx, String query) {
-        return queryClient.search(ctx, new QueryParams(
+    private Object executeQuery(String query) {
+        return queryClient.search(new QueryParams(
                 query, new QueryLimits(2, 200, 250, 8192),
                 "NONE"
         ));

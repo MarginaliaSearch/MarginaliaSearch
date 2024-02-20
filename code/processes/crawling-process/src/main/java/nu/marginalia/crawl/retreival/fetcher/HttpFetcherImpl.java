@@ -1,7 +1,6 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.SneakyThrows;
@@ -22,7 +21,6 @@ import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

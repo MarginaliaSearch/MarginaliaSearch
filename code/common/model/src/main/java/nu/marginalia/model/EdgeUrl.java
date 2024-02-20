@@ -32,7 +32,16 @@ public class EdgeUrl implements Serializable {
     }
 
     public EdgeUrl(String url) throws URISyntaxException {
-        this(new URI(urlencodeFixer(url)));
+        this(parseURI(url));
+    }
+
+    private static URI parseURI(String url) throws URISyntaxException {
+        try {
+            return new URI(urlencodeFixer(url));
+        }
+        catch (URISyntaxException ex) {
+            throw new URISyntaxException(STR."Failed to parse URI '\{url}'", ex.getMessage());
+        }
     }
 
     public static Optional<EdgeUrl> parse(@Nullable String url) {

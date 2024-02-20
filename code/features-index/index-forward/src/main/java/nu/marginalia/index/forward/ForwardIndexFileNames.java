@@ -19,7 +19,7 @@ public class ForwardIndexFileNames {
     public enum FileVersion {
         CURRENT,
         NEXT
-    };
+    }
 
     public enum FileIdentifier {
         DOC_DATA,
