@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.service.MainClass;
+import nu.marginalia.service.ServiceDiscoveryModule;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
@@ -25,6 +26,7 @@ public class ExplorerMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new ServiceConfigurationModule(ServiceId.Explorer),
+                new ServiceDiscoveryModule(),
                 new ExplorerModule(),
                 new DatabaseModule(false)
         );

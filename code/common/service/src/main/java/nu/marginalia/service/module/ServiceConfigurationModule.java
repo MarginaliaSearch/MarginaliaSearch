@@ -2,13 +2,7 @@ package nu.marginalia.service.module;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import nu.marginalia.service.discovery.FixedServiceRegistry;
-import nu.marginalia.service.discovery.ServiceRegistryIf;
-import nu.marginalia.service.discovery.ZkServiceRegistry;
 import nu.marginalia.service.id.ServiceId;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +32,6 @@ public class ServiceConfigurationModule extends AbstractModule {
 
         bind(Integer.class).annotatedWith(Names.named("wmsa-system-node")).toInstance(node);
         bind(ServiceConfiguration.class).toInstance(configObject);
-
-        if (Boolean.getBoolean("system.useZookeeper")) {
-            CuratorFramework client = CuratorFrameworkFactory
-                    .newClient(System.getProperty("zookeeper-hosts", "zookeeper:2181"),
-                            new ExponentialBackoffRetry(100, 10, 1000));
-
-            bind(CuratorFramework.class).toInstance(client);
-            bind(ServiceRegistryIf.class).to(ZkServiceRegistry.class);
-        }
-        else {
-            bind(ServiceRegistryIf.class).to(FixedServiceRegistry.class);
-        }
     }
 
     private int getPrometheusPort() {
