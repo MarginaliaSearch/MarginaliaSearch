@@ -43,22 +43,25 @@ public class GrpcMultiNodeChannelPool<STUB> {
 
         // Warm up the pool to reduce latency for the initial request
         for (var node : nodeConfigurationWatcher.getQueryNodes()) {
-            apiForNode(node);
+            getPoolForNode(node);
         }
+    }
+
+    private GrpcSingleNodeChannelPool<STUB> getPoolForNode(int node) {
+        return pools.computeIfAbsent(node, _ ->
+                new GrpcSingleNodeChannelPool<>(
+                        serviceRegistryIf,
+                        serviceId,
+                        new NodeSelectionStrategy.Just(node),
+                        channelConstructor,
+                        stubConstructor));
     }
 
 
 
     /** Get an API stub for the given node */
     public STUB apiForNode(int node) {
-        return pools.computeIfAbsent(node, _ ->
-            new GrpcSingleNodeChannelPool<>(
-                    serviceRegistryIf,
-                    serviceId,
-                    new NodeSelectionStrategy.Just(node),
-                    channelConstructor,
-                    stubConstructor)
-        ).api();
+        return pools.computeIfAbsent(node, this::getPoolForNode).api();
     }
 
 
