@@ -44,7 +44,6 @@ dependencies {
     implementation project(':code:functions:domain-info')
     implementation project(':code:functions:domain-info:api')
 
-    implementation project(':code:api:query-api')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:common:model')

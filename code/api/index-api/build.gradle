@@ -1,7 +1,5 @@
 plugins {
     id 'java'
-
-    id "com.google.protobuf" version "0.9.4"
     id 'jvm-test-suite'
 }
 
@@ -11,22 +9,14 @@ java {
     }
 }
 
-sourceSets {
-    main {
-        proto {
-            srcDir 'src/main/protobuf'
-        }
-    }
-}
-
-apply from: "$rootProject.projectDir/protobuf.gradle"
-
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service-discovery')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:features-index:index-query')
+
+    implementation project(':code:functions:search-query:api')
 
     implementation libs.bundles.slf4j
 

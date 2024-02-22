@@ -4,18 +4,18 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
-import nu.marginalia.index.api.*;
-import nu.marginalia.index.api.IndexApiGrpc.IndexApiImplBase;
-import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.client.model.results.ResultRankingParameters;
-import nu.marginalia.index.client.model.results.SearchResultItem;
-import nu.marginalia.index.client.model.results.ResultRankingContext;
-import nu.marginalia.index.client.model.results.SearchResultSet;
-import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.SearchResultSet;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
 import nu.marginalia.index.query.IndexQueryPriority;
@@ -41,7 +41,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
-public class IndexQueryService extends IndexApiImplBase {
+public class IndexQueryService extends IndexApiGrpc.IndexApiImplBase {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -122,8 +122,8 @@ public class IndexQueryService extends IndexApiImplBase {
 
     // GRPC endpoint
     @SneakyThrows
-    public void query(nu.marginalia.index.api.RpcIndexQuery request,
-                      io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcDecoratedResultItem> responseObserver) {
+    public void query(RpcIndexQuery request,
+                      StreamObserver<RpcDecoratedResultItem> responseObserver) {
 
         try {
             var params = new SearchParameters(request, getSearchSet(request));

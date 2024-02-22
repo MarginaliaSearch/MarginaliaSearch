@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.functions.domainlinks.AggregateDomainLinksService;
+import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;

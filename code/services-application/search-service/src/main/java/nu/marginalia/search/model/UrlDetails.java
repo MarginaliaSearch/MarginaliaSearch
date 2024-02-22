@@ -1,8 +1,8 @@
 package nu.marginalia.search.model;
 
 import lombok.*;
-import nu.marginalia.index.client.model.results.SearchResultItem;
-import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;

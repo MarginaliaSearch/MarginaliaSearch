@@ -1,7 +1,8 @@
 package nu.marginalia.index.client;
 
-import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.client.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.IndexProtobufCodec;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import org.junit.jupiter.api.Test;

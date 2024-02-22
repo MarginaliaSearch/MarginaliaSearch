@@ -1,6 +1,7 @@
 package nu.marginalia.ranking.factors;
 
-import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+
+import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 
 import java.util.List;
 

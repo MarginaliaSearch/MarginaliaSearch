@@ -4,7 +4,7 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
+import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.lsh.EasyLSH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

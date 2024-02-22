@@ -1,11 +1,11 @@
 package nu.marginalia.index.svc;
 
 import gnu.trove.set.hash.TLongHashSet;
-import nu.marginalia.index.api.RpcIndexQuery;
-import nu.marginalia.index.client.IndexProtobufCodec;
-import nu.marginalia.index.client.model.query.SearchSpecification;
-import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.client.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
 import nu.marginalia.index.query.IndexQuery;

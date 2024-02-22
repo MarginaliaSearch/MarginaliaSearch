@@ -1,6 +1,6 @@
 package nu.marginalia.search;
 
-import nu.marginalia.query.model.QueryResponse;
+import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.search.model.ClusteredUrlDetails;
 import nu.marginalia.search.model.UrlDetails;
 

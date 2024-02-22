@@ -5,13 +5,12 @@ import com.google.inject.Singleton;
 import nu.marginalia.api.model.ApiSearchResult;
 import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
-import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
-import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
+import nu.marginalia.api.searchquery.model.results.*;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.query.client.QueryClient;
-import nu.marginalia.query.model.QueryParams;
 
 import java.util.ArrayList;
 import java.util.Comparator;

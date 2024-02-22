@@ -2,15 +2,15 @@ package nu.marginalia.index.results;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.set.hash.TLongHashSet;
-import nu.marginalia.index.client.model.results.SearchResultPreliminaryScore;
-import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.model.results.SearchResultPreliminaryScore;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.client.model.results.SearchResultItem;
-import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
-import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.IndexQueryParams;
 import nu.marginalia.ranking.ResultValuator;
 

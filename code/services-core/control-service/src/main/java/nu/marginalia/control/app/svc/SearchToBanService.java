@@ -1,12 +1,12 @@
 package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
+import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.query.client.QueryClient;
-import nu.marginalia.query.model.QueryParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;

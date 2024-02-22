@@ -2,7 +2,7 @@ package nu.marginalia.index.results;
 
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.hash.TLongIntHashMap;
-import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 
 public class IndexResultDomainDeduplicator {
     final TLongIntMap resultsByDomainId = CachedObjects.getMap();

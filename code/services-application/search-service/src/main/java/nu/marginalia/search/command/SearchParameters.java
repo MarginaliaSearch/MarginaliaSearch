@@ -1,7 +1,7 @@
 package nu.marginalia.search.command;
 
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.index.client.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.search.model.SearchProfile;

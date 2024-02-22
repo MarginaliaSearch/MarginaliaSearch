@@ -1,8 +1,8 @@
 package nu.marginalia.ranking.factors;
 
-import nu.marginalia.index.client.model.results.Bm25Parameters;
-import nu.marginalia.index.client.model.results.ResultRankingContext;
-import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
+import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.ranking.ResultKeywordSet;
 

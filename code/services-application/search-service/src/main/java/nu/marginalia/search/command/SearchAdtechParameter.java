@@ -1,6 +1,6 @@
 package nu.marginalia.search.command;
 
-import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;

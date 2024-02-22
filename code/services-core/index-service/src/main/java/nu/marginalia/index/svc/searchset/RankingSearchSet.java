@@ -1,7 +1,6 @@
 package nu.marginalia.index.svc.searchset;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.searchset.SearchSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,7 +19,6 @@ dependencies {
     implementation libs.bundles.grpc
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil

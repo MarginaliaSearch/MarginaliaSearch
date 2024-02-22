@@ -7,7 +7,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
-import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;

@@ -1,8 +1,8 @@
 package nu.marginalia.ranking;
 
-import nu.marginalia.index.client.model.results.ResultRankingContext;
-import nu.marginalia.index.client.model.results.ResultRankingParameters;
-import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentFlags;

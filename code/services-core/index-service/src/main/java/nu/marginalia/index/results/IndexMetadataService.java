@@ -6,7 +6,7 @@ import gnu.trove.set.hash.TLongHashSet;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.SearchTermsService;
 import nu.marginalia.model.idx.WordMetadata;

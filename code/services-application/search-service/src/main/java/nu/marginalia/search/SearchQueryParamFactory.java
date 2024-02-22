@@ -1,12 +1,12 @@
 package nu.marginalia.search;
 
-import nu.marginalia.index.client.model.query.SearchSetIdentifier;
-import nu.marginalia.index.client.model.query.SearchSubquery;
-import nu.marginalia.index.client.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
+import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.query.model.QueryParams;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
