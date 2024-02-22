@@ -1,30 +1,41 @@
 # Index
 
-These are components that offer functionality for the [index-service](../../services-core/index-service).
+This module contains the components that make up the search index.
+
+It exposes an API for querying the index, and contains the logic 
+for ranking search results.  It does not parse the query, that is
+the responsibility of the [search-query](../functions/search-query) module.
 
 ## Indexes
 
 There are two indexes with accompanying tools for constructing them.
 
-* [index-reverse](index-reverse/) is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
+* [index-reverse](reverse-index/) is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
 
-* [index-forward](index-forward/) is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
+* [index-forward](forward-index/) is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
 
-These indices rely heavily on the [libraries/btree](../../libraries/btree) and [libraries/array](../../libraries/array) components.
+Additionally, the [index-journal](index-journal/) contains code for constructing a journal of the index, which is used to keep the index up to date.
 
-## Algorithms
+These indices rely heavily on the [libraries/btree](../libraries/btree) and [libraries/array](../libraries/array) components.
 
-* [domain-ranking](domain-ranking/) contains domain ranking algorithms.
-* [result-ranking](result-ranking/) contains logic for ranking search results by relevance.
+---
 
-# Libraries
+# Result Ranking
 
-* [index-query](index-query/) contains structures for evaluating search queries.
-* [index-journal](index-journal/) contains tools for writing and reading index data.
+The module is also responsible for ranking search results, and contains various heuristics
+for deciding which search results are important with regard to a query. In broad strokes [BM-25](https://nlp.stanford.edu/IR-book/html/htmledition/okapi-bm25-a-non-binary-model-1.html)
+is used, with a number of additional bonuses and penalties to rank the appropriate search
+results higher.
+
+## Central Classes
+
+* [ResultValuator](src/main/java/nu/marginalia/ranking/results/ResultValuator.java)
+
+---
 
 # Domain Ranking
 
-Contains domain ranking algorithms.  The domain ranking algorithms are based on
+The module contains domain ranking algorithms.  The domain ranking algorithms are based on
 the JGraphT library.
 
 Two principal algorithms are available, the standard PageRank algorithm,
@@ -42,14 +53,14 @@ for creating a ranking algorithm that is focused on a particular segment of the 
 
 ## Central Classes
 
-* [PageRankDomainRanker](src/main/java/nu/marginalia/ranking/PageRankDomainRanker.java) - Ranks domains using the
+* [PageRankDomainRanker](src/main/java/nu/marginalia/ranking/domains/PageRankDomainRanker.java) - Ranks domains using the
   PageRank or Personalized PageRank algorithm depending on whether a list of influence domains is provided.
 
 ### Data sources
 
-* [LinkGraphSource](src/main/java/nu/marginalia/ranking/data/LinkGraphSource.java) - fetches the link graph
-* [InvertedLinkGraphSource](src/main/java/nu/marginalia/ranking/data/InvertedLinkGraphSource.java) - fetches the inverted link graph
-* [SimilarityGraphSource](src/main/java/nu/marginalia/ranking/data/SimilarityGraphSource.java) - fetches the similarity graph from the database
+* [LinkGraphSource](src/main/java/nu/marginalia/ranking/domains/data/LinkGraphSource.java) - fetches the link graph
+* [InvertedLinkGraphSource](src/main/java/nu/marginalia/ranking/domains/data/InvertedLinkGraphSource.java) - fetches the inverted link graph
+* [SimilarityGraphSource](src/main/java/nu/marginalia/ranking/domains/data/SimilarityGraphSource.java) - fetches the similarity graph from the database
 
 Note that the similarity graph needs to be precomputed and stored in the database for
 the similarity graph source to be available.
@@ -57,14 +68,3 @@ the similarity graph source to be available.
 ## Useful Resources
 
 * [The PageRank Citation Ranking: Bringing Order to the Web](http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf)
-
-# Result Ranking
-
-Contains various heuristics for deciding which search results are important
-with regard to a query. In broad strokes [BM-25](https://nlp.stanford.edu/IR-book/html/htmledition/okapi-bm25-a-non-binary-model-1.html)
-is used, with a number of additional bonuses and penalties to rank the appropriate search
-results higher.
-
-## Central Classes
-
-* [ResultValuator](src/main/java/nu/marginalia/ranking/ResultValuator.java)
