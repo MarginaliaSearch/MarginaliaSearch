@@ -65,8 +65,6 @@ include 'code:features-crawl:crawl-blocklist'
 include 'code:features-crawl:link-parser'
 include 'code:features-crawl:content-type'
 
-
-include 'code:api:index-api'
 include 'code:api:process-mqapi'
 include 'code:api:executor-api'
 

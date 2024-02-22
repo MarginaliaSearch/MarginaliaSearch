@@ -28,11 +28,22 @@ services:
 
 ```java
 // Register one or more services
-registry.registerService(ApiSchema.GRPC,
-                         ServiceId.Test,  
-                         nodeId, 
-                         instanceUUID, //must be unique to the runtime
-                         "127.0.0.1"); // bind-address
+serviceRegistry.registerService(
+        ServiceKey.forRest(serviceId, nodeId),
+        instanceUuid, // unique
+        externalAddress); // bind-address
+
+// Non-partitioned GRPC service
+serviceRegistry.registerService(
+        ServiceKey.forServiceDescriptor(descriptor, ServicePartition.any()),
+        instanceUuid, 
+        externalAddress);
+
+// Partitioned GRPC service
+serviceRegistry.registerService(
+        ServiceKey.forServiceDescriptor(descriptor, ServicePartition.partition(5)),
+        instanceUuid,
+        externalAddress);
 // (+ any other services)
 ```
 
@@ -40,9 +51,7 @@ Then, the caller must announce their instance.  Before this is done,
 the service is not discoverable.
 
 ```java
-registry.announceInstance(ServiceId.Test,
-                          nodeId,
-                          instanceUUID);
+registry.announceInstance(instanceUUID);
 ```
 
 All of this is done automatically by the `Service` base class
@@ -51,15 +60,18 @@ in the [service](../service/) module.
 To discover a service, the caller can query the registry:
 
 ```java
-Set<InstanceAddress<?>> endpoints = registry.getEndpoints(ApiSchema.GRPC, ServiceId.Test, nodeId);
-
-for (var endpoint : endpoints) {
-    System.out.println(endpoint.getHost() + ":" + endpoint.getPort());
-}
+Set<InstanceAddress> endpoints = registry.getEndpoints(serviceKey);
 ```
 
 It's also possible to subscribe to changes in the registry, so that
 the caller can be notified when a service comes or goes, with `registry.registerMonitor()`.
+
+However the `GrpcChannelPoolFactory` is a more convenient way to access the services,
+it will let the caller create a pool of channels to the services, and manage their 
+lifecycle, listen to lifecycle notifications and so on.
+
+The ChannelPools exist in two flavors, one for partitioned services, and one for non-partitioned services.
+
 
 ### Central Classes
 
