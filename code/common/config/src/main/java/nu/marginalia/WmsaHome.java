@@ -5,7 +5,9 @@ import nu.marginalia.service.ServiceHomeNotConfiguredException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class WmsaHome {
@@ -32,20 +34,30 @@ public class WmsaHome {
             "/wmsa"
         };
 
-        String retStr = Stream.of(possibleLocations)
+        Optional<String> retStr = Stream.of(possibleLocations)
                 .filter(Objects::nonNull)
                 .map(Path::of)
                 .filter(Files::isDirectory)
                 .map(Path::toString)
-                .findFirst()
-                .orElseThrow(() ->
-                        new ServiceHomeNotConfiguredException("""
+                .findFirst();
+
+        if (retStr.isEmpty()) {
+            // Check if we are running in a test environment
+
+            var testRoot = Stream.iterate(Paths.get("").toAbsolutePath(), f -> f != null && Files.exists(f), Path::getParent)
+                    .filter(p -> Files.exists(p.resolve("run/env")))
+                    .filter(p -> Files.exists(p.resolve("run/setup.sh")))
+                    .map(p -> p.resolve("run"))
+                    .findAny();
+
+            return testRoot.orElseThrow(() -> new ServiceHomeNotConfiguredException("""
                             Could not find $WMSA_HOME, either set environment
                             variable, the 'system.homePath' property,
                             or ensure either /wmssa or /var/lib/wmsa exists
                             """));
+        }
 
-        var ret = Path.of(retStr);
+        var ret = Path.of(retStr.get());
 
         if (!Files.isDirectory(ret.resolve("model"))) {
             throw new ServiceHomeNotConfiguredException("You need to run 'run/setup.sh' to download models to run/ before this will work!");

@@ -37,11 +37,11 @@ public record ServiceEndpoint(String host, int port) {
         }
     }
 
-    public InstanceAddress asInstance(UUID instance, long cxTime) {
-        return new InstanceAddress(this, instance, cxTime);
+    public InstanceAddress asInstance(UUID instance) {
+        return new InstanceAddress(this, instance);
     }
 
-    public record InstanceAddress(ServiceEndpoint endpoint, UUID instance, long cxTime) {
+    public record InstanceAddress(ServiceEndpoint endpoint, UUID instance) {
         public String host() {
             return endpoint.host();
         }

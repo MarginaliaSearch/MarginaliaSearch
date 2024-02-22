@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.db.DomainBlacklist;
+import nu.marginalia.functions.index.api.IndexClient;
 import nu.marginalia.functions.searchquery.svc.QueryFactory;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -33,22 +34,18 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
-    private final GrpcMultiNodeChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
 
     private final QueryFactory queryFactory;
     private final DomainBlacklist blacklist;
-    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-
+    private final IndexClient indexClient;
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
-                            GrpcChannelPoolFactory channelPoolFactory,
-                            DomainBlacklist blacklist)
+                            DomainBlacklist blacklist,
+                            IndexClient indexClient)
     {
         this.queryFactory = queryFactory;
         this.blacklist = blacklist;
-        this.channelPool = channelPoolFactory.createMulti(
-                ServiceKey.forGrpcApi(IndexApiGrpc.class, ServicePartition.multi()),
-                IndexApiGrpc::newBlockingStub);
+        this.indexClient = indexClient;
     }
 
     public void query(RpcQsQuery request, StreamObserver<RpcQsResponse> responseObserver)
@@ -84,25 +81,6 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
-    @SneakyThrows
-    List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
-        var futures =
-            channelPool.call(IndexApiGrpc.IndexApiBlockingStub::query)
-                .async(executor)
-                .runEach(indexRequest);
-        List<RpcDecoratedResultItem> results = new ArrayList<>();
-        for (var future : futures) {
-            try {
-                future.get().forEachRemaining(results::add);
-            }
-            catch (Exception e) {
-                logger.error("Downstream exception", e);
-            }
-        }
-        results.sort(comparator);
-        results.removeIf(this::isBlacklisted);
-        return results.subList(0, Math.min(totalSize, results.size()));
-    }
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {
         return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));
@@ -117,4 +95,14 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                 .stream().map(QueryProtobufCodec::convertQueryResult)
                 .toList();
     }
+
+    @SneakyThrows
+    List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
+        var results = indexClient.executeQueries(indexRequest);
+
+        results.sort(comparator);
+        results.removeIf(this::isBlacklisted);
+        return results.subList(0, Math.min(totalSize, results.size()));
+    }
+
 }

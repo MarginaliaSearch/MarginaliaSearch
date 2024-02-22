@@ -15,13 +15,6 @@ import java.util.List;
 
 public class QueryService extends Service {
 
-    private static final Histogram wmsa_qs_query_time_rest = Histogram.build()
-            .name("wmsa_qs_query_time_rest")
-            .linearBuckets(0.05, 0.05, 15)
-            .help("QS-side query time (REST endpoint)")
-            .register();
-
-
     @SneakyThrows
     @Inject
     public QueryService(BaseServiceParams params,

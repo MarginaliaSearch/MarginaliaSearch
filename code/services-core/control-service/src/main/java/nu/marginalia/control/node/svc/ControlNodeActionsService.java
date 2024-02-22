@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.index.client.IndexClient;
+import nu.marginalia.functions.index.api.IndexMqClient;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -26,7 +26,7 @@ import java.util.Set;
 @Singleton
 public class ControlNodeActionsService {
     private static final Logger logger = LoggerFactory.getLogger(ControlNodeActionsService.class);
-    private final IndexClient indexClient;
+    private final IndexMqClient indexMqClient;
     private final RedirectControl redirectControl;
     private final FileStorageService fileStorageService;
     private final ServiceEventLog eventLog;
@@ -34,14 +34,14 @@ public class ControlNodeActionsService {
 
     @Inject
     public ControlNodeActionsService(ExecutorClient executorClient,
-                                     IndexClient indexClient,
+                                     IndexMqClient indexMqClient,
                                      RedirectControl redirectControl,
                                      FileStorageService fileStorageService,
                                      ServiceEventLog eventLog)
     {
         this.executorClient = executorClient;
 
-        this.indexClient = indexClient;
+        this.indexMqClient = indexMqClient;
         this.redirectControl = redirectControl;
         this.fileStorageService = fileStorageService;
         this.eventLog = eventLog;
@@ -184,7 +184,7 @@ public class ControlNodeActionsService {
     }
 
     public Object triggerRepartition(Request request, Response response) throws Exception {
-        indexClient.triggerRepartition(Integer.parseInt(request.params("node")));
+        indexMqClient.triggerRepartition(Integer.parseInt(request.params("node")));
 
         return "";
     }

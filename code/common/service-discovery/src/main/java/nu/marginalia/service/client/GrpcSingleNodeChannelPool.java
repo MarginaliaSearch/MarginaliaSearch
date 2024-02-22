@@ -74,7 +74,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         return true;
     }
 
-    private class ConnectionHolder implements Comparable<ConnectionHolder> {
+    private class ConnectionHolder {
         private final AtomicReference<ManagedChannel> channel = new AtomicReference<>();
         private final InstanceAddress address;
 
@@ -125,12 +125,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         @Override
         public int hashCode() {
             return Objects.hash(address);
-        }
-
-        @Override
-        public int compareTo(@NotNull GrpcSingleNodeChannelPool<STUB>.ConnectionHolder o) {
-
-            return -Long.compare(address.cxTime(), o.address.cxTime()); // Reverse order
         }
     }
 

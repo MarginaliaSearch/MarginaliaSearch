@@ -1,26 +1,22 @@
 package nu.marginalia.index;
 
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.functions.domainlinks.PartitionDomainLinksService;
+import nu.marginalia.functions.index.IndexQueryGrpcService;
+import nu.marginalia.functions.index.index.StatefulIndex;
 import nu.marginalia.linkdb.dlinks.DomainLinkDb;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.index.client.IndexMqEndpoints;
-import nu.marginalia.index.index.SearchIndex;
-import nu.marginalia.index.svc.IndexOpsService;
-import nu.marginalia.index.svc.IndexQueryService;
+import nu.marginalia.functions.index.api.IndexMqEndpoints;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
-import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
 import nu.marginalia.service.server.mq.MqRequest;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Spark;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +31,7 @@ public class IndexService extends Service {
     @NotNull
     private final Initialization init;
     private final IndexOpsService opsService;
-    private final SearchIndex searchIndex;
+    private final StatefulIndex statefulIndex;
     private final FileStorageService fileStorageService;
     private final DocumentDbReader documentDbReader;
 
@@ -47,37 +43,28 @@ public class IndexService extends Service {
     @Inject
     public IndexService(BaseServiceParams params,
                         IndexOpsService opsService,
-                        IndexQueryService indexQueryService,
-                        SearchIndex searchIndex,
+                        IndexQueryGrpcService indexQueryService,
+                        StatefulIndex statefulIndex,
                         FileStorageService fileStorageService,
                         DocumentDbReader documentDbReader,
                         DomainLinkDb domainLinkDb,
-
                         PartitionDomainLinksService partitionDomainLinksService,
-
                         ServiceEventLog eventLog)
     {
         super(params,
                 ServicePartition.partition(params.configuration.node()),
-                List.of(indexQueryService, partitionDomainLinksService));
+                List.of(indexQueryService,
+                        partitionDomainLinksService)
+        );
 
         this.opsService = opsService;
-        this.searchIndex = searchIndex;
+        this.statefulIndex = statefulIndex;
         this.fileStorageService = fileStorageService;
         this.documentDbReader = documentDbReader;
         this.domainLinkDb = domainLinkDb;
         this.eventLog = eventLog;
 
-        final Gson gson = GsonFactory.get();
-
         this.init = params.initialization;
-
-        Spark.get("/public/debug/docmeta", indexQueryService::debugEndpointDocMetadata, gson::toJson);
-        Spark.get("/public/debug/wordmeta", indexQueryService::debugEndpointWordMetadata, gson::toJson);
-        Spark.get("/public/debug/word", indexQueryService::debugEndpointWordEncoding, gson::toJson);
-
-        Spark.post("/ops/repartition", opsService::repartitionEndpoint);
-        Spark.post("/ops/reindex", opsService::reindexEndpoint);
 
         Thread.ofPlatform().name("initialize-index").start(this::initialize);
     }
@@ -141,7 +128,7 @@ public class IndexService extends Service {
     public void initialize() {
         if (!initialized) {
             init.waitReady();
-            searchIndex.init();
+            statefulIndex.init();
             initialized = true;
         }
     }

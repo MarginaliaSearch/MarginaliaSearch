@@ -27,10 +27,10 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:libraries:message-queue')
 
-    implementation project(':code:features-index:index-forward')
-    implementation project(':code:features-index:index-reverse')
-    implementation project(':code:features-index:index-journal')
-    implementation project(':code:features-index:domain-ranking')
+    implementation project(':code:functions:index:forward-index')
+    implementation project(':code:functions:index:reverse-index')
+    implementation project(':code:functions:index:index-journal')
+    implementation project(':code:functions:index:domain-ranking')
 
     implementation libs.bundles.slf4j
     implementation libs.guice

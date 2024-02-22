@@ -191,12 +191,10 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                         .getData()
                         .forPath(path);
 
-                long cxTime = curatorFramework.checkExists().forPath(path).getMzxid();
-
                 String hostAndPort = new String(data);
                 var address = ServiceEndpoint
                         .parse(hostAndPort)
-                        .asInstance(UUID.fromString(uuid), cxTime);
+                        .asInstance(UUID.fromString(uuid));
 
                 ret.add(address);
             }
@@ -242,7 +240,7 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
 
     /* Exposed for tests */
     public synchronized void shutDown() {
-        if (!stopped)
+        if (stopped)
             return;
 
         stopped = true;

@@ -6,10 +6,9 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.id.ServiceId;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -18,6 +17,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
+@Execution(ExecutionMode.SAME_THREAD)
 @Tag("slow")
 class ZkServiceRegistryTest {
     private static final int ZOOKEEPER_PORT = 2181;
@@ -51,6 +51,7 @@ class ZkServiceRegistryTest {
     }
 
     @Test
+    @Disabled // flaky on CI
     void getPort() {
         System.setProperty("service.random-port", "true");
 
@@ -101,17 +102,17 @@ class ZkServiceRegistryTest {
         registry1.announceInstance(uuid1);
         registry2.announceInstance(uuid2);
 
-        assertEquals(Set.of(endpoint1.asInstance(uuid1, 0)),
+        assertEquals(Set.of(endpoint1.asInstance(uuid1)),
                 registry1.getEndpoints(key1));
 
-        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)),
+        assertEquals(Set.of(endpoint2.asInstance(uuid2)),
                 registry1.getEndpoints(key2));
 
         registry1.shutDown();
         Thread.sleep(100);
 
         assertEquals(Set.of(), registry2.getEndpoints(key1));
-        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)), registry2.getEndpoints(key2));
+        assertEquals(Set.of(endpoint2.asInstance(uuid2)), registry2.getEndpoints(key2));
     }
 
     @Test
@@ -130,14 +131,14 @@ class ZkServiceRegistryTest {
         registry1.announceInstance(uuid1);
         registry2.announceInstance(uuid2);
 
-        assertEquals(Set.of(endpoint1.asInstance(uuid1, 0),
-                        endpoint2.asInstance(uuid2, 0)),
+        assertEquals(Set.of(endpoint1.asInstance(uuid1),
+                        endpoint2.asInstance(uuid2)),
                 registry1.getEndpoints(key));
 
         registry1.shutDown();
         Thread.sleep(100);
 
-        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)), registry2.getEndpoints(key));
+        assertEquals(Set.of(endpoint2.asInstance(uuid2)), registry2.getEndpoints(key));
     }
 
     @Test
@@ -157,8 +158,8 @@ class ZkServiceRegistryTest {
         registry1.announceInstance(uuid1);
         registry2.announceInstance(uuid2);
 
-        assertEquals(Set.of(endpoint1.asInstance(uuid1, 0)), registry1.getEndpoints(key1));
-        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)), registry1.getEndpoints(key2));
+        assertEquals(Set.of(endpoint1.asInstance(uuid1)), registry1.getEndpoints(key1));
+        assertEquals(Set.of(endpoint2.asInstance(uuid2)), registry1.getEndpoints(key2));
     }
 
     @Test

@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation project(':code:libraries:array')
+    implementation project(':code:libraries:btree')
+    implementation project(':code:functions:index:domain-ranking')
+    implementation project(':code:functions:index:query')
+    implementation project(':code:functions:index:index-journal')
+    implementation project(':code:common:model')
+    implementation project(':code:common:process')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.prometheus
+    implementation libs.roaringbitmap
+    implementation libs.fastutil
+    implementation libs.trove
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}

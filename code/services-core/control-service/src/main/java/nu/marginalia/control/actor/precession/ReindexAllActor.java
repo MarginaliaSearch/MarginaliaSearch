@@ -8,7 +8,7 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.control.actor.PrecessionNodes;
-import nu.marginalia.index.client.IndexClient;
+import nu.marginalia.functions.index.api.IndexMqClient;
 import nu.marginalia.mq.persistence.MqPersistence;
 
 import java.sql.SQLException;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class ReindexAllActor extends RecordActorPrototype {
 
     private final MqPersistence persistence;
-    private final IndexClient indexClient;
+    private final IndexMqClient indexMqClient;
     private final PrecessionNodes precessionNodes;
 
 
@@ -42,7 +42,7 @@ public class ReindexAllActor extends RecordActorPrototype {
                 if (first.isEmpty()) yield new End();
                 else yield new ReindexNode(first.getAsInt());
             }
-            case ReindexNode(int node, long msgId) when msgId < 0 -> new ReindexNode(node, indexClient.triggerRepartition(node));
+            case ReindexNode(int node, long msgId) when msgId < 0 -> new ReindexNode(node, indexMqClient.triggerRepartition(node));
             case ReindexNode(int node, long msgId) -> {
                 while (!isMessageTerminal(msgId)) {
                     TimeUnit.SECONDS.sleep(10);
@@ -66,12 +66,12 @@ public class ReindexAllActor extends RecordActorPrototype {
     @Inject
     public ReindexAllActor(Gson gson,
                            MqPersistence persistence,
-                           IndexClient indexClient,
+                           IndexMqClient indexMqClient,
                            PrecessionNodes precessionNodes)
     {
         super(gson);
         this.persistence = persistence;
-        this.indexClient = indexClient;
+        this.indexMqClient = indexMqClient;
         this.precessionNodes = precessionNodes;
     }
 

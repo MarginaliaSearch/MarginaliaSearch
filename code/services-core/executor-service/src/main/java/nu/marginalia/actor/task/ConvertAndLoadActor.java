@@ -19,8 +19,8 @@ import nu.marginalia.svc.BackupService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
-import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.index.client.IndexMqEndpoints;
+import nu.marginalia.functions.index.api.IndexMqClient;
+import nu.marginalia.functions.index.api.IndexMqEndpoints;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.converting.ConvertRequest;
@@ -196,7 +196,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     public ConvertAndLoadActor(ActorProcessWatcher processWatcher,
                                ProcessOutboxes processOutboxes,
                                FileStorageService storageService,
-                               IndexClient indexClient,
+                               IndexMqClient indexMqClient,
                                BackupService backupService,
                                Gson gson,
                                NodeConfigurationService nodeConfigurationService,
@@ -204,7 +204,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     {
         super(gson);
         this.processWatcher = processWatcher;
-        this.indexOutbox = indexClient.outbox();
+        this.indexOutbox = indexMqClient.outbox();
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
         this.mqIndexConstructorOutbox = processOutboxes.getIndexConstructorOutbox();

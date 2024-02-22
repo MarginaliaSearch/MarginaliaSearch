@@ -27,7 +27,7 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:libraries:big-string')
     implementation project(':code:libraries:blocking-thread-pool')
-    implementation project(':code:api:index-api')
+    implementation project(':code:functions:index:api')
     implementation project(':code:api:process-mqapi')
     implementation project(':code:common:service-discovery')
     implementation project(':code:libraries:message-queue')
