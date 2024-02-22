@@ -1,10 +1,10 @@
 package nu.marginalia.executor;
 
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.executor.svc.TransferService;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
 import nu.marginalia.service.server.mq.MqRequest;
@@ -16,10 +16,7 @@ import java.util.List;
 
 // Weird name for this one to not have clashes with java.util.concurrent.ExecutorService
 public class ExecutorSvc extends Service {
-    private final BaseServiceParams params;
-    private final Gson gson;
     private final ExecutorActorControlService actorControlService;
-    private final TransferService transferService;
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutorSvc.class);
 
@@ -28,14 +25,12 @@ public class ExecutorSvc extends Service {
     public ExecutorSvc(BaseServiceParams params,
                        ExecutorActorControlService actorControlService,
                        ExecutorGrpcService executorGrpcService,
-                       Gson gson,
                        TransferService transferService)
     {
-        super(params, List.of(executorGrpcService));
-        this.params = params;
-        this.gson = gson;
+        super(params,
+                ServicePartition.partition(params.configuration.node()),
+                List.of(executorGrpcService));
         this.actorControlService = actorControlService;
-        this.transferService = transferService;
 
         Spark.get("/transfer/file/:fid", transferService::transferFile);
     }

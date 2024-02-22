@@ -1,6 +1,8 @@
 package nu.marginalia.service.discovery;
 
-import nu.marginalia.service.discovery.property.ApiSchema;
+import nu.marginalia.api.math.MathApiGrpc;
+import nu.marginalia.service.discovery.property.ServiceKey;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.id.ServiceId;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -13,7 +15,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.*;
 
-import static nu.marginalia.service.discovery.property.ServiceEndpoint.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
@@ -58,15 +59,18 @@ class ZkServiceRegistryTest {
 
         List<Integer> ports = new ArrayList<>();
         Set<Integer> portsSet = new HashSet<>();
+
+        var key = ServiceKey.forRest(ServiceId.Search, 0);
+
         for (int i = 0; i < 500; i++) {
-            int port = registry1.requestPort("127.0.0.1", ApiSchema.REST, ServiceId.Search, 0);
+            int port = registry1.requestPort("127.0.0.1", key);
             ports.add(port);
 
             // Ensure we get unique ports
             assertTrue(portsSet.add(port));
         }
         for (int i = 0; i < 50; i++) {
-            int port = registry2.requestPort("127.0.0.1", ApiSchema.REST, ServiceId.Search, 0);
+            int port = registry2.requestPort("127.0.0.1", key);
             ports.add(port);
 
             // Ensure we get unique ports
@@ -75,39 +79,86 @@ class ZkServiceRegistryTest {
         registry1.shutDown();
         for (int i = 0; i < 500; i++) {
             // Verify we can reclaim ports
-            ports.add(registry2.requestPort("127.0.0.1", ApiSchema.REST, ServiceId.Search, 0));
+            ports.add(registry2.requestPort("127.0.0.1", key));
         }
         assertEquals(1050, ports.size());
     }
 
     @Test
-    void getInstances() throws Exception {
+    void getInstancesRestgRPC() throws Exception {
         var uuid1 = UUID.randomUUID();
         var uuid2 = UUID.randomUUID();
 
         var registry1 = createRegistry();
         var registry2 = createRegistry();
 
-        var endpoint1 = (RestEndpoint) registry1.registerService(ApiSchema.REST, ServiceId.Search, 0, uuid1, "127.0.0.1");
-        var endpoint2 = (GrpcEndpoint) registry2.registerService(ApiSchema.GRPC, ServiceId.Search, 0, uuid2, "127.0.0.2");
+        var key1 = ServiceKey.forRest(ServiceId.Search, 0);
+        var key2 = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.any());
 
-        registry1.announceInstance(ServiceId.Search, 0, uuid1);
-        registry2.announceInstance(ServiceId.Search, 0, uuid2);
+        var endpoint1 = registry1.registerService(key1, uuid1, "127.0.0.1");
+        var endpoint2 = registry2.registerService(key2, uuid2, "127.0.0.2");
 
-        assertEquals(Set.of(endpoint1.asInstance(uuid1)),
-                registry1.getRestEndpoints(ServiceId.Search, 0));
+        registry1.announceInstance(uuid1);
+        registry2.announceInstance(uuid2);
 
-        assertEquals(Set.of(endpoint2.asInstance(uuid2)),
-                registry1.getGrpcEndpoints(ServiceId.Search, 0));
+        assertEquals(Set.of(endpoint1.asInstance(uuid1, 0)),
+                registry1.getEndpoints(key1));
 
+        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)),
+                registry1.getEndpoints(key2));
 
         registry1.shutDown();
         Thread.sleep(100);
 
-        assertEquals(Set.of(),
-                registry2.getRestEndpoints(ServiceId.Search, 0));
-        assertEquals(Set.of(endpoint2.asInstance(uuid2)),
-                registry2.getGrpcEndpoints(ServiceId.Search, 0));
+        assertEquals(Set.of(), registry2.getEndpoints(key1));
+        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)), registry2.getEndpoints(key2));
+    }
+
+    @Test
+    void testInstancesTwoAny() throws Exception {
+        var uuid1 = UUID.randomUUID();
+        var uuid2 = UUID.randomUUID();
+
+        var registry1 = createRegistry();
+        var registry2 = createRegistry();
+
+        var key = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.any());
+
+        var endpoint1 = registry1.registerService(key, uuid1, "127.0.0.1");
+        var endpoint2 = registry2.registerService(key, uuid2, "127.0.0.2");
+
+        registry1.announceInstance(uuid1);
+        registry2.announceInstance(uuid2);
+
+        assertEquals(Set.of(endpoint1.asInstance(uuid1, 0),
+                        endpoint2.asInstance(uuid2, 0)),
+                registry1.getEndpoints(key));
+
+        registry1.shutDown();
+        Thread.sleep(100);
+
+        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)), registry2.getEndpoints(key));
+    }
+
+    @Test
+    void testInstancesTwoPartitions() throws Exception {
+        var uuid1 = UUID.randomUUID();
+        var uuid2 = UUID.randomUUID();
+
+        var registry1 = createRegistry();
+        var registry2 = createRegistry();
+
+        var key1 = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.partition(1));
+        var key2 = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.partition(2));
+
+        var endpoint1 = registry1.registerService(key1, uuid1, "127.0.0.1");
+        var endpoint2 = registry2.registerService(key2, uuid2, "127.0.0.2");
+
+        registry1.announceInstance(uuid1);
+        registry2.announceInstance(uuid2);
+
+        assertEquals(Set.of(endpoint1.asInstance(uuid1, 0)), registry1.getEndpoints(key1));
+        assertEquals(Set.of(endpoint2.asInstance(uuid2, 0)), registry1.getEndpoints(key2));
     }
 
     @Test
@@ -115,9 +166,9 @@ class ZkServiceRegistryTest {
         var registry1 = createRegistry();
         var uuid1 = UUID.randomUUID();
 
-        assertFalse(registry1.isInstanceRunning(ServiceId.Search, 0, uuid1));
-        registry1.announceInstance(ServiceId.Search, 0, uuid1);
-        assertTrue(registry1.isInstanceRunning(ServiceId.Search, 0, uuid1));
+        assertFalse(registry1.isInstanceRunning(uuid1));
+        registry1.announceInstance(uuid1);
+        assertTrue(registry1.isInstanceRunning(uuid1));
 
         registry1.shutDown();
     }

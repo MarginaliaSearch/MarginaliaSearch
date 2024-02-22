@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.assistant.client.AssistantClient;
+import nu.marginalia.api.math.MathClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.query.client.QueryClient;
@@ -34,7 +34,7 @@ public class SearchOperator {
     // Marker for filtering out sensitive content from the persistent logs
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
-    private final AssistantClient assistantClient;
+    private final MathClient mathClient;
     private final DbDomainQueries domainQueries;
     private final QueryClient queryClient;
     private final SearchQueryIndexService searchQueryService;
@@ -44,7 +44,7 @@ public class SearchOperator {
 
 
     @Inject
-    public SearchOperator(AssistantClient assistantClient,
+    public SearchOperator(MathClient mathClient,
                           DbDomainQueries domainQueries,
                           QueryClient queryClient,
                           SearchQueryIndexService searchQueryService,
@@ -53,7 +53,7 @@ public class SearchOperator {
                           SearchUnitConversionService searchUnitConversionService)
     {
 
-        this.assistantClient = assistantClient;
+        this.mathClient = mathClient;
         this.domainQueries = domainQueries;
         this.queryClient = queryClient;
 
@@ -162,7 +162,7 @@ public class SearchOperator {
 
     @SneakyThrows
     private void spellCheckTerms(QueryResponse response) {
-        var suggestions = assistantClient
+        var suggestions = mathClient
                 .spellCheck(response.searchTermsHuman(), Duration.ofMillis(20));
 
         suggestions.entrySet()

@@ -1,7 +1,6 @@
 package nu.marginalia.service;
 
 import com.google.inject.AbstractModule;
-import nu.marginalia.service.discovery.FixedServiceRegistry;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.ZkServiceRegistry;
 import org.apache.curator.framework.CuratorFramework;
@@ -18,18 +17,13 @@ public class ServiceDiscoveryModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(ServiceDiscoveryModule.class);
 
     public void configure() {
-        getZookeeperHosts().ifPresentOrElse((hosts) -> {
-                    logger.info("Using Zookeeper service registry at {}", hosts);
-                    CuratorFramework client = CuratorFrameworkFactory
-                            .newClient(hosts, new ExponentialBackoffRetry(100, 10, 1000));
+        var hosts = getZookeeperHosts().orElseThrow(() -> new IllegalStateException("Zookeeper hosts not set"));
+        logger.info("Using Zookeeper service registry at {}", hosts);
+        CuratorFramework client = CuratorFrameworkFactory
+                .newClient(hosts, new ExponentialBackoffRetry(100, 10, 1000));
 
-                    bind(CuratorFramework.class).toInstance(client);
-                    bind(ServiceRegistryIf.class).to(ZkServiceRegistry.class);
-                },
-                () -> {
-                    logger.info("Using fixed service registry");
-                    bind(ServiceRegistryIf.class).to(FixedServiceRegistry.class);
-                });
+        bind(CuratorFramework.class).toInstance(client);
+        bind(ServiceRegistryIf.class).to(ZkServiceRegistry.class);
     }
 
     private Optional<String> getZookeeperHosts() {

@@ -11,6 +11,16 @@ include 'code:services-application:api-service'
 include 'code:services-application:dating-service'
 include 'code:services-application:explorer-service'
 
+include 'code:functions:math'
+include 'code:functions:math:api'
+
+include 'code:functions:domain-info'
+include 'code:functions:domain-info:api'
+
+include 'code:functions:domain-links:partition'
+include 'code:functions:domain-links:aggregate'
+include 'code:functions:domain-links:api'
+
 include 'code:libraries:array'
 include 'code:libraries:geo-ip'
 include 'code:libraries:btree'
@@ -55,7 +65,6 @@ include 'code:features-index:domain-ranking'
 
 include 'code:api:query-api'
 include 'code:api:index-api'
-include 'code:api:assistant-api'
 include 'code:api:process-mqapi'
 include 'code:api:executor-api'
 
@@ -174,7 +183,7 @@ dependencyResolutionManagement {
             library('bucket4j','com.github.vladimir-bukhtoyarov','bucket4j-core').version('7.5.0')
 
             library('gson','com.google.code.gson','gson').version('2.10.1')
-            library('gson-type-adapter','com.github.Marcono1234','gson-record-type-adapter-factory').version('0.2.0')
+            library('gson-type-adapter','com.github.Marcono1234','gson-record-type-adapter-factory').version('0.3.0')
 
             library('zstd','com.github.luben','zstd-jni').version('1.5.2-2')
             library('lz4','org.lz4','lz4-java').version('1.8.0')
@@ -221,8 +230,5 @@ dependencyResolutionManagement {
 
             bundle('curator', ['curator-framework', 'curator-x-discovery'])
         }
-
-
     }
-
 }

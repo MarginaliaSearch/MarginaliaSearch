@@ -1,9 +1,8 @@
 plugins {
     id 'java'
-
     id 'application'
-    id 'com.palantir.docker' version '0.35.0'
     id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 java {
@@ -19,7 +18,22 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+jib {
+    from {
+        image = image = rootProject.ext.dockerImageBase
+    }
+    to {
+        image = 'marginalia/'+project.name
+        tags = ['latest']
+    }
+    container {
+
+        mainClass = application.mainClass
+        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
+        volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
+    }
+}
+
 
 dependencies {
     implementation libs.bundles.gson

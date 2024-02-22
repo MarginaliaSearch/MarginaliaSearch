@@ -10,7 +10,8 @@ import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.query.svc.QueryFactory;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.discovery.property.ServiceKey;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private final QueryFactory queryFactory;
     private final DomainBlacklist blacklist;
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
@@ -41,7 +43,9 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
     {
         this.queryFactory = queryFactory;
         this.blacklist = blacklist;
-        this.channelPool = channelPoolFactory.createMulti(ServiceId.Index, IndexApiGrpc::newBlockingStub);
+        this.channelPool = channelPoolFactory.createMulti(
+                ServiceKey.forGrpcApi(IndexApiGrpc.class, ServicePartition.multi()),
+                IndexApiGrpc::newBlockingStub);
     }
 
     public void query(nu.marginalia.index.api.RpcQsQuery request,
@@ -80,39 +84,22 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     @SneakyThrows
     List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
-        return channelPool.invokeAll(stub -> new QueryTask(stub, indexRequest))
-                .stream()
-                .filter(f -> f.state() == Future.State.SUCCESS)
-                .map(Future::resultNow)
-                .flatMap(List::stream)
-                .sorted(comparator)
-                .limit(totalSize)
-                .toList();
-    }
-
-    private class QueryTask implements Callable<List<RpcDecoratedResultItem>> {
-        private final IndexApiGrpc.IndexApiBlockingStub stub;
-        private final RpcIndexQuery indexRequest;
-
-        public QueryTask(IndexApiGrpc.IndexApiBlockingStub stub, RpcIndexQuery indexRequest) {
-            this.stub = stub;
-            this.indexRequest = indexRequest;
-        }
-
-        @Override
-        public List<RpcDecoratedResultItem> call() {
-            var rsp = stub.query(indexRequest);
-            List<RpcDecoratedResultItem> ret = new ArrayList<>();
-
-            while (rsp.hasNext()) {
-                RpcDecoratedResultItem next = rsp.next();
-                if (isBlacklisted(next))
-                    continue;
-                ret.add(next);
+        var futures =
+            channelPool.call(IndexApiGrpc.IndexApiBlockingStub::query)
+                .async(executor)
+                .runEach(indexRequest);
+        List<RpcDecoratedResultItem> results = new ArrayList<>();
+        for (var future : futures) {
+            try {
+                future.get().forEachRemaining(results::add);
             }
-
-            return ret;
+            catch (Exception e) {
+                logger.error("Downstream exception", e);
+            }
         }
+        results.sort(comparator);
+        results.removeIf(this::isBlacklisted);
+        return results.subList(0, Math.min(totalSize, results.size()));
     }
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {

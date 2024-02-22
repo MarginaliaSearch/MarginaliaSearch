@@ -4,7 +4,7 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import nu.marginalia.query.client.QueryClient;
+import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +35,15 @@ public class AdjacenciesData {
         return ret;
     }
 
-    public AdjacenciesData(QueryClient queryClient,
+    public AdjacenciesData(AggregateDomainLinksClient linksClient,
                            DomainAliases aliases) {
         logger.info("Loading adjacency data");
 
         Map<Integer, RoaringBitmap> tmpMapDtoS = new HashMap<>(100_000);
 
         int count = 0;
-        var allLinks = queryClient.getAllDomainLinks();
+        var allLinks = linksClient.getAllDomainLinks();
+
         for (var iter = allLinks.iterator();;count++) {
             if (!iter.advance()) {
                 break;

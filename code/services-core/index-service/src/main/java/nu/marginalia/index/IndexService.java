@@ -4,8 +4,9 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.svc.IndexDomainLinksService;
+import nu.marginalia.functions.domainlinks.PartitionDomainLinksService;
 import nu.marginalia.linkdb.dlinks.DomainLinkDb;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.index.index.SearchIndex;
@@ -51,10 +52,14 @@ public class IndexService extends Service {
                         FileStorageService fileStorageService,
                         DocumentDbReader documentDbReader,
                         DomainLinkDb domainLinkDb,
-                        IndexDomainLinksService indexDomainLinksService,
+
+                        PartitionDomainLinksService partitionDomainLinksService,
+
                         ServiceEventLog eventLog)
     {
-        super(params, List.of(indexQueryService, indexDomainLinksService));
+        super(params,
+                ServicePartition.partition(params.configuration.node()),
+                List.of(indexQueryService, partitionDomainLinksService));
 
         this.opsService = opsService;
         this.searchIndex = searchIndex;

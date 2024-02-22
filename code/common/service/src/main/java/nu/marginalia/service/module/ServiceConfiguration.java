@@ -1,5 +1,6 @@
 package nu.marginalia.service.module;
 
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.id.ServiceId;
 
 import java.util.UUID;

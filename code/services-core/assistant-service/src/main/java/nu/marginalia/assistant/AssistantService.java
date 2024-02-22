@@ -4,8 +4,11 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.assistant.suggest.Suggestions;
+import nu.marginalia.functions.domains.DomainInfoGrpcService;
+import nu.marginalia.functions.math.MathGrpcService;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.screenshot.ScreenshotService;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +27,13 @@ public class AssistantService extends Service {
     @Inject
     public AssistantService(BaseServiceParams params,
                             ScreenshotService screenshotService,
-                            AssistantGrpcService assistantGrpcService,
+                            DomainInfoGrpcService domainInfoGrpcService,
+                            MathGrpcService mathGrpcService,
                             Suggestions suggestions)
     {
-        super(params, List.of(assistantGrpcService));
+        super(params,
+                ServicePartition.any(),
+                List.of(domainInfoGrpcService, mathGrpcService));
 
         this.suggestions = suggestions;
 

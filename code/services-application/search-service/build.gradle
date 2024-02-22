@@ -2,9 +2,25 @@ plugins {
     id 'java'
     id 'io.freefair.sass-base' version '8.4'
     id 'io.freefair.sass-java' version '8.4'
-    id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
+
+    id 'com.google.cloud.tools.jib' version '3.4.0'
+}
+
+jib {
+    from {
+        image = image = rootProject.ext.dockerImageBase
+    }
+    to {
+        image = 'marginalia/'+project.name
+        tags = ['latest']
+    }
+    container {
+        mainClass = application.mainClass
+        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
+        volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
+    }
 }
 
 application {
@@ -14,7 +30,6 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
 
 java {
     toolchain {
@@ -26,6 +41,7 @@ sass {
     sourceMapEmbed = true
     outputStyle = EXPANDED
 }
+
 dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:model')
@@ -38,7 +54,8 @@ dependencies {
     implementation project(':code:libraries:braille-block-punch-cards')
     implementation project(':code:libraries:term-frequency-dict')
 
-    implementation project(':code:api:assistant-api')
+    implementation project(':code:functions:math:api')
+    implementation project(':code:functions:domain-info:api')
     implementation project(':code:api:query-api')
     implementation project(':code:api:index-api')
     implementation project(':code:common:service-discovery')

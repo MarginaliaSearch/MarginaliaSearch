@@ -1,8 +1,8 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.assistant.client.AssistantClient;
-import nu.marginalia.assistant.client.model.SimilarDomain;
+import nu.marginalia.api.domains.DomainInfoClient;
+import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
@@ -25,20 +25,20 @@ public class SearchBrowseService {
     private final DbBrowseDomainsRandom randomDomains;
     private final DbDomainQueries domainQueries;
     private final DomainBlacklist blacklist;
-    private final AssistantClient assistantClient;
+    private final DomainInfoClient domainInfoClient;
     private final BrowseResultCleaner browseResultCleaner;
 
     @Inject
     public SearchBrowseService(DbBrowseDomainsRandom randomDomains,
                                DbDomainQueries domainQueries,
                                DomainBlacklist blacklist,
-                               AssistantClient assistantClient,
+                               DomainInfoClient domainInfoClient,
                                BrowseResultCleaner browseResultCleaner)
     {
         this.randomDomains = randomDomains;
         this.domainQueries = domainQueries;
         this.blacklist = blacklist;
-        this.assistantClient = assistantClient;
+        this.domainInfoClient = domainInfoClient;
         this.browseResultCleaner = browseResultCleaner;
     }
 
@@ -53,7 +53,7 @@ public class SearchBrowseService {
     public BrowseResultSet getRelatedEntries(String domainName) throws ExecutionException, InterruptedException, TimeoutException {
         var domain = domainQueries.getDomainId(new EdgeDomain(domainName));
 
-        var neighbors = assistantClient.similarDomains(domain, 50)
+        var neighbors = domainInfoClient.similarDomains(domain, 50)
                 .get(100, TimeUnit.MILLISECONDS);
 
         neighbors.removeIf(sd -> !sd.screenshot());
@@ -61,7 +61,7 @@ public class SearchBrowseService {
         // If the results are very few, supplement with the alternative shitty algorithm
         if (neighbors.size() < 25) {
             Set<SimilarDomain> allNeighbors = new HashSet<>(neighbors);
-            allNeighbors.addAll(assistantClient
+            allNeighbors.addAll(domainInfoClient
                     .linkedDomains(domain, 50)
                     .get(100, TimeUnit.MILLISECONDS)
             );

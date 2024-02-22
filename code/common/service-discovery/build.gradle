@@ -6,6 +6,11 @@ plugins {
 repositories {
     mavenLocal()
     mavenCentral()
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
 }
 
 java {
@@ -18,6 +23,7 @@ dependencies {
 
     implementation libs.bundles.curator
     implementation libs.guice
+    implementation libs.bundles.gson
     implementation libs.bundles.mariadb
     implementation libs.bundles.grpc
     implementation libs.notnull
@@ -29,4 +35,5 @@ dependencies {
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
     testImplementation 'org.testcontainers:mariadb:1.17.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:functions:math:api')
 }

@@ -3,7 +3,7 @@ package nu.marginalia.ranking;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.query.client.QueryClient;
+import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
 import nu.marginalia.ranking.data.InvertedLinkGraphSource;
 import nu.marginalia.ranking.data.LinkGraphSource;
 import nu.marginalia.ranking.data.SimilarityGraphSource;
@@ -37,8 +37,9 @@ public class RankingAlgorithmsContainerTest {
 
     static HikariDataSource dataSource;
 
-    QueryClient queryClient;
-    QueryClient.AllLinks allLinks;
+    AggregateDomainLinksClient domainLinksClient;
+    AggregateDomainLinksClient.AllLinks allLinks;
+
     @BeforeAll
     public static void setup() {
         HikariConfig config = new HikariConfig();
@@ -66,9 +67,9 @@ public class RankingAlgorithmsContainerTest {
 
     @BeforeEach
     public void setupQueryClient() {
-        queryClient = Mockito.mock(QueryClient.class);
-        allLinks = new QueryClient.AllLinks();
-        when(queryClient.getAllDomainLinks()).thenReturn(allLinks);
+        domainLinksClient = Mockito.mock(AggregateDomainLinksClient.class);
+        allLinks = new AggregateDomainLinksClient.AllLinks();
+        when(domainLinksClient.getAllDomainLinks()).thenReturn(allLinks);
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement()) {
@@ -97,7 +98,7 @@ public class RankingAlgorithmsContainerTest {
     @Test
     public void testGetDomains() {
         // should all be the same, doesn't matter which one we use
-        var source = new LinkGraphSource(dataSource, queryClient);
+        var source = new LinkGraphSource(dataSource, domainLinksClient);
 
         Assertions.assertEquals(List.of(1),
                 source.domainIds(List.of("memex.marginalia.nu")));
@@ -111,7 +112,7 @@ public class RankingAlgorithmsContainerTest {
     public void testLinkGraphSource() {
         allLinks.add(1, 3);
 
-        var graph = new LinkGraphSource(dataSource, queryClient).getGraph();
+        var graph = new LinkGraphSource(dataSource, domainLinksClient).getGraph();
 
         Assertions.assertTrue(graph.containsVertex(1));
         Assertions.assertTrue(graph.containsVertex(2));
@@ -127,7 +128,7 @@ public class RankingAlgorithmsContainerTest {
     public void testInvertedLinkGraphSource() {
         allLinks.add(1, 3);
 
-        var graph = new InvertedLinkGraphSource(dataSource, queryClient).getGraph();
+        var graph = new InvertedLinkGraphSource(dataSource, domainLinksClient).getGraph();
 
         Assertions.assertTrue(graph.containsVertex(1));
         Assertions.assertTrue(graph.containsVertex(2));

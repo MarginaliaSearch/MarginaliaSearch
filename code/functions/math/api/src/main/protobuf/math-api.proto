@@ -1,0 +1,57 @@
+syntax="proto3";
+package nu.marginalia.api.math;
+
+option java_package="nu.marginalia.api.math";
+option java_multiple_files=true;
+
+service MathApi {
+  /** Looks up a word in the dictionary. */
+  rpc dictionaryLookup(RpcDictionaryLookupRequest) returns (RpcDictionaryLookupResponse) {}
+  /** Checks the spelling of a text. */
+  rpc spellCheck(RpcSpellCheckRequest) returns (RpcSpellCheckResponse) {}
+  /** Converts a unit from one to another. */
+  rpc unitConversion(RpcUnitConversionRequest) returns (RpcUnitConversionResponse) {}
+  /** Evaluates a mathematical expression. */
+  rpc evalMath(RpcEvalMathRequest) returns (RpcEvalMathResponse) {}
+}
+
+message RpcDictionaryLookupRequest {
+  string word = 1;
+}
+
+message RpcDictionaryLookupResponse {
+  string word = 1;
+  repeated RpcDictionaryEntry entries = 2;
+}
+
+message RpcDictionaryEntry {
+  string type = 1;
+  string word = 2;
+  string definition = 3;
+}
+
+message RpcSpellCheckRequest {
+  string text = 1;
+}
+
+message RpcSpellCheckResponse {
+  repeated string suggestions = 1;
+}
+
+message RpcUnitConversionRequest {
+  string unit = 1;
+  string from = 2;
+  string to = 3;
+}
+
+message RpcUnitConversionResponse {
+  string result = 1;
+}
+
+message RpcEvalMathRequest {
+  string expression = 1;
+}
+
+message RpcEvalMathResponse {
+  string result = 1;
+}

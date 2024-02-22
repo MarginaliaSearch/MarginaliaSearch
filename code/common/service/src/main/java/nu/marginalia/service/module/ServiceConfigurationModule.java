@@ -65,7 +65,7 @@ public class ServiceConfigurationModule extends AbstractModule {
         }
 
         // If we're in docker, we'll use the hostname
-        if (isDocker()) {
+        if (Boolean.getBoolean("service.useDockerHostname")) {
             return System.getenv("HOSTNAME");
         }
 
@@ -82,14 +82,7 @@ public class ServiceConfigurationModule extends AbstractModule {
             return configuredValue;
         }
 
-        // If we're in docker, we'll bind to all interfaces
-        if (isDocker())
-            return "0.0.0.0";
-        else  // If we're not in docker, we'll default to binding to localhost to avoid exposing services
-            return "127.0.0.1";
+        return "127.0.0.1";
     }
 
-    boolean isDocker() {
-        return System.getenv("WMSA_IN_DOCKER") != null;
-    }
 }

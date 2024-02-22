@@ -156,6 +156,8 @@ public class ServiceHeartbeatImpl implements ServiceHeartbeat {
                 stmt.executeUpdate();
             }
         }
+
+        dataSource.close();
     }
 
 }

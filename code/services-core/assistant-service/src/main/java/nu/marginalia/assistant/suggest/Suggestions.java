@@ -2,9 +2,9 @@ package nu.marginalia.assistant.suggest;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.functions.math.dict.SpellChecker;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.assistant.dict.SpellChecker;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

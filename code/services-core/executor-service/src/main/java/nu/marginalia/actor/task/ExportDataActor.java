@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -32,7 +33,7 @@ public class ExportDataActor extends RecordActorPrototype {
     private final FileStorageService storageService;
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final QueryClient queryClient;
+    private final AggregateDomainLinksClient domainLinksClient;
 
     public record Export() implements ActorStep {}
     public record ExportBlacklist(FileStorageId fid) implements ActorStep {}
@@ -114,7 +115,7 @@ public class ExportDataActor extends RecordActorPrototype {
                 var tmpFile = Files.createTempFile(storage.asPath(), "export", ".csv.gz",
                         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
 
-                var allLinks = queryClient.getAllDomainLinks();
+                var allLinks = domainLinksClient.getAllDomainLinks();
 
                 try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
                 {
@@ -154,12 +155,13 @@ public class ExportDataActor extends RecordActorPrototype {
     @Inject
     public ExportDataActor(Gson gson,
                            FileStorageService storageService,
-                           HikariDataSource dataSource, QueryClient queryClient)
+                           HikariDataSource dataSource,
+                           AggregateDomainLinksClient domainLinksClient)
     {
         super(gson);
         this.storageService = storageService;
         this.dataSource = dataSource;
-        this.queryClient = queryClient;
+        this.domainLinksClient = domainLinksClient;
     }
 
 }

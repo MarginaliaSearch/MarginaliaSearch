@@ -5,8 +5,8 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
-import nu.marginalia.service.discovery.property.ApiSchema;
-import nu.marginalia.service.discovery.property.ServiceEndpoint;
+import nu.marginalia.service.discovery.property.*;
+import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +16,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,10 +49,23 @@ public class Service {
     @SneakyThrows
     public Service(BaseServiceParams params,
                    Runnable configureStaticFiles,
+                   ServicePartition partition,
                    List<BindableService> grpcServices) {
+
         this.initialization = params.initialization;
         var config = params.configuration;
         node = config.node();
+
+        if (config.serviceId() == ServiceId.Control) {
+            // Special case for first boot, since the control service
+            // owns database migrations and so on, we need other processes
+            // to wait for this to be done before they start.  This is
+            // only needed once.
+            params.serviceRegistry.declareFirstBoot();
+        }
+        else {
+            params.serviceRegistry.waitForFirstBoot();
+        }
 
         String inboxName = config.serviceName();
         logger.info("Inbox name: {}", inboxName);
@@ -60,8 +74,7 @@ public class Service {
 
         var restEndpoint =
                 serviceRegistry.registerService(
-                        ApiSchema.REST, config.serviceId(),
-                    config.node(),
+                        ServiceKey.forRest(config.serviceId(), config.node()),
                     config.instanceUuid(),
                     config.externalAddress()
                 );
@@ -75,7 +88,7 @@ public class Service {
         initialization.addCallback(params.heartbeat::start);
         initialization.addCallback(messageQueueInbox::start);
         initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", serviceName + ":" + config.node()));
-        initialization.addCallback(() -> serviceRegistry.announceInstance(config.serviceId(), config.node(), config.instanceUuid()));
+        initialization.addCallback(() -> serviceRegistry.announceInstance(config.instanceUuid()));
 
         if (!initialization.isReady() && ! initialized ) {
             initialized = true;
@@ -101,29 +114,39 @@ public class Service {
             Spark.get("/internal/started", this::isInitialized);
             Spark.get("/internal/ready", this::isReady);
 
-            ServiceEndpoint.GrpcEndpoint grpcEndpoint = (ServiceEndpoint.GrpcEndpoint) params.serviceRegistry.registerService(
-                    ApiSchema.GRPC, config.serviceId(),
-                    config.node(),
-                    config.instanceUuid(),
-                    config.externalAddress()
-            );
+            int port = params.serviceRegistry.requestPort(config.externalAddress(), new ServiceKey.Grpc<>("-", partition));
 
             // Start the gRPC server
-            var grpcServerBuilder = NettyServerBuilder.forAddress(grpcEndpoint.toInetSocketAddress());
+            var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port));
             for (var grpcService : grpcServices) {
-                grpcServerBuilder.addService(grpcService);
+                var svc = grpcService.bindService();
+
+                params.serviceRegistry.registerService(
+                        ServiceKey.forServiceDescriptor(svc.getServiceDescriptor(), partition),
+                        config.instanceUuid(),
+                        config.externalAddress()
+                        );
+
+                grpcServerBuilder.addService(svc);
             }
             grpcServerBuilder.build().start();
         }
     }
 
     public Service(BaseServiceParams params,
+                   ServicePartition partition,
                    List<BindableService> grpcServices) {
-        this(params, Service::defaultSparkConfig, grpcServices);
+        this(params,
+                Service::defaultSparkConfig,
+                partition,
+                grpcServices);
     }
 
     public Service(BaseServiceParams params) {
-        this(params, Service::defaultSparkConfig, List.of());
+        this(params,
+                Service::defaultSparkConfig,
+                ServicePartition.any(),
+                List.of());
     }
 
     private static void defaultSparkConfig() {

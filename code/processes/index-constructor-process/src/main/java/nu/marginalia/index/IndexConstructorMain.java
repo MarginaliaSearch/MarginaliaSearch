@@ -76,6 +76,7 @@ public class IndexConstructorMain extends ProcessMainClass {
         // Grace period so we don't rug pull the logger or jdbc
         TimeUnit.SECONDS.sleep(5);
 
+
         System.exit(0);
     }
 

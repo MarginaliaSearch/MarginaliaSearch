@@ -1,12 +1,9 @@
 package nu.marginalia.service.client;
 
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.discovery.property.ServiceKey;
 
 public class ServiceNotAvailableException extends RuntimeException {
-    public ServiceNotAvailableException(ServiceId id, int node) {
-        super(STR."Service \{id} not available on node \{node}");
-    }
-    public ServiceNotAvailableException(ServiceId id) {
-        super(STR."Service \{id} not available");
+    public ServiceNotAvailableException(ServiceKey<?> key) {
+        super(STR."Service \{key} not available");
     }
 }

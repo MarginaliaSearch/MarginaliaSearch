@@ -60,6 +60,7 @@ public class ControlService extends Service {
                       ) throws IOException {
 
         super(params);
+
         this.monitors = monitors;
         this.heartbeatService = heartbeatService;
         this.eventLogService = eventLogService;

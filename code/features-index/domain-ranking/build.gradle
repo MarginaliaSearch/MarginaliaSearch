@@ -17,7 +17,7 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:model')
     implementation project(':code:common:service')
-    implementation project(':code:api:query-api')
+    implementation project(':code:functions:domain-links:api')
 
     implementation 'org.jgrapht:jgrapht-core:1.5.2'
 

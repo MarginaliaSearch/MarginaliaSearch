@@ -1,8 +1,9 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.assistant.client.AssistantClient;
-import nu.marginalia.assistant.client.model.SimilarDomain;
+import nu.marginalia.api.domains.DomainInfoClient;
+import nu.marginalia.api.domains.model.DomainInformation;
+import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.feedlot.model.FeedItems;
 import nu.marginalia.model.EdgeDomain;
@@ -10,7 +11,6 @@ import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
-import nu.marginalia.assistant.client.model.DomainInformation;
 import nu.marginalia.feedlot.FeedlotClient;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
@@ -32,7 +32,7 @@ public class SearchSiteInfoService {
     private static final Logger logger = LoggerFactory.getLogger(SearchSiteInfoService.class);
 
     private final SearchOperator searchOperator;
-    private final AssistantClient assistantClient;
+    private final DomainInfoClient domainInfoClient;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
@@ -41,7 +41,7 @@ public class SearchSiteInfoService {
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
-                                 AssistantClient assistantClient,
+                                 DomainInfoClient domainInfoClient,
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries,
@@ -49,7 +49,7 @@ public class SearchSiteInfoService {
                                  ScreenshotService screenshotService) throws IOException
     {
         this.searchOperator = searchOperator;
-        this.assistantClient = assistantClient;
+        this.domainInfoClient = domainInfoClient;
         this.flagSiteService = flagSiteService;
         this.domainQueries = domainQueries;
 
@@ -137,15 +137,20 @@ public class SearchSiteInfoService {
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
 
         var feedItemsFuture = feedlotClient.getFeedItems(domainName);
-        if (domainId < 0 || !assistantClient.isAccepting()) {
+        if (domainId < 0) {
+            domainInfoFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
+            similarSetFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
+            linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
+        }
+        else if (!domainInfoClient.isAccepting()) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
         }
         else {
-            domainInfoFuture = assistantClient.domainInformation(domainId);
-            similarSetFuture = assistantClient.similarDomains(domainId, 25);
-            linkingDomainsFuture = assistantClient.linkedDomains(domainId, 25);
+            domainInfoFuture = domainInfoClient.domainInformation(domainId);
+            similarSetFuture = domainInfoClient.similarDomains(domainId, 25);
+            linkingDomainsFuture = domainInfoClient.linkedDomains(domainId, 25);
         }
 
         List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, 5);
@@ -174,7 +179,7 @@ public class SearchSiteInfoService {
 
     private <T> T waitForFuture(Future<T> future, Supplier<T> fallback) {
         try {
-            return future.get(50, TimeUnit.MILLISECONDS);
+            return future.get(250, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             logger.info("Failed to get domain data: {}", e.getMessage());
             return fallback.get();

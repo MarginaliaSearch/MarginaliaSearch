@@ -3,19 +3,19 @@ package nu.marginalia.ranking.data;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.query.client.QueryClient;
+import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 /** A source for the regular link graph. */
 public class LinkGraphSource extends AbstractGraphSource {
-    private final QueryClient queryClient;
+    private final AggregateDomainLinksClient domainLinksClient;
 
     @Inject
-    public LinkGraphSource(HikariDataSource dataSource, QueryClient queryClient) {
+    public LinkGraphSource(HikariDataSource dataSource, AggregateDomainLinksClient domainLinksClient) {
         super(dataSource);
-        this.queryClient = queryClient;
+        this.domainLinksClient = domainLinksClient;
     }
 
     @SneakyThrows
@@ -25,7 +25,7 @@ public class LinkGraphSource extends AbstractGraphSource {
 
         addVertices(graph);
 
-        var allLinks = queryClient.getAllDomainLinks();
+        var allLinks = domainLinksClient.getAllDomainLinks();
         var iter = allLinks.iterator();
         while (iter.advance()) {
             if (!graph.containsVertex(iter.dest())) {

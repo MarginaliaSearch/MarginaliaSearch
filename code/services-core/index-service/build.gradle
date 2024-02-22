@@ -1,9 +1,9 @@
 plugins {
     id 'java'
 
-    id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 application {
@@ -13,7 +13,22 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+jib {
+    from {
+        image = image = rootProject.ext.dockerImageBase
+    }
+    to {
+        image = 'marginalia/'+project.name
+        tags = ['latest']
+    }
+    container {
+
+        mainClass = application.mainClass
+        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
+        volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
+    }
+}
+
 
 java {
     toolchain {
@@ -25,8 +40,13 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:linkdb')
+
+    implementation project(':code:functions:domain-links:partition')
+    implementation project(':code:functions:domain-links:api')
+
     implementation project(':code:common:service')
     implementation project(':code:api:index-api')
+
     implementation project(':code:common:service-discovery')
 
     implementation project(':code:libraries:array')

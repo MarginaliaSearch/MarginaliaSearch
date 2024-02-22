@@ -4,13 +4,17 @@ import io.grpc.ManagedChannel;
 import lombok.SneakyThrows;
 import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
+import nu.marginalia.service.discovery.property.PartitionTraits;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.discovery.property.ServiceKey;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -22,21 +26,20 @@ public class GrpcMultiNodeChannelPool<STUB> {
     private final ConcurrentHashMap<Integer, GrpcSingleNodeChannelPool<STUB>> pools =
             new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(GrpcMultiNodeChannelPool.class);
-    private final ExecutorService virtualExecutorService = Executors.newVirtualThreadPerTaskExecutor();
     private final ServiceRegistryIf serviceRegistryIf;
-    private final ServiceId serviceId;
-    private final Function<ServiceEndpoint.InstanceAddress<?>, ManagedChannel> channelConstructor;
+    private final ServiceKey<? extends PartitionTraits.Multicast> serviceKey;
+    private final Function<ServiceEndpoint.InstanceAddress, ManagedChannel> channelConstructor;
     private final Function<ManagedChannel, STUB> stubConstructor;
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
 
     @SneakyThrows
     public GrpcMultiNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
-                                    ServiceId serviceId,
-                                    Function<ServiceEndpoint.InstanceAddress<?>, ManagedChannel> channelConstructor,
+                                    ServiceKey<ServicePartition.Multi> serviceKey,
+                                    Function<ServiceEndpoint.InstanceAddress, ManagedChannel> channelConstructor,
                                     Function<ManagedChannel, STUB> stubConstructor,
                                     NodeConfigurationWatcher nodeConfigurationWatcher) {
         this.serviceRegistryIf = serviceRegistryIf;
-        this.serviceId = serviceId;
+        this.serviceKey = serviceKey;
         this.channelConstructor = channelConstructor;
         this.stubConstructor = stubConstructor;
         this.nodeConfigurationWatcher = nodeConfigurationWatcher;
@@ -51,51 +54,74 @@ public class GrpcMultiNodeChannelPool<STUB> {
         return pools.computeIfAbsent(node, _ ->
                 new GrpcSingleNodeChannelPool<>(
                         serviceRegistryIf,
-                        serviceId,
-                        new NodeSelectionStrategy.Just(node),
+                        serviceKey.forPartition(ServicePartition.partition(node)),
                         channelConstructor,
                         stubConstructor));
     }
 
-
-
-    /** Get an API stub for the given node */
-    public STUB apiForNode(int node) {
-        return pools.computeIfAbsent(node, this::getPoolForNode).api();
-    }
-
-
-    /** Invoke a function on each node, returning a list of futures in a terminal state, as per
-     * ExecutorService$invokeAll */
-    public <T> List<Future<T>> invokeAll(Function<STUB, Callable<T>> callF) throws InterruptedException {
-        List<Callable<T>> calls = getEligibleNodes().stream()
-                .mapMulti(this::passNodeIfOk)
-                .map(callF)
-                .toList();
-
-        return virtualExecutorService.invokeAll(calls);
-    }
-
-    /** Invoke a function on each node, returning a stream of results */
-    public <T> Stream<T> callEachSequential(Function<STUB, T> call) {
-        return getEligibleNodes().stream()
-                .mapMulti(this::passNodeIfOk)
-                .map(call);
-    }
-
-    // Eat connectivity exceptions and log them when doing a broadcast-style calls
-    private void passNodeIfOk(Integer nodeId, Consumer<STUB> consumer) {
-        try {
-            consumer.accept(apiForNode(nodeId));
-        }
-        catch (Exception ex) {
-            logger.error("Error calling node {}", nodeId, ex);
-        }
-    }
 
     /** Get the list of nodes that are eligible for broadcast-style requests */
     public List<Integer> getEligibleNodes() {
         return nodeConfigurationWatcher.getQueryNodes();
     }
 
+    public <T, I> CallBuilderBase<T, I> call(BiFunction<STUB, I, T> method) {
+        return new CallBuilderBase<>(method);
+    }
+
+    public class CallBuilderBase<T, I> {
+        private final BiFunction<STUB, I, T> method;
+
+        private CallBuilderBase(BiFunction<STUB, I, T> method) {
+            this.method = method;
+        }
+
+        public GrpcSingleNodeChannelPool<STUB>.CallBuilderBase<T, I> forNode(int node) {
+            return getPoolForNode(node).call(method);
+        }
+
+        public List<T> run(I arg) {
+            return getEligibleNodes().stream()
+                    .map(node -> getPoolForNode(node).call(method).run(arg))
+                    .toList();
+        }
+
+        public CallBuilderAsync<T, I> async(ExecutorService service) {
+            return new CallBuilderAsync<>(service, method);
+        }
+    }
+
+    public class CallBuilderAsync<T, I> {
+        private final Executor executor;
+        private final BiFunction<STUB, I, T> method;
+
+        public CallBuilderAsync(Executor executor, BiFunction<STUB, I, T> method) {
+            this.executor = executor;
+            this.method = method;
+        }
+
+        public CompletableFuture<List<T>> runAll(I arg) {
+            var futures = getEligibleNodes().stream()
+                    .map(GrpcMultiNodeChannelPool.this::getPoolForNode)
+                    .map(pool ->
+                            pool.call(method)
+                                    .async(executor)
+                                    .run(arg)
+                    ).toList();
+
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
+        }
+
+        public List<CompletableFuture<T>> runEach(I arg) {
+            return getEligibleNodes().stream()
+                    .map(GrpcMultiNodeChannelPool.this::getPoolForNode)
+                    .map(pool ->
+                            pool.call(method)
+                                    .async(executor)
+                                    .run(arg)
+                    ).toList();
+
+        }
+    }
 }

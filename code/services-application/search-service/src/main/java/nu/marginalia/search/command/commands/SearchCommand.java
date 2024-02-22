@@ -14,17 +14,13 @@ import java.io.IOException;
 import java.util.Optional;
 
 public class SearchCommand implements SearchCommandInterface {
-    private final DomainBlacklist blacklist;
     private final SearchOperator searchOperator;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
 
 
     @Inject
-    public SearchCommand(DomainBlacklist blacklist,
-                         SearchOperator searchOperator,
-                         RendererFactory rendererFactory
-                         ) throws IOException {
-        this.blacklist = blacklist;
+    public SearchCommand(SearchOperator searchOperator,
+                         RendererFactory rendererFactory) throws IOException {
         this.searchOperator = searchOperator;
 
         searchResultsRenderer = rendererFactory.renderer("search/search-results");

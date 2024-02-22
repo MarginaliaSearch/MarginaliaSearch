@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.service.ServiceHomeNotConfiguredException;
 import org.flywaydb.core.Flyway;
 import org.mariadb.jdbc.Driver;
@@ -51,7 +52,7 @@ public class DatabaseModule extends AbstractModule {
     }
 
     private Properties loadDbProperties() {
-        Path propDir = getHomePath().resolve("conf/db.properties");
+        Path propDir = WmsaHome.getHomePath().resolve("conf/db.properties");
         if (!Files.isRegularFile(propDir)) {
             throw new IllegalStateException("Database properties file " + propDir + " does not exist");
         }
@@ -72,17 +73,6 @@ public class DatabaseModule extends AbstractModule {
 
     }
 
-    public static Path getHomePath() {
-        var retStr = Optional.ofNullable(System.getenv("WMSA_HOME")).orElse("/var/lib/wmsa");
-
-        var ret = Path.of(retStr);
-        if (!Files.isDirectory(ret)) {
-            throw new ServiceHomeNotConfiguredException("Could not find WMSA_HOME, either set environment variable or ensure /var/lib/wmsa exists");
-        }
-        return ret;
-    }
-
-
     @SneakyThrows
     @Singleton
     @Provides
@@ -96,7 +86,6 @@ public class DatabaseModule extends AbstractModule {
 
         try {
             HikariConfig config = new HikariConfig();
-
 
             config.setJdbcUrl(connStr);
             config.setUsername(dbProperties.getProperty(DB_USER_KEY));

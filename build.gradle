@@ -3,6 +3,10 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.0"
     id "io.freefair.lombok" version "8.3"
     id "me.champeau.jmh" version "0.6.6"
+
+    // This is a workaround for a bug in the Jib plugin that causes it to stall randomly
+    // https://github.com/GoogleContainerTools/jib/issues/3347
+    id 'com.google.cloud.tools.jib' version '3.4.0' apply(false)
 }
 
 group 'marginalia'
@@ -29,11 +33,12 @@ subprojects.forEach {it ->
         reproducibleFileOrder = true
     }
 }
-
+ext {
+    dockerImageBase='container-registry.oracle.com/graalvm/jdk:21@sha256:1fd33d4d4eba3a9e1a41a728e39ea217178d257694eea1214fec68d2ed4d3d9b'
+}
 allprojects {
     apply plugin: 'java'
     apply plugin: 'io.freefair.lombok'
-
     dependencies {
         implementation libs.lombok
         testImplementation libs.lombok
@@ -77,3 +82,4 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
+

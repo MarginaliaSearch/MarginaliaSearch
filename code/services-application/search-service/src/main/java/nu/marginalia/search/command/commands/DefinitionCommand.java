@@ -2,11 +2,11 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
-import nu.marginalia.assistant.client.AssistantClient;
-import nu.marginalia.assistant.client.model.DictionaryResponse;
+import nu.marginalia.api.math.MathClient;
+import nu.marginalia.api.math.model.DictionaryResponse;
+import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,18 +23,18 @@ public class DefinitionCommand implements SearchCommandInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MustacheRenderer<DictionaryResponse> dictionaryRenderer;
-    private final AssistantClient assistantClient;
+    private final MathClient mathClient;
 
 
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^define:[A-Za-z\\s-0-9]+$").asPredicate();
 
     @Inject
-    public DefinitionCommand(RendererFactory rendererFactory, AssistantClient assistantClient)
+    public DefinitionCommand(RendererFactory rendererFactory, MathClient mathClient)
             throws IOException
     {
 
         dictionaryRenderer = rendererFactory.renderer("search/dictionary-results");
-        this.assistantClient = assistantClient;
+        this.mathClient = mathClient;
     }
 
     @Override
@@ -57,9 +57,9 @@ public class DefinitionCommand implements SearchCommandInterface {
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
         try {
-            return assistantClient
+            return mathClient
                     .dictionaryLookup(word)
-                    .get(100, TimeUnit.MILLISECONDS);
+                    .get(250, TimeUnit.MILLISECONDS);
         }
         catch (Exception e) {
             logger.error("Failed to lookup definition for word: " + word, e);

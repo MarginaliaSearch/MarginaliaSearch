@@ -3,6 +3,14 @@ package nu.marginalia.process;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import nu.marginalia.WmsaHome;
+import nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator;
+import nu.marginalia.converting.ConverterMain;
+import nu.marginalia.crawl.CrawlerMain;
+import nu.marginalia.index.IndexConstructorMain;
+import nu.marginalia.loading.LoaderMain;
+import nu.marginalia.service.MainClass;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
 import org.slf4j.Logger;
@@ -43,16 +51,32 @@ public class ProcessService {
     }
 
     public enum ProcessId {
-        CRAWLER("crawler-process/bin/crawler-process"),
-        CONVERTER("converter-process/bin/converter-process"),
-        LOADER("loader-process/bin/loader-process"),
-        INDEX_CONSTRUCTOR("index-construction-process/bin/index-construction-process"),
-        ADJACENCIES_CALCULATOR("website-adjacencies-calculator/bin/website-adjacencies-calculator")
+        CRAWLER(CrawlerMain.class),
+        CONVERTER(ConverterMain.class),
+        LOADER(LoaderMain.class),
+        INDEX_CONSTRUCTOR(IndexConstructorMain.class),
+        ADJACENCIES_CALCULATOR(WebsiteAdjacenciesCalculator.class)
         ;
 
-        public final String path;
-        ProcessId(String path) {
-            this.path = path;
+        public final String mainClass;
+        ProcessId(Class<? extends ProcessMainClass> mainClass) {
+            this.mainClass = mainClass.getName();
+        }
+
+        List<String> envOpts() {
+            String variable = switch (this) {
+                case CRAWLER -> "CRAWLER_PROCESS_OPTS";
+                case CONVERTER -> "CONVERTER_PROCESS_OPTS";
+                case LOADER -> "LOADER_PROCESS_OPTS";
+                case INDEX_CONSTRUCTOR -> "INDEX_CONSTRUCTION_PROCESS_OPTS";
+                case ADJACENCIES_CALCULATOR -> "ADJACENCIES_CALCULATOR_PROCESS_OPTS";
+            };
+            String value = System.getenv(variable);
+
+            if (value == null)
+                return List.of();
+            else
+                return Arrays.asList(value.split("\\s+"));
         }
     }
 
@@ -63,27 +87,27 @@ public class ProcessService {
         this.distPath = distPath;
     }
 
-    public boolean trigger(ProcessId processId) throws Exception {
-        return trigger(processId, new String[0]);
-    }
 
-    public boolean trigger(ProcessId processId, String... parameters) throws Exception {
-        final String processPath = distPath.resolve(processId.path).toString();
+    public boolean trigger(ProcessId processId, String... extraArgs) throws Exception {
         final String[] env = createEnvironmentVariables();
-        final String[] args = createCommandArguments(processPath, parameters);
+        List<String> args = new ArrayList<>();
+        String javaHome = System.getProperty("java.home");
+
+        args.add(STR."\{javaHome}/bin/java");
+        args.add("-cp");
+        args.add(System.getProperty("java.class.path"));
+        args.add("--enable-preview");
+        args.addAll(processId.envOpts());
+        args.add(processId.mainClass);
+        args.addAll(Arrays.asList(extraArgs));
 
         Process process;
 
-        if (!Files.exists(Path.of(processPath))) {
-            logger.error("Process not found: {}", processPath);
-            return false;
-        }
-
-        logger.info("Starting process: {}: {} // {}", processId, Arrays.toString(args), Arrays.toString(env));
+        logger.info("Starting process: {} {}", processId, processId.envOpts());
 
         synchronized (processes) {
             if (processes.containsKey(processId)) return false;
-            process = Runtime.getRuntime().exec(args, env);
+            process = Runtime.getRuntime().exec(args.toArray(String[]::new), env);
             processes.put(processId, process);
         }
 
@@ -107,13 +131,6 @@ public class ProcessService {
     }
 
 
-    private String[] createCommandArguments(String processPath, String[] parameters) {
-        final String[] args = new String[parameters.length + 1];
-        args[0] = processPath;
-        System.arraycopy(parameters, 0, args, 1, parameters.length);
-        return args;
-    }
-
     public boolean isRunning(ProcessId processId) {
         return processes.containsKey(processId);
     }
@@ -131,25 +148,14 @@ public class ProcessService {
     /** These environment variables are propagated from the parent process to the child process,
      * along with WMSA_HOME, but it has special logic */
     private final List<String> propagatedEnvironmentVariables = List.of(
-            "JAVA_HOME",
             "ZOOKEEPER_HOSTS",
-            "WMSA_SERVICE_NODE",
-            "CONVERTER_PROCESS_OPTS",
-            "LOADER_PROCESS_OPTS",
-            "INDEX_CONSTRUCTION_PROCESS_OPTS",
-            "CRAWLER_PROCESS_OPTS");
+            "WMSA_SERVICE_NODE"
+    );
 
     private String[] createEnvironmentVariables() {
         List<String> opts = new ArrayList<>();
 
-        String WMSA_HOME = System.getenv("WMSA_HOME");
-
-        if (WMSA_HOME == null || WMSA_HOME.isBlank()) {
-            WMSA_HOME = "/var/lib/wmsa";
-        }
-
-        opts.add(env2str("WMSA_HOME", WMSA_HOME));
-        opts.add(env2str("JAVA_OPTS", "--enable-preview")); //
+        opts.add(env2str("WMSA_HOME", WmsaHome.getHomePath().toString()));
 
         for (String envKey : propagatedEnvironmentVariables) {
             String envValue = System.getenv(envKey);

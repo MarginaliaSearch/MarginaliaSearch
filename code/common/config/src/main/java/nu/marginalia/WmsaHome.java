@@ -5,8 +5,7 @@ import nu.marginalia.service.ServiceHomeNotConfiguredException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class WmsaHome {
@@ -26,14 +25,27 @@ public class WmsaHome {
     }
 
     public static Path getHomePath() {
-        var retStr = Optional.ofNullable(System.getenv("WMSA_HOME")).orElseGet(WmsaHome::findDefaultHomePath);
+        String[] possibleLocations = new String[] {
+            System.getenv("WMSA_HOME"),
+            System.getProperty("system.homePath"),
+            "/var/lib/wmsa",
+            "/wmsa"
+        };
+
+        String retStr = Stream.of(possibleLocations)
+                .filter(Objects::nonNull)
+                .map(Path::of)
+                .filter(Files::isDirectory)
+                .map(Path::toString)
+                .findFirst()
+                .orElseThrow(() ->
+                        new ServiceHomeNotConfiguredException("""
+                            Could not find $WMSA_HOME, either set environment
+                            variable, the 'system.homePath' property,
+                            or ensure either /wmssa or /var/lib/wmsa exists
+                            """));
 
         var ret = Path.of(retStr);
-
-        if (!Files.isDirectory(ret)) {
-            throw new ServiceHomeNotConfiguredException("Could not find $WMSA_HOME, either set environment variable or ensure " + retStr + " exists");
-        }
-
 
         if (!Files.isDirectory(ret.resolve("model"))) {
             throw new ServiceHomeNotConfiguredException("You need to run 'run/setup.sh' to download models to run/ before this will work!");
@@ -41,22 +53,6 @@ public class WmsaHome {
 
         return ret;
     }
-
-    private static String findDefaultHomePath() {
-
-        // Assume this is a local developer and not a production system, since it would have WMSA_HOME set.
-        // Developers probably have a "run/" somewhere upstream from cwd.
-        //
-
-        return Stream.iterate(Paths.get("").toAbsolutePath(), f -> f != null && Files.exists(f), Path::getParent)
-                .filter(p -> Files.exists(p.resolve("run/env")))
-                .filter(p -> Files.exists(p.resolve("run/setup.sh")))
-                .map(p -> p.resolve("run"))
-                .findAny()
-                .orElse(Path.of("/var/lib/wmsa"))
-                .toString();
-    }
-
 
     public static Path getAdsDefinition() {
         return getHomePath().resolve("data").resolve("adblock.txt");

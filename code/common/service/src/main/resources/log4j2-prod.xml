@@ -21,6 +21,8 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger name="org.apache.zookeeper" level="WARN" />
+
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="LogToFile"/>

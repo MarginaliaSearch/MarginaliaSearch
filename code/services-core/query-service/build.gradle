@@ -1,9 +1,9 @@
 plugins {
     id 'java'
 
-    id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 application {
@@ -13,7 +13,22 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+jib {
+    from {
+        image = image = rootProject.ext.dockerImageBase
+    }
+    to {
+        image = 'marginalia/'+project.name
+        tags = ['latest']
+    }
+    container {
+
+        mainClass = application.mainClass
+        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
+        volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
+    }
+}
+
 
 java {
     toolchain {
@@ -34,6 +49,9 @@ dependencies {
     implementation project(':code:features-index:index-query')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
+
+    implementation project(':code:functions:domain-links:api')
+    implementation project(':code:functions:domain-links:aggregate')
 
     implementation libs.bundles.slf4j
 

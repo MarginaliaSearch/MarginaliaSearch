@@ -314,6 +314,10 @@ public class MqPersistence {
      */
     public Collection<MqMessage> pollInbox(String inboxName, String instanceUUID, long tick, int n) throws SQLException {
 
+        if (dataSource.isClosed()) {
+            return Collections.emptyList();
+        }
+
         // Mark new messages as claimed
         int expected = markInboxMessages(inboxName, instanceUUID, tick, n);
         if (expected == 0) {
@@ -365,6 +369,10 @@ public class MqPersistence {
      * then returns these messages.
      */
     public Collection<MqMessage> pollReplyInbox(String inboxName, String instanceUUID, long tick, int n) throws SQLException {
+
+        if (dataSource.isClosed()) {
+            return Collections.emptyList();
+        }
 
         // Mark new messages as claimed
         int expected = markInboxMessages(inboxName, instanceUUID, tick, n);

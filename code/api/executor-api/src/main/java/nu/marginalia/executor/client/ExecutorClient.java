@@ -13,7 +13,8 @@ import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.executor.upload.UploadDirItem;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
-import nu.marginalia.service.discovery.property.ApiSchema;
+import nu.marginalia.service.discovery.property.ServiceKey;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.storage.model.FileStorageId;
 
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -39,180 +41,190 @@ public class ExecutorClient {
     {
         this.registry = registry;
         this.channelPool = grpcChannelPoolFactory
-                .createMulti(ServiceId.Executor, ExecutorApiGrpc::newBlockingStub);
+                .createMulti(
+                        ServiceKey.forGrpcApi(ExecutorApiGrpc.class, ServicePartition.multi()),
+                        ExecutorApiGrpc::newBlockingStub);
     }
 
     public void startFsm(int node, String actorName) {
-        channelPool.apiForNode(node).startFsm(
-                RpcFsmName.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::startFsm)
+                .forNode(node)
+                .run(RpcFsmName.newBuilder()
                         .setActorName(actorName)
-                        .build()
-        );
+                        .build());
+
     }
 
     public void stopFsm(int node, String actorName) {
-        channelPool.apiForNode(node).stopFsm(
-                RpcFsmName.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::stopFsm)
+                .forNode(node)
+                .run(RpcFsmName.newBuilder()
                         .setActorName(actorName)
-                        .build()
-        );
+                        .build());
     }
 
     public void stopProcess(int node, String id) {
-        channelPool.apiForNode(node).stopProcess(
-                RpcProcessId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::stopProcess)
+                .forNode(node)
+                .run(RpcProcessId.newBuilder()
                         .setProcessId(id)
-                        .build()
-        );
+                        .build());
+
     }
 
     public void triggerCrawl(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).triggerCrawl(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::triggerCrawl)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
 
     public void triggerRecrawl(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).triggerRecrawl(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::triggerRecrawl)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
 
     public void triggerConvert(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).triggerConvert(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::triggerConvert)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
 
     public void triggerConvertAndLoad(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).triggerConvertAndLoad(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::triggerConvertAndLoad)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
 
     public void loadProcessedData(int node, List<FileStorageId> ids) {
-        channelPool.apiForNode(node).loadProcessedData(
-                RpcFileStorageIds.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::loadProcessedData)
+                .forNode(node)
+                .run(RpcFileStorageIds.newBuilder()
                         .addAllFileStorageIds(ids.stream().map(FileStorageId::id).toList())
-                        .build()
-        );
+                        .build());
     }
 
     public void calculateAdjacencies(int node) {
-        channelPool.apiForNode(node).calculateAdjacencies(Empty.getDefaultInstance());
+        channelPool.call(ExecutorApiBlockingStub::calculateAdjacencies)
+                .forNode(node)
+                .run(Empty.getDefaultInstance());
     }
 
     public void sideloadEncyclopedia(int node, Path sourcePath, String baseUrl) {
-        channelPool.apiForNode(node).sideloadEncyclopedia(
-                RpcSideloadEncyclopedia.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::sideloadEncyclopedia)
+                .forNode(node)
+                .run(RpcSideloadEncyclopedia.newBuilder()
                         .setBaseUrl(baseUrl)
                         .setSourcePath(sourcePath.toString())
-                        .build()
-        );
+                        .build());
     }
 
     public void sideloadDirtree(int node, Path sourcePath) {
-        channelPool.apiForNode(node).sideloadDirtree(
-                RpcSideloadDirtree.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::sideloadDirtree)
+                .forNode(node)
+                .run(RpcSideloadDirtree.newBuilder()
                         .setSourcePath(sourcePath.toString())
-                        .build()
-        );
+                        .build());
     }
     public void sideloadReddit(int node, Path sourcePath) {
-        channelPool.apiForNode(node).sideloadReddit(
-                RpcSideloadReddit.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::sideloadReddit)
+                .forNode(node)
+                .run(RpcSideloadReddit.newBuilder()
                         .setSourcePath(sourcePath.toString())
-                        .build()
-        );
+                        .build());
     }
     public void sideloadWarc(int node, Path sourcePath) {
-        channelPool.apiForNode(node).sideloadWarc(
-                RpcSideloadWarc.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::sideloadWarc)
+                .forNode(node)
+                .run(RpcSideloadWarc.newBuilder()
                         .setSourcePath(sourcePath.toString())
-                        .build()
-        );
+                        .build());
     }
 
     public void sideloadStackexchange(int node, Path sourcePath) {
-        channelPool.apiForNode(node).sideloadStackexchange(
-                RpcSideloadStackexchange.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::sideloadStackexchange)
+                .forNode(node)
+                .run(RpcSideloadStackexchange.newBuilder()
                         .setSourcePath(sourcePath.toString())
-                        .build()
-        );
+                        .build());
     }
 
     public void createCrawlSpecFromDownload(int node, String description, String url) {
-        channelPool.apiForNode(node).createCrawlSpecFromDownload(
-                RpcCrawlSpecFromDownload.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::createCrawlSpecFromDownload)
+                .forNode(node)
+                .run(RpcCrawlSpecFromDownload.newBuilder()
                         .setDescription(description)
                         .setUrl(url)
-                        .build()
-        );
+                        .build());
     }
 
     public void exportAtags(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).exportAtags(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::exportAtags)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
     public void exportSampleData(int node, FileStorageId fid, int size, String name) {
-        channelPool.apiForNode(node).exportSampleData(
-                RpcExportSampleData.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::exportSampleData)
+                .forNode(node)
+                .run(RpcExportSampleData.newBuilder()
                         .setFileStorageId(fid.id())
                         .setSize(size)
                         .setName(name)
-                        .build()
-        );
+                        .build());
     }
 
     public void exportRssFeeds(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).exportRssFeeds(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::exportRssFeeds)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
     public void exportTermFrequencies(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).exportTermFrequencies(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::exportTermFrequencies)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
 
     public void downloadSampleData(int node, String sampleSet) {
-        channelPool.apiForNode(node).downloadSampleData(
-                RpcDownloadSampleData.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::downloadSampleData)
+                .forNode(node)
+                .run(RpcDownloadSampleData.newBuilder()
                         .setSampleSet(sampleSet)
-                        .build()
-        );
+                        .build());
     }
 
     public void exportData(int node) {
-        channelPool.apiForNode(node).exportData(Empty.getDefaultInstance());
+        channelPool.call(ExecutorApiBlockingStub::exportData)
+                .forNode(node)
+                .run(Empty.getDefaultInstance());
     }
 
     public void restoreBackup(int node, FileStorageId fid) {
-        channelPool.apiForNode(node).restoreBackup(
-                RpcFileStorageId.newBuilder()
+        channelPool.call(ExecutorApiBlockingStub::restoreBackup)
+                .forNode(node)
+                .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())
-                        .build()
-        );
+                        .build());
     }
 
     public ActorRunStates getActorStates(int node) {
         try {
-            var rs = channelPool.apiForNode(node).getActorStates(Empty.getDefaultInstance());
+            var rs = channelPool.call(ExecutorApiBlockingStub::getActorStates)
+                    .forNode(node)
+                    .run(Empty.getDefaultInstance());
             var states = rs.getActorRunStatesList().stream()
                     .map(r -> new ActorRunState(
                             r.getActorName(),
@@ -236,7 +248,9 @@ public class ExecutorClient {
 
     public UploadDirContents listSideloadDir(int node) {
         try {
-            var rs = channelPool.apiForNode(node).listSideloadDir(Empty.getDefaultInstance());
+            var rs = channelPool.call(ExecutorApiBlockingStub::listSideloadDir)
+                    .forNode(node)
+                    .run(Empty.getDefaultInstance());
             var items = rs.getEntriesList().stream()
                     .map(i -> new UploadDirItem(i.getName(), i.getLastModifiedTime(), i.getIsDirectory(), i.getSize()))
                     .toList();
@@ -252,11 +266,12 @@ public class ExecutorClient {
 
     public FileStorageContent listFileStorage(int node, FileStorageId fileId) {
         try {
-            var rs = channelPool.apiForNode(node).listFileStorage(
-                    RpcFileStorageId.newBuilder()
+            var rs = channelPool.call(ExecutorApiBlockingStub::listFileStorage)
+                    .forNode(node)
+                    .run(RpcFileStorageId.newBuilder()
                             .setFileStorageId(fileId.id())
                             .build()
-            );
+                    );
 
             return new FileStorageContent(rs.getEntriesList().stream()
                     .map(e -> new FileStorageFile(e.getName(), e.getSize(), e.getLastModifiedTime()))
@@ -274,13 +289,13 @@ public class ExecutorClient {
         String uriPath = STR."/transfer/file/\{fileId.id()}";
         String uriQuery = STR."path=\{URLEncoder.encode(path, StandardCharsets.UTF_8)}";
 
-        var service = registry.getEndpoints(ApiSchema.REST, ServiceId.Executor, node)
+        var service = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, node))
                 .stream().findFirst().orElseThrow();
 
         try (var urlStream = service.endpoint().toURL(uriPath, uriQuery).openStream()) {
             urlStream.transferTo(destOutputStream);
         }
-        catch (IOException ex) {
+        catch (IOException | URISyntaxException ex) {
             throw new RuntimeException(ex);
         }
     }

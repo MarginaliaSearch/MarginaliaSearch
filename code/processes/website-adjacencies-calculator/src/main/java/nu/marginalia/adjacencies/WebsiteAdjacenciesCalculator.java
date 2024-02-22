@@ -4,18 +4,20 @@ import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
+import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.MainClass;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.ServiceDiscoveryModule;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,18 +26,18 @@ import java.util.stream.IntStream;
 
 import static nu.marginalia.adjacencies.SparseBitVector.*;
 
-public class WebsiteAdjacenciesCalculator extends MainClass {
+public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
     private final HikariDataSource dataSource;
     public AdjacenciesData adjacenciesData;
     public DomainAliases domainAliases;
     private static final Logger logger = LoggerFactory.getLogger(WebsiteAdjacenciesCalculator.class);
 
     float[] weights;
-    public WebsiteAdjacenciesCalculator(QueryClient queryClient, HikariDataSource dataSource) throws SQLException {
+    public WebsiteAdjacenciesCalculator(AggregateDomainLinksClient domainLinksClient, HikariDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
 
         domainAliases = new DomainAliases(dataSource);
-        adjacenciesData = new AdjacenciesData(queryClient, domainAliases);
+        adjacenciesData = new AdjacenciesData(domainLinksClient, domainAliases);
         weights = adjacenciesData.getWeights();
     }
 
@@ -146,16 +148,20 @@ public class WebsiteAdjacenciesCalculator extends MainClass {
     }
 
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws SQLException, InterruptedException {
         var injector = Guice.createInjector(
                 new DatabaseModule(false),
                 new ServiceDiscoveryModule());
 
 
         var dataSource = injector.getInstance(HikariDataSource.class);
-        var qc = injector.getInstance(QueryClient.class);
+        var lc = injector.getInstance(AggregateDomainLinksClient.class);
 
-        var main = new WebsiteAdjacenciesCalculator(qc, dataSource);
+        if (!lc.waitReady(Duration.ofSeconds(30))) {
+            throw new IllegalStateException("Failed to connect to domain-links");
+        }
+
+        var main = new WebsiteAdjacenciesCalculator(lc, dataSource);
 
         if (args.length == 1 && "load".equals(args[0])) {
             var processHeartbeat = new ProcessHeartbeatImpl(

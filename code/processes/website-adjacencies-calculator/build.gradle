@@ -23,7 +23,7 @@ dependencies {
     implementation project(':code:common:process')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service')
-    implementation project(':code:api:query-api')
+    implementation project(':code:functions:domain-links:api')
 
     implementation libs.bundles.slf4j
 
