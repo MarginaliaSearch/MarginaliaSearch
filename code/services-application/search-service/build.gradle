@@ -47,7 +47,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
-    implementation project(':code:functions:index:query')
+    implementation project(':code:index:query')
 
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:language-processing')
@@ -59,7 +59,7 @@ dependencies {
     implementation project(':code:functions:search-query:api')
 
 
-    implementation project(':code:functions:index:api')
+    implementation project(':code:index:api')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:renderer')
 

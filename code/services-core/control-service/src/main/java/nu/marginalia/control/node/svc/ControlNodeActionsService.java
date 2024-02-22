@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.functions.index.api.IndexMqClient;
+import nu.marginalia.index.api.IndexMqClient;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;

@@ -47,11 +47,11 @@ dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:api:executor-api')
-    implementation project(':code:functions:index:api')
+    implementation project(':code:index:api')
     implementation project(':code:api:process-mqapi')
     implementation project(':code:features-search:screenshots')
-    implementation project(':code:functions:index:index-journal')
-    implementation project(':code:functions:index:query')
+    implementation project(':code:index:index-journal')
+    implementation project(':code:index:query')
 
     implementation project(':code:process-models:crawl-spec')
 

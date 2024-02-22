@@ -8,7 +8,7 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.control.actor.PrecessionNodes;
-import nu.marginalia.functions.index.api.IndexMqClient;
+import nu.marginalia.index.api.IndexMqClient;
 import nu.marginalia.mq.persistence.MqPersistence;
 
 import java.sql.SQLException;

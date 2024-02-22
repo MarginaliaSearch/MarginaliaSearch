@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation project(':code:libraries:array')
+    implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:random-write-funnel')
+    implementation project(':code:index:query')
+    implementation project(':code:index:index-journal')
+    implementation project(':code:common:model')
+    implementation project(':code:common:process')
+
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.fastutil
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+

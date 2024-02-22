@@ -1,6 +1,6 @@
 # Control Service
 
-The control service provides an operator's user interface.  By default this interface is
+The control service provides an operator's user interface.  By default, this interface is
 exposed on port 8081.  It does not offer any sort of access control or authentication.
 
 The control service will itself execute tasks that affect the entire system, but delegate

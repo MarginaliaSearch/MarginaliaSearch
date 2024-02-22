@@ -24,7 +24,7 @@ dependencies {
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:count-min-sketch')
 
-    implementation project(':code:functions:index:api')
+    implementation project(':code:index:api')
     implementation project(':code:api:process-mqapi')
 
     implementation project(':code:common:model')

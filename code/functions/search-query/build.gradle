@@ -10,7 +10,7 @@ java {
 }
 
 dependencies {
-    implementation project(':code:functions:index:api')
+    implementation project(':code:index:api')
 
     implementation project(':code:common:db')
     implementation project(':code:common:config')
@@ -19,7 +19,7 @@ dependencies {
 
     implementation project(':code:functions:search-query:api')
 
-    implementation project(':code:functions:index:query')
+    implementation project(':code:index:query')
 
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')

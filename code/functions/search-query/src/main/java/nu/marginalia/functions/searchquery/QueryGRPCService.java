@@ -8,19 +8,14 @@ import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.db.DomainBlacklist;
-import nu.marginalia.functions.index.api.IndexClient;
+import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.functions.searchquery.svc.QueryFactory;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.service.client.GrpcChannelPoolFactory;
-import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
-import nu.marginalia.service.discovery.property.ServiceKey;
-import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.*;
 
 @Singleton
 public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {

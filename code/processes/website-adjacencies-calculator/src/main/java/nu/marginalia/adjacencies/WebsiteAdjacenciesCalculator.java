@@ -9,7 +9,6 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.ServiceDiscoveryModule;
 import nu.marginalia.service.module.DatabaseModule;

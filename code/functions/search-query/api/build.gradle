@@ -26,7 +26,7 @@ apply from: "$rootProject.projectDir/protobuf.gradle"
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
-    implementation project(':code:functions:index:query')
+    implementation project(':code:index:query')
     implementation project(':code:common:service-discovery')
 
     implementation libs.bundles.slf4j

@@ -1,7 +1,7 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.functions.index.api.IndexMqClient;
+import nu.marginalia.index.api.IndexMqClient;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
