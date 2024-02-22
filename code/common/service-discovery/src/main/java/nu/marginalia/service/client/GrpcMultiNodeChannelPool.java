@@ -100,6 +100,7 @@ public class GrpcMultiNodeChannelPool<STUB> {
             this.method = method;
         }
 
+        /** Run the given method on each node, returning a future of a list of results */
         public CompletableFuture<List<T>> runAll(I arg) {
             var futures = getEligibleNodes().stream()
                     .map(GrpcMultiNodeChannelPool.this::getPoolForNode)
@@ -113,6 +114,7 @@ public class GrpcMultiNodeChannelPool<STUB> {
                     .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
         }
 
+        /** Run the given method on each node, returning a list of futures. */
         public List<CompletableFuture<T>> runEach(I arg) {
             return getEligibleNodes().stream()
                     .map(GrpcMultiNodeChannelPool.this::getPoolForNode)
