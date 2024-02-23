@@ -10,6 +10,8 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:common:model')

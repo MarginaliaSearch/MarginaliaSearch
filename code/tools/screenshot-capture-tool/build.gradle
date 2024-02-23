@@ -35,6 +35,8 @@ jib {
 
 tasks.distZip.enabled = false
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:features-search:screenshots')

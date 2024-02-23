@@ -19,10 +19,12 @@ apply from: "$rootProject.projectDir/protobuf.gradle"
 sourceSets {
     main {
         proto {
-            srcDir 'src/main/protobuf'
+            srcDir 'protobuf'
         }
     }
 }
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:common:model')

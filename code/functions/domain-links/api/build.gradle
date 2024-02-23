@@ -13,15 +13,8 @@ java {
 
 jar.archiveBaseName = 'index-domain-links-api'
 
-sourceSets {
-    main {
-        proto {
-            srcDir 'src/main/protobuf'
-        }
-    }
-}
-
 apply from: "$rootProject.projectDir/protobuf.gradle"
+apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:common:model')

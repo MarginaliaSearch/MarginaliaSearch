@@ -18,6 +18,8 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation libs.bundles.slf4j
 

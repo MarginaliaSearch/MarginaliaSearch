@@ -17,6 +17,14 @@ compileTestJava.options.encoding = "UTF-8"
 
 subprojects.forEach {it ->
     // Enable preview features for the entire project
+
+    if (it.path.contains(':code:')) {
+        sourceSets.main.java.srcDirs += file('java')
+        sourceSets.main.resources.srcDirs += file('resources')
+        sourceSets.test.java.srcDirs += file('test')
+        sourceSets.test.resources.srcDirs += file('test-resources')
+    }
+
     it.tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += ['--enable-preview']
     }
@@ -32,33 +40,10 @@ subprojects.forEach {it ->
         preserveFileTimestamps = false
         reproducibleFileOrder = true
     }
+
 }
 ext {
     dockerImageBase='container-registry.oracle.com/graalvm/jdk:21@sha256:1fd33d4d4eba3a9e1a41a728e39ea217178d257694eea1214fec68d2ed4d3d9b'
-}
-allprojects {
-    apply plugin: 'java'
-    apply plugin: 'io.freefair.lombok'
-    dependencies {
-        implementation libs.lombok
-        testImplementation libs.lombok
-        annotationProcessor libs.lombok
-
-        lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
-    }
-
-    test {
-        maxHeapSize = "8G"
-        useJUnitPlatform()
-    }
-
-    tasks.register('fastTests', Test) {
-        maxHeapSize = "8G"
-        useJUnitPlatform {
-            excludeTags "slow"
-        }
-    }
-
 }
 
 idea {

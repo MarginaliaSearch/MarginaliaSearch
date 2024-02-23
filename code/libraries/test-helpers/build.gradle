@@ -8,6 +8,8 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation libs.bundles.slf4j
     implementation libs.bundles.mariadb

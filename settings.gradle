@@ -1,4 +1,4 @@
-rootProject.name = 'marginalia.nu'
+rootProject.name = 'marginalia'
 
 include 'code:services-core:index-service'
 include 'code:services-core:assistant-service'
@@ -31,8 +31,8 @@ include 'code:index'
 include 'code:index:api'
 include 'code:index:index-journal'
 include 'code:index:query'
-include 'code:index:forward-index'
-include 'code:index:reverse-index'
+include 'code:index:index-forward'
+include 'code:index:index-reverse'
 
 include 'code:libraries:array'
 include 'code:libraries:geo-ip'

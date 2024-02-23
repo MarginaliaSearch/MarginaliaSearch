@@ -18,6 +18,8 @@ application {
 
 tasks.distZip.enabled = false
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:process-mqapi')
     implementation project(':code:common:process')
@@ -28,8 +30,8 @@ dependencies {
     implementation project(':code:libraries:message-queue')
 
     implementation project(':code:index:query')
-    implementation project(':code:index:forward-index')
-    implementation project(':code:index:reverse-index')
+    implementation project(':code:index:index-forward')
+    implementation project(':code:index:index-reverse')
     implementation project(':code:index:index-journal')
 
     implementation libs.bundles.slf4j

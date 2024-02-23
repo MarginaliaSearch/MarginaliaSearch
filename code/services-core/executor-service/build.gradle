@@ -34,6 +34,8 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     // These look weird but they're needed to be able to spawn the processes
     // from the executor service

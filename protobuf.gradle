@@ -27,3 +27,13 @@ protobuf {
         }
     }
 }
+
+tasks.compileJava.dependsOn('generateProto')
+
+sourceSets {
+    main {
+        proto {
+            srcDirs += 'src/main/protobuf'
+        }
+    }
+}
