@@ -127,7 +127,7 @@ public class EdgeDomain implements Serializable {
             ret.append(topDomain, 0, cutPoint);
         }
 
-        if (!"".equals(subDomain) && !"www".equals(subDomain)) {
+        if (!subDomain.isEmpty() && !"www".equals(subDomain)) {
             ret.append(":");
             ret.append(subDomain);
         }

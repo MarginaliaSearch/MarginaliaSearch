@@ -39,6 +39,10 @@ public class ActorProcessWatcher {
     public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long msgId)
             throws ActorControlFlowException, InterruptedException, SQLException
     {
+        // enums values only have a single instance,
+        // so it's safe to synchronize on them
+        // even though it looks a bit weird to
+        // synchronize on a parameter like this:
         synchronized (processId) {
             // Wake up the process spawning actor
             processId.notifyAll();

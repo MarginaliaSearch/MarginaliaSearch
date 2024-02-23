@@ -56,7 +56,7 @@ public class IndexMetadataService {
                     continue;
                 }
 
-                long id = searchTermsUtil.getWordId(term);
+                long id = SearchTermsUtil.getWordId(term);
                 termIdsList.add(id);
                 termToId.put(term, id);
             }

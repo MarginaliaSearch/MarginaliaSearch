@@ -209,7 +209,7 @@ public class LinkParser {
     }
 
     private boolean isUrlRelevant(String href) {
-        if (null == href || "".equals(href)) {
+        if (null == href || href.isEmpty()) {
             return false;
         }
         if (href.length() > 128) {

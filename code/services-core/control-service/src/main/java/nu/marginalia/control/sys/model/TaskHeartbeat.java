@@ -21,9 +21,7 @@ public record TaskHeartbeat(
 
     public String progressStyle() {
         if ("RUNNING".equals(status) && progress != null) {
-            return """
-                    background: linear-gradient(90deg, #ccc 0%%, #ccc %d%%, #fff %d%%)
-                    """.formatted(progress, progress, progress);
+            return STR."background: linear-gradient(90deg, #ccc 0%, #ccc \{progress}%, #fff \{progress}%)";
         }
         return "";
     }

@@ -93,7 +93,7 @@ public class SearchSetsService {
             return anySet;
         }
 
-        if ("NONE".equals(searchSetIdentifier) || "".equals(searchSetIdentifier)) {
+        if ("NONE".equals(searchSetIdentifier) || searchSetIdentifier.isEmpty()) {
             return anySet;
         }
 
