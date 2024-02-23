@@ -4,13 +4,17 @@ plugins {
     id "com.google.protobuf" version "0.9.4"
 }
 
+jar.archiveBaseName = 'execution-api'
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
+
 apply from: "$rootProject.projectDir/protobuf.gradle"
+
 
 sourceSets {
     main {
@@ -19,8 +23,6 @@ sourceSets {
         }
     }
 }
-
-
 
 dependencies {
     implementation project(':code:common:model')

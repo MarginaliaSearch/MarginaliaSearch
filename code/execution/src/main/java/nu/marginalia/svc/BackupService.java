@@ -3,6 +3,7 @@ package nu.marginalia.svc;
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.linkdb.LinkdbFileNames;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -17,9 +18,6 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
-import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
 
 public class BackupService {
 
@@ -59,10 +57,10 @@ public class BackupService {
 
         try (var heartbeat = serviceHeartbeat.createServiceTaskHeartbeat(BackupHeartbeatSteps.class, "Backup")) {
             heartbeat.progress(BackupHeartbeatSteps.DOCS);
-            backupFileCompressed(DOCDB_FILE_NAME, linkdbStagingStorage, backupStorage.asPath());
+            backupFileCompressed(LinkdbFileNames.DOCDB_FILE_NAME, linkdbStagingStorage, backupStorage.asPath());
 
             heartbeat.progress(BackupHeartbeatSteps.LINKS);
-            backupFileCompressed(DOMAIN_LINKS_FILE_NAME, linkdbStagingStorage, backupStorage.asPath());
+            backupFileCompressed(LinkdbFileNames.DOMAIN_LINKS_FILE_NAME, linkdbStagingStorage, backupStorage.asPath());
 
             heartbeat.progress(BackupHeartbeatSteps.JOURNAL);
             // This file format is already compressed
@@ -84,10 +82,10 @@ public class BackupService {
 
         try (var heartbeat = serviceHeartbeat.createServiceTaskHeartbeat(BackupHeartbeatSteps.class, "Restore Backup")) {
             heartbeat.progress(BackupHeartbeatSteps.DOCS);
-            restoreBackupCompressed(DOCDB_FILE_NAME, linkdbStagingStorage, backupStorage);
+            restoreBackupCompressed(LinkdbFileNames.DOCDB_FILE_NAME, linkdbStagingStorage, backupStorage);
 
             heartbeat.progress(BackupHeartbeatSteps.LINKS);
-            restoreBackupCompressed(DOMAIN_LINKS_FILE_NAME, linkdbStagingStorage, backupStorage);
+            restoreBackupCompressed(LinkdbFileNames.DOMAIN_LINKS_FILE_NAME, linkdbStagingStorage, backupStorage);
 
             heartbeat.progress(BackupHeartbeatSteps.JOURNAL);
             restoreJournal(indexStagingStorage, backupStorage);

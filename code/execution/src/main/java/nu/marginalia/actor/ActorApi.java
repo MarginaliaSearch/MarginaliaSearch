@@ -2,11 +2,7 @@ package nu.marginalia.actor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.actor.state.ActorStateInstance;
-import nu.marginalia.executor.api.RpcActorRunState;
-import nu.marginalia.executor.api.RpcActorRunStates;
-import nu.marginalia.executor.api.RpcFsmName;
-import nu.marginalia.executor.api.RpcProcessId;
+import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.process.ProcessService;
@@ -14,8 +10,6 @@ import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Spark;
-
-import java.util.Comparator;
 
 @Singleton
 public class ActorApi {
@@ -74,45 +68,6 @@ public class ActorApi {
 
         return "OK";
     }
-
-
-    public RpcActorRunStates getActorStates() {
-        var items = actors.getActorStates().entrySet().stream().map(e -> {
-                    final var stateGraph = actors.getActorDefinition(e.getKey());
-
-                    final ActorStateInstance state = e.getValue();
-                    final String actorDescription = stateGraph.describe();
-
-                    final String machineName = e.getKey().name();
-                    final String stateName = state.name();
-
-                    final String stateDescription = "";
-
-                    final boolean terminal = state.isFinal();
-                    final boolean canStart = actors.isDirectlyInitializable(e.getKey()) && terminal;
-
-                    return RpcActorRunState
-                            .newBuilder()
-                            .setActorName(machineName)
-                            .setState(stateName)
-                            .setActorDescription(actorDescription)
-                            .setStateDescription(stateDescription)
-                            .setTerminal(terminal)
-                            .setCanStart(canStart)
-                            .build();
-
-                })
-                .filter(s -> !s.getTerminal() || s.getCanStart())
-                .sorted(Comparator.comparing(RpcActorRunState::getActorName))
-                .toList();
-
-        return RpcActorRunStates.newBuilder()
-                .setNode(serviceConfiguration.node())
-                .addAllActorRunStates(items)
-                .build();
-
-    }
-
 
     public ExecutorActor translateActor(String name) {
         try {

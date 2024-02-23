@@ -5,6 +5,9 @@ import com.google.inject.Singleton;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.executor.client.ExecutorClient;
+import nu.marginalia.executor.client.ExecutorCrawlClient;
+import nu.marginalia.executor.client.ExecutorExportClient;
+import nu.marginalia.executor.client.ExecutorSideloadClient;
 import nu.marginalia.index.api.IndexMqClient;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
@@ -31,13 +34,16 @@ public class ControlNodeActionsService {
     private final FileStorageService fileStorageService;
     private final ServiceEventLog eventLog;
     private final ExecutorClient executorClient;
+    private final ExecutorCrawlClient crawlClient;
+    private final ExecutorSideloadClient sideloadClient;
+    private final ExecutorExportClient exportClient;
 
     @Inject
     public ControlNodeActionsService(ExecutorClient executorClient,
                                      IndexMqClient indexMqClient,
                                      RedirectControl redirectControl,
                                      FileStorageService fileStorageService,
-                                     ServiceEventLog eventLog)
+                                     ServiceEventLog eventLog, ExecutorCrawlClient crawlClient, ExecutorSideloadClient sideloadClient, ExecutorExportClient exportClient)
     {
         this.executorClient = executorClient;
 
@@ -46,6 +52,9 @@ public class ControlNodeActionsService {
         this.fileStorageService = fileStorageService;
         this.eventLog = eventLog;
 
+        this.crawlClient = crawlClient;
+        this.sideloadClient = sideloadClient;
+        this.exportClient = exportClient;
     }
 
     public void register() {
@@ -127,7 +136,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD ENCYCLOPEDIA " + nodeId);
 
-        executorClient.sideloadEncyclopedia(nodeId, sourcePath, baseUrl);
+        sideloadClient.sideloadEncyclopedia(nodeId, sourcePath, baseUrl);
 
         return "";
     }
@@ -140,7 +149,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD DIRTREE " + nodeId);
 
-        executorClient.sideloadDirtree(nodeId, sourcePath);
+        sideloadClient.sideloadDirtree(nodeId, sourcePath);
 
         return "";
     }
@@ -152,7 +161,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD REDDIT " + nodeId);
 
-        executorClient.sideloadReddit(nodeId, sourcePath);
+        sideloadClient.sideloadReddit(nodeId, sourcePath);
 
         return "";
     }
@@ -163,7 +172,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD WARC " + nodeId);
 
-        executorClient.sideloadWarc(nodeId, sourcePath);
+        sideloadClient.sideloadWarc(nodeId, sourcePath);
 
         return "";
     }
@@ -178,7 +187,7 @@ public class ControlNodeActionsService {
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD STACKEXCHANGE " + nodeId);
 
-        executorClient.sideloadStackexchange(nodeId, sourcePath);
+        sideloadClient.sideloadStackexchange(nodeId, sourcePath);
 
         return "";
     }
@@ -196,7 +205,7 @@ public class ControlNodeActionsService {
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_DATA, toCrawl);
 
-        executorClient.triggerRecrawl(
+        crawlClient.triggerRecrawl(
                 nodeId,
                 toCrawl
         );
@@ -211,7 +220,7 @@ public class ControlNodeActionsService {
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_SPEC, toCrawl);
 
-        executorClient.triggerCrawl(nodeId, toCrawl);
+        crawlClient.triggerCrawl(nodeId, toCrawl);
 
         return "";
     }
@@ -224,10 +233,10 @@ public class ControlNodeActionsService {
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, toProcess);
 
         if (isAutoload) {
-            executorClient.triggerConvertAndLoad(nodeId, toProcess);
+            crawlClient.triggerConvertAndLoad(nodeId, toProcess);
         }
         else {
-            executorClient.triggerConvert(nodeId, toProcess);
+            crawlClient.triggerConvert(nodeId, toProcess);
         }
 
         return "";
@@ -245,7 +254,7 @@ public class ControlNodeActionsService {
 
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, ids.toArray(new FileStorageId[0]));
 
-        executorClient.loadProcessedData(nodeId, ids);
+        crawlClient.loadProcessedData(nodeId, ids);
 
         return "";
     }
@@ -287,13 +296,13 @@ public class ControlNodeActionsService {
             throw new ControlValidationError("No url specified", "A url must be specified", "..");
         }
 
-        executorClient.createCrawlSpecFromDownload(nodeId, description, url);
+        crawlClient.createCrawlSpecFromDownload(nodeId, description, url);
 
         return "";
     }
 
     private Object exportDbData(Request req, Response rsp) {
-        executorClient.exportData(Integer.parseInt(req.params("id")));
+        exportClient.exportData(Integer.parseInt(req.params("id")));
 
         return "";
     }
@@ -303,9 +312,9 @@ public class ControlNodeActionsService {
         FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
 
         switch (exportType) {
-            case "atags" -> executorClient.exportAtags(Integer.parseInt(req.params("id")), source);
-            case "rss" -> executorClient.exportRssFeeds(Integer.parseInt(req.params("id")), source);
-            case "termFreq" -> executorClient.exportTermFrequencies(Integer.parseInt(req.params("id")), source);
+            case "atags" -> exportClient.exportAtags(Integer.parseInt(req.params("id")), source);
+            case "rss" -> exportClient.exportRssFeeds(Integer.parseInt(req.params("id")), source);
+            case "termFreq" -> exportClient.exportTermFrequencies(Integer.parseInt(req.params("id")), source);
             default -> throw new ControlValidationError("No export type specified", "An export type must be specified", "..");
         }
 
@@ -317,7 +326,7 @@ public class ControlNodeActionsService {
         int size = Integer.parseInt(req.queryParams("size"));
         String name = req.queryParams("name");
 
-        executorClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, name);
+        exportClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, name);
 
         return "";
     }

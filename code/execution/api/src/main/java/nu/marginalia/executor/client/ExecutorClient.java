@@ -2,16 +2,15 @@ package nu.marginalia.executor.client;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
-import nu.marginalia.executor.api.*;
-import nu.marginalia.executor.api.ExecutorApiGrpc.ExecutorApiBlockingStub;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
 import nu.marginalia.executor.storage.FileStorageContent;
 import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.executor.upload.UploadDirItem;
+import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
@@ -26,8 +25,9 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
+
+import static nu.marginalia.functions.execution.api.ExecutorApiGrpc.*;
 
 @Singleton
 public class ExecutorClient {
@@ -72,131 +72,13 @@ public class ExecutorClient {
 
     }
 
-    public void triggerCrawl(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::triggerCrawl)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-
-    public void triggerRecrawl(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::triggerRecrawl)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-
-    public void triggerConvert(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::triggerConvert)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-
-    public void triggerConvertAndLoad(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::triggerConvertAndLoad)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-
-    public void loadProcessedData(int node, List<FileStorageId> ids) {
-        channelPool.call(ExecutorApiBlockingStub::loadProcessedData)
-                .forNode(node)
-                .run(RpcFileStorageIds.newBuilder()
-                        .addAllFileStorageIds(ids.stream().map(FileStorageId::id).toList())
-                        .build());
-    }
-
     public void calculateAdjacencies(int node) {
         channelPool.call(ExecutorApiBlockingStub::calculateAdjacencies)
                 .forNode(node)
                 .run(Empty.getDefaultInstance());
     }
 
-    public void sideloadEncyclopedia(int node, Path sourcePath, String baseUrl) {
-        channelPool.call(ExecutorApiBlockingStub::sideloadEncyclopedia)
-                .forNode(node)
-                .run(RpcSideloadEncyclopedia.newBuilder()
-                        .setBaseUrl(baseUrl)
-                        .setSourcePath(sourcePath.toString())
-                        .build());
-    }
 
-    public void sideloadDirtree(int node, Path sourcePath) {
-        channelPool.call(ExecutorApiBlockingStub::sideloadDirtree)
-                .forNode(node)
-                .run(RpcSideloadDirtree.newBuilder()
-                        .setSourcePath(sourcePath.toString())
-                        .build());
-    }
-    public void sideloadReddit(int node, Path sourcePath) {
-        channelPool.call(ExecutorApiBlockingStub::sideloadReddit)
-                .forNode(node)
-                .run(RpcSideloadReddit.newBuilder()
-                        .setSourcePath(sourcePath.toString())
-                        .build());
-    }
-    public void sideloadWarc(int node, Path sourcePath) {
-        channelPool.call(ExecutorApiBlockingStub::sideloadWarc)
-                .forNode(node)
-                .run(RpcSideloadWarc.newBuilder()
-                        .setSourcePath(sourcePath.toString())
-                        .build());
-    }
-
-    public void sideloadStackexchange(int node, Path sourcePath) {
-        channelPool.call(ExecutorApiBlockingStub::sideloadStackexchange)
-                .forNode(node)
-                .run(RpcSideloadStackexchange.newBuilder()
-                        .setSourcePath(sourcePath.toString())
-                        .build());
-    }
-
-    public void createCrawlSpecFromDownload(int node, String description, String url) {
-        channelPool.call(ExecutorApiBlockingStub::createCrawlSpecFromDownload)
-                .forNode(node)
-                .run(RpcCrawlSpecFromDownload.newBuilder()
-                        .setDescription(description)
-                        .setUrl(url)
-                        .build());
-    }
-
-    public void exportAtags(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::exportAtags)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-    public void exportSampleData(int node, FileStorageId fid, int size, String name) {
-        channelPool.call(ExecutorApiBlockingStub::exportSampleData)
-                .forNode(node)
-                .run(RpcExportSampleData.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .setSize(size)
-                        .setName(name)
-                        .build());
-    }
-
-    public void exportRssFeeds(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::exportRssFeeds)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-    public void exportTermFrequencies(int node, FileStorageId fid) {
-        channelPool.call(ExecutorApiBlockingStub::exportTermFrequencies)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
 
     public void downloadSampleData(int node, String sampleSet) {
         channelPool.call(ExecutorApiBlockingStub::downloadSampleData)
@@ -206,17 +88,11 @@ public class ExecutorClient {
                         .build());
     }
 
-    public void exportData(int node) {
-        channelPool.call(ExecutorApiBlockingStub::exportData)
-                .forNode(node)
-                .run(Empty.getDefaultInstance());
-    }
-
-    public void restoreBackup(int node, FileStorageId fid) {
+    public void restoreBackup(int nodeId, FileStorageId toLoad) {
         channelPool.call(ExecutorApiBlockingStub::restoreBackup)
-                .forNode(node)
+                .forNode(nodeId)
                 .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
+                        .setFileStorageId(toLoad.id())
                         .build());
     }
 
@@ -299,6 +175,5 @@ public class ExecutorClient {
             throw new RuntimeException(ex);
         }
     }
-
 
 }

@@ -24,6 +24,9 @@ include 'code:functions:domain-links:api'
 include 'code:functions:search-query'
 include 'code:functions:search-query:api'
 
+include 'code:execution'
+include 'code:execution:api'
+
 include 'code:index'
 include 'code:index:api'
 include 'code:index:index-journal'
@@ -66,7 +69,6 @@ include 'code:features-crawl:link-parser'
 include 'code:features-crawl:content-type'
 
 include 'code:process-mqapi'
-include 'code:api:executor-api'
 
 include 'code:common:service-discovery'
 include 'code:common:db'

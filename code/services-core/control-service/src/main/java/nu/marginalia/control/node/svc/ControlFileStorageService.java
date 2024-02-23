@@ -24,7 +24,8 @@ public class ControlFileStorageService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public ControlFileStorageService(FileStorageService fileStorageService, ExecutorClient executorClient)
+    public ControlFileStorageService(FileStorageService fileStorageService,
+                                     ExecutorClient executorClient)
     {
         this.fileStorageService = fileStorageService;
         this.executorClient = executorClient;

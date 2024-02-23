@@ -1,39 +1,47 @@
 syntax="proto3";
-package actorapi;
 
-option java_package="nu.marginalia.executor.api";
+package nu.marginalia.functions.execution.api;
+
+option java_package="nu.marginalia.functions.execution.api";
 option java_multiple_files=true;
 
 service ExecutorApi {
   rpc startFsm(RpcFsmName) returns (Empty) {}
   rpc stopFsm(RpcFsmName) returns (Empty) {}
-
   rpc stopProcess(RpcProcessId) returns (Empty) {}
 
+  rpc getActorStates(Empty) returns (RpcActorRunStates) {}
+  rpc listSideloadDir(Empty) returns (RpcUploadDirContents) {}
+  rpc listFileStorage(RpcFileStorageId) returns (RpcFileStorageContent) {}
+
+  rpc downloadSampleData(RpcDownloadSampleData) returns (Empty) {}
+  rpc calculateAdjacencies(Empty) returns (Empty) {}
+  rpc restoreBackup(RpcFileStorageId) returns (Empty) {}
+}
+
+service ExecutorCrawlApi {
   rpc triggerCrawl(RpcFileStorageId) returns (Empty) {}
   rpc triggerRecrawl(RpcFileStorageId) returns (Empty) {}
   rpc triggerConvert(RpcFileStorageId) returns (Empty) {}
   rpc triggerConvertAndLoad(RpcFileStorageId) returns (Empty) {}
   rpc loadProcessedData(RpcFileStorageIds) returns (Empty) {}
-  rpc calculateAdjacencies(Empty) returns (Empty) {}
+  rpc createCrawlSpecFromDownload(RpcCrawlSpecFromDownload) returns (Empty) {}
+}
 
+service ExecutorSideloadApi {
   rpc sideloadEncyclopedia(RpcSideloadEncyclopedia) returns (Empty) {}
   rpc sideloadDirtree(RpcSideloadDirtree) returns (Empty) {}
   rpc sideloadWarc(RpcSideloadWarc) returns (Empty) {}
   rpc sideloadReddit(RpcSideloadReddit) returns (Empty) {}
   rpc sideloadStackexchange(RpcSideloadStackexchange) returns (Empty) {}
+}
 
-  rpc createCrawlSpecFromDownload(RpcCrawlSpecFromDownload) returns (Empty) {}
+service ExecutorExportApi {
   rpc exportAtags(RpcFileStorageId) returns (Empty) {}
   rpc exportSampleData(RpcExportSampleData) returns (Empty) {}
   rpc exportRssFeeds(RpcFileStorageId) returns (Empty) {}
   rpc exportTermFrequencies(RpcFileStorageId) returns (Empty) {}
-  rpc downloadSampleData(RpcDownloadSampleData) returns (Empty) {}
   rpc exportData(Empty) returns (Empty) {}
-  rpc restoreBackup(RpcFileStorageId) returns (Empty) {}
-  rpc getActorStates(Empty) returns (RpcActorRunStates) {}
-  rpc listSideloadDir(Empty) returns (RpcUploadDirContents) {}
-  rpc listFileStorage(RpcFileStorageId) returns (RpcFileStorageContent) {}
 }
 
 message Empty {}
