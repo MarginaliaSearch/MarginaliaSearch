@@ -2,7 +2,6 @@ package nu.marginalia.functions.domains;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
-import nu.marginalia.api.domains.DomainInfoAPIGrpc;
 import nu.marginalia.api.domains.*;
 
 public class DomainInfoGrpcService extends DomainInfoAPIGrpc.DomainInfoAPIImplBase {

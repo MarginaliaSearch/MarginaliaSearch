@@ -2,7 +2,6 @@ package nu.marginalia.functions.domainlinks;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
-import nu.marginalia.api.domainlink.Empty;
 import nu.marginalia.api.domainlink.*;
 import nu.marginalia.linkdb.dlinks.DomainLinkDb;
 

@@ -2,7 +2,6 @@ package nu.marginalia.api.domains;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;

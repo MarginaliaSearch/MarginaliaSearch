@@ -1,7 +1,6 @@
 package nu.marginalia.query;
 
 import com.google.inject.Inject;
-import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.functions.domainlinks.AggregateDomainLinksService;
 import nu.marginalia.functions.searchquery.QueryGRPCService;

@@ -20,7 +20,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.sql.SQLException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 import static org.mockito.Mockito.when;
 

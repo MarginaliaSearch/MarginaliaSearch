@@ -1,7 +1,6 @@
 package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
-import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.Redirects;

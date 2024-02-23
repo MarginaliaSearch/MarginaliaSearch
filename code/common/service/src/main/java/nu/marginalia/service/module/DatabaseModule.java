@@ -7,7 +7,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.service.ServiceHomeNotConfiguredException;
 import org.flywaydb.core.Flyway;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.Properties;
 
 public class DatabaseModule extends AbstractModule {

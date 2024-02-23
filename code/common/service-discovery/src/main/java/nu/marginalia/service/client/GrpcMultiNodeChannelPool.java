@@ -11,13 +11,10 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /** A pool of gRPC channels for a service, with a separate channel for each node.
  * <p></p>
