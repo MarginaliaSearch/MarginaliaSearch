@@ -19,7 +19,7 @@ application {
 tasks.distZip.enabled = false
 
 dependencies {
-    implementation project(':code:api:process-mqapi')
+    implementation project(':code:process-mqapi')
     implementation project(':code:common:process')
     implementation project(':code:common:service')
     implementation project(':code:common:db')
