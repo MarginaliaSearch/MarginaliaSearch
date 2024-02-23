@@ -2,14 +2,12 @@ package nu.marginalia.process;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator;
 import nu.marginalia.converting.ConverterMain;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.index.IndexConstructorMain;
 import nu.marginalia.loading.LoaderMain;
-import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -21,8 +19,6 @@ import org.slf4j.MarkerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +30,6 @@ public class ProcessService {
     private final Marker processMarker = MarkerFactory.getMarker("PROCESS");
 
     private final ServiceEventLog eventLog;
-    private final Path distPath;
 
     private final ConcurrentHashMap<ProcessId, Process> processes = new ConcurrentHashMap<>();
 
@@ -81,10 +76,8 @@ public class ProcessService {
     }
 
     @Inject
-    public ProcessService(BaseServiceParams params,
-                          @Named("distPath") Path distPath) {
+    public ProcessService(BaseServiceParams params) {
         this.eventLog = params.eventLog;
-        this.distPath = distPath;
     }
 
 
