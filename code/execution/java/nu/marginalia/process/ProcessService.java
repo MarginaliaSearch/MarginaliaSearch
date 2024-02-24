@@ -89,6 +89,10 @@ public class ProcessService {
         args.add(STR."\{javaHome}/bin/java");
         args.add("-cp");
         args.add(System.getProperty("java.class.path"));
+
+        if (getClass().desiredAssertionStatus()) args.add("-ea");
+        else args.add("-da");
+
         args.add("--enable-preview");
         args.addAll(processId.envOpts());
         args.add(processId.mainClass);
