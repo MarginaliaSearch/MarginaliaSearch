@@ -48,20 +48,32 @@ public class GrpcMultiNodeChannelPool<STUB> {
     }
 
     private GrpcSingleNodeChannelPool<STUB> getPoolForNode(int node) {
-        return pools.computeIfAbsent(node, _ ->
-                new GrpcSingleNodeChannelPool<>(
-                        serviceRegistryIf,
-                        serviceKey.forPartition(ServicePartition.partition(node)),
-                        channelConstructor,
-                        stubConstructor));
+        return pools.computeIfAbsent(node, this::newSingleChannelPool);
     }
 
+    private GrpcSingleNodeChannelPool<STUB> newSingleChannelPool(int node) {
+        return new GrpcSingleNodeChannelPool<>(
+                serviceRegistryIf,
+                serviceKey.forPartition(ServicePartition.partition(node)),
+                channelConstructor,
+                stubConstructor);
+    }
 
     /** Get the list of nodes that are eligible for broadcast-style requests */
     public List<Integer> getEligibleNodes() {
         return nodeConfigurationWatcher.getQueryNodes();
     }
 
+    /** Create a new call builder for the given method.  This is a fluent-style
+     * method, where you can chain calls to specify how to run the method.
+     * <p></p>
+     * Example:
+     * <code><pre>
+     *     var results = channelPool.call(AStub:someMethod)
+     *                   .async(someExecutor)
+     *                   .runAll(argumentToSomeMethod);
+     * </pre></code>
+     * */
     public <T, I> CallBuilderBase<T, I> call(BiFunction<STUB, I, T> method) {
         return new CallBuilderBase<>(method);
     }
@@ -73,16 +85,20 @@ public class GrpcMultiNodeChannelPool<STUB> {
             this.method = method;
         }
 
+        /** Create a call for the given method on the given node */
         public GrpcSingleNodeChannelPool<STUB>.CallBuilderBase<T, I> forNode(int node) {
             return getPoolForNode(node).call(method);
         }
 
+        /** Run the given method on each node, returning a list of results.
+         * This is a blocking method, where each call will be made in sequence */
         public List<T> run(I arg) {
             return getEligibleNodes().stream()
                     .map(node -> getPoolForNode(node).call(method).run(arg))
                     .toList();
         }
 
+        /** Generate an async call builder for the given method */
         public CallBuilderAsync<T, I> async(ExecutorService service) {
             return new CallBuilderAsync<>(service, method);
         }

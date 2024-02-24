@@ -79,7 +79,7 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
             curatorFramework.create()
                     .creatingParentsIfNeeded()
                     .withMode(CreateMode.PERSISTENT)
-                    .forPath(STR."/first-boot");
+                    .forPath("/first-boot");
         }
     }
 

@@ -169,6 +169,9 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         throw new ServiceNotAvailableException(serviceKey);
     }
 
+    /** Create a call for the given method on the given node.
+     * This is a fluent method, so you can chain it with other
+     * methods to specify the node and arguments */
     public <T, I> CallBuilderBase<T, I> call(BiFunction<STUB, I, T> method) {
         return new CallBuilderBase<>(method);
     }
@@ -179,21 +182,12 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             this.method = method;
         }
 
+        /** Execute the call in a blocking manner */
         public T run(I arg) {
             return call(method, arg);
         }
 
-        public List<T> runFor(I... args) {
-            return runFor(List.of(args));
-        }
-
-        public List<T> runFor(List<I> args) {
-            List<T> results = new ArrayList<>();
-            for (var arg : args) {
-                results.add(call(method, arg));
-            }
-            return results;
-        }
+        /** Create an asynchronous call using the provided executor */
         public CallBuilderAsync<T, I> async(Executor executor) {
             return new CallBuilderAsync<>(executor, method);
         }
@@ -207,9 +201,12 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             this.method = method;
         }
 
+        /** Execute the call in an asynchronous manner */
         public CompletableFuture<T> run(I arg) {
             return CompletableFuture.supplyAsync(() -> call(method, arg), executor);
         }
+
+        /** Execute the call in an asynchronous manner for each of the given arguments */
         public CompletableFuture<List<T>> runFor(List<I> args) {
             List<CompletableFuture<T>> results = new ArrayList<>();
             for (var arg : args) {
@@ -218,6 +215,8 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             return CompletableFuture.allOf(results.toArray(new CompletableFuture[0]))
                     .thenApply(v -> results.stream().map(CompletableFuture::join).toList());
         }
+
+        /** Execute the call in an asynchronous manner for each of the given arguments */
         public CompletableFuture<List<T>> runFor(I... args) {
             return runFor(List.of(args));
         }
