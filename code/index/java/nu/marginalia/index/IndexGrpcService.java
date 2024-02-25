@@ -1,6 +1,5 @@
 package nu.marginalia.index;
 
-import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
@@ -190,7 +189,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
         ResultRankingContext rankingContext = createRankingContext(params.rankingParams, params.subqueries);
 
-        logger.info(queryMarker, "{}", params.queryParams);
+//        logger.info(queryMarker, "{}", params.queryParams);
 
         return new QueryExecution(rankingContext, params.fetchSize)
                 .run(params);
@@ -243,8 +242,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 this.subquery = subquery;
                 this.parameters = parameters;
 
-                logger.info("Starting index task");
-
                 remainingIndexTasks.incrementAndGet();
             }
 
@@ -254,7 +251,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                             subquery,
                             parameters.queryParams,
                             parameters.budget,
-                            parameters.fetchSize,
                             this::drain
                     );
                 }
@@ -264,7 +260,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                             remainingIndexTasks.notifyAll();
                         }
                     }
-                    logger.info("Terminating index task");
                 }
             }
 

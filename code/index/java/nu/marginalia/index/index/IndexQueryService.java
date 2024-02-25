@@ -38,27 +38,10 @@ public class IndexQueryService {
     public void evaluateSubquery(SearchSubquery subquery,
                                  QueryParams queryParams,
                                  IndexSearchBudget timeout,
-                                 int fetchSize,
                                  Consumer<CombinedDocIdList> drain)
     {
-        // These queries are various term combinations
-
-        if (!timeout.hasTimeLeft()) {
-            logger.info("Query timed out {}, ({}), -{}",
-                    subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
-            return;
-        }
-        logger.info(queryMarker, "{}", subquery);
-
         final SearchTerms searchTerms = new SearchTerms(subquery);
-        if (searchTerms.isEmpty()) {
-            logger.info(queryMarker, "empty");
-            return;
-        }
-
         final Roaring64Bitmap results = new Roaring64Bitmap();
-
-        // logSearchTerms(subquery, searchTerms);
 
         // These queries are different indices for one subquery
         List<IndexQuery> queries = index.createQueries(searchTerms, queryParams);
@@ -69,9 +52,7 @@ public class IndexQueryService {
 
             final LongQueryBuffer buffer = new LongQueryBuffer(512);
 
-            while (query.hasMore()
-                    && results.getIntCardinality() < fetchSize * query.fetchSizeMultiplier
-                    && timeout.hasTimeLeft())
+            while (query.hasMore() && timeout.hasTimeLeft())
             {
                 buffer.reset();
                 query.getMoreResults(buffer);
@@ -85,50 +66,11 @@ public class IndexQueryService {
                     results.clear();
                 }
             }
-
-            logger.info(queryMarker, "{} from {}", results.getIntCardinality(), query);
         }
 
         if (!results.isEmpty()) {
             drain.accept(new CombinedDocIdList(results));
         }
     }
-
-    private void logSearchTerms(SearchSubquery subquery, SearchTerms searchTerms) {
-
-        // This logging should only be enabled in testing, as it is very verbose
-        // and contains sensitive information
-
-        if (!logger.isInfoEnabled(queryMarker)) {
-            return;
-        }
-
-        var includes = subquery.searchTermsInclude;
-        var advice = subquery.searchTermsAdvice;
-        var excludes = subquery.searchTermsExclude;
-        var priority = subquery.searchTermsPriority;
-
-        for (int i = 0; i < includes.size(); i++) {
-            logger.info(queryMarker, "{} -> {} I", includes.get(i),
-                    Long.toHexString(searchTerms.includes().getLong(i))
-            );
-        }
-        for (int i = 0; i < advice.size(); i++) {
-            logger.info(queryMarker, "{} -> {} A", advice.get(i),
-                    Long.toHexString(searchTerms.includes().getLong(includes.size() + i))
-            );
-        }
-        for (int i = 0; i < excludes.size(); i++) {
-            logger.info(queryMarker, "{} -> {} E", excludes.get(i),
-                    Long.toHexString(searchTerms.excludes().getLong(i))
-            );
-        }
-        for (int i = 0; i < priority.size(); i++) {
-            logger.info(queryMarker, "{} -> {} P", priority.get(i),
-                    Long.toHexString(searchTerms.priority().getLong(i))
-            );
-        }
-    }
-
 
 }
