@@ -9,7 +9,6 @@ public interface TokenVisitor {
     void onYearTerm(Token token);
     void onSizeTerm(Token token);
     void onRankTerm(Token token);
-    void onDomainCountTerm(Token token);
     void onQualityTerm(Token token);
     void onQsTerm(Token token);
 }

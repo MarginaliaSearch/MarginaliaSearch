@@ -11,7 +11,6 @@ public class QueryLimitsAccumulator implements TokenVisitor {
     public SpecificationLimit year;
     public SpecificationLimit size;
     public SpecificationLimit rank;
-    public SpecificationLimit domainCount;
 
     public QueryStrategy queryStrategy = QueryStrategy.AUTO;
 
@@ -20,7 +19,6 @@ public class QueryLimitsAccumulator implements TokenVisitor {
         year = params.year();
         size = params.size();
         rank = params.rank();
-        domainCount = params.domainCount();
     }
 
     private SpecificationLimit parseSpecificationLimit(String str) {
@@ -65,11 +63,6 @@ public class QueryLimitsAccumulator implements TokenVisitor {
     @Override
     public void onRankTerm(Token token) {
         rank = parseSpecificationLimit(token.str);
-    }
-
-    @Override
-    public void onDomainCountTerm(Token token) {
-        domainCount = parseSpecificationLimit(token.str);
     }
 
     @Override

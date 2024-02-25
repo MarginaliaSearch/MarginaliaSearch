@@ -79,7 +79,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     private final IndexQueryService indexQueryService;
     private final IndexResultValuatorService resultValuator;
 
-    private final int nodeId;
     private final String nodeName;
 
     private final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
@@ -91,7 +90,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                             IndexQueryService indexQueryService,
                             IndexResultValuatorService resultValuator)
     {
-        this.nodeId = serviceConfiguration.node();
+        var nodeId = serviceConfiguration.node();
         this.nodeName = Integer.toString(nodeId);
         this.index = index;
         this.searchSetsService = searchSetsService;
@@ -107,6 +106,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         try {
             var params = new SearchParameters(request, getSearchSet(request));
 
+            long endTime = System.currentTimeMillis() + request.getQueryLimits().getTimeoutMs();
+
             SearchResultSet results = wmsa_query_time
                     .labels(nodeName, "GRPC")
                     .time(() -> {
@@ -119,7 +120,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                     .labels(nodeName, "GRPC")
                     .set(params.getDataCost());
 
-            if (!params.hasTimeLeft()) {
+            if (System.currentTimeMillis() >= endTime) {
                 wmsa_query_timeouts
                         .labels(nodeName, "GRPC")
                         .inc();

@@ -422,7 +422,6 @@ public class IndexQueryServiceIntegrationTest {
                 .quality(SpecificationLimit.none())
                 .size(SpecificationLimit.none())
                 .rank(SpecificationLimit.none())
-                .domainCount(SpecificationLimit.none())
                 .rankingParams(ResultRankingParameters.sensibleDefaults())
                 .domains(new ArrayList<>())
                 .searchSetIdentifier("NONE")

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -77,33 +78,15 @@ public class IndexResultValuatorService {
 
         for (var item : results) {
             if (domainCountFilter.test(item)) {
-                resultsList.add(item);
+                // It's important that this filter runs across all results, not just the top N
+                if (resultsList.size() < params.limitTotal) {
+                    resultsList.add(item);
+                }
             }
         }
 
-        if (!params.queryParams.domainCount().isNone()) {
-            // Remove items that don't meet the domain count requirement
-            // This isn't perfect because the domain count is calculated
-            // after the results are sorted
-            resultsList.removeIf(item -> !params.queryParams.domainCount().test(domainCountFilter.getCount(item)));
-        }
-
-        if (resultsList.size() > params.limitTotal) {
-            // This can't be made a stream limit() operation because we need domainCountFilter
-            // to run over the entire list to provide accurate statistics
-
-            resultsList.subList(params.limitTotal, resultsList.size()).clear();
-        }
-
-        // populate results with the total number of results encountered from
-        // the same domain so this information can be presented to the user
-        for (var result : resultsList) {
-            result.resultsFromDomain = domainCountFilter.getCount(result);
-        }
-
-        LongArrayList idsList = new LongArrayList(resultsList.size());
-        for (var result : resultsList) {
-            idsList.add(result.getCombinedId());
+        for (var item : resultsList) {
+            item.resultsFromDomain = domainCountFilter.getCount(item);
         }
 
         return decorateAndRerank(resultsList, rankingContext);
@@ -125,23 +108,19 @@ public class IndexResultValuatorService {
         for (var item : documentDbReader.getUrlDetails(idsList))
             urlDetailsById.put(item.urlId(), item);
 
-        List<DecoratedSearchResultItem> decoratedItems = new ArrayList<>();
+        List<DecoratedSearchResultItem> resultItems = new ArrayList<>(rawResults.size());
         for (var result : rawResults) {
-            var docData = urlDetailsById.get(result.getDocumentId());
+            var id = result.getDocumentId();
+            var docData = urlDetailsById.get(id);
 
-            if (null == docData) {
-                logger.warn("No data for document id {}", result.getDocumentId());
+            if (docData == null) {
+                logger.warn("No document data for id {}", id);
                 continue;
             }
 
-            decoratedItems.add(createCombinedItem(result, docData, rankingContext));
+            resultItems.add(createCombinedItem(result, docData, rankingContext));
         }
-
-        if (decoratedItems.size() != rawResults.size())
-            logger.warn("Result list shrunk during decoration?");
-
-        decoratedItems.sort(Comparator.naturalOrder());
-        return decoratedItems;
+        return resultItems;
     }
 
     private DecoratedSearchResultItem createCombinedItem(SearchResultItem result,

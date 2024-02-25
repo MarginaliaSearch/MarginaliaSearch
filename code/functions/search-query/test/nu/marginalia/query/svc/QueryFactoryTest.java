@@ -48,7 +48,6 @@ public class QueryFactoryTest {
                         SpecificationLimit.none(),
                         SpecificationLimit.none(),
                         SpecificationLimit.none(),
-                        SpecificationLimit.none(),
                         null,
                         new QueryLimits(100, 100, 100, 100),
                         "NONE",

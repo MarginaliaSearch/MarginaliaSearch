@@ -103,8 +103,6 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
     @Override
     public void onRankTerm(Token token) {}
     @Override
-    public void onDomainCountTerm(Token token) {}
-    @Override
     public void onQualityTerm(Token token) {}
     @Override
     public void onQsTerm(Token token) {}

@@ -127,7 +127,6 @@ public class QueryFactory {
                 .subqueries(subqueries)
                 .humanQuery(query)
                 .quality(qualityLimits.qualityLimit)
-                .domainCount(qualityLimits.domainCount)
                 .year(qualityLimits.year)
                 .size(qualityLimits.size)
                 .rank(qualityLimits.rank)

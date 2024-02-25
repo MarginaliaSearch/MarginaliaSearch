@@ -34,7 +34,6 @@ public class QueryProtobufCodec {
         builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
         builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
         builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
-        builder.setDomainCount(IndexProtobufCodec.convertSpecLimit(query.specs.domainCount));
 
         builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
 
@@ -63,7 +62,6 @@ public class QueryProtobufCodec {
         builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
         builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
         builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
-        builder.setDomainCount(IndexProtobufCodec.convertSpecLimit(query.specs.domainCount));
 
         builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
 
@@ -92,7 +90,6 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(request.getYear()),
                 IndexProtobufCodec.convertSpecLimit(request.getSize()),
                 IndexProtobufCodec.convertSpecLimit(request.getRank()),
-                IndexProtobufCodec.convertSpecLimit(request.getDomainCount()),
                 request.getDomainIdsList(),
                 IndexProtobufCodec.convertQueryLimits(request.getQueryLimits()),
                 request.getSearchSetIdentifier(),
@@ -174,7 +171,6 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(specs.getYear()),
                 IndexProtobufCodec.convertSpecLimit(specs.getSize()),
                 IndexProtobufCodec.convertSpecLimit(specs.getRank()),
-                IndexProtobufCodec.convertSpecLimit(specs.getDomainCount()),
                 IndexProtobufCodec.convertQueryLimits(specs.getQueryLimits()),
                 QueryStrategy.valueOf(specs.getQueryStrategy()),
                 IndexProtobufCodec.convertRankingParameterss(specs.getParameters())

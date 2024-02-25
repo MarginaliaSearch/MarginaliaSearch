@@ -24,8 +24,6 @@ public class SearchSpecification {
     public final SpecificationLimit size;
     public final SpecificationLimit rank;
 
-    public final SpecificationLimit domainCount;
-
     public final QueryLimits queryLimits;
 
     public final QueryStrategy queryStrategy;

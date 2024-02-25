@@ -52,7 +52,6 @@ public class SearchParameters {
                 specsSet.year,
                 specsSet.size,
                 specsSet.rank,
-                specsSet.domainCount,
                 searchSet,
                 specsSet.queryStrategy);
 
@@ -80,7 +79,6 @@ public class SearchParameters {
                 convertSpecLimit(request.getYear()),
                 convertSpecLimit(request.getSize()),
                 convertSpecLimit(request.getRank()),
-                convertSpecLimit(request.getDomainCount()),
                 searchSet,
                 QueryStrategy.valueOf(request.getQueryStrategy()));
 

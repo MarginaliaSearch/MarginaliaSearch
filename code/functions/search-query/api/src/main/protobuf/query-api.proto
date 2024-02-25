@@ -25,7 +25,6 @@ message RpcQsQuery {
   RpcSpecLimit year = 8;
   RpcSpecLimit size = 9;
   RpcSpecLimit rank = 10;
-  RpcSpecLimit domainCount = 11;
   repeated int32 domainIds = 12;
   RpcQueryLimits queryLimits = 13;
   string searchSetIdentifier = 14;
@@ -61,7 +60,6 @@ message RpcIndexQuery {
   RpcSpecLimit year = 6;
   RpcSpecLimit size = 7;
   RpcSpecLimit rank = 8;
-  RpcSpecLimit domainCount = 9;
   RpcQueryLimits queryLimits = 10;
   string queryStrategy = 11;      // Named query configuration
   RpcResultRankingParameters parameters = 12;

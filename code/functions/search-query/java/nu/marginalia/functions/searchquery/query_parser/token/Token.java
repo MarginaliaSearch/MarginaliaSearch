@@ -40,7 +40,6 @@ public class Token {
 
             case YEAR_TERM: visitor.onYearTerm(this); break;
             case RANK_TERM: visitor.onRankTerm(this); break;
-            case DOMAIN_COUNT_TERM: visitor.onDomainCountTerm(this); break;
             case SIZE_TERM: visitor.onSizeTerm(this); break;
             case QS_TERM: visitor.onQsTerm(this); break;
 
