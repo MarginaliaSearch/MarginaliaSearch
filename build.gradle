@@ -44,6 +44,8 @@ subprojects.forEach {it ->
 }
 ext {
     dockerImageBase='container-registry.oracle.com/graalvm/jdk:21@sha256:1fd33d4d4eba3a9e1a41a728e39ea217178d257694eea1214fec68d2ed4d3d9b'
+    dockerImageTag='latest'
+    dockerImageRegistry='marginalia'
 }
 
 idea {

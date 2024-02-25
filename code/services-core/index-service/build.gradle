@@ -15,11 +15,11 @@ tasks.distZip.enabled = false
 
 jib {
     from {
-        image = image = rootProject.ext.dockerImageBase
+        image = rootProject.ext.dockerImageBase
     }
     to {
-        image = 'marginalia/'+project.name
-        tags = ['latest']
+        image = rootProject.ext.dockerImageRegistry+'/'+project.name
+        tags = [ rootProject.ext.dockerImageTag ]
     }
     container {
 

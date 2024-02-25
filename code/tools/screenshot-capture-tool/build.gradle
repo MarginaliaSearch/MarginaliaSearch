@@ -22,7 +22,7 @@ jib {
         image = image = rootProject.ext.dockerImageBase
     }
     to {
-        image = 'marginalia/'+project.name
+        image = rootProject.ext.dockerImageRegistry+'/'+project.name
         tags = ['latest']
     }
     container {
