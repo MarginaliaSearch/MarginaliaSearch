@@ -63,7 +63,11 @@ public class SearchParameters {
         var limits = IndexProtobufCodec.convertQueryLimits(request.getQueryLimits());
 
         this.fetchSize = limits.fetchSize();
-        this.budget = new IndexSearchBudget(limits.timeoutMs());
+
+        // The time budget is halved because this is the point when we start to
+        // wrap up the search and return the results.
+        this.budget = new IndexSearchBudget(limits.timeoutMs() / 2);
+
         this.subqueries = new ArrayList<>(request.getSubqueriesCount());
         for (int i = 0; i < request.getSubqueriesCount(); i++) {
             this.subqueries.add(IndexProtobufCodec.convertSearchSubquery(request.getSubqueries(i)));
