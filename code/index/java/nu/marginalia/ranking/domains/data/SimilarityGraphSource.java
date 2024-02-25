@@ -52,6 +52,14 @@ public class SimilarityGraphSource extends AbstractGraphSource {
                 while (rs.next()) {
                     int src = rs.getInt(1);
                     int dest = rs.getInt(2);
+
+                    // Similarity data may contain domain ids that we don't have indexed,
+                    // omit these from the graph.
+                    if (!graph.containsVertex(src))
+                        continue;
+                    if (!graph.containsVertex(dest))
+                        continue;
+
                     double weight = rs.getDouble(3);
 
                     graph.addEdge(src, dest);
