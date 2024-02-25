@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 @Singleton
@@ -35,36 +34,25 @@ public class IndexQueryService {
      * at different priorty depths until timeout is reached or the results are all visited.
      * Then the results are combined.
      * */
-    public void evaluateSubquery(SearchSubquery subquery,
-                                 QueryParams queryParams,
+    public void evaluateSubquery(IndexQuery query,
                                  IndexSearchBudget timeout,
                                  Consumer<CombinedDocIdList> drain)
     {
-        final SearchTerms searchTerms = new SearchTerms(subquery);
-        final Roaring64Bitmap results = new Roaring64Bitmap();
+        final LongArrayList results = new LongArrayList(512);
 
         // These queries are different indices for one subquery
-        List<IndexQuery> queries = index.createQueries(searchTerms, queryParams);
-        for (var query : queries) {
+        final LongQueryBuffer buffer = new LongQueryBuffer(512);
 
-            if (!timeout.hasTimeLeft())
-                break;
+        while (query.hasMore() && timeout.hasTimeLeft())
+        {
+            buffer.reset();
+            query.getMoreResults(buffer);
 
-            final LongQueryBuffer buffer = new LongQueryBuffer(512);
+            results.addElements(0, buffer.data, 0, buffer.end);
 
-            while (query.hasMore() && timeout.hasTimeLeft())
-            {
-                buffer.reset();
-                query.getMoreResults(buffer);
-
-                for (int i = 0; i < buffer.size(); i++) {
-                    results.add(buffer.data[i]);
-                }
-
-                if (results.getIntCardinality() > 512) {
-                    drain.accept(new CombinedDocIdList(results));
-                    results.clear();
-                }
+            if (results.size() < 512) {
+                drain.accept(new CombinedDocIdList(results));
+                results.clear();
             }
         }
 

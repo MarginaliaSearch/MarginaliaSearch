@@ -14,7 +14,10 @@ import nu.marginalia.api.searchquery.model.results.*;
 import nu.marginalia.index.index.IndexQueryService;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.model.SearchTermsUtil;
+import nu.marginalia.index.query.IndexQuery;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultValuatorService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.searchset.SearchSetsService;
@@ -252,8 +255,15 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
         /** Execute a search query */
         public SearchResultSet run(SearchParameters parameters) throws SQLException, InterruptedException {
+
             for (var subquery : parameters.subqueries) {
-                workerPool.execute(new IndexLookup(subquery, parameters));
+                var terms = new SearchTerms(subquery);
+                if (terms.isEmpty())
+                    continue;
+
+                for (var indexQuery : index.createQueries(terms, parameters.queryParams)) {
+                    workerPool.execute(new IndexLookup(indexQuery, parameters.budget));
+                }
             }
 
             for (int i = 0; i < indexValuationThreads; i++) {
@@ -283,12 +293,13 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
          * resultCandidateQueue, which depending on the state of the valuator threads may
          * or may not block*/
         class IndexLookup implements Runnable {
-            private final SearchSubquery subquery;
-            private final SearchParameters parameters;
+            private final IndexQuery query;
+            private final IndexSearchBudget budget;
 
-            IndexLookup(SearchSubquery subquery, SearchParameters parameters) {
-                this.subquery = subquery;
-                this.parameters = parameters;
+            IndexLookup(IndexQuery query,
+                        IndexSearchBudget budget) {
+                this.query = query;
+                this.budget = budget;
 
                 remainingIndexTasks.incrementAndGet();
             }
@@ -296,9 +307,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             public void run() {
                 try {
                     indexQueryService.evaluateSubquery(
-                            subquery,
-                            parameters.queryParams,
-                            parameters.budget,
+                            query,
+                            budget,
                             this::drain
                     );
                 }
@@ -312,7 +322,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             }
 
             private void drain(CombinedDocIdList resultIds) {
-                long remainingTime = parameters.budget.timeLeft();
+                long remainingTime = budget.timeLeft();
 
                 try {
                     if (!resultCandidateQueue.offer(resultIds)) {
