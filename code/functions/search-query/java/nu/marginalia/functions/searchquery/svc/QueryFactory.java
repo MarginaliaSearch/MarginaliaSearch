@@ -81,7 +81,7 @@ public class QueryFactory {
 
         var basicQuery = queryParser.parse(query);
 
-        if (basicQuery.size() >= 8) {
+        if (basicQuery.size() >= 12) {
             problems.add("Your search query is too long");
             basicQuery.clear();
         }
