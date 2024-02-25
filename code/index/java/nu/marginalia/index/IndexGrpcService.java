@@ -348,7 +348,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         long start = System.currentTimeMillis();
 
                         CombinedDocIdList resultIds = resultCandidateQueue.poll(
-                                Math.clamp(parameters.budget.timeLeft(), 1, 25),
+                                Math.clamp(parameters.budget.timeLeft(), 1, 5),
                                 TimeUnit.MILLISECONDS);
 
                         if (resultIds == null) {
