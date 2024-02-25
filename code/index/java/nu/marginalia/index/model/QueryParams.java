@@ -16,13 +16,13 @@ import nu.marginalia.index.query.limit.SpecificationLimit;
  * @param queryStrategy The query strategy.  May impose additional constraints on the query, such as requiring
  *                      the keywords to appear in the title, or in the domain.
  */
-public record IndexQueryParams(SpecificationLimit qualityLimit,
-                               SpecificationLimit year,
-                               SpecificationLimit size,
-                               SpecificationLimit rank,
-                               SpecificationLimit domainCount,
-                               SearchSet searchSet,
-                               QueryStrategy queryStrategy
+public record QueryParams(SpecificationLimit qualityLimit,
+                          SpecificationLimit year,
+                          SpecificationLimit size,
+                          SpecificationLimit rank,
+                          SpecificationLimit domainCount,
+                          SearchSet searchSet,
+                          QueryStrategy queryStrategy
                                )
 {
 

@@ -6,7 +6,6 @@ import static java.lang.Boolean.compare;
 import static java.lang.Double.compare;
 
 public record SearchResultPreliminaryScore(
-        boolean hasPriorityTerm,
         double searchRankingScore)
         implements Comparable<SearchResultPreliminaryScore>
 {
@@ -17,9 +16,6 @@ public record SearchResultPreliminaryScore(
     @Override
     public int compareTo(@NotNull SearchResultPreliminaryScore other) {
         int diff;
-
-        diff = PREFER_HIGH * compare(hasPriorityTerm, other.hasPriorityTerm);
-        if (diff != 0) return diff;
 
         return PREFER_LOW * compare(searchRankingScore, other.searchRankingScore);
     }

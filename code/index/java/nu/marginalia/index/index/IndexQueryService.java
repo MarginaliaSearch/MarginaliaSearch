@@ -2,32 +2,27 @@ package nu.marginalia.index.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.array.buffer.LongQueryBuffer;
-import nu.marginalia.index.model.IndexSearchTerms;
-import nu.marginalia.index.model.IndexSearchParameters;
-import nu.marginalia.index.SearchTermsUtil;
+import nu.marginalia.index.model.QueryParams;
+import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
-import nu.marginalia.index.query.IndexQueryPriority;
+import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Singleton
 public class IndexQueryService {
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
-    /** Execute subqueries and return a list of document ids.  The index is queried for each subquery,
-     * at different priorty depths until timeout is reached or the results are all visited.
-     * <br>
-     * Then the results are combined.
-     * */
-    private final ThreadLocal<TLongArrayList> resultsArrayListPool = ThreadLocal.withInitial(TLongArrayList::new);
     private static final Logger logger = LoggerFactory.getLogger(IndexQueryService.class);
     private final StatefulIndex index;
 
@@ -40,84 +35,66 @@ public class IndexQueryService {
      * at different priorty depths until timeout is reached or the results are all visited.
      * Then the results are combined.
      * */
-    public TLongList evaluateSubqueries(IndexSearchParameters params) {
-        final TLongArrayList results = resultsArrayListPool.get();
-        results.resetQuick();
-        results.ensureCapacity(params.fetchSize);
-
+    public void evaluateSubquery(SearchSubquery subquery,
+                                 QueryParams queryParams,
+                                 IndexSearchBudget timeout,
+                                 int fetchSize,
+                                 Consumer<CombinedDocIdList> drain)
+    {
         // These queries are various term combinations
-        for (var subquery : params.subqueries) {
 
-            if (!params.hasTimeLeft()) {
-                logger.info("Query timed out {}, ({}), -{}",
-                        subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
-                break;
-            }
+        if (!timeout.hasTimeLeft()) {
+            logger.info("Query timed out {}, ({}), -{}",
+                    subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
+            return;
+        }
+        logger.info(queryMarker, "{}", subquery);
 
-            logger.info(queryMarker, "{}", subquery);
-
-            final IndexSearchTerms searchTerms = SearchTermsUtil.extractSearchTerms(subquery);
-
-            if (searchTerms.isEmpty()) {
-                logger.info(queryMarker, "empty");
-                continue;
-            }
-
-            // logSearchTerms(subquery, searchTerms);
-
-            // These queries are different indices for one subquery
-            List<IndexQuery> queries = params.createIndexQueries(index, searchTerms);
-            for (var query : queries) {
-
-                if (!params.hasTimeLeft())
-                    break;
-
-                if (shouldOmitQuery(params, query, results.size())) {
-                    logger.info(queryMarker, "Omitting {}", query);
-                    continue;
-                }
-
-                final int fetchSize = params.fetchSize * query.fetchSizeMultiplier;
-                final LongQueryBuffer buffer = new LongQueryBuffer(fetchSize);
-
-                int cnt = 0;
-
-                while (query.hasMore()
-                        && results.size() < fetchSize
-                        && params.budget.hasTimeLeft())
-                {
-                    buffer.reset();
-                    query.getMoreResults(buffer);
-
-                    for (int i = 0; i < buffer.size() && results.size() < fetchSize; i++) {
-                        results.add(buffer.data[i]);
-                        cnt++;
-                    }
-                }
-
-                params.dataCost += query.dataCost();
-
-
-                logger.info(queryMarker, "{} from {}", cnt, query);
-            }
+        final SearchTerms searchTerms = new SearchTerms(subquery);
+        if (searchTerms.isEmpty()) {
+            logger.info(queryMarker, "empty");
+            return;
         }
 
-        return results;
+        final Roaring64Bitmap results = new Roaring64Bitmap();
+
+        // logSearchTerms(subquery, searchTerms);
+
+        // These queries are different indices for one subquery
+        List<IndexQuery> queries = index.createQueries(searchTerms, queryParams);
+        for (var query : queries) {
+
+            if (!timeout.hasTimeLeft())
+                break;
+
+            final LongQueryBuffer buffer = new LongQueryBuffer(512);
+
+            while (query.hasMore()
+                    && results.getIntCardinality() < fetchSize * query.fetchSizeMultiplier
+                    && timeout.hasTimeLeft())
+            {
+                buffer.reset();
+                query.getMoreResults(buffer);
+
+                for (int i = 0; i < buffer.size(); i++) {
+                    results.add(buffer.data[i]);
+                }
+
+                if (results.getIntCardinality() > 512) {
+                    drain.accept(new CombinedDocIdList(results));
+                    results.clear();
+                }
+            }
+
+            logger.info(queryMarker, "{} from {}", results.getIntCardinality(), query);
+        }
+
+        if (!results.isEmpty()) {
+            drain.accept(new CombinedDocIdList(results));
+        }
     }
 
-    /** @see IndexQueryPriority */
-    private boolean shouldOmitQuery(IndexSearchParameters params, IndexQuery query, int resultCount) {
-
-        var priority = query.queryPriority;
-
-        return switch (priority) {
-            case IndexQueryPriority.BEST -> false;
-            case IndexQueryPriority.GOOD -> resultCount > params.fetchSize / 4;
-            case IndexQueryPriority.FALLBACK -> resultCount > params.fetchSize / 8;
-        };
-    }
-
-    private void logSearchTerms(SearchSubquery subquery, IndexSearchTerms searchTerms) {
+    private void logSearchTerms(SearchSubquery subquery, SearchTerms searchTerms) {
 
         // This logging should only be enabled in testing, as it is very verbose
         // and contains sensitive information

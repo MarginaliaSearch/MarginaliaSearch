@@ -144,7 +144,7 @@ public class QueryProtobufCodec {
                 rawItem.getCombinedId(),
                 keywordScores,
                 rawItem.getResultsFromDomain(),
-                null
+                Double.NaN // Not set
         );
     }
 
@@ -154,8 +154,7 @@ public class QueryProtobufCodec {
                 keywordScores.getKeyword(),
                 keywordScores.getEncodedWordMetadata(),
                 keywordScores.getEncodedDocMetadata(),
-                keywordScores.getHtmlFeatures(),
-                keywordScores.getHasPriorityTerms()
+                keywordScores.getHtmlFeatures()
         );
     }
 

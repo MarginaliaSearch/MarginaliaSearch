@@ -24,31 +24,20 @@ public class ResultValuator {
     private final Bm25Factor bm25Factor;
     private final TermCoherenceFactor termCoherenceFactor;
 
-    private final PriorityTermBonus priorityTermBonus;
-
-    private final ThreadLocal<ValuatorListPool<SearchResultKeywordScore>> listPool =
-            ThreadLocal.withInitial(ValuatorListPool::new);
-
     private static final Logger logger = LoggerFactory.getLogger(ResultValuator.class);
 
     @Inject
     public ResultValuator(Bm25Factor bm25Factor,
-                          TermCoherenceFactor termCoherenceFactor,
-                          PriorityTermBonus priorityTermBonus) {
-
+                          TermCoherenceFactor termCoherenceFactor) {
         this.bm25Factor = bm25Factor;
         this.termCoherenceFactor = termCoherenceFactor;
-        this.priorityTermBonus = priorityTermBonus;
-
     }
 
     public double calculateSearchResultValue(List<SearchResultKeywordScore> scores,
                                              int length,
                                              ResultRankingContext ctx)
     {
-        var threadListPool = listPool.get();
         int sets = numberOfSets(scores);
-
 
         long documentMetadata = documentMetadata(scores);
         int features = htmlFeatures(scores);
@@ -84,8 +73,7 @@ public class ResultValuator {
                            + rankingBonus
                            + topologyBonus
                            + temporalBias
-                           + flagsPenalty
-                           + priorityTermBonus.calculate(scores);
+                           + flagsPenalty;
 
         double bestTcf = 0;
         double bestBM25F = 0;
@@ -93,7 +81,7 @@ public class ResultValuator {
         double bestBM25PN = 0;
 
         for (int set = 0; set < sets; set++) {
-            ResultKeywordSet keywordSet = createKeywordSet(threadListPool, scores, set);
+            ResultKeywordSet keywordSet = createKeywordSet(scores, set);
 
             if (keywordSet.isEmpty())
                 continue;
@@ -185,12 +173,10 @@ public class ResultValuator {
         return 0;
     }
 
-    private ResultKeywordSet createKeywordSet(ValuatorListPool<SearchResultKeywordScore> listPool,
-                                              List<SearchResultKeywordScore> rawScores,
+    private ResultKeywordSet createKeywordSet(List<SearchResultKeywordScore> rawScores,
                                               int thisSet)
     {
-        List<SearchResultKeywordScore> scoresList = listPool.get(thisSet);
-        scoresList.clear();
+        List<SearchResultKeywordScore> scoresList = new ArrayList<>();
 
         for (var score : rawScores) {
             if (score.subquery != thisSet)
@@ -224,27 +210,4 @@ public class ResultValuator {
 
         return Math.sqrt((1.0 + scalingFactor + 10 * penalty) / (1.0 + value));
     }
-}
-
-/** Pool of List instances used to reduce memory churn during result ranking in the index
- * where potentially tens of thousands of candidate results are ranked.
- *
- * @param <T>
- */
-@SuppressWarnings({"unchecked", "rawtypes"})
-class ValuatorListPool<T> {
-    private final ArrayList[] items = new ArrayList[256];
-
-    public ValuatorListPool() {
-        for (int i  = 0; i < items.length; i++) {
-            items[i] = new ArrayList();
-        }
-    }
-
-    public List<T> get(int i) {
-        var ret = (ArrayList<T>) items[i];
-        ret.clear();
-        return ret;
-    }
-
 }

@@ -1,5 +1,6 @@
 package nu.marginalia.index;
 
+import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
@@ -10,13 +11,13 @@ import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchSubquery;
-import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.api.searchquery.model.results.SearchResultSet;
+import nu.marginalia.api.searchquery.model.results.*;
 import nu.marginalia.index.index.IndexQueryService;
 import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.model.IndexSearchParameters;
+import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.IndexResultValuatorService;
+import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
 import nu.marginalia.index.searchset.SearchSet;
@@ -28,9 +29,14 @@ import org.slf4j.MarkerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
-public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
+public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -66,11 +72,11 @@ public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
 
     @Inject
-    public IndexQueryGrpcService(ServiceConfiguration serviceConfiguration,
-                                 StatefulIndex index,
-                                 SearchSetsService searchSetsService,
-                                 IndexQueryService indexQueryService,
-                                 IndexResultValuatorService resultValuator)
+    public IndexGrpcService(ServiceConfiguration serviceConfiguration,
+                            StatefulIndex index,
+                            SearchSetsService searchSetsService,
+                            IndexQueryService indexQueryService,
+                            IndexResultValuatorService resultValuator)
     {
         this.nodeId = serviceConfiguration.node();
         this.index = index;
@@ -85,14 +91,17 @@ public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
                       StreamObserver<RpcDecoratedResultItem> responseObserver) {
 
         try {
-            var params = new IndexSearchParameters(request, getSearchSet(request));
-
+            var params = new SearchParameters(request, getSearchSet(request));
             final String nodeName = Integer.toString(nodeId);
 
             SearchResultSet results = wmsa_query_time
                     .labels(nodeName, "GRPC")
-                    .time(() -> executeSearch(params));
+                    .time(() -> {
+                        // Perform the search
+                        return executeSearch(params);
+                    });
 
+            // Prometheus bookkeeping
             wmsa_query_cost
                     .labels(nodeName, "GRPC")
                     .set(params.getDataCost());
@@ -103,6 +112,7 @@ public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .inc();
             }
 
+            // Send the results back to the client
             for (var result : results.results) {
 
                 var rawResult = result.rawIndexResult;
@@ -118,7 +128,6 @@ public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
                                     .setEncodedWordMetadata(score.encodedWordMetadata())
                                     .setKeyword(score.keyword)
                                     .setHtmlFeatures(score.htmlFeatures())
-                                    .setHasPriorityTerms(score.hasPriorityTerms())
                                     .setSubquery(score.subquery)
                     );
                 }
@@ -151,7 +160,7 @@ public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
     // exists for test access
     @SneakyThrows
     SearchResultSet justQuery(SearchSpecification specsSet) {
-        return executeSearch(new IndexSearchParameters(specsSet, getSearchSet(specsSet)));
+        return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
     }
 
     private SearchSet getSearchSet(SearchSpecification specsSet) {
@@ -171,23 +180,148 @@ public class IndexQueryGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
         return searchSetsService.getSearchSetByName(request.getSearchSetIdentifier());
     }
-    private SearchResultSet executeSearch(IndexSearchParameters params) throws SQLException {
+
+    private SearchResultSet executeSearch(SearchParameters params) throws SQLException {
 
         if (!index.isLoaded()) {
             // Short-circuit if the index is not loaded, as we trivially know that there can be no results
             return new SearchResultSet(List.of());
         }
 
-        var rankingContext = createRankingContext(params.rankingParams, params.subqueries);
+        ResultRankingContext rankingContext = createRankingContext(params.rankingParams, params.subqueries);
 
         logger.info(queryMarker, "{}", params.queryParams);
 
-        var resultIds = indexQueryService.evaluateSubqueries(params);
-        var resultItems = resultValuator.findBestResults(params,
-                rankingContext,
-                resultIds);
+        return new QueryExecution(rankingContext, params.fetchSize)
+                .run(params);
+    }
 
-        return new SearchResultSet(resultItems);
+    private class QueryExecution {
+        private static final Executor queryExecutor = Executors.newCachedThreadPool();
+        private static final Executor rankingExecutor = Executors.newCachedThreadPool();
+        private final ArrayBlockingQueue<CombinedDocIdList> resultQueue = new ArrayBlockingQueue<>(8);
+        private final ResultPriorityQueue resultHeap;
+        private final ResultRankingContext resultRankingContext;
+
+        private final AtomicInteger remainingIndexTasks = new AtomicInteger(0);
+        private final AtomicInteger remainingValuationTasks = new AtomicInteger(0);
+
+        private QueryExecution(ResultRankingContext resultRankingContext, int maxResults) {
+            this.resultRankingContext = resultRankingContext;
+            this.resultHeap = new ResultPriorityQueue(maxResults);
+        }
+
+        public SearchResultSet run(SearchParameters parameters) throws SQLException {
+            for (var subquery : parameters.subqueries) {
+                queryExecutor.execute(new IndexLookup(subquery, parameters));
+            }
+
+            for (int i = 0; i < 16; i++) {
+                rankingExecutor.execute(new ResultRanker(parameters, resultRankingContext));
+            }
+
+            // Wait for all tasks to complete
+            synchronized (remainingValuationTasks) {
+                while (remainingValuationTasks.get() > 0) {
+                    try {
+                        remainingValuationTasks.wait(20);
+                    }
+                    catch (InterruptedException e) {
+                        logger.warn("Interrupted while waiting for tasks to complete", e);
+                    }
+                }
+            }
+
+            return new SearchResultSet(resultValuator.selectBestResults(parameters, resultRankingContext, resultHeap));
+        }
+
+        class IndexLookup implements Runnable {
+            private final SearchSubquery subquery;
+            private final SearchParameters parameters;
+
+            IndexLookup(SearchSubquery subquery, SearchParameters parameters) {
+                this.subquery = subquery;
+                this.parameters = parameters;
+
+                logger.info("Starting index task");
+
+                remainingIndexTasks.incrementAndGet();
+            }
+
+            public void run() {
+                try {
+                    indexQueryService.evaluateSubquery(
+                            subquery,
+                            parameters.queryParams,
+                            parameters.budget,
+                            parameters.fetchSize,
+                            this::drain
+                    );
+                }
+                finally {
+                    synchronized (remainingIndexTasks) {
+                        if (remainingIndexTasks.decrementAndGet() == 0) {
+                            remainingIndexTasks.notifyAll();
+                        }
+                    }
+                    logger.info("Terminating index task");
+                }
+            }
+
+            private void drain(CombinedDocIdList resultIds) {
+                long remainingTime = parameters.budget.timeLeft();
+
+                try {
+                    resultQueue.offer(resultIds, remainingTime, TimeUnit.MILLISECONDS);
+                }
+                catch (InterruptedException e) {
+                    logger.warn("Interrupted while waiting to offer resultIds to queue", e);
+                }
+            }
+        }
+
+        class ResultRanker implements Runnable {
+            private final SearchParameters parameters;
+            private final ResultRankingContext rankingContext;
+
+            ResultRanker(SearchParameters parameters, ResultRankingContext rankingContext) {
+                this.parameters = parameters;
+                this.rankingContext = rankingContext;
+
+                remainingValuationTasks.incrementAndGet();
+            }
+
+            public void run() {
+                try {
+                    while (parameters.budget.timeLeft() > 0) {
+
+                        CombinedDocIdList resultIds = resultQueue.poll(
+                                Math.clamp(parameters.budget.timeLeft(), 1, 25),
+                                TimeUnit.MILLISECONDS);
+                        if (resultIds == null) {
+                            if (remainingIndexTasks.get() == 0 && resultQueue.isEmpty())
+                                break;
+                            else
+                                continue;
+                        }
+
+                        var bestResults = resultValuator.rankResults(parameters, rankingContext, resultIds);
+
+                        resultHeap.addAll(bestResults);
+                    }
+                }
+                catch (Exception e) {
+                    logger.warn("Interrupted while waiting to poll resultIds from queue", e);
+                }
+                finally {
+                    synchronized (remainingValuationTasks) {
+                        if (remainingValuationTasks.decrementAndGet() == 0)
+                            remainingValuationTasks.notifyAll();
+                    }
+                }
+            }
+        }
+
     }
 
     private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams, List<SearchSubquery> subqueries) {

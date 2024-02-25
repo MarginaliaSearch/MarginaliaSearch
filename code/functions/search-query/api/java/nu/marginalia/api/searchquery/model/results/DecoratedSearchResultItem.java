@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @ToString
-public class DecoratedSearchResultItem {
+public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResultItem> {
     public final SearchResultItem rawIndexResult;
 
     @NotNull
@@ -78,5 +78,15 @@ public class DecoratedSearchResultItem {
         this.dataHash = dataHash;
         this.wordsTotal = wordsTotal;
         this.rankingScore = rankingScore;
+    }
+
+    @Override
+    public int compareTo(@NotNull DecoratedSearchResultItem o) {
+        int diff =  Double.compare(rankingScore, o.rankingScore);
+
+        if (diff == 0)
+            diff = Long.compare(documentId(), o.documentId());
+
+        return diff;
     }
 }

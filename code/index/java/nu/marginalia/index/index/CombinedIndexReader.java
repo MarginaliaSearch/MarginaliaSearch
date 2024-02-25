@@ -1,10 +1,17 @@
 package nu.marginalia.index.index;
 
-import nu.marginalia.index.model.IndexQueryParams;
 import nu.marginalia.index.ReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import nu.marginalia.index.query.*;
+import nu.marginalia.index.model.QueryParams;
+import nu.marginalia.index.query.IndexQuery;
+import nu.marginalia.index.query.IndexQueryBuilder;
+import nu.marginalia.index.query.IndexQueryPriority;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
+import nu.marginalia.index.query.limit.SpecificationLimitType;
+import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.results.model.ids.DocMetadataList;
+import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.model.idx.DocumentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,28 +36,34 @@ public class CombinedIndexReader {
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
+    public IndexQueryBuilderImpl newQueryBuilder(IndexQuery query) {
+        return new IndexQueryBuilderImpl(reverseIndexFullReader, reverseIndexPriorityReader, query);
+    }
+
 
     /** Creates a query builder for terms in the priority index */
-    public IndexQueryBuilder findPriorityWord(IndexQueryPriority priority, long wordId, int fetchSizeMultiplier) {
-        return new IndexQueryBuilderImpl(reverseIndexFullReader, reverseIndexPriorityReader,
-                new IndexQuery(
+    public IndexQueryBuilder findPriorityWord(IndexQueryPriority priority,
+                                              long wordId,
+                                              int fetchSizeMultiplier) {
+        return newQueryBuilder(new IndexQuery(
                         List.of(reverseIndexPriorityReader.documents(wordId)),
                         priority,
-                        fetchSizeMultiplier), wordId);
+                        fetchSizeMultiplier))
+                .withSourceTerms(wordId);
     }
 
     /** Creates a query builder for terms in the full index */
     public IndexQueryBuilder findFullWord(IndexQueryPriority priority, long wordId, int fetchSizeMultiplier) {
-        return new IndexQueryBuilderImpl(reverseIndexFullReader, reverseIndexPriorityReader,
+        return newQueryBuilder(
                 new IndexQuery(List.of(reverseIndexFullReader.documents(wordId)),
                         priority,
-                        fetchSizeMultiplier),
-                wordId);
+                        fetchSizeMultiplier))
+                .withSourceTerms(wordId);
     }
 
     /** Creates a parameter matching filter step for the provided parameters */
-    public QueryFilterStepIf filterForParams(IndexQueryParams params) {
-        return new IndexQueryBuilderImpl.ParamMatchingQueryFilter(params, forwardIndexReader);
+    public QueryFilterStepIf filterForParams(QueryParams params) {
+        return new ParamMatchingQueryFilter(params, forwardIndexReader);
     }
 
     /** Returns the number of occurrences of the word in the full index */
@@ -64,8 +77,8 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
-    public long[] getMetadata(long wordId, long[] docIds) {
-        return reverseIndexFullReader.getTermMeta(wordId, docIds);
+    public DocMetadataList getMetadata(long wordId, CombinedDocIdList docIds) {
+        return new DocMetadataList(reverseIndexFullReader.getTermMeta(wordId, docIds.array()));
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -115,5 +128,100 @@ public class CombinedIndexReader {
     public boolean isLoaded() {
         // We only need to check one of the readers, as they are either all loaded or none are
         return forwardIndexReader.isLoaded();
+    }
+}
+
+class ParamMatchingQueryFilter implements QueryFilterStepIf {
+    private final QueryParams params;
+    private final ForwardIndexReader forwardIndexReader;
+
+    public ParamMatchingQueryFilter(QueryParams params,
+                                    ForwardIndexReader forwardIndexReader)
+    {
+        this.params = params;
+        this.forwardIndexReader = forwardIndexReader;
+    }
+
+    @Override
+    public boolean test(long combinedId) {
+        long docId = UrlIdCodec.removeRank(combinedId);
+        int domainId = UrlIdCodec.getDomainId(docId);
+
+        long meta = forwardIndexReader.getDocMeta(docId);
+
+        if (!validateDomain(domainId, meta)) {
+            return false;
+        }
+
+        if (!validateQuality(meta)) {
+            return false;
+        }
+
+        if (!validateYear(meta)) {
+            return false;
+        }
+
+        if (!validateSize(meta)) {
+            return false;
+        }
+
+        if (!validateRank(meta)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateDomain(int domainId, long meta) {
+        return params.searchSet().contains(domainId, meta);
+    }
+
+    private boolean validateQuality(long meta) {
+        final var limit = params.qualityLimit();
+
+        if (limit.type() == SpecificationLimitType.NONE) {
+            return true;
+        }
+
+        final int quality = DocumentMetadata.decodeQuality(meta);
+
+        return limit.test(quality);
+    }
+
+    private boolean validateYear(long meta) {
+        if (params.year().type() == SpecificationLimitType.NONE)
+            return true;
+
+        int postVal = DocumentMetadata.decodeYear(meta);
+
+        return params.year().test(postVal);
+    }
+
+    private boolean validateSize(long meta) {
+        if (params.size().type() == SpecificationLimitType.NONE)
+            return true;
+
+        int postVal = DocumentMetadata.decodeSize(meta);
+
+        return params.size().test(postVal);
+    }
+
+    private boolean validateRank(long meta) {
+        if (params.rank().type() == SpecificationLimitType.NONE)
+            return true;
+
+        int postVal = DocumentMetadata.decodeRank(meta);
+
+        return params.rank().test(postVal);
+    }
+
+    @Override
+    public double cost() {
+        return 32;
+    }
+
+    @Override
+    public String describe() {
+        return getClass().getSimpleName();
     }
 }

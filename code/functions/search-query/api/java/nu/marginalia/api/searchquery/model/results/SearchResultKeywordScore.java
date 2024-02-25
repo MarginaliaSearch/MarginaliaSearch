@@ -11,7 +11,6 @@ public final class SearchResultKeywordScore {
     public final String keyword;
     private final long encodedWordMetadata;
     private final long encodedDocMetadata;
-    private final boolean hasPriorityTerms;
 
     private final int htmlFeatures;
 
@@ -19,14 +18,12 @@ public final class SearchResultKeywordScore {
                                     String keyword,
                                     long encodedWordMetadata,
                                     long encodedDocMetadata,
-                                    int htmlFeatures,
-                                    boolean hasPriorityTerms) {
+                                    int htmlFeatures) {
         this.subquery = subquery;
         this.keyword = keyword;
         this.encodedWordMetadata = encodedWordMetadata;
         this.encodedDocMetadata = encodedDocMetadata;
         this.htmlFeatures = htmlFeatures;
-        this.hasPriorityTerms = hasPriorityTerms;
     }
 
     public boolean hasTermFlag(WordFlags flag) {
@@ -65,10 +62,6 @@ public final class SearchResultKeywordScore {
         return htmlFeatures;
     }
 
-    public boolean hasPriorityTerms() {
-        return hasPriorityTerms;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -77,13 +70,12 @@ public final class SearchResultKeywordScore {
         return this.subquery == that.subquery &&
                 Objects.equals(this.keyword, that.keyword) &&
                 this.encodedWordMetadata == that.encodedWordMetadata &&
-                this.encodedDocMetadata == that.encodedDocMetadata &&
-                this.hasPriorityTerms == that.hasPriorityTerms;
+                this.encodedDocMetadata == that.encodedDocMetadata;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(subquery, keyword, encodedWordMetadata, encodedDocMetadata, hasPriorityTerms);
+        return Objects.hash(subquery, keyword, encodedWordMetadata, encodedDocMetadata);
     }
 
     @Override
@@ -92,8 +84,7 @@ public final class SearchResultKeywordScore {
                 "set=" + subquery + ", " +
                 "keyword=" + keyword + ", " +
                 "encodedWordMetadata=" + new WordMetadata(encodedWordMetadata) + ", " +
-                "encodedDocMetadata=" + new DocumentMetadata(encodedDocMetadata) + ", " +
-                "hasPriorityTerms=" + hasPriorityTerms + ']';
+                "encodedDocMetadata=" + new DocumentMetadata(encodedDocMetadata) + ']';
     }
 
 }

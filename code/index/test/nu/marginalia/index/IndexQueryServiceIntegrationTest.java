@@ -62,7 +62,7 @@ public class IndexQueryServiceIntegrationTest {
     IndexQueryServiceIntegrationTestModule testModule;
 
     @Inject
-    IndexQueryGrpcService queryService;
+    IndexGrpcService queryService;
     @Inject
     StatefulIndex statefulIndex;
 

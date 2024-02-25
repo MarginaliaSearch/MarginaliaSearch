@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 
 public class ReverseIndexReader {
@@ -123,13 +124,13 @@ public class ReverseIndexReader {
             return new long[docIds.length];
         }
 
-        assert isSorted(docIds) : "The input array docIds is assumed to be sorted";
+        assert isUniqueAndSorted(docIds) : "The input array docIds is assumed to be unique and sorted, was " + Arrays.toString(docIds);
 
         var reader = createReaderNew(offset);
         return reader.queryData(docIds, 1);
     }
 
-    private boolean isSorted(long[] ids) {
+    private boolean isUniqueAndSorted(long[] ids) {
         if (ids.length == 0)
             return true;
         long prev = ids[0];

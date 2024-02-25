@@ -22,6 +22,10 @@ public class IndexQuery {
     public final IndexQueryPriority queryPriority;
     public final int fetchSizeMultiplier;
 
+    public IndexQuery(EntrySource... sources) {
+        this(List.of(sources), IndexQueryPriority.BEST, 1);
+    }
+
     /**
      * Creates an IndexQuery object with the given sources, priority, and fetchSizeMultiplier.
      *

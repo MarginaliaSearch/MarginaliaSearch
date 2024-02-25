@@ -15,7 +15,9 @@ import nu.marginalia.index.searchset.SearchSet;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IndexSearchParameters {
+import static nu.marginalia.api.searchquery.IndexProtobufCodec.convertSpecLimit;
+
+public class SearchParameters {
     /**
      * This is how many results matching the keywords we'll try to get
      * before evaluating them for the best result.
@@ -23,7 +25,7 @@ public class IndexSearchParameters {
     public final int fetchSize;
     public final IndexSearchBudget budget;
     public final List<SearchSubquery> subqueries;
-    public final IndexQueryParams queryParams;
+    public final QueryParams queryParams;
     public final ResultRankingParameters rankingParams;
 
     public final int limitByDomain;
@@ -36,13 +38,7 @@ public class IndexSearchParameters {
      */
     public long dataCost = 0;
 
-    /**
-     * A set of id:s considered during each subquery,
-     * for deduplication
-     */
-    public final TLongHashSet consideredUrlIds;
-
-    public IndexSearchParameters(SearchSpecification specsSet, SearchSet searchSet) {
+    public SearchParameters(SearchSpecification specsSet, SearchSet searchSet) {
         var limits = specsSet.queryLimits;
 
         this.fetchSize = limits.fetchSize();
@@ -51,9 +47,7 @@ public class IndexSearchParameters {
         this.limitByDomain = limits.resultsByDomain();
         this.limitTotal = limits.resultsTotal();
 
-        this.consideredUrlIds = CachedObjects.getConsideredUrlsMap();
-
-        queryParams = new IndexQueryParams(
+        queryParams = new QueryParams(
                 specsSet.quality,
                 specsSet.year,
                 specsSet.size,
@@ -65,7 +59,7 @@ public class IndexSearchParameters {
         rankingParams = specsSet.rankingParams;
     }
 
-    public IndexSearchParameters(RpcIndexQuery request, SearchSet searchSet) {
+    public SearchParameters(RpcIndexQuery request, SearchSet searchSet) {
         var limits = IndexProtobufCodec.convertQueryLimits(request.getQueryLimits());
 
         this.fetchSize = limits.fetchSize();
@@ -77,22 +71,16 @@ public class IndexSearchParameters {
         this.limitByDomain = limits.resultsByDomain();
         this.limitTotal = limits.resultsTotal();
 
-        this.consideredUrlIds = CachedObjects.getConsideredUrlsMap();
-
-        queryParams = new IndexQueryParams(
-                IndexProtobufCodec.convertSpecLimit(request.getQuality()),
-                IndexProtobufCodec.convertSpecLimit(request.getYear()),
-                IndexProtobufCodec.convertSpecLimit(request.getSize()),
-                IndexProtobufCodec.convertSpecLimit(request.getRank()),
-                IndexProtobufCodec.convertSpecLimit(request.getDomainCount()),
+        queryParams = new QueryParams(
+                convertSpecLimit(request.getQuality()),
+                convertSpecLimit(request.getYear()),
+                convertSpecLimit(request.getSize()),
+                convertSpecLimit(request.getRank()),
+                convertSpecLimit(request.getDomainCount()),
                 searchSet,
                 QueryStrategy.valueOf(request.getQueryStrategy()));
 
         rankingParams = IndexProtobufCodec.convertRankingParameterss(request.getParameters());
-    }
-
-    public List<IndexQuery> createIndexQueries(StatefulIndex index, IndexSearchTerms terms) {
-        return index.createQueries(terms, queryParams, consideredUrlIds::add);
     }
 
     public boolean hasTimeLeft() {

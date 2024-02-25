@@ -4,10 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
-import nu.marginalia.index.model.IndexSearchParameters;
+import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.ranking.results.ResultValuator;
@@ -25,46 +28,50 @@ public class IndexResultValuatorService {
     private final IndexMetadataService metadataService;
     private final DocumentDbReader documentDbReader;
     private final ResultValuator resultValuator;
+    private final StatefulIndex statefulIndex;
 
     @Inject
     public IndexResultValuatorService(IndexMetadataService metadataService,
                                       DocumentDbReader documentDbReader,
-                                      ResultValuator resultValuator) {
+                                      ResultValuator resultValuator,
+                                      StatefulIndex statefulIndex)
+    {
         this.metadataService = metadataService;
         this.documentDbReader = documentDbReader;
         this.resultValuator = resultValuator;
+        this.statefulIndex = statefulIndex;
     }
 
-
-    /** From a list of candidate document IDs, find the best results and decorate them with additional information */
-    public List<DecoratedSearchResultItem> findBestResults(IndexSearchParameters params, ResultRankingContext rankingContext, TLongList resultIds) throws SQLException {
-
+    public List<SearchResultItem> rankResults(SearchParameters params,
+                                                       ResultRankingContext rankingContext,
+                                                       CombinedDocIdList resultIds)
+    {
         final var evaluator = new IndexResultValuationContext(metadataService,
+                resultValuator,
                 resultIds,
+                statefulIndex,
                 rankingContext,
                 params.subqueries,
                 params.queryParams);
 
-        // Sort the ids for more favorable access patterns on disk
-        resultIds.sort();
+        List<SearchResultItem> results = new ArrayList<>(resultIds.size());
 
-        // Parallel stream to calculate scores is a minor performance boost
-        var results = Arrays.stream(resultIds.toArray())
-                .parallel()
-                .mapToObj(evaluator::calculatePreliminaryScore)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        for (long docId : resultIds.array()) {
+            var score = evaluator.calculatePreliminaryScore(docId);
+            if (score != null) {
+                results.add(score);
+            }
+        }
 
-        results = selectBestResults(params, results);
-
-        return decorateAndRerank(results, rankingContext);
+        return results;
     }
 
-    private List<SearchResultItem> selectBestResults(IndexSearchParameters params, List<SearchResultItem> results) {
+
+    public List<DecoratedSearchResultItem> selectBestResults(SearchParameters params,
+                                                     ResultRankingContext rankingContext,
+                                                     Collection<SearchResultItem> results) throws SQLException {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
-
-        results.sort(Comparator.naturalOrder());
 
         List<SearchResultItem> resultsList = new ArrayList<>(results.size());
 
@@ -94,7 +101,12 @@ public class IndexResultValuatorService {
             result.resultsFromDomain = domainCountFilter.getCount(result);
         }
 
-        return resultsList;
+        LongArrayList idsList = new LongArrayList(resultsList.size());
+        for (var result : resultsList) {
+            idsList.add(result.getCombinedId());
+        }
+
+        return decorateAndRerank(resultsList, rankingContext);
     }
 
     /** Decorate the result items with additional information from the link database
@@ -128,6 +140,7 @@ public class IndexResultValuatorService {
         if (decoratedItems.size() != rawResults.size())
             logger.warn("Result list shrunk during decoration?");
 
+        decoratedItems.sort(Comparator.naturalOrder());
         return decoratedItems;
     }
 

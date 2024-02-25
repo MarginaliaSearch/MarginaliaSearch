@@ -60,7 +60,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     IndexQueryServiceIntegrationTestModule testModule;
 
     @Inject
-    IndexQueryGrpcService queryService;
+    IndexGrpcService queryService;
     @Inject
     StatefulIndex statefulIndex;
 
@@ -135,6 +135,8 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 .mapToLong(i -> i.rawIndexResult.getDocumentId())
                 .toArray();
 
+        System.out.println(Arrays.toString(actual));
+        System.out.println(Arrays.toString(ids));
         Assertions.assertArrayEquals(ids, actual);
     }
 

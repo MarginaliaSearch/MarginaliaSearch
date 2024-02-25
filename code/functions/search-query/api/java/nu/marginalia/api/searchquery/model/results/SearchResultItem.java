@@ -36,11 +36,11 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     }
 
     /* Used for evaluation */
-    private transient SearchResultPreliminaryScore scoreValue = null;
-    public void setScore(SearchResultPreliminaryScore score) {
+    private transient double scoreValue = Double.MAX_VALUE;
+    public void setScore(double score) {
         scoreValue = score;
     }
-    public SearchResultPreliminaryScore getScore() {
+    public double getScore() {
         return scoreValue;
     }
 
@@ -70,7 +70,7 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     @Override
     public int compareTo(@NotNull SearchResultItem o) {
         // this looks like a bug, but we actually want this in a reversed order
-        int diff = o.getScore().compareTo(getScore());
+        int diff = Double.compare(o.getScore(), getScore());
         if (diff != 0)
             return diff;
 

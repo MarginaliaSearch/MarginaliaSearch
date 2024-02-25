@@ -2,11 +2,14 @@ package nu.marginalia.index.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.index.model.IndexQueryParams;
-import nu.marginalia.index.IndexServicesFactory;
-import nu.marginalia.index.model.IndexSearchTerms;
+import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.results.model.ids.DocMetadataList;
+import nu.marginalia.index.model.QueryParams;
+import nu.marginalia.index.IndexFactory;
+import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepFromPredicate;
+import nu.marginalia.index.results.model.ids.TermIdList;
 import nu.marginalia.service.control.ServiceEventLog;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -32,13 +35,13 @@ public class StatefulIndex {
 
     private final ReadWriteLock indexReplacementLock = new ReentrantReadWriteLock();
     @NotNull
-    private final IndexServicesFactory servicesFactory;
+    private final IndexFactory servicesFactory;
     private final ServiceEventLog eventLog;
 
     private volatile CombinedIndexReader combinedIndexReader;
 
     @Inject
-    public StatefulIndex(@NotNull IndexServicesFactory servicesFactory,
+    public StatefulIndex(@NotNull IndexFactory servicesFactory,
                          ServiceEventLog eventLog) {
         this.servicesFactory = servicesFactory;
         this.eventLog = eventLog;
@@ -52,7 +55,7 @@ public class StatefulIndex {
             logger.info("Initializing index");
 
             if (combinedIndexReader == null) {
-                combinedIndexReader = servicesFactory.getSearchIndexReader();
+                combinedIndexReader = servicesFactory.getCombinedIndexReader();
                 eventLog.logEvent("INDEX-INIT", "Index loaded");
             }
             else {
@@ -78,7 +81,7 @@ public class StatefulIndex {
 
             servicesFactory.switchFiles();
 
-            combinedIndexReader = servicesFactory.getSearchIndexReader();
+            combinedIndexReader = servicesFactory.getCombinedIndexReader();
 
             eventLog.logEvent("INDEX-SWITCH-OK", "");
         }
@@ -106,7 +109,7 @@ public class StatefulIndex {
     }
 
 
-    public List<IndexQuery> createQueries(IndexSearchTerms terms, IndexQueryParams params, LongPredicate includePred) {
+    public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
 
         if (!isLoaded()) {
             logger.warn("Index reader not ready");
@@ -160,10 +163,6 @@ public class StatefulIndex {
                 query = query.notFull(term);
             }
 
-            // This filtering step needs to happen only on terms that have passed all term-based filtering steps,
-            // it's essentially a memoization of the params filtering job which is relatively expensive
-            query = query.addInclusionFilter(new QueryFilterStepFromPredicate(includePred));
-
             // Run these last, as they'll worst-case cause as many page faults as there are
             // items in the buffer
             queries.add(query.addInclusionFilter(combinedIndexReader.filterForParams(params)).build());
@@ -190,7 +189,7 @@ public class StatefulIndex {
      * document identifiers provided; with metadata for termId.  The input array
      * docs[] *must* be sorted.
      */
-    public long[] getTermMetadata(long termId, long[] docs) {
+    public DocMetadataList getTermMetadata(long termId, CombinedDocIdList docs) {
         return combinedIndexReader.getMetadata(termId, docs);
     }
     public long getDocumentMetadata(long docId) {

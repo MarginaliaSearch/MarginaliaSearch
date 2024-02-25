@@ -16,16 +16,23 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 @Singleton
-public class IndexServicesFactory {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+public class IndexFactory {
     private final FileStorageService fileStorageService;
     private final Path liveStorage;
 
     @Inject
-    public IndexServicesFactory(FileStorageService fileStorageService) {
+    public IndexFactory(FileStorageService fileStorageService) {
 
         this.fileStorageService = fileStorageService;
         this.liveStorage = IndexLocations.getCurrentIndex(fileStorageService);
+    }
+
+    public CombinedIndexReader getCombinedIndexReader() throws IOException {
+        return new CombinedIndexReader(
+                getForwardIndexReader(),
+                getReverseIndexReader(),
+                getReverseIndexPrioReader()
+        );
     }
 
     public Path getSearchSetsBase() {
@@ -54,6 +61,7 @@ public class IndexServicesFactory {
         );
     }
 
+    /** Switches the current index to the next index */
     public void switchFiles() throws IOException {
 
         for (var file : ReverseIndexFullFileNames.FileIdentifier.values()) {
@@ -82,11 +90,5 @@ public class IndexServicesFactory {
         }
     }
 
-    public CombinedIndexReader getSearchIndexReader() throws IOException {
-        return new CombinedIndexReader(
-                getForwardIndexReader(),
-                getReverseIndexReader(),
-                getReverseIndexPrioReader()
-        );
-    }
+
 }

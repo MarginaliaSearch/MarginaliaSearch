@@ -6,7 +6,7 @@ import gnu.trove.list.TIntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.db.DomainTypes;
-import nu.marginalia.index.IndexServicesFactory;
+import nu.marginalia.index.IndexFactory;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.ranking.domains.PageRankDomainRanker;
 import nu.marginalia.ranking.domains.accumulator.RankingResultHashMapAccumulator;
@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SearchSetsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DomainTypes domainTypes;
-    private final IndexServicesFactory indexServicesFactory;
+    private final IndexFactory indexFactory;
     private final ServiceEventLog eventLog;
     private final DomainRankingSetsService domainRankingSetsService;
     private final DbUpdateRanks dbUpdateRanks;
@@ -51,13 +51,13 @@ public class SearchSetsService {
                              ServiceConfiguration serviceConfiguration,
                              LinkGraphSource rankingDomains,
                              SimilarityGraphSource similarityDomains,
-                             IndexServicesFactory indexServicesFactory,
+                             IndexFactory indexFactory,
                              ServiceEventLog eventLog,
                              DomainRankingSetsService domainRankingSetsService,
                              DbUpdateRanks dbUpdateRanks) throws IOException {
         this.nodeId = serviceConfiguration.node();
         this.domainTypes = domainTypes;
-        this.indexServicesFactory = indexServicesFactory;
+        this.indexFactory = indexFactory;
         this.eventLog = eventLog;
         this.domainRankingSetsService = domainRankingSetsService;
 
@@ -77,7 +77,7 @@ public class SearchSetsService {
         for (var rankingSet : domainRankingSetsService.getAll()) {
             rankingSets.put(rankingSet.name(),
                     new RankingSearchSet(rankingSet.name(),
-                            rankingSet.fileName(indexServicesFactory.getSearchSetsBase())
+                            rankingSet.fileName(indexFactory.getSearchSetsBase())
                     )
             );
         }
@@ -147,7 +147,7 @@ public class SearchSetsService {
                 .forDomainNames(source, domains)
                 .calculate(rankingSet.depth(), RankingResultHashSetAccumulator::new);
 
-        var set = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexServicesFactory.getSearchSetsBase()), data);
+        var set = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexFactory.getSearchSetsBase()), data);
         rankingSets.put(rankingSet.name(), set);
 
         try {
@@ -170,7 +170,7 @@ public class SearchSetsService {
         }
 
         synchronized (this) {
-            var blogSet = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexServicesFactory.getSearchSetsBase()), new IntOpenHashSet(knownDomains.toArray()));
+            var blogSet = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexFactory.getSearchSetsBase()), new IntOpenHashSet(knownDomains.toArray()));
             rankingSets.put(rankingSet.name(), blogSet);
             blogSet.write();
         }
@@ -197,7 +197,7 @@ public class SearchSetsService {
             domainRankings = new DomainRankings(ranks);
         }
 
-        domainRankings.save(indexServicesFactory.getSearchSetsBase());
+        domainRankings.save(indexFactory.getSearchSetsBase());
 
         if (nodeId == 1) {
             // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to

@@ -42,7 +42,7 @@ public class IndexService extends Service {
     @Inject
     public IndexService(BaseServiceParams params,
                         IndexOpsService opsService,
-                        IndexQueryGrpcService indexQueryService,
+                        IndexGrpcService indexQueryService,
                         StatefulIndex statefulIndex,
                         FileStorageService fileStorageService,
                         DocumentDbReader documentDbReader,
