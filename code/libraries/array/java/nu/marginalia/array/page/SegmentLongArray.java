@@ -154,7 +154,11 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     @Override
     public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
 
-        final int stride = 1024*1204*128; // Copy 1 GB at a time 'cause byte buffers are 'a byte buffering
+        final int stride = 1024*1024*128; // Copy 1 GB at a time 'cause byte buffers are 'a byte buffering
+
+        if (source.size() / 8 < sourceStart + (arrayEnd - arrayStart)) {
+            throw new IndexOutOfBoundsException(STR."Source channel too small: \{source.size()} < \{sourceStart + (arrayEnd - arrayStart)}");
+        }
 
         long ss = sourceStart;
         for (long as = arrayStart; as < arrayEnd; as += stride, ss += stride) {

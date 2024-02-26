@@ -92,7 +92,8 @@ public class ReversePreindex {
 
         LongArray wordIds = segments.wordIds;
 
-        assert offsets.size() == wordIds.size() : "Offsets and word-ids of different size";
+        if (offsets.size() != wordIds.size())
+            throw new IllegalStateException("Offsets and word-ids of different size");
         if (offsets.size() > Integer.MAX_VALUE) {
             throw new IllegalStateException("offsets.size() too big!");
         }
@@ -137,7 +138,7 @@ public class ReversePreindex {
 
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
-        LongArray mergedDocuments = LongArrayFactory.mmapForWritingConfined(docsFile, 2 * (left.documents.size() + right.documents.size()));
+        LongArray mergedDocuments = LongArrayFactory.mmapForWritingConfined(docsFile, left.documents.size() + right.documents.size());
 
         leftIter.next();
         rightIter.next();
@@ -180,17 +181,21 @@ public class ReversePreindex {
 
         }
 
-        assert !leftIter.isPositionBeforeEnd() : "Left has more to go";
-        assert !rightIter.isPositionBeforeEnd() : "Right has more to go";
-        assert !mergingIter.canPutMore() : "Source iters ran dry before merging iter";
+        if (leftIter.isPositionBeforeEnd())
+            throw new IllegalStateException("Left has more to go");
+        if (rightIter.isPositionBeforeEnd())
+            throw new IllegalStateException("Right has more to go");
+        if (mergingIter.canPutMore())
+            throw new IllegalStateException("Source iters ran dry before merging iter");
+
+
+        mergingSegment.force();
 
         // We may have overestimated the size of the merged docs size in the case there were
         // duplicates in the data, so we need to shrink it to the actual size we wrote.
 
         mergedDocuments = shrinkMergedDocuments(mergedDocuments,
                 docsFile, 2 * mergingSegment.totalSize());
-
-        mergingSegment.force();
 
         return new ReversePreindex(
                 mergingSegment,
@@ -233,16 +238,15 @@ public class ReversePreindex {
         mergedDocuments.force();
 
         long beforeSize = mergedDocuments.size();
-        try (var bc = Files.newByteChannel(docsFile, StandardOpenOption.WRITE)) {
-            bc.truncate(sizeLongs * 8);
-        }
-        long afterSize = mergedDocuments.size();
-        mergedDocuments.close();
-
-        mergedDocuments = LongArrayFactory.mmapForWritingConfined(docsFile, sizeLongs);
-
+        long afterSize = sizeLongs * 8;
         if (beforeSize != afterSize) {
+            mergedDocuments.close();
+            try (var bc = Files.newByteChannel(docsFile, StandardOpenOption.WRITE)) {
+                bc.truncate(sizeLongs * 8);
+            }
+
             logger.info("Shrunk {} from {}b to {}b", docsFile, beforeSize, afterSize);
+            mergedDocuments = LongArrayFactory.mmapForWritingConfined(docsFile, sizeLongs);
         }
 
         return mergedDocuments;
@@ -291,7 +295,8 @@ public class ReversePreindex {
         boolean putNext = mergingIter.putNext(size / 2);
         boolean iterNext = sourceIter.next();
 
-        assert putNext || !iterNext : "Source iterator ran out before dest iterator?!";
+        if (!putNext && iterNext)
+            throw new IllegalStateException("Source iterator ran out before dest iterator?!");
 
         return iterNext;
     }

@@ -2,8 +2,11 @@ package nu.marginalia.array.page;
 
 import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -12,7 +15,6 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
@@ -23,9 +25,13 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 public class UnsafeLongArray implements PartitionPage, LongArray {
 
     private static final Unsafe unsafe = UnsafeProvider.getUnsafe();
+    private static final Logger logger = LoggerFactory.getLogger(UnsafeLongArray.class);
 
     @Nullable
     private final Arena arena;
+    @Nullable
+    private final FileChannel channel;
+
     private final MemorySegment segment;
     private boolean closed;
 
@@ -33,6 +39,15 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
                     @Nullable Arena arena) {
         this.segment = segment;
         this.arena = arena;
+        this.channel = null;
+    }
+
+    UnsafeLongArray(MemorySegment segment,
+                    @Nonnull FileChannel channel,
+                    @Nullable Arena arena) {
+        this.segment = segment;
+        this.arena = arena;
+        this.channel = channel;
     }
 
     public static UnsafeLongArray onHeap(Arena arena, long size) {
@@ -40,36 +55,24 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
     }
 
     public static UnsafeLongArray fromMmapReadOnly(Arena arena, Path file, long offset, long size) throws IOException {
-        return new UnsafeLongArray(
-                mmapFile(arena, file, offset, size, FileChannel.MapMode.READ_ONLY, StandardOpenOption.READ),
-                arena);
-    }
-
-    public static UnsafeLongArray fromMmapReadWrite(Arena arena, Path file, long offset, long size) throws IOException {
-
-        return new UnsafeLongArray(
-                mmapFile(arena, file, offset, size, FileChannel.MapMode.READ_WRITE,
-                        StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE),
-                arena);
-    }
-
-    private static MemorySegment mmapFile(Arena arena,
-                                       Path file,
-                                       long offset,
-                                       long size,
-                                       FileChannel.MapMode mode,
-                                       OpenOption... openOptions) throws IOException
-    {
-        try (var channel = (FileChannel) Files.newByteChannel(file, openOptions)) {
-
-            return channel.map(mode,
-                            JAVA_LONG.byteSize() * offset,
-                            JAVA_LONG.byteSize() * size,
-                            arena);
+        try (var channel = (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ)) {
+            return new UnsafeLongArray(channel.map(FileChannel.MapMode.READ_ONLY,
+                    JAVA_LONG.byteSize() * offset, JAVA_LONG.byteSize() * size,
+                    arena), arena);
         }
         catch (IOException ex) {
             throw new IOException("Failed to map file " + file + " (" + offset + ":" + size + ")", ex);
         }
+    }
+
+    public static UnsafeLongArray fromMmapReadWrite(Arena arena, Path file, long offset, long size) throws IOException {
+        var channel = (FileChannel) Files.newByteChannel(file,
+                StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        var segment = channel.map(FileChannel.MapMode.READ_WRITE,
+                JAVA_LONG.byteSize() * offset, JAVA_LONG.byteSize() * size,
+                arena);
+
+        return new UnsafeLongArray(segment, channel, arena);
     }
 
     @Override
@@ -122,6 +125,15 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
         if (arena != null && !closed) {
             arena.close();
         }
+        if (channel != null && !closed) {
+            try {
+                channel.close();
+            }
+            catch (IOException ex) {
+                throw new RuntimeException("Failed to close channel", ex);
+            }
+        }
+
         closed = true;
     }
 
@@ -149,6 +161,13 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
     public void force() {
         if (segment.isMapped()) {
             segment.force();
+            try {
+                if (channel != null) {
+                    channel.force(false);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to force channel", e);
+            }
         }
     }
 
@@ -156,26 +175,102 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
         return new ArrayRangeReference<>(this, start, end);
     }
 
-    @Override
-    public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
+    public void chanelChannelTransfer(FileChannel source,
+                                      long sourceStartL,
+                                      long arrayStartL,
+                                      long arrayEndL) throws IOException {
 
-        final int stride = 1024*1204*128; // Copy 1 GB at a time 'cause byte buffers are 'a byte buffering
+        assert channel != null;
 
-        long ss = sourceStart;
-        for (long as = arrayStart; as < arrayEnd; as += stride, ss += stride) {
-            long ae = Math.min(as + stride, arrayEnd);
+        final int B_per_L = (int) JAVA_LONG.byteSize();
 
-            long index = as * JAVA_LONG.byteSize();
-            long length = (ae - as) * JAVA_LONG.byteSize();
+        final int strideB = 128*1024*1024; // Copy in 128 MB chunks
 
-            var bufferSlice = segment.asSlice(index, length).asByteBuffer();
+        final long destStartB = arrayStartL * B_per_L;
+        final long destEndB = arrayEndL * B_per_L;
+        final long lengthB = destEndB - destStartB;
 
-            long startPos = ss * JAVA_LONG.byteSize();
-            while (bufferSlice.position() < bufferSlice.capacity()) {
-                source.read(bufferSlice, startPos + bufferSlice.position());
+        final long sourceStartB = sourceStartL * B_per_L;
+        final long sourceEndB = sourceStartB + lengthB;
+
+
+        if (sourceStartB > sourceEndB)
+            throw new IndexOutOfBoundsException("Source start after end");
+        if (sourceStartB > source.size())
+            throw new IndexOutOfBoundsException("Source channel too small, start " + sourceStartB + " < input size " + source.size());
+        if (sourceEndB > source.size())
+            throw new IndexOutOfBoundsException("Source channel too small, end " + sourceEndB + " < input size " + source.size());
+
+        long destIndexB = destStartB;
+
+        source.position(sourceStartB);
+
+        while (destIndexB < destEndB)
+        {
+            long stepSizeB = Math.min(destIndexB + strideB, destEndB);
+            long copyLengthB = (stepSizeB - destIndexB);
+
+            long transferred = channel.transferFrom(source, destIndexB, copyLengthB);
+            if (transferred != copyLengthB) {
+                logger.warn("Less than {} bytes were copied: {}", copyLengthB, transferred);
             }
+
+            destIndexB += copyLengthB;
+        }
+    }
+
+    @Override
+    public void transferFrom(FileChannel source,
+                             long sourceStartL,
+                             long arrayStartL,
+                             long arrayEndL) throws IOException {
+
+
+        if (channel != null) {
+            chanelChannelTransfer(source, sourceStartL, arrayStartL, arrayEndL);
+            return;
         }
 
+        final int B_per_L = (int) JAVA_LONG.byteSize();
+
+        final int strideB = 1024*1024*1024; // Copy 1 GB at a time
+
+        final long arrayStartB = arrayStartL * B_per_L;
+        final long arrayEndB = arrayEndL * B_per_L;
+        final long arrayLengthB = arrayEndB - arrayStartB;
+
+        final long sourceStartB = sourceStartL * B_per_L;
+        final long sourceEndB = sourceStartB + arrayLengthB;
+
+
+        if (sourceStartB > sourceEndB)
+            throw new IndexOutOfBoundsException("Source start after end");
+        if (sourceStartB > source.size())
+            throw new IndexOutOfBoundsException("Source channel too small, start " + sourceStartB + " < input size " + source.size());
+        if (sourceEndB > source.size())
+            throw new IndexOutOfBoundsException("Source channel too small, end " + sourceEndB + " < input size " + source.size());
+
+        long channelIndexB = sourceStartB;
+        long segmentIndexB = arrayStartB;
+
+        while (segmentIndexB < arrayEndB)
+        {
+            long segmentEndB = Math.min(segmentIndexB + strideB, arrayEndB);
+            long lengthB = (segmentEndB - segmentIndexB);
+
+            var bufferSlice = segment.asSlice(segmentIndexB, lengthB).asByteBuffer();
+
+            while (bufferSlice.position() < bufferSlice.capacity()) {
+                if (source.position() + bufferSlice.capacity() > sourceEndB)
+                    throw new IndexOutOfBoundsException("Source channel too small");
+
+                if (source.read(bufferSlice, channelIndexB + bufferSlice.position()) < 0)
+                    throw new IOException("Failed to read from source");
+            }
+
+            channelIndexB += lengthB;
+            segmentIndexB += lengthB;
+        }
     }
 
 }

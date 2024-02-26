@@ -38,6 +38,9 @@ public class ReversePreindexWordSegments {
      * and each value is the start offset of the data.
      */
     public Long2LongOpenHashMap asMap(int recordSize) {
+        if (wordIds.size() > Integer.MAX_VALUE)
+            throw new IllegalArgumentException("Cannot create a map with more than Integer.MAX_VALUE entries");
+
         Long2LongOpenHashMap ret = new Long2LongOpenHashMap((int) wordIds.size(), 0.75f);
         var iter = iterator(recordSize);
 
@@ -62,7 +65,7 @@ public class ReversePreindexWordSegments {
 
         // Create the words file by iterating over the map and inserting them into
         // the words file in whatever bizarro hash table order they appear in
-        int i = 0;
+        long i = 0;
         LongIterator iter = countsMap.keySet().iterator();
         while (iter.hasNext()) {
             words.set(i++, iter.nextLong());
@@ -120,8 +123,8 @@ public class ReversePreindexWordSegments {
             this.fileSize = wordIds.size();
         }
 
-        private int i = -1;
-        public int idx() {
+        private long i = -1;
+        public long idx() {
             return i;
         }
         public boolean next() {
@@ -166,8 +169,8 @@ public class ReversePreindexWordSegments {
             this.wordId = wordIds.get(0);
         }
 
-        private int i = 0;
-        public int idx() {
+        private long i = 0;
+        public long idx() {
             return i;
         }
 

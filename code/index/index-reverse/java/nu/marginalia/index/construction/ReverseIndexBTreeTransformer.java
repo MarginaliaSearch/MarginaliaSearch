@@ -30,7 +30,7 @@ public class ReverseIndexBTreeTransformer implements LongIOTransformer {
     @Override
     public long transform(long pos, long end) throws IOException {
 
-        final int size = (int) (end - start) / entrySize;
+        final int size = (int) ((end - start) / entrySize);
 
         if (size == 0) {
             return -1;
