@@ -16,29 +16,30 @@ public record SearchParameters(String query,
                                SearchJsParameter js,
                                SearchRecentParameter recent,
                                SearchTitleParameter searchTitle,
-                               SearchAdtechParameter adtech
+                               SearchAdtechParameter adtech,
+                               boolean poisonResults
                                ) {
     public String profileStr() {
         return profile.filterId;
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, poisonResults);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, poisonResults);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, poisonResults);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, poisonResults);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(query, profile, js, recent, title, adtech);
+        return new SearchParameters(query, profile, js, recent, title, adtech, poisonResults);
     }
 
     public String renderUrl(WebsiteUrl baseUrl) {

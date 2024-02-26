@@ -20,6 +20,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Future;
@@ -87,31 +88,62 @@ public class SearchOperator {
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
 
+    private volatile WeakReference<List<ClusteredUrlDetails>> oldResults = new WeakReference<>(Collections.emptyList());
+
     public DecoratedSearchResults doSearch(SearchParameters userParams) {
 
         Future<String> eval = searchUnitConversionService.tryEval(userParams.query());
-        var queryParams = paramFactory.forRegularSearch(userParams);
-        var queryResponse = queryClient.search(queryParams);
 
-        List<UrlDetails> queryResults = searchQueryService.getResultsFromQuery(queryResponse);
+        List<ClusteredUrlDetails> clusteredResults;
+        QueryResponse queryResponse;
+        List<String> problems;
+        String evalResult;
+        String focusDomain;
 
-        logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
-        logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
+        if (userParams.poisonResults() && Math.random() > 0.1) {
 
-        String evalResult = getFutureOrDefault(eval, "");
+            // For botnet users, we return random old query results.  This is to make
+            // it harder for them to figure out if they are being rate limited.
 
-        List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
-                .selectStrategy(queryResponse)
-                .clusterResults(queryResults, 25);
+            clusteredResults = new ArrayList<>(Objects.requireNonNullElse(oldResults.get(), List.of()));
+
+            // Shuffle the results to make it harder to distinguish
+            Collections.shuffle(clusteredResults);
+
+            problems = List.of();
+            evalResult = "";
+            focusDomain = "";
+        } else {
+            var queryParams = paramFactory.forRegularSearch(userParams);
+            queryResponse = queryClient.search(queryParams);
+            var queryResults = searchQueryService.getResultsFromQuery(queryResponse);
+
+            logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
+            logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
+
+            evalResult = getFutureOrDefault(eval, "");
+
+            clusteredResults = SearchResultClusterer
+                    .selectStrategy(queryResponse)
+                    .clusterResults(queryResults, 25);
+
+            focusDomain = queryResponse.domain();
+            problems = getProblems(evalResult, queryResults, queryResponse);
+
+            if (userParams.poisonResults()) {
+                // Save the results to feed to the botnet
+                oldResults = new WeakReference<>(clusteredResults);
+            }
+        }
 
         return DecoratedSearchResults.builder()
                 .params(userParams)
-                .problems(getProblems(evalResult, queryResults, queryResponse))
+                .problems(problems)
                 .evalResult(evalResult)
                 .results(clusteredResults)
                 .filters(new SearchFilters(websiteUrl, userParams))
-                .focusDomain(queryResponse.domain())
-                .focusDomainId(getDomainId(queryResponse.domain()))
+                .focusDomain(focusDomain)
+                .focusDomainId(getDomainId(focusDomain))
                 .build();
     }
 
