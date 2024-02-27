@@ -9,7 +9,7 @@ much of the executor's functionality.
 
 ## Central Classes
 
-* [ExecutorActorControlService](src/main/java/nu/marginalia/actor/ExecutorActorControlService.java)
+* [ExecutorActorControlService](java/nu/marginalia/actor/ExecutorActorControlService.java)
 
 ## See Also
 

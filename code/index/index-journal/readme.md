@@ -16,9 +16,9 @@ are designed to handle this transparently via their *Paging* implementation.
 ## Central Classes
 
 ### Model
-* [IndexJournalEntry](src/main/java/nu/marginalia/index/journal/model/IndexJournalEntry.java)
-* [IndexJournalEntryHeader](src/main/java/nu/marginalia/index/journal/model/IndexJournalEntryHeader.java)
-* [IndexJournalEntryData](src/main/java/nu/marginalia/index/journal/model/IndexJournalEntryData.java)
+* [IndexJournalEntry](java/nu/marginalia/index/journal/model/IndexJournalEntry.java)
+* [IndexJournalEntryHeader](java/nu/marginalia/index/journal/model/IndexJournalEntryHeader.java)
+* [IndexJournalEntryData](java/nu/marginalia/index/journal/model/IndexJournalEntryData.java)
 ### I/O
-* [IndexJournalReader](src/main/java/nu/marginalia/index/journal/reader/IndexJournalReader.java)
-* [IndexJournalWriter](src/main/java/nu/marginalia/index/journal/writer/IndexJournalWriter.java)
+* [IndexJournalReader](java/nu/marginalia/index/journal/reader/IndexJournalReader.java)
+* [IndexJournalWriter](java/nu/marginalia/index/journal/writer/IndexJournalWriter.java)

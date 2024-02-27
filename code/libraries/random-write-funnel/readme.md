@@ -2,12 +2,12 @@ This micro-library with strategies for solving the problem of [write amplificati
 writing large files out of order to disk.  It offers a simple API to write data to a file in a 
 random order, while localizing the writes.
 
-Several strategies are available from the [RandomFileAssembler](src/main/java/nu/marginalia/rwf/RandomFileAssembler.java) 
+Several strategies are available from the [RandomFileAssembler](java/nu/marginalia/rwf/RandomFileAssembler.java) 
 interface.
 
 * Writing to a memory mapped file (non-solution, for small files)
 * Writing to a memory buffer (for systems with enough memory)
-* [RandomWriteFunnel](src/main/java/nu/marginalia/rwf/RandomWriteFunnel.java) - Not bound by memory. 
+* [RandomWriteFunnel](java/nu/marginalia/rwf/RandomWriteFunnel.java) - Not bound by memory. 
 
 The data is written in a native byte order.
 
@@ -41,5 +41,5 @@ catch (IOException ex) {
 
 ## Central Classes
 
-* [RandomFileAssembler](src/main/java/nu/marginalia/rwf/RandomFileAssembler.java)
-* [RandomWriteFunnel](src/main/java/nu/marginalia/rwf/RandomWriteFunnel.java)
+* [RandomFileAssembler](java/nu/marginalia/rwf/RandomFileAssembler.java)
+* [RandomWriteFunnel](java/nu/marginalia/rwf/RandomWriteFunnel.java)

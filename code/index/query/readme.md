@@ -12,11 +12,11 @@ interfaces are implemented within the index-service module.
 
 ## Central Classes
 
-* [IndexQuery](src/main/java/nu/marginalia/index/query/IndexQuery.java)
-* [query/filter](src/main/java/nu/marginalia/index/query/filter/)
+* [IndexQuery](java/nu/marginalia/index/query/IndexQuery.java)
+* [query/filter](java/nu/marginalia/index/query/filter/)
 
 ## See Also
 
 * [index/index-reverse](../index-reverse) implements many of these interfaces.
 * [libraries/array](../../libraries/array)
-* [libraries/array/.../LongQueryBuffer](../../libraries/array/src/main/java/nu/marginalia/array/buffer/LongQueryBuffer.java)
+* [libraries/array/.../LongQueryBuffer](../../libraries/array/java/nu/marginalia/array/buffer/LongQueryBuffer.java)

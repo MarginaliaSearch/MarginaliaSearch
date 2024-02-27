@@ -15,7 +15,7 @@ The web interface also offers a JSON API for machine-based queries.
 
 ## Central Classes
 
-This module is almost entirely boilerplate, except the [QueryBasicInterface](src/main/java/nu/marginalia/query/QueryBasicInterface.java) 
+This module is almost entirely boilerplate, except the [QueryBasicInterface](java/nu/marginalia/query/QueryBasicInterface.java) 
 class, which offers a REST API for querying the index.  
 
 Much of the guts of the query service are in the [query-service](../../functions/search-query) 

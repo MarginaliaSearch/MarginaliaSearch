@@ -15,7 +15,7 @@ Conceptually the application is broken into three parts:
 
 ## Central Classes
 
-* [ControlService](src/main/java/nu/marginalia/control/ControlService.java)
+* [ControlService](java/nu/marginalia/control/ControlService.java)
 
 ## See Also
 

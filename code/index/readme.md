@@ -29,7 +29,7 @@ results higher.
 
 ## Central Classes
 
-* [ResultValuator](src/main/java/nu/marginalia/ranking/results/ResultValuator.java)
+* [ResultValuator](java/nu/marginalia/ranking/results/ResultValuator.java)
 
 ---
 
@@ -53,14 +53,14 @@ for creating a ranking algorithm that is focused on a particular segment of the 
 
 ## Central Classes
 
-* [PageRankDomainRanker](src/main/java/nu/marginalia/ranking/domains/PageRankDomainRanker.java) - Ranks domains using the
+* [PageRankDomainRanker](java/nu/marginalia/ranking/domains/PageRankDomainRanker.java) - Ranks domains using the
   PageRank or Personalized PageRank algorithm depending on whether a list of influence domains is provided.
 
 ### Data sources
 
-* [LinkGraphSource](src/main/java/nu/marginalia/ranking/domains/data/LinkGraphSource.java) - fetches the link graph
-* [InvertedLinkGraphSource](src/main/java/nu/marginalia/ranking/domains/data/InvertedLinkGraphSource.java) - fetches the inverted link graph
-* [SimilarityGraphSource](src/main/java/nu/marginalia/ranking/domains/data/SimilarityGraphSource.java) - fetches the similarity graph from the database
+* [LinkGraphSource](java/nu/marginalia/ranking/domains/data/LinkGraphSource.java) - fetches the link graph
+* [InvertedLinkGraphSource](java/nu/marginalia/ranking/domains/data/InvertedLinkGraphSource.java) - fetches the inverted link graph
+* [SimilarityGraphSource](java/nu/marginalia/ranking/domains/data/SimilarityGraphSource.java) - fetches the similarity graph from the database
 
 Note that the similarity graph needs to be precomputed and stored in the database for
 the similarity graph source to be available.

@@ -71,11 +71,11 @@ lifecycle, listen to lifecycle notifications and so on.
 
 ## gRPC Channel Pool
 
-From the [GrpcChannelPoolFactory](src/main/java/nu/marginalia/service/client/GrpcChannelPoolFactory.java), two types of channel pools can be created
+From the [GrpcChannelPoolFactory](java/nu/marginalia/service/client/GrpcChannelPoolFactory.java), two types of channel pools can be created
 that are aware of the service registry:
 
-* [GrpcMultiNodeChannelPool](src/main/java/nu/marginalia/service/client/GrpcMultiNodeChannelPool.java) - This pool permits 1-n style communication with partitioned services
-* [GrpcSingleNodeChannelPool](src/main/java/nu/marginalia/service/client/GrpcSingleNodeChannelPool.java) - This pool permits 1-1 style communication with non-partitioned services.
+* [GrpcMultiNodeChannelPool](java/nu/marginalia/service/client/GrpcMultiNodeChannelPool.java) - This pool permits 1-n style communication with partitioned services
+* [GrpcSingleNodeChannelPool](java/nu/marginalia/service/client/GrpcSingleNodeChannelPool.java) - This pool permits 1-1 style communication with non-partitioned services.
   if multiple instances are running, it will use one of them and fall back
   to another if the first is not available.
 
@@ -145,5 +145,5 @@ Future<List<Response>> response = channelPool
 
 ### Central Classes
 
-* [ServiceRegistryIf](src/main/java/nu/marginalia/service/discovery/ServiceRegistryIf.java)
-* [ZkServiceRegistry](src/main/java/nu/marginalia/service/discovery/ZkServiceRegistry.java)
+* [ServiceRegistryIf](java/nu/marginalia/service/discovery/ServiceRegistryIf.java)
+* [ZkServiceRegistry](java/nu/marginalia/service/discovery/ZkServiceRegistry.java)

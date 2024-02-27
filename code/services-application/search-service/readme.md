@@ -14,13 +14,13 @@ to the user.
 
 ## Central classes
 
-* [SearchService](src/main/java/nu/marginalia/search/SearchService.java) receives requests and delegates to the 
+* [SearchService](java/nu/marginalia/search/SearchService.java) receives requests and delegates to the 
 appropriate services.
 
-* [CommandEvaluator](src/main/java/nu/marginalia/search/command/CommandEvaluator.java) interprets a user query and acts
+* [CommandEvaluator](java/nu/marginalia/search/command/CommandEvaluator.java) interprets a user query and acts
 upon it, dealing with special operations like `browse:` or `site:`.
 
-* [SearchQueryIndexService](src/main/java/nu/marginalia/search/svc/SearchQueryIndexService.java) passes a parsed search query to the index service, and
+* [SearchQueryIndexService](java/nu/marginalia/search/svc/SearchQueryIndexService.java) passes a parsed search query to the index service, and
 then decorates the search results so that they can be rendered.
 
 ## See Also

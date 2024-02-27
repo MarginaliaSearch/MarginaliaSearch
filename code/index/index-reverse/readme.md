@@ -34,9 +34,9 @@ to form a finalized reverse index.
 ![Illustration of the data layout of the finalized index](index.svg)
 ## Central Classes
 
-* [ReversePreindex](src/main/java/nu/marginalia/index/construction/ReversePreindex.java) intermediate reverse index state.
-* [ReverseIndexConstructor](src/main/java/nu/marginalia/index/construction/ReverseIndexConstructor.java) constructs the index.
-* [ReverseIndexReader](src/main/java/nu/marginalia/index/ReverseIndexReader.java) interrogates the index.
+* [ReversePreindex](java/nu/marginalia/index/construction/ReversePreindex.java) intermediate reverse index state.
+* [ReverseIndexConstructor](java/nu/marginalia/index/construction/ReverseIndexConstructor.java) constructs the index.
+* [ReverseIndexReader](java/nu/marginalia/index/ReverseIndexReader.java) interrogates the index.
 
 ## See Also
 

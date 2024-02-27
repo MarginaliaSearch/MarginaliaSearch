@@ -4,4 +4,4 @@ The assistant service helps the search service by offering various peripheral fu
 
 ## Central Classes
 
-* [AssistantService](src/main/java/nu/marginalia/assistant/AssistantService.java) handles REST requests and delegates to the appropriate handling classes. 
+* [AssistantService](java/nu/marginalia/assistant/AssistantService.java) handles REST requests and delegates to the appropriate handling classes. 

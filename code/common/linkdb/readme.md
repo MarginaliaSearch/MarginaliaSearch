@@ -4,11 +4,11 @@ The domain link database contains information about links
 between domains.  It is a static in-memory database loaded
 from a binary file.
 
-* [DomainLinkDb](src/main/java/nu/marginalia/linkdb/DomainLinkDb.java)
-* * [FileDomainLinkDb](src/main/java/nu/marginalia/linkdb/FileDomainLinkDb.java)
-* * [SqlDomainLinkDb](src/main/java/nu/marginalia/linkdb/SqlDomainLinkDb.java)
-* [DomainLinkDbWriter](src/main/java/nu/marginalia/linkdb/DomainLinkDbWriter.java)
-* [DomainLinkDbLoader](src/main/java/nu/marginalia/linkdb/DomainLinkDbLoader.java)
+* [DomainLinkDb](java/nu/marginalia/linkdb/DomainLinkDb.java)
+* * [FileDomainLinkDb](java/nu/marginalia/linkdb/FileDomainLinkDb.java)
+* * [SqlDomainLinkDb](java/nu/marginalia/linkdb/SqlDomainLinkDb.java)
+* [DomainLinkDbWriter](java/nu/marginalia/linkdb/DomainLinkDbWriter.java)
+* [DomainLinkDbLoader](java/nu/marginalia/linkdb/DomainLinkDbLoader.java)
 
 ## Document Database
 
@@ -21,8 +21,8 @@ is not in the MariaDB database is that this would make updates to
 this information take effect in production immediately, even before
 the information was searchable.
 
-* [DocumentLinkDbWriter](src/main/java/nu/marginalia/linkdb/DocumentDbWriter.java)
-* [DocumentLinkDbLoader](src/main/java/nu/marginalia/linkdb/DocumentDbReader.java)
+* [DocumentLinkDbWriter](java/nu/marginalia/linkdb/DocumentDbWriter.java)
+* [DocumentLinkDbLoader](java/nu/marginalia/linkdb/DocumentDbReader.java)
 
 
 ## See Also

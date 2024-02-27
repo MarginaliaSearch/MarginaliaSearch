@@ -5,4 +5,4 @@ uses it to identify if a document has ads.
 
 ## Central Classes
 
-* [AdblockSimulator](src/main/java/nu/marginalia/adblock/AdblockSimulator.java)
+* [AdblockSimulator](java/nu/marginalia/adblock/AdblockSimulator.java)

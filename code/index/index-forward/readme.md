@@ -8,8 +8,8 @@ The `id` file contains a list of sorted document ids, and the `data` file contai
 metadata for each document id, in the same order as the `id` file, with a fixed
 size record containing data associated with each document id.
 
-Each record contains a binary encoded [DocumentMetadata](../../common/model/src/main/java/nu/marginalia/model/idx/DocumentMetadata.java) object,
-as well as a [HtmlFeatures](../../common/model/src/main/java/nu/marginalia/model/crawl/HtmlFeature.java) bitmask.
+Each record contains a binary encoded [DocumentMetadata](../../common/model/java/nu/marginalia/model/idx/DocumentMetadata.java) object,
+as well as a [HtmlFeatures](../../common/model/java/nu/marginalia/model/crawl/HtmlFeature.java) bitmask.
 
 Unlike the reverse index, the forward index is not split into two tiers, and the data is in the same
 order as it is in the source data, and the cardinality of the document IDs is assumed to fit in memory,
@@ -17,5 +17,5 @@ so it's relatively easy to construct.
 
 ## Central Classes
 
-* [ForwardIndexConverter](src/main/java/nu/marginalia/index/forward/ForwardIndexConverter.java) constructs the index.
-* [ForwardIndexReader](src/main/java/nu/marginalia/index/forward/ForwardIndexReader.java) interrogates the index.
+* [ForwardIndexConverter](java/nu/marginalia/index/forward/ForwardIndexConverter.java) constructs the index.
+* [ForwardIndexReader](java/nu/marginalia/index/forward/ForwardIndexReader.java) interrogates the index.

@@ -34,4 +34,4 @@ void ifTheThingDoTheThing(String str) {
 
 ## Central Classes
 
-* [GuardedRegexFactory](src/main/java/nu/marginalia/gregex/GuardedRegexFactory.java)
+* [GuardedRegexFactory](java/nu/marginalia/gregex/GuardedRegexFactory.java)

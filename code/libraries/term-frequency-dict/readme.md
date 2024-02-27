@@ -5,7 +5,7 @@ the TF-IDF score of a keyword.
 
 ## Central Classes
 
-* [TermFrequencyDict](src/main/java/nu/marginalia/term_frequency_dict/TermFrequencyDict.java)
+* [TermFrequencyDict](java/nu/marginalia/term_frequency_dict/TermFrequencyDict.java)
 
 ## See Also
 
