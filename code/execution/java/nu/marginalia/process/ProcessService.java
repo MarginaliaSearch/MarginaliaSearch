@@ -94,6 +94,12 @@ public class ProcessService {
         else args.add("-da");
 
         args.add("--enable-preview");
+
+        String loggingOpts = System.getProperty("log4j2.configurationFile");
+        if (loggingOpts != null) {
+            args.add("-Dlog4j.configurationFile=" + loggingOpts);
+        }
+
         args.addAll(processId.envOpts());
         args.add(processId.mainClass);
         args.addAll(Arrays.asList(extraArgs));

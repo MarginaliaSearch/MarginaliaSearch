@@ -90,6 +90,11 @@ public class Service {
         initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", serviceName + ":" + config.node()));
         initialization.addCallback(() -> serviceRegistry.announceInstance(config.instanceUuid()));
 
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            logger.error("Uncaught exception", e);
+            request_counter_err.labels(serviceName, Integer.toString(node)).inc();
+        });
+
         if (!initialization.isReady() && ! initialized ) {
             initialized = true;
 
