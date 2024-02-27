@@ -34,6 +34,7 @@ dependencies {
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove
+    implementation libs.roaringbitmap
     implementation libs.fastutil
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb

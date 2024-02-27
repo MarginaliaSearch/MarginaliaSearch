@@ -8,10 +8,12 @@ import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
 import nu.marginalia.api.domains.*;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
 import nu.marginalia.model.EdgeDomain;
+import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +34,12 @@ public class SimilarDomainsService {
     private volatile TIntIntHashMap domainIdToIdx = new TIntIntHashMap(100_000);
     private volatile int[] domainIdxToId;
 
-    public volatile TIntDoubleHashMap[] relatedDomains;
+    public volatile Int2DoubleArrayMap[] relatedDomains;
     public volatile TIntList[] domainNeighbors = null;
-    public volatile BitSet screenshotDomains = null;
-    public volatile BitSet activeDomains = null;
-    public volatile BitSet indexedDomains = null;
-    public volatile double[] domainRanks = null;
+    public volatile RoaringBitmap screenshotDomains = null;
+    public volatile RoaringBitmap activeDomains = null;
+    public volatile RoaringBitmap indexedDomains = null;
+    public volatile TIntDoubleHashMap domainRanks = null;
     public volatile String[] domainNames = null;
 
     volatile boolean isReady = false;
@@ -69,13 +71,13 @@ public class SimilarDomainsService {
                     domainIdxToId[idx] = id;
                     return true;
                 });
-                domainRanks = new double[domainIdToIdx.size()];
+                domainRanks = new TIntDoubleHashMap(100_000, 0.5f, -1, 0.);
                 domainNames = new String[domainIdToIdx.size()];
                 domainNeighbors = new TIntList[domainIdToIdx.size()];
-                screenshotDomains = new BitSet(domainIdToIdx.size());
-                activeDomains = new BitSet(domainIdToIdx.size());
-                indexedDomains = new BitSet(domainIdToIdx.size());
-                relatedDomains = new TIntDoubleHashMap[domainIdToIdx.size()];
+                screenshotDomains = new RoaringBitmap();
+                activeDomains = new RoaringBitmap();
+                indexedDomains = new RoaringBitmap();
+                relatedDomains = new Int2DoubleArrayMap[domainIdToIdx.size()];
 
                 logger.info("Loaded {} domain IDs", domainIdToIdx.size());
 
@@ -94,13 +96,17 @@ public class SimilarDomainsService {
                     int higherIndex = Math.max(didx, nidx);
 
                     if (relatedDomains[lowerIndex] == null)
-                        relatedDomains[lowerIndex] = new TIntDoubleHashMap(32);
-                    relatedDomains[lowerIndex].put(higherIndex, Math.round(100 * rs.getDouble(3)));
+                        relatedDomains[lowerIndex] = new Int2DoubleArrayMap(4);
+
+                    double rank = Math.round(100 * rs.getDouble(3));
+                    if (rank > 0.1) {
+                        relatedDomains[lowerIndex].put(higherIndex, rank);
+                    }
 
                     if (domainNeighbors[didx] == null)
-                        domainNeighbors[didx] = new TIntArrayList(32);
+                        domainNeighbors[didx] = new TIntArrayList(4);
                     if (domainNeighbors[nidx] == null)
-                        domainNeighbors[nidx] = new TIntArrayList(32);
+                        domainNeighbors[nidx] = new TIntArrayList(4);
 
                     domainNeighbors[didx].add(nidx);
                     domainNeighbors[nidx].add(didx);
@@ -122,14 +128,14 @@ public class SimilarDomainsService {
                     final int id = rs.getInt("ID");
                     final int idx = domainIdToIdx.get(id);
 
-                    domainRanks[idx] = Math.round(100 * (1. - rs.getDouble("RANK")));
+                    domainRanks.put(idx, Math.round(100 * (1. - rs.getDouble("RANK"))));
                     domainNames[idx] = rs.getString("DOMAIN_NAME");
 
                     if (rs.getBoolean("INDEXED"))
-                        indexedDomains.set(idx);
+                        indexedDomains.add(idx);
 
                     if (rs.getBoolean("ACTIVE"))
-                        activeDomains.set(idx);
+                        activeDomains.add(idx);
                 }
 
 
@@ -142,10 +148,10 @@ public class SimilarDomainsService {
                     final int id = rs.getInt(1);
                     final int idx = domainIdToIdx.get(id);
 
-                    screenshotDomains.set(idx);
+                    screenshotDomains.add(idx);
                 }
 
-                logger.info("Loaded {} domains", domainRanks.length);
+                logger.info("Loaded {} domains", domainRanks.size());
                 isReady = true;
             }
         }
@@ -222,10 +228,10 @@ public class SimilarDomainsService {
                     .setDomainId(id)
                     .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
                     .setRelatedness(getRelatedness(domainId, id))
-                    .setRank(domainRanks[idx])
-                    .setIndexed(indexedDomains.get(idx))
-                    .setActive(activeDomains.get(idx))
-                    .setScreenshot(screenshotDomains.get(idx))
+                    .setRank(domainRanks.get(idx))
+                    .setIndexed(indexedDomains.contains(idx))
+                    .setActive(activeDomains.contains(idx))
+                    .setScreenshot(screenshotDomains.contains(idx))
                     .setLinkType(RpcSimilarDomain.LINK_TYPE.valueOf(linkType.name()))
                     .build());
 
@@ -291,7 +297,7 @@ public class SimilarDomainsService {
 
         double[] ranksArray = new double[idsArray.length];
         for (int i = 0; i < idxArray.length; i++) {
-            ranksArray[i] = this.domainRanks[idxArray[i]];
+            ranksArray[i] = this.domainRanks.get(idxArray[i]);
         }
         double[] relatednessArray = new double[idsArray.length];
         for (int i = 0; i < idsArray.length; i++) {
@@ -337,10 +343,10 @@ public class SimilarDomainsService {
                             .setDomainId(id)
                             .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
                             .setRelatedness(getRelatedness(domainId, id))
-                            .setRank(domainRanks[idx])
-                            .setIndexed(indexedDomains.get(idx))
-                            .setActive(activeDomains.get(idx))
-                            .setScreenshot(screenshotDomains.get(idx))
+                            .setRank(ranksArray[id])
+                            .setIndexed(indexedDomains.contains(idx))
+                            .setActive(activeDomains.contains(idx))
+                            .setScreenshot(screenshotDomains.contains(idx))
                             .setLinkType(RpcSimilarDomain.LINK_TYPE.valueOf(linkType.name()))
                     .build());
 
