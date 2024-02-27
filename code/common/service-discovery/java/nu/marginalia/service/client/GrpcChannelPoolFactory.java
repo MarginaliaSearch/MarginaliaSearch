@@ -10,7 +10,12 @@ import nu.marginalia.service.discovery.property.PartitionTraits;
 import nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 @Singleton
@@ -18,6 +23,16 @@ public class GrpcChannelPoolFactory {
 
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
     private final ServiceRegistryIf serviceRegistryIf;
+    private static final Executor executor = Executors.newFixedThreadPool(
+            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16), new ThreadFactory() {
+        static final AtomicInteger threadNumber = new AtomicInteger(1);
+        @Override
+        public Thread newThread(@NotNull Runnable r) {
+            var thread = new Thread(r, STR."gRPC-Channel-Pool[\{threadNumber.getAndIncrement()}]");
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
 
     @Inject
     public GrpcChannelPoolFactory(NodeConfigurationWatcher nodeConfigurationWatcher,
@@ -49,6 +64,7 @@ public class GrpcChannelPoolFactory {
 
         var mc = ManagedChannelBuilder
                 .forAddress(route.host(), route.port())
+                .executor(executor)
                 .usePlaintext()
                 .build();
 

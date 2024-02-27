@@ -30,7 +30,7 @@ public class FeedlotClient {
         this.gson = gson;
 
         httpClient = HttpClient.newBuilder()
-                .executor(Executors.newVirtualThreadPerTaskExecutor())
+                .executor(Executors.newCachedThreadPool())
                 .connectTimeout(connectTimeout)
                 .build();
         this.requestTimeout = requestTimeout;

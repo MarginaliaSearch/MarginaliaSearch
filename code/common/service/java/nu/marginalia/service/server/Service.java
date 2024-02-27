@@ -2,6 +2,8 @@ package nu.marginalia.service.server;
 
 import io.grpc.*;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
+import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
@@ -19,6 +21,11 @@ import spark.Spark;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Service {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -121,8 +128,16 @@ public class Service {
 
             int port = params.serviceRegistry.requestPort(config.externalAddress(), new ServiceKey.Grpc<>("-", partition));
 
+
+            int nThreads = Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 8);
+
             // Start the gRPC server
-            var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port));
+            var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port))
+                    .executor(namedExecutor("nettyExecutor", nThreads))
+                    .workerEventLoopGroup(new NioEventLoopGroup(nThreads, namedExecutor("Worker-ELG", nThreads)))
+                    .bossEventLoopGroup(new NioEventLoopGroup(nThreads, namedExecutor("Boss-ELG", nThreads)))
+                    .channelType(NioServerSocketChannel.class);
+
             for (var grpcService : grpcServices) {
                 var svc = grpcService.bindService();
 
@@ -136,6 +151,20 @@ public class Service {
             }
             grpcServerBuilder.build().start();
         }
+    }
+
+    private ExecutorService namedExecutor(String name, int limit) {
+        return Executors.newFixedThreadPool(
+                limit,
+                new ThreadFactory() {
+                    static final AtomicInteger threadNumber = new AtomicInteger(1);
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        var thread = new Thread(r, STR."\{name}[\{threadNumber.getAndIncrement()}]");
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
     }
 
     public Service(BaseServiceParams params,

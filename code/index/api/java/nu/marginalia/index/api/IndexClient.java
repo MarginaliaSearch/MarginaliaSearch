@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 public class IndexClient {
     private static final Logger logger = LoggerFactory.getLogger(IndexClient.class);
     private final GrpcMultiNodeChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
-    private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
     @Inject
     public IndexClient(GrpcChannelPoolFactory channelPoolFactory) {
         this.channelPool = channelPoolFactory.createMulti(

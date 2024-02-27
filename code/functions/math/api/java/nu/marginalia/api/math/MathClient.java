@@ -24,7 +24,8 @@ public class MathClient {
     private static final Logger logger = LoggerFactory.getLogger(MathClient.class);
 
     private final GrpcSingleNodeChannelPool<MathApiGrpc.MathApiBlockingStub> channelPool;
-    private final ExecutorService virtualExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService executor = Executors.newWorkStealingPool(8);
+
     @Inject
     public MathClient(GrpcChannelPoolFactory factory) {
         this.channelPool = factory.createSingle(
@@ -35,7 +36,7 @@ public class MathClient {
 
     public Future<DictionaryResponse> dictionaryLookup(String word) {
         return channelPool.call(MathApiGrpc.MathApiBlockingStub::dictionaryLookup)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(DictionaryLookup.createRequest(word))
                 .thenApply(DictionaryLookup::convertResponse);
     }
@@ -43,7 +44,7 @@ public class MathClient {
     @SuppressWarnings("unchecked")
     public Future<List<String>> spellCheck(String word) {
         return channelPool.call(MathApiGrpc.MathApiBlockingStub::spellCheck)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(SpellCheck.createRequest(word))
                 .thenApply(SpellCheck::convertResponse);
     }
@@ -52,7 +53,7 @@ public class MathClient {
         List<RpcSpellCheckRequest> requests = words.stream().map(SpellCheck::createRequest).toList();
 
         var future = channelPool.call(MathApiGrpc.MathApiBlockingStub::spellCheck)
-                .async(virtualExecutorService)
+                .async(executor)
                 .runFor(requests);
 
         try {
@@ -70,14 +71,14 @@ public class MathClient {
 
     public Future<String> unitConversion(String value, String from, String to) {
         return channelPool.call(MathApiGrpc.MathApiBlockingStub::unitConversion)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(UnitConversion.createRequest(from, to, value))
                 .thenApply(UnitConversion::convertResponse);
     }
 
     public Future<String> evalMath(String expression) {
         return channelPool.call(MathApiGrpc.MathApiBlockingStub::evalMath)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(EvalMath.createRequest(expression))
                 .thenApply(EvalMath::convertResponse);
     }

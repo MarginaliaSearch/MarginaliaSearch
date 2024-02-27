@@ -19,7 +19,7 @@ public class DomainInfoClient {
     private static final Logger logger = LoggerFactory.getLogger(DomainInfoClient.class);
 
     private final GrpcSingleNodeChannelPool<DomainInfoAPIGrpc.DomainInfoAPIBlockingStub> channelPool;
-    private final ExecutorService virtualExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService executor = Executors.newWorkStealingPool(8);
 
     @Inject
     public DomainInfoClient(GrpcChannelPoolFactory factory) {
@@ -30,21 +30,21 @@ public class DomainInfoClient {
 
     public Future<List<SimilarDomain>> similarDomains(int domainId, int count) {
         return channelPool.call(DomainInfoAPIGrpc.DomainInfoAPIBlockingStub::getSimilarDomains)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(DomainsProtobufCodec.DomainQueries.createRequest(domainId, count))
                 .thenApply(DomainsProtobufCodec.DomainQueries::convertResponse);
     }
 
     public Future<List<SimilarDomain>> linkedDomains(int domainId, int count) {
         return channelPool.call(DomainInfoAPIGrpc.DomainInfoAPIBlockingStub::getLinkingDomains)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(DomainsProtobufCodec.DomainQueries.createRequest(domainId, count))
                 .thenApply(DomainsProtobufCodec.DomainQueries::convertResponse);
     }
 
     public Future<DomainInformation> domainInformation(int domainId) {
         return channelPool.call(DomainInfoAPIGrpc.DomainInfoAPIBlockingStub::getDomainInfo)
-                .async(virtualExecutorService)
+                .async(executor)
                 .run(DomainsProtobufCodec.DomainInfo.createRequest(domainId))
                 .thenApply(DomainsProtobufCodec.DomainInfo::convertResponse);
     }

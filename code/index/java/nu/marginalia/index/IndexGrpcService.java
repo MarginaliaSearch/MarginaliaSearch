@@ -84,7 +84,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
     private final String nodeName;
 
-    private final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
+    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
@@ -227,7 +227,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
      * and finally the best results are returned.
      */
     private class QueryExecution {
-        private static final Executor workerPool = Executors.newCachedThreadPool();
+        private static final Executor workerPool = Executors.newWorkStealingPool(indexValuationThreads*4);
 
         private final ArrayBlockingQueue<CombinedDocIdList> resultCandidateQueue
                 = new ArrayBlockingQueue<>(8);
