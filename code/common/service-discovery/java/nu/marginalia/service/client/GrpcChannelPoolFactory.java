@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -33,6 +34,16 @@ public class GrpcChannelPoolFactory {
             return thread;
         }
     });
+    private static final Executor offloadExecutor = Executors.newFixedThreadPool(
+            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16), new ThreadFactory() {
+                static final AtomicInteger threadNumber = new AtomicInteger(1);
+                @Override
+                public Thread newThread(@NotNull Runnable r) {
+                    var thread = new Thread(r, STR."gRPC-Offload-Executor[\{threadNumber.getAndIncrement()}]");
+                    thread.setDaemon(true);
+                    return thread;
+                }
+            });
 
     @Inject
     public GrpcChannelPoolFactory(NodeConfigurationWatcher nodeConfigurationWatcher,
@@ -65,6 +76,7 @@ public class GrpcChannelPoolFactory {
         var mc = ManagedChannelBuilder
                 .forAddress(route.host(), route.port())
                 .executor(executor)
+                .offloadExecutor(offloadExecutor)
                 .usePlaintext()
                 .build();
 
