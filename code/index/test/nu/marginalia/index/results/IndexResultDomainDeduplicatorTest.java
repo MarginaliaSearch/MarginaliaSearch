@@ -9,11 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IndexResultDomainDeduplicatorTest {
 
-    @AfterEach
-    public void clear() {
-        IndexResultDomainDeduplicator.clearCachedObjects();
-    }
-
     @Test
     public void testDeduplicator() {
 
