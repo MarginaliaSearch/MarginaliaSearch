@@ -8,6 +8,7 @@ import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
 import nu.marginalia.service.NamedExecutorFactory;
+import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
@@ -99,7 +100,13 @@ public class Service {
         initialization.addCallback(() -> serviceRegistry.announceInstance(config.instanceUuid()));
 
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            logger.error("Uncaught exception", e);
+            if (e instanceof ServiceNotAvailableException) {
+                // reduce log spam for this common case
+                logger.error("Service not available: {}", e.getMessage());
+            }
+            else {
+                logger.error("Uncaught exception", e);
+            }
             request_counter_err.labels(serviceName, Integer.toString(node)).inc();
         });
 
