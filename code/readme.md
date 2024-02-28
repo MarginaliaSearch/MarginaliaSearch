@@ -25,23 +25,23 @@ service, and for monitoring the health of the system.  It also offers a web inte
 ### Services
 
 * [core services](services-core/) Most of these services are stateful, memory hungry, and doing heavy lifting.
-* * [control](services-core/control-service)
-* * [query](services-core/query-service)
-* * * Exposes the [functions/link-graph](functions/link-graph) subsystem
-* * * Exposes the [functions/search-query](functions/search-query) subsystem
-* * [index](services-core/index-service)
-* * * Exposes the [index](index) subsystem
-* * * Exposes the [functions/link-graph](functions/link-graph) subsystem
-* * [executor](services-core/executor-service)
-* * * Exposes the [execution](execution) subsystem
-* * [assistant](services-core/assistant-service)
-* * * Exposes the [functions/math](functions/math) subsystem
-* * * Exposes the [functions/domain-info](functions/domain-info) subsystem
+    * [control](services-core/control-service)
+    * [query](services-core/query-service)
+       * Exposes the [functions/link-graph](functions/link-graph) subsystem
+       * Exposes the [functions/search-query](functions/search-query) subsystem
+    * [index](services-core/index-service)
+       * Exposes the [index](index) subsystem
+       * Exposes the [functions/link-graph](functions/link-graph) subsystem
+    * [executor](services-core/executor-service)
+       * Exposes the [execution](execution) subsystem
+    * [assistant](services-core/assistant-service)
+       * Exposes the [functions/math](functions/math) subsystem
+       * Exposes the [functions/domain-info](functions/domain-info) subsystem
 * [application services](services-application/) Mostly stateless gateways providing access to the core services.
-* * [api](services-application/api-service) - public API gateway
-* * [search](services-application/search-service) - marginalia search application
-* * [dating](services-application/dating-service) - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
-* * [explorer](services-application/explorer-service) - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
+     * [api](services-application/api-service) - public API gateway
+     * [search](services-application/search-service) - marginalia search application
+     * [dating](services-application/dating-service) - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
+     * [explorer](services-application/explorer-service) - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
 
 The system uses a service registry to find the services.  The service registry is based on zookeeper,
 and is a separate service.  The registry doesn't keep track of processes, but APIs.  This means that
@@ -60,10 +60,10 @@ Processes are batch jobs that deal with data retrieval, processing and loading. 
 the executor service, which is controlled by the control service.  
 
 * [processes](processes/)
-* * [crawling-process](processes/crawling-process)
-* * [converting-process](processes/converting-process)
-* * [loading-process](processes/loading-process)
-* * [index-constructor-process](processes/index-constructor-process)
+    * [crawling-process](processes/crawling-process)
+    * [converting-process](processes/converting-process)
+    * [loading-process](processes/loading-process)
+    * [index-constructor-process](processes/index-constructor-process)
 
 ### Features
 
@@ -80,5 +80,5 @@ Libraries are stand-alone code that is independent of the domain logic.
 
 * [common](common/) elements for creating a service, a client etc.
 * [libraries](libraries/) containing non-search specific code.
-* * [array](libraries/array/) - large memory mapped area library 
-* * [btree](libraries/btree/) - static btree library
+    * [array](libraries/array/) - large memory mapped area library 
+    * [btree](libraries/btree/) - static btree library
