@@ -31,15 +31,21 @@ public class MathParser {
     }
 
     public String evalFormatted(String inputExpression) {
-        if (isTrivial.test(inputExpression)) {
+        try {
+            if (isTrivial.test(inputExpression)) {
+                return df.format(Double.parseDouble(inputExpression));
+            }
+
+            return df.format(eval(inputExpression));
+        }
+        catch (NumberFormatException | ParseException e) {
+            // We don't want to throw an exception here
             return "";
         }
-
-        return df.format(eval(inputExpression));
     }
 
     @SneakyThrows
-    public double eval(String inputExpression) {
+    public double eval(String inputExpression) throws ParseException {
         if (isTrivial.test(inputExpression)) {
             return Double.parseDouble(inputExpression);
         }

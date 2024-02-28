@@ -80,10 +80,10 @@ public class MathGrpcService extends MathApiGrpc.MathApiImplBase {
 
     @Override
     public void evalMath(RpcEvalMathRequest request, StreamObserver<RpcEvalMathResponse> responseObserver) {
-        var ret = mathParser.eval(request.getExpression());
+        var ret = mathParser.evalFormatted(request.getExpression());
 
         responseObserver.onNext(RpcEvalMathResponse.newBuilder()
-                .setResult(Double.toString(ret))
+                .setResult(ret)
                 .build());
 
         responseObserver.onCompleted();
