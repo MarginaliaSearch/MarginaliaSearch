@@ -19,6 +19,8 @@ application {
 
 tasks.distZip.enabled = false
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':third-party:rdrpostagger')
     implementation project(':third-party:porterstemmer')

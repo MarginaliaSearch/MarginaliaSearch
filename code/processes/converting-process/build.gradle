@@ -18,14 +18,16 @@ application {
 
 tasks.distZip.enabled = false
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:process')
 
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:count-min-sketch')
 
-    implementation project(':code:api:index-api')
-    implementation project(':code:api:process-mqapi')
+    implementation project(':code:index:api')
+    implementation project(':code:process-mqapi')
 
     implementation project(':code:common:model')
     implementation project(':code:common:db')
@@ -34,7 +36,6 @@ dependencies {
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
 
     implementation project(':code:libraries:guarded-regex')
     implementation project(':code:libraries:easy-lsh')

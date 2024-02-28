@@ -4,11 +4,11 @@ reading and writing parquet files with the output from the
 
 Main models:
 
-* [DocumentRecord](src/main/java/nu/marginalia/model/processed/DocumentRecord.java)
-* * [DocumentRecordKeywordsProjection](src/main/java/nu/marginalia/model/processed/DocumentRecordKeywordsProjection.java)
-* * [DocumentRecordMetadataProjection](src/main/java/nu/marginalia/model/processed/DocumentRecordMetadataProjection.java)
-* [DomainLinkRecord](src/main/java/nu/marginalia/model/processed/DomainLinkRecord.java)
-* [DomainRecord](src/main/java/nu/marginalia/model/processed/DomainRecord.java)
+* [DocumentRecord](java/nu/marginalia/model/processed/DocumentRecord.java)
+* * [DocumentRecordKeywordsProjection](java/nu/marginalia/model/processed/DocumentRecordKeywordsProjection.java)
+* * [DocumentRecordMetadataProjection](java/nu/marginalia/model/processed/DocumentRecordMetadataProjection.java)
+* [DomainLinkRecord](java/nu/marginalia/model/processed/DomainLinkRecord.java)
+* [DomainRecord](java/nu/marginalia/model/processed/DomainRecord.java)
 
 Since parquet is a column based format, some of the readable models are projections
 that only read parts of the input file.

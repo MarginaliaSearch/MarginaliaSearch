@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'jvm-test-suite'
+    id "com.google.protobuf" version "0.9.4"
+}
+
+jar.archiveBaseName = 'execution-api'
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+
+apply from: "$rootProject.projectDir/protobuf.gradle"
+
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'protobuf'
+        }
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:index:api')
+    implementation project(':code:common:config')
+    implementation project(':code:common:db')
+    implementation project(':code:libraries:message-queue')
+    implementation project(':code:common:service-discovery')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.prometheus
+    implementation libs.notnull
+    implementation libs.guice
+    implementation libs.protobuf
+    implementation libs.bundles.grpc
+    implementation libs.javax.annotation
+    implementation libs.gson
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}

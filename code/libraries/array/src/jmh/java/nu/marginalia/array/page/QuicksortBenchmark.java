@@ -2,7 +2,6 @@ package nu.marginalia.array.page;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.SimulatedNaiveArray;
-import nu.marginalia.array.scheme.ArrayPartitioningScheme;
 import org.openjdk.jmh.annotations.*;
 
 import java.lang.foreign.Arena;

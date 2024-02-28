@@ -9,8 +9,9 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
-    implementation project(':code:common:service-client')
     implementation project(':code:common:service-discovery')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:common:db')
@@ -18,8 +19,9 @@ dependencies {
 
     implementation libs.spark
     implementation libs.guice
-    implementation libs.rxjava
 
+    implementation libs.bundles.curator
+    implementation libs.bundles.grpc
     implementation libs.bundles.prometheus
     implementation libs.bundles.slf4j
     implementation libs.bucket4j

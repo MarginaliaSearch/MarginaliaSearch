@@ -1,9 +1,9 @@
 plugins {
     id 'java'
 
-    id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 application {
@@ -13,7 +13,8 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+apply from: "$rootProject.projectDir/docker.gradle"
+
 
 java {
     toolchain {
@@ -21,20 +22,22 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:service')
     implementation project(':code:common:renderer')
-    implementation project(':code:common:service-client')
-    implementation project(':code:api:index-api')
-    implementation project(':code:api:query-api')
+    implementation project(':code:index:api')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:features-qs:query-parser')
-    implementation project(':code:features-index:index-query')
-    implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:term-frequency-dict')
+    implementation project(':code:index:query')
+
+    implementation project(':code:functions:search-query')
+    implementation project(':code:functions:search-query:api')
+    implementation project(':code:functions:link-graph:api')
+    implementation project(':code:functions:link-graph:aggregate')
 
     implementation libs.bundles.slf4j
 
@@ -44,7 +47,6 @@ dependencies {
     implementation libs.notnull
     implementation libs.guice
     implementation libs.protobuf
-    implementation libs.rxjava
     implementation libs.bundles.mariadb
     implementation libs.bundles.grpc
 

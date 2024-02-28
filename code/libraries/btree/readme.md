@@ -4,11 +4,11 @@ This package contains a small library for creating and reading a static b-tree i
 Both binary indices (i.e. sets) are supported, as well as arbitrary multiple-of-keysize key-value mappings where the data is 
 interlaced with the keys in the leaf nodes. This is a fairly low-level datastructure. 
 
-The b-trees are specified through a [BTreeContext](src/main/java/nu/marginalia/btree/model/BTreeContext.java)
+The b-trees are specified through a [BTreeContext](java/nu/marginalia/btree/model/BTreeContext.java)
 which contains information about the data and index layout.
 
-The b-trees are written through a [BTreeWriter](src/main/java/nu/marginalia/btree/BTreeWriter.java) and 
-read with a [BTreeReader](src/main/java/nu/marginalia/btree/BTreeReader.java). 
+The b-trees are written through a [BTreeWriter](java/nu/marginalia/btree/BTreeWriter.java) and 
+read with a [BTreeReader](java/nu/marginalia/btree/BTreeReader.java). 
 
 ## Demo
 

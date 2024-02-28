@@ -38,16 +38,16 @@ https://www.marginalia.nu/log/93_atags/
 
 ## Central Classes
 
-* [ConverterMain](src/main/java/nu/marginalia/converting/ConverterMain.java) orchestrates the conversion process.
-* [DocumentProcessor](src/main/java/nu/marginalia/converting/processor/DocumentProcessor.java) converts a single document.
-* - [HtmlDocumentProcessorPlugin](src/main/java/nu/marginalia/converting/processor/plugin/HtmlDocumentProcessorPlugin.java) 
+* [ConverterMain](java/nu/marginalia/converting/ConverterMain.java) orchestrates the conversion process.
+* [DocumentProcessor](java/nu/marginalia/converting/processor/DocumentProcessor.java) converts a single document.
+* - [HtmlDocumentProcessorPlugin](java/nu/marginalia/converting/processor/plugin/HtmlDocumentProcessorPlugin.java) 
 has HTML-specific logic related to a document, keywords and identifies features such as whether it has javascript.
-* * - [HtmlProcessorSpecializations](src/main/java/nu/marginalia/converting/processor/plugin/specialization/HtmlProcessorSpecializations.java)
-* * - [XenForoSpecialization](src/main/java/nu/marginalia/converting/processor/plugin/specialization/XenForoSpecialization.java) ...
-* - [PlainTextDocumentProcessorPlugin](src/main/java/nu/marginalia/converting/processor/plugin/PlainTextDocumentProcessorPlugin.java)
+* * - [HtmlProcessorSpecializations](java/nu/marginalia/converting/processor/plugin/specialization/HtmlProcessorSpecializations.java)
+* * - [XenForoSpecialization](java/nu/marginalia/converting/processor/plugin/specialization/XenForoSpecialization.java) ...
+* - [PlainTextDocumentProcessorPlugin](java/nu/marginalia/converting/processor/plugin/PlainTextDocumentProcessorPlugin.java)
   has plain text-specific logic related to a document...
 
-* [DomainProcessor](src/main/java/nu/marginalia/converting/processor/DomainProcessor.java) converts each document and 
+* [DomainProcessor](java/nu/marginalia/converting/processor/DomainProcessor.java) converts each document and 
 generates domain-wide metadata such as link graphs.
 
 ## See Also

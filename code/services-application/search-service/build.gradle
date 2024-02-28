@@ -2,9 +2,10 @@ plugins {
     id 'java'
     id 'io.freefair.sass-base' version '8.4'
     id 'io.freefair.sass-java' version '8.4'
-    id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
+
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 application {
@@ -14,7 +15,6 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
 
 java {
     toolchain {
@@ -26,23 +26,29 @@ sass {
     sourceMapEmbed = true
     outputStyle = EXPANDED
 }
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+apply from: "$rootProject.projectDir/docker.gradle"
+
 dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
-    implementation project(':code:features-index:index-query')
+    implementation project(':code:index:query')
 
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:braille-block-punch-cards')
     implementation project(':code:libraries:term-frequency-dict')
 
-    implementation project(':code:api:assistant-api')
-    implementation project(':code:api:query-api')
-    implementation project(':code:api:index-api')
+    implementation project(':code:functions:math:api')
+    implementation project(':code:functions:domain-info:api')
+    implementation project(':code:functions:search-query:api')
+
+
+    implementation project(':code:index:api')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
     implementation project(':code:common:renderer')
 
     implementation project(':code:features-search:screenshots')
@@ -55,7 +61,6 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.rxjava
     implementation libs.handlebars
     implementation libs.spark
     implementation libs.opencsv

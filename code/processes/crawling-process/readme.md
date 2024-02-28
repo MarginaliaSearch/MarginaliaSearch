@@ -31,10 +31,10 @@ On top of organic links, the crawler can use sitemaps and rss-feeds to discover 
 
 ## Central Classes
 
-* [CrawlerMain](src/main/java/nu/marginalia/crawl/CrawlerMain.java) orchestrates the crawling.
-* [CrawlerRetreiver](src/main/java/nu/marginalia/crawl/retreival/CrawlerRetreiver.java)
+* [CrawlerMain](java/nu/marginalia/crawl/CrawlerMain.java) orchestrates the crawling.
+* [CrawlerRetreiver](java/nu/marginalia/crawl/retreival/CrawlerRetreiver.java)
   visits known addresses from a domain and downloads each document.
-* [HttpFetcher](src/main/java/nu/marginalia/crawl/retreival/fetcher/HttpFetcherImpl.java)
+* [HttpFetcher](java/nu/marginalia/crawl/retreival/fetcher/HttpFetcherImpl.java)
   fetches URLs.
 
 ## See Also

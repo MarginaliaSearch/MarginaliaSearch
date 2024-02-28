@@ -18,6 +18,8 @@ application {
 
 tasks.distZip.enabled = false
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:process')
 
@@ -27,10 +29,9 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:libraries:big-string')
     implementation project(':code:libraries:blocking-thread-pool')
-    implementation project(':code:api:index-api')
-    implementation project(':code:api:process-mqapi')
+    implementation project(':code:index:api')
+    implementation project(':code:process-mqapi')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:easy-lsh')
@@ -55,7 +56,6 @@ dependencies {
     implementation libs.okhttp3
     implementation libs.jsoup
     implementation libs.opencsv
-    implementation libs.rxjava
     implementation libs.fastutil
 
     implementation libs.bundles.mariadb

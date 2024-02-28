@@ -14,6 +14,8 @@ configurations {
     flywayMigration.extendsFrom(implementation)
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')

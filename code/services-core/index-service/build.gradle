@@ -1,9 +1,9 @@
 plugins {
     id 'java'
 
-    id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 application {
@@ -13,32 +13,32 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+apply from: "$rootProject.projectDir/docker.gradle"
+
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:config')
+    implementation project(':code:common:service')
+    implementation project(':code:common:service-discovery')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:linkdb')
-    implementation project(':code:common:service')
-    implementation project(':code:api:index-api')
+
+    implementation project(':code:index')
+    implementation project(':code:functions:link-graph:partition')
+    implementation project(':code:functions:link-graph:api')
+    implementation project(':code:functions:search-query:api')
+    implementation project(':code:index:api')
+
     implementation project(':code:common:service-discovery')
 
-    implementation project(':code:libraries:array')
-    implementation project(':code:libraries:btree')
-
-    implementation project(':code:features-index:index-journal')
-    implementation project(':code:features-index:index-query')
-    implementation project(':code:features-index:index-forward')
-    implementation project(':code:features-index:index-reverse')
-    implementation project(':code:features-index:domain-ranking')
-    implementation project(':code:features-index:result-ranking')
-    implementation project(':third-party:commons-codec')
     testImplementation project(path: ':code:services-core:control-service')
     testImplementation project(':code:common:process')
 
@@ -51,7 +51,6 @@ dependencies {
     implementation libs.bundles.httpcomponents
     implementation libs.roaringbitmap
     implementation libs.snakeyaml
-    implementation libs.rxjava
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove

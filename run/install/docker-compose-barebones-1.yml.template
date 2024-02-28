@@ -8,21 +8,12 @@ x-svc: &service
     - logs:/var/log/wmsa
   networks:
     - wmsa
-  healthcheck:
-      test: curl -f http://localhost:80/internal/ping || exit 1
-      start_period: 1s
-      interval: 5s
-      timeout: 5s
-      retries: 60
+  depends_on:
+    - mariadb
+    - zookeeper
 x-p1: &partition-1
   env_file:
     - "${INSTALL_DIR}/env/service.env"
-  healthcheck:
-      test: curl -f http://localhost:80/internal/ping || exit 1
-      start_period: 1s
-      interval: 5s
-      timeout: 5s
-      retries: 60
   volumes:
     - conf:/wmsa/conf:ro
     - model:/wmsa/model
@@ -37,28 +28,22 @@ x-p1: &partition-1
     - wmsa
   environment:
     - "WMSA_SERVICE_NODE=1"
+  depends_on:
+    - mariadb
+    - zookeeper
 services:
   index-service-1:
     <<: *partition-1
     image: "marginalia/index-service"
     container_name: "index-service-1"
-    depends_on:
-        control-service:
-          condition: service_healthy
   executor-service-1:
     <<: *partition-1
     image: "marginalia/executor-service"
     container_name: "executor-service-1"
-    depends_on:
-        control-service:
-          condition: service_healthy
   query-service:
     <<: *service
     image: "marginalia/query-service"
     container_name: "query-service"
-    depends_on:
-        control-service:
-          condition: service_healthy
     expose:
     - 80
     labels:
@@ -103,6 +88,12 @@ services:
       - db:/var/lib/mysql
     networks:
       - wmsa
+  zookeeper:
+    image: zookeeper
+    container_name: "zookeeper"
+    restart: always
+    ports:
+      - "127.0.0.1:2181:2181"
   traefik:
     image: "traefik:v2.10"
     container_name: "traefik"

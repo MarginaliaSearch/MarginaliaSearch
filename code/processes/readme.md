@@ -17,7 +17,7 @@ described in [processed-data](../process-models/processed-data/).
 
 The [loading-process](loading-process/) reads the processed data.
 
-It has creates an [index journal](../features-index/index-journal), 
+It has creates an [index journal](../index/index-journal), 
 a [link database](../common/linkdb), 
 and loads domains and domain-links 
 into the [MariaDB database](../common/db).

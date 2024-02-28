@@ -12,15 +12,16 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:config')
     implementation project(':code:common:process')
     implementation project(':code:libraries:big-string')
-    implementation project(':code:api:index-api')
+    implementation project(':code:index:api')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
     implementation project(':code:features-crawl:content-type')
     implementation project(':code:libraries:language-processing')
     implementation project(':third-party:parquet-floor')

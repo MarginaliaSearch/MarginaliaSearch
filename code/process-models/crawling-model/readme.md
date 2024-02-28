@@ -15,27 +15,27 @@ removed in the future.
 
 ## Central Classes
 
-* [CrawledDocument](src/main/java/nu/marginalia/crawling/model/CrawledDocument.java)
-* [CrawledDomain](src/main/java/nu/marginalia/crawling/model/CrawledDomain.java)
+* [CrawledDocument](java/nu/marginalia/crawling/model/CrawledDocument.java)
+* [CrawledDomain](java/nu/marginalia/crawling/model/CrawledDomain.java)
 
 ### Serialization
 
 These serialization classes automatically negotiate the serialization format based on the 
 file extension.
 
-Data is accessed through a [SerializableCrawlDataStream](src/main/java/nu/marginalia/crawling/io/SerializableCrawlDataStream.java),
+Data is accessed through a [SerializableCrawlDataStream](java/nu/marginalia/crawling/io/SerializableCrawlDataStream.java),
 which is a somewhat enhanced Iterator that can be used to read data. 
 
-* [CrawledDomainReader](src/main/java/nu/marginalia/crawling/io/CrawledDomainReader.java)
-* [CrawledDomainWriter](src/main/java/nu/marginalia/crawling/io/CrawledDomainWriter.java)
+* [CrawledDomainReader](java/nu/marginalia/crawling/io/CrawledDomainReader.java)
+* [CrawledDomainWriter](java/nu/marginalia/crawling/io/CrawledDomainWriter.java)
 
 ### Parquet Serialization
 
-The parquet serialization is done using the [CrawledDocumentParquetRecordFileReader](src/main/java/nu/marginalia/crawling/parquet/CrawledDocumentParquetRecordFileReader.java)
-and [CrawledDocumentParquetRecordFileWriter](src/main/java/nu/marginalia/crawling/parquet/CrawledDocumentParquetRecordFileWriter.java) classes,
+The parquet serialization is done using the [CrawledDocumentParquetRecordFileReader](java/nu/marginalia/crawling/parquet/CrawledDocumentParquetRecordFileReader.java)
+and [CrawledDocumentParquetRecordFileWriter](java/nu/marginalia/crawling/parquet/CrawledDocumentParquetRecordFileWriter.java) classes,
 which read and write parquet files respectively.
 
-The model classes are serialized to parquet using the [CrawledDocumentParquetRecord](src/main/java/nu/marginalia/crawling/parquet/CrawledDocumentParquetRecord.java)
+The model classes are serialized to parquet using the [CrawledDocumentParquetRecord](java/nu/marginalia/crawling/parquet/CrawledDocumentParquetRecord.java)
 
 The record has the following fields:
 

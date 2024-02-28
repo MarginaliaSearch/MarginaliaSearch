@@ -13,13 +13,10 @@ specific stuff.  This mode of operations is available through a `barebones` inst
 
 The web interface also offers a JSON API for machine-based queries.
 
-## Main Classes
+## Central Classes
 
-* [QueryService](src/main/java/nu/marginalia/query/QueryService.java) - The REST service implementation
-* [QueryGRPCService](src/main/java/nu/marginalia/query/QueryGRPCService.java) - The GRPC service implementation
+This module is almost entirely boilerplate, except the [QueryBasicInterface](java/nu/marginalia/query/QueryBasicInterface.java) 
+class, which offers a REST API for querying the index.  
 
-## See Also
-
-* [api/query-api](../../api/query-api)
-* [features-qs/query-parser](../../features-qs/query-parser)
-* [features-index/index-query](../../features-index/index-query)
+Much of the guts of the query service are in the [query-service](../../functions/search-query) 
+module; which offers query parsing and an interface to the index service partitions.

@@ -1,0 +1,51 @@
+/** Configures the source sets for the code/ subprojects.
+ *
+ * Ideally this would have been done in the root build.gradle file, but due to disagreements
+ * between Gradle and IntelliJ's gradle plugin about how to interpret the sourceSets block
+ * when applied to subprojects from the root project, this has to be done in each subproject.
+ * */
+apply plugin: 'java'
+apply plugin: 'io.freefair.lombok'
+
+dependencies {
+    implementation libs.lombok
+    testImplementation libs.lombok
+    annotationProcessor libs.lombok
+
+    lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
+}
+
+test {
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}
+
+tasks.register('fastTests', Test) {
+    maxHeapSize = "8G"
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                    'java',
+                    'build/generated/source/proto/main/grpc',
+                    'build/generated/source/proto/main/java'
+                    ]
+        }
+        resources {
+            srcDirs = [ 'resources' ]
+        }
+    }
+    test {
+        java {
+            srcDirs = [ 'test' ]
+        }
+        resources {
+            srcDirs = [ 'test-resources' ]
+        }
+    }
+}

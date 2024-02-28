@@ -26,6 +26,8 @@ configurations {
     flywayMigration.extendsFrom(implementation)
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation project(':code:common:model')
 
@@ -40,7 +42,6 @@ dependencies {
 
     implementation libs.trove
 
-    implementation libs.rxjava
     implementation libs.bundles.mariadb
     flywayMigration 'org.flywaydb:flyway-mysql:10.0.1'
 

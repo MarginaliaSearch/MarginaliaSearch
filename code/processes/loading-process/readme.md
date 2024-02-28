@@ -6,4 +6,4 @@ the index-service.
 
 ## Central Classes
 
-* [LoaderMain](src/main/java/nu/marginalia/loading/LoaderMain.java) main class.
+* [LoaderMain](java/nu/marginalia/loading/LoaderMain.java) main class.

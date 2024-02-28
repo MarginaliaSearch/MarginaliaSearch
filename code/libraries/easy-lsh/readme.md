@@ -5,7 +5,7 @@ for document deduplication. Hashes are compared using their hamming distance.
 
 ## Central Classes
 
-* [EasyLSH](src/main/java/nu/marginalia/lsh/EasyLSH.java)
+* [EasyLSH](java/nu/marginalia/lsh/EasyLSH.java)
 
 ## Demo
 

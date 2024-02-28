@@ -3,7 +3,7 @@ plugins {
 
     id 'application'
     id 'jvm-test-suite'
-    id 'com.palantir.docker' version '0.35.0'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 java {
@@ -17,9 +17,11 @@ application {
     applicationName = 'screenshot-capture-tool'
 }
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
 
 tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+apply from: "$rootProject.projectDir/docker.gradle"
 
 dependencies {
     implementation project(':code:common:model')

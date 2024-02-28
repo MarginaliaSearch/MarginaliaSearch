@@ -2,8 +2,8 @@ plugins {
     id 'java'
 
     id 'application'
-    id 'com.palantir.docker' version '0.35.0'
     id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 java {
@@ -19,7 +19,8 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+apply from: "$rootProject.projectDir/srcsets.gradle"
+apply from: "$rootProject.projectDir/docker.gradle"
 
 dependencies {
     implementation project(':code:common:db')
@@ -27,17 +28,14 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:config')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
-    implementation project(':code:api:query-api')
-    implementation project(':code:api:index-api')
-    implementation project(':code:features-index:index-query')
+    implementation project(':code:functions:search-query:api')
+    implementation project(':code:index:query')
 
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.rxjava
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove

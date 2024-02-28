@@ -9,11 +9,12 @@ java {
     }
 }
 
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
 dependencies {
     implementation libs.spark
     implementation libs.guice
     implementation libs.gson
-    implementation libs.rxjava
 
     implementation libs.bundles.slf4j
     implementation libs.bucket4j

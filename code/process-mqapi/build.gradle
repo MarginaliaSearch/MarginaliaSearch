@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:config')
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}

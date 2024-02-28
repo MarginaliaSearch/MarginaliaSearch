@@ -10,11 +10,11 @@ There are three types of indexes:
 
 This is a very light-weight module that delegates the actual work to the modules:
 
-* [features-index/index-reverse](../../features-index/index-reverse)
-* [features-index/index-forward](../../features-index/index-forward) 
+* [features-index/index-reverse](../../index/index-reverse)
+* [features-index/index-forward](../../index/index-forward) 
 
 Their respective readme files contain more information about the indexes themselves
 and how they are constructed.
 
-The process is glued together within [IndexConstructorMain](src/main/java/nu/marginalia/index/IndexConstructorMain.java),
+The process is glued together within [IndexConstructorMain](java/nu/marginalia/index/IndexConstructorMain.java),
 which is the only class of interest in this module. 

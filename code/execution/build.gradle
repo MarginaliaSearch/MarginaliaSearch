@@ -1,0 +1,77 @@
+plugins {
+    id 'java'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    // These look weird but they're needed to be able to spawn the processes
+    // from the executor service
+
+    implementation project(':code:processes:website-adjacencies-calculator')
+    implementation project(':code:processes:crawling-process')
+    implementation project(':code:processes:loading-process')
+    implementation project(':code:processes:converting-process')
+    implementation project(':code:processes:index-constructor-process')
+
+    implementation project(':code:common:config')
+    implementation project(':code:common:model')
+    implementation project(':code:common:process')
+    implementation project(':code:common:db')
+    implementation project(':code:common:linkdb')
+
+    implementation project(':code:common:service')
+    implementation project(':code:common:service-discovery')
+
+    implementation project(':third-party:commons-codec')
+
+    implementation project(':code:libraries:message-queue')
+
+    implementation project(':code:functions:link-graph:api')
+    implementation project(':code:execution:api')
+
+    implementation project(':code:process-models:crawl-spec')
+    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:features-crawl:link-parser')
+    implementation project(':code:features-convert:data-extractors')
+    implementation project(':code:features-convert:stackexchange-xml')
+    implementation project(':code:features-convert:reddit-json')
+    implementation project(':code:index:index-journal')
+    implementation project(':code:index:api')
+    implementation project(':code:process-mqapi')
+    implementation project(':third-party:encyclopedia-marginalia-nu')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.spark
+    implementation libs.bundles.grpc
+    implementation libs.gson
+    implementation libs.prometheus
+    implementation libs.notnull
+    implementation libs.guice
+    implementation libs.trove
+    implementation libs.protobuf
+    implementation libs.zstd
+    implementation libs.jsoup
+    implementation libs.commons.io
+    implementation libs.commons.compress
+    implementation libs.commons.lang3
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
+
+}

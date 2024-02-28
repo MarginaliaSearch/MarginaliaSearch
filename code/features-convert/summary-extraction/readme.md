@@ -21,5 +21,5 @@ order of a 100,000,000 documents with a time budget of a couple of hours.
 
 ## Central Classes
 
-* [SummaryExtractor](src/main/java/nu/marginalia/summary/SummaryExtractor.java)
+* [SummaryExtractor](java/nu/marginalia/summary/SummaryExtractor.java)
 

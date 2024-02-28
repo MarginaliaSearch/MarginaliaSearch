@@ -5,4 +5,4 @@ pathological links, etc.
 
 ## Central Classes
 
-* [LinkParser](src/main/java/nu/marginalia/link_parser/LinkParser.java)
+* [LinkParser](java/nu/marginalia/link_parser/LinkParser.java)

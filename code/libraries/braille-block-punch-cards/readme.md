@@ -6,4 +6,4 @@ This is The Way when it comes to representing bit masks to humans.
 
 ## Central Classes
 
-* [BrailleBlockPunchCards](src/main/java/nu/marginalia/bbpc/BrailleBlockPunchCards.java)
+* [BrailleBlockPunchCards](java/nu/marginalia/bbpc/BrailleBlockPunchCards.java)
