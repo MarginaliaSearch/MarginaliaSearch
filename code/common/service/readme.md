@@ -1,13 +1,17 @@
 # Service
 
 Contains the base classes for the services. This is where port configuration,
-and common endpoints are set up. 
+and common endpoints are set up.   The service base class is additionally responsible for
+registering the service with the service registry, and announcing its liveness.
 
 ## Creating a new Service
 
 The minimal service needs a `MainClass` and a `Service` class. 
 
-For proper initiation, the main class should look like this:
+For proper initiation, the main class should look like the below.  It will
+create a Guice injector, and then create an instance of the service, and take
+care of loading configuration properties and setting up loggers in a sane
+way.
 
 ```java
 public class FoobarMain extends MainClass {
@@ -41,12 +45,12 @@ public class FoobarService extends Service {
     public FoobarService(BaseServiceParams params) {
         super(params, List.of(/* grpc services */));
         
-        // set up Spark endpoints here
+        // set up any Spark endpoints here
     }
 }
 ```
 
-Further the new service needs to be added to the `ServiceId` enum in [service-discovery](../service-discovery).
+The service should also be given a canonical name in the `ServiceId` enum.
 
 ## Central Classes
 
