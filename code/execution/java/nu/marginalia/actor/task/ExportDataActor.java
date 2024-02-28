@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
-import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
+import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
@@ -32,7 +32,7 @@ public class ExportDataActor extends RecordActorPrototype {
     private final FileStorageService storageService;
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final AggregateDomainLinksClient domainLinksClient;
+    private final AggregateLinkGraphClient linkGraphClient;
 
     public record Export() implements ActorStep {}
     public record ExportBlacklist(FileStorageId fid) implements ActorStep {}
@@ -114,7 +114,7 @@ public class ExportDataActor extends RecordActorPrototype {
                 var tmpFile = Files.createTempFile(storage.asPath(), "export", ".csv.gz",
                         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
 
-                var allLinks = domainLinksClient.getAllDomainLinks();
+                var allLinks = linkGraphClient.getAllDomainLinks();
 
                 try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
                 {
@@ -155,12 +155,12 @@ public class ExportDataActor extends RecordActorPrototype {
     public ExportDataActor(Gson gson,
                            FileStorageService storageService,
                            HikariDataSource dataSource,
-                           AggregateDomainLinksClient domainLinksClient)
+                           AggregateLinkGraphClient linkGraphClient)
     {
         super(gson);
         this.storageService = storageService;
         this.dataSource = dataSource;
-        this.domainLinksClient = domainLinksClient;
+        this.linkGraphClient = linkGraphClient;
     }
 
 }

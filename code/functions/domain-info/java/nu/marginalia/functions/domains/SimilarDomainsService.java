@@ -11,7 +11,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
 import nu.marginalia.api.domains.*;
 import nu.marginalia.api.domains.model.SimilarDomain;
-import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
+import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.model.EdgeDomain;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
@@ -29,7 +28,7 @@ public class SimilarDomainsService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimilarDomainsService.class);
     private final HikariDataSource dataSource;
-    private final AggregateDomainLinksClient domainLinksClient;
+    private final AggregateLinkGraphClient linkGraphClient;
 
     private volatile TIntIntHashMap domainIdToIdx = new TIntIntHashMap(100_000);
     private volatile int[] domainIdxToId;
@@ -45,9 +44,9 @@ public class SimilarDomainsService {
     volatile boolean isReady = false;
 
     @Inject
-    public SimilarDomainsService(HikariDataSource dataSource, AggregateDomainLinksClient domainLinksClient) {
+    public SimilarDomainsService(HikariDataSource dataSource, AggregateLinkGraphClient linkGraphClient) {
         this.dataSource = dataSource;
-        this.domainLinksClient = domainLinksClient;
+        this.linkGraphClient = linkGraphClient;
 
         Executors.newSingleThreadExecutor().submit(this::init);
     }
@@ -262,7 +261,7 @@ public class SimilarDomainsService {
     private TIntSet getLinkingIdsDToS(int domainIdx) {
         var items = new TIntHashSet();
 
-        for (int id : domainLinksClient.getLinksFromDomain(domainIdxToId[domainIdx])) {
+        for (int id : linkGraphClient.getLinksFromDomain(domainIdxToId[domainIdx])) {
             items.add(domainIdToIdx.get(id));
         }
 
@@ -272,7 +271,7 @@ public class SimilarDomainsService {
     private TIntSet getLinkingIdsSToD(int domainIdx) {
         var items = new TIntHashSet();
 
-        for (int id : domainLinksClient.getLinksToDomain(domainIdxToId[domainIdx])) {
+        for (int id : linkGraphClient.getLinksToDomain(domainIdxToId[domainIdx])) {
             items.add(domainIdToIdx.get(id));
         }
 

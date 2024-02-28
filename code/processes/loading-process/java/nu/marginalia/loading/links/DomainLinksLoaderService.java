@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
-import nu.marginalia.linkdb.dlinks.DomainLinkDbWriter;
+import nu.marginalia.linkgraph.io.DomainLinksWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.processed.DomainLinkRecord;
@@ -20,10 +20,10 @@ public class DomainLinksLoaderService {
 
     private static final Logger logger = LoggerFactory.getLogger(DomainLinksLoaderService.class);
 
-    private final DomainLinkDbWriter domainLinkDbWriter;
+    private final DomainLinksWriter domainLinkDbWriter;
 
     @Inject
-    public DomainLinksLoaderService(DomainLinkDbWriter domainLinkDbWriter) {
+    public DomainLinksLoaderService(DomainLinksWriter domainLinkDbWriter) {
         this.domainLinkDbWriter = domainLinkDbWriter;
     }
 

@@ -5,7 +5,10 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.BitSet;
 
+// It's unclear why this exists, we should probably use a BitSet instead?
+// Chesterton's fence?
 public class DenseBitMap {
     public static final long MAX_CAPACITY_2GB_16BN_ITEMS=(1L<<34)-8;
 

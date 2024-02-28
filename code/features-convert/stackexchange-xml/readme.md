@@ -16,4 +16,3 @@ holistically, not by question or answer, it is necessary to re-arrange
 the data (which is very large).  SQLite does a decent job of enabling
 this task.
 
-See [tools/stackexchange-converter](../../tools/stackexchange-converter).

@@ -3,9 +3,9 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.functions.domainlinks.PartitionDomainLinksService;
+import nu.marginalia.linkgraph.PartitionLinkGraphService;
 import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.linkdb.dlinks.DomainLinkDb;
+import nu.marginalia.linkgraph.DomainLinks;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.api.IndexMqEndpoints;
@@ -34,7 +34,7 @@ public class IndexService extends Service {
     private final FileStorageService fileStorageService;
     private final DocumentDbReader documentDbReader;
 
-    private final DomainLinkDb domainLinkDb;
+    private final DomainLinks domainLinks;
     private final ServiceEventLog eventLog;
 
 
@@ -46,21 +46,21 @@ public class IndexService extends Service {
                         StatefulIndex statefulIndex,
                         FileStorageService fileStorageService,
                         DocumentDbReader documentDbReader,
-                        DomainLinkDb domainLinkDb,
-                        PartitionDomainLinksService partitionDomainLinksService,
+                        DomainLinks domainLinks,
+                        PartitionLinkGraphService partitionLinkGraphService,
                         ServiceEventLog eventLog)
     {
         super(params,
                 ServicePartition.partition(params.configuration.node()),
                 List.of(indexQueryService,
-                        partitionDomainLinksService)
+                        partitionLinkGraphService)
         );
 
         this.opsService = opsService;
         this.statefulIndex = statefulIndex;
         this.fileStorageService = fileStorageService;
         this.documentDbReader = documentDbReader;
-        this.domainLinkDb = domainLinkDb;
+        this.domainLinks = domainLinks;
         this.eventLog = eventLog;
 
         this.init = params.initialization;
@@ -106,7 +106,7 @@ public class IndexService extends Service {
 
         if (Files.exists(newPathDomains)) {
             eventLog.logEvent("INDEX-SWITCH-DOMAIN-LINKDB", "");
-            domainLinkDb.switchInput(newPathDomains);
+            domainLinks.switchInput(newPathDomains);
         }
     }
 

@@ -1,6 +1,6 @@
 # Index
 
-This module contains the components that make up the search index.
+This index subsystem contains the components that make up the search index.
 
 It exposes an API for querying the index, and contains the logic 
 for ranking search results.  It does not parse the query, that is
@@ -10,9 +10,9 @@ the responsibility of the [search-query](../functions/search-query) module.
 
 There are two indexes with accompanying tools for constructing them.
 
-* [index-reverse](reverse-index/) is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
+* [index-reverse](index-reverse/) is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
 
-* [index-forward](forward-index/) is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
+* [index-forward](index-forward/) is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
 
 Additionally, the [index-journal](index-journal/) contains code for constructing a journal of the index, which is used to keep the index up to date.
 

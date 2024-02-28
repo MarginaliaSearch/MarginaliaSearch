@@ -50,8 +50,8 @@ dependencies {
 
     implementation project(':code:functions:search-query')
     implementation project(':code:functions:search-query:api')
-    implementation project(':code:functions:domain-links:api')
-    implementation project(':code:functions:domain-links:aggregate')
+    implementation project(':code:functions:link-graph:api')
+    implementation project(':code:functions:link-graph:aggregate')
 
     implementation libs.bundles.slf4j
 

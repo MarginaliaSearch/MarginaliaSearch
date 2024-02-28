@@ -40,6 +40,8 @@ dependencies {
     implementation project(':code:process-models:work-log')
     implementation project(':code:features-convert:keyword-extraction')
 
+    implementation project(':code:functions:link-graph:partition')
+
     implementation libs.bundles.slf4j
 
     implementation libs.guice

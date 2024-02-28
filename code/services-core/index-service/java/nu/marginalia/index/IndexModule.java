@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import nu.marginalia.linkdb.dlinks.DomainLinkDb;
-import nu.marginalia.linkdb.dlinks.DelayingDomainLinkDb;
+import nu.marginalia.linkgraph.DomainLinks;
+import nu.marginalia.linkgraph.impl.DelayingDomainLinks;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.IndexLocations;
 import org.slf4j.Logger;
@@ -26,13 +26,13 @@ public class IndexModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public DomainLinkDb domainLinkDb (
+    public DomainLinks domainLinkDb (
             FileStorageService storageService
             )
     {
         Path path = IndexLocations.getLinkdbLivePath(storageService).resolve(DOMAIN_LINKS_FILE_NAME);
 
-        return new DelayingDomainLinkDb(path);
+        return new DelayingDomainLinks(path);
     }
 
     @Provides

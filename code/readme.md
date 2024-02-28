@@ -23,18 +23,38 @@ eligible index services.  The control service is responsible for distributing co
 service, and for monitoring the health of the system.  It also offers a web interface for operating the system.
 
 ### Services
+
 * [core services](services-core/) Most of these services are stateful, memory hungry, and doing heavy lifting.
 * * [control](services-core/control-service)
 * * [query](services-core/query-service)
+* * * Exposes the [functions/link-graph](functions/link-graph) subsystem
+* * * Exposes the [functions/search-query](functions/search-query) subsystem
 * * [index](services-core/index-service)
+* * * Exposes the [index](index) subsystem
+* * * Exposes the [functions/link-graph](functions/link-graph) subsystem
 * * [executor](services-core/executor-service)
+* * * Exposes the [execution](execution) subsystem
 * * [assistant](services-core/assistant-service)
+* * * Exposes the [functions/math](functions/math) subsystem
+* * * Exposes the [functions/domain-info](functions/domain-info) subsystem
 * [application services](services-application/) Mostly stateless gateways providing access to the core services.
-* * [api](services-application/api-service)  - public API
+* * [api](services-application/api-service) - public API gateway
 * * [search](services-application/search-service) - marginalia search application
-* * [dating](services-application/dating-service)  - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
-* * [explorer](services-application/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
-* an [internal API](api/)
+* * [dating](services-application/dating-service) - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
+* * [explorer](services-application/explorer-service) - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
+
+The system uses a service registry to find the services.  The service registry is based on zookeeper,
+and is a separate service.  The registry doesn't keep track of processes, but APIs.  This means that
+the system is flexible to reconfiguration.  The same code can in principle be run as a micro-service 
+mesh or as a monolith.
+
+This is an unusual architecture, but it has the benefit that you don't need to think too much about
+the layout of the system.  You can just request an API and talk to it.  Because of this, several of the 
+services have almost no code of their own.  They merely import a library and expose it as a service.
+
+These skeleton services are marked with (S).
+
+Services that expose HTTP endpoints tend to have more code.  They are marked with (G). 
 
 ### Processes
 
@@ -55,7 +75,6 @@ but isolated.
 * [features-search](features-search)
 * [features-crawl](features-crawl)
 * [features-convert](features-convert)
-* [features-index](features-index)
 
 ### Libraries and primitives
 

@@ -9,7 +9,7 @@ import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.linkdb.dlinks.DomainLinkDbWriter;
+import nu.marginalia.linkgraph.io.DomainLinksWriter;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.model.gson.GsonFactory;
@@ -45,7 +45,7 @@ public class LoaderModule extends AbstractModule {
     }
 
     @Inject @Provides @Singleton
-    private DomainLinkDbWriter createDomainLinkdbWriter(FileStorageService service) throws SQLException, IOException {
+    private DomainLinksWriter createDomainLinkdbWriter(FileStorageService service) throws SQLException, IOException {
 
         Path dbPath = IndexLocations.getLinkdbWritePath(service).resolve(DOMAIN_LINKS_FILE_NAME);
 
@@ -53,7 +53,7 @@ public class LoaderModule extends AbstractModule {
             Files.delete(dbPath);
         }
 
-        return new DomainLinkDbWriter(dbPath);
+        return new DomainLinksWriter(dbPath);
     }
 
     private Gson createGson() {

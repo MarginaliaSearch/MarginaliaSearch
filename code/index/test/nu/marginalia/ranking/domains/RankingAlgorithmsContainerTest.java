@@ -3,7 +3,7 @@ package nu.marginalia.ranking.domains;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
+import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.ranking.domains.data.InvertedLinkGraphSource;
 import nu.marginalia.ranking.domains.data.LinkGraphSource;
 import nu.marginalia.ranking.domains.data.SimilarityGraphSource;
@@ -36,8 +36,8 @@ public class RankingAlgorithmsContainerTest {
 
     static HikariDataSource dataSource;
 
-    AggregateDomainLinksClient domainLinksClient;
-    AggregateDomainLinksClient.AllLinks allLinks;
+    AggregateLinkGraphClient domainLinksClient;
+    AggregateLinkGraphClient.AllLinks allLinks;
 
     @BeforeAll
     public static void setup() {
@@ -66,8 +66,8 @@ public class RankingAlgorithmsContainerTest {
 
     @BeforeEach
     public void setupQueryClient() {
-        domainLinksClient = Mockito.mock(AggregateDomainLinksClient.class);
-        allLinks = new AggregateDomainLinksClient.AllLinks();
+        domainLinksClient = Mockito.mock(AggregateLinkGraphClient.class);
+        allLinks = new AggregateLinkGraphClient.AllLinks();
         when(domainLinksClient.getAllDomainLinks()).thenReturn(allLinks);
 
         try (var conn = dataSource.getConnection();

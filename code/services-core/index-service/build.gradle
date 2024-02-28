@@ -46,8 +46,8 @@ dependencies {
     implementation project(':code:common:linkdb')
 
     implementation project(':code:index')
-    implementation project(':code:functions:domain-links:partition')
-    implementation project(':code:functions:domain-links:api')
+    implementation project(':code:functions:link-graph:partition')
+    implementation project(':code:functions:link-graph:api')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:index:api')
 

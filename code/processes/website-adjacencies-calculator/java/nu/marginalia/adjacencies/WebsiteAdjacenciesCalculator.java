@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
+import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
@@ -32,7 +32,7 @@ public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
     private static final Logger logger = LoggerFactory.getLogger(WebsiteAdjacenciesCalculator.class);
 
     float[] weights;
-    public WebsiteAdjacenciesCalculator(AggregateDomainLinksClient domainLinksClient, HikariDataSource dataSource) throws SQLException {
+    public WebsiteAdjacenciesCalculator(AggregateLinkGraphClient domainLinksClient, HikariDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
 
         domainAliases = new DomainAliases(dataSource);
@@ -154,7 +154,7 @@ public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
 
 
         var dataSource = injector.getInstance(HikariDataSource.class);
-        var lc = injector.getInstance(AggregateDomainLinksClient.class);
+        var lc = injector.getInstance(AggregateLinkGraphClient.class);
 
         if (!lc.waitReady(Duration.ofSeconds(30))) {
             throw new IllegalStateException("Failed to connect to domain-links");

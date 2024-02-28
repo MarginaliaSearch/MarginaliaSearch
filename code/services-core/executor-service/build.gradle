@@ -59,7 +59,7 @@ dependencies {
 
     implementation project(':code:libraries:message-queue')
 
-    implementation project(':code:functions:domain-links:api')
+    implementation project(':code:functions:link-graph:api')
 
     implementation project(':code:process-models:crawl-spec')
     implementation project(':code:process-models:crawling-model')

@@ -12,5 +12,3 @@ its words, how they stem, POS tags, and so on.
 
 [features-convert/keyword-extraction](../../features-convert/keyword-extraction) uses this code to identify which keywords
 are important.
-
-[features-qs/query-parser](../../features-qs/query-parser) also does some language processing.

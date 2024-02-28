@@ -25,7 +25,7 @@ dependencies {
     implementation project(':code:common:process')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service')
-    implementation project(':code:functions:domain-links:api')
+    implementation project(':code:functions:link-graph:api')
 
     implementation libs.bundles.slf4j
 

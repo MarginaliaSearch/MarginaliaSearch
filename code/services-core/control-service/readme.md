@@ -4,8 +4,7 @@ The control service provides an operator's user interface.  By default, this int
 exposed on port 8081.  It does not offer any sort of access control or authentication.
 
 The control service will itself execute tasks that affect the entire system, but delegate
-node-specific tasks to the corresponding [executor-service](../executor-service) via the
-[executor-api](../../api/executor-api).
+node-specific tasks to the corresponding to the [execution subsystem](../../execution).
 
 Conceptually the application is broken into three parts: 
 

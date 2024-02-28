@@ -2,7 +2,7 @@ package nu.marginalia.query;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.functions.domainlinks.AggregateDomainLinksService;
+import nu.marginalia.linkgraph.AggregateLinkGraphService;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -17,7 +17,7 @@ public class QueryService extends Service {
     @SneakyThrows
     @Inject
     public QueryService(BaseServiceParams params,
-                        AggregateDomainLinksService domainLinksService,
+                        AggregateLinkGraphService domainLinksService,
                         QueryGRPCService queryGRPCService,
                         QueryBasicInterface queryBasicInterface)
     {

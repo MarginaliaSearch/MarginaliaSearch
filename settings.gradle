@@ -17,9 +17,9 @@ include 'code:functions:math:api'
 include 'code:functions:domain-info'
 include 'code:functions:domain-info:api'
 
-include 'code:functions:domain-links:partition'
-include 'code:functions:domain-links:aggregate'
-include 'code:functions:domain-links:api'
+include 'code:functions:link-graph:partition'
+include 'code:functions:link-graph:aggregate'
+include 'code:functions:link-graph:api'
 
 include 'code:functions:search-query'
 include 'code:functions:search-query:api'

@@ -15,7 +15,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:functions:domain-info:api')
-    implementation project(':code:functions:domain-links:api')
+    implementation project(':code:functions:link-graph:api')
 
     implementation project(':code:common:config')
     implementation project(':code:common:service')

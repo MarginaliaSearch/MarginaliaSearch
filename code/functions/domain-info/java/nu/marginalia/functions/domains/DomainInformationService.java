@@ -2,7 +2,7 @@ package nu.marginalia.functions.domains;
 
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
-import nu.marginalia.api.indexdomainlinks.AggregateDomainLinksClient;
+import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
@@ -21,7 +21,7 @@ public class DomainInformationService {
     private final GeoIpDictionary geoIpDictionary;
 
     private DbDomainQueries dbDomainQueries;
-    private final AggregateDomainLinksClient domainLinksClient;
+    private final AggregateLinkGraphClient linkGraphClient;
     private HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -29,11 +29,11 @@ public class DomainInformationService {
     public DomainInformationService(
             DbDomainQueries dbDomainQueries,
             GeoIpDictionary geoIpDictionary,
-            AggregateDomainLinksClient domainLinksClient,
+            AggregateLinkGraphClient linkGraphClient,
             HikariDataSource dataSource) {
         this.dbDomainQueries = dbDomainQueries;
         this.geoIpDictionary = geoIpDictionary;
-        this.domainLinksClient = domainLinksClient;
+        this.linkGraphClient = linkGraphClient;
         this.dataSource = dataSource;
     }
 
@@ -84,8 +84,8 @@ public class DomainInformationService {
             inCrawlQueue = rs.next();
             builder.setInCrawlQueue(inCrawlQueue);
 
-            builder.setIncomingLinks(domainLinksClient.countLinksToDomain(domainId));
-            builder.setOutboundLinks(domainLinksClient.countLinksFromDomain(domainId));
+            builder.setIncomingLinks(linkGraphClient.countLinksToDomain(domainId));
+            builder.setOutboundLinks(linkGraphClient.countLinksFromDomain(domainId));
 
             rs = stmt.executeQuery(STR."""
                     SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=\{domainId}
