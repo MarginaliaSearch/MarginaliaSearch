@@ -28,20 +28,20 @@ services:
 // Register one or more services
 serviceRegistry.registerService(
         ServiceKey.forRest(serviceId, nodeId),
-instanceUuid, // unique
-externalAddress); // bind-address
+        instanceUuid, // unique
+        externalAddress); // bind-address
 
 // Non-partitioned GRPC service
-        serviceRegistry.registerService(
+serviceRegistry.registerService(
         ServiceKey.forServiceDescriptor(descriptor, ServicePartition.any()),
-instanceUuid,
-externalAddress);
+        instanceUuid,
+        externalAddress);
 
 // Partitioned GRPC service
-        serviceRegistry.registerService(
+serviceRegistry.registerService(
         ServiceKey.forServiceDescriptor(descriptor, ServicePartition.partition(5)),
-instanceUuid,
-externalAddress);
+        instanceUuid,
+        externalAddress);
 
 // (+ any other services)
 ```
