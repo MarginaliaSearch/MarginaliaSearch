@@ -132,8 +132,9 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             return Objects.hash(address);
         }
 
+        /** Keep track of the last time this channel errored, up til 5 minutes */
         private boolean hasRecentError() {
-            return System.currentTimeMillis() < lastError + 5000;
+            return System.currentTimeMillis() < lastError + Duration.ofMinutes(5).toMillis();
         }
 
         void flagError() {
@@ -146,6 +147,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             int diff = Boolean.compare(hasRecentError(), o.hasRecentError());
             if (diff != 0) return diff;
 
+            // If no error has been recorded (or both have recent errors), round-robin between the options
             return Long.compare(lastUsed, o.lastUsed);
         }
     }
@@ -173,6 +175,8 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         final List<Exception> exceptions = new ArrayList<>();
         final List<ConnectionHolder> connectionHolders = new ArrayList<>(channels.values());
 
+        // Sorting the channel list will give us a round-robin distribution of calls,
+        // while preferring channels that have not errored recently
         Collections.sort(connectionHolders);
 
         for (var channel : connectionHolders) {
