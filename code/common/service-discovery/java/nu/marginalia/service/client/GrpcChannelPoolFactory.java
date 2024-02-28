@@ -4,19 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import nu.marginalia.service.NamedExecutorFactory;
 import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.PartitionTraits;
 import nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 @Singleton
@@ -24,26 +20,10 @@ public class GrpcChannelPoolFactory {
 
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
     private final ServiceRegistryIf serviceRegistryIf;
-    private static final Executor executor = Executors.newFixedThreadPool(
-            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16), new ThreadFactory() {
-        static final AtomicInteger threadNumber = new AtomicInteger(1);
-        @Override
-        public Thread newThread(@NotNull Runnable r) {
-            var thread = new Thread(r, STR."gRPC-Channel-Pool[\{threadNumber.getAndIncrement()}]");
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
-    private static final Executor offloadExecutor = Executors.newFixedThreadPool(
-            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16), new ThreadFactory() {
-                static final AtomicInteger threadNumber = new AtomicInteger(1);
-                @Override
-                public Thread newThread(@NotNull Runnable r) {
-                    var thread = new Thread(r, STR."gRPC-Offload-Executor[\{threadNumber.getAndIncrement()}]");
-                    thread.setDaemon(true);
-                    return thread;
-                }
-            });
+    private static final Executor executor = NamedExecutorFactory.createFixed("gRPC-Channel-Pool",
+            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16));
+    private static final Executor offloadExecutor = NamedExecutorFactory.createFixed("gRPC-Offload-Pool",
+            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16));
 
     @Inject
     public GrpcChannelPoolFactory(NodeConfigurationWatcher nodeConfigurationWatcher,

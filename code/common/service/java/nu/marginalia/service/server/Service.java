@@ -7,6 +7,7 @@ import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
+import nu.marginalia.service.NamedExecutorFactory;
 import nu.marginalia.service.discovery.property.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
@@ -133,9 +134,9 @@ public class Service {
 
             // Start the gRPC server
             var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port))
-                    .executor(namedExecutor("nettyExecutor", nThreads))
-                    .workerEventLoopGroup(new NioEventLoopGroup(nThreads, namedExecutor("Worker-ELG", nThreads)))
-                    .bossEventLoopGroup(new NioEventLoopGroup(nThreads, namedExecutor("Boss-ELG", nThreads)))
+                    .executor(NamedExecutorFactory.createFixed("nettyExecutor", nThreads))
+                    .workerEventLoopGroup(new NioEventLoopGroup(nThreads, NamedExecutorFactory.createFixed("Worker-ELG", nThreads)))
+                    .bossEventLoopGroup(new NioEventLoopGroup(nThreads, NamedExecutorFactory.createFixed("Boss-ELG", nThreads)))
                     .channelType(NioServerSocketChannel.class);
 
             for (var grpcService : grpcServices) {
@@ -151,20 +152,6 @@ public class Service {
             }
             grpcServerBuilder.build().start();
         }
-    }
-
-    private ExecutorService namedExecutor(String name, int limit) {
-        return Executors.newFixedThreadPool(
-                limit,
-                new ThreadFactory() {
-                    static final AtomicInteger threadNumber = new AtomicInteger(1);
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        var thread = new Thread(r, STR."\{name}[\{threadNumber.getAndIncrement()}]");
-                        thread.setDaemon(true);
-                        return thread;
-                    }
-                });
     }
 
     public Service(BaseServiceParams params,
