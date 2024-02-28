@@ -21,9 +21,9 @@ public class GrpcChannelPoolFactory {
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
     private final ServiceRegistryIf serviceRegistryIf;
     private static final Executor executor = NamedExecutorFactory.createFixed("gRPC-Channel-Pool",
-            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16));
+            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
     private static final Executor offloadExecutor = NamedExecutorFactory.createFixed("gRPC-Offload-Pool",
-            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16));
+            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
 
     @Inject
     public GrpcChannelPoolFactory(NodeConfigurationWatcher nodeConfigurationWatcher,

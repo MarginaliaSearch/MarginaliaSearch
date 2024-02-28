@@ -137,7 +137,7 @@ public class Service {
             int port = params.serviceRegistry.requestPort(config.externalAddress(), new ServiceKey.Grpc<>("-", partition));
 
 
-            int nThreads = Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 8);
+            int nThreads = Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16);
 
             // Start the gRPC server
             var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port))
