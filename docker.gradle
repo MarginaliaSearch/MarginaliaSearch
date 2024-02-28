@@ -1,0 +1,18 @@
+jib {
+    from {
+        image = image = rootProject.ext.dockerImageBase
+    }
+    to {
+        image = rootProject.ext.dockerImageRegistry+'/'+project.name
+        tags = ['latest']
+    }
+    container {
+        mainClass = application.mainClass
+        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
+        volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
+    }
+}
+
+tasks.register('docker', {
+    dependsOn('jibDockerBuild')
+})

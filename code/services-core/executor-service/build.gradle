@@ -13,20 +13,7 @@ application {
 
 tasks.distZip.enabled = false
 
-jib {
-    from {
-        image = image = rootProject.ext.dockerImageBase
-    }
-    to {
-        image = rootProject.ext.dockerImageRegistry+'/'+project.name
-        tags = ['latest']
-    }
-    container {
-        mainClass = application.mainClass
-        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
-        volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
-    }
-}
+
 
 java {
     toolchain {
@@ -35,7 +22,7 @@ java {
 }
 
 apply from: "$rootProject.projectDir/srcsets.gradle"
-
+apply from: "$rootProject.projectDir/docker.gradle"
 dependencies {
     // These look weird but they're needed to be able to spawn the processes
     // from the executor service
