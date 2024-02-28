@@ -19,29 +19,15 @@ public class IndexQuery {
     private final List<EntrySource> sources;
     private final List<QueryFilterStepIf> inclusionFilter = new ArrayList<>(10);
 
-    public final IndexQueryPriority queryPriority;
-    public final int fetchSizeMultiplier;
-
-    public IndexQuery(EntrySource... sources) {
-        this(List.of(sources), IndexQueryPriority.BEST, 1);
-    }
-
-    /**
-     * Creates an IndexQuery object with the given sources, priority, and fetchSizeMultiplier.
-     *
-     * @param sources              List of EntrySource objects representing the sources to query from
-     * @param priority             IndexQueryPriority of the query, determining how many results to fetch before stopping
-     * @param fetchSizeMultiplier  Affects the fetch size of the query, determining how deep the query should go
-     */
-    public IndexQuery(List<EntrySource> sources,
-                      IndexQueryPriority priority,
-                      int fetchSizeMultiplier)
+    public IndexQuery(List<EntrySource> sources)
     {
         this.sources = sources;
-        this.queryPriority = priority;
-        this.fetchSizeMultiplier = fetchSizeMultiplier;
     }
 
+    public IndexQuery(EntrySource... sources)
+    {
+        this.sources = List.of(sources);
+    }
     /** Adds a filter to the query.  The filter will be applied to the results
      * after they are read from the sources.
      *

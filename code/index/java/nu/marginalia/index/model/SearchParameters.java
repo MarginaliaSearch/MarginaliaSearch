@@ -1,13 +1,10 @@
 package nu.marginalia.index.model;
 
-import gnu.trove.set.hash.TLongHashSet;
+import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.api.searchquery.IndexProtobufCodec;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.searchset.SearchSet;
@@ -85,20 +82,8 @@ public class SearchParameters {
         rankingParams = IndexProtobufCodec.convertRankingParameterss(request.getParameters());
     }
 
-    public boolean hasTimeLeft() {
-        return budget.hasTimeLeft();
-    }
-
     public long getDataCost() {
         return dataCost;
     }
 
-    private static class CachedObjects {
-        private static final ThreadLocal<TLongHashSet> consideredCache = ThreadLocal.withInitial(() -> new TLongHashSet(4096));
-        private static TLongHashSet getConsideredUrlsMap() {
-            var ret = consideredCache.get();
-            ret.clear();
-            return ret;
-        }
-    }
 }

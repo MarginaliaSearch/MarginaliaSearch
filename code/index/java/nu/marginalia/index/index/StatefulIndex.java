@@ -8,8 +8,6 @@ import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.IndexFactory;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.*;
-import nu.marginalia.index.query.filter.QueryFilterStepFromPredicate;
-import nu.marginalia.index.results.model.ids.TermIdList;
 import nu.marginalia.service.control.ServiceEventLog;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -22,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.LongPredicate;
 
 /** This class delegates SearchIndexReader and deals with the stateful nature of the index,
  * i.e. it may be possible to reconstruct the index and load a new set of data.
@@ -122,19 +119,13 @@ public class StatefulIndex {
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<IndexQuery> queries = new ArrayList<>(10);
 
-        // Fetch more results than specified for short queries, as the query itself is cheap and the
-        // priority index may contain a considerable amount of less interesting results
-        final int fetchSizeMultiplier;
-        if (orderedIncludes.length == 1) fetchSizeMultiplier = 4;
-        else fetchSizeMultiplier = 1;
-
-        // To ensure that good results are processed first, create query heads for the priority index that filter for terms
-        // that contain pairs of two search terms
+        // To ensure that good results are discovered, create separate query heads for the priority index that
+        // filter for terms that contain pairs of two search terms
         if (orderedIncludesPrio.length > 1) {
             for (int i = 0; i + 1 < orderedIncludesPrio.length; i++) {
                 for (int j = i + 1; j < orderedIncludesPrio.length; j++) {
                     var entrySource = combinedIndexReader
-                            .findPriorityWord(IndexQueryPriority.BEST, orderedIncludesPrio[i], fetchSizeMultiplier)
+                            .findPriorityWord(orderedIncludesPrio[i])
                             .alsoPrio(orderedIncludesPrio[j]);
                     queryHeads.add(entrySource);
                 }
@@ -143,18 +134,20 @@ public class StatefulIndex {
 
         // Next consider entries that appear only once in the priority index
         for (var wordId : orderedIncludesPrio) {
-            queryHeads.add(combinedIndexReader.findPriorityWord(IndexQueryPriority.GOOD, wordId, fetchSizeMultiplier));
+            queryHeads.add(combinedIndexReader.findPriorityWord(wordId));
         }
 
-        // Finally consider terms in the full index, but only do this for sufficiently long queries
-        // as short queries tend to be too underspecified to produce anything other than CPU warmth
-        queryHeads.add(combinedIndexReader.findFullWord(IndexQueryPriority.FALLBACK, orderedIncludes[0], fetchSizeMultiplier));
+        // Finally consider terms in the full index
+        queryHeads.add(combinedIndexReader.findFullWord(orderedIncludes[0]));
 
         for (var query : queryHeads) {
             if (query == null) {
                 return Collections.emptyList();
             }
 
+            // Note that we can add all includes as filters, even though
+            // they may not be present in the query head, as the query builder
+            // will ignore redundant include filters:
             for (long orderedInclude : orderedIncludes) {
                 query = query.alsoFull(orderedInclude);
             }
@@ -163,7 +156,7 @@ public class StatefulIndex {
                 query = query.notFull(term);
             }
 
-            // Run these last, as they'll worst-case cause as many page faults as there are
+            // Run these filter steps last, as they'll worst-case cause as many page faults as there are
             // items in the buffer
             queries.add(query.addInclusionFilter(combinedIndexReader.filterForParams(params)).build());
         }

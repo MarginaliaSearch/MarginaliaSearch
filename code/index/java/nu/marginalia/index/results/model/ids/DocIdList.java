@@ -6,6 +6,11 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.LongStream;
 
+/** A list of document ids, with their ranking bits removed.
+ *
+ * @see nu.marginalia.index.results.model.ids.CombinedDocIdList
+ * @see nu.marginalia.model.id.UrlIdCodec
+ * */
 public final class DocIdList {
     private final long[] array;
 

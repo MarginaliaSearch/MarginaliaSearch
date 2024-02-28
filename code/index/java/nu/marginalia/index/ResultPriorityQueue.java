@@ -6,6 +6,18 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+/** A priority queue for search results. This class is not thread-safe,
+ * in general, except for concurrent use of the addAll method.
+ * <p></p>
+ * The class implements a subset of the Collection interface, and
+ * is intended to be used as a priority queue for search results,
+ * with a maximum size.
+ * <p></p>
+ * Since the expected use case is to add a large number of items
+ * and then iterate over the items, the class is optimized for
+ * this scenario, and does not implement other mutating methods
+ * than addAll().
+ */
 public class ResultPriorityQueue implements Iterable<SearchResultItem>,
         Collection<SearchResultItem> {
     private final int limit;
@@ -34,16 +46,12 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
 
     @Override
     public boolean add(SearchResultItem searchResultItem) {
-        throw new UnsupportedOperationException("Use addAll instead ya dingus");
+        throw new UnsupportedOperationException("Use addAll instead");
     }
 
     @Override
     public boolean remove(Object o) {
-        if (o instanceof SearchResultItem sri) {
-            idsInSet.remove(sri.getDocumentId());
-            return idsInSet.remove(sri.getDocumentId());
-        }
-        throw new IllegalArgumentException("Object is not a SearchResultItem");
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -77,17 +85,18 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
 
     @Override
     public boolean removeAll(@NotNull Collection<?> c) {
-        return backingList.removeAll(c);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean retainAll(@NotNull Collection<?> c) {
-        return backingList.retainAll(c);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
-
+        backingList.clear();
+        idsInSet.clear();
     }
 
     public int size() {

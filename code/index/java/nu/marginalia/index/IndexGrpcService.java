@@ -6,12 +6,13 @@ import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.api.searchquery.model.results.*;
-import nu.marginalia.index.index.IndexQueryService;
+import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
@@ -79,7 +80,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     private final StatefulIndex index;
     private final SearchSetsService searchSetsService;
 
-    private final IndexQueryService indexQueryService;
     private final IndexResultValuatorService resultValuator;
 
     private final String nodeName;
@@ -90,7 +90,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
                             StatefulIndex index,
                             SearchSetsService searchSetsService,
-                            IndexQueryService indexQueryService,
                             IndexResultValuatorService resultValuator)
     {
         var nodeId = serviceConfiguration.node();
@@ -98,7 +97,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         this.index = index;
         this.searchSetsService = searchSetsService;
         this.resultValuator = resultValuator;
-        this.indexQueryService = indexQueryService;
     }
 
     // GRPC endpoint
@@ -222,13 +220,14 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     }
 
     /** This class is responsible for executing a search query. It uses a thread pool to
-     * execute the subqueries in parallel, and then uses another thread pool to rank the
-     * results in parallel. The results are then combined into a bounded priority queue,
-     * and finally the best results are returned.
+     * execute the subqueries and their valuation in parallel. The results are then combined
+     * into a bounded priority queue, and finally the best results are returned.
      */
     private class QueryExecution {
         private static final Executor workerPool = Executors.newWorkStealingPool(indexValuationThreads*4);
 
+        /** The queue where the results from the index lookup threads are placed,
+         * pending ranking by the result ranker threads */
         private final ArrayBlockingQueue<CombinedDocIdList> resultCandidateQueue
                 = new ArrayBlockingQueue<>(8);
 
@@ -291,7 +290,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
         /** This class is responsible for executing a subquery and adding the results to the
          * resultCandidateQueue, which depending on the state of the valuator threads may
-         * or may not block*/
+         * or may not block */
         class IndexLookup implements Runnable {
             private final IndexQuery query;
             private final IndexSearchBudget budget;
@@ -306,11 +305,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
             public void run() {
                 try {
-                    indexQueryService.evaluateSubquery(
-                            query,
-                            budget,
-                            this::drain
-                    );
+                    executeSearch();
                 }
                 finally {
                     synchronized (remainingIndexTasks) {
@@ -321,7 +316,31 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 }
             }
 
-            private void drain(CombinedDocIdList resultIds) {
+            private void executeSearch() {
+                final LongArrayList results = new LongArrayList(512);
+
+                // These queries are different indices for one subquery
+                final LongQueryBuffer buffer = new LongQueryBuffer(512);
+
+                while (query.hasMore() && budget.hasTimeLeft())
+                {
+                    buffer.reset();
+                    query.getMoreResults(buffer);
+
+                    results.addElements(0, buffer.data, 0, buffer.end);
+
+                    if (results.size() < 512) {
+                        enqueueResults(new CombinedDocIdList(results));
+                        results.clear();
+                    }
+                }
+
+                if (!results.isEmpty()) {
+                    enqueueResults(new CombinedDocIdList(results));
+                }
+            }
+
+            private void enqueueResults(CombinedDocIdList resultIds) {
                 long remainingTime = budget.timeLeft();
 
                 try {
@@ -353,30 +372,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
             public void run() {
                 try {
-                    while (parameters.budget.timeLeft() > 0) {
-
-                        long start = System.currentTimeMillis();
-
-                        CombinedDocIdList resultIds = resultCandidateQueue.poll(
-                                Math.clamp(parameters.budget.timeLeft(), 1, 5),
-                                TimeUnit.MILLISECONDS);
-
-                        if (resultIds == null) {
-                            if (remainingIndexTasks.get() == 0
-                                    && resultCandidateQueue.isEmpty())
-                                break;
-                            else
-                                continue;
-                        }
-
-                        stallTime.addAndGet(System.currentTimeMillis() - start);
-
-                        var bestResults = resultValuator.rankResults(parameters, rankingContext, resultIds);
-
-                        resultHeap.addAll(bestResults);
-                    }
+                    while (parameters.budget.timeLeft() > 0 && execute());
                 }
-                catch (Exception e) {
+                catch (InterruptedException e) {
                     logger.warn("Interrupted while waiting to poll resultIds from queue", e);
                 }
                 finally {
@@ -385,6 +383,31 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                             remainingValuationTasks.notifyAll();
                     }
                 }
+            }
+
+            private boolean execute() throws InterruptedException {
+                long start = System.currentTimeMillis();
+
+                // Do a relatively short poll to ensure we terminate in a timely manner
+                // in the event all work is done
+                final long pollTime = Math.clamp(parameters.budget.timeLeft(), 1, 5);
+                CombinedDocIdList resultIds = resultCandidateQueue.poll(pollTime, TimeUnit.MILLISECONDS);
+
+                if (resultIds == null) {
+                    // check if we are done and can terminate
+                    if (remainingIndexTasks.get() == 0 && resultCandidateQueue.isEmpty()) {
+                        return false;
+                    }
+                }
+                else {
+                    stallTime.addAndGet(System.currentTimeMillis() - start);
+
+                    resultHeap.addAll(
+                            resultValuator.rankResults(parameters, rankingContext, resultIds)
+                    );
+                }
+
+                return true; // keep going
             }
         }
 

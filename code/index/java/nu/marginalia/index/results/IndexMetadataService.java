@@ -22,7 +22,6 @@ import static nu.marginalia.index.results.model.TermMetadataForCombinedDocumentI
 public class IndexMetadataService {
     private final StatefulIndex index;
 
-
     @Inject
     public IndexMetadataService(StatefulIndex index) {
         this.index = index;

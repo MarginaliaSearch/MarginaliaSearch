@@ -5,7 +5,6 @@ import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
-import nu.marginalia.index.query.IndexQueryPriority;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
@@ -16,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /** A reader for the combined forward and reverse indexes */
@@ -42,22 +40,15 @@ public class CombinedIndexReader {
 
 
     /** Creates a query builder for terms in the priority index */
-    public IndexQueryBuilder findPriorityWord(IndexQueryPriority priority,
-                                              long wordId,
-                                              int fetchSizeMultiplier) {
-        return newQueryBuilder(new IndexQuery(
-                        List.of(reverseIndexPriorityReader.documents(wordId)),
-                        priority,
-                        fetchSizeMultiplier))
+    public IndexQueryBuilder findPriorityWord(long wordId) {
+        return newQueryBuilder(new IndexQuery(reverseIndexPriorityReader.documents(wordId)))
                 .withSourceTerms(wordId);
     }
 
     /** Creates a query builder for terms in the full index */
-    public IndexQueryBuilder findFullWord(IndexQueryPriority priority, long wordId, int fetchSizeMultiplier) {
+    public IndexQueryBuilder findFullWord(long wordId) {
         return newQueryBuilder(
-                new IndexQuery(List.of(reverseIndexFullReader.documents(wordId)),
-                        priority,
-                        fetchSizeMultiplier))
+                new IndexQuery(reverseIndexFullReader.documents(wordId)))
                 .withSourceTerms(wordId);
     }
 

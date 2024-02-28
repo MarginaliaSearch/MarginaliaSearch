@@ -47,24 +47,31 @@ public class IndexResultValuatorService {
                                                        ResultRankingContext rankingContext,
                                                        CombinedDocIdList resultIds)
     {
-        final var evaluator = new IndexResultValuationContext(metadataService,
-                resultValuator,
-                resultIds,
-                statefulIndex,
-                rankingContext,
-                params.subqueries,
-                params.queryParams);
+        final var evaluator = createValuationContext(params, rankingContext, resultIds);
 
         List<SearchResultItem> results = new ArrayList<>(resultIds.size());
 
-        for (long docId : resultIds.array()) {
-            var score = evaluator.calculatePreliminaryScore(docId);
+        for (long id : resultIds.array()) {
+            var score = evaluator.calculatePreliminaryScore(id);
             if (score != null) {
                 results.add(score);
             }
         }
 
         return results;
+    }
+
+    private IndexResultValuationContext createValuationContext(SearchParameters params,
+                                                               ResultRankingContext rankingContext,
+                                                               CombinedDocIdList resultIds)
+    {
+        return new IndexResultValuationContext(metadataService,
+                resultValuator,
+                resultIds,
+                statefulIndex,
+                rankingContext,
+                params.subqueries,
+                params.queryParams);
     }
 
 

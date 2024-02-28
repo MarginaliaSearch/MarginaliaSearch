@@ -6,6 +6,9 @@ It exposes an API for querying the index, and contains the logic
 for ranking search results.  It does not parse the query, that is
 the responsibility of the [search-query](../functions/search-query) module.
 
+The central class of the index subsystem is the [IndexGrpcService](java/nu/marginalia/index/IndexGrpcService.java) class,
+which is a gRPC service that exposes the index to the rest of the system.
+
 ## Indexes
 
 There are two indexes with accompanying tools for constructing them.

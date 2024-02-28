@@ -1,11 +1,17 @@
 package nu.marginalia.index.results.model.ids;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongIterators;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import java.util.Arrays;
 import java.util.stream.LongStream;
 
+/** A list of document ids, with their ranking bits still remaining.
+ *
+ * @see nu.marginalia.index.results.model.ids.DocIdList
+ * @see nu.marginalia.model.id.UrlIdCodec
+ * */
 public final class CombinedDocIdList {
     private final long[] data;
 
@@ -48,5 +54,6 @@ public final class CombinedDocIdList {
     public void sort() {
         Arrays.sort(data);
     }
+
 }
 
