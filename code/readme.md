@@ -52,8 +52,6 @@ This is an unusual architecture, but it has the benefit that you don't need to t
 the layout of the system.  You can just request an API and talk to it.  Because of this, several of the 
 services have almost no code of their own.  They merely import a library and expose it as a service.
 
-These skeleton services are marked with (S).
-
 Services that expose HTTP endpoints tend to have more code.  They are marked with (G). 
 
 ### Processes
