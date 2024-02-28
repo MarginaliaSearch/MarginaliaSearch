@@ -17,7 +17,7 @@ public class ServiceDiscoveryModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(ServiceDiscoveryModule.class);
 
     public void configure() {
-        var hosts = getZookeeperHosts().orElseThrow(() -> new IllegalStateException("Zookeeper hosts not set"));
+        var hosts = getZookeeperHosts();
         logger.info("Using Zookeeper service registry at {}", hosts);
         CuratorFramework client = CuratorFrameworkFactory
                 .newClient(hosts, new ExponentialBackoffRetry(100, 10, 1000));
@@ -26,11 +26,21 @@ public class ServiceDiscoveryModule extends AbstractModule {
         bind(ServiceRegistryIf.class).to(ZkServiceRegistry.class);
     }
 
-    private Optional<String> getZookeeperHosts() {
+    private String getZookeeperHosts() {
         if (System.getProperty("zookeeper-hosts") != null) {
-            return Optional.of(System.getProperty("zookeeper-hosts"));
+            return System.getProperty("zookeeper-hosts");
         }
-        return Optional.ofNullable(System.getenv("ZOOKEEPER_HOSTS"));
+        String env = System.getenv("ZOOKEEPER_HOSTS");
+        if (null == env) {
+            System.err.println("""
+                ZOOKEEPER_HOSTS not set.  This probably means that you are running an old installation,
+                   or that the environment is not set up correctly.  
+                   
+                See the 2024-03+ migration notes, https://docs.marginalia.nu/6_notes/6_1__migrate_2024_03_plus
+                
+                """);
+        }
+        return env;
     }
 
 }
