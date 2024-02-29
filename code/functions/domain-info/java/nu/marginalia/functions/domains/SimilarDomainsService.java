@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.IntStream;
 
 public class SimilarDomainsService {
@@ -43,12 +44,13 @@ public class SimilarDomainsService {
 
     volatile boolean isReady = false;
 
+
     @Inject
     public SimilarDomainsService(HikariDataSource dataSource, AggregateLinkGraphClient linkGraphClient) {
         this.dataSource = dataSource;
         this.linkGraphClient = linkGraphClient;
 
-        Executors.newSingleThreadExecutor().submit(this::init);
+        Thread.ofPlatform().start(this::init);
     }
 
     private void init() {
@@ -342,7 +344,7 @@ public class SimilarDomainsService {
                             .setDomainId(id)
                             .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
                             .setRelatedness(getRelatedness(domainId, id))
-                            .setRank(ranksArray[id])
+                            .setRank(ranksArray[idx])
                             .setIndexed(indexedDomains.contains(idx))
                             .setActive(activeDomains.contains(idx))
                             .setScreenshot(screenshotDomains.contains(idx))
