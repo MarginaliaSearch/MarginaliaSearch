@@ -344,7 +344,7 @@ public class SimilarDomainsService {
                             .setDomainId(id)
                             .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
                             .setRelatedness(getRelatedness(domainId, id))
-                            .setRank(ranksArray[idx])
+                            .setRank(domainRanks.get(idx))
                             .setIndexed(indexedDomains.contains(idx))
                             .setActive(activeDomains.contains(idx))
                             .setScreenshot(screenshotDomains.contains(idx))
