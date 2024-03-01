@@ -1,6 +1,7 @@
 package nu.marginalia.converting.sideload.encyclopedia;
 
 import com.github.luben.zstd.ZstdInputStream;
+import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import nu.marginalia.atags.AnchorTextKeywords;
@@ -110,7 +111,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     }
 
     private ProcessedDocument convertDocument(List<String> parts, String title, String url, DomainLinks domainLinks) throws URISyntaxException, DisqualifiedException {
-        String fullUrl = baseUrl.toString() + url;
+        String fullUrl = baseUrl.toString() + URLEncoder.encode(url, Charsets.UTF_8);
 
         StringBuilder fullHtml = new StringBuilder();
         fullHtml
