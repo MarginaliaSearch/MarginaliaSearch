@@ -1,8 +1,6 @@
 package nu.marginalia;
 
 
-import nu.marginalia.service.ServiceHomeNotConfiguredException;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +48,7 @@ public class WmsaHome {
                     .map(p -> p.resolve("run"))
                     .findAny();
 
-            return testRoot.orElseThrow(() -> new ServiceHomeNotConfiguredException("""
+            return testRoot.orElseThrow(() -> new IllegalStateException("""
                             Could not find $WMSA_HOME, either set environment
                             variable, the 'system.homePath' property,
                             or ensure either /wmssa or /var/lib/wmsa exists
@@ -60,7 +58,7 @@ public class WmsaHome {
         var ret = Path.of(retStr.get());
 
         if (!Files.isDirectory(ret.resolve("model"))) {
-            throw new ServiceHomeNotConfiguredException("You need to run 'run/setup.sh' to download models to run/ before this will work!");
+            throw new IllegalStateException("You need to run 'run/setup.sh' to download models to run/ before this will work!");
         }
 
         return ret;

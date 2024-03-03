@@ -12,7 +12,6 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation project(':code:common:service-discovery')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:common:db')
     implementation project(':code:common:config')
@@ -25,10 +24,17 @@ dependencies {
     implementation libs.bundles.prometheus
     implementation libs.bundles.slf4j
     implementation libs.bucket4j
+    implementation libs.notnull
+    implementation libs.bundles.curator
     implementation libs.bundles.flyway
 
     testImplementation libs.bundles.slf4j.test
     implementation libs.bundles.mariadb
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

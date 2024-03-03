@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import nu.marginalia.service.NamedExecutorFactory;
+import nu.marginalia.util.NamedExecutorFactory;
 import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.PartitionTraits;
@@ -57,6 +57,7 @@ public class GrpcChannelPoolFactory {
                 .forAddress(route.host(), route.port())
                 .executor(executor)
                 .offloadExecutor(offloadExecutor)
+                .idleTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
                 .usePlaintext()
                 .build();
 

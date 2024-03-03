@@ -1,4 +1,4 @@
-package nu.marginalia.service;
+package nu.marginalia.service.module;
 
 import com.google.inject.AbstractModule;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -8,8 +8,6 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 /** Provides a Guice module for service discovery. */
 public class ServiceDiscoveryModule extends AbstractModule {

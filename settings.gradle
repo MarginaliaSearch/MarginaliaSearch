@@ -70,7 +70,6 @@ include 'code:features-crawl:content-type'
 
 include 'code:process-mqapi'
 
-include 'code:common:service-discovery'
 include 'code:common:db'
 include 'code:common:linkdb'
 include 'code:common:service'
@@ -224,6 +223,7 @@ dependencyResolutionManagement {
             bundle('selenium', ['selenium.chrome', 'selenium.java'])
             bundle('handlebars', ['handlebars', 'handlebars.markdown'])
             bundle('grpc', ['protobuf', 'grpc-stub', 'grpc-protobuf', 'grpc-netty'])
+            bundle('protobuf', ['protobuf', 'javax.annotation'])
             bundle('gson', ['gson', 'gson-type-adapter'])
             bundle('httpcomponents', ['httpcomponents.core', 'httpcomponents.client'])
             bundle('parquet', ['parquet-column', 'parquet-hadoop'])

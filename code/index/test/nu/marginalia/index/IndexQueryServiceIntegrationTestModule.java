@@ -15,7 +15,7 @@ import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.service.control.*;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
 

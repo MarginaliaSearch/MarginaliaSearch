@@ -27,7 +27,6 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:common:linkdb')
     implementation project(':code:index:index-journal')
     implementation project(':code:libraries:message-queue')

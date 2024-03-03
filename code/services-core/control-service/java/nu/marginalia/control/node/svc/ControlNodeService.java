@@ -15,7 +15,7 @@ import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.storage.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

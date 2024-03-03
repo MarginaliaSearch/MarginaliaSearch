@@ -31,7 +31,6 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:renderer')
     implementation project(':code:index:api')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:index:query')
 
     implementation project(':code:functions:search-query')
@@ -46,7 +45,6 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.protobuf
     implementation libs.bundles.mariadb
     implementation libs.bundles.grpc
 

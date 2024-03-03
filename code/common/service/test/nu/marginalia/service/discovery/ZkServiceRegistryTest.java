@@ -1,9 +1,9 @@
 package nu.marginalia.service.discovery;
 
-import nu.marginalia.api.math.MathApiGrpc;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
+import nu.marginalia.test.TestApiGrpc;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.junit.jupiter.api.*;
@@ -94,7 +94,7 @@ class ZkServiceRegistryTest {
         var registry2 = createRegistry();
 
         var key1 = ServiceKey.forRest(ServiceId.Search, 0);
-        var key2 = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.any());
+        var key2 = ServiceKey.forGrpcApi(TestApiGrpc.class, ServicePartition.any());
 
         var endpoint1 = registry1.registerService(key1, uuid1, "127.0.0.1");
         var endpoint2 = registry2.registerService(key2, uuid2, "127.0.0.2");
@@ -123,7 +123,7 @@ class ZkServiceRegistryTest {
         var registry1 = createRegistry();
         var registry2 = createRegistry();
 
-        var key = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.any());
+        var key = ServiceKey.forGrpcApi(TestApiGrpc.class, ServicePartition.any());
 
         var endpoint1 = registry1.registerService(key, uuid1, "127.0.0.1");
         var endpoint2 = registry2.registerService(key, uuid2, "127.0.0.2");
@@ -149,8 +149,8 @@ class ZkServiceRegistryTest {
         var registry1 = createRegistry();
         var registry2 = createRegistry();
 
-        var key1 = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.partition(1));
-        var key2 = ServiceKey.forGrpcApi(MathApiGrpc.class, ServicePartition.partition(2));
+        var key1 = ServiceKey.forGrpcApi(TestApiGrpc.class, ServicePartition.partition(1));
+        var key2 = ServiceKey.forGrpcApi(TestApiGrpc.class, ServicePartition.partition(2));
 
         var endpoint1 = registry1.registerService(key1, uuid1, "127.0.0.1");
         var endpoint2 = registry2.registerService(key2, uuid2, "127.0.0.2");

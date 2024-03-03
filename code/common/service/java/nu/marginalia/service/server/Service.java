@@ -7,10 +7,10 @@ import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
-import nu.marginalia.service.NamedExecutorFactory;
+import nu.marginalia.util.NamedExecutorFactory;
 import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.*;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +23,6 @@ import spark.Spark;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Service {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -54,6 +49,7 @@ public class Service {
 
     protected final MqInboxIf messageQueueInbox;
     private final int node;
+    private GrpcServer grpcServer;
 
     @SneakyThrows
     public Service(BaseServiceParams params,
@@ -134,30 +130,8 @@ public class Service {
             Spark.get("/internal/started", this::isInitialized);
             Spark.get("/internal/ready", this::isReady);
 
-            int port = params.serviceRegistry.requestPort(config.externalAddress(), new ServiceKey.Grpc<>("-", partition));
-
-
-            int nThreads = Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16);
-
-            // Start the gRPC server
-            var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port))
-                    .executor(NamedExecutorFactory.createFixed("nettyExecutor", nThreads))
-                    .workerEventLoopGroup(new NioEventLoopGroup(nThreads, NamedExecutorFactory.createFixed("Worker-ELG", nThreads)))
-                    .bossEventLoopGroup(new NioEventLoopGroup(nThreads, NamedExecutorFactory.createFixed("Boss-ELG", nThreads)))
-                    .channelType(NioServerSocketChannel.class);
-
-            for (var grpcService : grpcServices) {
-                var svc = grpcService.bindService();
-
-                params.serviceRegistry.registerService(
-                        ServiceKey.forServiceDescriptor(svc.getServiceDescriptor(), partition),
-                        config.instanceUuid(),
-                        config.externalAddress()
-                        );
-
-                grpcServerBuilder.addService(svc);
-            }
-            grpcServerBuilder.build().start();
+            grpcServer = new GrpcServer(config, serviceRegistry, partition, grpcServices);
+            grpcServer.start();
         }
     }
 

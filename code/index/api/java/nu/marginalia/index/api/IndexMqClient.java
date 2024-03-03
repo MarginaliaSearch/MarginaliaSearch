@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 
 import java.util.UUID;
 

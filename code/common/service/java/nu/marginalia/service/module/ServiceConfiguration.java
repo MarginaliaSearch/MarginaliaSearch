@@ -1,6 +1,6 @@
 package nu.marginalia.service.module;
 
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 
 import java.util.UUID;
 

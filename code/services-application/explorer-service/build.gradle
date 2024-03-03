@@ -26,7 +26,6 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:common:renderer')
 
     implementation project(':code:features-search:random-websites')

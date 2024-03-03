@@ -14,7 +14,7 @@ import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.storage.model.FileStorageId;
 
 import org.slf4j.Logger;

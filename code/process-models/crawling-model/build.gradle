@@ -21,7 +21,6 @@ dependencies {
     implementation project(':code:common:process')
     implementation project(':code:libraries:big-string')
     implementation project(':code:index:api')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:features-crawl:content-type')
     implementation project(':code:libraries:language-processing')
     implementation project(':third-party:parquet-floor')

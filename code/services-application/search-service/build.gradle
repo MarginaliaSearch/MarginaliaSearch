@@ -48,7 +48,6 @@ dependencies {
 
 
     implementation project(':code:index:api')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:common:renderer')
 
     implementation project(':code:features-search:screenshots')

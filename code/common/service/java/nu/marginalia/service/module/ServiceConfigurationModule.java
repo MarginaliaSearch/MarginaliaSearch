@@ -2,7 +2,7 @@ package nu.marginalia.service.module;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

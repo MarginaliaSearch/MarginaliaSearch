@@ -1,4 +1,4 @@
-package nu.marginalia.service;
+package nu.marginalia.util;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -14,7 +14,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
-    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:functions:search-query:api')
 
@@ -23,7 +23,7 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.protobuf
+    implementation libs.bundles.protobuf
     implementation libs.fastutil
     implementation libs.javax.annotation
     implementation libs.bundles.gson

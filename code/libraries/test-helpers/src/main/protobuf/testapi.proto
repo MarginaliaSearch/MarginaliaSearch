@@ -1,0 +1,15 @@
+syntax="proto3";
+package nu.marginalia.test;
+
+option java_package="nu.marginalia.test";
+option java_multiple_files=true;
+
+/* Dummy API for testing gRPC, service discovery, similar things */
+service TestApi {
+  rpc increment(RpcInteger) returns (RpcInteger) {}
+  rpc count(RpcInteger) returns (stream RpcInteger) {}
+}
+
+message RpcInteger {
+  int32 value = 1;
+}

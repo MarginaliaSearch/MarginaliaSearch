@@ -10,7 +10,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.service.ProcessMainClass;
-import nu.marginalia.service.ServiceDiscoveryModule;
+import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

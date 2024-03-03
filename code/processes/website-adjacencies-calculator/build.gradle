@@ -23,7 +23,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:process')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:common:service')
     implementation project(':code:functions:link-graph:api')
 

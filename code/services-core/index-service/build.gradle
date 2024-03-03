@@ -26,7 +26,6 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:service')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:linkdb')
@@ -37,8 +36,6 @@ dependencies {
     implementation project(':code:functions:search-query:api')
     implementation project(':code:index:api')
 
-    implementation project(':code:common:service-discovery')
-
     testImplementation project(path: ':code:services-core:control-service')
     testImplementation project(':code:common:process')
 
@@ -47,7 +44,6 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
-    implementation libs.protobuf
     implementation libs.bundles.httpcomponents
     implementation libs.roaringbitmap
     implementation libs.snakeyaml

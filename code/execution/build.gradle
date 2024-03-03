@@ -28,7 +28,6 @@ dependencies {
     implementation project(':code:common:linkdb')
 
     implementation project(':code:common:service')
-    implementation project(':code:common:service-discovery')
 
     implementation project(':third-party:commons-codec')
 
@@ -57,7 +56,6 @@ dependencies {
     implementation libs.notnull
     implementation libs.guice
     implementation libs.trove
-    implementation libs.protobuf
     implementation libs.zstd
     implementation libs.jsoup
     implementation libs.commons.io

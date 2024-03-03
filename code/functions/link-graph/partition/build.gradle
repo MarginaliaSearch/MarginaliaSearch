@@ -21,7 +21,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:linkdb')
     implementation project(':code:common:db')
-    implementation project(':code:common:service-discovery')
 
     implementation libs.bundles.slf4j
 

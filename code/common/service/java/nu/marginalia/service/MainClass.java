@@ -1,7 +1,6 @@
 package nu.marginalia.service;
 
 import io.prometheus.client.hotspot.DefaultExports;
-import nu.marginalia.service.id.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

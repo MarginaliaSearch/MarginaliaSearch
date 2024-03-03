@@ -13,7 +13,6 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation project(':code:common:service-discovery')
     implementation project(':code:libraries:big-string')
     implementation project(':code:libraries:braille-block-punch-cards')
 

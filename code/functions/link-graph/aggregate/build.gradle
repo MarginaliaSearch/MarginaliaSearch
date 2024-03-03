@@ -19,7 +19,6 @@ dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:common:model')
-    implementation project(':code:common:service-discovery')
 
     implementation libs.bundles.slf4j
 

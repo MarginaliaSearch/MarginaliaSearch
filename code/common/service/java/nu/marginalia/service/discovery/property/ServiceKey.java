@@ -1,7 +1,7 @@
 package nu.marginalia.service.discovery.property;
 
 import io.grpc.ServiceDescriptor;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 
 public sealed interface ServiceKey<P extends ServicePartition> {
     String toPath();

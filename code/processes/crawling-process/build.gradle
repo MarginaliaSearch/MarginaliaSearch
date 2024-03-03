@@ -31,7 +31,6 @@ dependencies {
     implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:index:api')
     implementation project(':code:process-mqapi')
-    implementation project(':code:common:service-discovery')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:easy-lsh')

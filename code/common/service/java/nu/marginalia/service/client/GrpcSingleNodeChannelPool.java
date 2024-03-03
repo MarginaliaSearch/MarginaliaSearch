@@ -74,6 +74,14 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         return true;
     }
 
+    // Mostly for testing
+    public synchronized void stop() {
+        for (var channel : channels.values()) {
+            channel.closeHard();
+        }
+        channels.clear();
+    }
+
     private class ConnectionHolder implements Comparable<ConnectionHolder> {
         private final AtomicReference<ManagedChannel> channel = new AtomicReference<>();
         private final InstanceAddress address;
@@ -114,6 +122,12 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             ManagedChannel mc = channel.getAndSet(null);
             if (mc != null) {
                 mc.shutdown();
+            }
+        }
+        public void closeHard() {
+            ManagedChannel mc = channel.getAndSet(null);
+            if (mc != null) {
+                mc.shutdownNow();
             }
         }
 

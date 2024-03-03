@@ -1,4 +1,4 @@
-package nu.marginalia.service.id;
+package nu.marginalia.service;
 
 public enum ServiceId {
 

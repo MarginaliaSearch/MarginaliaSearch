@@ -12,7 +12,7 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageType;
 import spark.Request;
