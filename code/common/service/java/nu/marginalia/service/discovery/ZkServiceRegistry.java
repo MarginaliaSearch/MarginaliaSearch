@@ -9,9 +9,9 @@ import static nu.marginalia.service.discovery.property.ServiceEndpoint.*;
 
 import nu.marginalia.service.discovery.property.ServiceKey;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,29 +212,35 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
 
         String path = monitor.getKey().toPath();
 
-        CuratorWatcher watcher = change -> {
-            boolean reRegister;
-            try {
-                reRegister = monitor.onChange();
-            }
-            catch (Exception ex) {
-                logger.error("Monitor for path {} failed", path, ex);
-                reRegister = true;
-            }
-
-            if (reRegister) {
-                registerMonitor(monitor);
-            }
-        };
-
         curatorFramework.watchers().add()
-                .usingWatcher(watcher)
+                .usingWatcher((Watcher) change -> {
+                    Watcher.Event.EventType type = change.getType();
+
+                    if (type == Watcher.Event.EventType.NodeCreated) {
+                        monitor.onChange();
+                    }
+                    if (type == Watcher.Event.EventType.NodeDeleted) {
+                        monitor.onChange();
+                    }
+                })
                 .forPath(path);
 
         // Also register for updates to the running-instances list,
         // as this will have an effect on the result of getEndpoints()
         curatorFramework.watchers().add()
-                .usingWatcher(watcher)
+                .usingWatcher((Watcher) change -> {
+                    Watcher.Event.EventType type = change.getType();
+
+                    if ("/running-instances".equals(change.getPath()))
+                        return;
+
+                    if (type == Watcher.Event.EventType.NodeCreated) {
+                        monitor.onChange();
+                    }
+                    if (type == Watcher.Event.EventType.NodeDeleted) {
+                        monitor.onChange();
+                    }
+                })
                 .forPath("/running-instances");
     }
 

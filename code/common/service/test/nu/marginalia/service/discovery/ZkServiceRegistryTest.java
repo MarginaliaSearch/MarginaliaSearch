@@ -1,5 +1,6 @@
 package nu.marginalia.service.discovery;
 
+import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.ServiceId;
@@ -9,12 +10,14 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.mockito.Mockito;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @Testcontainers
 @Execution(ExecutionMode.SAME_THREAD)
@@ -172,5 +175,36 @@ class ZkServiceRegistryTest {
         assertTrue(registry1.isInstanceRunning(uuid1));
 
         registry1.shutDown();
+    }
+
+    @Test
+    public void testMonitors() throws Exception {
+        var registry1 = createRegistry();
+        var registry2 = createRegistry();
+        var uuid1 = UUID.randomUUID();
+        var uuid2 = UUID.randomUUID();
+
+        var monitor = Mockito.mock(ServiceMonitorIf.class);
+        when(monitor.getKey()).thenReturn((ServiceKey)ServiceKey.forGrpcApi(
+                TestApiGrpc.class,
+                ServicePartition.any()));
+
+        // This test has sleeps that make it a bit
+        // easier to reason about, as it lets us pretend
+        // a distributed concurrent system is not.
+
+        registry1.registerMonitor(monitor);
+
+        Thread.sleep(100);
+        registry2.announceInstance(uuid1);
+        Thread.sleep(100);
+        registry1.announceInstance(uuid2);
+        Thread.sleep(100);
+        registry1.shutDown();
+
+        Thread.sleep(100);
+
+        Mockito.verify(monitor, Mockito.times(3)).onChange();
+
     }
 }

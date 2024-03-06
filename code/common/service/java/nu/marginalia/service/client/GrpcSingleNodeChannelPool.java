@@ -52,7 +52,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
 
     @Override
-    public synchronized boolean onChange() {
+    public synchronized void onChange() {
         Set<InstanceAddress> newRoutes = serviceRegistryIf.getEndpoints(serviceKey);
         Set<InstanceAddress> oldRoutes = new HashSet<>(channels.keySet());
 
@@ -71,7 +71,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             }
         }
 
-        return true;
     }
 
     // Mostly for testing

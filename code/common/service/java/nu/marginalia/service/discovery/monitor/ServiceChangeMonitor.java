@@ -9,7 +9,7 @@ public abstract class ServiceChangeMonitor implements ServiceMonitorIf {
         this.serviceKey = key;
     }
 
-    public abstract boolean onChange();
+    public abstract void onChange();
     public ServiceKey<?> getKey() {
         return serviceKey;
     }
