@@ -94,6 +94,8 @@ services:
     restart: always
     ports:
       - "127.0.0.1:2181:2181"
+    networks:
+      - wmsa
   traefik:
     image: "traefik:v2.10"
     container_name: "traefik"
