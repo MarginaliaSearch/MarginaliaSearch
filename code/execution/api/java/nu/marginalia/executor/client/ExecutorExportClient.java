@@ -2,10 +2,7 @@ package nu.marginalia.executor.client;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.functions.execution.api.Empty;
-import nu.marginalia.functions.execution.api.ExecutorExportApiGrpc;
-import nu.marginalia.functions.execution.api.RpcExportSampleData;
-import nu.marginalia.functions.execution.api.RpcFileStorageId;
+import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -55,6 +52,7 @@ public class ExecutorExportClient {
                         .setFileStorageId(fid.id())
                         .build());
     }
+
     public void exportTermFrequencies(int node, FileStorageId fid) {
         channelPool.call(ExecutorExportApiBlockingStub::exportTermFrequencies)
                 .forNode(node)
@@ -69,6 +67,14 @@ public class ExecutorExportClient {
                 .run(Empty.getDefaultInstance());
     }
 
+    public void exportSegmentationModel(int node, String path) {
+        channelPool.call(ExecutorExportApiBlockingStub::exportSegmentationModel)
+                .forNode(node)
+                .run(RpcExportSegmentationModel
+                        .newBuilder()
+                        .setSourcePath(path)
+                        .build());
+    }
 
 
 }

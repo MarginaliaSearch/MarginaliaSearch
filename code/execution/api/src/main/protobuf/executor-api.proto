@@ -38,6 +38,7 @@ service ExecutorSideloadApi {
 
 service ExecutorExportApi {
   rpc exportAtags(RpcFileStorageId) returns (Empty) {}
+  rpc exportSegmentationModel(RpcExportSegmentationModel) returns (Empty) {}
   rpc exportSampleData(RpcExportSampleData) returns (Empty) {}
   rpc exportRssFeeds(RpcFileStorageId) returns (Empty) {}
   rpc exportTermFrequencies(RpcFileStorageId) returns (Empty) {}
@@ -60,6 +61,9 @@ message RpcFileStorageIds {
 message RpcSideloadEncyclopedia {
   string sourcePath = 1;
   string baseUrl = 2;
+}
+message RpcExportSegmentationModel {
+  string sourcePath = 1;
 }
 message RpcSideloadDirtree {
   string sourcePath = 1;

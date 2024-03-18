@@ -1,0 +1,45 @@
+<h1 class="my-3">Export segmentation model</h1>
+
+<div class="my-3 p-3 border bg-light">
+<p>This will generate a query segmentation model from a wikipedia ZIM file.  A query segmentation model
+is used to break a search query into segments corresponding to different concepts.  For example, the query
+"slackware linux package manager" would be segmented into "slackware linux", and "package manager"; and the
+search would be performed putting higher emphasis on "package" and "manager" appearing in the same part of the document
+than "linux" and "manager".
+</p>
+</div>
+<form method="post" action="actions/export-segmentation" onsubmit="return confirm('Confirm export')">
+    <div class="my-3 py-3">
+        <table class="table">
+            <th></th><th>Filename</th><th>Size</th><th>Last Modified</th>
+            {{#each uploadDirContents.items}}
+                <tr>
+                    <td><input {{#unless isZim}}disabled{{/unless}} class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
+                    <td {{#unless isZim}}class="text-muted"{{/unless}}>
+                        <label class="form-check-label" for="{{name}}">{{name}}{{#if directory}}/{{/if}}</label>
+                    </td>
+                    <td>{{#unless directory}}{{size}}{{/unless}}</td>
+                    <td title={{lastModifiedTime}}>{{shortTimestamp lastModifiedTime}}</td>
+                </tr>
+            {{/each}}
+            {{#unless uploadDirContents.items}}
+                <tr>
+                    <td colspan="3">Nothing found in upload directory</td>
+                </tr>
+            {{/unless}}
+        </table>
+
+        <p>
+            <small class="text-muted">
+                The upload directory is typically mounted to /uploads on the server.  The external
+                directory is typically something like index-{{node.id}}/uploads.
+            </small>
+        </p>
+
+        <div class="row mt-3">
+            <div class="col">
+                <button {{#unless uploadDirContents.items}}disabled{{/unless}} type="submit" class="btn btn-primary">Export Segmentation Model</button>
+            </div>
+        </div>
+    </div>
+</form>

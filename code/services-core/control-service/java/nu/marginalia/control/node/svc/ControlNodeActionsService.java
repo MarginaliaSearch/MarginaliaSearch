@@ -76,6 +76,9 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
+        Spark.post("/public/nodes/:node/actions/export-segmentation", this::exportSegmentationModel,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
+        );
         Spark.post("/public/nodes/:node/actions/download-sample-data", this::downloadSampleData,
                 redirectControl.renderRedirectAcknowledgement("Downloading", "..")
         );
@@ -303,6 +306,14 @@ public class ControlNodeActionsService {
 
     private Object exportDbData(Request req, Response rsp) {
         exportClient.exportData(Integer.parseInt(req.params("id")));
+
+        return "";
+    }
+
+    private Object exportSegmentationModel(Request req, Response rsp) {
+        exportClient.exportSegmentationModel(
+                Integer.parseInt(req.params("node")),
+                req.queryParams("source"));
 
         return "";
     }
