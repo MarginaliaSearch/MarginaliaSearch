@@ -8,7 +8,6 @@ import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.util.language.EnglishDictionary;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.util.ngrams.NGramBloomFilter;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
@@ -37,9 +36,8 @@ public class QueryFactory {
     @Inject
     public QueryFactory(LanguageModels lm,
                         TermFrequencyDict dict,
-                        EnglishDictionary englishDictionary,
-                        NGramBloomFilter nGramBloomFilter) {
-        this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
+                        EnglishDictionary englishDictionary) {
+        this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, englishDictionary));
     }
 
 
@@ -79,7 +77,7 @@ public class QueryFactory {
 
         String domain = null;
 
-        var basicQuery = queryParser.parse(query);
+        List<Token> basicQuery = queryParser.parse(query);
 
         if (basicQuery.size() >= 12) {
             problems.add("Your search query is too long");
@@ -108,10 +106,9 @@ public class QueryFactory {
         for (var parts : queryPermutations) {
             QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(parts);
 
-            SearchSubquery subquery = termsAccumulator.createSubquery();
-
             domain = termsAccumulator.domain;
 
+            SearchSubquery subquery = termsAccumulator.createSubquery();
             subqueries.add(subquery);
         }
 
