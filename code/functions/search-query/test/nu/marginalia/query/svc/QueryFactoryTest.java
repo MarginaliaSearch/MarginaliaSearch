@@ -32,8 +32,7 @@ public class QueryFactoryTest {
 
         queryFactory = new QueryFactory(lm,
                 tfd,
-                new EnglishDictionary(tfd),
-                new NGramBloomFilter(lm)
+                new EnglishDictionary(tfd)
         );
     }
 

@@ -1,17 +1,14 @@
 package nu.marginalia.functions.searchquery.query_parser;
 
-import ca.rmen.porterstemmer.PorterStemmer;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import nu.marginalia.functions.searchquery.query_parser.token.Token;
 import nu.marginalia.functions.searchquery.query_parser.token.TokenType;
+import nu.marginalia.functions.searchquery.query_parser.variant.QueryVariant;
+import nu.marginalia.functions.searchquery.query_parser.variant.QueryVariantSet;
+import nu.marginalia.functions.searchquery.query_parser.variant.QueryWord;
 import nu.marginalia.util.language.EnglishDictionary;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.util.ngrams.NGramBloomFilter;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordSpan;
@@ -22,17 +19,13 @@ import java.util.regex.Pattern;
 public class QueryVariants {
     private final KeywordExtractor keywordExtractor;
     private final TermFrequencyDict dict;
-    private final PorterStemmer ps = new PorterStemmer();
 
-    private final NGramBloomFilter nGramBloomFilter;
     private final EnglishDictionary englishDictionary;
     private final ThreadLocal<SentenceExtractor> sentenceExtractor;
 
     public QueryVariants(LanguageModels lm,
                          TermFrequencyDict dict,
-                         NGramBloomFilter nGramBloomFilter,
                          EnglishDictionary englishDictionary) {
-        this.nGramBloomFilter = nGramBloomFilter;
         this.englishDictionary = englishDictionary;
         this.keywordExtractor = new KeywordExtractor();
         this.sentenceExtractor = ThreadLocal.withInitial(() -> new SentenceExtractor(lm));
@@ -40,33 +33,6 @@ public class QueryVariants {
     }
 
 
-    final Pattern numWordBoundary = Pattern.compile("[0-9][a-zA-Z]|[a-zA-Z][0-9]");
-    final Pattern dashBoundary = Pattern.compile("-");
-
-    @AllArgsConstructor
-    private static class Word {
-        public final String stemmed;
-        public final String word;
-        public final String wordOriginal;
-    }
-
-    @AllArgsConstructor @Getter @ToString @EqualsAndHashCode
-    public static class QueryVariant {
-        public final List<String> terms;
-        public final double value;
-    }
-
-    @Getter @ToString
-    public static class QueryVariantSet {
-        final List<QueryVariant> faithful = new ArrayList<>();
-        final List<QueryVariant> alternative = new ArrayList<>();
-
-        final List<Token> nonLiterals = new ArrayList<>();
-
-        public boolean isEmpty() {
-            return faithful.isEmpty() && alternative.isEmpty() && nonLiterals.isEmpty();
-        }
-    }
 
     public QueryVariantSet getQueryVariants(List<Token> query) {
         final JoinedQueryAndNonLiteralTokens joinedQuery = joinQuery(query);
@@ -108,18 +74,10 @@ public class QueryVariants {
             byStart.put(0, elongatedFirstWords);
         }
 
-        final List<List<Word>> goodSpans = getWordSpans(byStart, sentence, livingSpans);
+        final List<List<QueryWord>> goodSpans = getWordSpans(byStart, sentence, livingSpans);
 
         List<List<String>> faithfulQueries = new ArrayList<>();
         List<List<String>> alternativeQueries = new ArrayList<>();
-
-        for (var ls : goodSpans) {
-            faithfulQueries.addAll(createTokens(ls));
-        }
-
-        for (var span : goodSpans) {
-            alternativeQueries.addAll(joinTerms(span));
-        }
 
         for (var ls : goodSpans) {
             var last = ls.get(ls.size() - 1);
@@ -174,105 +132,8 @@ public class QueryVariants {
         return ret;
     }
 
-    private Collection<List<String>> createTokens(List<Word> ls) {
-        List<String> asTokens = new ArrayList<>();
-        List<List<String>> ret = new ArrayList<>();
-
-
-        boolean dash = false;
-        boolean num = false;
-
-        for (var span : ls) {
-            dash |= dashBoundary.matcher(span.word).find();
-            num  |= numWordBoundary.matcher(span.word).find();
-            if (ls.size() == 1 || !isOmittableWord(span.word)) {
-                asTokens.add(span.word);
-            }
-        }
-        ret.add(asTokens);
-
-        if (dash) {
-            ret.addAll(combineDashWords(ls));
-        }
-
-        if (num) {
-            ret.addAll(splitWordNum(ls));
-        }
-
-        return ret;
-    }
-
-    private boolean isOmittableWord(String word) {
-        return switch (word) {
-            case "vs", "or", "and", "versus", "is", "the", "why", "when", "if", "who", "are", "am" -> true;
-            default -> false;
-        };
-    }
-
-    private Collection<? extends List<String>> splitWordNum(List<Word> ls) {
-        List<String> asTokens2 = new ArrayList<>();
-
-        boolean num = false;
-
-        for (var span : ls) {
-            var wordMatcher = numWordBoundary.matcher(span.word);
-            var stemmedMatcher = numWordBoundary.matcher(span.stemmed);
-
-            int ws = 0;
-            int ss = 0;
-            boolean didSplit = false;
-            while (wordMatcher.find(ws) && stemmedMatcher.find(ss)) {
-                ws = wordMatcher.start()+1;
-                ss = stemmedMatcher.start()+1;
-                if (nGramBloomFilter.isKnownNGram(splitAtNumBoundary(span.word, stemmedMatcher.start(), "_"))
-                        || nGramBloomFilter.isKnownNGram(splitAtNumBoundary(span.word, stemmedMatcher.start(), "-")))
-                {
-                    String combined = splitAtNumBoundary(span.word, wordMatcher.start(), "_");
-                    asTokens2.add(combined);
-                    didSplit = true;
-                    num = true;
-                }
-            }
-
-            if (!didSplit) {
-                asTokens2.add(span.word);
-            }
-        }
-
-        if (num) {
-            return List.of(asTokens2);
-        }
-        return Collections.emptyList();
-    }
-
-    private Collection<? extends List<String>> combineDashWords(List<Word> ls) {
-        List<String> asTokens2 = new ArrayList<>();
-        boolean dash = false;
-
-        for (var span : ls) {
-            var matcher = dashBoundary.matcher(span.word);
-            if (matcher.find() && nGramBloomFilter.isKnownNGram(ps.stemWord(dashBoundary.matcher(span.word).replaceAll("")))) {
-                dash = true;
-                String combined = dashBoundary.matcher(span.word).replaceAll("");
-                asTokens2.add(combined);
-            }
-            else {
-                asTokens2.add(span.word);
-            }
-        }
-
-        if (dash) {
-            return List.of(asTokens2);
-        }
-        return Collections.emptyList();
-    }
-
-    private String splitAtNumBoundary(String in, int splitPoint, String joiner) {
-        return in.substring(0, splitPoint+1) + joiner + in.substring(splitPoint+1);
-    }
-
-    private List<List<Word>> getWordSpans(TreeMap<Integer, List<WordSpan>> byStart, DocumentSentence sentence, List<ArrayList<WordSpan>> livingSpans) {
-        List<List<Word>> goodSpans = new ArrayList<>();
+    private List<List<QueryWord>> getWordSpans(TreeMap<Integer, List<WordSpan>> byStart, DocumentSentence sentence, List<ArrayList<WordSpan>> livingSpans) {
+        List<List<QueryWord>> goodSpans = new ArrayList<>();
         for (int i = 0; i < 1; i++) {
             var spans = byStart.get(i);
 
@@ -298,9 +159,9 @@ public class QueryVariants {
                 int end = span.get(span.size()-1).end;
 
                 if (end == sentence.length()) {
-                    var gs = new ArrayList<Word>(span.size());
+                    var gs = new ArrayList<QueryWord>(span.size());
                     for (var s : span) {
-                        gs.add(new Word(sentence.constructStemmedWordFromSpan(s), sentence.constructWordFromSpan(s),
+                        gs.add(new QueryWord(sentence.constructStemmedWordFromSpan(s), sentence.constructWordFromSpan(s),
                                 s.size() == 1 ? sentence.words[s.start] : ""));
                     }
                     goodSpans.add(gs);
@@ -325,38 +186,6 @@ public class QueryVariants {
         return goodSpans;
     }
 
-    private List<List<String>> joinTerms(List<Word> span) {
-        List<List<String>> ret = new ArrayList<>();
-
-        for (int i = 0; i < span.size()-1; i++) {
-            var a = span.get(i);
-            var b = span.get(i+1);
-
-            var stemmed = ps.stemWord(a.word + b.word);
-
-            double scoreCombo = dict.getTermFreqStemmed(stemmed);
-            if (scoreCombo > 10000) {
-                List<String> asTokens = new ArrayList<>();
-
-                for (int j = 0; j < i; j++) {
-                    var word = span.get(j).word;
-                    asTokens.add(word);
-                }
-                {
-                    var word = a.word + b.word;
-                    asTokens.add(word);
-                }
-                for (int j = i+2; j < span.size(); j++) {
-                    var word = span.get(j).word;
-                    asTokens.add(word);
-                }
-
-                ret.add(asTokens);
-            }
-        }
-
-        return ret;
-    }
 
     private JoinedQueryAndNonLiteralTokens joinQuery(List<Token> query) {
         StringJoiner s = new StringJoiner(" ");
