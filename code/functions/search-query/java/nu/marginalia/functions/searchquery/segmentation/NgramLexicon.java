@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class NgramLexicon {
+public class NgramLexicon {
     private final Long2IntOpenCustomHashMap counts = new Long2IntOpenCustomHashMap(
             100_000_000,
             new KeyIsAlreadyHashStrategy()

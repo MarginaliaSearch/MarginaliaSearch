@@ -22,9 +22,15 @@ public class NgramExtractorMain {
     public static void main(String... args) {
     }
 
-    private static List<String> getNgramTerms(Document document) {
+    private static List<String> getNgramTerms(String title, Document document) {
         List<String> terms = new ArrayList<>();
 
+        // Add the title
+        if (title.contains(" ")) {
+            terms.add(title.toLowerCase());
+        }
+
+        // Grab all internal links
         document.select("a[href]").forEach(e -> {
             var href = e.attr("href");
             if (href.contains(":"))
@@ -37,6 +43,43 @@ public class NgramExtractorMain {
                 return;
 
             terms.add(text);
+        });
+
+        // Grab all italicized text
+        document.getElementsByTag("i").forEach(e -> {
+            var text = e.text().toLowerCase();
+            if (!text.contains(" "))
+                return;
+
+            terms.add(text);
+        });
+
+        // Trim the discovered terms
+        terms.replaceAll(s -> {
+
+            // Remove trailing parentheses and their contents
+            if (s.endsWith(")")) {
+                int idx = s.lastIndexOf('(');
+                if (idx > 0) {
+                    return s.substring(0, idx).trim();
+                }
+            }
+
+            // Remove leading "list of "
+            if (s.startsWith("list of ")) {
+                return s.substring("list of ".length());
+            }
+
+            return s;
+        });
+
+        // Remove terms that are too short or too long
+        terms.removeIf(s -> {
+            if (!s.contains(" "))
+                return true;
+            if (s.length() > 64)
+                return true;
+            return false;
         });
 
         return terms;
@@ -56,7 +99,7 @@ public class NgramExtractorMain {
         try (var executor = Executors.newWorkStealingPool()) {
             reader.forEachArticles((title, body) -> {
                 executor.submit(() -> {
-                    var terms = getNgramTerms(Jsoup.parse(body));
+                    var terms = getNgramTerms(title, Jsoup.parse(body));
                     synchronized (known) {
                         for (String term : terms) {
                             if (known.add(hash.hashNearlyASCII(term))) {
@@ -72,7 +115,9 @@ public class NgramExtractorMain {
     }
 
     public static void dumpCounts(Path zimInputFile,
-                                  Path countsOutputFile) throws IOException, InterruptedException
+                                  Path countsOutputFile,
+                                  Path permutationsOutputFile
+                                  ) throws IOException, InterruptedException
     {
         ZIMReader reader = new ZIMReader(new ZIMFile(zimInputFile.toString()));
 
@@ -87,7 +132,7 @@ public class NgramExtractorMain {
                     LongArrayList orderedHashes = new LongArrayList();
                     LongArrayList unorderedHashes = new LongArrayList();
 
-                    for (var sent : getNgramTerms(Jsoup.parse(body))) {
+                    for (var sent : getNgramTerms(title, Jsoup.parse(body))) {
                         String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
 
                         orderedHashes.add(orderedHasher.rollingHash(terms));
@@ -108,6 +153,7 @@ public class NgramExtractorMain {
         }
 
         lexicon.saveCounts(countsOutputFile);
+        lexicon.savePermutations(permutationsOutputFile);
     }
 
 }
