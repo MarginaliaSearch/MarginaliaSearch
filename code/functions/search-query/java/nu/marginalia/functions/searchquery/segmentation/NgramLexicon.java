@@ -1,8 +1,10 @@
 package nu.marginalia.functions.searchquery.segmentation;
 
+import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.longs.LongHash;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import nu.marginalia.LanguageModels;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -23,6 +25,19 @@ public class NgramLexicon {
 
     private static final HasherGroup orderedHasher = HasherGroup.ordered();
     private static final HasherGroup unorderedHasher = HasherGroup.unordered();
+
+    @Inject
+    public NgramLexicon(LanguageModels models) {
+        try {
+            loadCounts(models.segments);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public NgramLexicon() {
+
+    }
 
     public List<SentenceSegment> findSegments(int length, String... parts) {
         // Don't look for ngrams longer than the sentence

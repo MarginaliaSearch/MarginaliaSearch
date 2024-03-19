@@ -1,6 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser.variant;
 
 import ca.rmen.porterstemmer.PorterStemmer;
+import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.variant.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.variant.model.QWordGraph;
 import nu.marginalia.functions.searchquery.segmentation.NgramLexicon;
@@ -15,13 +16,15 @@ public class QueryExpansion {
     private static final PorterStemmer ps = new PorterStemmer();
     private final TermFrequencyDict dict;
     private final NgramLexicon lexicon;
-    List<ExpansionStrategy> expansionStrategies = List.of(
+
+    private final List<ExpansionStrategy> expansionStrategies = List.of(
             this::joinDashes,
             this::splitWordNum,
             this::joinTerms,
             this::createSegments
     );
 
+    @Inject
     public QueryExpansion(TermFrequencyDict dict,
                           NgramLexicon lexicon
                           ) {
@@ -97,6 +100,7 @@ public class QueryExpansion {
 
         String[] words = nodes.stream().map(QWord::word).toArray(String[]::new);
 
+        // Look for known segments within the query
         for (int length = 2; length < Math.min(10, words.length); length++) {
             for (var segment : lexicon.findSegments(length, words)) {
                 int start = segment.start();

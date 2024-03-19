@@ -26,13 +26,13 @@ public class TestLanguageModels {
         var languageModelsHome = getLanguageModelsPath();
 
         return new LanguageModels(
-                languageModelsHome.resolve("ngrams.bin"),
                 languageModelsHome.resolve("tfreq-new-algo3.bin"),
                 languageModelsHome.resolve("opennlp-sentence.bin"),
                 languageModelsHome.resolve("English.RDR"),
                 languageModelsHome.resolve("English.DICT"),
                 languageModelsHome.resolve("opennlp-tokens.bin"),
-                languageModelsHome.resolve("lid.176.ftz")
+                languageModelsHome.resolve("lid.176.ftz"),
+                languageModelsHome.resolve("segments.bin")
         );
     }
 }

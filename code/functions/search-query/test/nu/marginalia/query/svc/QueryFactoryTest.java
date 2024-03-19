@@ -9,7 +9,6 @@ import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.util.language.EnglishDictionary;
-import nu.marginalia.util.ngrams.NGramBloomFilter;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
