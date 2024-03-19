@@ -26,7 +26,7 @@ download_model model/English.DICT https://raw.githubusercontent.com/datquocnguye
 download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.RDR
 download_model model/opennlp-sentence.bin https://mirrors.estointernet.in/apache/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin
 download_model model/opennlp-tokens.bin https://mirrors.estointernet.in/apache/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin
-download_model model/ngrams.bin https://downloads.marginalia.nu/model/ngrams.bin
+download_model model/segments.bin https://downloads.marginalia.nu/model/segments.bin
 download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/tfreq-new-algo3.bin
 download_model model/lid.176.ftz https://downloads.marginalia.nu/model/lid.176.ftz
 

@@ -85,13 +85,14 @@ public class WmsaHome {
         final Path home = getHomePath();
 
         return new LanguageModels(
-                home.resolve("model/ngrams.bin"),
                 home.resolve("model/tfreq-new-algo3.bin"),
                 home.resolve("model/opennlp-sentence.bin"),
                 home.resolve("model/English.RDR"),
                 home.resolve("model/English.DICT"),
                 home.resolve("model/opennlp-tok.bin"),
-                home.resolve("model/lid.176.ftz"));
+                home.resolve("model/lid.176.ftz"),
+                home.resolve("model/segments.bin")
+                );
     }
 
     public static Path getAtagsPath() {

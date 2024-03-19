@@ -9,8 +9,6 @@ import nu.marginalia.actor.task.*;
 import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.storage.model.FileStorageId;
 
-import java.nio.file.Path;
-
 @Singleton
 public class ExecutorExportGrpcService extends ExecutorExportApiGrpc.ExecutorExportApiImplBase {
     private final ExecutorActorControlService actorControlService;
