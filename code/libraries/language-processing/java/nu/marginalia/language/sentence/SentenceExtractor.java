@@ -4,6 +4,7 @@ import com.github.datquocnguyen.RDRPOSTagger;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import opennlp.tools.sentdetect.SentenceDetectorME;
@@ -32,6 +33,8 @@ public class SentenceExtractor {
     private SentenceDetectorME sentenceDetector;
     private static RDRPOSTagger rdrposTagger;
 
+    private static NgramLexicon ngramLexicon = null;
+
     private final PorterStemmer porterStemmer = new PorterStemmer();
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
 
@@ -45,7 +48,8 @@ public class SentenceExtractor {
     private static final int MAX_TEXT_LENGTH = 65536;
 
     @SneakyThrows @Inject
-    public SentenceExtractor(LanguageModels models) {
+    public SentenceExtractor(LanguageModels models)
+    {
         try (InputStream modelIn = new FileInputStream(models.openNLPSentenceDetectionData.toFile())) {
             var sentenceModel = new SentenceModel(modelIn);
             sentenceDetector = new SentenceDetectorME(sentenceModel);
@@ -55,7 +59,9 @@ public class SentenceExtractor {
             logger.error("Could not initialize sentence detector", ex);
         }
 
-        synchronized (RDRPOSTagger.class) {
+        synchronized (this) {
+            ngramLexicon = new NgramLexicon(models);
+
             try {
                 rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
             }
@@ -128,8 +134,34 @@ public class SentenceExtractor {
         var seps = wordsAndSeps.separators;
         var lc = SentenceExtractorStringUtils.toLowerCaseStripPossessive(wordsAndSeps.words);
 
+        List<String[]> ngrams = ngramLexicon.findSegmentsStrings(2, 12, words);
+
+        String[] ngramsWords = new String[ngrams.size()];
+        String[] ngramsStemmedWords = new String[ngrams.size()];
+        for (int i = 0; i < ngrams.size(); i++) {
+            String[] ngram = ngrams.get(i);
+
+            StringJoiner ngramJoiner = new StringJoiner("_");
+            StringJoiner stemmedJoiner = new StringJoiner("_");
+            for (String s : ngram) {
+                ngramJoiner.add(s);
+                stemmedJoiner.add(porterStemmer.stem(s));
+            }
+
+            ngramsWords[i] = ngramJoiner.toString();
+            ngramsStemmedWords[i] = stemmedJoiner.toString();
+        }
+
+
         return new DocumentSentence(
-            SentenceExtractorStringUtils.sanitizeString(text), words, seps, lc, rdrposTagger.tagsForEnSentence(words), stemSentence(lc)
+            SentenceExtractorStringUtils.sanitizeString(text),
+                words,
+                seps,
+                lc,
+                rdrposTagger.tagsForEnSentence(words),
+                stemSentence(lc),
+                ngramsWords,
+                ngramsStemmedWords
         );
     }
 
@@ -195,7 +227,35 @@ public class SentenceExtractor {
                 fullString = "";
             }
 
-            ret[i] = new DocumentSentence(fullString, tokens[i], separators[i], tokensLc[i], posTags[i], stemmedWords[i]);
+            List<String[]> ngrams = ngramLexicon.findSegmentsStrings(2, 12, tokens[i]);
+
+            String[] ngramsWords = new String[ngrams.size()];
+            String[] ngramsStemmedWords = new String[ngrams.size()];
+
+            for (int j = 0; j < ngrams.size(); j++) {
+                String[] ngram = ngrams.get(j);
+
+                StringJoiner ngramJoiner = new StringJoiner("_");
+                StringJoiner stemmedJoiner = new StringJoiner("_");
+                for (String s : ngram) {
+                    ngramJoiner.add(s);
+                    stemmedJoiner.add(porterStemmer.stem(s));
+                }
+
+                ngramsWords[j] = ngramJoiner.toString();
+                ngramsStemmedWords[j] = stemmedJoiner.toString();
+            }
+
+
+            ret[i] = new DocumentSentence(fullString,
+                    tokens[i],
+                    separators[i],
+                    tokensLc[i],
+                    posTags[i],
+                    stemmedWords[i],
+                    ngramsWords,
+                    ngramsStemmedWords
+                    );
         }
         return ret;
     }

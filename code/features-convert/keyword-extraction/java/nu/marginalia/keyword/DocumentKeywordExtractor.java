@@ -1,5 +1,6 @@
 package nu.marginalia.keyword;
 
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -15,11 +16,13 @@ public class DocumentKeywordExtractor {
 
     private final KeywordExtractor keywordExtractor;
     private final TermFrequencyDict dict;
+    private final NgramLexicon ngramLexicon;
 
 
     @Inject
-    public DocumentKeywordExtractor(TermFrequencyDict dict) {
+    public DocumentKeywordExtractor(TermFrequencyDict dict, NgramLexicon ngramLexicon) {
         this.dict = dict;
+        this.ngramLexicon = ngramLexicon;
         this.keywordExtractor = new KeywordExtractor();
     }
 
@@ -131,6 +134,17 @@ public class DocumentKeywordExtractor {
 
                 wordsBuilder.add(rep.word, meta);
             }
+
+            for (int i = 0; i < sent.ngrams.length; i++) {
+                var ngram = sent.ngrams[i];
+                var ngramStemmed = sent.ngramStemmed[i];
+
+                long meta = metadata.getMetadataForWord(ngramStemmed);
+                assert meta != 0L : "Missing meta for " + ngram;
+
+                wordsBuilder.add(ngram, meta);
+            }
+
         }
     }
 

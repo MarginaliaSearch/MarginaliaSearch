@@ -1,7 +1,10 @@
 package nu.marginalia;
 
+import lombok.Builder;
+
 import java.nio.file.Path;
 
+@Builder
 public class LanguageModels {
     public final Path termFrequencies;
 

@@ -1,4 +1,4 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import org.apache.commons.lang3.StringUtils;

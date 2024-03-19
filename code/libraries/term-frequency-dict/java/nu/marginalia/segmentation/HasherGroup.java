@@ -1,11 +1,11 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
 import nu.marginalia.hash.MurmurHash3_128;
 
 /** A group of hash functions that can be used to hash a sequence of strings,
  * that also has an inverse operation that can be used to remove a previously applied
  * string from the sequence. */
-sealed interface HasherGroup {
+public sealed interface HasherGroup {
     /** Apply a hash to the accumulator */
     long apply(long acc, long add);
 
