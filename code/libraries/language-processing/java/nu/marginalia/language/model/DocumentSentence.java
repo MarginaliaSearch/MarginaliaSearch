@@ -16,12 +16,24 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
     public final String[] wordsLowerCase;
     public final String[] posTags;
     public final String[] stemmedWords;
+    public final String[] ngrams;
+    public final String[] ngramStemmed;
 
     private final BitSet isStopWord;
 
+
     public SoftReference<WordSpan[]> keywords;
 
-    public DocumentSentence(String originalSentence, String[] words, int[] separators, String[] wordsLowerCase, String[] posTags, String[] stemmedWords) {
+    public DocumentSentence(String originalSentence,
+                            String[] words,
+                            int[] separators,
+                            String[] wordsLowerCase,
+                            String[] posTags,
+                            String[] stemmedWords,
+                            String[] ngrams,
+                            String[] ngramsStemmed
+                            )
+    {
         this.originalSentence = originalSentence;
         this.words = words;
         this.separators = separators;
@@ -30,6 +42,9 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
         this.stemmedWords = stemmedWords;
 
         isStopWord = new BitSet(words.length);
+
+        this.ngrams = ngrams;
+        this.ngramStemmed = ngramsStemmed;
 
         for (int i = 0; i < words.length; i++) {
             if (WordPatterns.isStopWord(words[i]))

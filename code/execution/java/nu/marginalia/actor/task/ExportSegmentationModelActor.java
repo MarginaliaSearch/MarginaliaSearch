@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
-import nu.marginalia.functions.searchquery.segmentation.NgramExtractorMain;
+import nu.marginalia.segmentation.NgramExtractorMain;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;

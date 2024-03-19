@@ -1,11 +1,13 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.longs.LongHash;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.LanguageModels;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -16,11 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Singleton
 public class NgramLexicon {
-    private final Long2IntOpenCustomHashMap counts = new Long2IntOpenCustomHashMap(
-            100_000_000,
-            new KeyIsAlreadyHashStrategy()
-            );
+    private final Long2IntOpenCustomHashMap counts;
     private final LongOpenHashSet permutations = new LongOpenHashSet();
 
     private static final HasherGroup orderedHasher = HasherGroup.ordered();
@@ -28,17 +28,35 @@ public class NgramLexicon {
 
     @Inject
     public NgramLexicon(LanguageModels models) {
-        try {
-            loadCounts(models.segments);
+        try (var dis = new DataInputStream(new BufferedInputStream(Files.newInputStream(models.segments)))) {
+            long size = dis.readInt();
+            counts = new Long2IntOpenCustomHashMap(
+                    (int) size,
+                    new KeyIsAlreadyHashStrategy()
+            );
+
+            for (int i = 0; i < size; i++) {
+                counts.put(dis.readLong(), dis.readInt());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public NgramLexicon() {
-
+        counts = new Long2IntOpenCustomHashMap(100_000_000, new KeyIsAlreadyHashStrategy());
     }
 
+    public List<String[]> findSegmentsStrings(int minLength, int maxLength, String... parts) {
+        List<SentenceSegment> segments = new ArrayList<>();
+
+        for (int i = minLength; i <= maxLength; i++) {
+            segments.addAll(findSegments(i, parts));
+        }
+
+        return segments.stream().map(seg -> seg.project(parts)).toList();
+    }
+    
     public List<SentenceSegment> findSegments(int length, String... parts) {
         // Don't look for ngrams longer than the sentence
         if (parts.length < length) return List.of();
@@ -96,15 +114,6 @@ public class NgramLexicon {
         permutations.add(hashUnordered);
     }
 
-    public void loadCounts(Path path) throws IOException {
-        try (var dis = new DataInputStream(Files.newInputStream(path))) {
-            long size = dis.readInt();
-
-            for (int i = 0; i < size; i++) {
-                counts.put(dis.readLong(), dis.readInt());
-            }
-        }
-    }
 
     public void loadPermutations(Path path) throws IOException {
         try (var dis = new DataInputStream(Files.newInputStream(path))) {

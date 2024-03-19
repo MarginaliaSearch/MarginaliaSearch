@@ -1,5 +1,6 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
+import nu.marginalia.segmentation.HasherGroup;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

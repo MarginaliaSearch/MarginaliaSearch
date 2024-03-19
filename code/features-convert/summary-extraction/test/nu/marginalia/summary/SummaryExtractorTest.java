@@ -5,6 +5,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.summary.heuristic.*;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;
@@ -25,7 +26,9 @@ class SummaryExtractorTest {
 
     @BeforeEach
     public void setUp() {
-        keywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+        keywordExtractor = new DocumentKeywordExtractor(
+                new TermFrequencyDict(WmsaHome.getLanguageModels()),
+                new NgramLexicon(WmsaHome.getLanguageModels()));
         setenceExtractor = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         summaryExtractor = new SummaryExtractor(255,

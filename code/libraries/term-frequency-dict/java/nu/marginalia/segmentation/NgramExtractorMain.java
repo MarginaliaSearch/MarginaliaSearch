@@ -1,4 +1,4 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
 import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.hash.MurmurHash3_128;

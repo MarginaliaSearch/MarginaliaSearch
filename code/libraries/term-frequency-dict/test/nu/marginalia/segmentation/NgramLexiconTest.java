@@ -1,4 +1,4 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

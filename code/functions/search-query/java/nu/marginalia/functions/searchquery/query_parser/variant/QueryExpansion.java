@@ -4,7 +4,7 @@ import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.variant.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.variant.model.QWordGraph;
-import nu.marginalia.functions.searchquery.segmentation.NgramLexicon;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
 

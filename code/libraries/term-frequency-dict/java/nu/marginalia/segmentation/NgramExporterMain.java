@@ -1,7 +1,6 @@
-package nu.marginalia.functions.searchquery.segmentation;
+package nu.marginalia.segmentation;
 
-import nu.marginalia.WmsaHome;
-import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.LanguageModels;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,10 +14,11 @@ public class NgramExporterMain {
     }
 
     static void trial() throws IOException {
-        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
-
-        NgramLexicon lexicon = new NgramLexicon();
-        lexicon.loadCounts(Path.of("/home/vlofgren/ngram-counts.bin"));
+        NgramLexicon lexicon = new NgramLexicon(
+                LanguageModels.builder()
+                        .segments(Path.of("/home/vlofgren/ngram-counts.bin"))
+                        .build()
+        );
 
         System.out.println("Loaded!");
 
