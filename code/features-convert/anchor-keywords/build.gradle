@@ -6,7 +6,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
@@ -23,6 +23,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
     implementation libs.guice
+    implementation libs.trove
     implementation libs.bundles.mariadb
     implementation libs.duckdb
     implementation libs.notnull
