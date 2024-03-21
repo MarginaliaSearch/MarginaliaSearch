@@ -23,6 +23,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
     implementation libs.guice
+    implementation libs.trove
     implementation libs.bundles.mariadb
     implementation libs.duckdb
     implementation libs.notnull
