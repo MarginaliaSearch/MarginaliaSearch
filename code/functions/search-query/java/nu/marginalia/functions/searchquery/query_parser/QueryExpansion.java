@@ -1,9 +1,9 @@
-package nu.marginalia.functions.searchquery.query_parser.variant;
+package nu.marginalia.functions.searchquery.query_parser;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
-import nu.marginalia.functions.searchquery.query_parser.variant.model.QWord;
-import nu.marginalia.functions.searchquery.query_parser.variant.model.QWordGraph;
+import nu.marginalia.functions.searchquery.query_parser.model.QWord;
+import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +40,7 @@ public class QueryExpansion {
             strategy.expand(graph);
         }
 
-        return null;
+        return graph;
     }
 
     private static final Pattern dashPattern = Pattern.compile("-");
