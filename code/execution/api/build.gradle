@@ -8,7 +8,7 @@ jar.archiveBaseName = 'execution-api'
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
