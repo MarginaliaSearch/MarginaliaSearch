@@ -2,6 +2,7 @@ package nu.marginalia.converting.writer;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -61,6 +62,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     }
 
     @Override
+    @SneakyThrows
     public void writeProcessedDomain(ProcessedDomain domain) {
         var results = ForkJoinPool.commonPool().invokeAll(
                 writeTasks(domain)
