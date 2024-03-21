@@ -1,4 +1,4 @@
-package nu.marginalia.functions.searchquery.query_parser.variant.model;
+package nu.marginalia.functions.searchquery.query_parser.model;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 

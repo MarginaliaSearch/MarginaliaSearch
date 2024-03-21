@@ -1,4 +1,4 @@
-package nu.marginalia.functions.searchquery.query_parser.variant.model;
+package nu.marginalia.functions.searchquery.query_parser.model;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,8 +15,7 @@ import java.util.stream.Stream;
 public class QWordGraph implements Iterable<QWord> {
 
 
-    public record QWordGraphLink(QWord from, QWord to) {
-    }
+    public record QWordGraphLink(QWord from, QWord to) {}
 
     private final List<QWordGraphLink> links = new ArrayList<>();
     private final Map<QWord, List<QWord>> fromTo = new HashMap<>();
@@ -121,8 +120,6 @@ public class QWordGraph implements Iterable<QWord> {
     // understanding which vertexes can be re-ordered without changing
     // the semantics of the encoded query.
     public boolean isBypassed(QWord word, QWord begin, QWord end) {
-        assert word.isOriginal() : "Can only bypass original words";
-
         Set<QWord> edge = new HashSet<>();
         Set<QWord> visited = new HashSet<>();
 
@@ -163,6 +160,7 @@ public class QWordGraph implements Iterable<QWord> {
         List<QWord> edge = new ArrayList<>();
         List<QWord> visited = new ArrayList<>();
 
+        visited.add(begin);
         edge.add(begin);
 
         while (!edge.isEmpty()) {
@@ -172,7 +170,9 @@ public class QWordGraph implements Iterable<QWord> {
                 if (Objects.equals(w, end))
                     continue;
 
-                assert (!w.isEnd() && end.isEnd()) : "Graph has a path beyond the specified end vertex";
+                if (w.isEnd()) {
+                    assert end.isEnd() : "Graph has a path beyond the specified end vertex " + end;
+                }
 
                 next.addAll(getNext(w));
             }
@@ -182,7 +182,7 @@ public class QWordGraph implements Iterable<QWord> {
             edge = next;
         }
 
-        return visited;
+        return visited.stream().distinct().toList();
     }
 
     /** Returns a list of subgraphs that are connected on the path from
@@ -201,7 +201,7 @@ public class QWordGraph implements Iterable<QWord> {
 
         List<QWord> points = nodesBetween(begin, end)
                 .stream()
-                .filter(w -> isBypassed(w, begin, end))
+                .filter(w -> !isBypassed(w, begin, end))
                 .toList();
 
         for (int i = 0; i < points.size() - 1; i++) {
@@ -214,6 +214,36 @@ public class QWordGraph implements Iterable<QWord> {
         return subgraphs;
     }
 
+    public String compileToQuery() {
+        return compileToQuery(QWord.beg(), QWord.end());
+    }
+
+    public String compileToQuery(QWord begin, QWord end) {
+        StringJoiner sj = new StringJoiner(" ");
+
+        for (var subgraph : getSubgraphs(begin, end)) {
+            if (getNext(subgraph.from).equals(List.of(subgraph.to))) {
+                if (subgraph.from.isBeg())
+                    continue;
+
+                sj.add(subgraph.from.word());
+            }
+            else {
+                StringJoiner branchJoiner = new StringJoiner(" | ", "( ", " )");
+                if (Objects.equals(subgraph.from, begin)) {
+                    for (QWord path : getNext(subgraph.from)) {
+                        branchJoiner.add(compileToQuery(path, subgraph.to));
+                    }
+                }
+                else {
+                    branchJoiner.add(compileToQuery(subgraph.from, subgraph.to));
+                }
+                sj.add(branchJoiner.toString());
+            }
+        }
+
+        return sj.toString();
+    }
 
     @NotNull
     @Override

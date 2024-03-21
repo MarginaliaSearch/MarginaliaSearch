@@ -11,8 +11,6 @@ import nu.marginalia.language.WordPatterns;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
-import nu.marginalia.functions.searchquery.query_parser.QueryPermutation;
-import nu.marginalia.functions.searchquery.query_parser.QueryVariants;
 import nu.marginalia.functions.searchquery.query_parser.token.Token;
 import nu.marginalia.functions.searchquery.query_parser.token.TokenType;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -29,43 +27,19 @@ public class QueryFactory {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
-    private final ThreadLocal<QueryVariants> queryVariants;
     private final QueryParser queryParser = new QueryParser();
 
 
     @Inject
     public QueryFactory(LanguageModels lm,
                         TermFrequencyDict dict,
-                        EnglishDictionary englishDictionary) {
-        this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, englishDictionary));
+                        EnglishDictionary englishDictionary)
+    {
     }
 
 
-    public QueryPermutation getQueryPermutation() {
-        return new QueryPermutation(queryVariants.get());
-    }
 
     public ProcessedQuery createQuery(QueryParams params) {
-        final var processedQuery =  createQuery(getQueryPermutation(), params);
-        final List<SearchSubquery> subqueries = processedQuery.specs.subqueries;
-
-        // There used to be a piece of logic here that would try to figure out which one of these subqueries were the "best",
-        // it's gone for the moment, but it would be neat if it resurrected somehow
-
-        trimArray(subqueries, RETAIN_QUERY_VARIANT_COUNT);
-
-        return processedQuery;
-    }
-
-    private void trimArray(List<?> arr, int maxSize) {
-        if (arr.size() > maxSize) {
-            arr.subList(0, arr.size() - maxSize).clear();
-        }
-    }
-
-    public ProcessedQuery createQuery(QueryPermutation queryPermutation,
-                                      QueryParams params)
-    {
         final var query = params.humanQuery();
 
         if (query.length() > 1000) {
@@ -100,17 +74,19 @@ public class QueryFactory {
             t.visit(qualityLimits);
         }
 
-        var queryPermutations = queryPermutation.permuteQueriesNew(basicQuery);
+//        var queryPermutations = queryPermutation.permuteQueriesNew(basicQuery);
         List<SearchSubquery> subqueries = new ArrayList<>();
+        QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(basicQuery);
+        domain = termsAccumulator.domain;
 
-        for (var parts : queryPermutations) {
-            QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(parts);
-
-            domain = termsAccumulator.domain;
-
-            SearchSubquery subquery = termsAccumulator.createSubquery();
-            subqueries.add(subquery);
-        }
+//        for (var parts : queryPermutations) {
+//            QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(basicQuery);
+//
+//            domain = termsAccumulator.domain;
+//
+//            SearchSubquery subquery = termsAccumulator.createSubquery();
+//            subqueries.add(subquery);
+//        }
 
         List<Integer> domainIds = params.domainIds();
 
