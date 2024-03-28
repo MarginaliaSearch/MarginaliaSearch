@@ -370,7 +370,9 @@ public class QWordGraph implements Iterable<QWord> {
                     }
                 }
 
-                var branches = pathsByCommonWord.entrySet().stream().map(e -> {
+                var branches = pathsByCommonWord.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey(reachability.topologicalComparator()))
+                        .map(e -> {
                             String commonWord = e.getKey().word();
                             String branchPart = new WordPaths(e.getValue()).render(reachability);
                             return STR."\{commonWord} \{branchPart}";
@@ -382,7 +384,7 @@ public class QWordGraph implements Iterable<QWord> {
             }
 
             // Remove any double spaces that may have been introduced
-            return concat.toString().replaceAll("\\s+", " ");
+            return concat.toString().replaceAll("\\s+", " ").trim();
         }
 
 

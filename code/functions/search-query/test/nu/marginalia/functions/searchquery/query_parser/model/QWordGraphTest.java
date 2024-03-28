@@ -99,8 +99,9 @@ class QWordGraphTest {
         QWordGraph graph = new QWordGraph("a", "b", "c");
         graph.addVariant(graph.node("b"), "d");
 
-        assertEquals(" ^ a(b|d)c $ ", graph.compileToQuery());
+        assertEquals("a c ( b | d )", graph.compileToQuery());
     }
+
     @Test
     void testCompile2() {
         // Construct a graph like
@@ -108,7 +109,7 @@ class QWordGraphTest {
         // ^ -  a - b - c - $
         QWordGraph graph = new QWordGraph("a", "b", "c");
 
-        assertEquals(" ^ abc $ ", graph.compileToQuery());
+        assertEquals("a b c", graph.compileToQuery());
     }
 
     @Test
@@ -119,7 +120,7 @@ class QWordGraphTest {
         //   \- d -/
         QWordGraph graph = new QWordGraph("a", "b", "c");
         graph.addVariant(graph.node("a"), "d");
-        assertEquals(" ^ (a|d)bc $ ", graph.compileToQuery());
+        assertEquals("b c ( a | d )", graph.compileToQuery());
     }
 
     @Test
@@ -130,7 +131,7 @@ class QWordGraphTest {
         //           \- d -/
         QWordGraph graph = new QWordGraph("a", "b", "c");
         graph.addVariant(graph.node("c"), "d");
-        assertEquals(" ^ ab(c|d) $ ", graph.compileToQuery());
+        assertEquals("a b ( c | d )", graph.compileToQuery());
     }
 
     @Test
@@ -143,6 +144,6 @@ class QWordGraphTest {
         QWordGraph graph = new QWordGraph("a", "b", "c");
         graph.addVariant(graph.node("c"), "d");
         graph.addVariant(graph.node("b"), "e");
-        assertEquals(" ^ a(b|e)(c|d) $ ", graph.compileToQuery());
+        assertEquals("a ( b ( c | d ) | c e )", graph.compileToQuery());
     }
 }
