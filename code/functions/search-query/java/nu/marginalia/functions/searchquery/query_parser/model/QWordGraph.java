@@ -49,9 +49,9 @@ public class QWordGraph implements Iterable<QWord> {
 
         var newWord = new QWord(wordId++, original, word);
 
-        for (var prev : getPrev(original))
+        for (var prev : getPrevOriginal(original))
             addLink(prev, newWord);
-        for (var next : getNext(original))
+        for (var next : getNextOriginal(original))
             addLink(newWord, next);
     }
 
@@ -93,6 +93,12 @@ public class QWordGraph implements Iterable<QWord> {
                 .collect(Collectors.toList());
     }
 
+    public QWord node(String word) {
+        return nodes().stream()
+                .filter(n -> n.word().equals(word))
+                .findFirst()
+                .orElseThrow();
+    }
 
     public List<QWord> getNext(QWord word) {
         return fromTo.getOrDefault(word, List.of());
@@ -147,34 +153,25 @@ public class QWordGraph implements Iterable<QWord> {
         return false;
     }
 
-    /** Returns a set of all nodes that are between 'begin' and 'end' in the graph,
-     * including the terminal nodes. This is useful for breaking up the graph into
-     * smaller components that can be evaluated in any order.
-     * <p></p>
-     * It is assumed that there is a path from 'begin' to 'end' in the graph, and no
-     * other paths that bypass 'end'.
-     * <p></p>
-     * The nodes are returned in the order they are encountered in a breadth-first search.
-     */
-    public List<QWord> nodesBetween(QWord begin, QWord end) {
-        List<QWord> edge = new ArrayList<>();
-        List<QWord> visited = new ArrayList<>();
+    public Map<QWord, Set<QWord>> forwardReachability() {
+        Map<QWord, Set<QWord>> ret = new HashMap<>();
 
-        visited.add(begin);
-        edge.add(begin);
+        Set<QWord> edge = Set.of(QWord.beg());
+        Set<QWord> visited = new HashSet<>();
 
         while (!edge.isEmpty()) {
-            List<QWord> next = new ArrayList<>();
+            Set<QWord> next = new LinkedHashSet<>();
 
             for (var w : edge) {
-                if (Objects.equals(w, end))
-                    continue;
 
-                if (w.isEnd()) {
-                    assert end.isEnd() : "Graph has a path beyond the specified end vertex " + end;
+                for (var n : getNext(w)) {
+                    var set = ret.computeIfAbsent(n, k -> new HashSet<>());
+
+                    set.add(w);
+                    set.addAll(ret.getOrDefault(w, Set.of()));
+
+                    next.add(n);
                 }
-
-                next.addAll(getNext(w));
             }
 
             next.removeAll(visited);
@@ -182,67 +179,299 @@ public class QWordGraph implements Iterable<QWord> {
             edge = next;
         }
 
-        return visited.stream().distinct().toList();
+        return ret;
     }
 
-    /** Returns a list of subgraphs that are connected on the path from
-     * 'begin' to 'end'.  This is useful for breaking up the graph into
-     * smaller components that can be evaluated in any order.
-     * <p></p>
-     * The subgraphs are specified by their predecessor and successor nodes,
-     *
-     */
-    public List<QWordGraphLink> getSubgraphs(QWord begin, QWord end) {
-        // Short-circuit for the common and simple case
-        if (getNext(begin).equals(List.of(end)))
-            return List.of(new QWordGraphLink(begin, end));
+    public Map<QWord, Set<QWord>> reverseReachability() {
+        Map<QWord, Set<QWord>> ret = new HashMap<>();
 
-        List<QWordGraphLink> subgraphs = new ArrayList<>();
+        Set<QWord> edge = Set.of(QWord.end());
+        Set<QWord> visited = new HashSet<>();
 
-        List<QWord> points = nodesBetween(begin, end)
-                .stream()
-                .filter(w -> !isBypassed(w, begin, end))
-                .toList();
+        while (!edge.isEmpty()) {
+            Set<QWord> prev = new LinkedHashSet<>();
 
-        for (int i = 0; i < points.size() - 1; i++) {
-            var a = points.get(i);
-            var b = points.get(i+1);
+            for (var w : edge) {
 
-            subgraphs.add(new QWordGraphLink(a, b));
+                for (var p : getPrev(w)) {
+                    var set = ret.computeIfAbsent(p, k -> new HashSet<>());
+
+                    set.add(w);
+                    set.addAll(ret.getOrDefault(w, Set.of()));
+
+                    prev.add(p);
+                }
+            }
+
+            prev.removeAll(visited);
+            visited.addAll(prev);
+            edge = prev;
         }
 
-        return subgraphs;
+        return ret;
+    }
+
+    public record ReachabilityData(List<QWord> sortedNodes,
+                            Map<QWord, Integer> sortOrder,
+
+                            Map<QWord, Set<QWord>> forward,
+                            Map<QWord, Set<QWord>> reverse)
+    {
+        public Set<QWord> forward(QWord node) {
+            return forward.getOrDefault(node, Set.of());
+        }
+        public Set<QWord> reverse(QWord node) {
+            return reverse.getOrDefault(node, Set.of());
+        }
+
+        public Comparator<QWord> topologicalComparator() {
+            return Comparator.comparing(sortOrder::get);
+        }
+
+    }
+
+    /** Gather data about graph reachability, including the topological order of nodes */
+    public ReachabilityData reachability() {
+        var forwardReachability = forwardReachability();
+        var reverseReachability = reverseReachability();
+
+        List<QWord> nodes = new ArrayList<>(nodes());
+        nodes.sort(new SetMembershipComparator<>(forwardReachability));
+
+        Map<QWord, Integer> topologicalOrder = new HashMap<>();
+        for (int i = 0; i < nodes.size(); i++) {
+            topologicalOrder.put(nodes.get(i), i);
+        }
+
+        return new ReachabilityData(nodes, topologicalOrder, forwardReachability, reverseReachability);
+    }
+
+    static class SetMembershipComparator<T> implements Comparator<T> {
+        private final Map<T, Set<T>> membership;
+
+        SetMembershipComparator(Map<T, Set<T>> membership) {
+            this.membership = membership;
+        }
+
+        @Override
+        public int compare(T o1, T o2) {
+            return Boolean.compare(isIn(o1, o2), isIn(o2, o1));
+        }
+
+        private boolean isIn(T a, T b) {
+            return membership.getOrDefault(a, Set.of()).contains(b);
+        }
     }
 
     public String compileToQuery() {
-        return compileToQuery(QWord.beg(), QWord.end());
+        var wp = new WordPaths(QWord.beg(), QWord.end());
+        return wp.render(reachability());
     }
 
-    public String compileToQuery(QWord begin, QWord end) {
-        StringJoiner sj = new StringJoiner(" ");
 
-        for (var subgraph : getSubgraphs(begin, end)) {
-            if (getNext(subgraph.from).equals(List.of(subgraph.to))) {
-                if (subgraph.from.isBeg())
-                    continue;
+    class WordPaths {
+        private final Set<WordPath> paths;
 
-                sj.add(subgraph.from.word());
-            }
-            else {
-                StringJoiner branchJoiner = new StringJoiner(" | ", "( ", " )");
-                if (Objects.equals(subgraph.from, begin)) {
-                    for (QWord path : getNext(subgraph.from)) {
-                        branchJoiner.add(compileToQuery(path, subgraph.to));
-                    }
-                }
-                else {
-                    branchJoiner.add(compileToQuery(subgraph.from, subgraph.to));
-                }
-                sj.add(branchJoiner.toString());
-            }
+        public final QWord begin;
+        public final QWord end;
+
+        public WordPaths(Collection<WordPath> paths) {
+            this.paths = Collections.unmodifiableSet(new HashSet<>(paths));
+
+            begin = null;
+            end = null;
         }
 
-        return sj.toString();
+        public WordPaths(QWord begin, QWord end) {
+            this.begin = begin;
+            this.end = end;
+
+            this.paths = Collections.unmodifiableSet(listPaths());
+        }
+
+        public String render(ReachabilityData reachability) {
+            if (paths.size() == 1) {
+                return paths.iterator().next().stream().map(QWord::word).collect(Collectors.joining(" "));
+            }
+
+            Map<QWord, Integer> commonality = paths.stream().flatMap(WordPath::stream)
+                    .collect(Collectors.groupingBy(w -> w, Collectors.summingInt(w -> 1)));
+
+            Set<QWord> commonToAll = new HashSet<>();
+            Set<QWord> notCommonToAll = new HashSet<>();
+
+            commonality.forEach((k, v) -> {
+                if (v == paths.size()) {
+                    commonToAll.add(k);
+                }
+                else {
+                    notCommonToAll.add(k);
+                }
+            });
+
+            StringJoiner concat = new StringJoiner(" ");
+            if (!commonToAll.isEmpty()) { // Case where one or more words are common to all paths
+
+                commonToAll.stream()
+                        .sorted(reachability.topologicalComparator())
+                        .map(QWord::word)
+                        .forEach(concat::add);
+
+                // Deal portion of the paths that do not all share a common word
+                if (!notCommonToAll.isEmpty()) {
+
+                    List<WordPath> nonOverlappingPortions = new ArrayList<>();
+
+                    for (var path : paths) {
+                        // Project the path onto the divergent nodes (i.e. remove common nodes)
+                        var np = path.project(notCommonToAll);
+                        if (np.isEmpty())
+                            continue;
+                        nonOverlappingPortions.add(np);
+                    }
+
+                    if (nonOverlappingPortions.size() > 1) {
+                        var wp = new WordPaths(nonOverlappingPortions);
+                        concat.add(wp.render(reachability));
+                    }
+                    else if (!nonOverlappingPortions.isEmpty()) {
+                        var wp = new WordPaths(nonOverlappingPortions);
+                        concat.add(wp.render(reachability));
+                    }
+                }
+            }
+            else if (commonality.size() > 1) { // The case where no words are common to all paths
+
+                // Sort the words by commonality, so that we can consider the most common words first
+                List<QWord> byCommonality = commonality.entrySet().stream().sorted(Map.Entry.comparingByValue()).map(Map.Entry::getKey).collect(Collectors.toList()).reversed();
+
+                Map<QWord, List<WordPath>> pathsByCommonWord = new HashMap<>();
+
+                // Mutable copy of the paths
+                List<WordPath> allDivergentPaths = new ArrayList<>(paths);
+
+                for (var qw : byCommonality) {
+                    if (allDivergentPaths.isEmpty())
+                        break;
+
+                    var iter = allDivergentPaths.iterator();
+                    while (iter.hasNext()) {
+                        var path = iter.next();
+
+                        if (!path.contains(qw)) {
+                            continue;
+                        }
+
+                        pathsByCommonWord
+                                .computeIfAbsent(qw, k -> new ArrayList<>())
+                                .add(path.without(qw)); // Remove the common word from the path
+
+                        iter.remove();
+                    }
+                }
+
+                var branches = pathsByCommonWord.entrySet().stream().map(e -> {
+                            String commonWord = e.getKey().word();
+                            String branchPart = new WordPaths(e.getValue()).render(reachability);
+                            return STR."\{commonWord} \{branchPart}";
+                        })
+                        .collect(Collectors.joining(" | ", " ( ", " ) "));
+
+                concat.add(branches);
+
+            }
+
+            // Remove any double spaces that may have been introduced
+            return concat.toString().replaceAll("\\s+", " ");
+        }
+
+
+        public Set<WordPath> listPaths() {
+            assert begin != null;
+            assert end != null;
+
+            Set<WordPath> paths = new HashSet<>();
+            listPaths(paths, new LinkedList<>(), begin, end);
+            return paths;
+        }
+
+        private void listPaths(Set<WordPath> acc,
+                               LinkedList<QWord> stack,
+                               QWord start,
+                               QWord end)
+        {
+            stack.addLast(start);
+
+            if (Objects.equals(start, end)) {
+                var nodes = new HashSet<>(stack);
+
+                nodes.remove(this.begin);
+                nodes.remove(this.end);
+
+                acc.add(new WordPath(nodes));
+            }
+            else {
+                for (var next : getNext(start)) {
+                    listPaths(acc, stack, next, end);
+                }
+            }
+
+            stack.removeLast();
+        }
+    }
+
+    public static class WordPath {
+        private final Set<QWord> nodes;
+
+        WordPath(Collection<QWord> nodes) {
+            this.nodes = new HashSet<>(nodes);
+        }
+
+        public boolean contains(QWord node) {
+            return nodes.contains(node);
+        }
+
+        public WordPath without(QWord word) {
+            Set<QWord> newNodes = new HashSet<>(nodes);
+            newNodes.remove(word);
+            return new WordPath(newNodes);
+        }
+
+        public Stream<QWord> stream() {
+            return nodes.stream();
+        }
+
+        public WordPath project(Set<QWord> nodes) {
+            return new WordPath(this.nodes.stream().filter(nodes::contains).collect(Collectors.toSet()));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            WordPath wordPath = (WordPath) o;
+
+            return nodes.equals(wordPath.nodes);
+        }
+
+        public boolean isEmpty() {
+            return nodes.isEmpty();
+        }
+
+        public int size() {
+            return nodes.size();
+        }
+
+        @Override
+        public int hashCode() {
+            return nodes.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return STR."WordPath{nodes=\{nodes}\{'}'}";
+        }
     }
 
     @NotNull
@@ -258,7 +487,7 @@ public class QWordGraph implements Iterable<QWord> {
 
             @Override
             public QWord next() {
-                pos = getNextOriginal(pos).get(0);
+                pos = getNextOriginal(pos).getFirst();
                 return pos;
             }
         };
