@@ -21,17 +21,26 @@ class QWordPathsRenderer {
         return new QWordPathsRenderer(graph).render(graph.reachability());
     }
 
+    /** Render the paths into a human-readable infix-style expression.
+     * <p></p>
+     * This method is recursive, but the recursion depth is limited by the
+     * maximum length of the paths, which is hard limited to a value typically around 10,
+     * so we don't need to worry about stack overflows here...
+     */
     String render(QWordGraph.ReachabilityData reachability) {
         if (paths.size() == 1) {
             return paths.iterator().next().stream().map(QWord::word).collect(Collectors.joining(" "));
         }
 
+        // Find the commonality of words in the paths
+
         Map<QWord, Integer> commonality = paths.stream().flatMap(QWordPath::stream)
                 .collect(Collectors.groupingBy(w -> w, Collectors.summingInt(w -> 1)));
 
-        Set<QWord> commonToAll = new HashSet<>();
-        Set<QWord> notCommonToAll = new HashSet<>();
+        // Break the words into two categories: those that are common to all paths, and those that are not
 
+        List<QWord> commonToAll = new ArrayList<>();
+        Set<QWord> notCommonToAll = new HashSet<>();
         commonality.forEach((k, v) -> {
             if (v == paths.size()) {
                 commonToAll.add(k);
@@ -40,33 +49,32 @@ class QWordPathsRenderer {
             }
         });
 
-        StringJoiner concat = new StringJoiner(" ");
-        if (!commonToAll.isEmpty()) { // Case where one or more words are common to all paths
+        StringJoiner resultJoiner = new StringJoiner(" ");
 
-            commonToAll.stream()
-                    .sorted(reachability.topologicalComparator())
-                    .map(QWord::word)
-                    .forEach(concat::add);
+        if (!commonToAll.isEmpty()) { // Case where one or more words are common to all paths
+            commonToAll.sort(reachability.topologicalComparator());
+
+            for (var word : commonToAll) {
+                resultJoiner.add(word.word());
+            }
 
             // Deal portion of the paths that do not all share a common word
             if (!notCommonToAll.isEmpty()) {
 
                 List<QWordPath> nonOverlappingPortions = new ArrayList<>();
 
+                // Create a new path for each path that does not contain the common words we just printed
                 for (var path : paths) {
-                    // Project the path onto the divergent nodes (i.e. remove common nodes)
                     var np = path.project(notCommonToAll);
                     if (np.isEmpty())
                         continue;
                     nonOverlappingPortions.add(np);
                 }
 
-                if (nonOverlappingPortions.size() > 1) {
+                // Recurse into the non-overlapping portions
+                if (!nonOverlappingPortions.isEmpty()) {
                     var wp = new QWordPathsRenderer(nonOverlappingPortions);
-                    concat.add(wp.render(reachability));
-                } else if (!nonOverlappingPortions.isEmpty()) {
-                    var wp = new QWordPathsRenderer(nonOverlappingPortions);
-                    concat.add(wp.render(reachability));
+                    resultJoiner.add(wp.render(reachability));
                 }
             }
         } else if (commonality.size() > 1) { // The case where no words are common to all paths
@@ -79,6 +87,7 @@ class QWordPathsRenderer {
             // Mutable copy of the paths
             List<QWordPath> allDivergentPaths = new ArrayList<>(paths);
 
+            // Break the paths into branches by the first common word they contain, in order of decreasing commonality
             for (var commonWord : byCommonality) {
                 if (allDivergentPaths.isEmpty())
                     break;
@@ -91,10 +100,15 @@ class QWordPathsRenderer {
                         continue;
                     }
 
+                    // Remove the common word from the path
+                    var newPath = path.without(commonWord);
+
                     pathsByCommonWord
                             .computeIfAbsent(commonWord, k -> new ArrayList<>())
-                            .add(path.without(commonWord)); // Remove the common word from the path
+                            .add(newPath);
 
+                    // Remove the path from the list of divergent paths since we've now accounted for it and
+                    // we don't want redundant branches:
                     iter.remove();
                 }
             }
@@ -103,17 +117,17 @@ class QWordPathsRenderer {
                     .sorted(Map.Entry.comparingByKey(reachability.topologicalComparator())) // Sort by topological order to ensure consistent output
                     .map(e -> {
                         String commonWord = e.getKey().word();
+                        // Recurse into the branches:
                         String branchPart = new QWordPathsRenderer(e.getValue()).render(reachability);
                         return STR."\{commonWord} \{branchPart}";
                     })
                     .collect(Collectors.joining(" | ", " ( ", " ) "));
 
-            concat.add(branches);
-
+            resultJoiner.add(branches);
         }
 
         // Remove any double spaces that may have been introduced
-        return concat.toString().replaceAll("\\s+", " ").trim();
+        return resultJoiner.toString().replaceAll("\\s+", " ").trim();
     }
 
 }
