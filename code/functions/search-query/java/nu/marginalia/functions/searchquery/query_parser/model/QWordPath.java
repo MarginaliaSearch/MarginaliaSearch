@@ -32,6 +32,8 @@ public class QWordPath {
         return nodes.stream();
     }
 
+    /** Construct a new path by projecting the path onto a set of nodes, such that
+     * the nodes in the new set is a strict subset of the provided nodes */
     public QWordPath project(Set<QWord> nodes) {
         return new QWordPath(this.nodes.stream().filter(nodes::contains).collect(Collectors.toSet()));
     }
