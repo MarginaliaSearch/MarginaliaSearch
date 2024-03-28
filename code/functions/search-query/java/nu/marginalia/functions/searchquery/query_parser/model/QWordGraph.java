@@ -10,7 +10,8 @@ import java.util.stream.Stream;
  * with a single start node and a single end node, denoted by QWord.beg() and QWord.end() respectively.
  * <p></p>
  * Naively, every path from the start to the end node should represent a valid query variant, although in
- * practice it is desirable to be clever about how to evaluate the paths, to avoid combinatorial explosion.
+ * practice it is desirable to be clever about how to evaluate the paths, to avoid a large number of queries
+ * being generated.
  */
 public class QWordGraph implements Iterable<QWord> {
 
@@ -85,6 +86,7 @@ public class QWordGraph implements Iterable<QWord> {
     public List<QWordGraphLink> links() {
         return Collections.unmodifiableList(links);
     }
+
     public List<QWord> nodes() {
         return links.stream()
                 .flatMap(l -> Stream.of(l.from(), l.to()))
@@ -118,39 +120,6 @@ public class QWordGraph implements Iterable<QWord> {
                 .stream()
                 .filter(QWord::isOriginal)
                 .toList();
-    }
-
-    // Returns true if removing the word would disconnect the graph
-    // so that there is no path from 'begin' to 'end'.  This is useful
-    // in breaking up the graph into smaller component subgraphs, and
-    // understanding which vertexes can be re-ordered without changing
-    // the semantics of the encoded query.
-    public boolean isBypassed(QWord word, QWord begin, QWord end) {
-        Set<QWord> edge = new HashSet<>();
-        Set<QWord> visited = new HashSet<>();
-
-        edge.add(begin);
-
-        while (!edge.isEmpty()) {
-            Set<QWord> next = new HashSet<>();
-
-            for (var w : edge) {
-                // Skip the word we're trying find a bypassing route for
-                if (w.ord() == word.ord())
-                    continue;
-
-                if (Objects.equals(w, end))
-                    return true;
-
-                next.addAll(getNext(w));
-            }
-
-            next.removeAll(visited);
-            visited.addAll(next);
-            edge = next;
-        }
-
-        return false;
     }
 
     public Map<QWord, Set<QWord>> forwardReachability() {
