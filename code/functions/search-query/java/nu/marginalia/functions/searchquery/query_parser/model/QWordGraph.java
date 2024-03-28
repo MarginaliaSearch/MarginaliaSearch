@@ -225,7 +225,8 @@ public class QWordGraph implements Iterable<QWord> {
         }
 
         public Comparator<QWord> topologicalComparator() {
-            return Comparator.comparing(sortOrder::get);
+            Comparator<QWord> comp = Comparator.comparing(sortOrder::get);
+            return comp.thenComparing(QWord::ord);
         }
 
     }

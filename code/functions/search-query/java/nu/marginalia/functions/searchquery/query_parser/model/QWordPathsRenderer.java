@@ -21,6 +21,13 @@ class QWordPathsRenderer {
         return new QWordPathsRenderer(graph).render(graph.reachability());
     }
 
+
+    private static String render(Collection<QWordPath> paths,
+                                 QWordGraph.ReachabilityData reachability)
+    {
+        return new QWordPathsRenderer(paths).render(reachability);
+    }
+
     /** Render the paths into a human-readable infix-style expression.
      * <p></p>
      * This method is recursive, but the recursion depth is limited by the
@@ -34,8 +41,7 @@ class QWordPathsRenderer {
 
         // Find the commonality of words in the paths
 
-        Map<QWord, Integer> commonality = paths.stream().flatMap(QWordPath::stream)
-                .collect(Collectors.groupingBy(w -> w, Collectors.summingInt(w -> 1)));
+        Map<QWord, Integer> commonality = nodeCommonality();
 
         // Break the words into two categories: those that are common to all paths, and those that are not
 
@@ -72,10 +78,7 @@ class QWordPathsRenderer {
                 }
 
                 // Recurse into the non-overlapping portions
-                if (!nonOverlappingPortions.isEmpty()) {
-                    var wp = new QWordPathsRenderer(nonOverlappingPortions);
-                    resultJoiner.add(wp.render(reachability));
-                }
+                resultJoiner.add(render(nonOverlappingPortions, reachability));
             }
         } else if (commonality.size() > 1) { // The case where no words are common to all paths
 
@@ -117,8 +120,10 @@ class QWordPathsRenderer {
                     .sorted(Map.Entry.comparingByKey(reachability.topologicalComparator())) // Sort by topological order to ensure consistent output
                     .map(e -> {
                         String commonWord = e.getKey().word();
+
                         // Recurse into the branches:
-                        String branchPart = new QWordPathsRenderer(e.getValue()).render(reachability);
+                        String branchPart = render(e.getValue(), reachability);
+
                         return STR."\{commonWord} \{branchPart}";
                     })
                     .collect(Collectors.joining(" | ", " ( ", " ) "));
@@ -128,6 +133,12 @@ class QWordPathsRenderer {
 
         // Remove any double spaces that may have been introduced
         return resultJoiner.toString().replaceAll("\\s+", " ").trim();
+    }
+
+    /** Compute how many paths each word is part of */
+    private Map<QWord, Integer> nodeCommonality() {
+        return paths.stream().flatMap(QWordPath::stream)
+                .collect(Collectors.groupingBy(w -> w, Collectors.summingInt(w -> 1)));
     }
 
 }
