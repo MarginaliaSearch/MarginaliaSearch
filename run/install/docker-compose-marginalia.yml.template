@@ -82,8 +82,7 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.search-service.entrypoints=search"
-    - "traefik.http.routers.search-service.middlewares=add-xpublic"
-    - "traefik.http.routers.search-service.middlewares=add-public"
+    - "traefik.http.routers.search-service.middlewares=add-xpublic,add-public"
     - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
     - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   assistant-service:
@@ -100,8 +99,7 @@ services:
       - "traefik.http.routers.assistant-service-screenshot.middlewares=add-public"
       - "traefik.http.routers.assistant-service-suggest.rule=PathPrefix(`/suggest`)"
       - "traefik.http.routers.assistant-service-suggest.entrypoints=search"
-      - "traefik.http.routers.assistant-service-suggest.middlewares=add-xpublic"
-      - "traefik.http.routers.assistant-service-suggest.middlewares=add-public"
+      - "traefik.http.routers.assistant-service-suggest.middlewares=add-xpublic,add-public"
       - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
       - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   api-service:
@@ -114,8 +112,7 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.api-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.api-service.entrypoints=api"
-    - "traefik.http.routers.api-service.middlewares=add-xpublic"
-    - "traefik.http.routers.api-service.middlewares=add-public"
+    - "traefik.http.routers.api-service.middlewares=add-xpublic,add-public"
     - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
     - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   control-service:
@@ -131,8 +128,7 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.control-service.entrypoints=control"
-    - "traefik.http.routers.control-service.middlewares=add-xpublic"
-    - "traefik.http.routers.control-service.middlewares=add-public"
+    - "traefik.http.routers.control-service.middlewares=add-xpublic,add-public"
     - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
     - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   mariadb:
