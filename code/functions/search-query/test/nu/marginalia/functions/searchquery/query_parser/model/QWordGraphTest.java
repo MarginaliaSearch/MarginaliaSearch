@@ -110,6 +110,6 @@ class QWordGraphTest {
         QWordGraph graph = new QWordGraph("a", "b", "c");
         graph.addVariant(graph.node("c"), "d");
         graph.addVariant(graph.node("b"), "e");
-        assertEquals("a ( b ( c | d ) | c e )", graph.compileToQuery());
+        assertEquals("a ( c ( b | e ) | d ( b | e ) )", graph.compileToQuery());
     }
 }

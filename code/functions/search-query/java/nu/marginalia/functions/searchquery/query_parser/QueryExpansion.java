@@ -4,6 +4,7 @@ import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
+import nu.marginalia.functions.searchquery.query_parser.model.QWordPathsRenderer;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class QueryExpansion {
     private static final PorterStemmer ps = new PorterStemmer();
@@ -32,7 +35,7 @@ public class QueryExpansion {
         this.lexicon = lexicon;
     }
 
-    public QWordGraph expandQuery(List<String> words) {
+    public String expandQuery(List<String> words) {
 
         QWordGraph graph = new QWordGraph(words);
 
@@ -40,7 +43,7 @@ public class QueryExpansion {
             strategy.expand(graph);
         }
 
-        return graph;
+        return QWordPathsRenderer.render(graph);
     }
 
     private static final Pattern dashPattern = Pattern.compile("-");
@@ -98,16 +101,16 @@ public class QueryExpansion {
             nodes.add(qw);
         }
 
-        String[] words = nodes.stream().map(QWord::word).toArray(String[]::new);
+        String[] words = nodes.stream().map(QWord::stemmed).toArray(String[]::new);
 
         // Look for known segments within the query
         for (int length = 2; length < Math.min(10, words.length); length++) {
             for (var segment : lexicon.findSegments(length, words)) {
                 int start = segment.start();
                 int end = segment.start() + segment.length();
-                var word = StringUtils.join(words, "_", start, end);
+                var word = IntStream.range(start, end).mapToObj(nodes::get).map(QWord::word).collect(Collectors.joining("_"));
 
-                graph.addVariantForSpan(nodes.get(start), nodes.get(end), word);
+                graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
             }
         }
     }

@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 /** Renders a set of QWordPaths into a human-readable infix-style expression.  It's not guaranteed to find
  * the globally optimal expression, but rather uses a greedy algorithm as a tradeoff in effort to outcome.
  */
-class QWordPathsRenderer {
+public class QWordPathsRenderer {
     private final Set<QWordPath> paths;
 
     private QWordPathsRenderer(Collection<QWordPath> paths) {
@@ -41,7 +41,7 @@ class QWordPathsRenderer {
 
         // Find the commonality of words in the paths
 
-        Map<QWord, Integer> commonality = nodeCommonality();
+        Map<QWord, Integer> commonality = nodeCommonality(paths);
 
         // Break the words into two categories: those that are common to all paths, and those that are not
 
@@ -82,32 +82,30 @@ class QWordPathsRenderer {
             }
         } else if (commonality.size() > 1) { // The case where no words are common to all paths
 
-            // Sort the words by commonality, so that we can consider the most common words first
-            List<QWord> byCommonality = commonality.entrySet().stream().sorted(Map.Entry.comparingByValue()).map(Map.Entry::getKey).collect(Collectors.toList()).reversed();
 
+            // Sort the words by commonality, so that we can consider the most common words first
             Map<QWord, List<QWordPath>> pathsByCommonWord = new HashMap<>();
 
             // Mutable copy of the paths
             List<QWordPath> allDivergentPaths = new ArrayList<>(paths);
 
             // Break the paths into branches by the first common word they contain, in order of decreasing commonality
-            for (var commonWord : byCommonality) {
-                if (allDivergentPaths.isEmpty())
-                    break;
+            while (!allDivergentPaths.isEmpty()) {
+                QWord mostCommon = mostCommonQWord(allDivergentPaths);
 
                 var iter = allDivergentPaths.iterator();
                 while (iter.hasNext()) {
                     var path = iter.next();
 
-                    if (!path.contains(commonWord)) {
+                    if (!path.contains(mostCommon)) {
                         continue;
                     }
 
                     // Remove the common word from the path
-                    var newPath = path.without(commonWord);
+                    var newPath = path.without(mostCommon);
 
                     pathsByCommonWord
-                            .computeIfAbsent(commonWord, k -> new ArrayList<>())
+                            .computeIfAbsent(mostCommon, k -> new ArrayList<>())
                             .add(newPath);
 
                     // Remove the path from the list of divergent paths since we've now accounted for it and
@@ -136,9 +134,16 @@ class QWordPathsRenderer {
     }
 
     /** Compute how many paths each word is part of */
-    private Map<QWord, Integer> nodeCommonality() {
+    private static Map<QWord, Integer> nodeCommonality(Collection<QWordPath> paths) {
         return paths.stream().flatMap(QWordPath::stream)
                 .collect(Collectors.groupingBy(w -> w, Collectors.summingInt(w -> 1)));
     }
+    private static QWord mostCommonQWord(Collection<QWordPath> paths) {
+        assert !paths.isEmpty();
 
+        return nodeCommonality(paths).entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElseThrow();
+    }
 }

@@ -44,4 +44,8 @@ public record QWord(
     public QWord(int ord, QWord original, String word) {
         this(ord, true, ps.stemWord(word), word, original.original);
     }
+
+    public String toString() {
+        return STR."q{\{word}}";
+    }
 }

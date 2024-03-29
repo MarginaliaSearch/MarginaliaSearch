@@ -16,7 +16,7 @@ public class QWordGraphPathLister {
         this.graph = graph;
     }
 
-    static Set<QWordPath> listPaths(QWordGraph graph) {
+    public static Set<QWordPath> listPaths(QWordGraph graph) {
         return new QWordGraphPathLister(graph).listPaths();
     }
 
