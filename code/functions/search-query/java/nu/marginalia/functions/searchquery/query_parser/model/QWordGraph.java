@@ -50,9 +50,9 @@ public class QWordGraph implements Iterable<QWord> {
 
         var newWord = new QWord(wordId++, original, word);
 
-        for (var prev : getPrevOriginal(original))
+        for (var prev : getPrev(original))
             addLink(prev, newWord);
-        for (var next : getNextOriginal(original))
+        for (var next : getNext(original))
             addLink(newWord, next);
     }
 
@@ -236,7 +236,15 @@ public class QWordGraph implements Iterable<QWord> {
     public String compileToQuery() {
         return QWordPathsRenderer.render(this);
     }
-
+    public String compileToDot() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph {\n");
+        for (var link : links) {
+            sb.append(STR."\"\{link.from().word()}\" -> \"\{link.to.word()}\";\n");
+        }
+        sb.append("}\n");
+        return sb.toString();
+    }
 
     @NotNull
     @Override
