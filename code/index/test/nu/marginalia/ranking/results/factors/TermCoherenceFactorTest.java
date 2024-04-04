@@ -1,9 +1,10 @@
 package nu.marginalia.ranking.results.factors;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.ranking.results.ResultKeywordSet;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ class TermCoherenceFactorTest {
                 WordMetadata.POSITIONS_MASK, WordMetadata.POSITIONS_MASK
         );
 
-        long mask = termCoherenceFactor.combinedMask(allPositionsSet);
+        long mask = CompiledQueryAggregates.longBitmaskAggregate(allPositionsSet, score -> score.positions() & WordMetadata.POSITIONS_MASK);
 
         assertEquals(1.0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
@@ -33,7 +34,7 @@ class TermCoherenceFactorTest {
                 0, 0
         );
 
-        long mask = termCoherenceFactor.combinedMask(allPositionsSet);
+        long mask = CompiledQueryAggregates.longBitmaskAggregate(allPositionsSet, score -> score.positions() & WordMetadata.POSITIONS_MASK);
 
         assertEquals(0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
@@ -46,7 +47,7 @@ class TermCoherenceFactorTest {
                 List.of(0, 1, 2, 3), List.of(0, 1, 2, 3)
         );
 
-        long mask = termCoherenceFactor.combinedMask(positions);
+        long mask = CompiledQueryAggregates.longBitmaskAggregate(positions, score -> score.positions() & WordMetadata.POSITIONS_MASK);
         printMask(mask);
 
     }
@@ -57,7 +58,7 @@ class TermCoherenceFactorTest {
                 List.of(55, 54, 53, 52), List.of(55, 54, 53, 52)
         );
 
-        long mask = termCoherenceFactor.combinedMask(positions);
+        long mask = CompiledQueryAggregates.longBitmaskAggregate(positions, score -> score.positions() & WordMetadata.POSITIONS_MASK);
         printMask(mask);
     }
 
@@ -72,7 +73,7 @@ class TermCoherenceFactorTest {
         System.out.println(BrailleBlockPunchCards.printBits(mask, 48));
     }
 
-    ResultKeywordSet createSet(List<Integer>... maskPositions) {
+    CompiledQuery<SearchResultKeywordScore> createSet(List<Integer>... maskPositions) {
         long[] positions = new long[maskPositions.length];
 
         for (int i = 0; i < maskPositions.length; i++) {
@@ -84,14 +85,14 @@ class TermCoherenceFactorTest {
         return createSet(positions);
     }
 
-    ResultKeywordSet createSet(long... positionMasks) {
+    CompiledQuery<SearchResultKeywordScore> createSet(long... positionMasks) {
         List<SearchResultKeywordScore> keywords = new ArrayList<>();
 
         for (int i = 0; i < positionMasks.length; i++) {
-            keywords.add(new SearchResultKeywordScore(0, "",
+            keywords.add(new SearchResultKeywordScore("", 0,
                     new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, 0));
         }
 
-        return new ResultKeywordSet(keywords);
+        return CompiledQuery.just(keywords.toArray(SearchResultKeywordScore[]::new));
     }
 }

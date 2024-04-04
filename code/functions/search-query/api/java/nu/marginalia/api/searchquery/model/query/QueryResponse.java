@@ -13,10 +13,6 @@ public record QueryResponse(SearchSpecification specs,
                             String domain)
 {
     public Set<String> getAllKeywords() {
-        Set<String> keywords = new HashSet<>(100);
-        for (var sq : specs.subqueries) {
-            keywords.addAll(sq.searchTermsInclude);
-        }
-        return keywords;
+        return new HashSet<>(specs.query.searchTermsInclude);
     }
 }

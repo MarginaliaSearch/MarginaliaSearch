@@ -4,7 +4,8 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparator;
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,34 +19,39 @@ public final class SearchTerms {
     private final LongList priority;
     private final List<LongList> coherences;
 
+    private final CompiledQueryLong compiledQueryIds;
+
     public SearchTerms(
             LongList includes,
             LongList excludes,
             LongList priority,
-            List<LongList> coherences
+            List<LongList> coherences,
+            CompiledQueryLong compiledQueryIds
     ) {
         this.includes = includes;
         this.excludes = excludes;
         this.priority = priority;
         this.coherences = coherences;
+        this.compiledQueryIds = compiledQueryIds;
     }
 
-    public SearchTerms(SearchSubquery subquery) {
+    public SearchTerms(SearchQuery query, CompiledQueryLong compiledQueryIds) {
         this(new LongArrayList(),
                 new LongArrayList(),
                 new LongArrayList(),
-                new ArrayList<>());
+                new ArrayList<>(),
+                compiledQueryIds);
 
-        for (var word : subquery.searchTermsInclude) {
+        for (var word : query.searchTermsInclude) {
             includes.add(getWordId(word));
         }
-        for (var word : subquery.searchTermsAdvice) {
+        for (var word : query.searchTermsAdvice) {
             // This looks like a bug, but it's not
             includes.add(getWordId(word));
         }
 
 
-        for (var coherence : subquery.searchTermCoherences) {
+        for (var coherence : query.searchTermCoherences) {
             LongList parts = new LongArrayList(coherence.size());
 
             for (var word : coherence) {
@@ -55,10 +61,10 @@ public final class SearchTerms {
             coherences.add(parts);
         }
 
-        for (var word : subquery.searchTermsExclude) {
+        for (var word : query.searchTermsExclude) {
             excludes.add(getWordId(word));
         }
-        for (var word : subquery.searchTermsPriority) {
+        for (var word : query.searchTermsPriority) {
             priority.add(getWordId(word));
         }
     }
@@ -95,6 +101,8 @@ public final class SearchTerms {
     public List<LongList> coherences() {
         return coherences;
     }
+
+    public CompiledQueryLong compiledQuery() { return compiledQueryIds; }
 
     @Override
     public boolean equals(Object obj) {

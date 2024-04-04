@@ -13,9 +13,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @With
 @EqualsAndHashCode
-public class SearchSubquery {
+public class SearchQuery {
 
-    /** These terms must be present in the document and are used in ranking*/
+    /** An infix style expression that encodes the required terms in the query */
+    public final String compiledQuery;
+
+    /** All terms that appear in {@see compiledQuery} */
     public final List<String> searchTermsInclude;
 
     /** These terms must be absent from the document */
@@ -33,7 +36,8 @@ public class SearchSubquery {
     @Deprecated // why does this exist?
     private double value = 0;
 
-    public SearchSubquery() {
+    public SearchQuery() {
+        this.compiledQuery = "";
         this.searchTermsInclude = new ArrayList<>();
         this.searchTermsExclude = new ArrayList<>();
         this.searchTermsAdvice = new ArrayList<>();
@@ -41,11 +45,13 @@ public class SearchSubquery {
         this.searchTermCoherences = new ArrayList<>();
     }
 
-    public SearchSubquery(List<String> searchTermsInclude,
-                          List<String> searchTermsExclude,
-                          List<String> searchTermsAdvice,
-                          List<String> searchTermsPriority,
-                          List<List<String>> searchTermCoherences) {
+    public SearchQuery(String compiledQuery,
+                       List<String> searchTermsInclude,
+                       List<String> searchTermsExclude,
+                       List<String> searchTermsAdvice,
+                       List<String> searchTermsPriority,
+                       List<List<String>> searchTermCoherences) {
+        this.compiledQuery = compiledQuery;
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.searchTermsAdvice = searchTermsAdvice;
@@ -54,7 +60,7 @@ public class SearchSubquery {
     }
 
     @Deprecated // why does this exist?
-    public SearchSubquery setValue(double value) {
+    public SearchQuery setValue(double value) {
         if (Double.isInfinite(value) || Double.isNaN(value)) {
             this.value = Double.MAX_VALUE;
         } else {
@@ -66,7 +72,7 @@ public class SearchSubquery {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (!searchTermsInclude.isEmpty()) sb.append("include=").append(searchTermsInclude.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!compiledQuery.isEmpty()) sb.append("compiledQuery=").append(compiledQuery);
         if (!searchTermsExclude.isEmpty()) sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsAdvice.isEmpty()) sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsPriority.isEmpty()) sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));

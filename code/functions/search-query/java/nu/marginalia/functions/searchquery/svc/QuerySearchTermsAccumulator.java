@@ -1,6 +1,6 @@
 package nu.marginalia.functions.searchquery.svc;
 
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.functions.searchquery.query_parser.token.Token;
 import nu.marginalia.functions.searchquery.query_parser.token.TokenVisitor;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/** @see SearchSubquery */
+/** @see SearchQuery */
 public class QuerySearchTermsAccumulator implements TokenVisitor {
     public List<String> searchTermsExclude = new ArrayList<>();
     public List<String> searchTermsInclude = new ArrayList<>();
@@ -18,10 +18,6 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
     public List<List<String>> searchTermCoherences = new ArrayList<>();
 
     public String domain;
-
-    public SearchSubquery createSubquery() {
-        return new SearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermCoherences);
-    }
 
     public QuerySearchTermsAccumulator(List<Token> parts) {
         for (Token t : parts) {

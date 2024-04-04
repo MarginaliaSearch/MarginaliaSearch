@@ -2,7 +2,6 @@ package nu.marginalia.api.searchquery;
 
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -14,7 +13,6 @@ import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class QueryProtobufCodec {
 
@@ -23,9 +21,7 @@ public class QueryProtobufCodec {
 
         builder.addAllDomains(request.getDomainIdsList());
 
-        for (var subquery : query.specs.subqueries) {
-            builder.addSubqueries(IndexProtobufCodec.convertSearchSubquery(subquery));
-        }
+        builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(request.getHumanQuery());
@@ -51,9 +47,7 @@ public class QueryProtobufCodec {
     public static RpcIndexQuery convertQuery(String humanQuery, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
-        for (var subquery : query.specs.subqueries) {
-            builder.addSubqueries(IndexProtobufCodec.convertSearchSubquery(subquery));
-        }
+        builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(humanQuery);
@@ -147,8 +141,8 @@ public class QueryProtobufCodec {
 
     private static SearchResultKeywordScore convertKeywordScore(RpcResultKeywordScore keywordScores) {
         return new SearchResultKeywordScore(
-                keywordScores.getSubquery(),
                 keywordScores.getKeyword(),
+                -1, // termId is internal to index service
                 keywordScores.getEncodedWordMetadata(),
                 keywordScores.getEncodedDocMetadata(),
                 keywordScores.getHtmlFeatures()
@@ -156,14 +150,8 @@ public class QueryProtobufCodec {
     }
 
     private static SearchSpecification convertSearchSpecification(RpcIndexQuery specs) {
-        List<SearchSubquery> subqueries = new ArrayList<>(specs.getSubqueriesCount());
-
-        for (int i = 0; i < specs.getSubqueriesCount(); i++) {
-            subqueries.add(IndexProtobufCodec.convertSearchSubquery(specs.getSubqueries(i)));
-        }
-
         return new SearchSpecification(
-                subqueries,
+                IndexProtobufCodec.convertRpcQuery(specs.getQuery()),
                 specs.getDomainsList(),
                 specs.getSearchSetIdentifier(),
                 specs.getHumanQuery(),
@@ -182,7 +170,6 @@ public class QueryProtobufCodec {
                 .addAllDomainIds(params.domainIds())
                 .addAllTacitAdvice(params.tacitAdvice())
                 .addAllTacitExcludes(params.tacitExcludes())
-                .addAllTacitIncludes(params.tacitIncludes())
                 .addAllTacitPriority(params.tacitPriority())
                 .setHumanQuery(params.humanQuery())
                 .setQueryLimits(IndexProtobufCodec.convertQueryLimits(params.limits()))

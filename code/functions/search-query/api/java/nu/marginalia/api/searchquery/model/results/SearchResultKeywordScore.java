@@ -7,19 +7,22 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import java.util.Objects;
 
 public final class SearchResultKeywordScore {
+    @Deprecated
     public final int subquery;
+    public final long termId;
     public final String keyword;
     private final long encodedWordMetadata;
     private final long encodedDocMetadata;
 
     private final int htmlFeatures;
 
-    public SearchResultKeywordScore(int subquery,
-                                    String keyword,
+    public SearchResultKeywordScore(String keyword,
+                                    long termId,
                                     long encodedWordMetadata,
                                     long encodedDocMetadata,
                                     int htmlFeatures) {
-        this.subquery = subquery;
+        this.termId = termId;
+        this.subquery = -1; // FIXME, deprecated
         this.keyword = keyword;
         this.encodedWordMetadata = encodedWordMetadata;
         this.encodedDocMetadata = encodedDocMetadata;

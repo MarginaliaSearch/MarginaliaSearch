@@ -143,7 +143,7 @@ class LongArraySearchTest {
 
         assertEquals(43, buffer.size());
         for (int i = 0; i < 43; i++) {
-            assertEquals(buffer.data[i], i*3);
+            assertEquals(buffer.data.get(i), i*3);
         }
     }
 
@@ -160,7 +160,7 @@ class LongArraySearchTest {
         int j = 0;
         for (int i = 0; i < 43; i++) {
             if (++j % 3 == 0) j++;
-            assertEquals(buffer.data[i], j);
+            assertEquals(buffer.data.get(i), j);
         }
     }
 }

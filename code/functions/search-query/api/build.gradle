@@ -30,6 +30,7 @@ dependencies {
     implementation libs.notnull
     implementation libs.guice
     implementation libs.gson
+    implementation libs.commons.lang3
     implementation libs.bundles.protobuf
     implementation libs.bundles.grpc
     implementation libs.fastutil

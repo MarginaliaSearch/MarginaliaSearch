@@ -21,9 +21,9 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public SearchResultItem(long combinedId, int scoresCount) {
+    public SearchResultItem(long combinedId) {
         this.combinedId = combinedId;
-        this.keywordScores = new ArrayList<>(scoresCount);
+        this.keywordScores = new ArrayList<>();
     }
 
 

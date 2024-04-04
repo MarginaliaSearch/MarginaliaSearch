@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
@@ -123,9 +123,10 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
-                        .subqueries(List.of(new SearchSubquery(
+                        .query(new SearchQuery(
+                                "2 3 5",
                                 List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
-                                Collections.emptyList()))).build());
+                                Collections.emptyList())).build());
 
         int[] idxes = new int[] { 30, 510, 90, 150, 210, 270, 330, 390, 450 };
         long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
@@ -166,9 +167,13 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
-                        .subqueries(List.of(new SearchSubquery(
-                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
-                                Collections.emptyList()))).build());
+                        .query(new SearchQuery(
+                                "2 3 5",
+                                List.of("3", "5", "2"),
+                                List.of("4"),
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                Collections.emptyList())).build());
         int[] idxes = new int[] {  210, 270 };
         long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
         long[] actual = rsp.results.stream().mapToLong(i -> i.rawIndexResult.getDocumentId()).toArray();
@@ -202,9 +207,8 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier("NONE")
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
-                        .subqueries(List.of(new SearchSubquery(
-                                List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
-                                Collections.emptyList()))
+                        .query(
+                            new SearchQuery("4", List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList())
                         ).build());
 
 

@@ -9,14 +9,14 @@ import io.prometheus.client.Histogram;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.api.searchquery.model.results.*;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
-import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultValuatorService;
@@ -143,7 +143,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                                     .setEncodedWordMetadata(score.encodedWordMetadata())
                                     .setKeyword(score.keyword)
                                     .setHtmlFeatures(score.htmlFeatures())
-                                    .setSubquery(score.subquery)
                     );
                 }
 
@@ -203,7 +202,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             return new SearchResultSet(List.of());
         }
 
-        ResultRankingContext rankingContext = createRankingContext(params.rankingParams, params.subqueries);
+        ResultRankingContext rankingContext = createRankingContext(params.rankingParams,
+                params.compiledQuery,
+                params.compiledQueryIds);
 
         var queryExecution = new QueryExecution(rankingContext, params.fetchSize);
 
@@ -255,14 +256,10 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         /** Execute a search query */
         public SearchResultSet run(SearchParameters parameters) throws SQLException, InterruptedException {
 
-            for (var subquery : parameters.subqueries) {
-                var terms = new SearchTerms(subquery);
-                if (terms.isEmpty())
-                    continue;
+            var terms = new SearchTerms(parameters.query, parameters.compiledQueryIds);
 
-                for (var indexQuery : index.createQueries(terms, parameters.queryParams)) {
-                    workerPool.execute(new IndexLookup(indexQuery, parameters.budget));
-                }
+            for (var indexQuery : index.createQueries(terms, parameters.queryParams)) {
+                workerPool.execute(new IndexLookup(indexQuery, parameters.budget));
             }
 
             for (int i = 0; i < indexValuationThreads; i++) {
@@ -327,7 +324,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                     buffer.reset();
                     query.getMoreResults(buffer);
 
-                    results.addElements(0, buffer.data, 0, buffer.end);
+                    for (int i = 0; i < buffer.end; i++) {
+                        results.add(buffer.data.get(i));
+                    }
 
                     if (results.size() < 512) {
                         enqueueResults(new CombinedDocIdList(results));
@@ -413,8 +412,13 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
     }
 
-    private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams, List<SearchSubquery> subqueries) {
-        final var termToId = SearchTermsUtil.getAllIncludeTerms(subqueries);
+    private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams,
+                                                      CompiledQuery<String> query,
+                                                      CompiledQueryLong compiledQueryIds)
+    {
+        Map<String, Long> termToId = new HashMap<>(query.size());
+        query.indices().forEach(id -> termToId.put(query.at(id), compiledQueryIds.at(id)));
+
         final Map<String, Integer> termFrequencies = new HashMap<>(termToId.size());
         final Map<String, Integer> prioFrequencies = new HashMap<>(termToId.size());
 

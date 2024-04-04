@@ -16,7 +16,7 @@ public class QueryFilterLetThrough implements QueryFilterStepIf {
     }
 
     public double cost() {
-        return 0.;
+        return 1.;
     }
 
     public String describe() {

@@ -2,18 +2,16 @@ package nu.marginalia.functions.searchquery.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.LanguageModels;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.util.language.EnglishDictionary;
+import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import nu.marginalia.functions.searchquery.query_parser.token.Token;
 import nu.marginalia.functions.searchquery.query_parser.token.TokenType;
-import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +24,14 @@ import java.util.List;
 public class QueryFactory {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
     private final QueryParser queryParser = new QueryParser();
+    private final QueryExpansion queryExpansion;
 
 
     @Inject
-    public QueryFactory(LanguageModels lm,
-                        TermFrequencyDict dict,
-                        EnglishDictionary englishDictionary)
+    public QueryFactory(QueryExpansion queryExpansion)
     {
+        this.queryExpansion = queryExpansion;
     }
 
 
@@ -48,8 +45,6 @@ public class QueryFactory {
 
         List<String> searchTermsHuman = new ArrayList<>();
         List<String> problems = new ArrayList<>();
-
-        String domain = null;
 
         List<Token> basicQuery = queryParser.parse(query);
 
@@ -74,19 +69,8 @@ public class QueryFactory {
             t.visit(qualityLimits);
         }
 
-//        var queryPermutations = queryPermutation.permuteQueriesNew(basicQuery);
-        List<SearchSubquery> subqueries = new ArrayList<>();
         QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(basicQuery);
-        domain = termsAccumulator.domain;
-
-//        for (var parts : queryPermutations) {
-//            QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(basicQuery);
-//
-//            domain = termsAccumulator.domain;
-//
-//            SearchSubquery subquery = termsAccumulator.createSubquery();
-//            subqueries.add(subquery);
-//        }
+        String domain = termsAccumulator.domain;
 
         List<Integer> domainIds = params.domainIds();
 
@@ -97,7 +81,18 @@ public class QueryFactory {
         }
 
         var specsBuilder = SearchSpecification.builder()
-                .subqueries(subqueries)
+                .query(
+                        new SearchQuery(
+                                queryExpansion.expandQuery(
+                                        termsAccumulator.searchTermsInclude
+                                ),
+                                termsAccumulator.searchTermsInclude,
+                                termsAccumulator.searchTermsExclude,
+                                termsAccumulator.searchTermsAdvice,
+                                termsAccumulator.searchTermsPriority,
+                                termsAccumulator.searchTermCoherences
+                        )
+                )
                 .humanQuery(query)
                 .quality(qualityLimits.qualityLimit)
                 .year(qualityLimits.year)
@@ -111,12 +106,9 @@ public class QueryFactory {
 
         SearchSpecification specs = specsBuilder.build();
 
-        for (var sq : specs.subqueries) {
-            sq.searchTermsAdvice.addAll(params.tacitAdvice());
-            sq.searchTermsPriority.addAll(params.tacitPriority());
-            sq.searchTermsInclude.addAll(params.tacitIncludes());
-            sq.searchTermsExclude.addAll(params.tacitExcludes());
-        }
+        specs.query.searchTermsAdvice.addAll(params.tacitAdvice());
+        specs.query.searchTermsPriority.addAll(params.tacitPriority());
+        specs.query.searchTermsExclude.addAll(params.tacitExcludes());
 
         return new ProcessedQuery(specs, searchTermsHuman, domain);
     }
