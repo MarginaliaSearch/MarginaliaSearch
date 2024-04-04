@@ -32,7 +32,8 @@ public class BTreeReaderRejectRetainWithIndexTest {
     @Test
     public void testRetain() {
         LongQueryBuffer odds = new LongQueryBuffer(50);
-        Arrays.setAll(odds.data, i -> 2L*i + 1);
+        for (int i = 0; i < 50; i++)
+            odds.data.set(i, 2L*i + 1);
 
         BTreeReader reader = new BTreeReader(array, ctx, 0);
         reader.retainEntries(odds);
@@ -46,7 +47,8 @@ public class BTreeReaderRejectRetainWithIndexTest {
     @Test
     public void testReject() {
         LongQueryBuffer odds = new LongQueryBuffer(50);
-        Arrays.setAll(odds.data, i -> 2L*i + 1);
+        for (int i = 0; i < 50; i++)
+            odds.data.set(i, 2L*i + 1);
 
         BTreeReader reader = new BTreeReader(array, ctx, 0);
         reader.rejectEntries(odds);

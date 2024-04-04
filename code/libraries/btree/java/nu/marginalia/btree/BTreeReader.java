@@ -109,8 +109,8 @@ public class BTreeReader {
         return ip.findData(key);
     }
 
-    public void readData(long[] buf, int n, long pos) {
-        data.get(pos, pos + n, buf);
+    public void readData(LongArray buf, int n, long pos) {
+        data.get(pos, pos + n, buf, 0);
     }
 
     /** Used for querying interlaced data in the btree.

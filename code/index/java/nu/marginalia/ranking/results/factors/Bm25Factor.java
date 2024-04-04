@@ -1,10 +1,11 @@
 package nu.marginalia.ranking.results.factors;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.ranking.results.ResultKeywordSet;
 
 public class Bm25Factor {
     private static final int AVG_LENGTH = 5000;
@@ -13,43 +14,33 @@ public class Bm25Factor {
      *
      * @see Bm25Parameters
      */
-    public double calculateBm25(Bm25Parameters bm25Parameters, ResultKeywordSet keywordSet, int length, ResultRankingContext ctx) {
+    public double calculateBm25(Bm25Parameters bm25Parameters, CompiledQuery<SearchResultKeywordScore> scores, int length, ResultRankingContext ctx) {
         final int docCount = ctx.termFreqDocCount();
 
-        if (length <= 0)
-            length = AVG_LENGTH;
-
-        double sum = 0.;
-
-        for (var keyword : keywordSet.keywords()) {
+        return CompiledQueryAggregates.doubleSumAggregate(scores, keyword -> {
             double count = keyword.positionCount();
 
             int freq = ctx.frequency(keyword.keyword);
 
-            sum += invFreq(docCount, freq) * f(bm25Parameters.k(), bm25Parameters.b(), count, length);
-        }
-
-        return sum;
+            return invFreq(docCount, freq) * f(bm25Parameters.k(), bm25Parameters.b(), count, length);
+        });
     }
 
     /** Bm25 calculation, except instead of counting positions in the document,
      *  the number of relevance signals for the term is counted instead.
      */
-    public double calculateBm25Prio(Bm25Parameters bm25Parameters, ResultKeywordSet keywordSet, ResultRankingContext ctx) {
+    public double calculateBm25Prio(Bm25Parameters bm25Parameters, CompiledQuery<SearchResultKeywordScore> scores, ResultRankingContext ctx) {
         final int docCount = ctx.termFreqDocCount();
 
-        double sum = 0.;
-
-        for (var keyword : keywordSet.keywords()) {
+        return CompiledQueryAggregates.doubleSumAggregate(scores, keyword -> {
             double count = evaluatePriorityScore(keyword);
 
             int freq = ctx.priorityFrequency(keyword.keyword);
 
             // note we override b to zero for priority terms as they are independent of document length
-            sum += invFreq(docCount, freq) * f(bm25Parameters.k(), 0, count, 0);
-        }
+            return invFreq(docCount, freq) * f(bm25Parameters.k(), 0, count, 0);
+        });
 
-        return sum;
     }
 
     private static double evaluatePriorityScore(SearchResultKeywordScore keyword) {

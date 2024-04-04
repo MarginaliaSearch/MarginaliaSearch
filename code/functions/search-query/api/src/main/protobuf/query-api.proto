@@ -52,7 +52,7 @@ message RpcTemporalBias {
 
 /* Index service query request */
 message RpcIndexQuery {
-  repeated RpcSubquery subqueries = 1;
+  RpcQuery query = 1;
   repeated int32 domains = 2;     // (optional) A list of domain IDs to consider
   string searchSetIdentifier = 3; // (optional) A named set of domains to consider
   string humanQuery = 4;          // The search query as the user entered it
@@ -102,12 +102,11 @@ message RpcRawResultItem {
 
 /* Information about how well a keyword matches a query */
 message RpcResultKeywordScore {
-  int32 subquery = 1; // index of the subquery this keyword relates to
-  string keyword = 2; // the keyword
-  int64 encodedWordMetadata = 3; // bit encoded word metadata
-  int64 encodedDocMetadata = 4; // bit encoded document metadata
-  bool hasPriorityTerms = 5; // true if this word is important to the document
-  int32 htmlFeatures = 6; // bit encoded document features
+  string keyword = 1; // the keyword
+  int64 encodedWordMetadata = 2; // bit encoded word metadata
+  int64 encodedDocMetadata = 3; // bit encoded document metadata
+  bool hasPriorityTerms = 4; // true if this word is important to the document
+  int32 htmlFeatures = 5; // bit encoded document features
 }
 
 /* Query execution parameters */
@@ -137,12 +136,13 @@ message RpcResultRankingParameters {
 }
 
 /* Defines a single subquery */
-message RpcSubquery {
+message RpcQuery {
   repeated string include = 1;  // These terms must be present
   repeated string exclude = 2;  // These terms must be absent
   repeated string advice = 3;   // These terms must be present, but do not affect ranking
   repeated string priority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
   repeated RpcCoherences coherences = 5; // Groups of terms that must exist in proximity of each other
+  string compiledQuery = 6;  // Compiled query in infix notation
 }
 
 /* Defines a group of search terms that must exist in close proximity within the document */

@@ -1,7 +1,6 @@
 package nu.marginalia.api.searchquery;
 
-import nu.marginalia.api.searchquery.*;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
@@ -45,33 +44,37 @@ public class IndexProtobufCodec {
                 .build();
     }
 
-    public static SearchSubquery convertSearchSubquery(RpcSubquery subquery) {
+    public static SearchQuery convertRpcQuery(RpcQuery query) {
         List<List<String>>  coherences = new ArrayList<>();
 
-        for (int j = 0; j < subquery.getCoherencesCount(); j++) {
-            var coh = subquery.getCoherences(j);
+        for (int j = 0; j < query.getCoherencesCount(); j++) {
+            var coh = query.getCoherences(j);
             coherences.add(new ArrayList<>(coh.getCoherencesList()));
         }
 
-        return new SearchSubquery(
-                subquery.getIncludeList(),
-                subquery.getExcludeList(),
-                subquery.getAdviceList(),
-                subquery.getPriorityList(),
+        return new SearchQuery(
+                query.getCompiledQuery(),
+                query.getIncludeList(),
+                query.getExcludeList(),
+                query.getAdviceList(),
+                query.getPriorityList(),
                 coherences
         );
     }
 
-    public static RpcSubquery convertSearchSubquery(SearchSubquery searchSubquery) {
+    public static RpcQuery convertRpcQuery(SearchQuery searchQuery) {
         var subqueryBuilder =
-                RpcSubquery.newBuilder()
-                        .addAllAdvice(searchSubquery.getSearchTermsAdvice())
-                        .addAllExclude(searchSubquery.getSearchTermsExclude())
-                        .addAllInclude(searchSubquery.getSearchTermsInclude())
-                        .addAllPriority(searchSubquery.getSearchTermsPriority());
-        for (var coherences : searchSubquery.searchTermCoherences) {
+                RpcQuery.newBuilder()
+                        .setCompiledQuery(searchQuery.compiledQuery)
+                        .addAllInclude(searchQuery.getSearchTermsInclude())
+                        .addAllAdvice(searchQuery.getSearchTermsAdvice())
+                        .addAllExclude(searchQuery.getSearchTermsExclude())
+                        .addAllPriority(searchQuery.getSearchTermsPriority());
+
+        for (var coherences : searchQuery.searchTermCoherences) {
             subqueryBuilder.addCoherencesBuilder().addAllCoherences(coherences);
         }
+
         return subqueryBuilder.build();
     }
 

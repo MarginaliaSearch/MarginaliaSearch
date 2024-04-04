@@ -2,6 +2,13 @@ package nu.marginalia.index.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
+import nu.marginalia.index.query.filter.QueryFilterAllOf;
+import nu.marginalia.index.query.filter.QueryFilterAnyOf;
+import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.DocMetadataList;
 import nu.marginalia.index.model.QueryParams;
@@ -14,12 +21,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.LongFunction;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** This class delegates SearchIndexReader and deals with the stateful nature of the index,
  * i.e. it may be possible to reconstruct the index and load a new set of data.
@@ -105,6 +113,61 @@ public class StatefulIndex {
         return combinedIndexReader != null && combinedIndexReader.isLoaded();
     }
 
+    private Predicate<LongSet> containsOnly(long[] permitted) {
+        LongSet permittedTerms = new LongOpenHashSet(permitted);
+        return permittedTerms::containsAll;
+    }
+
+    private List<IndexQueryBuilder> createBuilders(CompiledQueryLong query,
+                                                   LongFunction<IndexQueryBuilder> builderFactory,
+                                                   long[] termPriority) {
+        List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(query);
+
+        // Remove any paths that do not contain all prioritized terms, as this means
+        // the term is missing from the index and can never be found
+        paths.removeIf(containsOnly(termPriority).negate());
+
+        List<QueryBranchWalker> helpers = QueryBranchWalker.create(termPriority, paths);
+        List<IndexQueryBuilder> builders = new ArrayList<>();
+
+        for (var helper : helpers) {
+            var builder = builderFactory.apply(helper.termId);
+
+            builders.add(builder);
+
+            if (helper.atEnd())
+                continue;
+
+            var filters = helper.next().stream()
+                            .map(this::createFilter)
+                            .toList();
+
+            builder.addInclusionFilterAny(filters);
+        }
+
+        return builders;
+    }
+
+    private QueryFilterStepIf createFilter(QueryBranchWalker helper) {
+        var selfCondition = combinedIndexReader.hasWordFull(helper.termId);
+        if (helper.atEnd())
+            return selfCondition;
+
+        var nextSteps = helper.next();
+        var nextFilters = nextSteps.stream()
+                .map(this::createFilter)
+                .map(filter -> new QueryFilterAllOf(List.of(selfCondition, filter)))
+                .collect(Collectors.toList());
+
+        if (nextFilters.isEmpty())
+            return selfCondition;
+
+        if (nextFilters.size() == 1)
+            return nextFilters.getFirst();
+
+
+        return new QueryFilterAnyOf(nextFilters);
+    }
 
     public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
 
@@ -117,40 +180,13 @@ public class StatefulIndex {
         final long[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
+
+        queryHeads.addAll(createBuilders(terms.compiledQuery(), combinedIndexReader::findFullWord, orderedIncludes));
+        queryHeads.addAll(createBuilders(terms.compiledQuery(), combinedIndexReader::findPriorityWord, orderedIncludesPrio));
+
         List<IndexQuery> queries = new ArrayList<>(10);
 
-        // To ensure that good results are discovered, create separate query heads for the priority index that
-        // filter for terms that contain pairs of two search terms
-        if (orderedIncludesPrio.length > 1) {
-            for (int i = 0; i + 1 < orderedIncludesPrio.length; i++) {
-                for (int j = i + 1; j < orderedIncludesPrio.length; j++) {
-                    var entrySource = combinedIndexReader
-                            .findPriorityWord(orderedIncludesPrio[i])
-                            .alsoPrio(orderedIncludesPrio[j]);
-                    queryHeads.add(entrySource);
-                }
-            }
-        }
-
-        // Next consider entries that appear only once in the priority index
-        for (var wordId : orderedIncludesPrio) {
-            queryHeads.add(combinedIndexReader.findPriorityWord(wordId));
-        }
-
-        // Finally consider terms in the full index
-        queryHeads.add(combinedIndexReader.findFullWord(orderedIncludes[0]));
-
         for (var query : queryHeads) {
-            if (query == null) {
-                return Collections.emptyList();
-            }
-
-            // Note that we can add all includes as filters, even though
-            // they may not be present in the query head, as the query builder
-            // will ignore redundant include filters:
-            for (long orderedInclude : orderedIncludes) {
-                query = query.alsoFull(orderedInclude);
-            }
 
             for (long term : terms.excludes()) {
                 query = query.notFull(term);
@@ -160,6 +196,7 @@ public class StatefulIndex {
             // items in the buffer
             queries.add(query.addInclusionFilter(combinedIndexReader.filterForParams(params)).build());
         }
+
 
         return queries;
     }

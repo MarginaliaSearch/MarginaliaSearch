@@ -1,5 +1,6 @@
 package nu.marginalia.ranking.results;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
@@ -35,21 +36,21 @@ class ResultValuatorTest {
         );
 
     }
-    List<SearchResultKeywordScore> titleOnlyLowCountSet = List.of(
-            new SearchResultKeywordScore(0, "bob",
+    CompiledQuery<SearchResultKeywordScore> titleOnlyLowCountSet = CompiledQuery.just(
+            new SearchResultKeywordScore("bob", 1,
                     wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)),
                     docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
                     0)
     );
-    List<SearchResultKeywordScore> highCountNoTitleSet = List.of(
-            new SearchResultKeywordScore(0, "bob",
+    CompiledQuery<SearchResultKeywordScore> highCountNoTitleSet = CompiledQuery.just(
+            new SearchResultKeywordScore("bob", 1,
                     wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
                     docMetadata(0, 2010,  5, EnumSet.noneOf(DocumentFlags.class)),
                     0)
     );
 
-    List<SearchResultKeywordScore> highCountSubjectSet = List.of(
-            new SearchResultKeywordScore(0, "bob",
+    CompiledQuery<SearchResultKeywordScore> highCountSubjectSet = CompiledQuery.just(
+            new SearchResultKeywordScore("bob", 1,
                     wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
                     docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
                     0)
@@ -75,7 +76,10 @@ class ResultValuatorTest {
         System.out.println(highCountSubject);
     }
 
-    private long docMetadata(int topology, int year, int quality, EnumSet<DocumentFlags> flags) {
+    private long docMetadata(int topology,
+                             int year,
+                             int quality,
+                             EnumSet<DocumentFlags> flags) {
         return new DocumentMetadata(topology, PubDate.toYearByte(year), quality, flags).encode();
     }
 

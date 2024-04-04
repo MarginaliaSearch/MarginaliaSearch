@@ -1,5 +1,6 @@
 package nu.marginalia.ranking.results;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
@@ -33,14 +34,17 @@ public class ResultValuator {
         this.termCoherenceFactor = termCoherenceFactor;
     }
 
-    public double calculateSearchResultValue(List<SearchResultKeywordScore> scores,
+    public double calculateSearchResultValue(CompiledQuery<SearchResultKeywordScore> scores,
                                              int length,
                                              ResultRankingContext ctx)
     {
-        int sets = numberOfSets(scores);
+        if (scores.size() == 0)
+            return Double.MAX_VALUE;
+        if (length < 0)
+            length = 5000;
 
-        long documentMetadata = documentMetadata(scores);
-        int features = htmlFeatures(scores);
+        long documentMetadata = scores.at(0).encodedDocMetadata();
+        int features = scores.at(0).htmlFeatures();
         var rankingParams = ctx.params;
 
         int rank = DocumentMetadata.decodeRank(documentMetadata);
@@ -75,32 +79,16 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double bestTcf = 0;
-        double bestBM25F = 0;
-        double bestBM25P = 0;
-        double bestBM25PN = 0;
-
-        for (int set = 0; set < sets; set++) {
-            ResultKeywordSet keywordSet = createKeywordSet(scores, set);
-
-            if (keywordSet.isEmpty())
-                continue;
-
-            bestTcf = Math.max(bestTcf, rankingParams.tcfWeight * termCoherenceFactor.calculate(keywordSet));
-            bestBM25P = Math.max(bestBM25P, rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx));
-            bestBM25F = Math.max(bestBM25F, rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.fullParams, keywordSet, length, ctx));
-            if (keywordSet.hasNgram()) {
-                bestBM25PN = Math.max(bestBM25PN, rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx));
-            }
-        }
-
+        double bestTcf = rankingParams.tcfWeight * termCoherenceFactor.calculate(scores);
+        double bestBM25F = rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.prioParams, scores, length, ctx);
+        double bestBM25P = rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, scores, ctx);
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
-        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + 0.25 * bestBM25PN + overallPartPositive, overallPartNegative);
+        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + overallPartPositive, overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {

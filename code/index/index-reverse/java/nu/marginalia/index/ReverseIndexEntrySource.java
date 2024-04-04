@@ -46,7 +46,7 @@ public class ReverseIndexEntrySource implements EntrySource {
             return;
 
         for (int ri = entrySize, wi=1; ri < buffer.end ; ri+=entrySize, wi++) {
-            buffer.data[wi] = buffer.data[ri];
+            buffer.data.set(wi, buffer.data.get(ri));
         }
 
         buffer.end /= entrySize;

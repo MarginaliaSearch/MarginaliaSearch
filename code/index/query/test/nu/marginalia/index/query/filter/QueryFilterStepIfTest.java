@@ -56,6 +56,32 @@ class QueryFilterStepIfTest {
     }
 
     @Test
+    public void testSuccessiveApplicationWithAllOf() {
+        var buffer = createBuffer(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        var filter1 = new QueryFilterStepFromPredicate(value -> value % 2 == 0);
+        var filter2 = new QueryFilterStepExcludeFromPredicate(value -> value <= 6);
+        new QueryFilterAllOf(List.of(filter1, filter2)).apply(buffer);
+        assertArrayEquals(new long[]{8, 10}, buffer.copyData());
+    }
+    @Test
+    public void testCombinedOrAnd() {
+        var buffer = createBuffer(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        var filter1 = new QueryFilterStepFromPredicate(value -> value % 2 == 0);
+        var filter2 = new QueryFilterStepFromPredicate(value -> value <= 5);
+        var filter1_2 = new QueryFilterAllOf(List.of(filter1, filter2));
+
+        var filter3 = new QueryFilterStepFromPredicate(value -> value % 2 == 1);
+        var filter4 = new QueryFilterStepFromPredicate(value -> value > 5);
+        var filter3_4 = new QueryFilterAllOf(List.of(filter3, filter4));
+
+        var filter12_34 = new QueryFilterAnyOf(List.of(filter1_2, filter3_4));
+
+        filter12_34.apply(buffer);
+
+        assertArrayEquals(new long[]{2, 4, 7, 9}, buffer.copyData());
+    }
+    @Test
     public void testCombinedApplication() {
         var buffer = createBuffer(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         var filter1 = new QueryFilterStepFromPredicate(value -> value % 3 == 0);
