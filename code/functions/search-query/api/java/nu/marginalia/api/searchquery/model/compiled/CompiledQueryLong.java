@@ -39,4 +39,12 @@ public class CompiledQueryLong implements Iterable<Long> {
     public Iterator<Long> iterator() {
         return stream().iterator();
     }
+
+    public long[] copyData() {
+        return data.copyData();
+    }
+
+    public boolean isEmpty() {
+        return data.size() == 0;
+    }
 }

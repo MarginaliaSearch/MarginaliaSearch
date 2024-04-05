@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.*;
 
+/** Contains methods for aggregating across a CompiledQuery or CompiledQueryLong */
 public class CompiledQueryAggregates {
     /** Compiled query aggregate that for a single boolean that treats or-branches as logical OR,
      * and and-branches as logical AND operations.  Will return true if there exists a path through
