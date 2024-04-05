@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.index.query.filter.QueryFilterAllOf;
 import nu.marginalia.index.query.filter.QueryFilterAnyOf;
@@ -25,9 +24,7 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.LongFunction;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /** This class delegates SearchIndexReader and deals with the stateful nature of the index,
  * i.e. it may be possible to reconstruct the index and load a new set of data.
@@ -95,7 +92,6 @@ public class StatefulIndex {
             logger.error("Uncaught exception", ex);
         }
         finally {
-
             lock.unlock();
         }
 
@@ -113,62 +109,6 @@ public class StatefulIndex {
         return combinedIndexReader != null && combinedIndexReader.isLoaded();
     }
 
-    private Predicate<LongSet> containsOnly(long[] permitted) {
-        LongSet permittedTerms = new LongOpenHashSet(permitted);
-        return permittedTerms::containsAll;
-    }
-
-    private List<IndexQueryBuilder> createBuilders(CompiledQueryLong query,
-                                                   LongFunction<IndexQueryBuilder> builderFactory,
-                                                   long[] termPriority) {
-        List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(query);
-
-        // Remove any paths that do not contain all prioritized terms, as this means
-        // the term is missing from the index and can never be found
-        paths.removeIf(containsOnly(termPriority).negate());
-
-        List<QueryBranchWalker> helpers = QueryBranchWalker.create(termPriority, paths);
-        List<IndexQueryBuilder> builders = new ArrayList<>();
-
-        for (var helper : helpers) {
-            var builder = builderFactory.apply(helper.termId);
-
-            builders.add(builder);
-
-            if (helper.atEnd())
-                continue;
-
-            var filters = helper.next().stream()
-                            .map(this::createFilter)
-                            .toList();
-
-            builder.addInclusionFilterAny(filters);
-        }
-
-        return builders;
-    }
-
-    private QueryFilterStepIf createFilter(QueryBranchWalker helper) {
-        var selfCondition = combinedIndexReader.hasWordFull(helper.termId);
-        if (helper.atEnd())
-            return selfCondition;
-
-        var nextSteps = helper.next();
-        var nextFilters = nextSteps.stream()
-                .map(this::createFilter)
-                .map(filter -> new QueryFilterAllOf(List.of(selfCondition, filter)))
-                .collect(Collectors.toList());
-
-        if (nextFilters.isEmpty())
-            return selfCondition;
-
-        if (nextFilters.size() == 1)
-            return nextFilters.getFirst();
-
-
-        return new QueryFilterAnyOf(nextFilters);
-    }
-
     public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
 
         if (!isLoaded()) {
@@ -176,17 +116,45 @@ public class StatefulIndex {
             return Collections.emptyList();
         }
 
-        final long[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
-        final long[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
-
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
 
-        queryHeads.addAll(createBuilders(terms.compiledQuery(), combinedIndexReader::findFullWord, orderedIncludes));
-        queryHeads.addAll(createBuilders(terms.compiledQuery(), combinedIndexReader::findPriorityWord, orderedIncludesPrio));
+        final long[] termPriority = terms.sortedDistinctIncludes(this::compareKeywords);
+        List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(terms.compiledQuery());
 
-        List<IndexQuery> queries = new ArrayList<>(10);
+        // Remove any paths that do not contain all prioritized terms, as this means
+        // the term is missing from the index and can never be found
+        paths.removeIf(containsAll(termPriority).negate());
 
+        List<QueryBranchWalker> helpers = QueryBranchWalker.create(termPriority, paths);
+
+        for (var helper : helpers) {
+            for (var builder : List.of(
+                    combinedIndexReader.findPriorityWord(helper.termId),
+                    combinedIndexReader.findFullWord(helper.termId)
+            ))
+            {
+                queryHeads.add(builder);
+
+                if (helper.atEnd())
+                    continue;
+
+                List<QueryFilterStepIf> filterSteps = new ArrayList<>();
+                for (var step : helper.next()) {
+                    filterSteps.add(createFilter(step, 0));
+                }
+                builder.addInclusionFilterAny(filterSteps);
+            }
+        }
+
+        List<IndexQuery> ret = new ArrayList<>(10);
+
+        // Add additional conditions to the query heads
         for (var query : queryHeads) {
+
+            // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
+            for (long term : terms.advice()) {
+                query = query.alsoFull(term);
+            }
 
             for (long term : terms.excludes()) {
                 query = query.notFull(term);
@@ -194,24 +162,59 @@ public class StatefulIndex {
 
             // Run these filter steps last, as they'll worst-case cause as many page faults as there are
             // items in the buffer
-            queries.add(query.addInclusionFilter(combinedIndexReader.filterForParams(params)).build());
+            ret.add(query.addInclusionFilter(combinedIndexReader.filterForParams(params)).build());
         }
 
 
-        return queries;
+        return ret;
+    }
+
+    /** Recursively create a filter step based on the QBW and its children */
+    private QueryFilterStepIf createFilter(QueryBranchWalker walker, int depth) {
+        final QueryFilterStepIf ownFilterCondition = ownFilterCondition(walker, depth);
+
+        var childSteps = walker.next();
+
+        if (childSteps.isEmpty())
+            return ownFilterCondition;
+
+        List<QueryFilterStepIf> combinedFilters = new ArrayList<>();
+
+        for (var step : childSteps) {
+            // Recursion will be limited to a fairly shallow stack depth due to how the queries are constructed.
+            var childFilter = createFilter(step, depth+1);
+            combinedFilters.add(new QueryFilterAllOf(ownFilterCondition, childFilter));
+        }
+
+        if (combinedFilters.size() == 1)
+            return combinedFilters.getFirst();
+        else
+            return new QueryFilterAnyOf(combinedFilters);
+    }
+
+    /** Create a filter condition based on the termId associated with the QBW */
+    private QueryFilterStepIf ownFilterCondition(QueryBranchWalker walker, int depth) {
+        if (depth < 2) {
+            // At shallow depths we prioritize terms that appear in the priority index,
+            // to increase the odds we find "good" results before the sand runs out
+            return new QueryFilterAnyOf(
+                    combinedIndexReader.hasWordPrio(walker.termId),
+                    combinedIndexReader.hasWordFull(walker.termId)
+            );
+        } else {
+            return combinedIndexReader.hasWordFull(walker.termId);
+        }
+    }
+
+    private Predicate<LongSet> containsAll(long[] permitted) {
+        LongSet permittedTerms = new LongOpenHashSet(permitted);
+        return permittedTerms::containsAll;
     }
 
     private int compareKeywords(long a, long b) {
         return Long.compare(
                 combinedIndexReader.numHits(a),
                 combinedIndexReader.numHits(b)
-        );
-    }
-
-    private int compareKeywordsPrio(long a, long b) {
-        return Long.compare(
-                combinedIndexReader.numHitsPrio(a),
-                combinedIndexReader.numHitsPrio(b)
         );
     }
 

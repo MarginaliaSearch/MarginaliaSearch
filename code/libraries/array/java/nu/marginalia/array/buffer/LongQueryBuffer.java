@@ -133,12 +133,6 @@ public class LongQueryBuffer {
         write = 0;
     }
 
-    public void finalizeFiltering(int pos) {
-        end = write;
-        read = pos;
-        write = pos;
-    }
-
     /**  Retain only unique values in the buffer, and update the end pointer to the new length.
      * <p></p>
      *   The buffer is assumed to be sorted up until the end pointer.

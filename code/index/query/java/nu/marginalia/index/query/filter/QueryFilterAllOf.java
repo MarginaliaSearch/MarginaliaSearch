@@ -2,14 +2,28 @@ package nu.marginalia.index.query.filter;
 
 import nu.marginalia.array.buffer.LongQueryBuffer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
 public class QueryFilterAllOf implements QueryFilterStepIf {
-    private final List<? extends QueryFilterStepIf> steps;
+    private final List<QueryFilterStepIf> steps;
 
     public QueryFilterAllOf(List<? extends QueryFilterStepIf> steps) {
-        this.steps = steps;
+        this.steps = new ArrayList<>(steps.size());
+
+        for (var step : steps) {
+            if (step instanceof QueryFilterAllOf allOf) {
+                this.steps.addAll(allOf.steps);
+            }
+            else {
+                this.steps.add(step);
+            }
+        }
+    }
+
+    public QueryFilterAllOf(QueryFilterStepIf... steps) {
+        this(List.of(steps));
     }
 
     public double cost() {

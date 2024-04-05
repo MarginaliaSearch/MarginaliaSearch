@@ -24,4 +24,8 @@ public class CqDataLong {
     public int size() {
         return data.length;
     }
+
+    public long[] copyData() {
+        return Arrays.copyOf(data, data.length);
+    }
 }
