@@ -60,13 +60,16 @@ public class SentenceExtractor {
         }
 
         synchronized (this) {
-            ngramLexicon = new NgramLexicon(models);
-
-            try {
-                rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
+            if (ngramLexicon == null) {
+                ngramLexicon = new NgramLexicon(models);
             }
-            catch (Exception ex) {
-                throw new IllegalStateException(ex);
+
+            if (rdrposTagger == null) {
+                try {
+                    rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
+                } catch (Exception ex) {
+                    throw new IllegalStateException(ex);
+                }
             }
         }
 
