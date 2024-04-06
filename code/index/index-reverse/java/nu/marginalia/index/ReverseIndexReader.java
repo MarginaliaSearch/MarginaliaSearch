@@ -25,8 +25,11 @@ public class ReverseIndexReader {
     private final long wordsDataOffset;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final BTreeReader wordsBTreeReader;
+    private final String name;
 
-    public ReverseIndexReader(Path words, Path documents) throws IOException {
+    public ReverseIndexReader(String name, Path words, Path documents) throws IOException {
+        this.name = name;
+
         if (!Files.exists(words) || !Files.exists(documents)) {
             this.words = null;
             this.documents = null;
@@ -84,7 +87,7 @@ public class ReverseIndexReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexEntrySource(createReaderNew(offset), 2, wordId);
+        return new ReverseIndexEntrySource(name, createReaderNew(offset), 2, wordId);
     }
 
     public QueryFilterStepIf also(long wordId) {
@@ -92,7 +95,7 @@ public class ReverseIndexReader {
 
         if (offset < 0) return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(createReaderNew(offset), "full", wordId);
+        return new ReverseIndexRetainFilter(createReaderNew(offset), name, wordId);
     }
 
     public QueryFilterStepIf not(long wordId) {
