@@ -46,7 +46,7 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
         return urlDetails.resultItem.keywordScores.stream()
                 .filter(score -> !score.keyword.contains(":"))
                 .collect(Collectors.toMap(
-                        score -> score.subquery,
+                        score -> -1, // FIXME
                         score -> score.hasTermFlag(WordFlags.Title)
                                | score.hasTermFlag(WordFlags.ExternalLink)
                                | score.hasTermFlag(WordFlags.UrlDomain)

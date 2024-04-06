@@ -147,51 +147,6 @@ public class ResultValuator {
         return (int) -penalty;
     }
 
-    private long documentMetadata(List<SearchResultKeywordScore> rawScores) {
-        for (var score : rawScores) {
-            return score.encodedDocMetadata();
-        }
-        return 0;
-    }
-
-    private int htmlFeatures(List<SearchResultKeywordScore> rawScores) {
-        for (var score : rawScores) {
-            return score.htmlFeatures();
-        }
-        return 0;
-    }
-
-    private ResultKeywordSet createKeywordSet(List<SearchResultKeywordScore> rawScores,
-                                              int thisSet)
-    {
-        List<SearchResultKeywordScore> scoresList = new ArrayList<>();
-
-        for (var score : rawScores) {
-            if (score.subquery != thisSet)
-                continue;
-
-            // Don't consider synthetic keywords for ranking, these are keywords that don't
-            // have counts. E.g. "tld:edu"
-            if (score.isKeywordSpecial())
-                continue;
-
-            scoresList.add(score);
-        }
-
-        return new ResultKeywordSet(scoresList);
-
-    }
-
-    private int numberOfSets(List<SearchResultKeywordScore> scores) {
-        int maxSet = 0;
-
-        for (var score : scores) {
-            maxSet = Math.max(maxSet, score.subquery);
-        }
-
-        return 1 + maxSet;
-    }
-
     public static double normalize(double value, double penalty) {
         if (value < 0)
             value = 0;
