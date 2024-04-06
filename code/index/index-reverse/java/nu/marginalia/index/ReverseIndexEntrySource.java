@@ -7,6 +7,7 @@ import nu.marginalia.index.query.EntrySource;
 import static java.lang.Math.min;
 
 public class ReverseIndexEntrySource implements EntrySource {
+    private final String name;
     private final BTreeReader reader;
 
     int pos;
@@ -15,9 +16,11 @@ public class ReverseIndexEntrySource implements EntrySource {
     final int entrySize;
     private final long wordId;
 
-    public ReverseIndexEntrySource(BTreeReader reader,
+    public ReverseIndexEntrySource(String name,
+                                   BTreeReader reader,
                                    int entrySize,
                                    long wordId) {
+        this.name = name;
         this.reader = reader;
         this.entrySize = entrySize;
         this.wordId = wordId;
@@ -60,6 +63,6 @@ public class ReverseIndexEntrySource implements EntrySource {
 
     @Override
     public String indexName() {
-        return "Full:" + Long.toHexString(wordId);
+        return name + ":" + Long.toHexString(wordId);
     }
 }

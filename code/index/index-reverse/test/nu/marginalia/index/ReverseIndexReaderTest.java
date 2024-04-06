@@ -102,7 +102,7 @@ class ReverseIndexReaderTest {
         preindex.finalizeIndex(docsFile, wordsFile);
         preindex.delete();
 
-        return new ReverseIndexReader(wordsFile, docsFile);
+        return new ReverseIndexReader("test", wordsFile, docsFile);
 
     }
 }

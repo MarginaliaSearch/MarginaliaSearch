@@ -41,14 +41,14 @@ public class IndexFactory {
 
     public ReverseIndexReader getReverseIndexReader() throws IOException {
 
-        return new ReverseIndexReader(
+        return new ReverseIndexReader("full",
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.CURRENT),
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT)
         );
     }
 
     public ReverseIndexReader getReverseIndexPrioReader() throws IOException {
-        return new ReverseIndexReader(
+        return new ReverseIndexReader("prio",
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT)
         );
