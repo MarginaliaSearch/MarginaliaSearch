@@ -88,7 +88,7 @@ public class SearchQueryIndexService {
                     DomainIndexingState.ACTIVE,
                     detail.rankingScore, // termScore
                     detail.resultsFromDomain(),
-                    getPositionsString(detail.rawIndexResult),
+                    getPositionsString(detail),
                     detail.rawIndexResult,
                     detail.rawIndexResult.keywordScores
             ));
@@ -97,27 +97,8 @@ public class SearchQueryIndexService {
         return ret;
     }
 
-    private String getPositionsString(SearchResultItem resultItem) {
-        Int2LongArrayMap positionsPerSet = new Int2LongArrayMap(8);
-
-        for (var score : resultItem.keywordScores) {
-            if (!score.isKeywordRegular()) {
-                continue;
-            }
-            positionsPerSet.merge(score.subquery(), score.positions(), this::and);
-        }
-
-        long bits = positionsPerSet.values().longStream().reduce(this::or).orElse(0);
-
-        return BrailleBlockPunchCards.printBits(bits, 56);
+    private String getPositionsString(DecoratedSearchResultItem resultItem) {
+        return BrailleBlockPunchCards.printBits(resultItem.bestPositions, 56);
 
     }
-
-    private long and(long a, long b) {
-        return a & b;
-    }
-    private long or(long a, long b) {
-        return a | b;
-    }
-
 }

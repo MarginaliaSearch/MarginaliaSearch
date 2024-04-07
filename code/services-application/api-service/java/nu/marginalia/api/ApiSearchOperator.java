@@ -70,22 +70,24 @@ public class ApiSearchOperator {
 
     ApiSearchResult convert(DecoratedSearchResultItem url) {
         List<List<ApiSearchResultQueryDetails>> details = new ArrayList<>();
+
+        // This list-of-list construction is to avoid breaking the API,
+        // we'll always have just a single outer list from now on...
+
         if (url.rawIndexResult != null) {
-            var bySet = url.rawIndexResult.keywordScores.stream().collect(Collectors.groupingBy(SearchResultKeywordScore::subquery));
+            List<ApiSearchResultQueryDetails> lst = new ArrayList<>();
+            for (var entry : url.rawIndexResult.keywordScores) {
+                var metadata = new WordMetadata(entry.encodedWordMetadata());
 
-            outer:
-            for (var entries : bySet.values()) {
-                List<ApiSearchResultQueryDetails> lst = new ArrayList<>();
-                for (var entry : entries) {
-                    var metadata = new WordMetadata(entry.encodedWordMetadata());
-                    if (metadata.isEmpty())
-                        continue outer;
+                // Skip terms that don't appear anywhere
+                if (metadata.isEmpty())
+                    continue;
 
-                    Set<String> flags = metadata.flagSet().stream().map(Object::toString).collect(Collectors.toSet());
-                    lst.add(new ApiSearchResultQueryDetails(entry.keyword, Long.bitCount(metadata.positions()), flags));
-                }
-                details.add(lst);
+                Set<String> flags = metadata.flagSet().stream().map(Object::toString).collect(Collectors.toSet());
+                lst.add(new ApiSearchResultQueryDetails(entry.keyword, Long.bitCount(metadata.positions()), flags));
             }
+
+            details.add(lst);
         }
 
         return new ApiSearchResult(

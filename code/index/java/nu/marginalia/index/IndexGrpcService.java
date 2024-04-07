@@ -155,6 +155,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setTitle(result.title)
                         .setUrl(result.url.toString())
                         .setWordsTotal(result.wordsTotal)
+                        .setBestPositions(result.bestPositions)
                         .setRawItem(rawItem);
 
                 if (result.pubYear != null) {

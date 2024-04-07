@@ -121,6 +121,7 @@ public class QueryProtobufCodec {
                 results.getPubYear(), // ??,
                 results.getDataHash(),
                 results.getWordsTotal(),
+                results.getBestPositions(),
                 results.getRankingScore()
         );
     }
@@ -202,6 +203,7 @@ public class QueryProtobufCodec {
                 rpcDecoratedResultItem.getPubYear(),
                 rpcDecoratedResultItem.getDataHash(),
                 rpcDecoratedResultItem.getWordsTotal(),
+                rpcDecoratedResultItem.getBestPositions(),
                 rpcDecoratedResultItem.getRankingScore()
         );
     }
