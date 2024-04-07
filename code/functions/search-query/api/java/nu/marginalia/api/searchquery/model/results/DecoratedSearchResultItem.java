@@ -30,6 +30,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     public final Integer pubYear;
     public final long dataHash;
     public final int wordsTotal;
+    public final long bestPositions;
     public final double rankingScore;
 
     public long documentId() {
@@ -65,6 +66,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
                                      Integer pubYear,
                                      long dataHash,
                                      int wordsTotal,
+                                     long bestPositions,
                                      double rankingScore)
     {
         this.rawIndexResult = rawIndexResult;
@@ -77,6 +79,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
         this.pubYear = pubYear;
         this.dataHash = dataHash;
         this.wordsTotal = wordsTotal;
+        this.bestPositions = bestPositions;
         this.rankingScore = rankingScore;
     }
 

@@ -4,7 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -152,8 +154,27 @@ public class IndexResultValuatorService {
                 docData.pubYear(),
                 docData.dataHash(),
                 docData.wordsTotal(),
+                bestPositions(resultQuery),
                 resultValuator.calculateSearchResultValue(resultQuery, docData.wordsTotal(), rankingContext)
         );
+    }
 
+    private long bestPositions(CompiledQuery<SearchResultKeywordScore> resultQuery) {
+        LongSet positionsSet = CompiledQueryAggregates.positionsAggregate(resultQuery, SearchResultKeywordScore::positions);
+        int bestPc = 0;
+        long bestPositions = 0;
+
+        var li = positionsSet.longIterator();
+
+        while (li.hasNext()) {
+            long pos = li.nextLong();
+            int pc = Long.bitCount(pos);
+            if (pc > bestPc) {
+                bestPc = pc;
+                bestPositions = pos;
+            }
+        }
+
+        return bestPositions;
     }
 }

@@ -91,6 +91,7 @@ message RpcDecoratedResultItem {
   int64 dataHash = 9;
   int32 wordsTotal = 10;
   double rankingScore = 11; // The ranking score of this search result item, lower is better
+  int64 bestPositions = 12;
 }
 
 /** A raw index-service view of a search result */

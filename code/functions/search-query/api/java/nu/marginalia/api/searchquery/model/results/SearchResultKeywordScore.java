@@ -7,8 +7,6 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import java.util.Objects;
 
 public final class SearchResultKeywordScore {
-    @Deprecated
-    public final int subquery;
     public final long termId;
     public final String keyword;
     private final long encodedWordMetadata;
@@ -22,7 +20,6 @@ public final class SearchResultKeywordScore {
                                     long encodedDocMetadata,
                                     int htmlFeatures) {
         this.termId = termId;
-        this.subquery = -1; // FIXME, deprecated
         this.keyword = keyword;
         this.encodedWordMetadata = encodedWordMetadata;
         this.encodedDocMetadata = encodedDocMetadata;
@@ -37,8 +34,9 @@ public final class SearchResultKeywordScore {
         return Long.bitCount(positions());
     }
 
+    @Deprecated // FIXME 2024-04-06
     public int subquery() {
-        return subquery;
+        return -1;
     }
     public long positions() {
         return WordMetadata.decodePositions(encodedWordMetadata);
@@ -70,21 +68,19 @@ public final class SearchResultKeywordScore {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (SearchResultKeywordScore) obj;
-        return this.subquery == that.subquery &&
-                Objects.equals(this.keyword, that.keyword) &&
+        return Objects.equals(this.keyword, that.keyword) &&
                 this.encodedWordMetadata == that.encodedWordMetadata &&
                 this.encodedDocMetadata == that.encodedDocMetadata;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(subquery, keyword, encodedWordMetadata, encodedDocMetadata);
+        return Objects.hash(keyword, encodedWordMetadata, encodedDocMetadata);
     }
 
     @Override
     public String toString() {
         return "SearchResultKeywordScore[" +
-                "set=" + subquery + ", " +
                 "keyword=" + keyword + ", " +
                 "encodedWordMetadata=" + new WordMetadata(encodedWordMetadata) + ", " +
                 "encodedDocMetadata=" + new DocumentMetadata(encodedDocMetadata) + ']';
