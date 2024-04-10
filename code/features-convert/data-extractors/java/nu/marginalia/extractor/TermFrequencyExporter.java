@@ -127,6 +127,10 @@ public class TermFrequencyExporter implements ExporterIf {
                     for (var word : sent) {
                         words.add(longHash(word.stemmed().getBytes(StandardCharsets.UTF_8)));
                     }
+
+                    for (var ngram : sent.ngramStemmed) {
+                        words.add(longHash(ngram.getBytes()));
+                    }
                 }
 
                 synchronized (counts) {
