@@ -14,6 +14,7 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -53,26 +54,22 @@ public class TermFrequencyExporter implements ExporterIf {
         TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
         AtomicInteger docCount = new AtomicInteger();
 
-        try (ForkJoinPool fjp = new ForkJoinPool(Math.max(2, Runtime.getRuntime().availableProcessors() / 2))) {
+        SimpleBlockingThreadPool sjp = new SimpleBlockingThreadPool("exporter", Math.clamp(2, 16, Runtime.getRuntime().availableProcessors() / 2), 4);
+        Path crawlerLogFile = inputDir.resolve("crawler.log");
 
-            Path crawlerLogFile = inputDir.resolve("crawler.log");
+        for (var item : WorkLog.iterable(crawlerLogFile)) {
+            if (Thread.interrupted()) {
+                sjp.shutDownNow();
 
-            for (var item : WorkLog.iterable(crawlerLogFile)) {
-                if (Thread.interrupted()) {
-                    fjp.shutdownNow();
-
-                    throw new InterruptedException();
-                }
-
-                Path crawlDataPath = inputDir.resolve(item.relPath());
-                fjp.execute(() -> processFile(crawlDataPath, counts, docCount, se.get()));
+                throw new InterruptedException();
             }
 
-            while (!fjp.isQuiescent()) {
-                if (fjp.awaitQuiescence(10, TimeUnit.SECONDS))
-                    break;
-            }
+            Path crawlDataPath = inputDir.resolve(item.relPath());
+            sjp.submitQuietly(() -> processFile(crawlDataPath, counts, docCount, se.get()));
         }
+
+        sjp.shutDown();
+        sjp.awaitTermination(10, TimeUnit.DAYS);
 
         var tmpFile = Files.createTempFile(destStorage.asPath(), "freqs", ".dat.tmp",
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
