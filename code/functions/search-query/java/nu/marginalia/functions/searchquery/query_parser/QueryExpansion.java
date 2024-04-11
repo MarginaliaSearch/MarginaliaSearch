@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/** Responsible for expanding a query, that is creating alternative branches of query execution
+ *  to increase the number of results
+ */
 public class QueryExpansion {
     private static final PorterStemmer ps = new PorterStemmer();
     private final TermFrequencyDict dict;
@@ -94,6 +97,10 @@ public class QueryExpansion {
         }
     }
 
+    /** Create an alternative interpretation of the query that replaces a sequence of words
+     * with a word n-gram.  This makes it so that when possible, the order of words in the document
+     * matches the order of the words in the query.
+     */
     public void createSegments(QWordGraph graph) {
         List<QWord> nodes = new ArrayList<>();
 
@@ -115,4 +122,7 @@ public class QueryExpansion {
         }
     }
 
+    public interface ExpansionStrategy {
+        void expand(QWordGraph graph);
+    }
 }

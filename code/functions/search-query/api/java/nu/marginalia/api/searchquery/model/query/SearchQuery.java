@@ -72,7 +72,7 @@ public class SearchQuery {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (!compiledQuery.isEmpty()) sb.append("compiledQuery=").append(compiledQuery);
+        if (!compiledQuery.isEmpty()) sb.append("compiledQuery=").append(compiledQuery).append(", ");
         if (!searchTermsExclude.isEmpty()) sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsAdvice.isEmpty()) sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsPriority.isEmpty()) sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));
