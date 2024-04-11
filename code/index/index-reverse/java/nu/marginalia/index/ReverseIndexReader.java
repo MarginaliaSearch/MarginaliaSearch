@@ -68,8 +68,12 @@ public class ReverseIndexReader {
     }
 
 
-    long wordOffset(long wordId) {
-        long idx = wordsBTreeReader.findEntry(wordId);
+    /** Calculate the offset of the word in the documents.
+     * If the return-value is negative, the term does not exist
+     * in the index.
+     */
+    long wordOffset(long termId) {
+        long idx = wordsBTreeReader.findEntry(termId);
 
         if (idx < 0)
             return -1L;
@@ -77,37 +81,43 @@ public class ReverseIndexReader {
         return words.get(wordsDataOffset + idx + 1);
     }
 
-    public EntrySource documents(long wordId) {
+    public EntrySource documents(long termId) {
         if (null == words) {
             logger.warn("Reverse index is not ready, dropping query");
             return new EmptyEntrySource();
         }
 
-        long offset = wordOffset(wordId);
+        long offset = wordOffset(termId);
 
-        if (offset < 0) return new EmptyEntrySource();
+        if (offset < 0) // No documents
+            return new EmptyEntrySource();
 
-        return new ReverseIndexEntrySource(name, createReaderNew(offset), 2, wordId);
+        return new ReverseIndexEntrySource(name, createReaderNew(offset), 2, termId);
     }
 
-    public QueryFilterStepIf also(long wordId) {
-        long offset = wordOffset(wordId);
+    /** Create a filter step requiring the specified termId to exist in the documents */
+    public QueryFilterStepIf also(long termId) {
+        long offset = wordOffset(termId);
 
-        if (offset < 0) return new QueryFilterNoPass();
+        if (offset < 0) // No documents
+            return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(createReaderNew(offset), name, wordId);
+        return new ReverseIndexRetainFilter(createReaderNew(offset), name, termId);
     }
 
-    public QueryFilterStepIf not(long wordId) {
-        long offset = wordOffset(wordId);
+    /** Create a filter step requiring the specified termId to be absent from the documents */
+    public QueryFilterStepIf not(long termId) {
+        long offset = wordOffset(termId);
 
-        if (offset < 0) return new QueryFilterLetThrough();
+        if (offset < 0) // No documents
+            return new QueryFilterLetThrough();
 
         return new ReverseIndexRejectFilter(createReaderNew(offset));
     }
 
-    public int numDocuments(long wordId) {
-        long offset = wordOffset(wordId);
+    /** Return the number of documents with the termId in the index */
+    public int numDocuments(long termId) {
+        long offset = wordOffset(termId);
 
         if (offset < 0)
             return 0;
@@ -115,15 +125,20 @@ public class ReverseIndexReader {
         return createReaderNew(offset).numEntries();
     }
 
+    /** Create a BTreeReader for the document offset associated with a termId */
     private BTreeReader createReaderNew(long offset) {
-        return new BTreeReader(documents, ReverseIndexParameters.docsBTreeContext, offset);
+        return new BTreeReader(
+                documents,
+                ReverseIndexParameters.docsBTreeContext,
+                offset);
     }
 
-    public long[] getTermMeta(long wordId, long[] docIds) {
-        long offset = wordOffset(wordId);
+    public long[] getTermMeta(long termId, long[] docIds) {
+        long offset = wordOffset(termId);
 
         if (offset < 0) {
-            logger.debug("Missing offset for word {}", wordId);
+            // This is likely a bug in the code, but we can't throw an exception here
+            logger.debug("Missing offset for word {}", termId);
             return new long[docIds.length];
         }
 
@@ -136,10 +151,9 @@ public class ReverseIndexReader {
     private boolean isUniqueAndSorted(long[] ids) {
         if (ids.length == 0)
             return true;
-        long prev = ids[0];
 
         for (int i = 1; i < ids.length; i++) {
-            if(ids[i] <= prev)
+            if(ids[i] <= ids[i-1])
                 return false;
         }
 

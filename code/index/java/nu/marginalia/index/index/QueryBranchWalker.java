@@ -75,7 +75,7 @@ public class QueryBranchWalker {
         // in practice only when an index doesn't contain all the search terms, so we can just
         // skip those paths
         if (!remainingPaths.isEmpty()) {
-            logger.info("Dropping: {}", remainingPaths);
+            logger.debug("Dropping: {}", remainingPaths);
         }
 
         return ret;

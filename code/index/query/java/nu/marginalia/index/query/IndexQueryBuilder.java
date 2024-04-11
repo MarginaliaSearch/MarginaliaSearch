@@ -11,16 +11,11 @@ import java.util.List;
 public interface IndexQueryBuilder {
     /** Filters documents that also contain termId, within the full index.
      */
-    IndexQueryBuilder alsoFull(long termId);
-
-    /**
-     * Filters documents that also contain the termId, within the priority index.
-     */
-    IndexQueryBuilder alsoPrio(long termIds);
+    IndexQueryBuilder also(long termId);
 
     /** Excludes documents that contain termId, within the full index
      */
-    IndexQueryBuilder notFull(long termId);
+    IndexQueryBuilder not(long termId);
 
     IndexQueryBuilder addInclusionFilter(QueryFilterStepIf filterStep);
     IndexQueryBuilder addInclusionFilterAny(List<QueryFilterStepIf> filterStep);
