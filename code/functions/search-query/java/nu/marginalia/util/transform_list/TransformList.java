@@ -80,6 +80,15 @@ public class TransformList<T> {
                     iter.remove();
                 }
             }
+            else if (firstEntity.action == Action.NO_OP) {
+                if (secondEntry.action == Action.REPLACE) {
+                    backingList.set(iter.nextIndex(), secondEntry.value);
+                }
+                else if (secondEntry.action == Action.REMOVE) {
+                    iter.next();
+                    iter.remove();
+                }
+            }
 
         }
     }
