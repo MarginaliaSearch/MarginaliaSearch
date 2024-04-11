@@ -115,8 +115,7 @@ public class NgramExtractorMain {
     }
 
     public static void dumpCounts(Path zimInputFile,
-                                  Path countsOutputFile,
-                                  Path permutationsOutputFile
+                                  Path countsOutputFile
                                   ) throws IOException, InterruptedException
     {
         ZIMReader reader = new ZIMReader(new ZIMFile(zimInputFile.toString()));
@@ -143,9 +142,6 @@ public class NgramExtractorMain {
                         for (var hash : orderedHashes) {
                             lexicon.incOrdered(hash);
                         }
-                        for (var hash : unorderedHashes) {
-                            lexicon.addUnordered(hash);
-                        }
                     }
                 });
 
@@ -153,7 +149,6 @@ public class NgramExtractorMain {
         }
 
         lexicon.saveCounts(countsOutputFile);
-        lexicon.savePermutations(permutationsOutputFile);
     }
 
 }
