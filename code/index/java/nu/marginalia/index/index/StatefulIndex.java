@@ -125,58 +125,64 @@ public class StatefulIndex {
         // the term is missing from the index and can never be found
         paths.removeIf(containsAll(termPriority).negate());
 
-        List<QueryBranchWalker> helpers = QueryBranchWalker.create(termPriority, paths);
+        List<QueryBranchWalker> walkers = QueryBranchWalker.create(termPriority, paths);
 
-        for (var helper : helpers) {
+        for (var walker : walkers) {
             for (var builder : List.of(
-                    combinedIndexReader.findPriorityWord(helper.termId),
-                    combinedIndexReader.findFullWord(helper.termId)
+                    combinedIndexReader.findPriorityWord(walker.termId),
+                    combinedIndexReader.findFullWord(walker.termId)
             ))
             {
                 queryHeads.add(builder);
 
-                if (helper.atEnd())
-                    continue;
+                if (walker.atEnd())
+                    continue; // Single term search query
 
+                // Add filter steps for the remaining combinations of terms
                 List<QueryFilterStepIf> filterSteps = new ArrayList<>();
-                for (var step : helper.next()) {
+                for (var step : walker.next()) {
                     filterSteps.add(createFilter(step, 0));
                 }
                 builder.addInclusionFilterAny(filterSteps);
             }
         }
 
-        List<IndexQuery> ret = new ArrayList<>(10);
 
         // Add additional conditions to the query heads
         for (var query : queryHeads) {
 
             // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
             for (long term : terms.advice()) {
-                query = query.alsoFull(term);
+                query = query.also(term);
             }
 
             for (long term : terms.excludes()) {
-                query = query.notFull(term);
+                query = query.not(term);
             }
 
             // Run these filter steps last, as they'll worst-case cause as many page faults as there are
             // items in the buffer
-            ret.add(query.addInclusionFilter(combinedIndexReader.filterForParams(params)).build());
+            query.addInclusionFilter(combinedIndexReader.filterForParams(params));
         }
 
-
-        return ret;
+        return queryHeads
+                .stream()
+                .map(IndexQueryBuilder::build)
+                .toList();
     }
 
     /** Recursively create a filter step based on the QBW and its children */
     private QueryFilterStepIf createFilter(QueryBranchWalker walker, int depth) {
+
+        // Create a filter for the current termId
         final QueryFilterStepIf ownFilterCondition = ownFilterCondition(walker, depth);
 
         var childSteps = walker.next();
-
-        if (childSteps.isEmpty())
+        if (childSteps.isEmpty()) // no children, and so we're satisfied with just a single filter condition
             return ownFilterCondition;
+
+        // If there are children, we append the filter conditions for each child as an anyOf condition
+        // to the current filter condition
 
         List<QueryFilterStepIf> combinedFilters = new ArrayList<>();
 
@@ -186,6 +192,7 @@ public class StatefulIndex {
             combinedFilters.add(new QueryFilterAllOf(ownFilterCondition, childFilter));
         }
 
+        // Flatten the filter conditions if there's only one branch
         if (combinedFilters.size() == 1)
             return combinedFilters.getFirst();
         else
@@ -196,7 +203,7 @@ public class StatefulIndex {
     private QueryFilterStepIf ownFilterCondition(QueryBranchWalker walker, int depth) {
         if (depth < 2) {
             // At shallow depths we prioritize terms that appear in the priority index,
-            // to increase the odds we find "good" results before the sand runs out
+            // to increase the odds we find "good" results before the execution timer runs out
             return new QueryFilterAnyOf(
                     combinedIndexReader.hasWordPrio(walker.termId),
                     combinedIndexReader.hasWordFull(walker.termId)

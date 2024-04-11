@@ -41,6 +41,7 @@ public class CombinedIndexReader {
     public QueryFilterStepIf hasWordFull(long termId) {
         return reverseIndexFullReader.also(termId);
     }
+
     public QueryFilterStepIf hasWordPrio(long termId) {
         return reverseIndexPriorityReader.also(termId);
     }

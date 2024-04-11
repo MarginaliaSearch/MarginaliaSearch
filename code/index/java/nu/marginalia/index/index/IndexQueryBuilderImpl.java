@@ -36,7 +36,7 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
         return this;
     }
 
-    public IndexQueryBuilder alsoFull(long termId) {
+    public IndexQueryBuilder also(long termId) {
 
         if (alreadyConsideredTerms.add(termId)) {
             query.addInclusionFilter(reverseIndexFullReader.also(termId));
@@ -45,16 +45,7 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
         return this;
     }
 
-    public IndexQueryBuilder alsoPrio(long termId) {
-
-        if (alreadyConsideredTerms.add(termId)) {
-            query.addInclusionFilter(reverseIndexPrioReader.also(termId));
-        }
-
-        return this;
-    }
-
-    public IndexQueryBuilder notFull(long termId) {
+    public IndexQueryBuilder not(long termId) {
 
         query.addInclusionFilter(reverseIndexFullReader.not(termId));
 
