@@ -112,10 +112,15 @@ public class QueryExpansion {
 
         // Look for known segments within the query
         for (int length = 2; length < Math.min(10, words.length); length++) {
-            for (var segment : lexicon.findSegments(length, words)) {
+            for (var segment : lexicon.findSegmentOffsets(length, words)) {
+
                 int start = segment.start();
                 int end = segment.start() + segment.length();
-                var word = IntStream.range(start, end).mapToObj(nodes::get).map(QWord::word).collect(Collectors.joining("_"));
+
+                var word = IntStream.range(start, end)
+                        .mapToObj(nodes::get)
+                        .map(QWord::word)
+                        .collect(Collectors.joining("_"));
 
                 graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
             }

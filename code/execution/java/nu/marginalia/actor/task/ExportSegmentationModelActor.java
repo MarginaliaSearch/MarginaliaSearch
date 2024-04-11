@@ -21,6 +21,7 @@ public class ExportSegmentationModelActor extends RecordActorPrototype {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public record Export(String zimFile) implements ActorStep {}
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
@@ -29,9 +30,8 @@ public class ExportSegmentationModelActor extends RecordActorPrototype {
                 var storage = storageService.allocateStorage(FileStorageType.EXPORT, "segmentation-model", "Segmentation Model Export " + LocalDateTime.now());
 
                 Path countsFile = storage.asPath().resolve("ngram-counts.bin");
-                Path permutationsFile = storage.asPath().resolve("ngram-permutations.bin");
 
-                NgramExtractorMain.dumpCounts(Path.of(zimFile), countsFile, permutationsFile);
+                NgramExtractorMain.dumpCounts(Path.of(zimFile), countsFile);
 
                 yield new End();
             }
