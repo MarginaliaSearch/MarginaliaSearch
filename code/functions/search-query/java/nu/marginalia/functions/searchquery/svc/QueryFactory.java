@@ -68,8 +68,6 @@ public class QueryFactory {
 
         String domain = null;
 
-        System.out.println(basicQuery);
-
         for (QueryToken t : basicQuery) {
             switch (t) {
                 case QueryToken.QuotTerm(String str, String displayStr) -> {
