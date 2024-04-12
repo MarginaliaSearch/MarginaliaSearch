@@ -3,6 +3,8 @@ package nu.marginalia.segmentation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class NgramLexiconTest {
@@ -22,8 +24,7 @@ class NgramLexiconTest {
         addNgram("rye", "bread");
         addNgram("rye", "world");
 
-        String[] sent = { "hello", "world", "rye", "bread" };
-        var segments = lexicon.findSegments(2, "hello", "world", "rye", "bread");
+        List<String[]> segments = lexicon.findSegmentsStrings(2, 2, "hello", "world", "rye", "bread");
 
         assertEquals(2, segments.size());
 

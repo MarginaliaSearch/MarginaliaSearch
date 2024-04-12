@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.longs.LongHash;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.LanguageModels;
 
 import java.io.BufferedInputStream;
@@ -45,21 +44,11 @@ public class NgramLexicon {
         counts = new Long2IntOpenCustomHashMap(100_000_000, new KeyIsAlreadyHashStrategy());
     }
 
-    public List<String[]> findSegmentsStrings(int minLength, int maxLength, String... parts) {
+    public List<String[]> findSegmentsStrings(int minLength,
+                                              int maxLength,
+                                              String... parts)
+    {
         List<String[]> segments = new ArrayList<>();
-
-        for (int i = minLength; i <= maxLength; i++) {
-            segments.addAll(findSegments(i, parts));
-        }
-
-        return segments;
-    }
-    
-    public List<String[]> findSegments(int length, String... parts) {
-        // Don't look for ngrams longer than the sentence
-        if (parts.length < length) return List.of();
-
-        List<String[]> positions = new ArrayList<>();
 
         // Hash the parts
         long[] hashes = new long[parts.length];
@@ -67,33 +56,42 @@ public class NgramLexicon {
             hashes[i] = HasherGroup.hash(parts[i]);
         }
 
-        long ordered = 0;
+        for (int i = minLength; i <= maxLength; i++) {
+            findSegments(segments, i, parts, hashes);
+        }
+
+        return segments;
+    }
+    
+    public void findSegments(List<String[]> positions,
+                             int length,
+                             String[] parts,
+                             long[] hashes)
+    {
+        // Don't look for ngrams longer than the sentence
+        if (parts.length < length) return;
+
+        long hash = 0;
         int i = 0;
 
         // Prepare by combining up to length hashes
         for (; i < length; i++) {
-            ordered = orderedHasher.apply(ordered, hashes[i]);
+            hash = orderedHasher.apply(hash, hashes[i]);
         }
 
         // Slide the window and look for matches
-        for (;; i++) {
-            int ct = counts.get(ordered);
-
-            if (ct > 0) {
+        for (;;) {
+            if (counts.get(hash) > 0) {
                 positions.add(Arrays.copyOfRange(parts, i - length, i));
             }
 
-            if (i >= hashes.length)
+            if (i < hashes.length) {
+                hash = orderedHasher.replace(hash, hashes[i], hashes[i - length], length);
+                i++;
+            } else {
                 break;
-
-            // Remove the oldest hash and add the new one
-            ordered = orderedHasher.replace(ordered,
-                    hashes[i],
-                    hashes[i - length],
-                    length);
+            }
         }
-
-        return positions;
     }
 
     public List<SentenceSegment> findSegmentOffsets(int length, String... parts) {
@@ -108,30 +106,28 @@ public class NgramLexicon {
             hashes[i] = HasherGroup.hash(parts[i]);
         }
 
-        long ordered = 0;
+        long hash = 0;
         int i = 0;
 
         // Prepare by combining up to length hashes
         for (; i < length; i++) {
-            ordered = orderedHasher.apply(ordered, hashes[i]);
+            hash = orderedHasher.apply(hash, hashes[i]);
         }
 
         // Slide the window and look for matches
-        for (;; i++) {
-            int ct = counts.get(ordered);
+        for (;;) {
+            int ct = counts.get(hash);
 
             if (ct > 0) {
                 positions.add(new SentenceSegment(i - length, length, ct));
             }
 
-            if (i >= hashes.length)
+            if (i < hashes.length) {
+                hash = orderedHasher.replace(hash, hashes[i], hashes[i - length], length);
+                i++;
+            } else {
                 break;
-
-            // Remove the oldest hash and add the new one
-            ordered = orderedHasher.replace(ordered,
-                    hashes[i],
-                    hashes[i - length],
-                    length);
+            }
         }
 
         return positions;
@@ -166,6 +162,10 @@ public class NgramLexicon {
     public record SentenceSegment(int start, int length, int count) {
         public String[] project(String... parts) {
             return Arrays.copyOfRange(parts, start, start + length);
+        }
+
+        public boolean overlaps(SentenceSegment other) {
+            return start < other.start + other.length && start + length > other.start;
         }
     }
 
