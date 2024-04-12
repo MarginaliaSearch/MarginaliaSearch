@@ -134,8 +134,6 @@ public class QueryExpansion {
                     .map(QWord::word)
                     .collect(Collectors.joining("_"));
 
-            System.out.println(word);
-
             graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
         }
 
