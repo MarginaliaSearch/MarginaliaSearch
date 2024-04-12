@@ -42,6 +42,7 @@ public class NgramLexicon {
 
     public NgramLexicon() {
         counts = new Long2IntOpenCustomHashMap(100_000_000, new KeyIsAlreadyHashStrategy());
+        counts.defaultReturnValue(0);
     }
 
     public List<String[]> findSegmentsStrings(int minLength,
@@ -133,8 +134,22 @@ public class NgramLexicon {
         return positions;
     }
 
-    public void incOrdered(long hashOrdered) {
-        counts.addTo(hashOrdered, 1);
+    public void incOrderedTitle(long hashOrdered) {
+        int value = counts.get(hashOrdered);
+
+        if (value < 0) value = -value + 1;
+        else value ++;
+
+        counts.put(hashOrdered, value);
+    }
+
+    public void incOrderedBody(long hashOrdered) {
+        int value = counts.get(hashOrdered);
+
+        if (value <= 0) value --;
+        else value ++;
+
+        counts.put(hashOrdered, value);
     }
 
     public void saveCounts(Path file) throws IOException {
@@ -146,8 +161,10 @@ public class NgramLexicon {
 
             counts.forEach((k, v) -> {
                 try {
-                    dos.writeLong(k);
-                    dos.writeInt(v);
+                    if (v > 0) {
+                        dos.writeLong(k);
+                        dos.writeInt(v);
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
