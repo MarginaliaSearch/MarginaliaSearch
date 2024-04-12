@@ -80,7 +80,7 @@ public class NgramLexicon {
             int ct = counts.get(ordered);
 
             if (ct > 0) {
-                positions.add(Arrays.copyOfRange(parts, i - length, length));
+                positions.add(Arrays.copyOfRange(parts, i - length, i));
             }
 
             if (i >= hashes.length)
