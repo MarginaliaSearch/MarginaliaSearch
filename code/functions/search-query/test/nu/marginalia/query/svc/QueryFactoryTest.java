@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,6 +52,21 @@ public class QueryFactoryTest {
                         "NONE",
                         QueryStrategy.AUTO,
                         ResultRankingParameters.TemporalBias.NONE)).specs;
+    }
+
+
+    @Test
+    void qsec10() {
+        try (var lines = Files.lines(Path.of("/home/vlofgren/Exports/qsec10/webis-qsec-10-training-set/webis-qsec-10-training-set-queries.txt"))) {
+            lines.limit(1000).forEach(line -> {
+                String[] parts = line.split("\t");
+                if (parts.length == 2) {
+                    System.out.println(parseAndGetSpecs(parts[1]).getQuery().compiledQuery);
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

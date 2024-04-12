@@ -9,8 +9,7 @@ import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -110,21 +109,72 @@ public class QueryExpansion {
 
         String[] words = nodes.stream().map(QWord::stemmed).toArray(String[]::new);
 
-        // Look for known segments within the query
+        // Grab all segments
+
+        List<NgramLexicon.SentenceSegment> allSegments = new ArrayList<>();
         for (int length = 2; length < Math.min(10, words.length); length++) {
-            for (var segment : lexicon.findSegmentOffsets(length, words)) {
+            allSegments.addAll(lexicon.findSegmentOffsets(length, words));
+        }
+        allSegments.sort(Comparator.comparing(NgramLexicon.SentenceSegment::start));
 
-                int start = segment.start();
-                int end = segment.start() + segment.length();
+        if (allSegments.isEmpty()) {
+            return;
+        }
 
-                var word = IntStream.range(start, end)
-                        .mapToObj(nodes::get)
-                        .map(QWord::word)
-                        .collect(Collectors.joining("_"));
+        Set<NgramLexicon.SentenceSegment> bestSegmentation =
+                findBestSegmentation(allSegments);
 
-                graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
+        for (var segment : bestSegmentation) {
+
+            int start = segment.start();
+            int end = segment.start() + segment.length();
+
+            var word = IntStream.range(start, end)
+                    .mapToObj(nodes::get)
+                    .map(QWord::word)
+                    .collect(Collectors.joining("_"));
+
+            System.out.println(word);
+
+            graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
+        }
+
+    }
+
+    private Set<NgramLexicon.SentenceSegment> findBestSegmentation(List<NgramLexicon.SentenceSegment> allSegments) {
+        Set<NgramLexicon.SentenceSegment> bestSet = Set.of();
+        double bestScore = Double.MIN_VALUE;
+
+        for (int i = 0; i < allSegments.size(); i++) {
+            Set<NgramLexicon.SentenceSegment> parts = new HashSet<>();
+            parts.add(allSegments.get(i));
+
+            outer:
+            for (int j = i+1; j < allSegments.size(); j++) {
+                var candidate = allSegments.get(j);
+                for (var part : parts) {
+                    if (part.overlaps(candidate)) {
+                        continue outer;
+                    }
+                }
+                parts.add(candidate);
+            }
+
+            double score = 0.;
+            for (var part : parts) {
+                // |s|^|s|-normalization per M Hagen et al
+                double normFactor = Math.pow(part.count(), part.count());
+
+                score += normFactor * part.count();
+            }
+
+            if (bestScore < score) {
+                bestScore = score;
+                bestSet = parts;
             }
         }
+
+        return bestSet;
     }
 
     public interface ExpansionStrategy {
