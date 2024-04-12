@@ -8,10 +8,7 @@ import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -22,13 +19,19 @@ public class NgramExtractorMain {
     public static void main(String... args) {
     }
 
-    private static List<String> getNgramTerms(String title, Document document) {
+    private static List<String> getNgramTitleTerms(String title) {
         List<String> terms = new ArrayList<>();
 
         // Add the title
-        if (title.contains(" ")) {
+        if (title.contains(" ")) { // Only add multi-word titles since we're chasing ngrams
             terms.add(title.toLowerCase());
         }
+
+        return cleanTerms(terms);
+    }
+
+    private static List<String> getNgramBodyTerms(Document document) {
+        List<String> terms = new ArrayList<>();
 
         // Grab all internal links
         document.select("a[href]").forEach(e -> {
@@ -54,6 +57,10 @@ public class NgramExtractorMain {
             terms.add(text);
         });
 
+        return cleanTerms(terms);
+    }
+
+    private static List<String> cleanTerms(List<String> terms) {
         // Trim the discovered terms
         terms.replaceAll(s -> {
 
@@ -85,35 +92,6 @@ public class NgramExtractorMain {
         return terms;
     }
 
-    public static void dumpNgramsList(
-            Path zimFile,
-            Path ngramFile
-    ) throws IOException, InterruptedException {
-        ZIMReader reader = new ZIMReader(new ZIMFile(zimFile.toString()));
-
-        PrintWriter printWriter = new PrintWriter(Files.newOutputStream(ngramFile,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE));
-
-        LongOpenHashSet known = new LongOpenHashSet();
-
-        try (var executor = Executors.newWorkStealingPool()) {
-            reader.forEachArticles((title, body) -> {
-                executor.submit(() -> {
-                    var terms = getNgramTerms(title, Jsoup.parse(body));
-                    synchronized (known) {
-                        for (String term : terms) {
-                            if (known.add(hash.hashNearlyASCII(term))) {
-                                printWriter.println(term);
-                            }
-                        }
-                    }
-                });
-
-            }, p -> true);
-        }
-        printWriter.close();
-    }
-
     public static void dumpCounts(Path zimInputFile,
                                   Path countsOutputFile
                                   ) throws IOException, InterruptedException
@@ -123,24 +101,31 @@ public class NgramExtractorMain {
         NgramLexicon lexicon = new NgramLexicon();
 
         var orderedHasher = HasherGroup.ordered();
-        var unorderedHasher = HasherGroup.unordered();
 
         try (var executor = Executors.newWorkStealingPool()) {
             reader.forEachArticles((title, body) -> {
                 executor.submit(() -> {
-                    LongArrayList orderedHashes = new LongArrayList();
-                    LongArrayList unorderedHashes = new LongArrayList();
+                    LongArrayList orderedHashesTitle = new LongArrayList();
+                    LongArrayList orderedHashesBody = new LongArrayList();
 
-                    for (var sent : getNgramTerms(title, Jsoup.parse(body))) {
+                    for (var sent : getNgramTitleTerms(title)) {
                         String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
 
-                        orderedHashes.add(orderedHasher.rollingHash(terms));
-                        unorderedHashes.add(unorderedHasher.rollingHash(terms));
+                        orderedHashesTitle.add(orderedHasher.rollingHash(terms));
+                    }
+
+                    for (var sent : getNgramBodyTerms(Jsoup.parse(body))) {
+                        String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
+
+                        orderedHashesBody.add(orderedHasher.rollingHash(terms));
                     }
 
                     synchronized (lexicon) {
-                        for (var hash : orderedHashes) {
-                            lexicon.incOrdered(hash);
+                        for (var hash : orderedHashesTitle) {
+                            lexicon.incOrderedTitle(hash);
+                        }
+                        for (var hash : orderedHashesBody) {
+                            lexicon.incOrderedBody(hash);
                         }
                     }
                 });
