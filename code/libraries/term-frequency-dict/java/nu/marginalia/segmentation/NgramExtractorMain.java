@@ -1,7 +1,6 @@
 package nu.marginalia.segmentation;
 
 import it.unimi.dsi.fastutil.longs.*;
-import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 public class NgramExtractorMain {
     public static void main(String... args) throws IOException, InterruptedException {
-        dumpCounts(Path.of("/home/vlofgren/Exports/wikipedia_en_all_nopic_2024-02.zim"),
-                Path.of("/tmp/ngram-counts.bin"));
     }
 
     private static List<String> getNgramTitleTerms(String title) {
@@ -64,7 +61,6 @@ public class NgramExtractorMain {
     private static List<String> cleanTerms(List<String> terms) {
         // Trim the discovered terms
         terms.replaceAll(s -> {
-
             // Remove trailing parentheses and their contents
             if (s.endsWith(")")) {
                 int idx = s.lastIndexOf('(');
@@ -73,9 +69,22 @@ public class NgramExtractorMain {
                 }
             }
 
+            return s;
+        });
+
+        terms.replaceAll(s -> {
             // Remove leading "list of "
             if (s.startsWith("list of ")) {
                 return s.substring("list of ".length());
+            }
+
+            return s;
+        });
+
+        terms.replaceAll(s -> {
+            // Remove trailing punctuation
+            if (s.endsWith(".") || s.endsWith(",") || s.endsWith(":") || s.endsWith(";")) {
+                return s.substring(0, s.length() - 1);
             }
 
             return s;

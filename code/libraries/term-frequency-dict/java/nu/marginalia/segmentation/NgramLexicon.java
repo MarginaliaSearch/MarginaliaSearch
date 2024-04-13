@@ -21,6 +21,7 @@ import java.util.List;
 public class NgramLexicon {
     private final Long2IntOpenCustomHashMap counts;
 
+    private int size;
     private static final HasherGroup orderedHasher = HasherGroup.ordered();
 
     @Inject
@@ -31,9 +32,15 @@ public class NgramLexicon {
                     (int) size,
                     new KeyIsAlreadyHashStrategy()
             );
+            counts.defaultReturnValue(0);
 
-            for (int i = 0; i < size; i++) {
-                counts.put(dis.readLong(), dis.readInt());
+            try {
+                for (int i = 0; i < size; i++) {
+                    counts.put(dis.readLong(), dis.readInt());
+                }
+            }
+            catch (IOException ex) {
+                ex.printStackTrace();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -137,8 +144,12 @@ public class NgramLexicon {
     public void incOrderedTitle(long hashOrdered) {
         int value = counts.get(hashOrdered);
 
-        if (value < 0) value = -value + 1;
-        else value ++;
+        if (value <= 0) {
+            size ++;
+            value = -value;
+        }
+
+        value ++;
 
         counts.put(hashOrdered, value);
     }
@@ -147,7 +158,7 @@ public class NgramLexicon {
         int value = counts.get(hashOrdered);
 
         if (value <= 0) value --;
-        else value ++;
+        else value++;
 
         counts.put(hashOrdered, value);
     }
@@ -157,7 +168,8 @@ public class NgramLexicon {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.WRITE))) {
-            dos.writeInt(counts.size());
+
+            dos.writeInt(size);
 
             counts.forEach((k, v) -> {
                 try {
