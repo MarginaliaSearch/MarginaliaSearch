@@ -117,10 +117,9 @@ public class NgramExtractorMain {
                 32
                 );
 
-        reader.forEachArticles((title, body) -> {
+        reader.forEachTitles((title) -> {
             pool.submitQuietly(() -> {
                 LongArrayList orderedHashesTitle = new LongArrayList();
-                LongArrayList orderedHashesBody = new LongArrayList();
 
                 String normalizedTitle = title.replace('_', ' ');
 
@@ -128,6 +127,18 @@ public class NgramExtractorMain {
                     String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
                     orderedHashesTitle.add(orderedHasher.rollingHash(terms));
                 }
+                synchronized (lexicon) {
+                    for (var hash : orderedHashesTitle) {
+                        lexicon.incOrderedTitle(hash);
+                    }
+                }
+            });
+
+        });
+
+        reader.forEachArticles((title, body) -> {
+            pool.submitQuietly(() -> {
+                LongArrayList orderedHashesBody = new LongArrayList();
 
                 for (var sent : getNgramBodyTerms(Jsoup.parse(body))) {
                     String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
@@ -135,9 +146,6 @@ public class NgramExtractorMain {
                 }
 
                 synchronized (lexicon) {
-                    for (var hash : orderedHashesTitle) {
-                        lexicon.incOrderedTitle(hash);
-                    }
                     for (var hash : orderedHashesBody) {
                         lexicon.incOrderedBody(hash);
                     }
