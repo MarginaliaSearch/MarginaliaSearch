@@ -161,7 +161,7 @@ public class QueryExpansion {
             double score = 0.;
             for (var part : parts) {
                 // |s|^|s|-normalization per M Hagen et al
-                double normFactor = Math.pow(part.count(), part.count());
+                double normFactor = Math.pow(part.length(), part.length());
 
                 score += normFactor * part.count();
             }
