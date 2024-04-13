@@ -23,6 +23,7 @@ dependencies {
     implementation project(':code:common:config')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:array')
+    implementation project(':code:libraries:blocking-thread-pool')
 
     implementation libs.bundles.slf4j
     implementation libs.notnull

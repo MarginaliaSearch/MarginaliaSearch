@@ -2,6 +2,7 @@ package nu.marginalia.segmentation;
 
 import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.hash.MurmurHash3_128;
+import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openzim.ZIMTypes.ZIMFile;
@@ -11,12 +12,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class NgramExtractorMain {
-    static MurmurHash3_128 hash = new MurmurHash3_128();
-
-    public static void main(String... args) {
+    public static void main(String... args) throws IOException, InterruptedException {
+        dumpCounts(Path.of("/home/vlofgren/Exports/wikipedia_en_all_nopic_2024-02.zim"),
+                Path.of("/tmp/ngram-counts.bin"));
     }
 
     private static List<String> getNgramTitleTerms(String title) {
@@ -102,36 +103,42 @@ public class NgramExtractorMain {
 
         var orderedHasher = HasherGroup.ordered();
 
-        try (var executor = Executors.newWorkStealingPool()) {
-            reader.forEachArticles((title, body) -> {
-                executor.submit(() -> {
-                    LongArrayList orderedHashesTitle = new LongArrayList();
-                    LongArrayList orderedHashesBody = new LongArrayList();
+        var pool = new SimpleBlockingThreadPool("ngram-extractor",
+                Math.clamp(2, Runtime.getRuntime().availableProcessors(), 32),
+                32
+                );
 
-                    for (var sent : getNgramTitleTerms(title)) {
-                        String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
+        reader.forEachArticles((title, body) -> {
+            pool.submitQuietly(() -> {
+                LongArrayList orderedHashesTitle = new LongArrayList();
+                LongArrayList orderedHashesBody = new LongArrayList();
 
-                        orderedHashesTitle.add(orderedHasher.rollingHash(terms));
+                String normalizedTitle = title.replace('_', ' ');
+
+                for (var sent : getNgramTitleTerms(normalizedTitle)) {
+                    String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
+                    orderedHashesTitle.add(orderedHasher.rollingHash(terms));
+                }
+
+                for (var sent : getNgramBodyTerms(Jsoup.parse(body))) {
+                    String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
+                    orderedHashesBody.add(orderedHasher.rollingHash(terms));
+                }
+
+                synchronized (lexicon) {
+                    for (var hash : orderedHashesTitle) {
+                        lexicon.incOrderedTitle(hash);
                     }
-
-                    for (var sent : getNgramBodyTerms(Jsoup.parse(body))) {
-                        String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
-
-                        orderedHashesBody.add(orderedHasher.rollingHash(terms));
+                    for (var hash : orderedHashesBody) {
+                        lexicon.incOrderedBody(hash);
                     }
+                }
+            });
 
-                    synchronized (lexicon) {
-                        for (var hash : orderedHashesTitle) {
-                            lexicon.incOrderedTitle(hash);
-                        }
-                        for (var hash : orderedHashesBody) {
-                            lexicon.incOrderedBody(hash);
-                        }
-                    }
-                });
+        }, p -> true);
 
-            }, p -> true);
-        }
+        pool.shutDown();
+        pool.awaitTermination(10, TimeUnit.DAYS);
 
         lexicon.saveCounts(countsOutputFile);
     }
