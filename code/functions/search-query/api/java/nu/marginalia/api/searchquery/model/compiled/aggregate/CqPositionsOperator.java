@@ -4,16 +4,22 @@ import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 
 import java.util.List;
 import java.util.function.IntToLongFunction;
+import java.util.function.LongUnaryOperator;
 import java.util.function.ToLongFunction;
 
 public class CqPositionsOperator implements CqExpression.ObjectVisitor<LongSet> {
     private final IntToLongFunction operator;
 
     public <T> CqPositionsOperator(CompiledQuery<T> query, ToLongFunction<T> operator) {
+        this.operator = idx -> operator.applyAsLong(query.at(idx));
+    }
+
+    public CqPositionsOperator(CompiledQueryLong query, LongUnaryOperator operator) {
         this.operator = idx -> operator.applyAsLong(query.at(idx));
     }
 

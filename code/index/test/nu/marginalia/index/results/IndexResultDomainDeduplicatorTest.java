@@ -25,7 +25,7 @@ class IndexResultDomainDeduplicatorTest {
     }
 
     SearchResultItem forId(int domain, int ordinal) {
-        return new SearchResultItem(UrlIdCodec.encodeId(domain, ordinal), List.of(), 4, Double.NaN);
+        return new SearchResultItem(UrlIdCodec.encodeId(domain, ordinal), 0, 0, List.of(), 4, Double.NaN);
     }
 
 }

@@ -46,6 +46,10 @@ public class CompiledQuery<T> implements Iterable<T> {
         return new CompiledQueryLong(root, data.mapToLong(mapper));
     }
 
+    public CompiledQueryLong mapToInt(ToIntFunction<T> mapper) {
+        return new CompiledQueryLong(root, data.mapToInt(mapper));
+    }
+
     public CqExpression root() {
         return root;
     }

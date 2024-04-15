@@ -1,10 +1,12 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 
 import java.util.List;
 import java.util.function.IntToLongFunction;
+import java.util.function.LongUnaryOperator;
 import java.util.function.ToLongFunction;
 
 public class CqLongBitmaskOperator implements CqExpression.LongVisitor {
@@ -12,6 +14,9 @@ public class CqLongBitmaskOperator implements CqExpression.LongVisitor {
     private final IntToLongFunction operator;
 
     public <T> CqLongBitmaskOperator(CompiledQuery<T> query, ToLongFunction<T> operator) {
+        this.operator = idx-> operator.applyAsLong(query.at(idx));
+    }
+    public CqLongBitmaskOperator(CompiledQueryLong query, LongUnaryOperator operator) {
         this.operator = idx-> operator.applyAsLong(query.at(idx));
     }
 

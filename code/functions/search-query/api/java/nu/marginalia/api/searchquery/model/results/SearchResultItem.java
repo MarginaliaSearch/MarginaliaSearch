@@ -15,15 +15,24 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
      * probably not what you want, use getDocumentId() instead */
     public final long combinedId;
 
+    /** Encoded document metadata */
+    public final long encodedDocMetadata;
+
+    /** Encoded html features of document */
+
+    public final int htmlFeatures;
+
     /** How did the subqueries match against the document ? */
     public final List<SearchResultKeywordScore> keywordScores;
 
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public SearchResultItem(long combinedId) {
+    public SearchResultItem(long combinedId, long encodedDocMetadata, int htmlFeatures) {
         this.combinedId = combinedId;
+        this.encodedDocMetadata = encodedDocMetadata;
         this.keywordScores = new ArrayList<>();
+        this.htmlFeatures = htmlFeatures;
     }
 
 

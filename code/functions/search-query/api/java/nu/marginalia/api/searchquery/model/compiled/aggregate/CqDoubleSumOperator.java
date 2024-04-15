@@ -1,10 +1,12 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 
 import java.util.List;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.LongToDoubleFunction;
 import java.util.function.ToDoubleFunction;
 
 public class CqDoubleSumOperator implements CqExpression.DoubleVisitor {
@@ -13,6 +15,10 @@ public class CqDoubleSumOperator implements CqExpression.DoubleVisitor {
 
     public <T> CqDoubleSumOperator(CompiledQuery<T> query, ToDoubleFunction<T> operator) {
         this.operator = idx -> operator.applyAsDouble(query.at(idx));
+    }
+
+    public CqDoubleSumOperator(IntToDoubleFunction operator) {
+        this.operator = operator;
     }
 
     @Override

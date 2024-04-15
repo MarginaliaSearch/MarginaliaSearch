@@ -98,16 +98,16 @@ message RpcDecoratedResultItem {
 message RpcRawResultItem {
   int64 combinedId = 1; // raw ID with bit-encoded ranking information still present
   int32 resultsFromDomain = 2; // number of other results from the same domain
-  repeated RpcResultKeywordScore keywordScores = 3;
+  int64 encodedDocMetadata = 3; // bit encoded document metadata
+  int32 htmlFeatures = 4; // bitmask encoding features of the document
+  repeated RpcResultKeywordScore keywordScores = 5;
 }
 
 /* Information about how well a keyword matches a query */
 message RpcResultKeywordScore {
   string keyword = 1; // the keyword
   int64 encodedWordMetadata = 2; // bit encoded word metadata
-  int64 encodedDocMetadata = 3; // bit encoded document metadata
-  bool hasPriorityTerms = 4; // true if this word is important to the document
-  int32 htmlFeatures = 5; // bit encoded document features
+  bool hasPriorityTerms = 3; // true if this word is important to the document
 }
 
 /* Query execution parameters */

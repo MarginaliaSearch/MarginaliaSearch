@@ -1,38 +1,34 @@
 package nu.marginalia.api.searchquery.model.results;
 
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.ToString;
-
-import java.util.Map;
+import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 
 @ToString
 public class ResultRankingContext {
     private final int docCount;
     public final ResultRankingParameters params;
 
-    private final Object2IntOpenHashMap<String> fullCounts = new Object2IntOpenHashMap<>(10, 0.5f);
-    private final Object2IntOpenHashMap<String> priorityCounts = new Object2IntOpenHashMap<>(10, 0.5f);
+    /** CqDataInt associated with frequency information of the terms in the query
+     * in the full index.  The dataset is indexed by the compiled query. */
+    public final CqDataInt fullCounts;
+
+    /** CqDataInt associated with frequency information of the terms in the query
+     * in the full index.  The dataset is indexed by the compiled query. */
+    public final CqDataInt priorityCounts;
 
     public ResultRankingContext(int docCount,
                                 ResultRankingParameters params,
-                                Map<String, Integer> fullCounts,
-                                Map<String, Integer> prioCounts
-                                      ) {
+                                CqDataInt fullCounts,
+                                CqDataInt prioCounts)
+    {
         this.docCount = docCount;
         this.params = params;
-        this.fullCounts.putAll(fullCounts);
-        this.priorityCounts.putAll(prioCounts);
+        this.fullCounts = fullCounts;
+        this.priorityCounts = prioCounts;
     }
 
     public int termFreqDocCount() {
         return docCount;
     }
 
-    public int frequency(String keyword) {
-        return fullCounts.getOrDefault(keyword, 1);
-    }
-
-    public int priorityFrequency(String keyword) {
-        return priorityCounts.getOrDefault(keyword, 1);
-    }
 }
