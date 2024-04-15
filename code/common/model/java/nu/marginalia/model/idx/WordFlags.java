@@ -50,6 +50,10 @@ public enum WordFlags {
         return (asBit() & value) > 0;
     }
 
+    public boolean isAbsent(long value) {
+        return (asBit() & value) == 0;
+    }
+
     public static EnumSet<WordFlags> decode(long encodedValue) {
         EnumSet<WordFlags> ret = EnumSet.noneOf(WordFlags.class);
 
@@ -61,4 +65,5 @@ public enum WordFlags {
 
         return ret;
     }
+
 }

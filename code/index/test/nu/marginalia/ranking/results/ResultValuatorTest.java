@@ -1,6 +1,8 @@
 package nu.marginalia.ranking.results;
 
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
@@ -31,30 +33,27 @@ class ResultValuatorTest {
         when(dict.docCount()).thenReturn(100_000);
 
         valuator = new ResultValuator(
-                new Bm25Factor(),
                 new TermCoherenceFactor()
         );
 
     }
-    CompiledQuery<SearchResultKeywordScore> titleOnlyLowCountSet = CompiledQuery.just(
-            new SearchResultKeywordScore("bob", 1,
-                    wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)),
-                    docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
-                    0)
-    );
-    CompiledQuery<SearchResultKeywordScore> highCountNoTitleSet = CompiledQuery.just(
-            new SearchResultKeywordScore("bob", 1,
-                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
-                    docMetadata(0, 2010,  5, EnumSet.noneOf(DocumentFlags.class)),
-                    0)
-    );
 
-    CompiledQuery<SearchResultKeywordScore> highCountSubjectSet = CompiledQuery.just(
+    CqDataInt frequencyData = new CqDataInt(new int[] { 10 });
+
+    CompiledQueryLong titleOnlyLowCountSet = CompiledQuery.just(
             new SearchResultKeywordScore("bob", 1,
-                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
-                    docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
-                    0)
-    );
+                    wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)))
+    ).mapToLong(SearchResultKeywordScore::encodedWordMetadata);
+
+    CompiledQueryLong highCountNoTitleSet = CompiledQuery.just(
+            new SearchResultKeywordScore("bob", 1,
+                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)))
+    ).mapToLong(SearchResultKeywordScore::encodedWordMetadata);;
+
+    CompiledQueryLong highCountSubjectSet = CompiledQuery.just(
+            new SearchResultKeywordScore("bob", 1,
+                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)))
+    ).mapToLong(SearchResultKeywordScore::encodedWordMetadata);;
 
 
     @Test
@@ -63,12 +62,16 @@ class ResultValuatorTest {
         when(dict.getTermFreq("bob")).thenReturn(10);
         ResultRankingContext context = new ResultRankingContext(100000,
                 ResultRankingParameters.sensibleDefaults(),
-                Map.of("bob", 10), Collections.emptyMap());
+                frequencyData,
+                frequencyData);
 
-        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, context);
-        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, context);
-        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet, 10_000, context);
-        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, 10_000, context);
+        long docMeta = docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class));
+        int features = 0;
+
+        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, docMeta, features, 10_000, context);
+        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, docMeta, features, 10_000, context);
+        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet,  docMeta, features, 10_000, context);
+        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, docMeta, features, 10_000, context);
 
         System.out.println(titleOnlyLowCount);
         System.out.println(titleLongOnlyLowCount);

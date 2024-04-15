@@ -1,18 +1,14 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Iterator;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 
 
 /** A compiled index service query */
-public class CompiledQueryLong implements Iterable<Long> {
-    public final CqExpression root;
-    public final CqDataLong data;
+public class CompiledQueryInt {
+    private final CqExpression root;
+    private final CqDataInt data;
 
-    public CompiledQueryLong(CqExpression root, CqDataLong data) {
+    public CompiledQueryInt(CqExpression root, CqDataInt data) {
         this.root = root;
         this.data = data;
     }
@@ -22,7 +18,7 @@ public class CompiledQueryLong implements Iterable<Long> {
         return root;
     }
 
-    public LongStream stream() {
+    public IntStream stream() {
         return data.stream();
     }
 
@@ -34,13 +30,7 @@ public class CompiledQueryLong implements Iterable<Long> {
         return data.get(index);
     }
 
-    @NotNull
-    @Override
-    public Iterator<Long> iterator() {
-        return stream().iterator();
-    }
-
-    public long[] copyData() {
+    public int[] copyData() {
         return data.copyData();
     }
 

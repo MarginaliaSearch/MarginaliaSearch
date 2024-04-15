@@ -15,7 +15,7 @@ class NgramLexiconTest {
     }
 
     void addNgram(String... ngram) {
-        lexicon.incOrdered(HasherGroup.ordered().rollingHash(ngram));
+        lexicon.incOrderedTitle(HasherGroup.ordered().rollingHash(ngram));
     }
 
     @Test

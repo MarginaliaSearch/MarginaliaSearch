@@ -6,16 +6,19 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
+import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
-import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.ranking.results.ResultValuator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,22 +129,31 @@ public class IndexResultValuatorService {
                 continue;
             }
 
-            // Reconstruct the SearchResultKeywordScore-compiledquery for re-valuation
+            // Reconstruct the compiledquery for re-valuation
             //
             // CAVEAT:  This hinges on a very fragile that IndexResultValuationContext puts them in the same
             // order as the data for the CompiledQuery<String>.
-            CompiledQuery<SearchResultKeywordScore> resultQuery =
-                    new CompiledQuery<>(compiledQuery.root, result.keywordScores.toArray(SearchResultKeywordScore[]::new));
+            long[] wordMetas = new long[compiledQuery.size()];
 
+            for (int i = 0; i < compiledQuery.size(); i++) {
+                var score = result.keywordScores.get(i);
+                wordMetas[i] = score.encodedWordMetadata();
+            }
 
-            resultItems.add(createCombinedItem(result, docData, resultQuery, rankingContext));
+            CompiledQueryLong metaQuery = new CompiledQueryLong(compiledQuery.root, new CqDataLong(wordMetas));
+
+            resultItems.add(createCombinedItem(
+                    result,
+                    docData,
+                    metaQuery,
+                    rankingContext));
         }
         return resultItems;
     }
 
     private DecoratedSearchResultItem createCombinedItem(SearchResultItem result,
                                                          DocdbUrlDetail docData,
-                                                         CompiledQuery<SearchResultKeywordScore> resultQuery,
+                                                         CompiledQueryLong wordMetas,
                                                          ResultRankingContext rankingContext) {
         return new DecoratedSearchResultItem(
                 result,
@@ -154,13 +166,19 @@ public class IndexResultValuatorService {
                 docData.pubYear(),
                 docData.dataHash(),
                 docData.wordsTotal(),
-                bestPositions(resultQuery),
-                resultValuator.calculateSearchResultValue(resultQuery, docData.wordsTotal(), rankingContext)
+                bestPositions(wordMetas),
+
+                resultValuator.calculateSearchResultValue(wordMetas,
+                        result.encodedDocMetadata,
+                        result.htmlFeatures,
+                        docData.wordsTotal(),
+                        rankingContext)
         );
     }
 
-    private long bestPositions(CompiledQuery<SearchResultKeywordScore> resultQuery) {
-        LongSet positionsSet = CompiledQueryAggregates.positionsAggregate(resultQuery, SearchResultKeywordScore::positions);
+    private long bestPositions(CompiledQueryLong wordMetas) {
+        LongSet positionsSet = CompiledQueryAggregates.positionsAggregate(wordMetas, WordMetadata::decodePositions);
+
         int bestPc = 0;
         long bestPositions = 0;
 

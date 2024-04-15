@@ -1,10 +1,12 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 
 import java.util.List;
 import java.util.function.IntUnaryOperator;
+import java.util.function.LongToIntFunction;
 import java.util.function.ToIntFunction;
 
 public class CqIntMaxMinOperator implements CqExpression.IntVisitor {
@@ -13,6 +15,10 @@ public class CqIntMaxMinOperator implements CqExpression.IntVisitor {
 
 
     public <T> CqIntMaxMinOperator(CompiledQuery<T> query, ToIntFunction<T> operator) {
+        this.operator = idx -> operator.applyAsInt(query.at(idx));
+    }
+
+    public CqIntMaxMinOperator(CompiledQueryLong query, LongToIntFunction operator) {
         this.operator = idx -> operator.applyAsInt(query.at(idx));
     }
 

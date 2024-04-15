@@ -1,7 +1,6 @@
 package nu.marginalia.index.results;
 
-import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -70,39 +69,42 @@ public class IndexResultValuationContext {
         long docMetadata = statefulIndex.getDocumentMetadata(docId);
         int htmlFeatures = statefulIndex.getHtmlFeatures(docId);
 
-        SearchResultItem searchResult = new SearchResultItem(docId);
+        SearchResultItem searchResult = new SearchResultItem(docId, docMetadata, htmlFeatures);
 
-        SearchResultKeywordScore[] scores = compiledQuery.indices().mapToObj(idx ->
-            new SearchResultKeywordScore(
-                    compiledQuery.at(idx),
-                    compiledQueryIds.at(idx),
-                    termMetadataForCombinedDocumentIds.getTermMetadata(
-                            compiledQueryIds.at(idx), combinedId
-                    ),
-                    docMetadata,
-                    htmlFeatures)
-        )
-                .toArray(SearchResultKeywordScore[]::new);
+        long[] wordMetas = new long[compiledQuery.size()];
+        SearchResultKeywordScore[] scores = new SearchResultKeywordScore[compiledQuery.size()];
+
+        for (int i = 0; i < wordMetas.length; i++) {
+            final long termId = compiledQueryIds.at(i);
+            final String term = compiledQuery.at(i);
+
+            wordMetas[i] = termMetadataForCombinedDocumentIds.getTermMetadata(termId, combinedId);
+            scores[i] = new SearchResultKeywordScore(term, termId, wordMetas[i]);
+        }
+
 
         // DANGER: IndexResultValuatorService assumes that searchResult.keywordScores has this specific order, as it needs
         // to be able to re-construct its own CompiledQuery<SearchResultKeywordScore> for re-ranking the results.  This is
         // a very flimsy assumption.
         searchResult.keywordScores.addAll(List.of(scores));
 
-        CompiledQuery<SearchResultKeywordScore> queryGraphScores = new CompiledQuery<>(compiledQuery.root, scores);
+        CompiledQueryLong wordMetasQuery = new CompiledQueryLong(compiledQuery.root, new CqDataLong(wordMetas));
 
-        boolean allSynthetic = !CompiledQueryAggregates.booleanAggregate(queryGraphScores, score -> !score.hasTermFlag(WordFlags.Synthetic));
-        int flagsCount = CompiledQueryAggregates.intMaxMinAggregate(queryGraphScores, score -> Long.bitCount(score.encodedWordMetadata() & flagsFilterMask));
-        int positionsCount = CompiledQueryAggregates.intMaxMinAggregate(queryGraphScores, SearchResultKeywordScore::positionCount);
+        boolean allSynthetic = !CompiledQueryAggregates.booleanAggregate(wordMetasQuery, WordFlags.Synthetic::isAbsent);
+        int flagsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(wordMeta & flagsFilterMask));
+        int positionsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(WordMetadata.decodePositions(wordMeta)));
 
-        if (!meetsQueryStrategyRequirements(queryGraphScores, queryParams.queryStrategy())) {
+        if (!meetsQueryStrategyRequirements(wordMetasQuery, queryParams.queryStrategy())) {
             return null;
         }
 
         if (flagsCount == 0 && !allSynthetic && positionsCount == 0)
             return null;
 
-        double score = searchResultValuator.calculateSearchResultValue(queryGraphScores,
+        double score = searchResultValuator.calculateSearchResultValue(
+                wordMetasQuery,
+                docMetadata,
+                htmlFeatures,
                 5000, // use a dummy value here as it's not present in the index
                 rankingContext);
 
@@ -111,7 +113,7 @@ public class IndexResultValuationContext {
         return searchResult;
     }
 
-    private boolean meetsQueryStrategyRequirements(CompiledQuery<SearchResultKeywordScore> queryGraphScores,
+    private boolean meetsQueryStrategyRequirements(CompiledQueryLong queryGraphScores,
                                                    QueryStrategy queryStrategy)
     {
         if (queryStrategy == QueryStrategy.AUTO ||
@@ -124,24 +126,24 @@ public class IndexResultValuationContext {
                 docs -> meetsQueryStrategyRequirements(docs, queryParams.queryStrategy()));
     }
 
-    private boolean meetsQueryStrategyRequirements(SearchResultKeywordScore termScore, QueryStrategy queryStrategy) {
+    private boolean meetsQueryStrategyRequirements(long wordMeta, QueryStrategy queryStrategy) {
         if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
-            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.Site.asBit());
+            return WordFlags.Site.isPresent(wordMeta);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
-            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.Subjects.asBit());
+            return WordFlags.Subjects.isPresent(wordMeta);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
-            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.Title.asBit());
+            return WordFlags.Title.isPresent(wordMeta);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_URL) {
-            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.UrlPath.asBit());
+            return WordFlags.UrlPath.isPresent(wordMeta);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
-            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.UrlDomain.asBit());
+            return WordFlags.UrlDomain.isPresent(wordMeta);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_LINK) {
-            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.ExternalLink.asBit());
+            return WordFlags.ExternalLink.isPresent(wordMeta);
         }
         return true;
     }

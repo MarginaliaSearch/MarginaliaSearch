@@ -3,7 +3,7 @@ package nu.marginalia.api.searchquery.model.compiled;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.function.Function;
-import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 import java.util.stream.Stream;
 
@@ -28,6 +28,15 @@ public class CqData<T> {
         long[] newData = new long[data.length];
         for (int i = 0; i < data.length; i++) {
             newData[i] = mapper.applyAsLong((T) data[i]);
+        }
+
+        return new CqDataLong(newData);
+    }
+
+    public CqDataLong mapToInt(ToIntFunction<T> mapper) {
+        long[] newData = new long[data.length];
+        for (int i = 0; i < data.length; i++) {
+            newData[i] = mapper.applyAsInt((T) data[i]);
         }
 
         return new CqDataLong(newData);

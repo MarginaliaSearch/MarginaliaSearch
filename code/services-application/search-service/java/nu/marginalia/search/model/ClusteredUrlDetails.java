@@ -38,7 +38,7 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
             for (var keywordScore : urlDetail.resultItem.keywordScores) {
                 if (keywordScore.isKeywordSpecial())
                     continue;
-                if (keywordScore.positionCount() == 0)
+                if (keywordScore.positions() == 0)
                     continue;
 
                 if (keywordScore.hasTermFlag(WordFlags.Title))

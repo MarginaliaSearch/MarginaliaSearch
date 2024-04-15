@@ -215,9 +215,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         Set<Integer> years = new HashSet<>();
 
         for (var res : rsp.results) {
-            for (var score : res.rawIndexResult.getKeywordScores()) {
-                years.add(DocumentMetadata.decodeYear(score.encodedDocMetadata()));
-            }
+            years.add(DocumentMetadata.decodeYear(res.rawIndexResult.encodedDocMetadata));
         }
 
         assertEquals(Set.of(1998), years);

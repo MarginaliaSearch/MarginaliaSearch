@@ -1,9 +1,8 @@
 package nu.marginalia.ranking.results;
 
-import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentFlags;
@@ -15,36 +14,32 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Singleton
 public class ResultValuator {
     final static double scalingFactor = 500.;
 
-    private final Bm25Factor bm25Factor;
     private final TermCoherenceFactor termCoherenceFactor;
 
     private static final Logger logger = LoggerFactory.getLogger(ResultValuator.class);
 
     @Inject
-    public ResultValuator(Bm25Factor bm25Factor,
-                          TermCoherenceFactor termCoherenceFactor) {
-        this.bm25Factor = bm25Factor;
+    public ResultValuator(TermCoherenceFactor termCoherenceFactor) {
         this.termCoherenceFactor = termCoherenceFactor;
     }
 
-    public double calculateSearchResultValue(CompiledQuery<SearchResultKeywordScore> scores,
+    public double calculateSearchResultValue(CompiledQueryLong wordMeta,
+                                             long documentMetadata,
+                                             int features,
                                              int length,
                                              ResultRankingContext ctx)
     {
-        if (scores.size() == 0)
+        if (wordMeta.isEmpty())
             return Double.MAX_VALUE;
-        if (length < 0)
-            length = 5000;
 
-        long documentMetadata = scores.at(0).encodedDocMetadata();
-        int features = scores.at(0).htmlFeatures();
+        if (length < 0) {
+            length = 5000;
+        }
+
         var rankingParams = ctx.params;
 
         int rank = DocumentMetadata.decodeRank(documentMetadata);
@@ -79,9 +74,10 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double bestTcf = rankingParams.tcfWeight * termCoherenceFactor.calculate(scores);
-        double bestBM25F = rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.prioParams, scores, length, ctx);
-        double bestBM25P = rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, scores, ctx);
+        double bestTcf = rankingParams.tcfWeight * termCoherenceFactor.calculate(wordMeta);
+
+        double bestBM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(new Bm25FullGraphVisitor(rankingParams.fullParams, wordMeta.data, length, ctx));
+        double bestBM25P = rankingParams.bm25PrioWeight * wordMeta.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordMeta.data, ctx));
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);

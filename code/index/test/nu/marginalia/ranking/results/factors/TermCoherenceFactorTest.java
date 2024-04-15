@@ -18,14 +18,23 @@ class TermCoherenceFactorTest {
     @Test
     public void testAllBitsSet() {
         var allPositionsSet = createSet(
-                WordMetadata.POSITIONS_MASK, WordMetadata.POSITIONS_MASK
+                ~0L,
+                ~0L
         );
 
-        long mask = CompiledQueryAggregates.longBitmaskAggregate(allPositionsSet, score -> score.positions() & WordMetadata.POSITIONS_MASK);
+        long mask = CompiledQueryAggregates.longBitmaskAggregate(
+                allPositionsSet,
+                SearchResultKeywordScore::positions
+        );
 
         assertEquals(1.0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
-        assertEquals(1.0, termCoherenceFactor.calculate(allPositionsSet));
+        assertEquals(1.0,
+                termCoherenceFactor.calculate(
+                        allPositionsSet.mapToLong(SearchResultKeywordScore::encodedWordMetadata)
+                )
+        );
+
     }
 
     @Test
@@ -38,7 +47,7 @@ class TermCoherenceFactorTest {
 
         assertEquals(0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
-        assertEquals(0, termCoherenceFactor.calculate(allPositionsSet));
+        assertEquals(0, termCoherenceFactor.calculate(allPositionsSet.mapToLong(SearchResultKeywordScore::encodedWordMetadata)));
     }
 
     @Test @SuppressWarnings("unchecked")
@@ -90,7 +99,7 @@ class TermCoherenceFactorTest {
 
         for (int i = 0; i < positionMasks.length; i++) {
             keywords.add(new SearchResultKeywordScore("", 0,
-                    new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, 0));
+                    new WordMetadata(positionMasks[i] & WordMetadata.POSITIONS_MASK, (byte) 0).encode()));
         }
 
         return CompiledQuery.just(keywords.toArray(SearchResultKeywordScore[]::new));

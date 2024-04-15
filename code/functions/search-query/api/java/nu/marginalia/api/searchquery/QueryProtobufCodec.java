@@ -134,6 +134,8 @@ public class QueryProtobufCodec {
 
         return new SearchResultItem(
                 rawItem.getCombinedId(),
+                rawItem.getEncodedDocMetadata(),
+                rawItem.getHtmlFeatures(),
                 keywordScores,
                 rawItem.getResultsFromDomain(),
                 Double.NaN // Not set
@@ -144,9 +146,7 @@ public class QueryProtobufCodec {
         return new SearchResultKeywordScore(
                 keywordScores.getKeyword(),
                 -1, // termId is internal to index service
-                keywordScores.getEncodedWordMetadata(),
-                keywordScores.getEncodedDocMetadata(),
-                keywordScores.getHtmlFeatures()
+                keywordScores.getEncodedWordMetadata()
         );
     }
 
