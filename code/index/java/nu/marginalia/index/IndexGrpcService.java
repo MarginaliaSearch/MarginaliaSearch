@@ -138,6 +138,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 rawItem.setResultsFromDomain(rawResult.resultsFromDomain);
                 rawItem.setHtmlFeatures(rawResult.htmlFeatures);
                 rawItem.setEncodedDocMetadata(rawResult.encodedDocMetadata);
+                rawItem.setHasPriorityTerms(rawResult.hasPrioTerm);
 
                 for (var score : rawResult.keywordScores) {
                     rawItem.addKeywordScores(

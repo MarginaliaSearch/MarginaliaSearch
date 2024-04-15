@@ -43,6 +43,7 @@ public class IndexMetadataService {
     public QuerySearchTerms getSearchTerms(CompiledQuery<String> compiledQuery, SearchQuery searchQuery) {
 
         LongArrayList termIdsList = new LongArrayList();
+        LongArrayList termIdsPrio = new LongArrayList();
 
         TObjectLongHashMap<String> termToId = new TObjectLongHashMap<>(10, 0.75f, -1);
 
@@ -52,8 +53,30 @@ public class IndexMetadataService {
             termToId.put(word, id);
         }
 
+        for (var term : searchQuery.searchTermsAdvice) {
+            if (termToId.containsKey(term)) {
+                continue;
+            }
+
+            long id = SearchTermsUtil.getWordId(term);
+            termIdsList.add(id);
+            termToId.put(term, id);
+        }
+
+        for (var term : searchQuery.searchTermsPriority) {
+            if (termToId.containsKey(term)) {
+                continue;
+            }
+
+            long id = SearchTermsUtil.getWordId(term);
+            termIdsList.add(id);
+            termIdsPrio.add(id);
+            termToId.put(term, id);
+        }
+
         return new QuerySearchTerms(termToId,
                 new TermIdList(termIdsList),
+                new TermIdList(termIdsPrio),
                 new TermCoherenceGroupList(
                         searchQuery.searchTermCoherences.stream().map(TermCoherenceGroup::new).toList()
                 )
