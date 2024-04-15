@@ -28,11 +28,17 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public SearchResultItem(long combinedId, long encodedDocMetadata, int htmlFeatures) {
+    public boolean hasPrioTerm;
+
+    public SearchResultItem(long combinedId,
+                            long encodedDocMetadata,
+                            int htmlFeatures,
+                            boolean hasPrioTerm) {
         this.combinedId = combinedId;
         this.encodedDocMetadata = encodedDocMetadata;
         this.keywordScores = new ArrayList<>();
         this.htmlFeatures = htmlFeatures;
+        this.hasPrioTerm = hasPrioTerm;
     }
 
 
@@ -85,4 +91,6 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
         return Long.compare(this.combinedId, o.combinedId);
     }
+
+
 }

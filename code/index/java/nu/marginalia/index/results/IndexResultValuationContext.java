@@ -52,7 +52,8 @@ public class IndexResultValuationContext {
 
         this.searchTerms = metadataService.getSearchTerms(params.compiledQuery, params.query);
 
-        this.termMetadataForCombinedDocumentIds = metadataService.getTermMetadataForDocuments(ids, searchTerms.termIdsAll);
+        this.termMetadataForCombinedDocumentIds = metadataService.getTermMetadataForDocuments(ids,
+                searchTerms.termIdsAll);
     }
 
     private final long flagsFilterMask =
@@ -69,7 +70,10 @@ public class IndexResultValuationContext {
         long docMetadata = statefulIndex.getDocumentMetadata(docId);
         int htmlFeatures = statefulIndex.getHtmlFeatures(docId);
 
-        SearchResultItem searchResult = new SearchResultItem(docId, docMetadata, htmlFeatures);
+        SearchResultItem searchResult = new SearchResultItem(docId,
+                docMetadata,
+                htmlFeatures,
+                hasPrioTerm(combinedId));
 
         long[] wordMetas = new long[compiledQuery.size()];
         SearchResultKeywordScore[] scores = new SearchResultKeywordScore[compiledQuery.size()];
@@ -108,9 +112,22 @@ public class IndexResultValuationContext {
                 5000, // use a dummy value here as it's not present in the index
                 rankingContext);
 
+        if (searchResult.hasPrioTerm) {
+            score = 0.75 * score;
+        }
+
         searchResult.setScore(score);
 
         return searchResult;
+    }
+
+    private boolean hasPrioTerm(long combinedId) {
+        for (var term : searchTerms.termIdsPrio.array()) {
+            if (termMetadataForCombinedDocumentIds.hasTermMeta(term, combinedId)) {
+                return true;
+            }
+        }
+        return  false;
     }
 
     private boolean meetsQueryStrategyRequirements(CompiledQueryLong queryGraphScores,

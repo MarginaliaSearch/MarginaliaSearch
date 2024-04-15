@@ -18,10 +18,19 @@ public class TermMetadataForCombinedDocumentIds {
     public long getTermMetadata(long termId, long combinedId) {
         var metaByCombinedId = termdocToMeta.get(termId);
         if (metaByCombinedId == null) {
-            logger.warn("Missing meta for term {}", termId);
             return 0;
         }
         return metaByCombinedId.get(combinedId);
+    }
+
+    public boolean hasTermMeta(long termId, long combinedId) {
+        var metaByCombinedId = termdocToMeta.get(termId);
+
+        if (metaByCombinedId == null) {
+            return false;
+        }
+
+        return metaByCombinedId.get(combinedId) != 0;
     }
 
     public record DocumentsWithMetadata(Long2LongOpenHashMap data) {
