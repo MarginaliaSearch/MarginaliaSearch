@@ -1,7 +1,6 @@
 package nu.marginalia.functions.searchquery.query_parser;
 
-import nu.marginalia.functions.searchquery.query_parser.token.Token;
-import nu.marginalia.functions.searchquery.query_parser.token.TokenType;
+import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.language.encoding.AsciiFlattener;
 
 import java.util.ArrayList;
@@ -11,8 +10,8 @@ import java.util.regex.Pattern;
 public class QueryTokenizer {
     private static final Pattern noisePattern = Pattern.compile("[,\\s]");
 
-    public List<Token> tokenizeQuery(String rawQuery) {
-        List<Token> tokens = new ArrayList<>();
+    public List<QueryToken> tokenizeQuery(String rawQuery) {
+        List<QueryToken> tokens = new ArrayList<>();
 
         String query = AsciiFlattener.flattenUnicode(rawQuery);
         query = noisePattern.matcher(query).replaceAll(" ");
@@ -21,26 +20,27 @@ public class QueryTokenizer {
             int chr = query.charAt(i);
 
             if ('(' == chr) {
-                tokens.add(new Token(TokenType.LPAREN, "(", "("));
+                tokens.add(new QueryToken.LParen());
             }
             else if (')' == chr) {
-                tokens.add(new Token(TokenType.RPAREN, ")", ")"));
+                tokens.add(new QueryToken.RParen());
             }
             else if ('"' == chr) {
                 int end = query.indexOf('"', i+1);
+
                 if (end == -1) {
                     end = query.length();
                 }
-                tokens.add(new Token(TokenType.QUOT,
-                        query.substring(i+1, end).toLowerCase(),
-                        query.substring(i, Math.min(query.length(), end+1))));
+
+                tokens.add(new QueryToken.Quot(query.substring(i + 1, end).toLowerCase()));
+
                 i = end;
             }
             else if ('-' == chr) {
-                tokens.add(new Token(TokenType.MINUS, "-"));
+                tokens.add(new QueryToken.Minus());
             }
             else if ('?' == chr) {
-                tokens.add(new Token(TokenType.QMARK, "?"));
+                tokens.add(new QueryToken.QMark());
             }
             else if (Character.isSpaceChar(chr)) {
                 //
@@ -52,9 +52,12 @@ public class QueryTokenizer {
                     if (query.charAt(end) == ' ' || query.charAt(end) == ')')
                         break;
                 }
-                tokens.add(new Token(TokenType.LITERAL_TERM,
-                        query.substring(i, end).toLowerCase(),
-                        query.substring(i, end)));
+
+                String displayStr = query.substring(i, end);
+                String str = displayStr.toLowerCase();
+
+                tokens.add(new QueryToken.LiteralTerm(str, displayStr));
+
                 i = end-1;
             }
         }

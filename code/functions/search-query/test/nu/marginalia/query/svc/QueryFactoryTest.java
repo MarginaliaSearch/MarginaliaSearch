@@ -3,19 +3,21 @@ package nu.marginalia.query.svc;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.svc.QueryFactory;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
-import nu.marginalia.util.language.EnglishDictionary;
-import nu.marginalia.util.ngrams.NGramBloomFilter;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,12 +30,9 @@ public class QueryFactoryTest {
     public static void setUpAll() throws IOException {
 
         var lm = WmsaHome.getLanguageModels();
-        var tfd = new TermFrequencyDict(lm);
 
-        queryFactory = new QueryFactory(lm,
-                tfd,
-                new EnglishDictionary(tfd),
-                new NGramBloomFilter(lm)
+        queryFactory = new QueryFactory(
+                new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm))
         );
     }
 
@@ -53,6 +52,21 @@ public class QueryFactoryTest {
                         "NONE",
                         QueryStrategy.AUTO,
                         ResultRankingParameters.TemporalBias.NONE)).specs;
+    }
+
+
+    @Test
+    void qsec10() {
+        try (var lines = Files.lines(Path.of("/home/vlofgren/Exports/qsec10/webis-qsec-10-training-set/webis-qsec-10-training-set-queries.txt"))) {
+            lines.limit(1000).forEach(line -> {
+                String[] parts = line.split("\t");
+                if (parts.length == 2) {
+                    System.out.println(parseAndGetSpecs(parts[1]).getQuery().compiledQuery);
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -114,17 +128,15 @@ public class QueryFactoryTest {
         {
             // the is a stopword, so it should generate an ngram search term
             var specs = parseAndGetSpecs("\"the shining\"");
-            assertEquals(List.of("the_shining"), specs.subqueries.iterator().next().searchTermsInclude);
-            assertEquals(List.of(), specs.subqueries.iterator().next().searchTermsAdvice);
-            assertEquals(List.of(), specs.subqueries.iterator().next().searchTermCoherences);
+            assertEquals("the_shining", specs.query.compiledQuery);
         }
 
         {
             // tde isn't a stopword, so we should get the normal behavior
             var specs = parseAndGetSpecs("\"tde shining\"");
-            assertEquals(List.of("tde", "shining"), specs.subqueries.iterator().next().searchTermsInclude);
-            assertEquals(List.of("tde_shining"), specs.subqueries.iterator().next().searchTermsAdvice);
-            assertEquals(List.of(List.of("tde", "shining")), specs.subqueries.iterator().next().searchTermCoherences);
+            assertEquals("tde shining", specs.query.compiledQuery);
+            assertEquals(List.of("tde_shining"), specs.query.searchTermsAdvice);
+            assertEquals(List.of(List.of("tde", "shining")), specs.query.searchTermCoherences);
         }
     }
 
@@ -152,8 +164,18 @@ public class QueryFactoryTest {
 
     @Test
     public void testPriorityTerm() {
-        var subquery = parseAndGetSpecs("physics ?tld:edu").subqueries.iterator().next();
+        var subquery = parseAndGetSpecs("physics ?tld:edu").query;
         assertEquals(List.of("tld:edu"), subquery.searchTermsPriority);
-        assertEquals(List.of("physics"), subquery.searchTermsInclude);
+        assertEquals("physics", subquery.compiledQuery);
+    }
+
+    @Test
+    public void testExpansion() {
+
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("elden ring mechanical keyboard slackware linux duke nukem 3d").query;
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery.compiledQuery);
+
     }
 }

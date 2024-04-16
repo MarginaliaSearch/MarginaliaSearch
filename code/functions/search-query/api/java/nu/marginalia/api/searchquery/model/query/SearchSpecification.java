@@ -10,7 +10,7 @@ import java.util.List;
 
 @ToString @Getter @Builder @With @AllArgsConstructor
 public class SearchSpecification {
-    public List<SearchSubquery> subqueries;
+    public SearchQuery query;
 
     /** If present and not empty, limit the search to these domain IDs */
     public List<Integer> domains;

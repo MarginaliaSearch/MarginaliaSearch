@@ -38,6 +38,14 @@ public class CombinedIndexReader {
         return new IndexQueryBuilderImpl(reverseIndexFullReader, reverseIndexPriorityReader, query);
     }
 
+    public QueryFilterStepIf hasWordFull(long termId) {
+        return reverseIndexFullReader.also(termId);
+    }
+
+    public QueryFilterStepIf hasWordPrio(long termId) {
+        return reverseIndexPriorityReader.also(termId);
+    }
+
 
     /** Creates a query builder for terms in the priority index */
     public IndexQueryBuilder findPriorityWord(long wordId) {

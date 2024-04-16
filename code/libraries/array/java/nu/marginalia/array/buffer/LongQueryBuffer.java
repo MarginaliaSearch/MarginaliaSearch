@@ -1,5 +1,8 @@
 package nu.marginalia.array.buffer;
 
+import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
+
 import java.util.Arrays;
 
 /** A buffer for long values that can be used to filter and manipulate the data.
@@ -17,7 +20,7 @@ import java.util.Arrays;
 public class LongQueryBuffer {
     /** Direct access to the data in the buffer,
      * guaranteed to be populated until `end` */
-    public final long[] data;
+    public final LongArray data;
 
     /** Number of items in the data buffer */
     public int end;
@@ -25,18 +28,27 @@ public class LongQueryBuffer {
     private int read = 0;
     private int write = 0;
 
+    private LongQueryBuffer(LongArray array, int size) {
+        this.data = array;
+        this.end = size;
+    }
+
     public LongQueryBuffer(int size) {
-        this.data = new long[size];
+        this.data = LongArrayFactory.onHeapConfined(size);
         this.end = size;
     }
 
     public LongQueryBuffer(long[] data, int size) {
-        this.data = data;
+        this.data = LongArrayFactory.onHeapConfined(size);
+        this.data.set(0, data);
+
         this.end = size;
     }
 
     public long[] copyData() {
-        return Arrays.copyOf(data, end);
+        long[] copy = new long[end];
+        data.forEach(0, end, (pos, val) -> copy[(int)pos]=val );
+        return copy;
     }
 
     public boolean isEmpty() {
@@ -48,7 +60,7 @@ public class LongQueryBuffer {
     }
 
     public void reset() {
-        end = data.length;
+        end = (int) data.size();
         read = 0;
         write = 0;
     }
@@ -59,12 +71,16 @@ public class LongQueryBuffer {
         write = 0;
     }
 
+    public LongQueryBuffer slice(int start, int end) {
+        return new LongQueryBuffer(data.range(start, end), end - start);
+    }
+
     /* ==  Filtering methods == */
 
     /** Returns the current value at the read pointer.
      */
     public long currentValue() {
-        return data[read];
+        return data.get(read);
     }
 
     /** Advances the read pointer and returns true if there are more values to read. */
@@ -79,9 +95,9 @@ public class LongQueryBuffer {
      */
     public boolean retainAndAdvance() {
         if (read != write) {
-            long tmp = data[write];
-            data[write] = data[read];
-            data[read] = tmp;
+            long tmp = data.get(write);
+            data.set(write, data.get(read));
+            data.set(read, tmp);
         }
 
         write++;
@@ -117,11 +133,6 @@ public class LongQueryBuffer {
         write = 0;
     }
 
-    public void startFilterForRange(int pos, int end) {
-        read = write = pos;
-        this.end = end;
-    }
-
     /**  Retain only unique values in the buffer, and update the end pointer to the new length.
      * <p></p>
      *   The buffer is assumed to be sorted up until the end pointer.
@@ -153,7 +164,7 @@ public class LongQueryBuffer {
             "read = " + read +
             ",write = " + write +
             ",end = " + end +
-            ",data = [" + Arrays.toString(Arrays.copyOf(data, end)) + "]]";
+            ",data = [" + Arrays.toString(copyData()) + "]]";
     }
 
 

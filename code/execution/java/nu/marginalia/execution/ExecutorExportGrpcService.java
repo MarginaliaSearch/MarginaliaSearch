@@ -6,10 +6,7 @@ import io.grpc.stub.StreamObserver;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.*;
-import nu.marginalia.functions.execution.api.Empty;
-import nu.marginalia.functions.execution.api.ExecutorExportApiGrpc;
-import nu.marginalia.functions.execution.api.RpcExportSampleData;
-import nu.marginalia.functions.execution.api.RpcFileStorageId;
+import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.storage.model.FileStorageId;
 
 @Singleton
@@ -92,4 +89,20 @@ public class ExecutorExportGrpcService extends ExecutorExportApiGrpc.ExecutorExp
             responseObserver.onError(e);
         }
     }
+
+    @Override
+    public void exportSegmentationModel(RpcExportSegmentationModel request, StreamObserver<Empty> responseObserver) {
+        try {
+            actorControlService.startFrom(ExecutorActor.EXPORT_SEGMENTATION_MODEL,
+                    new ExportSegmentationModelActor.Export(request.getSourcePath())
+            );
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
 }

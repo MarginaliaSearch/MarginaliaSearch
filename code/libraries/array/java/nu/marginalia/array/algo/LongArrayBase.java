@@ -1,5 +1,7 @@
 package nu.marginalia.array.algo;
 
+import nu.marginalia.array.LongArray;
+
 import java.io.IOException;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
@@ -58,6 +60,12 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
     default void get(long start, long end, LongBuffer buffer, int bufferStart) {
         for (int i = 0; i < (end-start); i++) {
             buffer.put(i + bufferStart, get(start + i));
+        }
+    }
+
+    default void get(long start, long end, LongArray buffer, int bufferStart) {
+        for (int i = 0; i < (end-start); i++) {
+            buffer.set(i + bufferStart, get(start + i));
         }
     }
 

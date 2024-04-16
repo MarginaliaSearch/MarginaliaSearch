@@ -5,6 +5,7 @@ import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
@@ -20,7 +21,9 @@ import java.util.Set;
 
 class DocumentKeywordExtractorTest {
 
-    DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+    DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(
+            new TermFrequencyDict(WmsaHome.getLanguageModels()),
+            new NgramLexicon(WmsaHome.getLanguageModels()));
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
     @Test
@@ -56,6 +59,22 @@ class DocumentKeywordExtractorTest {
 
     }
 
+    @Test
+    public void testKeyboards2() throws IOException, URISyntaxException {
+        var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/keyboards.html"),
+                "Could not load word frequency table");
+        String html = new String(resource.readAllBytes(), Charset.defaultCharset());
+        var doc = Jsoup.parse(html);
+        doc.filter(new DomPruningFilter(0.5));
+
+        var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
+
+        keywords.getWords().forEach((k, v) -> {
+            if (k.contains("_")) {
+                System.out.println(k + " " + new WordMetadata(v));
+            }
+        });
+    }
     @Test
     public void testKeyboards() throws IOException, URISyntaxException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/keyboards.html"),
@@ -119,7 +138,9 @@ class DocumentKeywordExtractorTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0.5));
 
-        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(
+                new TermFrequencyDict(WmsaHome.getLanguageModels()),
+                new NgramLexicon(WmsaHome.getLanguageModels()));
         SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://math.byu.edu/wiki/index.php/All_You_Need_To_Know_About_Earning_Money_Online"));

@@ -1,7 +1,7 @@
 package nu.marginalia.search;
 
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
@@ -14,7 +14,7 @@ import java.util.List;
 public class SearchQueryParamFactory {
 
     public QueryParams forRegularSearch(SearchParameters userParams) {
-        SearchSubquery prototype =  new SearchSubquery();
+        SearchQuery prototype =  new SearchQuery();
         var profile = userParams.profile();
 
         profile.addTacitTerms(prototype);

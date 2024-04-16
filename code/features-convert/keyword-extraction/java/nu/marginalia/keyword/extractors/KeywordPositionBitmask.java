@@ -14,7 +14,9 @@ public class KeywordPositionBitmask {
     private static final int unmodulatedPortion = 16;
 
     @Inject
-    public KeywordPositionBitmask(KeywordExtractor keywordExtractor, DocumentLanguageData dld) {
+    public KeywordPositionBitmask(KeywordExtractor keywordExtractor,
+                                  DocumentLanguageData dld)
+    {
 
         // Mark the title words as position 0
         for (var sent : dld.titleSentences) {
@@ -22,6 +24,10 @@ public class KeywordPositionBitmask {
 
             for (var word : sent) {
                 positionMask.merge(word.stemmed(), posBit, this::bitwiseOr);
+            }
+
+            for (var ngram : sent.ngramStemmed) {
+                positionMask.merge(ngram, posBit, this::bitwiseOr);
             }
 
             for (var span : keywordExtractor.getKeywordsFromSentence(sent)) {
@@ -41,6 +47,10 @@ public class KeywordPositionBitmask {
 
             for (var word : sent) {
                 positionMask.merge(word.stemmed(), posBit, this::bitwiseOr);
+            }
+
+            for (var ngram : sent.ngramStemmed) {
+                positionMask.merge(ngram, posBit, this::bitwiseOr);
             }
 
             for (var span : keywordExtractor.getKeywordsFromSentence(sent)) {

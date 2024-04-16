@@ -1,6 +1,6 @@
 package nu.marginalia.search.command;
 
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ public enum SearchJsParameter {
         return DEFAULT;
     }
 
-    public void addTacitTerms(SearchSubquery subquery) {
+    public void addTacitTerms(SearchQuery subquery) {
         subquery.searchTermsExclude.addAll(Arrays.asList(implictExcludeSearchTerms));
     }
 }

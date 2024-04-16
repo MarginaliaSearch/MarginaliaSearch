@@ -9,14 +9,15 @@ import io.prometheus.client.Histogram;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
 import nu.marginalia.api.searchquery.model.results.*;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
-import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultValuatorService;
@@ -135,15 +136,15 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 var rawItem = RpcRawResultItem.newBuilder();
                 rawItem.setCombinedId(rawResult.combinedId);
                 rawItem.setResultsFromDomain(rawResult.resultsFromDomain);
+                rawItem.setHtmlFeatures(rawResult.htmlFeatures);
+                rawItem.setEncodedDocMetadata(rawResult.encodedDocMetadata);
+                rawItem.setHasPriorityTerms(rawResult.hasPrioTerm);
 
                 for (var score : rawResult.keywordScores) {
                     rawItem.addKeywordScores(
                             RpcResultKeywordScore.newBuilder()
-                                    .setEncodedDocMetadata(score.encodedDocMetadata())
                                     .setEncodedWordMetadata(score.encodedWordMetadata())
                                     .setKeyword(score.keyword)
-                                    .setHtmlFeatures(score.htmlFeatures())
-                                    .setSubquery(score.subquery)
                     );
                 }
 
@@ -156,6 +157,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setTitle(result.title)
                         .setUrl(result.url.toString())
                         .setWordsTotal(result.wordsTotal)
+                        .setBestPositions(result.bestPositions)
                         .setRawItem(rawItem);
 
                 if (result.pubYear != null) {
@@ -203,7 +205,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             return new SearchResultSet(List.of());
         }
 
-        ResultRankingContext rankingContext = createRankingContext(params.rankingParams, params.subqueries);
+        ResultRankingContext rankingContext = createRankingContext(params.rankingParams, params.compiledQueryIds);
 
         var queryExecution = new QueryExecution(rankingContext, params.fetchSize);
 
@@ -255,14 +257,10 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         /** Execute a search query */
         public SearchResultSet run(SearchParameters parameters) throws SQLException, InterruptedException {
 
-            for (var subquery : parameters.subqueries) {
-                var terms = new SearchTerms(subquery);
-                if (terms.isEmpty())
-                    continue;
+            var terms = new SearchTerms(parameters.query, parameters.compiledQueryIds);
 
-                for (var indexQuery : index.createQueries(terms, parameters.queryParams)) {
-                    workerPool.execute(new IndexLookup(indexQuery, parameters.budget));
-                }
+            for (var indexQuery : index.createQueries(terms, parameters.queryParams)) {
+                workerPool.execute(new IndexLookup(indexQuery, parameters.budget));
             }
 
             for (int i = 0; i < indexValuationThreads; i++) {
@@ -327,7 +325,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                     buffer.reset();
                     query.getMoreResults(buffer);
 
-                    results.addElements(0, buffer.data, 0, buffer.end);
+                    for (int i = 0; i < buffer.end; i++) {
+                        results.add(buffer.data.get(i));
+                    }
 
                     if (results.size() < 512) {
                         enqueueResults(new CombinedDocIdList(results));
@@ -413,18 +413,23 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
     }
 
-    private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams, List<SearchSubquery> subqueries) {
-        final var termToId = SearchTermsUtil.getAllIncludeTerms(subqueries);
-        final Map<String, Integer> termFrequencies = new HashMap<>(termToId.size());
-        final Map<String, Integer> prioFrequencies = new HashMap<>(termToId.size());
+    private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams,
+                                                      CompiledQueryLong compiledQueryIds)
+    {
 
-        termToId.forEach((key, id) -> termFrequencies.put(key, index.getTermFrequency(id)));
-        termToId.forEach((key, id) -> prioFrequencies.put(key, index.getTermFrequencyPrio(id)));
+        int[] full = new int[compiledQueryIds.size()];
+        int[] prio = new int[compiledQueryIds.size()];
+
+        for (int idx = 0; idx < compiledQueryIds.size(); idx++) {
+            long id = compiledQueryIds.at(idx);
+            full[idx] = index.getTermFrequency(id);
+            prio[idx] = index.getTermFrequencyPrio(id);
+        }
 
         return new ResultRankingContext(index.getTotalDocCount(),
                 rankingParams,
-                termFrequencies,
-                prioFrequencies);
+                new CqDataInt(full),
+                new CqDataInt(prio));
     }
 
 }

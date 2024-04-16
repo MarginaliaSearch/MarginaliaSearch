@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchSubquery;
+import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.storage.FileStorageService;
@@ -35,6 +35,7 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
+import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -108,7 +109,7 @@ public class IndexQueryServiceIntegrationTest {
                 w("world", WordFlags.Title)
         ).load();
 
-        var query = basicQuery(builder -> builder.subqueries(justInclude("hello", "world")));
+        var query = basicQuery(builder -> builder.query(justInclude("hello", "world")));
 
         executeSearch(query)
                 .expectDocumentsInOrder(d(1,1));
@@ -127,57 +128,51 @@ public class IndexQueryServiceIntegrationTest {
         ).load();
 
         var queryMissingExclude = basicQuery(builder ->
-                builder.subqueries(includeAndExclude("hello", "missing")));
+                builder.query(includeAndExclude("hello", "missing")));
 
         executeSearch(queryMissingExclude)
                 .expectDocumentsInOrder(d(1,1));
 
         var queryMissingInclude = basicQuery(builder ->
-                builder.subqueries(justInclude("missing")));
+                builder.query(justInclude("missing")));
 
         executeSearch(queryMissingInclude)
                 .expectCount(0);
 
         var queryMissingPriority = basicQuery(builder ->
-                builder.subqueries(
-                        List.of(
-                                new SearchSubquery(
-                                        List.of("hello"),
-                                        List.of(),
-                                        List.of(),
-                                        List.of("missing"),
-                                        List.of()
-                                )
-                        )));
+                builder.query(new SearchQuery(
+                        "hello",
+                        List.of("hello"),
+                        List.of(),
+                        List.of(),
+                        List.of("missing"),
+                        List.of())
+                        ));
 
         executeSearch(queryMissingPriority)
                 .expectCount(1);
 
         var queryMissingAdvice = basicQuery(builder ->
-                builder.subqueries(
-                        List.of(
-                                new SearchSubquery(
-                                        List.of("hello"),
-                                        List.of(),
-                                        List.of("missing"),
-                                        List.of(),
-                                        List.of()
-                                )
+                builder.query(
+                        new SearchQuery("hello",
+                                List.of("hello"),
+                                List.of(),
+                                List.of("missing"),
+                                List.of(),
+                                List.of()
                         )));
 
         executeSearch(queryMissingAdvice)
                 .expectCount(0);
 
         var queryMissingCoherence = basicQuery(builder ->
-                builder.subqueries(
-                        List.of(
-                                new SearchSubquery(
-                                        List.of("hello"),
-                                        List.of(),
-                                        List.of(),
-                                        List.of(),
-                                        List.of(List.of("missing", "hello"))
-                                )
+                builder.query(
+                        new SearchQuery("hello",
+                                List.of("hello"),
+                                List.of(),
+                                List.of(),
+                                List.of(),
+                                List.of(List.of("missing", "hello"))
                         )));
 
         executeSearch(queryMissingCoherence)
@@ -202,7 +197,7 @@ public class IndexQueryServiceIntegrationTest {
             ).load();
 
 
-        var query = basicQuery(builder -> builder.subqueries(justInclude("hello", "world")));
+        var query = basicQuery(builder -> builder.query(justInclude("hello", "world")));
 
         executeSearch(query)
             .expectDocumentsInOrder(d(1,1));
@@ -234,15 +229,15 @@ public class IndexQueryServiceIntegrationTest {
 
 
         var beforeY2K = basicQuery(builder ->
-                builder.subqueries(justInclude("hello", "world"))
+                builder.query(justInclude("hello", "world"))
                        .year(SpecificationLimit.lessThan(2000))
         );
         var atY2K = basicQuery(builder ->
-                builder.subqueries(justInclude("hello", "world"))
+                builder.query(justInclude("hello", "world"))
                         .year(SpecificationLimit.equals(2000))
         );
         var afterY2K = basicQuery(builder ->
-                builder.subqueries(justInclude("hello", "world"))
+                builder.query(justInclude("hello", "world"))
                         .year(SpecificationLimit.greaterThan(2000))
         );
 
@@ -296,11 +291,11 @@ public class IndexQueryServiceIntegrationTest {
 
 
         var domain1 = basicQuery(builder ->
-                builder.subqueries(justInclude("hello", "world"))
+                builder.query(justInclude("hello", "world"))
                         .domains(List.of(1))
         );
         var domain2 = basicQuery(builder ->
-                builder.subqueries(justInclude("hello", "world"))
+                builder.query(justInclude("hello", "world"))
                         .domains(List.of(2))
         );
 
@@ -334,7 +329,7 @@ public class IndexQueryServiceIntegrationTest {
                 ).load();
 
         var query = basicQuery(builder ->
-                builder.subqueries(includeAndExclude("hello", "my_darling"))
+                builder.query(includeAndExclude("hello", "my_darling"))
         );
 
         executeSearch(query)
@@ -403,7 +398,7 @@ public class IndexQueryServiceIntegrationTest {
         .load();
 
         var rsp = queryService.justQuery(
-                basicQuery(builder -> builder.subqueries(
+                basicQuery(builder -> builder.query(
                         // note coherence requriement
                         includeAndCohere("hello", "world")
                 )));
@@ -424,50 +419,53 @@ public class IndexQueryServiceIntegrationTest {
                 .rank(SpecificationLimit.none())
                 .rankingParams(ResultRankingParameters.sensibleDefaults())
                 .domains(new ArrayList<>())
-                .searchSetIdentifier("NONE")
-                .subqueries(List.of());
+                .searchSetIdentifier("NONE");
 
         return mutator.apply(builder).build();
     }
 
-    List<SearchSubquery> justInclude(String... includes) {
-        return List.of(new SearchSubquery(
+    SearchQuery justInclude(String... includes) {
+        return new SearchQuery(
+                Strings.join(List.of(includes), ' '),
                 List.of(includes),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of()
-        ));
+        );
     }
 
-    List<SearchSubquery> includeAndExclude(List<String> includes, List<String> excludes) {
-        return List.of(new SearchSubquery(
+    SearchQuery includeAndExclude(List<String> includes, List<String> excludes) {
+        return new SearchQuery(
+                Strings.join(List.of(includes), ' '),
                 includes,
                 excludes,
                 List.of(),
                 List.of(),
                 List.of()
-        ));
+        );
     }
 
-    List<SearchSubquery> includeAndExclude(String include, String exclude) {
-        return List.of(new SearchSubquery(
+    SearchQuery includeAndExclude(String include, String exclude) {
+        return new SearchQuery(
+                include,
                 List.of(include),
                 List.of(exclude),
                 List.of(),
                 List.of(),
                 List.of()
-        ));
+        );
     }
 
-    List<SearchSubquery> includeAndCohere(String... includes) {
-        return List.of(new SearchSubquery(
+    SearchQuery includeAndCohere(String... includes) {
+        return new SearchQuery(
+                Strings.join(List.of(includes), ' '),
                 List.of(includes),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(List.of(includes))
-        ));
+        );
     }
     private MockDataDocument d(int domainId, int ordinal) {
         return new MockDataDocument(domainId, ordinal);

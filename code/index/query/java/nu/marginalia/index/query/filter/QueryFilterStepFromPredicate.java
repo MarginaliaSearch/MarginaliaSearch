@@ -16,7 +16,7 @@ public class QueryFilterStepFromPredicate implements QueryFilterStepIf {
 
     @Override
     public double cost() {
-        return 0;
+        return 1;
     }
 
     @Override

@@ -15,15 +15,30 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
      * probably not what you want, use getDocumentId() instead */
     public final long combinedId;
 
+    /** Encoded document metadata */
+    public final long encodedDocMetadata;
+
+    /** Encoded html features of document */
+
+    public final int htmlFeatures;
+
     /** How did the subqueries match against the document ? */
     public final List<SearchResultKeywordScore> keywordScores;
 
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public SearchResultItem(long combinedId, int scoresCount) {
+    public boolean hasPrioTerm;
+
+    public SearchResultItem(long combinedId,
+                            long encodedDocMetadata,
+                            int htmlFeatures,
+                            boolean hasPrioTerm) {
         this.combinedId = combinedId;
-        this.keywordScores = new ArrayList<>(scoresCount);
+        this.encodedDocMetadata = encodedDocMetadata;
+        this.keywordScores = new ArrayList<>();
+        this.htmlFeatures = htmlFeatures;
+        this.hasPrioTerm = hasPrioTerm;
     }
 
 
@@ -76,4 +91,6 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
         return Long.compare(this.combinedId, o.combinedId);
     }
+
+
 }

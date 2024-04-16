@@ -1,8 +1,8 @@
 package nu.marginalia.ranking.results;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentFlags;
@@ -14,33 +14,32 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Singleton
 public class ResultValuator {
     final static double scalingFactor = 500.;
 
-    private final Bm25Factor bm25Factor;
     private final TermCoherenceFactor termCoherenceFactor;
 
     private static final Logger logger = LoggerFactory.getLogger(ResultValuator.class);
 
     @Inject
-    public ResultValuator(Bm25Factor bm25Factor,
-                          TermCoherenceFactor termCoherenceFactor) {
-        this.bm25Factor = bm25Factor;
+    public ResultValuator(TermCoherenceFactor termCoherenceFactor) {
         this.termCoherenceFactor = termCoherenceFactor;
     }
 
-    public double calculateSearchResultValue(List<SearchResultKeywordScore> scores,
+    public double calculateSearchResultValue(CompiledQueryLong wordMeta,
+                                             long documentMetadata,
+                                             int features,
                                              int length,
                                              ResultRankingContext ctx)
     {
-        int sets = numberOfSets(scores);
+        if (wordMeta.isEmpty())
+            return Double.MAX_VALUE;
 
-        long documentMetadata = documentMetadata(scores);
-        int features = htmlFeatures(scores);
+        if (length < 0) {
+            length = 5000;
+        }
+
         var rankingParams = ctx.params;
 
         int rank = DocumentMetadata.decodeRank(documentMetadata);
@@ -75,32 +74,17 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double bestTcf = 0;
-        double bestBM25F = 0;
-        double bestBM25P = 0;
-        double bestBM25PN = 0;
+        double bestTcf = rankingParams.tcfWeight * termCoherenceFactor.calculate(wordMeta);
 
-        for (int set = 0; set < sets; set++) {
-            ResultKeywordSet keywordSet = createKeywordSet(scores, set);
-
-            if (keywordSet.isEmpty())
-                continue;
-
-            bestTcf = Math.max(bestTcf, rankingParams.tcfWeight * termCoherenceFactor.calculate(keywordSet));
-            bestBM25P = Math.max(bestBM25P, rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx));
-            bestBM25F = Math.max(bestBM25F, rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.fullParams, keywordSet, length, ctx));
-            if (keywordSet.hasNgram()) {
-                bestBM25PN = Math.max(bestBM25PN, rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx));
-            }
-        }
-
+        double bestBM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(new Bm25FullGraphVisitor(rankingParams.fullParams, wordMeta.data, length, ctx));
+        double bestBM25P = rankingParams.bm25PrioWeight * wordMeta.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordMeta.data, ctx));
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
-        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + 0.25 * bestBM25PN + overallPartPositive, overallPartNegative);
+        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + overallPartPositive, overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
@@ -157,51 +141,6 @@ public class ResultValuator {
         }
 
         return (int) -penalty;
-    }
-
-    private long documentMetadata(List<SearchResultKeywordScore> rawScores) {
-        for (var score : rawScores) {
-            return score.encodedDocMetadata();
-        }
-        return 0;
-    }
-
-    private int htmlFeatures(List<SearchResultKeywordScore> rawScores) {
-        for (var score : rawScores) {
-            return score.htmlFeatures();
-        }
-        return 0;
-    }
-
-    private ResultKeywordSet createKeywordSet(List<SearchResultKeywordScore> rawScores,
-                                              int thisSet)
-    {
-        List<SearchResultKeywordScore> scoresList = new ArrayList<>();
-
-        for (var score : rawScores) {
-            if (score.subquery != thisSet)
-                continue;
-
-            // Don't consider synthetic keywords for ranking, these are keywords that don't
-            // have counts. E.g. "tld:edu"
-            if (score.isKeywordSpecial())
-                continue;
-
-            scoresList.add(score);
-        }
-
-        return new ResultKeywordSet(scoresList);
-
-    }
-
-    private int numberOfSets(List<SearchResultKeywordScore> scores) {
-        int maxSet = 0;
-
-        for (var score : scores) {
-            maxSet = Math.max(maxSet, score.subquery);
-        }
-
-        return 1 + maxSet;
     }
 
     public static double normalize(double value, double penalty) {

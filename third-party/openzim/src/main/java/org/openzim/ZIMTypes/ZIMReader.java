@@ -275,9 +275,7 @@ public class ZIMReader {
 	}
 
 
-
-	// Gives the minimum required information needed for the given articleName
-	public DirectoryEntry forEachTitles(Consumer<ArticleEntry> aeConsumer, Consumer<RedirectEntry> reConsumer)
+	public DirectoryEntry forEachTitles(Consumer<String> titleConsumer)
 			throws IOException {
 
 		int numberOfArticles = mFile.getArticleCount();
@@ -287,26 +285,9 @@ public class ZIMReader {
 		System.err.println(numberOfArticles);
 		long start = System.currentTimeMillis();
 
-		Map<Integer, Map<Integer, String>> data = new TreeMap<>();
-
-		System.err.println("Indexing");
-
 		for (long i = beg; i < end; i+=4) {
 			var entry = getDirectoryInfoAtTitlePosition(i);
-
-			if (((i-beg)%100_000) == 0) {
-				System.err.printf("%f%%\n", ((i-beg) * 100.) / (end-beg));
-			}
-
-			if (entry.mimeType == targetMime && entry instanceof ArticleEntry) {
-				aeConsumer.accept((ArticleEntry) entry);
-			}
-			else if (entry.mimeType == 65535 && entry instanceof RedirectEntry) {
-
-				reConsumer.accept((RedirectEntry) entry);
-
-			}
-
+			titleConsumer.accept(entry.title);
 		}
 
 		return null;

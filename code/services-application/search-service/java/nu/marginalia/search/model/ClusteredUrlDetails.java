@@ -6,7 +6,6 @@ import nu.marginalia.model.idx.WordFlags;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /** A class to hold a list of UrlDetails, grouped by domain, where the first one is the main result
  * and the rest are additional results, for summary display. */
@@ -19,44 +18,46 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
      * @param details A collection of UrlDetails, which must not be empty.
      */
     public ClusteredUrlDetails(Collection<UrlDetails> details) {
-        var queue = new PriorityQueue<>(details);
+        var items = new ArrayList<>(details);
 
-        if (queue.isEmpty())
+        items.sort(Comparator.naturalOrder());
+
+        if (items.isEmpty())
             throw new IllegalArgumentException("Empty list of details");
 
-        this.first = queue.poll();
+        this.first = items.removeFirst();
+        this.rest = items;
 
-        if (queue.isEmpty()) {
-            this.rest = Collections.emptyList();
-        }
-        else {
-            double bestScore = first.termScore;
-            double scoreLimit = Math.min(4.0, bestScore * 1.25);
+        double bestScore = first.termScore;
+        double scoreLimit = Math.min(4.0, bestScore * 1.25);
 
-            this.rest = queue
-                    .stream()
-                    .filter(this::isEligbleForInclusion)
-                    .takeWhile(next -> next.termScore <= scoreLimit)
-                    .toList();
-        }
+        this.rest.removeIf(urlDetail -> {
+            if (urlDetail.termScore > scoreLimit)
+                return false;
+
+            for (var keywordScore : urlDetail.resultItem.keywordScores) {
+                if (keywordScore.isKeywordSpecial())
+                    continue;
+                if (keywordScore.positions() == 0)
+                    continue;
+
+                if (keywordScore.hasTermFlag(WordFlags.Title))
+                    return false;
+                if (keywordScore.hasTermFlag(WordFlags.ExternalLink))
+                    return false;
+                if (keywordScore.hasTermFlag(WordFlags.UrlDomain))
+                    return false;
+                if (keywordScore.hasTermFlag(WordFlags.UrlPath))
+                    return false;
+                if (keywordScore.hasTermFlag(WordFlags.Subjects))
+                    return false;
+            }
+
+            return true;
+        });
 
     }
 
-    private boolean isEligbleForInclusion(UrlDetails urlDetails) {
-        return urlDetails.resultItem.keywordScores.stream()
-                .filter(score -> !score.keyword.contains(":"))
-                .collect(Collectors.toMap(
-                        score -> score.subquery,
-                        score -> score.hasTermFlag(WordFlags.Title)
-                               | score.hasTermFlag(WordFlags.ExternalLink)
-                               | score.hasTermFlag(WordFlags.UrlDomain)
-                               | score.hasTermFlag(WordFlags.UrlPath)
-                               | score.hasTermFlag(WordFlags.Subjects)
-                        ,
-                        (a, b) -> a && b
-                ))
-                .containsValue(Boolean.TRUE);
-    }
 
     public ClusteredUrlDetails(@NotNull UrlDetails onlyFirst) {
         this.first = onlyFirst;

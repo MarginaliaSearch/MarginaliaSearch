@@ -8,6 +8,7 @@ import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
@@ -21,8 +22,10 @@ import java.nio.file.Path;
 
 public class SentenceStatisticsExperiment extends LegacyExperiment {
 
+    NgramLexicon lexicon = new NgramLexicon(WmsaHome.getLanguageModels());
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
-    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(
+            new TermFrequencyDict(WmsaHome.getLanguageModels()), lexicon);
     Path filename;
     PrintWriter writer;
 

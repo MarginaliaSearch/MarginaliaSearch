@@ -3,6 +3,7 @@ package nu.marginalia.keyword;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.EdgeUrl;
@@ -20,9 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("slow")
 class SentenceExtractorTest {
-    final LanguageModels lm = TestLanguageModels.getLanguageModels();
+    static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-    SentenceExtractor se = new SentenceExtractor(lm);
+    static NgramLexicon ngramLexicon = new NgramLexicon(lm);
+    static SentenceExtractor se = new SentenceExtractor(lm);
 
     @SneakyThrows
     public static void main(String... args) throws IOException {
@@ -32,11 +34,9 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        SentenceExtractor se = new SentenceExtractor(lm);
-
         var dict = new TermFrequencyDict(lm);
         var url = new EdgeUrl("https://memex.marginalia.nu/");
-        DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
+        DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict, ngramLexicon);
 
         for (;;) {
             long total = 0;
