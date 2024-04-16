@@ -64,7 +64,7 @@ public class IndexResultValuationContext {
 
         long docId = UrlIdCodec.removeRank(combinedId);
 
-        if (!searchTerms.coherences.test(termMetadataForCombinedDocumentIds, docId))
+        if (!searchTerms.coherences.test(termMetadataForCombinedDocumentIds, combinedId))
             return null;
 
         long docMetadata = statefulIndex.getDocumentMetadata(docId);

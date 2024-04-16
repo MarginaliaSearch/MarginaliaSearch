@@ -15,9 +15,9 @@ public record TermCoherenceGroupList(List<TermCoherenceGroup> words) {
         this.words = Collections.unmodifiableList(words);
     }
 
-    public boolean test(TermMetadataForCombinedDocumentIds documents, long docId) {
+    public boolean test(TermMetadataForCombinedDocumentIds documents, long combinedId) {
         for (var coherenceSet : words()) {
-            if (!coherenceSet.test(documents, docId)) {
+            if (!coherenceSet.test(documents, combinedId)) {
                 return false;
             }
         }
@@ -36,11 +36,11 @@ public record TermCoherenceGroupList(List<TermCoherenceGroup> words) {
             this(coh.stream().mapToLong(SearchTermsUtil::getWordId).toArray());
         }
 
-        public boolean test(TermMetadataForCombinedDocumentIds documents, long docId) {
+        public boolean test(TermMetadataForCombinedDocumentIds documents, long combinedId) {
             long overlap = 0xFF_FFFF_FFFF_FFFFL;
 
             for (var word : words) {
-                overlap &= documents.getTermMetadata(word, docId);
+                overlap &= documents.getTermMetadata(word, combinedId);
             }
 
             return WordMetadata.decodePositions(overlap) != 0L;
