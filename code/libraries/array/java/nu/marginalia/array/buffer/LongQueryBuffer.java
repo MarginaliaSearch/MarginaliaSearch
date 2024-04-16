@@ -51,6 +51,11 @@ public class LongQueryBuffer {
         return copy;
     }
 
+    /** Dispose of the buffer and release resources */
+    public void dispose() {
+        data.close();
+    }
+
     public boolean isEmpty() {
         return end == 0;
     }

@@ -9,7 +9,6 @@ import io.prometheus.client.Histogram;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
@@ -334,6 +333,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         results.clear();
                     }
                 }
+
+                buffer.dispose();
 
                 if (!results.isEmpty()) {
                     enqueueResults(new CombinedDocIdList(results));
