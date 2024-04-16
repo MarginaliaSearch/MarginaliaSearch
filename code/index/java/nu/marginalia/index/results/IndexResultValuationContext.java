@@ -182,15 +182,12 @@ class PositionOverlapOperator implements CqExpression.LongVisitor {
 
         for (var part : parts) {
             long pv = part.visit(this);
-            if ((pv & WordMetadata.FLAGS_MASK) != 0) {
-                flags |= (pv & WordMetadata.FLAGS_MASK);
-            }
-            else {
-                positions &= pv;
-            }
+
+            flags |= pv;
+            positions &= pv;
         }
 
-        return positions | flags;
+        return positions | (flags & WordMetadata.FLAGS_MASK);
     }
 
     @Override
