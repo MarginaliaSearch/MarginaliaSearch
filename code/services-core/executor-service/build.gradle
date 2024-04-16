@@ -3,7 +3,7 @@ plugins {
 
     id 'application'
     id 'jvm-test-suite'
-    id 'com.google.cloud.tools.jib' version '3.4.1'
+    id 'com.google.cloud.tools.jib' version '3.4.2'
 }
 
 application {
@@ -12,8 +12,6 @@ application {
 }
 
 tasks.distZip.enabled = false
-
-
 
 java {
     toolchain {
