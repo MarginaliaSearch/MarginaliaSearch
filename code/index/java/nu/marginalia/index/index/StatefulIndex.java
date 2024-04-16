@@ -2,8 +2,7 @@ package nu.marginalia.index.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.index.query.filter.QueryFilterAllOf;
 import nu.marginalia.index.query.filter.QueryFilterAnyOf;
@@ -125,28 +124,26 @@ public class StatefulIndex {
         // the term is missing from the index and can never be found
         paths.removeIf(containsAll(termPriority).negate());
 
-        List<QueryBranchWalker> walkers = QueryBranchWalker.create(termPriority, paths);
+        for (var path : paths) {
+            LongList elements = new LongArrayList(path);
 
-        for (var walker : walkers) {
-            for (var builder : List.of(
-                    combinedIndexReader.findPriorityWord(walker.termId),
-                    combinedIndexReader.findFullWord(walker.termId)
-            ))
-            {
-                queryHeads.add(builder);
-
-                if (walker.atEnd())
-                    continue; // Single term search query
-
-                // Add filter steps for the remaining combinations of terms
-                List<QueryFilterStepIf> filterSteps = new ArrayList<>();
-                for (var step : walker.next()) {
-                    filterSteps.add(createFilter(step, 0));
+            elements.sort((a, b) -> {
+                for (int i = 0; i < termPriority.length; i++) {
+                    if (termPriority[i] == a)
+                        return -1;
+                    if (termPriority[i] == b)
+                        return 1;
                 }
-                builder.addInclusionFilterAny(filterSteps);
-            }
-        }
+                return 0;
+            });
 
+            var head = combinedIndexReader.findFullWord(elements.getLong(0));
+            for (int i = 1; i < elements.size(); i++) {
+                head.addInclusionFilter(combinedIndexReader.hasWordFull(elements.getLong(i)));
+            }
+
+            queryHeads.add(head);
+        }
 
         // Add additional conditions to the query heads
         for (var query : queryHeads) {
