@@ -4,9 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
-import nu.marginalia.index.query.filter.QueryFilterAllOf;
-import nu.marginalia.index.query.filter.QueryFilterAnyOf;
-import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.DocMetadataList;
 import nu.marginalia.index.model.QueryParams;
@@ -166,48 +163,6 @@ public class StatefulIndex {
                 .stream()
                 .map(IndexQueryBuilder::build)
                 .toList();
-    }
-
-    /** Recursively create a filter step based on the QBW and its children */
-    private QueryFilterStepIf createFilter(QueryBranchWalker walker, int depth) {
-
-        // Create a filter for the current termId
-        final QueryFilterStepIf ownFilterCondition = ownFilterCondition(walker, depth);
-
-        var childSteps = walker.next();
-        if (childSteps.isEmpty()) // no children, and so we're satisfied with just a single filter condition
-            return ownFilterCondition;
-
-        // If there are children, we append the filter conditions for each child as an anyOf condition
-        // to the current filter condition
-
-        List<QueryFilterStepIf> combinedFilters = new ArrayList<>();
-
-        for (var step : childSteps) {
-            // Recursion will be limited to a fairly shallow stack depth due to how the queries are constructed.
-            var childFilter = createFilter(step, depth+1);
-            combinedFilters.add(new QueryFilterAllOf(ownFilterCondition, childFilter));
-        }
-
-        // Flatten the filter conditions if there's only one branch
-        if (combinedFilters.size() == 1)
-            return combinedFilters.getFirst();
-        else
-            return new QueryFilterAnyOf(combinedFilters);
-    }
-
-    /** Create a filter condition based on the termId associated with the QBW */
-    private QueryFilterStepIf ownFilterCondition(QueryBranchWalker walker, int depth) {
-        if (depth < 2) {
-            // At shallow depths we prioritize terms that appear in the priority index,
-            // to increase the odds we find "good" results before the execution timer runs out
-            return new QueryFilterAnyOf(
-                    combinedIndexReader.hasWordPrio(walker.termId),
-                    combinedIndexReader.hasWordFull(walker.termId)
-            );
-        } else {
-            return combinedIndexReader.hasWordFull(walker.termId);
-        }
     }
 
     private Predicate<LongSet> containsAll(long[] permitted) {
