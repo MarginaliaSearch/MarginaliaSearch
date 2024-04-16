@@ -4,6 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
+import nu.marginalia.index.query.filter.QueryFilterAllOf;
+import nu.marginalia.index.query.filter.QueryFilterAnyOf;
+import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.DocMetadataList;
 import nu.marginalia.index.model.QueryParams;
@@ -138,8 +141,16 @@ public class StatefulIndex {
             for (int i = 1; i < elements.size(); i++) {
                 head.addInclusionFilter(combinedIndexReader.hasWordFull(elements.getLong(i)));
             }
-
             queryHeads.add(head);
+
+            // If there are few paths, we can afford to check the priority index as well
+            if (paths.size() < 4) {
+                var prioHead = combinedIndexReader.findPriorityWord(elements.getLong(0));
+                for (int i = 1; i < elements.size(); i++) {
+                    prioHead.addInclusionFilter(combinedIndexReader.hasWordPrio(elements.getLong(i)));
+                }
+                queryHeads.add(prioHead);
+            }
         }
 
         // Add additional conditions to the query heads

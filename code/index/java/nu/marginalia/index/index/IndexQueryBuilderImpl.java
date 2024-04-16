@@ -11,6 +11,7 @@ import nu.marginalia.index.query.filter.QueryFilterStepIf;
 public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
     private final IndexQuery query;
     private final ReverseIndexReader reverseIndexFullReader;
+    private final ReverseIndexReader reverseIndexPrioReader;
 
     /* Keep track of already added include terms to avoid redundant checks.
      *
@@ -21,10 +22,12 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
     private final TLongHashSet alreadyConsideredTerms = new TLongHashSet();
 
     IndexQueryBuilderImpl(ReverseIndexReader reverseIndexFullReader,
+                          ReverseIndexReader reverseIndexPrioReader,
                           IndexQuery query)
     {
         this.query = query;
         this.reverseIndexFullReader = reverseIndexFullReader;
+        this.reverseIndexPrioReader = reverseIndexPrioReader;
     }
 
     public IndexQueryBuilder withSourceTerms(long... sourceTerms) {
