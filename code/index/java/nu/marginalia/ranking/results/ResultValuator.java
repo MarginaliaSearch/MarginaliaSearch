@@ -74,8 +74,8 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double tcfOverlap = rankingParams.tcfWeight * termCoherenceFactor.calculateOverlap(wordMeta);
-        double tcfJaccard = rankingParams.tcfWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
+        double tcfOverlap = 1.5 * rankingParams.tcfWeight * termCoherenceFactor.calculateOverlap(wordMeta);
+        double tcfJaccard = 0.5 * rankingParams.tcfWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
 
         double bM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forRegular(rankingParams.fullParams, wordMeta.data, length, ctx));
         double bM25N = 0.25 * rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
@@ -86,7 +86,11 @@ public class ResultValuator {
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
-        return normalize(1.5 * tcfOverlap + tcfJaccard + bM25F + bM25P + bM25N + overallPartPositive, overallPartNegative);
+        return normalize(
+                      tcfOverlap + tcfJaccard
+                      + bM25F + bM25P + bM25N
+                      + overallPartPositive,
+                overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
