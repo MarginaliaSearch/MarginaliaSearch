@@ -137,10 +137,11 @@ public class QueryFactory {
             limits = limits.forSingleDomain();
         }
 
+        var expansion = queryExpansion.expandQuery(searchTermsInclude);
+        searchTermCoherences.addAll(expansion.extraCoherences());
+
         var searchQuery = new SearchQuery(
-                queryExpansion.expandQuery(
-                        searchTermsInclude
-                ),
+                expansion.compiledQuery(),
                 searchTermsInclude,
                 searchTermsExclude,
                 searchTermsAdvice,

@@ -178,4 +178,15 @@ public class QueryFactoryTest {
         System.out.println(subquery.compiledQuery);
 
     }
+
+    @Test
+    public void testExpansion2() {
+
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("need for speed").query;
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+
+    }
+
 }

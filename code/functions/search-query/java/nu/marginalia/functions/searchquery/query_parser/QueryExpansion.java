@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /** Responsible for expanding a query, that is creating alternative branches of query execution
@@ -25,8 +24,7 @@ public class QueryExpansion {
     private final List<ExpansionStrategy> expansionStrategies = List.of(
             this::joinDashes,
             this::splitWordNum,
-            this::joinTerms,
-            this::createSegments
+            this::joinTerms
     );
 
     @Inject
@@ -37,7 +35,7 @@ public class QueryExpansion {
         this.lexicon = lexicon;
     }
 
-    public String expandQuery(List<String> words) {
+    public Expansion expandQuery(List<String> words) {
 
         QWordGraph graph = new QWordGraph(words);
 
@@ -45,7 +43,11 @@ public class QueryExpansion {
             strategy.expand(graph);
         }
 
-        return QWordPathsRenderer.render(graph);
+        List<List<String>> coherences = createSegments(graph);
+
+        var compiled = QWordPathsRenderer.render(graph);
+
+        return new Expansion(compiled, coherences);
     }
 
     private static final Pattern dashPattern = Pattern.compile("-");
@@ -99,8 +101,12 @@ public class QueryExpansion {
     /** Create an alternative interpretation of the query that replaces a sequence of words
      * with a word n-gram.  This makes it so that when possible, the order of words in the document
      * matches the order of the words in the query.
+     *
+     * The function modifies the graph in place, adding new variants to the graph; but also
+     * returns a list of the new groupings that were added.
      */
-    public void createSegments(QWordGraph graph) {
+    public List<List<String>> createSegments(QWordGraph graph)
+    {
         List<QWord> nodes = new ArrayList<>();
 
         for (var qw : graph) {
@@ -118,24 +124,31 @@ public class QueryExpansion {
         allSegments.sort(Comparator.comparing(NgramLexicon.SentenceSegment::start));
 
         if (allSegments.isEmpty()) {
-            return;
+            return List.of();
         }
 
         Set<NgramLexicon.SentenceSegment> bestSegmentation =
                 findBestSegmentation(allSegments);
+
+        List<List<String>> coherences = new ArrayList<>();
 
         for (var segment : bestSegmentation) {
 
             int start = segment.start();
             int end = segment.start() + segment.length();
 
-            var word = IntStream.range(start, end)
+            List<String> components =IntStream.range(start, end)
                     .mapToObj(nodes::get)
                     .map(QWord::word)
-                    .collect(Collectors.joining("_"));
+                    .toList();
 
+            coherences.add(components);
+
+            String word = String.join("_", components);
             graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
         }
+
+        return coherences;
 
     }
 
@@ -178,4 +191,6 @@ public class QueryExpansion {
     public interface ExpansionStrategy {
         void expand(QWordGraph graph);
     }
+
+    public record Expansion(String compiledQuery, List<List<String>> extraCoherences) {}
 }
