@@ -40,7 +40,12 @@ public record TermCoherenceGroupList(List<TermCoherenceGroup> words) {
             long overlap = 0xFF_FFFF_FFFF_FFFFL;
 
             for (var word : words) {
-                overlap &= documents.getTermMetadata(word, combinedId);
+                long meta = documents.getTermMetadata(word, combinedId);
+
+                // if the word is not present in the document, we omit it from the coherence check
+                if (meta != 0L) {
+                    overlap &= meta;
+                }
             }
 
             return WordMetadata.decodePositions(overlap) != 0L;
