@@ -74,18 +74,19 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double bestTcf = rankingParams.tcfWeight * termCoherenceFactor.calculate(wordMeta);
+        double tcfOverlap = rankingParams.tcfWeight * termCoherenceFactor.calculateOverlap(wordMeta);
+        double tcfJaccard = rankingParams.tcfWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
 
-        double bestBM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forRegular(rankingParams.fullParams, wordMeta.data, length, ctx));
-        double bestBM25N = 0.25 * rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
-        double bestBM25P = rankingParams.bm25PrioWeight * wordMeta.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordMeta.data, ctx));
+        double bM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forRegular(rankingParams.fullParams, wordMeta.data, length, ctx));
+        double bM25N = 0.25 * rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
+        double bM25P = rankingParams.bm25PrioWeight * wordMeta.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordMeta.data, ctx));
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
-        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + bestBM25N + overallPartPositive, overallPartNegative);
+        return normalize(1.5 * tcfOverlap + tcfJaccard + bM25F + bM25P + bM25N + overallPartPositive, overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {

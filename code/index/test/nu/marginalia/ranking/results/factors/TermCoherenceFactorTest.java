@@ -30,7 +30,7 @@ class TermCoherenceFactorTest {
         assertEquals(1.0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
         assertEquals(1.0,
-                termCoherenceFactor.calculate(
+                termCoherenceFactor.calculateOverlap(
                         allPositionsSet.mapToLong(SearchResultKeywordScore::encodedWordMetadata)
                 )
         );
@@ -47,7 +47,7 @@ class TermCoherenceFactorTest {
 
         assertEquals(0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
-        assertEquals(0, termCoherenceFactor.calculate(allPositionsSet.mapToLong(SearchResultKeywordScore::encodedWordMetadata)));
+        assertEquals(0, termCoherenceFactor.calculateOverlap(allPositionsSet.mapToLong(SearchResultKeywordScore::encodedWordMetadata)));
     }
 
     @Test @SuppressWarnings("unchecked")
