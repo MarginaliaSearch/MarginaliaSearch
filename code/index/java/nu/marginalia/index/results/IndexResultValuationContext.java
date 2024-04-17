@@ -97,13 +97,12 @@ public class IndexResultValuationContext {
         boolean allSynthetic = !CompiledQueryAggregates.booleanAggregate(wordMetasQuery, WordFlags.Synthetic::isAbsent);
         int flagsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(wordMeta & flagsFilterMask));
         int positionsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(WordMetadata.decodePositions(wordMeta)));
-        boolean noneOverlap = wordMetasQuery.root.visit(new PositionOverlapOperator(wordMetasQuery.data)) != 0;
 
         if (!meetsQueryStrategyRequirements(wordMetasQuery, queryParams.queryStrategy())) {
             return null;
         }
 
-        if (flagsCount == 0 && !allSynthetic && (positionsCount == 0 || noneOverlap))
+        if (flagsCount == 0 && !allSynthetic && positionsCount == 0)
             return null;
 
         double score = searchResultValuator.calculateSearchResultValue(
@@ -166,43 +165,4 @@ public class IndexResultValuationContext {
         return true;
     }
 
-}
-
-class PositionOverlapOperator implements CqExpression.LongVisitor {
-    private final CqDataLong wordMetaData;
-
-    PositionOverlapOperator(CqDataLong wordMetaData) {
-        this.wordMetaData = wordMetaData;
-    }
-
-    @Override
-    public long onAnd(List<? extends CqExpression> parts) {
-        long positions = ~0;
-        long flags = 0;
-
-        for (var part : parts) {
-            long pv = part.visit(this);
-
-            flags |= pv;
-            positions &= pv;
-        }
-
-        return positions | (flags & WordMetadata.FLAGS_MASK);
-    }
-
-    @Override
-    public long onOr(List<? extends CqExpression> parts) {
-        long ret = 0;
-
-        for (var part : parts) {
-            ret |= part.visit(this);
-        }
-
-        return ret;
-    }
-
-    @Override
-    public long onLeaf(int idx) {
-        return wordMetaData.get(idx);
-    }
 }
