@@ -7,6 +7,7 @@ import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.model.idx.WordMetadata;
 
+import java.util.BitSet;
 import java.util.List;
 
 public class Bm25FullGraphVisitor implements CqExpression.DoubleVisitor {
@@ -19,15 +20,33 @@ public class Bm25FullGraphVisitor implements CqExpression.DoubleVisitor {
     private final int docCount;
     private final int length;
 
-    public Bm25FullGraphVisitor(Bm25Parameters bm25Parameters,
+    private final BitSet mask;
+
+    private Bm25FullGraphVisitor(Bm25Parameters bm25Parameters,
                                 CqDataLong wordMetaData,
                                 int length,
+                                BitSet mask,
                                 ResultRankingContext ctx) {
         this.length = length;
         this.bm25Parameters = bm25Parameters;
         this.docCount = ctx.termFreqDocCount();
         this.wordMetaData = wordMetaData;
         this.frequencies = ctx.fullCounts;
+        this.mask = mask;
+    }
+
+    public static Bm25FullGraphVisitor forRegular(Bm25Parameters bm25Parameters,
+                                                  CqDataLong wordMetaData,
+                                                  int length,
+                                                  ResultRankingContext ctx) {
+        return new Bm25FullGraphVisitor(bm25Parameters, wordMetaData, length, ctx.regularMask, ctx);
+    }
+
+    public static Bm25FullGraphVisitor forNgrams(Bm25Parameters bm25Parameters,
+                                                 CqDataLong wordMetaData,
+                                                 int length,
+                                                 ResultRankingContext ctx) {
+        return new Bm25FullGraphVisitor(bm25Parameters, wordMetaData, length, ctx.ngramsMask, ctx);
     }
 
     @Override
@@ -50,6 +69,10 @@ public class Bm25FullGraphVisitor implements CqExpression.DoubleVisitor {
 
     @Override
     public double onLeaf(int idx) {
+        if (!mask.get(idx)) {
+            return 0;
+        }
+
         double count = Long.bitCount(WordMetadata.decodePositions(wordMetaData.get(idx)));
 
         int freq = frequencies.get(idx);
