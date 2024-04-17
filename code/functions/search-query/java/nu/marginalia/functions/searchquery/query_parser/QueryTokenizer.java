@@ -2,6 +2,7 @@ package nu.marginalia.functions.searchquery.query_parser;
 
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.language.encoding.AsciiFlattener;
+import nu.marginalia.language.sentence.SentenceExtractorStringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class QueryTokenizer {
                 }
 
                 String displayStr = query.substring(i, end);
-                String str = displayStr.toLowerCase();
+                String str = SentenceExtractorStringUtils.toLowerCaseStripPossessive(displayStr);
 
                 tokens.add(new QueryToken.LiteralTerm(str, displayStr));
 
