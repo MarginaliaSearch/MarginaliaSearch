@@ -9,6 +9,7 @@ import io.prometheus.client.Histogram;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
@@ -204,7 +205,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             return new SearchResultSet(List.of());
         }
 
-        ResultRankingContext rankingContext = createRankingContext(params.rankingParams, params.compiledQueryIds);
+        ResultRankingContext rankingContext = createRankingContext(params.rankingParams,
+                params.compiledQuery,
+                params.compiledQueryIds);
 
         var queryExecution = new QueryExecution(rankingContext, params.fetchSize);
 
@@ -415,20 +418,28 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     }
 
     private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams,
+                                                      CompiledQuery<String> compiledQuery,
                                                       CompiledQueryLong compiledQueryIds)
     {
 
         int[] full = new int[compiledQueryIds.size()];
         int[] prio = new int[compiledQueryIds.size()];
 
+        BitSet ngramsMask = new BitSet(compiledQuery.size());
+
         for (int idx = 0; idx < compiledQueryIds.size(); idx++) {
             long id = compiledQueryIds.at(idx);
             full[idx] = index.getTermFrequency(id);
             prio[idx] = index.getTermFrequencyPrio(id);
+
+            if (compiledQuery.at(idx).contains("_")) {
+                ngramsMask.set(idx);
+            }
         }
 
         return new ResultRankingContext(index.getTotalDocCount(),
                 rankingParams,
+                ngramsMask,
                 new CqDataInt(full),
                 new CqDataInt(prio));
     }
