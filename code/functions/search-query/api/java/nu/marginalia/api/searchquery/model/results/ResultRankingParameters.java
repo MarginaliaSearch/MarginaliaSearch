@@ -32,8 +32,10 @@ public class ResultRankingParameters {
     public double shortSentencePenalty;
 
     public double bm25FullWeight;
+    public double bm25NgramWeight;
     public double bm25PrioWeight;
-    public double tcfWeight;
+    public double tcfJaccardWeight;
+    public double tcfOverlapWeight;
 
     public TemporalBias temporalBias;
     public double temporalBiasWeight;
@@ -49,8 +51,10 @@ public class ResultRankingParameters {
                 .shortSentenceThreshold(2)
                 .shortSentencePenalty(5)
                 .bm25FullWeight(1.)
+                .bm25NgramWeight(.25)
                 .bm25PrioWeight(1.)
-                .tcfWeight(2.)
+                .tcfOverlapWeight(3.)
+                .tcfJaccardWeight(1)
                 .temporalBias(TemporalBias.NONE)
                 .temporalBiasWeight(1. / (5.))
                 .build();

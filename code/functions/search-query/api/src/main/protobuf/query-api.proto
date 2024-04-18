@@ -130,10 +130,12 @@ message RpcResultRankingParameters {
   int32 shortSentenceThreshold = 9;
   double shortSentencePenalty = 10;
   double bm25FullWeight = 11;
-  double bm25PrioWeight = 12;
-  double tcfWeight = 13;
-  RpcTemporalBias temporalBias = 14;
-  double temporalBiasWeight = 15;
+  double bm25NgramWeight = 12;
+  double bm25PrioWeight = 13;
+  double tcfOverlapWeight = 14;
+  double tcfJaccardWeight = 15;
+  RpcTemporalBias temporalBias = 16;
+  double temporalBiasWeight = 17;
 }
 
 /* Defines a single subquery */

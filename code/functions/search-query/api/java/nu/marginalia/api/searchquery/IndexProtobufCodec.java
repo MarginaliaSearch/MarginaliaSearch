@@ -79,6 +79,9 @@ public class IndexProtobufCodec {
     }
 
     public static ResultRankingParameters convertRankingParameterss(RpcResultRankingParameters params) {
+        if (params == null)
+            return ResultRankingParameters.sensibleDefaults();
+
         return new ResultRankingParameters(
                 new Bm25Parameters(params.getFullK(), params.getFullB()),
                 new Bm25Parameters(params.getPrioK(), params.getPrioB()),
@@ -89,8 +92,10 @@ public class IndexProtobufCodec {
                 params.getShortSentenceThreshold(),
                 params.getShortSentencePenalty(),
                 params.getBm25FullWeight(),
+                params.getBm25NgramWeight(),
                 params.getBm25PrioWeight(),
-                params.getTcfWeight(),
+                params.getTcfJaccardWeight(),
+                params.getTcfOverlapWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight()
         );
@@ -111,9 +116,12 @@ public class IndexProtobufCodec {
                         .setShortSentenceThreshold(rankingParams.shortSentenceThreshold)
                         .setShortSentencePenalty(rankingParams.shortSentencePenalty)
                         .setBm25FullWeight(rankingParams.bm25FullWeight)
+                        .setBm25NgramWeight(rankingParams.bm25NgramWeight)
                         .setBm25PrioWeight(rankingParams.bm25PrioWeight)
-                        .setTcfWeight(rankingParams.tcfWeight)
+                        .setTcfOverlapWeight(rankingParams.tcfOverlapWeight)
+                        .setTcfJaccardWeight(rankingParams.tcfJaccardWeight)
                         .setTemporalBiasWeight(rankingParams.temporalBiasWeight);
+
         if (temporalBias != null && temporalBias.getBias() != RpcTemporalBias.Bias.NONE) {
             builder.setTemporalBias(temporalBias);
         }

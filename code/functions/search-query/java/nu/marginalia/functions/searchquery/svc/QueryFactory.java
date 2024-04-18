@@ -159,7 +159,6 @@ public class QueryFactory {
                 .domains(domainIds)
                 .queryLimits(limits)
                 .searchSetIdentifier(params.identifier())
-                .rankingParams(ResultRankingParameters.sensibleDefaults())
                 .queryStrategy(queryStrategy);
 
         SearchSpecification specs = specsBuilder.build();
