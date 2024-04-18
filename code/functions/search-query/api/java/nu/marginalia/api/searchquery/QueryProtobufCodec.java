@@ -39,7 +39,9 @@ public class QueryProtobufCodec {
         else
             builder.setQueryStrategy(request.getQueryStrategy());
 
-        builder.setParameters(IndexProtobufCodec.convertRankingParameterss(query.specs.rankingParams, request.getTemporalBias()));
+        if (query.specs.rankingParams != null) {
+            builder.setParameters(IndexProtobufCodec.convertRankingParameterss(query.specs.rankingParams, request.getTemporalBias()));
+        }
 
         return builder.build();
     }
@@ -62,12 +64,14 @@ public class QueryProtobufCodec {
         // Query strategy may be overridden by the query, but if not, use the one from the request
         builder.setQueryStrategy(query.specs.queryStrategy.name());
 
-        builder.setParameters(IndexProtobufCodec.convertRankingParameterss(
-                query.specs.rankingParams,
-                RpcTemporalBias.newBuilder().setBias(
-                        RpcTemporalBias.Bias.NONE)
-                        .build())
-        );
+        if (query.specs.rankingParams != null) {
+            builder.setParameters(IndexProtobufCodec.convertRankingParameterss(
+                    query.specs.rankingParams,
+                    RpcTemporalBias.newBuilder().setBias(
+                                    RpcTemporalBias.Bias.NONE)
+                            .build())
+            );
+        }
 
         return builder.build();
     }
