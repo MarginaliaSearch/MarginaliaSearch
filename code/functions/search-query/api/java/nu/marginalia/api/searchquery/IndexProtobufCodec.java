@@ -104,6 +104,10 @@ public class IndexProtobufCodec {
     public static RpcResultRankingParameters convertRankingParameterss(ResultRankingParameters rankingParams,
                                                                        RpcTemporalBias temporalBias)
     {
+        if (rankingParams == null) {
+            rankingParams = ResultRankingParameters.sensibleDefaults();
+        }
+
         var builder = RpcResultRankingParameters.newBuilder()
                         .setFullB(rankingParams.fullParams.b())
                         .setFullK(rankingParams.fullParams.k())
