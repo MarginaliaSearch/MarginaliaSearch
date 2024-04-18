@@ -74,8 +74,8 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double tcfOverlap = 1.5 * rankingParams.tcfWeight * termCoherenceFactor.calculateOverlap(wordMeta);
-        double tcfJaccard = 0.5 * rankingParams.tcfWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
+        double tcfOverlap = rankingParams.tcfOverlapWeight * termCoherenceFactor.calculateOverlap(wordMeta);
+        double tcfJaccard = rankingParams.tcfJaccardWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
 
         double bM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forRegular(rankingParams.fullParams, wordMeta.data, length, ctx));
         double bM25N = 0.25 * rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
