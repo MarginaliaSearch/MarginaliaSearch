@@ -189,4 +189,11 @@ public class QueryFactoryTest {
 
     }
 
+    @Test
+    public void testExpansion3() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("plato's republic").query;
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
 }

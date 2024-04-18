@@ -137,19 +137,18 @@ public class QueryExpansion {
             int start = segment.start();
             int end = segment.start() + segment.length();
 
-            List<String> components =IntStream.range(start, end)
-                    .mapToObj(nodes::get)
-                    .map(QWord::word)
-                    .toList();
-
+            List<String> components = new ArrayList<>(end - start);
+            for (int i = start; i < end; i++) {
+                components.add(nodes.get(i).word());
+            }
             coherences.add(components);
 
+            // Create an n-gram search term for the segment
             String word = String.join("_", components);
             graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
         }
 
         return coherences;
-
     }
 
     private Set<NgramLexicon.SentenceSegment> findBestSegmentation(List<NgramLexicon.SentenceSegment> allSegments) {
