@@ -19,8 +19,8 @@ public class QWordGraph implements Iterable<QWord> {
     public record QWordGraphLink(QWord from, QWord to) {}
 
     private final List<QWordGraphLink> links = new ArrayList<>();
-    private final Map<QWord, List<QWord>> fromTo = new HashMap<>();
-    private final Map<QWord, List<QWord>> toFrom = new HashMap<>();
+    private final Map<Integer, List<QWord>> fromTo = new HashMap<>();
+    private final Map<Integer, List<QWord>> toFrom = new HashMap<>();
 
     private int wordId = 0;
 
@@ -79,8 +79,8 @@ public class QWordGraph implements Iterable<QWord> {
 
     public void addLink(QWord from, QWord to) {
         links.add(new QWordGraphLink(from, to));
-        fromTo.computeIfAbsent(from, k -> new ArrayList<>()).add(to);
-        toFrom.computeIfAbsent(to, k -> new ArrayList<>()).add(from);
+        fromTo.computeIfAbsent(from.ord(), k -> new ArrayList<>()).add(to);
+        toFrom.computeIfAbsent(to.ord(), k -> new ArrayList<>()).add(from);
     }
 
     public List<QWordGraphLink> links() {
@@ -103,20 +103,20 @@ public class QWordGraph implements Iterable<QWord> {
     }
 
     public List<QWord> getNext(QWord word) {
-        return fromTo.getOrDefault(word, List.of());
+        return fromTo.getOrDefault(word.ord(), List.of());
     }
     public List<QWord> getNextOriginal(QWord word) {
-        return fromTo.getOrDefault(word, List.of())
+        return fromTo.getOrDefault(word.ord(), List.of())
                 .stream()
                 .filter(QWord::isOriginal)
                 .toList();
     }
 
     public List<QWord> getPrev(QWord word) {
-        return toFrom.getOrDefault(word, List.of());
+        return toFrom.getOrDefault(word.ord(), List.of());
     }
     public List<QWord> getPrevOriginal(QWord word) {
-        return toFrom.getOrDefault(word, List.of())
+        return toFrom.getOrDefault(word.ord(), List.of())
                 .stream()
                 .filter(QWord::isOriginal)
                 .toList();
