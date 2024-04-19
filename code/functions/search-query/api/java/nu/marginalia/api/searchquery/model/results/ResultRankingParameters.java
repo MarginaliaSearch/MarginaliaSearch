@@ -1,11 +1,12 @@
 package nu.marginalia.api.searchquery.model.results;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
-@Builder @AllArgsConstructor @ToString @EqualsAndHashCode
+@Builder
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@Getter // getter for the mustache template engine's behalf
 public class ResultRankingParameters {
 
     /** Tuning for BM25 when applied to full document matches */

@@ -6,7 +6,9 @@ import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.functions.searchquery.svc.QueryFactory;
@@ -51,7 +53,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
                 var params = QueryProtobufCodec.convertRequest(request);
-                var query = queryFactory.createQuery(params);
+                var query = queryFactory.createQuery(params, null);
 
                 RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
                 List<RpcDecoratedResultItem> bestItems = executeQueries(indexRequest, request.getQueryLimits().getResultsTotal());
@@ -81,15 +83,25 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));
     }
 
-    public List<DecoratedSearchResultItem> executeDirect(String originalQuery, QueryParams params, int count) {
-        var query = queryFactory.createQuery(params);
+    public DetailedDirectResult executeDirect(
+            String originalQuery,
+            QueryParams params,
+            ResultRankingParameters rankingParameters,
+            int count) {
 
-        return executeQueries(
+        var query = queryFactory.createQuery(params, rankingParameters);
+
+        var items = executeQueries(
                 QueryProtobufCodec.convertQuery(originalQuery, query),
                 count)
                 .stream().map(QueryProtobufCodec::convertQueryResult)
                 .toList();
+
+        return new DetailedDirectResult(query, items);
     }
+
+    public record DetailedDirectResult(ProcessedQuery processedQuery,
+                                List<DecoratedSearchResultItem> result) {}
 
     @SneakyThrows
     List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
