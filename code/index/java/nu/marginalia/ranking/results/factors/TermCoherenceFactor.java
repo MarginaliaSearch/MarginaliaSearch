@@ -14,6 +14,9 @@ public class TermCoherenceFactor {
      * found in the same sentences.
      */
     public double calculateOverlap(CompiledQueryLong wordMetadataQuery) {
+        if (wordMetadataQuery.size() <= 2)
+            return 0;
+
         long mask = CompiledQueryAggregates.longBitmaskAggregate(wordMetadataQuery,
                 score -> score >>> WordMetadata.POSITIONS_SHIFT);
 
@@ -62,7 +65,7 @@ public class TermCoherenceFactor {
             }
         }
 
-        if (cnt != 0) {
+        if (cnt > 0) {
             return sum / cnt;
         } else {
             return 0;

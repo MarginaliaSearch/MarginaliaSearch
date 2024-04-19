@@ -34,7 +34,11 @@ public class ResultRankingContext {
         this.ngramsMask = ngramsMask;
 
         this.regularMask = new BitSet(ngramsMask.length());
-        this.regularMask.xor(ngramsMask);
+        for (int i = 0; i < ngramsMask.length(); i++) {
+            if (!ngramsMask.get(i)) {
+                regularMask.set(i);
+            }
+        }
 
         this.fullCounts = fullCounts;
         this.priorityCounts = prioCounts;
