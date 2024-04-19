@@ -193,6 +193,8 @@ public class DomainProcessor {
                     continue;
                 if (doc.url == null)
                     continue;
+                if (doc.documentBody.isBlank())
+                    continue;
                 if (!processedUrls.add(doc.url))
                     continue;
 
