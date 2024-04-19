@@ -99,9 +99,9 @@ public class ResultValuator {
                             asl,
                             quality,
                             size,
-                            flagsPenalty,
                             topology,
-                            year
+                            year,
+                            DocumentFlags.decode(documentMetadata).stream().map(Enum::name).toList()
                     ),
                     new ResultRankingOutputs(
                             averageSentenceLengthPenalty,

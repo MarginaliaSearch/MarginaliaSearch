@@ -171,9 +171,9 @@ public class QueryProtobufCodec {
                 inputs.getAsl(),
                 inputs.getQuality(),
                 inputs.getSize(),
-                inputs.getFlagsPenalty(),
                 inputs.getTopology(),
-                inputs.getYear()
+                inputs.getYear(),
+                inputs.getFlagsList()
         );
     }
 

@@ -163,9 +163,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setBestPositions(result.bestPositions)
                         .setRawItem(rawItem);
 
-                var rankingDetails = convertRankingDetails(result.rankingDetails);
+                var rankingDetails = IndexProtobufCodec.convertRankingDetails(result.rankingDetails);
                 if (rankingDetails != null) {
-                    logger.info(queryMarker, "Ranking details: {}", rankingDetails);
                     decoratedBuilder.setRankingDetails(rankingDetails);
                 }
 
@@ -183,46 +182,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         }
     }
 
-    private RpcResultRankingDetails convertRankingDetails(ResultRankingDetails rankingDetails) {
-        if (rankingDetails == null) {
-            return null;
-        }
-
-        return RpcResultRankingDetails.newBuilder()
-                .setInputs(convertRankingInputs(rankingDetails.inputs()))
-                .setOutput(convertRankingOutput(rankingDetails.outputs()))
-                .build();
-    }
-
-    private RpcResultRankingOutputs convertRankingOutput(ResultRankingOutputs outputs) {
-        return RpcResultRankingOutputs.newBuilder()
-                .setAverageSentenceLengthPenalty(outputs.averageSentenceLengthPenalty())
-                .setQualityPenalty(outputs.qualityPenalty())
-                .setRankingBonus(outputs.rankingBonus())
-                .setTopologyBonus(outputs.topologyBonus())
-                .setDocumentLengthPenalty(outputs.documentLengthPenalty())
-                .setTemporalBias(outputs.temporalBias())
-                .setFlagsPenalty(outputs.flagsPenalty())
-                .setOverallPart(outputs.overallPart())
-                .setTcfOverlap(outputs.tcfOverlap())
-                .setTcfJaccard(outputs.tcfJaccard())
-                .setBM25F(outputs.bM25F())
-                .setBM25N(outputs.bM25N())
-                .setBM25P(outputs.bM25P())
-                .build();
-    }
-
-    private RpcResultRankingInputs convertRankingInputs(ResultRankingInputs inputs) {
-        return RpcResultRankingInputs.newBuilder()
-                .setRank(inputs.rank())
-                .setAsl(inputs.asl())
-                .setQuality(inputs.quality())
-                .setSize(inputs.size())
-                .setFlagsPenalty(inputs.flagsPenalty())
-                .setTopology(inputs.topology())
-                .setYear(inputs.year())
-                .build();
-    }
 
     // exists for test access
     @SneakyThrows

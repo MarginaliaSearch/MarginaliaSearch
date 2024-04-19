@@ -112,7 +112,31 @@
     <p>{{description}}</p>
 
     <div><small class="text-muted">dataHash: {{dataHash}} wordsTotal: {{wordsTotal}} bestPositions: {{bestPositions}} rankingScore: {{rankingScore}} urlQuality: {{urlQuality}}</small></div>
-    <div>{{rankingDetails}}</div>
+    {{#with rankingDetails.inputs}}
+        <div><small class="text-muted">Rank: {{rank}}</small></div>
+        <div><small class="text-muted">ASL: {{asl}}</small></div>
+        <div><small class="text-muted">Quality: {{quality}}</small></div>
+        <div><small class="text-muted">Size: {{size}}</small></div>
+        <div><small class="text-muted">Topology: {{topology}}</small></div>
+        <div><small class="text-muted">Year: {{year}}</small></div>
+        <div><small class="text-muted">Flags: {{#each flags}} {{.}} {{/each}}</small></div>
+    {{/with}}
+    {{#with rankingDetails.outputs}}
+        <div><small class="text-muted">Average Sentence Length Penalty: {{averageSentenceLengthPenalty}}</small></div>
+        <div><small class="text-muted">Quality Penalty: {{qualityPenalty}}</small></div>
+        <div><small class="text-muted">Ranking Bonus: {{rankingBonus}}</small></div>
+        <div><small class="text-muted">Topology Bonus: {{topologyBonus}}</small></div>
+        <div><small class="text-muted">Document Length Penalty: {{documentLengthPenalty}}</small></div>
+        <div><small class="text-muted">Temporal Bias: {{temporalBias}}</small></div>
+        <div><small class="text-muted">Flags Penalty: {{flagsPenalty}}</small></div>
+        <div><small class="text-muted">Overall Part: {{overallPart}}</small></div>
+        <div><small class="text-muted">TCF Overlap: {{tcfOverlap}}</small></div>
+        <div><small class="text-muted">TCF Jaccard: {{tcfJaccard}}</small></div>
+        <div><small class="text-muted">BM25 Full: {{bM25F}}</small></div>
+        <div><small class="text-muted">BM25 Ngram: {{bM25N}}</small></div>
+        <div><small class="text-muted">BM25 Prio: {{bM25P}}</small></div>
+    {{/with}}
+
 </div>
 {{/each}}
 {{/if}}

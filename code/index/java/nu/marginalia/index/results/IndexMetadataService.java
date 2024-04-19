@@ -65,13 +65,15 @@ public class IndexMetadataService {
 
         for (var term : searchQuery.searchTermsPriority) {
             if (termToId.containsKey(term)) {
-                continue;
+                long id = SearchTermsUtil.getWordId(term);
+                termIdsPrio.add(id);
             }
-
-            long id = SearchTermsUtil.getWordId(term);
-            termIdsList.add(id);
-            termIdsPrio.add(id);
-            termToId.put(term, id);
+            else {
+                long id = SearchTermsUtil.getWordId(term);
+                termIdsList.add(id);
+                termIdsPrio.add(id);
+                termToId.put(term, id);
+            }
         }
 
         return new QuerySearchTerms(termToId,
