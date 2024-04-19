@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +38,8 @@ public class QueryFactory {
 
 
 
-    public ProcessedQuery createQuery(QueryParams params) {
+    public ProcessedQuery createQuery(QueryParams params,
+                                      @Nullable ResultRankingParameters rankingParams) {
         final var query = params.humanQuery();
 
         if (query.length() > 1000) {
@@ -156,6 +158,7 @@ public class QueryFactory {
                 .year(year)
                 .size(size)
                 .rank(rank)
+                .rankingParams(rankingParams)
                 .domains(domainIds)
                 .queryLimits(limits)
                 .searchSetIdentifier(params.identifier())

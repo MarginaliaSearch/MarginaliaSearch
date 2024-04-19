@@ -51,7 +51,7 @@ public class QueryFactoryTest {
                         new QueryLimits(100, 100, 100, 100),
                         "NONE",
                         QueryStrategy.AUTO,
-                        ResultRankingParameters.TemporalBias.NONE)).specs;
+                        ResultRankingParameters.TemporalBias.NONE), null).specs;
     }
 
 
