@@ -150,9 +150,9 @@ message RpcResultRankingInputs {
   int32 asl = 2;
   int32 quality = 3;
   int32 size = 4;
-  int32 flagsPenalty = 5;
-  int32 topology = 6;
-  int32 year = 7;
+  int32 topology = 5;
+  int32 year = 6;
+  repeated string flags = 7;
 }
 
 message RpcResultRankingOutputs {

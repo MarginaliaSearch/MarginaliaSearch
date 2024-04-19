@@ -1,3 +1,5 @@
 package nu.marginalia.api.searchquery.model.results.debug;
 
-public record ResultRankingInputs(int rank, int asl, int quality, int size, int flagsPenalty, int topology, int year) {}
+import java.util.List;
+
+public record ResultRankingInputs(int rank, int asl, int quality, int size, int topology, int year, List<String> flags) {}
