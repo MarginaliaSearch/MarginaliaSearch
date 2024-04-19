@@ -124,11 +124,20 @@ public class ResultValuator {
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
-        return normalize(
+        double ret = normalize(
                       tcfOverlap + tcfJaccard
                       + bM25F + bM25P + bM25N
                       + overallPartPositive,
                 overallPartNegative);
+
+        if (Double.isNaN(ret)) {
+            if (getClass().desiredAssertionStatus()) {
+                throw new IllegalStateException("NaN in result value calculation");
+            }
+
+            return Double.MAX_VALUE;
+        }
+        return ret;
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
