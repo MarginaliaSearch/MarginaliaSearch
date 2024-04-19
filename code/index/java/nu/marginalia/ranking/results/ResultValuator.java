@@ -137,7 +137,9 @@ public class ResultValuator {
 
             return Double.MAX_VALUE;
         }
-        return ret;
+        else {
+            return ret;
+        }
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {

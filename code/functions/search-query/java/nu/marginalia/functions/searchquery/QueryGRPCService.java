@@ -53,7 +53,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
                 var params = QueryProtobufCodec.convertRequest(request);
-                var query = queryFactory.createQuery(params, null);
+                var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
 
                 RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
                 List<RpcDecoratedResultItem> bestItems = executeQueries(indexRequest, request.getQueryLimits().getResultsTotal());
@@ -109,7 +109,10 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
         results.sort(comparator);
         results.removeIf(this::isBlacklisted);
-        return results.subList(0, Math.min(totalSize, results.size()));
+        if (results.size() > totalSize) {
+            results = results.subList(0, totalSize);
+        }
+        return results;
     }
 
 }
