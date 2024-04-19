@@ -19,14 +19,4 @@ public class SearchResultSet {
         return results.size();
     }
 
-    public static SearchResultSet combine(SearchResultSet l, SearchResultSet r) {
-        List<DecoratedSearchResultItem> combinedItems = new ArrayList<>(l.size() + r.size());
-        combinedItems.addAll(l.results);
-        combinedItems.addAll(r.results);
-
-        // TODO: Do we combine these correctly?
-        combinedItems.sort(Comparator.comparing(item -> item.rankingScore));
-
-        return new SearchResultSet(combinedItems);
-    }
 }
