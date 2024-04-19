@@ -159,6 +159,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setRankingScore(result.rankingScore)
                         .setTitle(result.title)
                         .setUrl(result.url.toString())
+                        .setUrlQuality(result.urlQuality)
                         .setWordsTotal(result.wordsTotal)
                         .setBestPositions(result.bestPositions)
                         .setRawItem(rawItem);
