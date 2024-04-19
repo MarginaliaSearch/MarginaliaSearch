@@ -63,6 +63,7 @@ class ResultValuatorTest {
         ResultRankingContext context = new ResultRankingContext(100000,
                 ResultRankingParameters.sensibleDefaults(),
                 new BitSet(),
+                new BitSet(),
                 frequencyData,
                 frequencyData);
 

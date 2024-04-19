@@ -436,6 +436,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         int[] prio = new int[compiledQueryIds.size()];
 
         BitSet ngramsMask = new BitSet(compiledQuery.size());
+        BitSet regularMask = new BitSet(compiledQuery.size());
 
         for (int idx = 0; idx < compiledQueryIds.size(); idx++) {
             long id = compiledQueryIds.at(idx);
@@ -445,11 +446,15 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             if (compiledQuery.at(idx).contains("_")) {
                 ngramsMask.set(idx);
             }
+            else {
+                regularMask.set(idx);
+            }
         }
 
         return new ResultRankingContext(index.getTotalDocCount(),
                 rankingParams,
                 ngramsMask,
+                regularMask,
                 new CqDataInt(full),
                 new CqDataInt(prio));
     }

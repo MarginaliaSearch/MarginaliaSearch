@@ -25,6 +25,7 @@ public class ResultRankingContext {
     public ResultRankingContext(int docCount,
                                 ResultRankingParameters params,
                                 BitSet ngramsMask,
+                                BitSet regularMask,
                                 CqDataInt fullCounts,
                                 CqDataInt prioCounts)
     {
@@ -32,13 +33,7 @@ public class ResultRankingContext {
         this.params = params;
 
         this.ngramsMask = ngramsMask;
-
-        this.regularMask = new BitSet(ngramsMask.length());
-        for (int i = 0; i < ngramsMask.length(); i++) {
-            if (!ngramsMask.get(i)) {
-                regularMask.set(i);
-            }
-        }
+        this.regularMask = regularMask;
 
         this.fullCounts = fullCounts;
         this.priorityCounts = prioCounts;
