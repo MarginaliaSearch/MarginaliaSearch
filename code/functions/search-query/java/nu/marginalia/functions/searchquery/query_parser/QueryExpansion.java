@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** Responsible for expanding a query, that is creating alternative branches of query execution
  *  to increase the number of results
@@ -23,7 +24,8 @@ public class QueryExpansion {
     private final List<ExpansionStrategy> expansionStrategies = List.of(
             this::joinDashes,
             this::splitWordNum,
-            this::joinTerms
+            this::joinTerms,
+            this::ngramAll
     );
 
     @Inject
@@ -62,6 +64,22 @@ public class QueryExpansion {
         }
     }
 
+
+    public void ngramAll(QWordGraph graph) {
+        List<QWord> parts = new ArrayList<>();
+
+        for (var qw : graph) {
+            if (qw.isBeg() || qw.isEnd())
+                continue;
+
+            parts.add(qw);
+        }
+
+        if (parts.size() > 1) {
+            graph.addVariantForSpan(parts.getFirst(), parts.getLast(),
+                    parts.stream().map(QWord::word).collect(Collectors.joining("_")));
+        }
+    }
 
     // Turn 'MP3' into 'MP-3'
     public void splitWordNum(QWordGraph graph) {

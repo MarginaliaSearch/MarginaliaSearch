@@ -2,6 +2,8 @@ package nu.marginalia.functions.searchquery.query_parser.model;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 
+import java.util.Objects;
+
 public record QWord(
         int ord,
         boolean variant,
@@ -47,5 +49,23 @@ public record QWord(
 
     public String toString() {
         return STR."q{\{word}}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        QWord qWord = (QWord) o;
+        return variant == qWord.variant && Objects.equals(word, qWord.word) && Objects.equals(stemmed, qWord.stemmed) && Objects.equals(isOriginal(), qWord.isOriginal());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Boolean.hashCode(variant);
+        result = 31 * result + Objects.hashCode(stemmed);
+        result = 31 * result + Objects.hashCode(word);
+        result = 31 * result + Objects.hashCode(isOriginal());
+        return result;
     }
 }
