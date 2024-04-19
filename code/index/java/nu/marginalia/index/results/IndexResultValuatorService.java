@@ -13,6 +13,7 @@ import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggre
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 
 @Singleton
 public class IndexResultValuatorService {
@@ -155,6 +157,17 @@ public class IndexResultValuatorService {
                                                          DocdbUrlDetail docData,
                                                          CompiledQueryLong wordMetas,
                                                          ResultRankingContext rankingContext) {
+
+        ResultRankingDetailsExtractor detailsExtractor = new ResultRankingDetailsExtractor();
+        Consumer<ResultRankingDetails> detailConsumer = rankingContext.params.exportDebugData ? detailsExtractor::set : null;
+
+        double score = resultValuator.calculateSearchResultValue(wordMetas,
+                result.encodedDocMetadata,
+                result.htmlFeatures,
+                docData.wordsTotal(),
+                rankingContext,
+                detailConsumer);
+
         return new DecoratedSearchResultItem(
                 result,
                 docData.url(),
@@ -167,13 +180,20 @@ public class IndexResultValuatorService {
                 docData.dataHash(),
                 docData.wordsTotal(),
                 bestPositions(wordMetas),
-
-                resultValuator.calculateSearchResultValue(wordMetas,
-                        result.encodedDocMetadata,
-                        result.htmlFeatures,
-                        docData.wordsTotal(),
-                        rankingContext)
+                score,
+                detailsExtractor.get()
         );
+    }
+
+    private static class ResultRankingDetailsExtractor {
+        private ResultRankingDetails value = null;
+
+        public ResultRankingDetails get() {
+            return value;
+        }
+        public void set(ResultRankingDetails value) {
+            this.value = value;
+        }
     }
 
     private long bestPositions(CompiledQueryLong wordMetas) {

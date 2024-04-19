@@ -3,6 +3,9 @@ package nu.marginalia.ranking.results;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentFlags;
@@ -13,6 +16,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 @Singleton
 public class ResultValuator {
@@ -31,7 +37,9 @@ public class ResultValuator {
                                              long documentMetadata,
                                              int features,
                                              int length,
-                                             ResultRankingContext ctx)
+                                             ResultRankingContext ctx,
+                                             @Nullable Consumer<ResultRankingDetails> detailsConsumer
+                                             )
     {
         if (wordMeta.isEmpty())
             return Double.MAX_VALUE;
@@ -83,6 +91,36 @@ public class ResultValuator {
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
+
+        if (null != detailsConsumer) {
+            var details = new ResultRankingDetails(
+                    new ResultRankingInputs(
+                            rank,
+                            asl,
+                            quality,
+                            size,
+                            flagsPenalty,
+                            topology,
+                            year
+                    ),
+                    new ResultRankingOutputs(
+                            averageSentenceLengthPenalty,
+                            qualityPenalty,
+                            rankingBonus,
+                            topologyBonus,
+                            documentLengthPenalty,
+                            temporalBias,
+                            flagsPenalty,
+                            overallPart,
+                            tcfOverlap,
+                            tcfJaccard,
+                            bM25F,
+                            bM25N,
+                            bM25P)
+            );
+
+            detailsConsumer.accept(details);
+        }
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function

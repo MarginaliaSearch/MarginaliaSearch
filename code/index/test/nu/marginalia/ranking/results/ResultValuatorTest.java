@@ -62,16 +62,17 @@ class ResultValuatorTest {
         when(dict.getTermFreq("bob")).thenReturn(10);
         ResultRankingContext context = new ResultRankingContext(100000,
                 ResultRankingParameters.sensibleDefaults(),
+                new BitSet(),
                 frequencyData,
                 frequencyData);
 
         long docMeta = docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class));
         int features = 0;
 
-        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, docMeta, features, 10_000, context);
-        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, docMeta, features, 10_000, context);
-        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet,  docMeta, features, 10_000, context);
-        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, docMeta, features, 10_000, context);
+        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, docMeta, features, 10_000, context, null);
+        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, docMeta, features, 10_000, context, null);
+        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet,  docMeta, features, 10_000, context, null);
+        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, docMeta, features, 10_000, context, null);
 
         System.out.println(titleOnlyLowCount);
         System.out.println(titleLongOnlyLowCount);

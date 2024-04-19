@@ -2,6 +2,7 @@ package nu.marginalia.api.searchquery.model.results;
 
 import lombok.Getter;
 import lombok.ToString;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
 import nu.marginalia.model.EdgeUrl;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +33,9 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     public final int wordsTotal;
     public final long bestPositions;
     public final double rankingScore;
+
+    @Nullable
+    public ResultRankingDetails rankingDetails;
 
     public long documentId() {
         return rawIndexResult.getDocumentId();
@@ -67,7 +71,10 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
                                      long dataHash,
                                      int wordsTotal,
                                      long bestPositions,
-                                     double rankingScore)
+                                     double rankingScore,
+                                     @Nullable
+                                     ResultRankingDetails rankingDetails
+                                     )
     {
         this.rawIndexResult = rawIndexResult;
         this.url = url;
@@ -81,6 +88,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
         this.wordsTotal = wordsTotal;
         this.bestPositions = bestPositions;
         this.rankingScore = rankingScore;
+        this.rankingDetails = rankingDetails;
     }
 
     @Override

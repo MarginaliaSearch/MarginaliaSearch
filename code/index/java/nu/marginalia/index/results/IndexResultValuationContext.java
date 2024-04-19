@@ -110,7 +110,8 @@ public class IndexResultValuationContext {
                 docMetadata,
                 htmlFeatures,
                 5000, // use a dummy value here as it's not present in the index
-                rankingContext);
+                rankingContext,
+                null);
 
         if (searchResult.hasPrioTerm) {
             score = 0.75 * score;
