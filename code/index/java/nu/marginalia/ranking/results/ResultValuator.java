@@ -86,7 +86,7 @@ public class ResultValuator {
         double tcfJaccard = rankingParams.tcfJaccardWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
 
         double bM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forRegular(rankingParams.fullParams, wordMeta.data, length, ctx));
-        double bM25N = 0.25 * rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
+        double bM25N = rankingParams.bm25NgramWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
         double bM25P = rankingParams.bm25PrioWeight * wordMeta.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordMeta.data, ctx));
 
         double overallPartPositive = Math.max(0, overallPart);
