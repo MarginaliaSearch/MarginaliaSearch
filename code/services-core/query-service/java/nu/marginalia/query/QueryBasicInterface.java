@@ -125,6 +125,7 @@ public class QueryBasicInterface {
                 .bm25FullWeight(doubleFromRequest(request, "bm25FullWeight", sensibleDefaults.bm25FullWeight))
                 .bm25NgramWeight(doubleFromRequest(request, "bm25NgramWeight", sensibleDefaults.bm25NgramWeight))
                 .bm25PrioWeight(doubleFromRequest(request, "bm25PrioWeight", sensibleDefaults.bm25PrioWeight))
+                .exportDebugData(true)
                 .build();
     }
 

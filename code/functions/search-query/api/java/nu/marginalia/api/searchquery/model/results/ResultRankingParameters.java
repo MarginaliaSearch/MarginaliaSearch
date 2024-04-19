@@ -41,6 +41,8 @@ public class ResultRankingParameters {
     public TemporalBias temporalBias;
     public double temporalBiasWeight;
 
+    public boolean exportDebugData;
+
     public static ResultRankingParameters sensibleDefaults() {
         return builder()
                 .fullParams(new Bm25Parameters(1.2, 0.5))
@@ -58,6 +60,7 @@ public class ResultRankingParameters {
                 .tcfJaccardWeight(1)
                 .temporalBias(TemporalBias.NONE)
                 .temporalBiasWeight(1. / (5.))
+                .exportDebugData(false)
                 .build();
     }
 

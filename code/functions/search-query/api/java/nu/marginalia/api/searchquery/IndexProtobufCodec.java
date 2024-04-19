@@ -97,7 +97,8 @@ public class IndexProtobufCodec {
                 params.getTcfJaccardWeight(),
                 params.getTcfOverlapWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
-                params.getTemporalBiasWeight()
+                params.getTemporalBiasWeight(),
+                params.getExportDebugData()
         );
     }
 
@@ -124,7 +125,8 @@ public class IndexProtobufCodec {
                         .setBm25PrioWeight(rankingParams.bm25PrioWeight)
                         .setTcfOverlapWeight(rankingParams.tcfOverlapWeight)
                         .setTcfJaccardWeight(rankingParams.tcfJaccardWeight)
-                        .setTemporalBiasWeight(rankingParams.temporalBiasWeight);
+                        .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
+                        .setExportDebugData(rankingParams.exportDebugData);
 
         if (temporalBias != null && temporalBias.getBias() != RpcTemporalBias.Bias.NONE) {
             builder.setTemporalBias(temporalBias);

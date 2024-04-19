@@ -6,6 +6,9 @@ import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
@@ -126,7 +129,51 @@ public class QueryProtobufCodec {
                 results.getDataHash(),
                 results.getWordsTotal(),
                 results.getBestPositions(),
-                results.getRankingScore()
+                results.getRankingScore(),
+                convertRankingDetails(results.getRankingDetails())
+        );
+    }
+
+    private static ResultRankingDetails convertRankingDetails(RpcResultRankingDetails rankingDetails) {
+        if (rankingDetails == null)
+            return null;
+        var inputs = rankingDetails.getInputs();
+        var outputs = rankingDetails.getOutput();
+
+        return new ResultRankingDetails(
+                convertRankingInputs(inputs),
+                convertRankingOutputs(outputs)
+        );
+
+    }
+
+    private static ResultRankingOutputs convertRankingOutputs(RpcResultRankingOutputs outputs) {
+        return new ResultRankingOutputs(
+                outputs.getAverageSentenceLengthPenalty(),
+                outputs.getQualityPenalty(),
+                outputs.getRankingBonus(),
+                outputs.getTopologyBonus(),
+                outputs.getDocumentLengthPenalty(),
+                outputs.getTemporalBias(),
+                outputs.getFlagsPenalty(),
+                outputs.getOverallPart(),
+                outputs.getTcfOverlap(),
+                outputs.getTcfJaccard(),
+                outputs.getBM25F(),
+                outputs.getBM25N(),
+                outputs.getBM25P()
+        );
+    }
+
+    private static ResultRankingInputs convertRankingInputs(RpcResultRankingInputs inputs) {
+        return new ResultRankingInputs(
+                inputs.getRank(),
+                inputs.getAsl(),
+                inputs.getQuality(),
+                inputs.getSize(),
+                inputs.getFlagsPenalty(),
+                inputs.getTopology(),
+                inputs.getYear()
         );
     }
 
@@ -209,7 +256,8 @@ public class QueryProtobufCodec {
                 rpcDecoratedResultItem.getDataHash(),
                 rpcDecoratedResultItem.getWordsTotal(),
                 rpcDecoratedResultItem.getBestPositions(),
-                rpcDecoratedResultItem.getRankingScore()
+                rpcDecoratedResultItem.getRankingScore(),
+                convertRankingDetails(rpcDecoratedResultItem.getRankingDetails())
         );
     }
 

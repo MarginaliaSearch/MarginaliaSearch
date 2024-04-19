@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 /** Responsible for expanding a query, that is creating alternative branches of query execution
  *  to increase the number of results

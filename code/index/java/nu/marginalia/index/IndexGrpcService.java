@@ -14,6 +14,9 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.*;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
@@ -160,6 +163,12 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setBestPositions(result.bestPositions)
                         .setRawItem(rawItem);
 
+                var rankingDetails = convertRankingDetails(result.rankingDetails);
+                if (rankingDetails != null) {
+                    logger.info(queryMarker, "Ranking details: {}", rankingDetails);
+                    decoratedBuilder.setRankingDetails(rankingDetails);
+                }
+
                 if (result.pubYear != null) {
                     decoratedBuilder.setPubYear(result.pubYear);
                 }
@@ -172,6 +181,47 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             logger.error("Error in handling request", ex);
             responseObserver.onError(ex);
         }
+    }
+
+    private RpcResultRankingDetails convertRankingDetails(ResultRankingDetails rankingDetails) {
+        if (rankingDetails == null) {
+            return null;
+        }
+
+        return RpcResultRankingDetails.newBuilder()
+                .setInputs(convertRankingInputs(rankingDetails.inputs()))
+                .setOutput(convertRankingOutput(rankingDetails.outputs()))
+                .build();
+    }
+
+    private RpcResultRankingOutputs convertRankingOutput(ResultRankingOutputs outputs) {
+        return RpcResultRankingOutputs.newBuilder()
+                .setAverageSentenceLengthPenalty(outputs.averageSentenceLengthPenalty())
+                .setQualityPenalty(outputs.qualityPenalty())
+                .setRankingBonus(outputs.rankingBonus())
+                .setTopologyBonus(outputs.topologyBonus())
+                .setDocumentLengthPenalty(outputs.documentLengthPenalty())
+                .setTemporalBias(outputs.temporalBias())
+                .setFlagsPenalty(outputs.flagsPenalty())
+                .setOverallPart(outputs.overallPart())
+                .setTcfOverlap(outputs.tcfOverlap())
+                .setTcfJaccard(outputs.tcfJaccard())
+                .setBM25F(outputs.bM25F())
+                .setBM25N(outputs.bM25N())
+                .setBM25P(outputs.bM25P())
+                .build();
+    }
+
+    private RpcResultRankingInputs convertRankingInputs(ResultRankingInputs inputs) {
+        return RpcResultRankingInputs.newBuilder()
+                .setRank(inputs.rank())
+                .setAsl(inputs.asl())
+                .setQuality(inputs.quality())
+                .setSize(inputs.size())
+                .setFlagsPenalty(inputs.flagsPenalty())
+                .setTopology(inputs.topology())
+                .setYear(inputs.year())
+                .build();
     }
 
     // exists for test access

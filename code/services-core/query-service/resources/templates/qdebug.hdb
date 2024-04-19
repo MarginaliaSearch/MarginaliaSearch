@@ -112,6 +112,7 @@
     <p>{{description}}</p>
 
     <div><small class="text-muted">dataHash: {{dataHash}} wordsTotal: {{wordsTotal}} bestPositions: {{bestPositions}} rankingScore: {{rankingScore}} urlQuality: {{urlQuality}}</small></div>
+    <div>{{rankingDetails}}</div>
 </div>
 {{/each}}
 {{/if}}

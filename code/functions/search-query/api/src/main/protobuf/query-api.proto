@@ -92,6 +92,7 @@ message RpcDecoratedResultItem {
   int32 wordsTotal = 10;
   double rankingScore = 11; // The ranking score of this search result item, lower is better
   int64 bestPositions = 12;
+  RpcResultRankingDetails rankingDetails = 13; // optional, only present if exportDebugData is true in RpcResultRankingParameters
 }
 
 /** A raw index-service view of a search result */
@@ -136,6 +137,38 @@ message RpcResultRankingParameters {
   double tcfJaccardWeight = 15;
   RpcTemporalBias temporalBias = 16;
   double temporalBiasWeight = 17;
+  bool exportDebugData = 18;
+}
+
+message RpcResultRankingDetails {
+  RpcResultRankingInputs inputs = 1;
+  RpcResultRankingOutputs output = 2;
+}
+
+message RpcResultRankingInputs {
+  int32 rank = 1;
+  int32 asl = 2;
+  int32 quality = 3;
+  int32 size = 4;
+  int32 flagsPenalty = 5;
+  int32 topology = 6;
+  int32 year = 7;
+}
+
+message RpcResultRankingOutputs {
+  double averageSentenceLengthPenalty = 1;
+  double qualityPenalty = 2;
+  double rankingBonus = 3;
+  double topologyBonus = 4;
+  double documentLengthPenalty = 5;
+  double temporalBias = 6;
+  double flagsPenalty = 7;
+  double overallPart = 8;
+  double tcfOverlap = 9;
+  double tcfJaccard = 10;
+  double bM25F = 11;
+  double bM25N = 12;
+  double bM25P = 13;
 }
 
 /* Defines a single subquery */
