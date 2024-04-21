@@ -100,7 +100,7 @@ class QWordGraphTest {
         assertEquals("a b ( c | d )", graph.compileToQuery());
     }
 
-    @Test
+    @Test // this test is a bit flaky, the order of the variants is not guaranteed
     void testCompile5() {
         // Construct a graph like
 

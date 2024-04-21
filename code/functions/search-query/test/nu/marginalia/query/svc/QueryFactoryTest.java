@@ -134,7 +134,7 @@ public class QueryFactoryTest {
         {
             // tde isn't a stopword, so we should get the normal behavior
             var specs = parseAndGetSpecs("\"tde shining\"");
-            assertEquals("tde shining", specs.query.compiledQuery);
+            assertEquals("( shining tde | tde_shining )", specs.query.compiledQuery);
             assertEquals(List.of("tde_shining"), specs.query.searchTermsAdvice);
             assertEquals(List.of(List.of("tde", "shining")), specs.query.searchTermCoherences);
         }
@@ -192,7 +192,7 @@ public class QueryFactoryTest {
     @Test
     public void testExpansion3() {
         long start = System.currentTimeMillis();
-        var subquery = parseAndGetSpecs("plato's republic").query;
+        var subquery = parseAndGetSpecs("buy rimonabant buy acomplia");
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
