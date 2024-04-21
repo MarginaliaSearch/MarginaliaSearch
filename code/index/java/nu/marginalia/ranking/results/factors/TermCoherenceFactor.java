@@ -14,7 +14,7 @@ public class TermCoherenceFactor {
      * found in the same sentences.
      */
     public double calculateOverlap(CompiledQueryLong wordMetadataQuery) {
-        if (wordMetadataQuery.size() <= 2)
+        if (wordMetadataQuery.size() < 2)
             return 0;
 
         long mask = CompiledQueryAggregates.longBitmaskAggregate(wordMetadataQuery,
