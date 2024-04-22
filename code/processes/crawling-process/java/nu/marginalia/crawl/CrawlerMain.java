@@ -69,11 +69,11 @@ public class CrawlerMain extends ProcessMainClass {
 
     private final Map<String, String> processingIds = new ConcurrentHashMap<>();
 
-    final AbortMonitor abortMonitor = AbortMonitor.getInstance();
+    private final AbortMonitor abortMonitor = AbortMonitor.getInstance();
+    private final AtomicInteger tasksDone = new AtomicInteger(0);
+    private final HttpFetcherImpl fetcher;
 
-    volatile int totalTasks;
-    final AtomicInteger tasksDone = new AtomicInteger(0);
-    private HttpFetcherImpl fetcher;
+    private volatile int totalTasks;
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
@@ -263,6 +263,8 @@ public class CrawlerMain extends ProcessMainClass {
                 CrawledDocumentParquetRecordFileWriter
                         .convertWarc(domain, userAgent, newWarcFile, parquetFile);
 
+                // Optionally archive the WARC file if full retention is enabled,
+                // otherwise delete it:
                 warcArchiver.consumeWarc(newWarcFile, domain);
 
                 workLog.setJobToFinished(domain, parquetFile.toString(), size);
