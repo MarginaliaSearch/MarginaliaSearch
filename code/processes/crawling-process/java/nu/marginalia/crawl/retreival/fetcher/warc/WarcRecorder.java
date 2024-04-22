@@ -146,7 +146,11 @@ public class WarcRecorder implements AutoCloseable {
             WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
 
             byte[] httpRequestString = WarcProtocolReconstructor
-                    .getHttpRequestString(response.request(), requestUri)
+                    .getHttpRequestString(
+                            response.request().method(),
+                            response.request().headers().toMultimap(),
+                            request.headers().toMultimap(),
+                            requestUri)
                     .getBytes();
 
             requestDigestBuilder.update(httpRequestString);
