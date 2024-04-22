@@ -42,6 +42,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
     private final ContentTypeProber contentTypeProber;
+    private final SoftIfModifiedSinceProber softIfModifiedSinceProber;
 
     @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
@@ -93,6 +94,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
         this.contentTypeProber = new ContentTypeProber(userAgentString, client);
+        this.softIfModifiedSinceProber = new SoftIfModifiedSinceProber(userAgentString, client);
     }
 
     public HttpFetcherImpl(String userAgent) {
@@ -100,6 +102,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         this.userAgentString = userAgent;
         this.userAgentIdentifier = userAgent;
         this.contentTypeProber = new ContentTypeProber(userAgent, client);
+        this.softIfModifiedSinceProber = new SoftIfModifiedSinceProber(userAgent, client);
     }
 
     /**
@@ -164,6 +167,13 @@ public class HttpFetcherImpl implements HttpFetcher {
             else if (probeResult instanceof ContentTypeProbeResult.Exception exception) {
                 warcRecorder.flagAsError(url, exception.ex());
                 return new HttpFetchResult.ResultNone();
+            }
+        }
+        else {
+            // Possibly do a soft probe to see if the URL has been modified since the last time we crawled it
+            // if we have reason to suspect ETags are not supported by the server.
+            if (softIfModifiedSinceProber.probeModificationTime(url, contentTags)) {
+                return new HttpFetchResult.Result304Raw();
             }
         }
 
