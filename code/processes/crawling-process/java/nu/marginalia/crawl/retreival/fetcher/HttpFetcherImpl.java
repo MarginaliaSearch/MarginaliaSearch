@@ -143,7 +143,6 @@ public class HttpFetcherImpl implements HttpFetcher {
     public HttpFetchResult fetchContent(EdgeUrl url,
                                            WarcRecorder warcRecorder,
                                            ContentTags contentTags)
-            throws RateLimitException
     {
 
         // We don't want to waste time and resources on URLs that are not HTML, so if the file ending

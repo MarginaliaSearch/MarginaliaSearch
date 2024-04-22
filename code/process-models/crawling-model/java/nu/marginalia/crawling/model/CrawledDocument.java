@@ -87,12 +87,6 @@ public class CrawledDocument implements SerializableCrawlData {
         return getHeader("Last-Modified");
     }
 
-    public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
-    @Override
-    public String getSerialIdentifier() {
-        return SERIAL_IDENTIFIER;
-    }
-
     @Override
     public String getDomain() {
         if (url == null)

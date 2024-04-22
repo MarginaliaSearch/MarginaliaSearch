@@ -8,33 +8,6 @@ import java.nio.file.Path;
 
 public class CrawlerOutputFile {
 
-    /** Return the Path to a file for the given id and name */
-    public static Path getLegacyOutputFile(Path base, String id, String name) {
-        id = padId(id);
-
-        String first = id.substring(0, 2);
-        String second = id.substring(2, 4);
-
-        Path destDir = base.resolve(first).resolve(second);
-        return destDir.resolve(STR."\{id}-\{filesystemSafeName(name)}.zstd");
-    }
-
-    /** Return the Path to a file for the given id and name, creating the prerequisite
-     * directory structure as necessary. */
-    public static Path createLegacyOutputPath(Path base, String id, String name) throws IOException {
-        id = padId(id);
-
-        String first = id.substring(0, 2);
-        String second = id.substring(2, 4);
-
-        Path destDir = base.resolve(first).resolve(second);
-        if (!Files.exists(destDir)) {
-            Files.createDirectories(destDir);
-        }
-        return destDir.resolve(STR."\{id}-\{filesystemSafeName(name)}.zstd");
-    }
-
-
     private static String filesystemSafeName(String name) {
         StringBuilder nameSaneBuilder = new StringBuilder();
 

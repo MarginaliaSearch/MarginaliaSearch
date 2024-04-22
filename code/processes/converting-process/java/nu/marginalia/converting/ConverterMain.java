@@ -11,6 +11,10 @@ import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
+import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
+import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -23,11 +27,15 @@ import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import nu.marginalia.worklog.BatchingWorkLog;
 import nu.marginalia.worklog.BatchingWorkLogImpl;
-import plan.CrawlPlan;
+import org.apache.logging.log4j.util.Strings;
+import nu.marginalia.converting.model.CrawlPlan;
 import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import nu.marginalia.converting.model.WorkDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -36,6 +44,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 
@@ -118,7 +127,8 @@ public class ConverterMain extends ProcessMainClass {
         }
     }
 
-    public void convert(CrawlPlan plan) throws Exception {
+    public void convert(int totalDomains, WorkDir crawlDir, WorkDir processedDir) throws Exception {
+
 
         final int defaultPoolSize = Boolean.getBoolean("system.conserveMemory")
                 ? Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 1, 4)   // <-- conserve memory
@@ -126,12 +136,11 @@ public class ConverterMain extends ProcessMainClass {
 
         final int maxPoolSize = Integer.getInteger("converter.poolSize", defaultPoolSize);
 
-        try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
-             ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
+        try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(processedDir.getLogFile());
+             ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, processedDir.getDir()))
         {
             var pool = new SimpleBlockingThreadPool("ConverterThread", maxPoolSize, 2);
 
-            int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
             logger.info("Processing {} domains", totalDomains);
 
@@ -139,7 +148,8 @@ public class ConverterMain extends ProcessMainClass {
             processedDomains.set(batchingWorkLog.size());
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
-            for (var domain : plan.crawlDataIterable(id -> !batchingWorkLog.isItemProcessed(id)))
+            for (var domain : WorkLog.iterableMap(crawlDir.getLogFile(),
+                    new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
             {
                 pool.submit(() -> {
                     try {
@@ -162,6 +172,52 @@ public class ConverterMain extends ProcessMainClass {
             do {
                 System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
             } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+        }
+    }
+
+    private static class CrawlDataLocator implements Function<WorkLogEntry, Optional<SerializableCrawlDataStream>> {
+
+        private final Path crawlRootDir;
+        private final BatchingWorkLog batchingWorkLog;
+
+        CrawlDataLocator(Path crawlRootDir, BatchingWorkLog workLog) {
+            this.crawlRootDir = crawlRootDir;
+            this.batchingWorkLog = workLog;
+        }
+
+        @Override
+        public Optional<SerializableCrawlDataStream> apply(WorkLogEntry entry) {
+            if (batchingWorkLog.isItemProcessed(entry.id())) {
+                return Optional.empty();
+            }
+
+            var path = getCrawledFilePath(crawlRootDir, entry.path());
+
+            if (!Files.exists(path)) {
+                logger.warn("File not found: {}", path);
+                return Optional.empty();
+            }
+
+            try {
+                return Optional.of(CrawledDomainReader.createDataStream(path));
+            }
+            catch (IOException ex) {
+                return Optional.empty();
+            }
+        }
+
+        private Path getCrawledFilePath(Path crawlDir, String fileName) {
+            int sp = fileName.lastIndexOf('/');
+
+            // Normalize the filename
+            if (sp >= 0 && sp + 1< fileName.length())
+                fileName = fileName.substring(sp + 1);
+            if (fileName.length() < 4)
+                fileName = Strings.repeat("0", 4 - fileName.length()) + fileName;
+
+            String sp1 = fileName.substring(0, 2);
+            String sp2 = fileName.substring(2, 4);
+            return crawlDir.resolve(sp1).resolve(sp2).resolve(fileName);
         }
     }
 
@@ -196,6 +252,7 @@ public class ConverterMain extends ProcessMainClass {
             this.sideloadSources = List.of(sideloadSource);
             this.workDir = workDir;
         }
+
         SideloadAction(Collection<? extends SideloadSource> sideloadSources,
                        Path workDir,
                        MqMessage message, MqSingleShotInbox inbox) {
@@ -227,7 +284,7 @@ public class ConverterMain extends ProcessMainClass {
         @Override
         public void execute(ConverterMain converterMain) throws Exception {
             try {
-                converterMain.convert(plan);
+                converterMain.convert(plan.countCrawledDomains(), plan.crawl(), plan.process());
                 ok();
             }
             catch (Exception ex) {
@@ -256,8 +313,9 @@ public class ConverterMain extends ProcessMainClass {
                     var processData = fileStorageService.getStorage(request.processedDataStorage);
 
                     var plan = new CrawlPlan(null,
-                            new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
-                            new CrawlPlan.WorkDir(processData.path(), "processor.log"));
+                            new WorkDir(crawlData.path(), "crawler.log"),
+                            new WorkDir(processData.path(), "processor.log")
+                    );
 
                     yield new ConvertCrawlDataAction(plan, msg, inbox);
                 }

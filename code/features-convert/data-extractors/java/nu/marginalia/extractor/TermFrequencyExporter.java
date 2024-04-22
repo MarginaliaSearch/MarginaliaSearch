@@ -99,7 +99,7 @@ public class TermFrequencyExporter implements ExporterIf {
 
     private void processFile(Path crawlDataPath, TLongIntHashMap counts, AtomicInteger docCount, SentenceExtractor se) {
         TLongHashSet words = new TLongHashSet(10_000);
-        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.FAST, crawlDataPath)) {
+        try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
             while (stream.hasNext()) {
                 if (Thread.interrupted())
                     return;

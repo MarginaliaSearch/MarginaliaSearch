@@ -29,7 +29,6 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
 
     public ParquetSerializableCrawlDataStream(Path file) throws IOException {
         path = file;
-
         backingIterator = CrawledDocumentParquetRecordFileReader.stream(file).iterator();
     }
 
@@ -79,6 +78,10 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         String statusReason = "";
 
         String redirectDomain = null;
+
+        // The advisory content types are used to signal various states of the crawl
+        // that are not actual crawled documents.
+
         if (parquetRecord.contentType.equals("x-marginalia/advisory;state=redirect")) {
             EdgeUrl crawledUrl = new EdgeUrl(parquetRecord.url);
             redirectDomain = crawledUrl.getDomain().toString();
@@ -103,8 +106,6 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         ));
     }
 
-    private CrawledDocumentParquetRecord previousRecord = null;
-
     private void createDocumentRecord(CrawledDocumentParquetRecord nextRecord) {
         String bodyString = "";
         CrawlerDocumentStatus status = CrawlerDocumentStatus.OK;
@@ -115,7 +116,8 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         else if (nextRecord.contentType.startsWith("x-marginalia/advisory;state=robots-txt-skipped")) {
             status = CrawlerDocumentStatus.ROBOTS_TXT;
         }
-        else if (nextRecord.contentType.startsWith("x-marginalia/advisory")) { // other advisory stuff we don't want
+        else if (nextRecord.contentType.startsWith("x-marginalia/advisory")) {
+            // we don't care about the other advisory content types here
             return;
         }
         else if (nextRecord.body != null) {
@@ -135,21 +137,6 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         String etag = nextRecord.etagHeader;
         String lastModified = nextRecord.lastModifiedHeader;
 
-        // If we have a previous record, and it was a 304, and this one is a 200, we'll use the ETag and Last-Modified
-        // from the previous record, as it's not guaranteed the reference copy will have the same headers due to a bug
-        // in the crawler.  The bug is fixed, but we still need to support old crawls.
-        //
-        // This was added in 2024-01-18, so we can remove it in a few months.
-
-        if (previousRecord != null
-            && previousRecord.url.equals(nextRecord.url)
-            && previousRecord.httpStatus == 304
-            && nextRecord.httpStatus == 200)
-        {
-            etag = previousRecord.etagHeader;
-            lastModified = previousRecord.lastModifiedHeader;
-        }
-
         nextQ.add(new CrawledDocument("",
                 nextRecord.url,
                 nextRecord.contentType,
@@ -166,13 +153,9 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 nextRecord.cookies,
                 lastModified,
                 etag));
-
-        previousRecord = nextRecord;
     }
 
-    public void close() throws IOException {
-        previousRecord = null;
-    }
+    public void close() throws IOException {}
 
     @Override
     public SerializableCrawlData next() throws IOException {

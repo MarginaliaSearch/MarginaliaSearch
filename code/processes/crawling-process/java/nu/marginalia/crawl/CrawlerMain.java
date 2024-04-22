@@ -284,7 +284,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         private CrawlDataReference getReference() {
             try {
-                return new CrawlDataReference(CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, outputDir, domain, id));
+                return new CrawlDataReference(CrawledDomainReader.createDataStream(outputDir, domain, id));
             } catch (IOException e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain);
                 return new CrawlDataReference();
