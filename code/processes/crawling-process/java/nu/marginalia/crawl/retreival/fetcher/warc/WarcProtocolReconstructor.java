@@ -8,9 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /** We don't have access to the raw HTTP request and response, so we need to reconstruct them
@@ -18,12 +16,15 @@ import java.util.stream.Collectors;
  */
 public class WarcProtocolReconstructor {
 
-    static String getHttpRequestString(Request request, URI uri) {
+    static String getHttpRequestString(String method,
+                                       Map<String, List<String>> mainHeaders,
+                                       Map<String, List<String>> extraHeaders,
+                                       URI uri) {
         StringBuilder requestStringBuilder = new StringBuilder();
 
         final String encodedURL = encodeURLKeepSlashes(uri.getPath());
 
-        requestStringBuilder.append(request.method()).append(" ").append(encodedURL);
+        requestStringBuilder.append(method).append(" ").append(encodedURL);
 
         if (uri.getQuery() != null) {
             requestStringBuilder.append("?").append(URLEncoder.encode(uri.getQuery(), StandardCharsets.UTF_8));
@@ -31,9 +32,20 @@ public class WarcProtocolReconstructor {
         requestStringBuilder.append(" HTTP/1.1\r\n");
         requestStringBuilder.append("Host: ").append(uri.getHost()).append("\r\n");
 
-        request.headers().toMultimap().forEach((k, values) -> {
+        Set<String> addedHeaders = new HashSet<>();
+
+        mainHeaders.forEach((k, values) -> {
             for (var value : values) {
+                addedHeaders.add(k);
                 requestStringBuilder.append(capitalizeHeader(k)).append(": ").append(value).append("\r\n");
+            }
+        });
+
+        extraHeaders.forEach((k, values) -> {
+            if (!addedHeaders.contains(k)) {
+                for (var value : values) {
+                    requestStringBuilder.append(capitalizeHeader(k)).append(": ").append(value).append("\r\n");
+                }
             }
         });
 
