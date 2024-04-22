@@ -72,11 +72,6 @@ public class CrawlerRetreiver implements AutoCloseable {
 
             crawlFrontier.addFirst(root);
         }
-        else {
-            // We know nothing about this domain, so we'll start with the index, trying both HTTP and HTTPS
-            crawlFrontier.addToQueue(new EdgeUrl("http", new EdgeDomain(domain), null, "/", null));
-            crawlFrontier.addToQueue(new EdgeUrl("https", new EdgeDomain(domain), null, "/", null));
-        }
     }
 
     // For testing
@@ -89,7 +84,10 @@ public class CrawlerRetreiver implements AutoCloseable {
     }
 
     public int fetch(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
-        final DomainProber.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, crawlFrontier.peek());
+        final DomainProber.ProbeResult probeResult = domainProber.probeDomain(
+                fetcher,
+                domain,
+                new EdgeUrl("http", new EdgeDomain(domain), null, "/", null));
 
         try {
             return crawlDomain(oldCrawlData, probeResult, domainLinks);
@@ -108,7 +106,6 @@ public class CrawlerRetreiver implements AutoCloseable {
 
     private int crawlDomain(CrawlDataReference oldCrawlData, DomainProber.ProbeResult probeResult, DomainLinks domainLinks) throws IOException, InterruptedException {
         String ip = findIp(domain);
-
         EdgeUrl rootUrl;
 
         warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), probeResult);
@@ -123,13 +120,13 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         assert !crawlFrontier.isEmpty();
 
-        final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain, warcRecorder);
+        final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(rootUrl.domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
         sniffRootDocument(rootUrl);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
-        int recrawled = recrawl(oldCrawlData, robotsRules, delayTimer);
+        int recrawled = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
 
         if (recrawled > 0) {
             // If we have reference data, we will always grow the crawl depth a bit
@@ -197,11 +194,6 @@ public class CrawlerRetreiver implements AutoCloseable {
         ret.cookies = fetcher.getCookies();
 
         return fetchedCount;
-    }
-
-    /** Using the old crawl data, fetch the documents comparing etags and last-modified */
-    private int recrawl(CrawlDataReference oldCrawlData, SimpleRobotRules robotsRules, CrawlDelayTimer delayTimer) throws InterruptedException {
-        return crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
     }
 
     private void sniffRootDocument(EdgeUrl rootUrl) {
