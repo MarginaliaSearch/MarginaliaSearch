@@ -19,8 +19,6 @@ public record ContentTags(String etag, String lastMod) {
     /** Paints the tags onto the request builder. */
     public void paint(Request.Builder getBuilder) {
 
-        System.out.println(ifNoneMatch() + " " + ifModifiedSince());
-
         if (etag != null) {
             getBuilder.addHeader("If-None-Match", ifNoneMatch());
         }
