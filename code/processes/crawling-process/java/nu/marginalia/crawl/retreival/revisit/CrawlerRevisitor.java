@@ -86,8 +86,6 @@ public class CrawlerRevisitor {
                 // fashion to make sure we eventually catch changes over time
                 // and ensure we discover new links
 
-                crawlFrontier.addVisited(url);
-
                 // Hoover up any links from the document
                 crawlFrontier.enqueueLinksFromDocument(url, Jsoup.parse(doc.documentBody));
 
