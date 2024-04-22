@@ -48,7 +48,7 @@ public class ExperimentRunnerMain {
         Path basePath = Path.of(args[0]);
         for (var item : WorkLog.iterable(basePath.resolve("crawler.log"))) {
             Path crawlDataPath = basePath.resolve(item.relPath());
-            try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.FAST, crawlDataPath)) {
+            try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
                 experiment.process(stream);
             }
             catch (Exception ex) {

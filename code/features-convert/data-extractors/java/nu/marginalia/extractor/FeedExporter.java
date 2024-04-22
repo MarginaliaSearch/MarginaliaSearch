@@ -58,7 +58,7 @@ public class FeedExporter implements ExporterIf {
                 }
 
                 Path crawlDataPath = inputDir.resolve(item.relPath());
-                try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.COMPATIBLE, crawlDataPath)) {
+                try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
                     exportFeeds(tagWriter, stream);
                 }
                 catch (Exception ex) {

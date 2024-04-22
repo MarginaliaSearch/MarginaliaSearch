@@ -183,7 +183,7 @@ class CrawlerRetreiverTest {
 
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1)) {
+        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -236,7 +236,7 @@ class CrawlerRetreiverTest {
 
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1)) {
+        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -284,7 +284,7 @@ class CrawlerRetreiverTest {
         doCrawl(tempFileWarc1, specs);
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1)) {
+        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -331,7 +331,7 @@ class CrawlerRetreiverTest {
         doCrawl(tempFileWarc1, specs);
         convertToParquet(tempFileWarc1, tempFileParquet1);
         doCrawlWithReferenceStream(specs,
-                CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1)
+                CrawledDomainReader.createDataStream(tempFileParquet1)
         );
         convertToParquet(tempFileWarc2, tempFileParquet2);
 
@@ -352,7 +352,7 @@ class CrawlerRetreiverTest {
             });
         }
 
-        try (var ds = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet2)) {
+        try (var ds = CrawledDomainReader.createDataStream(tempFileParquet2)) {
             while (ds.hasNext()) {
                 var doc = ds.next();
                 if (doc instanceof CrawledDomain dr) {
@@ -395,7 +395,7 @@ class CrawlerRetreiverTest {
 
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1)) {
+        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 var doc = stream.next();
                 data.computeIfAbsent(doc.getClass(), c -> new ArrayList<>()).add(doc);
@@ -404,7 +404,7 @@ class CrawlerRetreiverTest {
             throw new RuntimeException(e);
         }
 
-        var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet1);
+        var stream = CrawledDomainReader.createDataStream(tempFileParquet1);
 
         System.out.println("---");
 
@@ -444,7 +444,7 @@ class CrawlerRetreiverTest {
             });
         }
 
-        try (var ds = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, tempFileParquet2)) {
+        try (var ds = CrawledDomainReader.createDataStream(tempFileParquet2)) {
             while (ds.hasNext()) {
                 var doc = ds.next();
                 if (doc instanceof CrawledDomain dr) {

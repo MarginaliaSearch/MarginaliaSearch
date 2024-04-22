@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class ContentTypeLogic {
 
-    private static final Predicate<String> probableHtmlPattern = Pattern.compile("^.*\\.(htm|html|php|txt)$").asMatchPredicate();
+    private static final Predicate<String> probableHtmlPattern = Pattern.compile("^.*\\.(htm|html|php|txt|md)$").asMatchPredicate();
     private static final Predicate<String> probableBinaryPattern = Pattern.compile("^.*\\.[a-z]+$").asMatchPredicate();
     private static final Set<String> blockedContentTypes = Set.of("text/css", "text/javascript");
     private static final List<String> acceptedContentTypePrefixes = List.of(
@@ -29,6 +29,7 @@ public class ContentTypeLogic {
         this.allowAllContentTypes = allowAllContentTypes;
     }
 
+    /** Returns true if the URL is likely to be a binary file, based on the URL path. */
     public boolean isUrlLikeBinary(EdgeUrl url) {
         String pathLowerCase = url.path.toLowerCase();
 
@@ -41,6 +42,7 @@ public class ContentTypeLogic {
     public boolean isAllowableContentType(ContentType contentType) {
         return isAllowableContentType(contentType.contentType());
     }
+
     public boolean isAllowableContentType(String contentType) {
         if (allowAllContentTypes)
             return true;

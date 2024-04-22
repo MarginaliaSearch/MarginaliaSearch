@@ -61,7 +61,7 @@ public class AtagExporter implements ExporterIf {
                 }
 
                 Path crawlDataPath = inputDir.resolve(item.relPath());
-                try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.FAST, crawlDataPath)) {
+                try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
                     exportLinks(tagWriter, stream);
                 }
                 catch (Exception ex) {

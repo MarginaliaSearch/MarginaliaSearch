@@ -272,6 +272,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             }
         }
 
+        // Parse the document and enqueue links
         try {
             if (fetchedDoc instanceof HttpFetchResult.ResultOk ok) {
                 var docOpt = ok.parseDocument();

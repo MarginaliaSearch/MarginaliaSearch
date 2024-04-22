@@ -1,5 +1,6 @@
 package nu.marginalia.crawl.retreival.revisit;
 
+import com.google.common.base.Strings;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
@@ -48,23 +49,32 @@ public class CrawlerRevisitor {
                 continue;
             var url = urlMaybe.get();
 
-            // If we've previously 404:d on this URL, we'll refrain from trying to fetch it again
+            // If we've previously 404:d on this URL, we'll refrain from trying to fetch it again,
+            // since it's likely to 404 again.  It will be forgotten by the next crawl though, so
+            // we'll eventually try again.
+
             if (doc.httpStatus == 404) {
                 crawlFrontier.addVisited(url);
                 continue;
             }
 
+            // If the reference document is empty or the HTTP status is not 200, we'll skip it since it's
+            // unlikely to produce anything meaningful for us.
             if (doc.httpStatus != 200)
+                continue;
+            if (Strings.isNullOrEmpty(doc.documentBody))
+                continue;
+
+            if (!crawlFrontier.filterLink(url))
+                continue;
+
+            if (!crawlFrontier.addVisited(url))
                 continue;
 
             if (!robotsRules.isAllowed(url.toString())) {
                 warcRecorder.flagAsRobotsTxtError(url);
                 continue;
             }
-            if (!crawlFrontier.filterLink(url))
-                continue;
-            if (!crawlFrontier.addVisited(url))
-                continue;
 
 
             if (recrawled > 5
@@ -79,10 +89,7 @@ public class CrawlerRevisitor {
                 crawlFrontier.addVisited(url);
 
                 // Hoover up any links from the document
-                if (doc.httpStatus == 200 && doc.documentBody != null) {
-                    var parsedDoc = Jsoup.parse(doc.documentBody);
-                    crawlFrontier.enqueueLinksFromDocument(url, parsedDoc);
-                }
+                crawlFrontier.enqueueLinksFromDocument(url, Jsoup.parse(doc.documentBody));
 
                 // Add a WARC record so we don't repeat this
                 warcRecorder.writeReferenceCopy(url,
@@ -97,7 +104,8 @@ public class CrawlerRevisitor {
                 // providing etag and last-modified headers, so we can recycle the
                 // document if it hasn't changed without actually downloading it
 
-                var reference = new DocumentWithReference(doc, oldCrawlData);
+                DocumentWithReference reference =  new DocumentWithReference(doc, oldCrawlData);
+
                 var result = crawlerRetreiver.fetchWriteAndSleep(url, delayTimer, reference);
 
                 if (reference.isSame(result)) {

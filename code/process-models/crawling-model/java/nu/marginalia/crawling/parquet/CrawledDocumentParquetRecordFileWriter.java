@@ -134,8 +134,6 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             return;
         }
 
-
-
         byte[] bodyBytes;
         String contentType;
 

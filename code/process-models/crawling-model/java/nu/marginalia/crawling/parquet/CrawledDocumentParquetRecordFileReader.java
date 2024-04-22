@@ -35,7 +35,6 @@ public class CrawledDocumentParquetRecordFileReader {
                     public Integer finish(Integer target) { return target; }
                 }),
                 List.of("statusCode"))
-                .mapToInt(Integer::valueOf)
                 .count();
     }
 }
