@@ -11,7 +11,7 @@ documentation.
 **Docker** - It is a bit of a pain to install, but if you follow
 [this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track for ubuntu-like systems.
 
-**JDK 22** - The code uses Java 22 preview features. 
+**JDK 21** - The code uses Java 21 preview features. 
 The civilized way of installing this is to use [SDKMAN](https://sdkman.io/);
 graalce is a good distribution choice but it doesn't matter too much.
 
