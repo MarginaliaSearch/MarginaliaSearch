@@ -117,9 +117,6 @@ public class CrawlerRetreiver implements AutoCloseable {
             rootUrl = ok.probedUrl();
         }
 
-
-        assert !crawlFrontier.isEmpty();
-
         final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(rootUrl.domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
@@ -235,6 +232,9 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
         catch (Exception ex) {
             logger.error("Error configuring link filter", ex);
+        }
+        finally {
+            crawlFrontier.addVisited(rootUrl);
         }
     }
 
