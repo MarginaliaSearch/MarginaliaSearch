@@ -5,7 +5,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     }
 }
 
@@ -30,7 +30,7 @@ jmh {
 }
 tasks.withType(me.champeau.jmh.WithJavaToolchain).configureEach {
     javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     })
 }
 tasks.withType(me.champeau.jmh.JmhBytecodeGeneratorTask).configureEach {

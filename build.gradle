@@ -42,8 +42,10 @@ subprojects.forEach {it ->
     }
 
 }
+
 ext {
-    dockerImageBase='container-registry.oracle.com/graalvm/jdk:22@sha256:22d2ca0d4fb378f50306ec2fda3178cce4523c4fe64e869108571c3c6e7026c8\n'
+    jvmVersion=21
+    dockerImageBase='container-registry.oracle.com/graalvm/jdk:21@sha256:1fd33d4d4eba3a9e1a41a728e39ea217178d257694eea1214fec68d2ed4d3d9b'
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
 }
@@ -66,7 +68,7 @@ idea {
 }
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     }
 }
 

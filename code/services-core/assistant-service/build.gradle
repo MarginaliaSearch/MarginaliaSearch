@@ -15,7 +15,7 @@ tasks.distZip.enabled = false
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     }
 }
 
