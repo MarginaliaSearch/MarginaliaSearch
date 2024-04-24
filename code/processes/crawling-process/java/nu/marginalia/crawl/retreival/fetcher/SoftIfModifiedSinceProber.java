@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Objects;
 
 public class SoftIfModifiedSinceProber {
@@ -43,6 +44,9 @@ public class SoftIfModifiedSinceProber {
 
             var contentTypeHeader = rsp.header("Last-Modified");
             return Objects.equals(contentTypeHeader, tags.lastMod());
+        }
+        catch (SocketTimeoutException e) { // suppress timeout exceptions to reduce log noise
+            return false;
         }
     }
 
