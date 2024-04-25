@@ -94,7 +94,8 @@ public class IndexResultValuationContext {
 
         CompiledQueryLong wordMetasQuery = new CompiledQueryLong(compiledQuery.root, new CqDataLong(wordMetas));
 
-        boolean allSynthetic = !CompiledQueryAggregates.booleanAggregate(wordMetasQuery, WordFlags.Synthetic::isAbsent);
+
+        boolean allSynthetic = CompiledQueryAggregates.booleanAggregate(wordMetasQuery, WordFlags.Synthetic::isPresent);
         int flagsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(wordMeta & flagsFilterMask));
         int positionsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(WordMetadata.decodePositions(wordMeta)));
 

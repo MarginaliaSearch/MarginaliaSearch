@@ -8,6 +8,7 @@ import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
@@ -36,8 +37,14 @@ public class CrawlerRevisitor {
     throws InterruptedException {
         int recrawled = 0;
         int retained = 0;
+        int errors = 0;
 
         for (;;) {
+            if (errors > 20) {
+                // If we've had too many errors, we'll stop trying to recrawl
+                break;
+            }
+
             CrawledDocument doc = oldCrawlData.nextDocument();
 
             if (doc == null)
@@ -108,6 +115,9 @@ public class CrawlerRevisitor {
 
                 if (reference.isSame(result)) {
                     retained++;
+                }
+                else if (result instanceof HttpFetchResult.ResultException) {
+                    errors++;
                 }
 
                 recrawled++;
