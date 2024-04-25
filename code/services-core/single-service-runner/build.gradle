@@ -7,13 +7,14 @@ plugins {
 application {
     mainClass = 'nu.marginalia.SingleService'
     applicationName = 'marginalia'
+    applicationDefaultJvmArgs = [ "--enable-preview" ]
 }
 
 tasks.distZip.enabled = false
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     }
 }
 
