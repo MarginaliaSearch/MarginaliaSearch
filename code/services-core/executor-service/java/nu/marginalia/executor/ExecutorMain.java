@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.service.MainClass;
+import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.module.DatabaseModule;
@@ -28,8 +29,11 @@ public class ExecutorMain extends MainClass  {
                 new ServiceDiscoveryModule(),
                 new ServiceConfigurationModule(ServiceId.Executor)
         );
-        injector.getInstance(NodeStatusWatcher.class);
 
+        // Ensure that the service registry is initialized early
+        injector.getInstance(ServiceRegistryIf.class);
+
+        injector.getInstance(NodeStatusWatcher.class);
         injector.getInstance(ExecutorMain.class);
         injector.getInstance(Initialization.class).setReady();
     }
