@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+application {
+    mainClass = 'nu.marginalia.SingleService'
+    applicationName = 'marginalia'
+    applicationDefaultJvmArgs = [ "--enable-preview" ]
+}
+
+tasks.distZip.enabled = false
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:services-core:query-service')
+    implementation project(':code:services-core:index-service')
+    implementation project(':code:services-core:control-service')
+    implementation project(':code:services-core:executor-service')
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}
+

@@ -13,6 +13,10 @@ public class MetricsServer {
     @SneakyThrows
     @Inject
     public MetricsServer(ServiceConfiguration configuration) {
+        // If less than zero, we forego setting up a metrics server
+        if (configuration.metricsPort() < 0)
+            return;
+
         Server server = new Server(configuration.metricsPort());
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");

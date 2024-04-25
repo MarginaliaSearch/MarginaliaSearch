@@ -36,9 +36,13 @@ public class ServiceConfigurationModule extends AbstractModule {
 
     private int getPrometheusPort() {
         String prometheusPortEnv = System.getenv("WMSA_PROMETHEUS_PORT");
-
         if (prometheusPortEnv != null) {
             return Integer.parseInt(prometheusPortEnv);
+        }
+
+        Integer prometheusPortProperty = Integer.getInteger("service.prometheus-port");
+        if (prometheusPortProperty != null) {
+            return prometheusPortProperty;
         }
 
         return 7000;

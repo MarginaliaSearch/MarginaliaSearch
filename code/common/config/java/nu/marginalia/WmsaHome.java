@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 
 public class WmsaHome {
     public static UserAgent getUserAgent()  {
-
         return new UserAgent(
                 System.getProperty("crawler.userAgentString", "Mozilla/5.0 (compatible; Marginalia-like bot; +https://git.marginalia.nu/))"),
                 System.getProperty("crawler.userAgentIdentifier", "search.marginalia.nu")
@@ -40,7 +39,19 @@ public class WmsaHome {
                 .findFirst();
 
         if (retStr.isEmpty()) {
-            // Check if we are running in a test environment
+            // Check parent directories for a fingerprint of the project's installation boilerplate
+            var prodRoot = Stream.iterate(Paths.get("").toAbsolutePath(), f -> f != null && Files.exists(f), Path::getParent)
+                    .filter(p -> Files.exists(p.resolve("conf/properties/system.properties")))
+                    .filter(p -> Files.exists(p.resolve("model/tfreq-new-algo3.bin")))
+                    .findAny();
+            if (prodRoot.isPresent()) {
+                return prodRoot.get();
+            }
+
+            // Check if we are running in a test environment by looking for fingerprints
+            // matching the base of the source tree for the project, then looking up the
+            // run directory which contains a template for the installation we can use as
+            // though it's the project root for testing purposes
 
             var testRoot = Stream.iterate(Paths.get("").toAbsolutePath(), f -> f != null && Files.exists(f), Path::getParent)
                     .filter(p -> Files.exists(p.resolve("run/env")))
@@ -50,8 +61,8 @@ public class WmsaHome {
 
             return testRoot.orElseThrow(() -> new IllegalStateException("""
                             Could not find $WMSA_HOME, either set environment
-                            variable, the 'system.homePath' property,
-                            or ensure either /wmssa or /var/lib/wmsa exists
+                            variable, the 'system.homePath' java property,
+                            or ensure either /wmsa or /var/lib/wmsa exists
                             """));
         }
 

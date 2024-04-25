@@ -7,7 +7,7 @@
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </Console>
-        <RollingFile name="LogToFile" fileName="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
+        <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
                      ignoreExceptions="false">
             <PatternLayout>
                 <Pattern>%-5level %d{yyyy-MM-dd HH:mm:ss,SSS} %-20t %-20c{1}: %msg{nolookups}%n</Pattern>

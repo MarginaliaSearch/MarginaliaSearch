@@ -6,7 +6,7 @@ plugins {
 
     // This is a workaround for a bug in the Jib plugin that causes it to stall randomly
     // https://github.com/GoogleContainerTools/jib/issues/3347
-    id 'com.google.cloud.tools.jib' version '3.4.1' apply(false)
+    id 'com.google.cloud.tools.jib' version '3.4.2' apply(false)
 }
 
 group 'marginalia'
