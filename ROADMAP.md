@@ -2,13 +2,20 @@
 
 This is a roadmap with major features planned for Marginalia Search.
 
-It's not set in any particular order and other features will definitely be implemented as well.
+It's not set in any particular order and other features will definitely 
+be implemented as well.
+
+Major goals:
+
+* Reach 1 billion pages indexed
+* Improve technical ability of indexing and search
 
 ## Proper Position Index
 
-Currently the search engine uses a fixed width bit mask to indicate word positions.  It has the benefit
-of being very fast to evaluate, but is inaccurate and has the drawback of making support for quoted
-search terms difficult and reliant on indexing word n-grams known beforehand.
+The search engine uses a fixed width bit mask to indicate word positions.  It has the benefit
+of being very fast to evaluate and works well for what it is, but is inaccurate and has the 
+drawback of making support for quoted search terms inaccurate and largely reliant on indexing 
+word n-grams known beforehand.
 
 The positions mask should be supplemented or replaced with a more accurate (e.g.) gamma coded positions
 list, as is the civilized way of doing this.
@@ -16,14 +23,16 @@ list, as is the civilized way of doing this.
 ## Hybridize crawler w/ Common Crawl data
 
 Sometimes Marginalia's relatively obscure crawler is blocked when attempting to crawl a website, or for
-other technical reasons, it may be difficult.  A possible work around is to hybridize the crawler so that
-it attempts to fetch such websites from common crawl.  That said, retaining the ability to independently
-crawl the web is still strongly desirable.
+other technical reasons it may be prevented from doing so.  A possible work-around is to hybridize the 
+crawler so that it attempts to fetch such inaccessible websites from common crawl.  This is an important 
+step on the road to 1 billion pages indexed.
 
 As a rough sketch, the crawler would identify target websites, consume CC's index, and then fetch the WARC data
-with byte range queries.
+with byte range queries.  
 
-## Some sort of Safe Search
+Retaining the ability to independently crawl the web is still strongly desirable so going full CC is not an option.
+
+## Safe Search
 
 The search engine has a bit of a problem showing spicy content mixed in with the results.  It would be desirable
 to have a way to filter this out.  It's likely something like a URL blacklist (e.g. [UT1](https://dsi.ut-capitole.fr/blacklists/index_en.php) )
@@ -45,12 +54,10 @@ RSS data itself.
 
 ## Support for binary formats like PDF
 
-Add support for formats like PDF.
-
 The crawler needs to be modified to retain them, and the conversion logic needs to parse them.  
 The documents database probably should have some sort of flag indicating it's a PDF as well.
 
-PDF parsing is known to be a bit of a security libability so some thought needs to be put in
+PDF parsing is known to be a bit of a security liability so some thought needs to be put in
 that direction as well.
 
 ## Custom ranking logic
