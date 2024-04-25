@@ -53,12 +53,22 @@ public class SingleService {
             int httpPort = Integer.parseInt(bindParts[1]);
             int grpcPort = Integer.parseInt(bindParts[2]);
 
-            System.out.println("Configuring service with bind address: " + bindAddress + " http port: " + httpPort + " grpc port: " + grpcPort + " announce address: " + announceAddress);
+            System.out.println(STR."""
+                Configuring service with bind address: \{bindAddress}
+                                         http port: \{httpPort}
+                                         grpc port: \{grpcPort}
+                                         announce address: \{announceAddress}
+                """);
 
             System.setProperty("service.bind-address", bindAddress);
             System.setProperty("service.http-port", Integer.toString(httpPort));
             System.setProperty("service.grpc-port", Integer.toString(grpcPort));
             System.setProperty("service.host", announceAddress);
+
+            // By default, disable prometheus metrics
+            if (System.getProperty("service.prometheus-port") == null) {
+                System.setProperty("service.prometheus-port", "-1");
+            }
 
             return true;
         }
