@@ -69,7 +69,7 @@ public class ContentTypeProber {
             return new ContentTypeProbeResult.Ok(ret);
 
         } catch (SocketTimeoutException ex) {
-            return new ContentTypeProbeResult.Timeout();
+            return new ContentTypeProbeResult.Timeout(ex);
         } catch (Exception ex) {
             logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
 
@@ -80,7 +80,7 @@ public class ContentTypeProber {
     public sealed interface ContentTypeProbeResult {
         record Ok(EdgeUrl resolvedUrl) implements ContentTypeProbeResult { }
         record BadContentType(String contentType, int statusCode) implements ContentTypeProbeResult { }
-        record Timeout() implements ContentTypeProbeResult { }
+        record Timeout(java.lang.Exception ex) implements ContentTypeProbeResult { }
         record Exception(java.lang.Exception ex) implements ContentTypeProbeResult { }
     }
 }

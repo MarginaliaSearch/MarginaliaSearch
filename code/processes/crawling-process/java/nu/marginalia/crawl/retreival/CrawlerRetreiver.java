@@ -291,7 +291,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                     crawlFrontier.addVisited(top);
                 }
             }
-            else if (fetchedDoc instanceof HttpFetchResult.ResultException ex) {
+            else if (fetchedDoc instanceof HttpFetchResult.ResultException) {
                 errorCount ++;
             }
         }

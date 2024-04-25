@@ -162,11 +162,13 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
             else if (probeResult instanceof ContentTypeProbeResult.BadContentType.Timeout timeout) {
                 warcRecorder.flagAsTimeout(url);
-                return new HttpFetchResult.ResultNone();
+
+                return new HttpFetchResult.ResultException(timeout.ex());
             }
             else if (probeResult instanceof ContentTypeProbeResult.Exception exception) {
                 warcRecorder.flagAsError(url, exception.ex());
-                return new HttpFetchResult.ResultNone();
+
+                return new HttpFetchResult.ResultException(exception.ex());
             }
         }
         else {
@@ -200,7 +202,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
         }
 
-        return new HttpFetchResult.ResultNone();
+        return result;
     }
 
     @Override
