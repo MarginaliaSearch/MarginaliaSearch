@@ -140,12 +140,14 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     @Override
     public int requestPort(String externalHost,
                            ServiceKey<?> key) {
+
         if (!Boolean.getBoolean("service.random-port")) {
             return switch (key) {
-                case ServiceKey.Rest rest -> 80;
-                case ServiceKey.Grpc<?> grpc -> 81;
+                case ServiceKey.Rest rest -> Integer.getInteger("service.http-port", 80);
+                case ServiceKey.Grpc<?> grpc -> Integer.getInteger("service.grpc-port",81);
             };
         }
+
 
         int portRangeLow = 12_000;
         int portRangeHigh = 12_999;
