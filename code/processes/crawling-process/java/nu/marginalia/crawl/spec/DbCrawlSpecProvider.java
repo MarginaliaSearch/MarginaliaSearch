@@ -25,6 +25,7 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
 
     private static final double URL_GROWTH_FACTOR = Double.parseDouble(System.getProperty("crawler.crawlSetGrowthFactor", "1.25"));
     private static final int MIN_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 100);
+    private static final int MID_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 2_000);
     private static final int MAX_URLS_PER_DOMAIN = Integer.getInteger("crawler.maxUrlsPerDomain", 10_000);
 
     @Inject
@@ -56,14 +57,27 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
             query.setInt(1, processConfiguration.node());
             query.setFetchSize(10_000);
             var rs = query.executeQuery();
+
             while (rs.next()) {
                 // Skip blacklisted domains
                 if (blacklist.isBlacklisted(rs.getInt(3)))
                     continue;
 
+                int urls = rs.getInt(2);
+                double growthFactor;
+
+                if (urls < MID_URLS_PER_DOMAIN) {
+                    growthFactor =  Math.max(2.5, URL_GROWTH_FACTOR);
+                }
+                else {
+                    growthFactor = URL_GROWTH_FACTOR;
+                }
+
+                int urlsToFetch = Math.clamp((int) (growthFactor * rs.getInt(2)), MIN_URLS_PER_DOMAIN, MAX_URLS_PER_DOMAIN);
+
                 var record = new CrawlSpecRecord(
                         rs.getString(1),
-                        Math.clamp((int) (URL_GROWTH_FACTOR * rs.getInt(2)), MIN_URLS_PER_DOMAIN, MAX_URLS_PER_DOMAIN),
+                        urlsToFetch,
                         List.of()
                 );
 
