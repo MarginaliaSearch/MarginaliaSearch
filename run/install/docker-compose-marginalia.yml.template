@@ -148,6 +148,14 @@ services:
       - db:/var/lib/mysql
     networks:
       - wmsa
+  zookeeper:
+    image: zookeeper
+    container_name: "zookeeper"
+    restart: always
+    ports:
+      - "127.0.0.1:2181:2181"
+    networks:
+      - wmsa
   traefik:
     image: "traefik:v2.10"
     container_name: "traefik"
