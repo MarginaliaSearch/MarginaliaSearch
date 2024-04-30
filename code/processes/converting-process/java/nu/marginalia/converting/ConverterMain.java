@@ -288,6 +288,8 @@ public class ConverterMain extends ProcessMainClass {
                 ok();
             }
             catch (Exception ex) {
+                logger.error("Error converting", ex);
+
                 err();
             }
         }
@@ -313,8 +315,8 @@ public class ConverterMain extends ProcessMainClass {
                     var processData = fileStorageService.getStorage(request.processedDataStorage);
 
                     var plan = new CrawlPlan(null,
-                            new WorkDir(crawlData.path(), "crawler.log"),
-                            new WorkDir(processData.path(), "processor.log")
+                            new WorkDir(crawlData.asPath().toString(), "crawler.log"),
+                            new WorkDir(processData.asPath().toString(), "processor.log")
                     );
 
                     yield new ConvertCrawlDataAction(plan, msg, inbox);
