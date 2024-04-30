@@ -41,13 +41,13 @@ public class MessageQueueService {
         var newMessageRenderer = rendererFactory.renderer("control/sys/new-message");
         var viewMessageRenderer = rendererFactory.renderer("control/sys/view-message");
 
-        Spark.get("/public/message-queue", this::listMessageQueueModel, messageQueueRenderer::render);
-        Spark.post("/public/message-queue/", this::createMessage, Redirects.redirectToMessageQueue);
-        Spark.get("/public/message-queue/new", this::newMessageModel, newMessageRenderer::render);
-        Spark.get("/public/message-queue/:id", this::viewMessageModel, viewMessageRenderer::render);
-        Spark.get("/public/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
-        Spark.get("/public/message-queue/:id/edit", this::viewMessageForEditStateModel, updateMessageStateRenderer::render);
-        Spark.post("/public/message-queue/:id/edit", this::editMessageState, Redirects.redirectToMessageQueue);
+        Spark.get("/message-queue", this::listMessageQueueModel, messageQueueRenderer::render);
+        Spark.post("/message-queue/", this::createMessage, Redirects.redirectToMessageQueue);
+        Spark.get("/message-queue/new", this::newMessageModel, newMessageRenderer::render);
+        Spark.get("/message-queue/:id", this::viewMessageModel, viewMessageRenderer::render);
+        Spark.get("/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
+        Spark.get("/message-queue/:id/edit", this::viewMessageForEditStateModel, updateMessageStateRenderer::render);
+        Spark.post("/message-queue/:id/edit", this::editMessageState, Redirects.redirectToMessageQueue);
 
     }
 

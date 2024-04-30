@@ -60,9 +60,9 @@ public class AbortedProcessService {
     public void register() {
         var abortedProcessesRenderer = rendererFactory.renderer("control/sys/aborted-processes");
 
-        Spark.get("/public/aborted-processes", this::abortedProcessesModel, abortedProcessesRenderer::render);
-        Spark.get("/public/aborted-processes/", this::abortedProcessesModel, abortedProcessesRenderer::render);
-        Spark.post("/public/aborted-processes/:id", this::restartProcess, redirectControl.renderRedirectAcknowledgement("Restarting...", "/"));
+        Spark.get("/aborted-processes", this::abortedProcessesModel, abortedProcessesRenderer::render);
+        Spark.get("/aborted-processes/", this::abortedProcessesModel, abortedProcessesRenderer::render);
+        Spark.post("/aborted-processes/:id", this::restartProcess, redirectControl.renderRedirectAcknowledgement("Restarting...", "/"));
     }
 
     private Object abortedProcessesModel(Request request, Response response) {

@@ -32,9 +32,9 @@ public class RandomExplorationService {
     public void register() throws IOException {
         var reviewRandomDomainsRenderer = rendererFactory.renderer("control/app/review-random-domains");
 
-        Spark.get("/public/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
+        Spark.get("/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
 
-        Spark.post("/public/review-random-domains", this::reviewRandomDomainsAction);
+        Spark.post("/review-random-domains", this::reviewRandomDomainsAction);
     }
 
     private Object reviewRandomDomainsModel(Request request, Response response) throws SQLException {

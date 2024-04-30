@@ -39,8 +39,8 @@ public class SearchToBanService {
     public void register() throws IOException {
         var searchToBanRenderer = rendererFactory.renderer("control/app/search-to-ban");
 
-        Spark.get("/public/search-to-ban", this::handle, searchToBanRenderer::render);
-        Spark.post("/public/search-to-ban", this::handle, searchToBanRenderer::render);
+        Spark.get("/search-to-ban", this::handle, searchToBanRenderer::render);
+        Spark.post("/search-to-ban", this::handle, searchToBanRenderer::render);
     }
 
     public Object handle(Request request, Response response) {

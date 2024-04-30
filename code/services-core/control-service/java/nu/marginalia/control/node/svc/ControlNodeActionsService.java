@@ -58,55 +58,55 @@ public class ControlNodeActionsService {
     }
 
     public void register() {
-        Spark.post("/public/nodes/:node/actions/repartition-index", this::triggerRepartition,
+        Spark.post("/nodes/:node/actions/repartition-index", this::triggerRepartition,
                 redirectControl.renderRedirectAcknowledgement("Repartitioning", "..")
         );
-        Spark.post("/public/nodes/:node/actions/sideload-encyclopedia", this::sideloadEncyclopedia,
+        Spark.post("/nodes/:node/actions/sideload-encyclopedia", this::sideloadEncyclopedia,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
-        Spark.post("/public/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree,
+        Spark.post("/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
-        Spark.post("/public/nodes/:node/actions/sideload-reddit", this::sideloadReddit,
+        Spark.post("/nodes/:node/actions/sideload-reddit", this::sideloadReddit,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
-        Spark.post("/public/nodes/:node/actions/sideload-warc", this::sideloadWarc,
+        Spark.post("/nodes/:node/actions/sideload-warc", this::sideloadWarc,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
-        Spark.post("/public/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
+        Spark.post("/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
-        Spark.post("/public/nodes/:node/actions/export-segmentation", this::exportSegmentationModel,
+        Spark.post("/nodes/:node/actions/export-segmentation", this::exportSegmentationModel,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
-        Spark.post("/public/nodes/:node/actions/download-sample-data", this::downloadSampleData,
+        Spark.post("/nodes/:node/actions/download-sample-data", this::downloadSampleData,
                 redirectControl.renderRedirectAcknowledgement("Downloading", "..")
         );
-        Spark.post("/public/nodes/:id/actions/new-crawl", this::triggerNewCrawl,
+        Spark.post("/nodes/:id/actions/new-crawl", this::triggerNewCrawl,
                 redirectControl.renderRedirectAcknowledgement("Crawling", "..")
         );
-        Spark.post("/public/nodes/:id/actions/recrawl", this::triggerAutoRecrawl,
+        Spark.post("/nodes/:id/actions/recrawl", this::triggerAutoRecrawl,
                 redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
         );
-        Spark.post("/public/nodes/:id/actions/process", this::triggerProcess,
+        Spark.post("/nodes/:id/actions/process", this::triggerProcess,
                 redirectControl.renderRedirectAcknowledgement("Processing", "..")
         );
-        Spark.post("/public/nodes/:id/actions/load", this::triggerLoadSelected,
+        Spark.post("/nodes/:id/actions/load", this::triggerLoadSelected,
                 redirectControl.renderRedirectAcknowledgement("Loading", "..")
         );
-        Spark.post("/public/nodes/:id/actions/restore-backup", this::triggerRestoreBackup,
+        Spark.post("/nodes/:id/actions/restore-backup", this::triggerRestoreBackup,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
         );
-        Spark.post("/public/nodes/:id/actions/new-crawl-specs", this::createNewSpecsAction,
+        Spark.post("/nodes/:id/actions/new-crawl-specs", this::createNewSpecsAction,
                 redirectControl.renderRedirectAcknowledgement("Creating", "../actions?view=new-crawl")
         );
-        Spark.post("/public/nodes/:id/actions/export-db-data", this::exportDbData,
+        Spark.post("/nodes/:id/actions/export-db-data", this::exportDbData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
-        Spark.post("/public/nodes/:id/actions/export-from-crawl-data", this::exportFromCrawlData,
+        Spark.post("/nodes/:id/actions/export-from-crawl-data", this::exportFromCrawlData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
-        Spark.post("/public/nodes/:id/actions/export-sample-data", this::exportSampleData,
+        Spark.post("/nodes/:id/actions/export-sample-data", this::exportSampleData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
     }

@@ -36,8 +36,8 @@ public class ControlBlacklistService {
     public void register() throws IOException {
         var blacklistRenderer = rendererFactory.renderer("control/app/blacklist");
 
-        Spark.get("/public/blacklist", this::blacklistModel, blacklistRenderer::render);
-        Spark.post("/public/blacklist", this::updateBlacklist, Redirects.redirectToBlacklist);
+        Spark.get("/blacklist", this::blacklistModel, blacklistRenderer::render);
+        Spark.post("/blacklist", this::updateBlacklist, Redirects.redirectToBlacklist);
     }
 
     private Object blacklistModel(Request request, Response response) {

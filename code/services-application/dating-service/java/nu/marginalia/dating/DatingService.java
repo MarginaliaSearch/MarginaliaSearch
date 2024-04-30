@@ -44,13 +44,13 @@ public class DatingService extends Service {
         this.browseRandom = browseRandom;
         this.screenshotService = screenshotService;
 
-        Spark.get("/public/reset", this::getReset);
-        Spark.get("/public/", this::getInitSession);
-        Spark.get("/public/view", this::getCurrent);
-        Spark.get("/public/next", this::getNext);
-        Spark.get("/public/similar/:id", this::getSimilar);
-        Spark.get("/public/rewind", this::getRewind);
-        Spark.get("/public/init", this::getInitSession);
+        Spark.get("/reset", this::getReset);
+        Spark.get("/", this::getInitSession);
+        Spark.get("/view", this::getCurrent);
+        Spark.get("/next", this::getNext);
+        Spark.get("/similar/:id", this::getSimilar);
+        Spark.get("/rewind", this::getRewind);
+        Spark.get("/init", this::getInitSession);
     }
 
     private Object getInitSession(Request request, Response response) {

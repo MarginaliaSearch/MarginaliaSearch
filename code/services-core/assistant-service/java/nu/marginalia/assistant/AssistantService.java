@@ -39,9 +39,8 @@ public class AssistantService extends Service {
 
         Spark.staticFiles.expireTime(600);
 
-        Spark.get("/public/screenshot/:id", screenshotService::serveScreenshotRequest);
         Spark.get("/screenshot/:id", screenshotService::serveScreenshotRequest);
-        Spark.get("/public/suggest/", this::getSuggestions, this::convertToJson);
+        Spark.get("/suggest/", this::getSuggestions, this::convertToJson);
 
         Spark.awaitInitialization();
     }

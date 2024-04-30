@@ -78,9 +78,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.search-service.entrypoints=search"
-    - "traefik.http.routers.search-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   control-service:
     <<: *service
     image: "marginalia/control-service"
@@ -94,9 +91,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.control-service.entrypoints=control"
-    - "traefik.http.routers.control-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"

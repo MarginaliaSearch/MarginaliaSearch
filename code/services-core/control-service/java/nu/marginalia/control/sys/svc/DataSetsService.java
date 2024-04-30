@@ -28,8 +28,8 @@ public class DataSetsService {
     public void register() throws IOException {
         var datasetsRenderer = rendererFactory.renderer("control/sys/data-sets");
 
-        Spark.get("/public/datasets", this::dataSetsModel, datasetsRenderer::render);
-        Spark.post("/public/datasets", this::updateDataSets, datasetsRenderer::render);
+        Spark.get("/datasets", this::dataSetsModel, datasetsRenderer::render);
+        Spark.post("/datasets", this::updateDataSets, datasetsRenderer::render);
     }
 
     public Object dataSetsModel(Request request, Response response) {

@@ -96,21 +96,21 @@ public class ControlService extends Service {
         this.staticResources = staticResources;
         this.messageQueueService = messageQueueService;
 
-        Spark.get("/public/heartbeats", (req, res) -> {
+        Spark.get("/heartbeats", (req, res) -> {
             res.type("application/json");
             return heartbeatService.getServiceHeartbeats();
         }, gson::toJson);
 
-        Spark.get("/public/", this::overviewModel, indexRenderer::render);
+        Spark.get("/", this::overviewModel, indexRenderer::render);
 
-        Spark.get("/public/actions", (req,rs) -> new Object() , actionsViewRenderer::render);
-        Spark.get("/public/events", eventLogService::eventsListModel , eventsRenderer::render);
-        Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
+        Spark.get("/actions", (req,rs) -> new Object() , actionsViewRenderer::render);
+        Spark.get("/events", eventLogService::eventsListModel , eventsRenderer::render);
+        Spark.get("/services/:id", this::serviceModel, serviceByIdRenderer::render);
 
         // Needed to be able to show website screenshots
-        Spark.get("/public/screenshot/:id", screenshotService::serveScreenshotRequest);
+        Spark.get("/screenshot/:id", screenshotService::serveScreenshotRequest);
 
-        Spark.get("/public/:resource", this::serveStatic);
+        Spark.get("/:resource", this::serveStatic);
 
 
         monitors.subscribe(this::logMonitorStateChange);

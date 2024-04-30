@@ -32,12 +32,12 @@ public class ControlFileStorageService {
     }
 
     public void register() throws IOException {
-        Spark.post("/public/storage/:fid/delete", this::flagFileForDeletionRequest, Redirects.redirectToStorage);
+        Spark.post("/storage/:fid/delete", this::flagFileForDeletionRequest, Redirects.redirectToStorage);
 
-        Spark.post("/public/nodes/:id/storage/:fid/delete", this::deleteFileStorage);
-        Spark.post("/public/nodes/:id/storage/:fid/enable", this::enableFileStorage);
-        Spark.post("/public/nodes/:id/storage/:fid/disable", this::disableFileStorage);
-        Spark.get("/public/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
+        Spark.post("/nodes/:id/storage/:fid/delete", this::deleteFileStorage);
+        Spark.post("/nodes/:id/storage/:fid/enable", this::enableFileStorage);
+        Spark.post("/nodes/:id/storage/:fid/disable", this::disableFileStorage);
+        Spark.get("/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
 
     }
 

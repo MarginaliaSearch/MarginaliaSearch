@@ -64,13 +64,13 @@ public class ControlSysActionsService {
     public void register() {
         var actionsView = rendererFactory.renderer("control/sys/sys-actions");
 
-        Spark.get("/public/actions", this::actionsModel, actionsView::render);
-        Spark.post("/public/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
-        Spark.post("/public/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
-        Spark.post("/public/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
-        Spark.post("/public/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
-        Spark.post("/public/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
-        Spark.post("/public/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
+        Spark.get("/actions", this::actionsModel, actionsView::render);
+        Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
+        Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
+        Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
+        Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
+        Spark.post("/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
+        Spark.post("/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
     }
 
     @SneakyThrows
