@@ -6,7 +6,4 @@ public enum FileStorageType {
     PROCESSED_DATA,
     BACKUP,
     EXPORT;
-    public String overrideName() {
-        return "FS_OVERRIDE:"+name();
-    }
 }

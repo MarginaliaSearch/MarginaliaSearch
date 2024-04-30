@@ -2,7 +2,6 @@ package nu.marginalia.storage;
 
 import com.google.inject.name.Named;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.storage.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +33,21 @@ public class FileStorageService {
         this.dataSource = dataSource;
         this.node = node;
 
-        for (var type : FileStorageType.values()) {
-            String overrideProperty = System.getProperty(type.overrideName());
+        logger.info("Resolving file storage root into {}", resolveStoragePath("/").toAbsolutePath());
+    }
 
-            if (overrideProperty == null || overrideProperty.isBlank())
-                continue;
-
-            logger.info("FileStorage override present: {} -> {}", type,
-                    FileStorage.createOverrideStorage(type, FileStorageBaseType.CURRENT, overrideProperty).asPath());
+    /** Resolve a storage path from a relative path, injecting the system configured storage root
+     * if set */
+    public static Path resolveStoragePath(String path) {
+        if (path.startsWith("/")) {
+            // Since Path.of("ANYTHING").resolve("/foo") = "/foo", we need to strip
+            // the leading slash
+            return resolveStoragePath(path.substring(1));
         }
+
+        return Path
+                .of(System.getProperty("storage.root", "/"))
+                .resolve(path);
     }
 
     /** @return the storage base with the given id, or null if it does not exist */
@@ -91,7 +96,7 @@ public class FileStorageService {
             throw new RuntimeException(e);
         }
 
-        File basePathFile = Path.of(base.path()).toFile();
+        File basePathFile = base.asPath().toFile();
         File[] files = basePathFile.listFiles(pathname -> pathname.isDirectory() && !ignoredPaths.contains(pathname.getName()));
         if (files == null) return;
         for (File file : files) {
@@ -200,7 +205,6 @@ public class FileStorageService {
         return getStorageBase(type);
     }
 
-    @SneakyThrows
     private Path allocateDirectory(Path basePath, String prefix) throws IOException {
         LocalDateTime now = LocalDateTime.now();
         String timestampPart = now.format(dirNameDatePattern);
@@ -219,6 +223,9 @@ public class FileStorageService {
                     PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"))
             );
         }
+
+        // Ensure umask didn't mess with the access permissions
+        Files.setPosixFilePermissions(maybePath, PosixFilePermissions.fromString("rwxr-xr-x"));
 
         return maybePath;
     }
@@ -278,20 +285,6 @@ public class FileStorageService {
 
 
     public FileStorage getStorageByType(FileStorageType type) throws SQLException {
-        String override = System.getProperty(type.overrideName());
-
-        if (override != null) {
-            // It is sometimes desirable to be able to override the
-            // configured location of a FileStorage when running a process
-            //
-
-            if (!Files.isDirectory(Path.of(override))) {
-                throw new IllegalStateException("FileStorageType " + type.name() + " was overridden, but location '" + override + "' does not exist!");
-            }
-
-            return FileStorage.createOverrideStorage(type, FileStorageBaseType.CURRENT, override);
-        }
-
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT PATH, STATE, DESCRIPTION, ID, BASE_ID, CREATE_DATE

@@ -1,5 +1,7 @@
 package nu.marginalia.storage.model;
 
+import nu.marginalia.storage.FileStorageService;
+
 import java.nio.file.Path;
 
 /**
@@ -16,9 +18,11 @@ public record FileStorageBase(FileStorageBaseId id,
                               String name,
                               String path
                               ) {
+
     public Path asPath() {
-        return Path.of(path);
+        return FileStorageService.resolveStoragePath(path);
     }
+
     public boolean isValid() {
         return id.id() >= 0;
     }
