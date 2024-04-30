@@ -32,11 +32,12 @@ public class ServiceDiscoveryModule extends AbstractModule {
         if (null == env) {
             System.err.println("""
                 ZOOKEEPER_HOSTS not set.  This probably means that you are running an old installation,
-                   or that the environment is not set up correctly.  
+                   or that the environment is not set up correctly.
                    
                 See the 2024-03+ migration notes, https://docs.marginalia.nu/6_notes/6_1__migrate_2024_03_plus
                 
                 """);
+            System.exit(1);
         }
         return env;
     }
