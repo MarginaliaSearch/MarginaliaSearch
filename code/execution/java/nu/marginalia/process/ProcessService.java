@@ -100,6 +100,10 @@ public class ProcessService {
             args.add("-Dlog4j.configurationFile=" + loggingOpts);
         }
 
+        if (System.getProperty("system.serviceNode") != null) {
+            args.add("-Dsystem.serviceNode=" + System.getProperty("system.serviceNode"));
+        }
+
         args.addAll(processId.envOpts());
         args.add(processId.mainClass);
         args.addAll(Arrays.asList(extraArgs));
