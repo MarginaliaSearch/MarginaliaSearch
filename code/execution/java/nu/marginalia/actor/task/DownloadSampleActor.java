@@ -91,7 +91,12 @@ public class DownloadSampleActor extends RecordActorPrototype {
                     transferBytes(tar, fos, buffer, size);
                 }
 
-                Files.setPosixFilePermissions(outputPath, PosixFilePermissions.fromString("rw-r--r--"));
+                if (Files.isDirectory(outputPath)) {
+                    Files.setPosixFilePermissions(outputPath, PosixFilePermissions.fromString("rwxr-xr-x"));
+                }
+                else {
+                    Files.setPosixFilePermissions(outputPath, PosixFilePermissions.fromString("rw-r--r--"));
+                }
             }
         }
     }
