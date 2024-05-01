@@ -30,6 +30,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
     public int resultsFromSameDomain;
 
     public String positions;
+    public int positionsCount;
     public SearchResultItem resultItem;
     public List<SearchResultKeywordScore> keywordScores;
 
