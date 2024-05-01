@@ -61,17 +61,6 @@ public class Service {
         var config = params.configuration;
         node = config.node();
 
-        if (config.serviceId() == ServiceId.Control) {
-            // Special case for first boot, since the control service
-            // owns database migrations and so on, we need other processes
-            // to wait for this to be done before they start.  This is
-            // only needed once.
-            params.serviceRegistry.declareFirstBoot();
-        }
-        else {
-            params.serviceRegistry.waitForFirstBoot();
-        }
-
         String inboxName = config.serviceName();
         logger.info("Inbox name: {}", inboxName);
 
@@ -122,13 +111,24 @@ public class Service {
             configureStaticFiles.run();
 
             Spark.before(this::auditRequestIn);
-            Spark.before(this::filterPublicRequests);
             Spark.after(this::auditRequestOut);
 
             // Live and ready endpoints
             Spark.get("/internal/ping", (rq,rp) -> "pong");
             Spark.get("/internal/started", this::isInitialized);
             Spark.get("/internal/ready", this::isReady);
+
+            Spark.get("/public/", (rq, rp) -> {
+                rp.type("text/html");
+
+                return """
+                        <html><body>
+                        <h1>Migration required</h1>
+                        <p>The system is configured to use an old URL scheme.  If you are the operator of the service,
+                        you need to modify the reverse proxy to not use the /public prefix.  If you are a user, please
+                        contact the operator of the service.</p>
+                        """;
+            });
 
             grpcServer = new GrpcServer(config, serviceRegistry, partition, grpcServices);
             grpcServer.start();
@@ -157,23 +157,6 @@ public class Service {
         // must run first
         Spark.staticFiles.expireTime(3600);
         Spark.staticFiles.header("Cache-control", "public");
-    }
-
-    private void filterPublicRequests(Request request, Response response) {
-        if (null == request.headers("X-Public")) {
-            return;
-        }
-
-        String context = Optional
-                        .ofNullable(request.headers("X-Context"))
-                        .orElseGet(request::ip);
-
-        if (!request.pathInfo().startsWith("/public/")) {
-            logger.warn(httpMarker, "External connection to internal API: {} -> {} {}", context, request.requestMethod(), request.pathInfo());
-            Spark.halt(403);
-        }
-
-        logRequest(request);
     }
 
     private Object isInitialized(Request request, Response response) {

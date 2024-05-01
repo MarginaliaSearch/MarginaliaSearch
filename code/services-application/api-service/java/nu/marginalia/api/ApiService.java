@@ -66,15 +66,15 @@ public class ApiService extends Service {
         this.rateLimiterService = rateLimiterService;
         this.searchOperator = searchOperator;
 
-        Spark.get("/public/api/", (rq, rsp) -> {
+        Spark.get("/api/", (rq, rsp) -> {
             rsp.redirect("https://memex.marginalia.nu/projects/edge/api.gmi");
             return "";
         });
 
-        Spark.get("/public/api/:key", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
-        Spark.get("/public/api/:key/", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
+        Spark.get("/api/:key", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
+        Spark.get("/api/:key/", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
 
-        Spark.get("/public/api/:key/search/*", this::search, gson::toJson);
+        Spark.get("/api/:key/search/*", this::search, gson::toJson);
     }
 
     @MqRequest(endpoint = "FLUSH_CACHES")

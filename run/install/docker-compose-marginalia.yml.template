@@ -9,8 +9,10 @@ x-svc: &service
   networks:
     - wmsa
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
 x-p1: &partition-1
   env_file:
     - "${INSTALL_DIR}/env/service.env"
@@ -27,8 +29,10 @@ x-p1: &partition-1
   networks:
     - wmsa
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
   environment:
     - "WMSA_SERVICE_NODE=1"
 x-p2: &partition-2
@@ -47,8 +51,10 @@ x-p2: &partition-2
   networks:
     - wmsa
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
   environment:
     - "WMSA_SERVICE_NODE=2"
 services:
@@ -82,9 +88,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.search-service.entrypoints=search"
-    - "traefik.http.routers.search-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   assistant-service:
     <<: *service
     image: "marginalia/assistant-service"
@@ -95,13 +98,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.assistant-service-screenshot.rule=PathPrefix(`/screenshot`)"
       - "traefik.http.routers.assistant-service-screenshot.entrypoints=search"
-      - "traefik.http.routers.assistant-service-screenshot.middlewares=add-xpublic"
-      - "traefik.http.routers.assistant-service-screenshot.middlewares=add-public"
       - "traefik.http.routers.assistant-service-suggest.rule=PathPrefix(`/suggest`)"
       - "traefik.http.routers.assistant-service-suggest.entrypoints=search"
-      - "traefik.http.routers.assistant-service-suggest.middlewares=add-xpublic,add-public"
-      - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-      - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   api-service:
     <<: *service
     image: "marginalia/api-service"
@@ -112,9 +110,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.api-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.api-service.entrypoints=api"
-    - "traefik.http.routers.api-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   control-service:
     <<: *service
     image: "marginalia/control-service"
@@ -128,9 +123,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.control-service.entrypoints=control"
-    - "traefik.http.routers.control-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"

@@ -34,11 +34,11 @@ public class ApiKeyService {
 
         var apiKeysRenderer = rendererFactory.renderer("control/app/api-keys");
 
-        Spark.get("/public/api-keys", this::apiKeysModel, apiKeysRenderer::render);
-        Spark.post("/public/api-keys", this::createApiKey, Redirects.redirectToApiKeys);
-        Spark.delete("/public/api-keys/:key", this::deleteApiKey, Redirects.redirectToApiKeys);
+        Spark.get("/api-keys", this::apiKeysModel, apiKeysRenderer::render);
+        Spark.post("/api-keys", this::createApiKey, Redirects.redirectToApiKeys);
+        Spark.delete("/api-keys/:key", this::deleteApiKey, Redirects.redirectToApiKeys);
         // HTML forms don't support the DELETE verb :-(
-        Spark.post("/public/api-keys/:key/delete", this::deleteApiKey, Redirects.redirectToApiKeys);
+        Spark.post("/api-keys/:key/delete", this::deleteApiKey, Redirects.redirectToApiKeys);
 
     }
 

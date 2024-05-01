@@ -3,6 +3,8 @@ package nu.marginalia.storage;
 import com.google.common.collect.Lists;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.storage.model.FileStorage;
+import nu.marginalia.storage.model.FileStorageBase;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.test.TestMigrationLoader;
@@ -52,11 +54,6 @@ public class FileStorageServiceTest {
 
     @BeforeEach
     public void setupEach() {
-        // clean up any file storage overrides
-        for (FileStorageType type : FileStorageType.values()) {
-            System.setProperty(type.overrideName(), "");
-        }
-
         fileStorageService = new FileStorageService(dataSource, 0);
     }
 
@@ -97,12 +94,43 @@ public class FileStorageServiceTest {
     }
 
     @Test
-    public void testOverride() throws SQLException {
-        System.setProperty(FileStorageType.BACKUP.overrideName(), "/tmp");
-        System.out.println(FileStorageType.BACKUP.overrideName());
-        fileStorageService = new FileStorageService(dataSource, 0);
-        Assertions.assertEquals(Path.of("/tmp"), fileStorageService.getStorageByType(FileStorageType.BACKUP).asPath());
+    public void testPathOverride() {
+        try {
+            System.setProperty("storage.root", "/tmp");
+
+            var path = new FileStorageBase(null, null, 0, null, "test").asPath();
+            Assertions.assertEquals(Path.of("/tmp/test"), path);
+        }
+        finally {
+            System.clearProperty("storage.root");
+        }
     }
+    @Test
+    public void testPathOverride3() {
+        try {
+            System.setProperty("storage.root", "/tmp");
+
+            var path = new FileStorageBase(null, null, 0, null, "/test").asPath();
+            Assertions.assertEquals(Path.of("/tmp/test"), path);
+        }
+        finally {
+            System.clearProperty("storage.root");
+        }
+    }
+    @Test
+    public void testPathOverride2() {
+        try {
+            System.setProperty("storage.root", "/tmp");
+
+            var path = new FileStorage(null, null, null, null, "test", null, null).asPath();
+
+            Assertions.assertEquals(Path.of("/tmp/test"), path);
+        }
+        finally {
+            System.clearProperty("storage.root");
+        }
+    }
+
     @Test
     public void testCreateBase() throws SQLException {
         String name = "test-" + UUID.randomUUID();

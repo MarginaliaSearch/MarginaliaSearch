@@ -49,7 +49,8 @@ public class ServiceConfigurationModule extends AbstractModule {
     }
 
     private int getNode() {
-        String nodeEnv = Objects.requireNonNullElse(System.getenv("WMSA_SERVICE_NODE"), "0");
+        String nodeEnv = Objects.requireNonNullElse(System.getenv("WMSA_SERVICE_NODE"),
+                System.getProperty("system.serviceNode", "0"));
 
         return Integer.parseInt(nodeEnv);
     }

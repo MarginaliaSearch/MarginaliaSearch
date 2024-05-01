@@ -46,8 +46,8 @@ public class DomainComplaintService {
     public void register() throws IOException {
         var domainComplaintsRenderer = rendererFactory.renderer("control/app/domain-complaints");
 
-        Spark.get("/public/complaints", this::complaintsModel, domainComplaintsRenderer::render);
-        Spark.post("/public/complaints/:domain", this::reviewComplaint, Redirects.redirectToComplaints);
+        Spark.get("/complaints", this::complaintsModel, domainComplaintsRenderer::render);
+        Spark.post("/complaints/:domain", this::reviewComplaint, Redirects.redirectToComplaints);
     }
 
     private Object complaintsModel(Request request, Response response) {

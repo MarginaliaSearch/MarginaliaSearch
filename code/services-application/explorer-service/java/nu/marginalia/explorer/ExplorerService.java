@@ -51,9 +51,9 @@ public class ExplorerService extends Service {
         this.dataSource = dataSource;
         this.staticResources = staticResources;
 
-        Spark.get("/public/", this::serveIndex, this::render);
-        Spark.get("/public/search", this::search, this::render);
-        Spark.get("/public/:resource", this::serveStatic);
+        Spark.get("/", this::serveIndex, this::render);
+        Spark.get("/search", this::search, this::render);
+        Spark.get("/:resource", this::serveStatic);
     }
 
 

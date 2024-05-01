@@ -41,10 +41,13 @@ echo
 echo "1) barebones instance (1 node)"
 echo "2) barebones instance (2 nodes)"
 echo "3) full Marginalia Search instance?"
-read -p "Enter 1, 2 or 3: " INSTANCE_TYPE
+echo "4) non-docker install? (not recommended)"
+echo
+
+read -p "Enter 1, 2, 3, or 4: " INSTANCE_TYPE
 
 ## Validate
-if [ "${INSTANCE_TYPE}" != "1" ] && [ "${INSTANCE_TYPE}" != "2" ] && [ "${INSTANCE_TYPE}" != "3" ]; then
+if [ "${INSTANCE_TYPE}" != "1" ] && [ "${INSTANCE_TYPE}" != "2" ] && [ "${INSTANCE_TYPE}" != "3" ] && [ "${INSTANCE_TYPE}" != "4" ]; then
   echo
   echo "ERROR: Invalid instance type, choose 1, 2 or 3"
   exit 1
@@ -61,6 +64,11 @@ echo
 
 export MARIADB_USER
 export MARIADB_PASSWORD
+if [ "${INSTANCE_TYPE}" == "4" ]; then
+  export MARIADB_HOST="localhost"
+else
+  export MARIADB_HOST="mariadb"
+fi
 
 if [ "${MARIADB_PASSWORD}" != "${MARIADB_PASSWORD2}" ]; then
   echo "ERROR: Passwords do not match"
@@ -94,6 +102,17 @@ if [ "${INSTANCE_TYPE}" == "1" ]; then
   echo "control.hideMarginaliaApp=true" > ${INSTALL_DIR}/conf/properties/control-service.properties
 elif [ "${INSTANCE_TYPE}" == "2" ]; then
   echo "control.hideMarginaliaApp=true" > ${INSTALL_DIR}/conf/properties/control-service.properties
+elif [ "${INSTANCE_TYPE}" == "4" ]; then
+  echo "control.hideMarginaliaApp=true" > ${INSTALL_DIR}/conf/properties/control-service.properties
+  # (leading with a blank newline is important, as we cannot trust that the source file ends with a new-line)
+  cat >>${INSTALL_DIR}/conf/properties/system.properties <<EOF
+
+# Override zookeeper hosts for non-docker install here:
+zookeeper-hosts=localhost:2181
+
+# Override the storage root for non-docker install here:
+storage.root=${INSTALL_DIR}/index-1
+EOF
 fi
 
 echo "** Copying settings files"
@@ -124,8 +143,56 @@ if [ "${INSTANCE_TYPE}" == "1" ]; then
   envsubst < install/docker-compose-barebones-1.yml.template >${INSTALL_DIR}/docker-compose.yml
 elif [ "${INSTANCE_TYPE}" == "2" ]; then
   envsubst < install/docker-compose-barebones-2.yml.template >${INSTALL_DIR}/docker-compose.yml
-else
+elif [ "${INSTANCE_TYPE}" == "3" ]; then
   envsubst < install/docker-compose-marginalia.yml.template >${INSTALL_DIR}/docker-compose.yml
+elif [ "${INSTANCE_TYPE}" == "4" ]; then
+  envsubst < install/docker-compose-scaffold.yml.template >${INSTALL_DIR}/docker-compose.yml
+
+cat <<EOF > ${INSTALL_DIR}/README
+Quick note about running Marginalia Search in a non-docker environment:
+
+* The template sets up a sample (in-docker) setup for
+  mariadb and zookeeper.  These can also be run outside
+  of docker, but you will need to update the db.properties
+  file and "zookeeper-hosts" in the system.properties
+  file to point to the correct locations/addresses.
+* Each service is spawned by the same launcher.  When building
+  the project with "gradlew assemble", the launcher is put in
+  "code/services-core/single-service-runner/build/distributions/marginalia.tar".
+  This needs to be extracted.
+
+To launch a process you need to unpack it, and then run the launcher with the
+appropriate arguments.  For example:
+
+WMSA_HOME=/path/to/install/dir marginalia control:1 127.0.0.1:7000:7001 127.0.0.2
+
+This command will start the control partition 1 on ports 7000 (HTTP) and 7001 (GRPC),
+bound to 127.0.0.1, and it will announce its presence to the local zookeeper
+instance on 127.0.0.2.
+
+A working setup needs at all the services
+
+* control [ http port is the control GUI ]
+* query [ http port is the query GUI ]
+* index [ http port is internal ]
+* executor [ http port is internal ]
+
+The index and executor services should be on the same partition e.g. index:1 and executor:1,
+which should be a number larger than 0.  You can have multiple pairs of index and executor partitions,
+but the pair should run on the same physical machine with the same install directory.
+
+The query service can use any partition number.
+
+The control service should be on partition 1.
+EOF
+
+echo
+echo "====="
+cat ${INSTALL_DIR}/README
+echo
+echo "====="
+echo "To read this again, look in ${INSTALL_DIR}/README"
+echo
 fi
 
 popd

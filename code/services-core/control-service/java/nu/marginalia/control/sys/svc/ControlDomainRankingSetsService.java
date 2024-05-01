@@ -29,10 +29,10 @@ public class ControlDomainRankingSetsService {
         var updateDatasetRenderer = rendererFactory.renderer("control/sys/update-domain-ranking-set");
         var newDatasetRenderer = rendererFactory.renderer("control/sys/new-domain-ranking-set");
 
-        Spark.get("/public/domain-ranking-sets", this::rankingSetsModel, datasetsRenderer::render);
-        Spark.get("/public/domain-ranking-sets/new", (rq,rs) -> new Object(), newDatasetRenderer::render);
-        Spark.get("/public/domain-ranking-sets/:id", this::rankingSetModel, updateDatasetRenderer::render);
-        Spark.post("/public/domain-ranking-sets/:id", this::alterSetModel, Redirects.redirectToRankingDataSets);
+        Spark.get("/domain-ranking-sets", this::rankingSetsModel, datasetsRenderer::render);
+        Spark.get("/domain-ranking-sets/new", (rq,rs) -> new Object(), newDatasetRenderer::render);
+        Spark.get("/domain-ranking-sets/:id", this::rankingSetModel, updateDatasetRenderer::render);
+        Spark.post("/domain-ranking-sets/:id", this::alterSetModel, Redirects.redirectToRankingDataSets);
     }
 
     private Object alterSetModel(Request request, Response response) throws SQLException {

@@ -1,5 +1,7 @@
 package nu.marginalia.storage.model;
 
+import nu.marginalia.storage.FileStorageService;
+
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,35 +26,14 @@ public record FileStorage (
         String description)
 {
 
-    /** It is sometimes desirable to be able to create an override that isn't
-     * backed by the database.  This constructor permits this.
-     */
-    public static FileStorage createOverrideStorage(FileStorageType type, FileStorageBaseType baseType, String override) {
-        var mockBase = new FileStorageBase(
-                new FileStorageBaseId(-1),
-                baseType,
-                -1,
-                "OVERRIDE:" + type.name(),
-                "INVALIDINVALIDINVALID"
-        );
-
-        return new FileStorage(
-                new FileStorageId(-1),
-                mockBase,
-                type,
-                LocalDateTime.now(),
-                override,
-                FileStorageState.UNSET,
-                "OVERRIDE:" + type.name()
-        );
-    }
-
     public int node() {
         return base.node();
     }
+
     public Path asPath() {
-        return Path.of(path);
+        return FileStorageService.resolveStoragePath(path);
     }
+
 
     public boolean isActive() {
         return FileStorageState.ACTIVE.equals(state);

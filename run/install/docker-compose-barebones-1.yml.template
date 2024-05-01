@@ -9,8 +9,10 @@ x-svc: &service
   networks:
     - wmsa
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
 x-p1: &partition-1
   env_file:
     - "${INSTALL_DIR}/env/service.env"
@@ -29,8 +31,10 @@ x-p1: &partition-1
   environment:
     - "WMSA_SERVICE_NODE=1"
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
 services:
   index-service-1:
     <<: *partition-1
@@ -50,9 +54,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.search-service.entrypoints=search"
-    - "traefik.http.routers.search-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   control-service:
     <<: *service
     image: "marginalia/control-service"
@@ -66,9 +67,6 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.control-service.entrypoints=control"
-    - "traefik.http.routers.control-service.middlewares=add-xpublic,add-public"
-    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
-    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"

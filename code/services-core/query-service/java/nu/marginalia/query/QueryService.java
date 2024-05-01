@@ -31,10 +31,10 @@ public class QueryService extends Service {
                 List.of(queryGRPCService, domainLinksService));
 
 
-        Spark.get("/public/search", queryBasicInterface::handleBasic);
+        Spark.get("/search", queryBasicInterface::handleBasic);
 
         if (!Boolean.getBoolean("noQdebug")) {
-            Spark.get("/public/qdebug", queryBasicInterface::handleAdvanced);
+            Spark.get("/qdebug", queryBasicInterface::handleAdvanced);
         }
 
         Spark.exception(Exception.class, (e, request, response) -> {

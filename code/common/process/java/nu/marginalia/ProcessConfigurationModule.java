@@ -22,8 +22,13 @@ public class ProcessConfigurationModule extends AbstractModule {
         String nodeEnv = System.getenv("WMSA_PROCESS_NODE");
 
         if (null == nodeEnv) {
-            // fallback logic, try to inherit from parent
+            // fallback logic, try to inherit from parent via environment variable
             nodeEnv = System.getenv("WMSA_SERVICE_NODE");
+        }
+
+        if (null == nodeEnv) {
+            // fallback logic, try to inherit from parent via system property
+            nodeEnv = System.getProperty("system.serviceNode");
         }
 
         //

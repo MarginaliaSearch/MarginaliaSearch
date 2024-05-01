@@ -75,29 +75,29 @@ public class ControlNodeService {
         var configRenderer = rendererFactory.renderer("control/node/node-config");
 
 
-        Spark.get("/public/nodes", this::nodeListModel, nodeListRenderer::render);
-        Spark.get("/public/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
-        Spark.get("/public/nodes/:id/", this::nodeOverviewModel, overviewRenderer::render);
-        Spark.get("/public/nodes/:id/actors", this::nodeActorsModel, actorsRenderer::render);
-        Spark.get("/public/nodes/:id/actions", this::nodeActionsModel, actionsRenderer::render);
-        Spark.get("/public/nodes/:id/storage/", this::nodeStorageConfModel, storageConfRenderer::render);
-        Spark.get("/public/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
-        Spark.get("/public/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
+        Spark.get("/nodes", this::nodeListModel, nodeListRenderer::render);
+        Spark.get("/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
+        Spark.get("/nodes/:id/", this::nodeOverviewModel, overviewRenderer::render);
+        Spark.get("/nodes/:id/actors", this::nodeActorsModel, actorsRenderer::render);
+        Spark.get("/nodes/:id/actions", this::nodeActionsModel, actionsRenderer::render);
+        Spark.get("/nodes/:id/storage/", this::nodeStorageConfModel, storageConfRenderer::render);
+        Spark.get("/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
+        Spark.get("/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
 
-        Spark.post("/public/nodes/:id/process/:processBase/stop", this::stopProcess,
+        Spark.post("/nodes/:id/process/:processBase/stop", this::stopProcess,
                 redirectControl.renderRedirectAcknowledgement("Stopping", "../..")
         );
 
-        Spark.get("/public/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
+        Spark.get("/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
 
-        Spark.get("/public/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
-        Spark.post("/public/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
+        Spark.get("/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
+        Spark.post("/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
 
-        Spark.post("/public/nodes/:id/storage/reset-state/:fid", this::resetState,
+        Spark.post("/nodes/:id/storage/reset-state/:fid", this::resetState,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
         );
-        Spark.post("/public/nodes/:id/fsms/:fsm/start", this::startFsm);
-        Spark.post("/public/nodes/:id/fsms/:fsm/stop", this::stopFsm);
+        Spark.post("/nodes/:id/fsms/:fsm/start", this::startFsm);
+        Spark.post("/nodes/:id/fsms/:fsm/stop", this::stopFsm);
     }
 
     private Object resetState(Request request, Response response) throws SQLException {

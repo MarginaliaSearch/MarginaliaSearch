@@ -5,6 +5,7 @@ import nu.marginalia.WmsaHome;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 
 public class ConfigLoader {
 
@@ -21,7 +22,13 @@ public class ConfigLoader {
         System.out.println("Loading config from " + configPath);
 
         try (var is = Files.newInputStream(configPath)) {
-            System.getProperties().load(is);
+            var toLoad = new Properties();
+            toLoad.load(is);
+            for (var key : toLoad.keySet()) {
+                String k = (String) key;
+                System.out.println("Loading property " + k + " = " + toLoad.getProperty(k));
+                System.setProperty(k, toLoad.getProperty(k));
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

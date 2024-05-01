@@ -55,20 +55,19 @@ public class SearchService extends Service {
         Spark.staticFiles.expireTime(600);
 
         SearchServiceMetrics.get("/search", searchQueryService::pathSearch);
-        SearchServiceMetrics.get("/public/search", searchQueryService::pathSearch);
 
-        SearchServiceMetrics.get("/public/", frontPageService::render);
-        SearchServiceMetrics.get("/public/news.xml", frontPageService::renderNewsFeed);
-        SearchServiceMetrics.get("/public/:resource", this::serveStatic);
+        SearchServiceMetrics.get("/", frontPageService::render);
+        SearchServiceMetrics.get("/news.xml", frontPageService::renderNewsFeed);
+        SearchServiceMetrics.get("/:resource", this::serveStatic);
 
-        SearchServiceMetrics.post("/public/site/suggest/", addToCrawlQueueService::suggestCrawling);
+        SearchServiceMetrics.post("/site/suggest/", addToCrawlQueueService::suggestCrawling);
 
-        SearchServiceMetrics.get("/public/site-search/:site/*", this::siteSearchRedir);
+        SearchServiceMetrics.get("/site-search/:site/*", this::siteSearchRedir);
 
-        SearchServiceMetrics.get("/public/site/:site", siteInfoService::handle);
-        SearchServiceMetrics.post("/public/site/:site", siteInfoService::handlePost);
+        SearchServiceMetrics.get("/site/:site", siteInfoService::handle);
+        SearchServiceMetrics.post("/site/:site", siteInfoService::handlePost);
 
-        SearchServiceMetrics.get("/public/crosstalk/", crosstalkService::handle);
+        SearchServiceMetrics.get("/crosstalk/", crosstalkService::handle);
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);

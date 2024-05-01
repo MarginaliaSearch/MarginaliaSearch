@@ -5,14 +5,13 @@ public class SingleService {
 
     public static void main(String... args) {
         if (!configure(args)) {
-            System.out.println("Usage: SingleService <service> bind-address:bind-port-http:bind-port-grpc announce-address [args...]");
+            System.out.println("Usage: SingleService <service>:node bind-address:bind-port-http:bind-port-grpc announce-address [args...]");
             return;
         }
 
-        requireEnv("ZOOKEEPER_HOSTS", "Comma-separated list of zookeeper hosts");
         requireEnv("WMSA_HOME", "Path to the install directory of the project");
 
-        String serviceName = args[0];
+        String serviceName = args[0].substring(0, args[0].indexOf(":"));
         String[] serviceArgs = new String[args.length - 3];
         System.arraycopy(args, 3, serviceArgs, 0, serviceArgs.length);
 
@@ -38,6 +37,11 @@ public class SingleService {
      * */
     private static boolean configure(String[] args) {
         if (args.length < 3)
+            return false;
+
+        String serviceNameAndNode = args[0];
+        String[] nameAndNode = serviceNameAndNode.split(":");
+        if (nameAndNode.length != 2)
             return false;
 
         try {
@@ -69,6 +73,8 @@ public class SingleService {
             if (System.getProperty("service.prometheus-port") == null) {
                 System.setProperty("service.prometheus-port", "-1");
             }
+
+            System.setProperty("system.serviceNode", nameAndNode[1]);
 
             return true;
         }
