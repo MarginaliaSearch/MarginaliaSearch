@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en-US">
 <head>
 <title>Message Queue | New Message</title>
 {{> control/partials/head-includes }}
