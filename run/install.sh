@@ -151,9 +151,6 @@ elif [ "${INSTANCE_TYPE}" == "4" ]; then
 cat <<EOF > ${INSTALL_DIR}/README
 Quick note about running Marginalia Search in a non-docker environment:
 
-* The public endpoints require the path prefix /public,
-  you can accomplish this with a reverse proxy like
-  nginx or traefik.
 * The template sets up a sample (in-docker) setup for
   mariadb and zookeeper.  These can also be run outside
   of docker, but you will need to update the db.properties
@@ -175,11 +172,18 @@ instance on 127.0.0.2.
 
 A working setup needs at all the services
 
-* control
-* query
-* index
-* executor
+* control [ http port is the control GUI ]
+* query [ http port is the query GUI ]
+* index [ http port is internal ]
+* executor [ http port is internal ]
 
+The index and executor services should be on the same partition e.g. index:1 and executor:1,
+which should be a number larger than 0.  You can have multiple pairs of index and executor partitions,
+but the pair should run on the same physical machine with the same install directory.
+
+The query service can use any partition number.
+
+The control service should be on partition 1.
 EOF
 
 echo
