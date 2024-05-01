@@ -61,17 +61,6 @@ public class Service {
         var config = params.configuration;
         node = config.node();
 
-        if (config.serviceId() == ServiceId.Control) {
-            // Special case for first boot, since the control service
-            // owns database migrations and so on, we need other processes
-            // to wait for this to be done before they start.  This is
-            // only needed once.
-            params.serviceRegistry.declareFirstBoot();
-        }
-        else {
-            params.serviceRegistry.waitForFirstBoot();
-        }
-
         String inboxName = config.serviceName();
         logger.info("Inbox name: {}", inboxName);
 

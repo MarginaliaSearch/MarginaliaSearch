@@ -9,8 +9,10 @@ x-svc: &service
   networks:
     - wmsa
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
 x-p1: &partition-1
   env_file:
     - "${INSTALL_DIR}/env/service.env"
@@ -29,8 +31,10 @@ x-p1: &partition-1
   environment:
     - "WMSA_SERVICE_NODE=1"
   depends_on:
-    - mariadb
-    - zookeeper
+    mariadb:
+      condition: service_healthy
+    zookeeper:
+      condition: service_started
 services:
   index-service-1:
     <<: *partition-1

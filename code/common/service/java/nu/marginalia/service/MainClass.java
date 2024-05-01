@@ -1,6 +1,8 @@
 package nu.marginalia.service;
 
 import io.prometheus.client.hotspot.DefaultExports;
+import nu.marginalia.service.discovery.ServiceRegistryIf;
+import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,4 +46,27 @@ public abstract class MainClass {
         DefaultExports.initialize();
     }
 
+    /** Ensure that the services boot in the correct order, so that the control service
+     * has the opportunity to migrate the database before the other services attempt to access it
+     * on first boot.
+     */
+    protected static void orchestrateBoot(ServiceRegistryIf serviceRegistry,
+                                          ServiceConfiguration configuration) {
+
+        if (configuration.serviceId() != ServiceId.Control) {
+            // If this is not the control service, we need to wait for the control service to boot
+            try {
+                serviceRegistry.waitForFirstBoot();
+            }
+            catch (InterruptedException e) {
+                // Fail hard here, there is no meaningful recovery
+                System.err.println("Interrupted while waiting for control service to boot");
+                System.exit(1);
+            }
+        }
+        else {
+            // This is the control service, so we need to declare that we have booted successfully
+            serviceRegistry.declareFirstBoot();
+        }
+    }
 }
