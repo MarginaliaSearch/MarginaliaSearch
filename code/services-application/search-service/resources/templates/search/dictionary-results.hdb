@@ -13,7 +13,7 @@
 
 {{>search/parts/search-header}}
 {{>search/parts/search-form}}
-
+<span id="content-start"></span>
 <div class="infobox">
 {{#unless entries}}
 No definitions were found for that word

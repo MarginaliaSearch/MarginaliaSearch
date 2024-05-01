@@ -14,7 +14,7 @@
 
 {{>search/parts/search-header}}
 {{>search/parts/search-form}}
-
+<span id="content-start"></span>
 <div class="infobox">
     <h2> {{ title }} </h2>
     <div class="info"> {{{message}}} </div>
