@@ -11,7 +11,7 @@
         <input type="hidden" name="profile" value="{{profile}}">
         <input type="hidden" name="recent" value="{{recent}}">
 
-        <input type="submit" form="search-form" title="Execute Search" value="Search">
+        <input type="submit" form="search-form" title="Execute Search" value="Search" autocomplete="off">
     </div>
 </form>
 <!-- load the first stage mobile customizations script early to avoid flicker -->
