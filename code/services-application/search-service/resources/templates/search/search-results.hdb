@@ -12,10 +12,13 @@
 
 <body data-filter="{{filters.currentFilter}}">
 
+{{#if newFilter}} <div class="screenreader-only" aria-role="status">Search Filters Updated</div> {{/if}}
+
 <!-- Hi there, fellow human being :-) -->
 
 {{>search/parts/search-header}}
 {{>search/parts/search-form}}
+
 
 <span id="content-start"></span>
 

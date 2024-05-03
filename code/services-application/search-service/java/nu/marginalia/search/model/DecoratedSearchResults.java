@@ -26,4 +26,5 @@ public class DecoratedSearchResults {
     public String getAdtech() { return params.adtech().value; }
     public String getRecent() { return params.recent().value; }
     public String getSearchTitle() { return params.searchTitle().value; }
+    public Boolean isNewFilter() { return params.newFilter(); }
 }
