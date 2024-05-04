@@ -7,7 +7,13 @@ import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
 
-@AllArgsConstructor @Getter @Builder
+/** A class to hold details about the search results,
+ * as used by the handlebars templating engine to render
+ * the search results page.
+ */
+@AllArgsConstructor
+@Getter
+@Builder
 public class DecoratedSearchResults {
     private final SearchParameters params;
     private final List<String> problems;
@@ -19,7 +25,9 @@ public class DecoratedSearchResults {
     private final int focusDomainId;
     private final SearchFilters filters;
 
-    // These are used by the search form
+    // These are used by the search form, they look unused in the IDE but are used by the mustache template,
+    // DO NOT REMOVE THEM
+    public int getResultCount() { return results.size(); }
     public String getQuery() { return params.query(); }
     public String getProfile() { return params.profile().filterId; }
     public String getJs() { return params.js().value; }
