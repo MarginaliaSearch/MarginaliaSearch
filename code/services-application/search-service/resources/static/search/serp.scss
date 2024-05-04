@@ -706,6 +706,10 @@ footer {
 // hidden on modern browsers via CSS.
 
 hr.w3m-helper { display: none; }
+
+// This is a screenreader-only class that hides content from visual browsers, but allows screenreaders and
+// text-based browsers to access it.
+
 .screenreader-only {
   position:absolute;
   left:-10000px;
