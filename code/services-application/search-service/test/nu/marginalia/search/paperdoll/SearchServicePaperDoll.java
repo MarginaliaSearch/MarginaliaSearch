@@ -33,10 +33,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -147,6 +144,7 @@ public class SearchServicePaperDoll extends AbstractModule {
 
         registerSearchResult("https://www.example.com/foo", "Foo", "Lorem ipsum dolor sit amet", Set.of(), 0.5, 0.5, ~0L);
         registerSearchResult("https://www.example2.com/bar", "Bar", "Some text goes here", Set.of(), 0.5, 0.5, 1L);
+        registerSearchResult("https://www.example3.com/baz", "All HTML Features", "This one's got every feature", EnumSet.allOf(HtmlFeature.class), 0.5, 0.5, 1L);
 
         for (;;);
     }

@@ -7,6 +7,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -104,25 +105,25 @@ public class UrlDetails implements Comparable<UrlDetails> {
         return Integer.bitCount(features & mask);
     }
 
-    public String getProblems() {
-        StringJoiner sj = new StringJoiner(", ");
+    public List<UrlProblem> getProblems() {
+        List<UrlProblem> problems = new ArrayList<>();
 
         if (isScripts()) {
-            sj.add("Javascript");
+            problems.add(new UrlProblem("Js", "The page uses Javascript"));
         }
         if (isCookies()) {
-            sj.add("Cookies");
+            problems.add(new UrlProblem("Co", "The page uses Cookies"));
         }
         if (isTracking()) {
-            sj.add("Tracking/Analytics");
+            problems.add(new UrlProblem("Tr", "The page uses Tracking/Analytics"));
         }
         if (isAffiliate()) {
-            sj.add("Affiliate Linking");
+            problems.add(new UrlProblem("Af", "The page may use Affiliate Linking"));
         }
         if (isAds()) {
-            sj.add("Ads/Adtech Tracking");
+            problems.add(new UrlProblem("Ad", "The page uses Ads/Adtech Tracking"));
         }
-        return sj.toString();
+        return problems;
 
     }
 
@@ -150,5 +151,9 @@ public class UrlDetails implements Comparable<UrlDetails> {
         if (termScore <= 5) return 5;
 
         return 10;
+    }
+
+    public static record UrlProblem(String name, String description) {
+
     }
 }
