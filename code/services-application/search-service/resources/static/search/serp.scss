@@ -6,6 +6,7 @@ $highlight-dark: #2f4858;
 $highlight-light: #3F5F6F;
 $highlight-light2: #eee;
 $border-color: #ccc;
+$border-color2: #aaa;
 $heading-fonts: serif;
 $visited: #fcc;
 
@@ -28,8 +29,8 @@ body {
   font-family: sans-serif;
   font-size: 14px;
   line-height: 1.6;
-  margin-left: 2ch;
-  margin-right: 4ch;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 120ch;
   padding: 0;
 }
@@ -117,7 +118,7 @@ body {
 }
 
 .dialog {
-  border: 1px solid $border-color;
+  border: 1px solid $border-color2;
   box-shadow: 0 0 1ch $border-color;
   background-color: #fff;
   padding: 1ch;
@@ -155,7 +156,7 @@ header {
               rgba(100,255,100,1) 50%,
               rgba(100,100,255,1) 100%);
       color: black;
-      text-shadow: 0 0 0.25ch #ccc;
+      text-shadow: 0 0 0.5ch #fff;
     }
 
     a:hover, a:focus {
@@ -212,7 +213,7 @@ header {
   background-color: #fff;
   padding: 1ch;
   margin: 1ch;
-  border: 1px solid $border-color;
+  border: 1px solid $border-color2;
   box-shadow: 0 0 1ch $border-color;
 }
 
@@ -312,7 +313,7 @@ footer {
     flex-grow: 1.1;
 
     background-color: #fff;
-    border-left: 1px solid $border-color;
+    border-left: 1px solid $border-color2;
     box-shadow: -1px -1px 5px $border-color;
 
     padding-left: 1ch;
@@ -328,7 +329,7 @@ footer {
 }
 
 .shadowbox {
-  box-shadow: 0 0 1ch $border-color;
+  box-shadow: 0 0 1ch $border-color2;
   border: 1px solid $border-color;
 }
 
@@ -336,7 +337,7 @@ footer {
   margin: 0;
   padding: 0.5ch;
   background-color: $highlight-light;
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid $border-color2;
   font-family: $heading-fonts;
   font-weight: normal;
   color: $fg-light;
@@ -468,14 +469,14 @@ footer {
     font-family: monospace;
     font-size: 12pt;
     padding: 0.5ch;
-    border: 1px solid $border-color;
+    border: 1px solid $border-color2;
     background-color: $fg-light;
     color: $fg-dark;
   }
 
   input[type="submit"] {
     font-size: 12pt;
-    border: 1px solid $border-color;
+    border: 1px solid $border-color2;
     background-color: $fg-light;
     color: $fg-dark;
   }
@@ -542,7 +543,7 @@ footer {
   }
 
   hr {
-    border-top: 0.5px solid $border-color;
+    border-top: 0.5px solid $border-color2;
     border-bottom: none;
   }
   ul {
@@ -706,3 +707,15 @@ footer {
 // hidden on modern browsers via CSS.
 
 hr.w3m-helper { display: none; }
+
+// This is a screenreader-only class that hides content from visual browsers, but allows screenreaders and
+// text-based browsers to access it.
+
+.screenreader-only {
+  position:absolute;
+  left:-10000px;
+  top:auto;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+}

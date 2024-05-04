@@ -58,7 +58,8 @@ public class SearchQueryService {
                     SearchRecentParameter.parse(request.queryParams("recent")),
                     SearchTitleParameter.parse(request.queryParams("searchTitle")),
                     SearchAdtechParameter.parse(request.queryParams("adtech")),
-                    "1".equals(request.headers("X-Poison-Results"))
+                    "1".equals(request.headers("X-Poison-Results")),
+                    "true".equals(request.queryParams("newfilter"))
             );
         }
         catch (Exception ex) {

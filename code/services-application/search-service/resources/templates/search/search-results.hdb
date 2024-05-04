@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <title>Marginalia Search - {{query}}</title>
@@ -12,10 +12,15 @@
 
 <body data-filter="{{filters.currentFilter}}">
 
+{{#if newFilter}} <div class="screenreader-only" aria-role="status">Search Filters Updated</div> {{/if}}
+
 <!-- Hi there, fellow human being :-) -->
 
 {{>search/parts/search-header}}
 {{>search/parts/search-form}}
+
+
+<span id="content-start"></span>
 
 <section class="sidebar-narrow">
     <section id="results" class="sb-left">
@@ -24,6 +29,11 @@
                 Showing search results from <a href="/site/{{focusDomain}}">{{focusDomain}}</a>.
             </div>
         {{/if}}
+        {{#unless focusDomain}}
+            <div class="infobox screenreader-only">
+                Showing {{resultCount}} search results.
+            </div>
+        {{/unless}}
         {{#each results}}
             {{#if hasMultiple}}
                 {{>search/parts/search-result-rest}}

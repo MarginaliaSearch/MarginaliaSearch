@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <title>Marginalia Search - {{domainA}} and {{domainB}}</title>
@@ -12,8 +12,9 @@
 <body>
 
 {{>search/parts/search-header}}
-
 {{>search/parts/search-form}}
+
+<span id="content-start"></span>
 
 <div class="infobox">
     Showing results containing links between <a href="/site/{{domainA}}">{{domainA}}</a> and <a href="/site/{{domainB}}">{{domainB}}</a>.

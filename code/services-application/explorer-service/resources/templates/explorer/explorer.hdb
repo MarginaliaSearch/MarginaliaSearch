@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en-US">
 <head>
 <meta charset="UTF-8">
 {{#if query}} <title>Websites Similar To {{query}}</title> {{/if}}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <title>Marginalia Search - {{query}}</title>
@@ -14,7 +14,7 @@
 
 {{>search/parts/search-header}}
 {{>search/parts/search-form}}
-
+<span id="content-start"></span>
 <div class="infobox">
 {{#if focusDomain}}
   Showing domains similar to <tt>{{focusDomain}}</tt>.

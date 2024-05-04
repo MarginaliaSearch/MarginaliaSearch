@@ -10,9 +10,12 @@
     <a href="/site/{{url.domain}}" title="Domain Information">Info</a>
     {{#if hasMoreResults}}<a href="/site-search/{{url.domain}}/{{query}}?profile={{profile}}" title="More results from this domain">{{resultsFromSameDomain}}+</a>{{/if}}{{/unless}}
     <div class="meta">
-        {{#if problemCount}} <span class="problems" title="{{problems}}"> ⚠ {{problemCount}} </span> {{/if}}
+        {{#each problems}}
+            <span class="problem" title="{{description}}">{{name}}</span>
+        {{/each}}
         <span aria-hidden="true" class="meta positions"
               title="Positions where keywords were found within the document">{{positions}}</span>
+        <div class="screenreader-only">Terms appear in {{positionsCount}} positions</div>
     </div>
 </div>
 </section>

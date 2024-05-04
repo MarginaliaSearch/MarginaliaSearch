@@ -1,3 +1,6 @@
+<div class="screenreader-only">
+    <a href="#content-begin">Skip to main content</a>
+</div>
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
 	<div class="container-fluid">
@@ -48,3 +51,4 @@
 	    </div>
 	</div>
 </nav>
+<a id="content-begin"></a>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en-US">
 {{> control/partials/head-includes }}
 <head><title>Control Service: Node {{node.id}}</title></head>
 <body>

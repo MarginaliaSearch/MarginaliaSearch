@@ -12,6 +12,7 @@ import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,7 +47,6 @@ public class DatabaseModule extends AbstractModule {
                 new Flyway(config.getConfiguration()).migrate();
             }
         }
-
     }
 
     private Properties loadDbProperties() {

@@ -89,6 +89,7 @@ public class SearchQueryIndexService {
                     detail.rankingScore, // termScore
                     detail.resultsFromDomain(),
                     getPositionsString(detail),
+                    Long.bitCount(detail.bestPositions),
                     detail.rawIndexResult,
                     detail.rawIndexResult.keywordScores
             ));
