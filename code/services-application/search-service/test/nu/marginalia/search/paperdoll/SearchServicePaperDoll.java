@@ -1,5 +1,6 @@
 package nu.marginalia.search.paperdoll;
 
+import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariConfig;
@@ -17,6 +18,7 @@ import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.search.SearchModule;
 import nu.marginalia.search.SearchService;
 import nu.marginalia.service.ServiceId;
@@ -31,8 +33,10 @@ import org.mockito.Mockito;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import spark.Spark;
 
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -66,6 +70,7 @@ public class SearchServicePaperDoll extends AbstractModule {
 
     private static List<DecoratedSearchResultItem> results = new ArrayList<>();
     private static QueryResponse searchResponse;
+    private static final Gson gson = GsonFactory.get();
 
     @SneakyThrows
     void registerSearchResult(
@@ -112,6 +117,33 @@ public class SearchServicePaperDoll extends AbstractModule {
         System.setProperty("service-name", "search");
         System.setProperty("search.websiteUrl", "http://localhost:9999/");
 
+        try (var conn = dataSource.getConnection();
+             var ps = conn.prepareStatement("""
+                            INSERT INTO SEARCH_NEWS_FEED(TITLE, LINK, SOURCE, LIST_DATE)
+                            VALUES (?, ?, ?, ?)
+                            """)) {
+            ps.setString(1, "Lex Luthor elected president");
+            ps.setString(2, "https://www.example.com/foo");
+            ps.setString(3, "Daily Planet");
+            ps.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            ps.execute();
+
+            ps.setString(1, "Besieged Alesian onlookers confused as Caesar builds a wall around his wall around the city walls");
+            ps.setString(2, "https://www.example2.com/bar");
+            ps.setString(3, "The Gaulish Observer");
+            ps.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            ps.execute();
+
+            ps.setString(1, "Marginalia acquires Google");
+            ps.setString(2, "https://www.example3.com/baz");
+            ps.setString(3, "The Dependent");
+            ps.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+
+            ps.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         searchResponse = new QueryResponse(
                 new SearchSpecification(new SearchQuery(), List.of(), "", "test",
                         SpecificationLimit.none(),
@@ -141,6 +173,13 @@ public class SearchServicePaperDoll extends AbstractModule {
                 this);
 
         injector.getInstance(SearchService.class);
+
+        List<String> suggestions = List.of("foo", "bar", "baz");
+
+        Spark.get("/suggest/", (rq, rsp) -> {
+            rsp.type("application/json");
+            return gson.toJson(suggestions);
+        });
 
         registerSearchResult("https://www.example.com/foo", "Foo", "Lorem ipsum dolor sit amet", Set.of(), 0.5, 0.5, ~0L);
         registerSearchResult("https://www.example2.com/bar", "Bar", "Some text goes here", Set.of(), 0.5, 0.5, 1L);
