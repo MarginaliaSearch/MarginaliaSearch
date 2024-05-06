@@ -29,6 +29,13 @@
                 Showing search results from <a href="/site/{{focusDomain}}">{{focusDomain}}</a>.
             </div>
         {{/if}}
+
+        {{#unless results}}
+            <div class="infobox">
+                No search results found.
+            </div>
+        {{/unless}}
+
         {{#unless focusDomain}}
             <div class="infobox screenreader-only">
                 Showing {{resultCount}} search results.
