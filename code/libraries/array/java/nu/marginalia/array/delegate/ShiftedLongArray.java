@@ -76,6 +76,35 @@ public class ShiftedLongArray implements LongArray {
     }
 
     @Override
+    public void quickSortNative(long start, long end) {
+        delegate.quickSortNative(start + shift, end + shift);
+    }
+    @Override
+    public void quickSortNative128(long start, long end) {
+        delegate.quickSortNative128(start, end);
+    }
+
+    @Override
+    public long linearSearchNative(long key, long start, long end) {
+        return delegate.linearSearchNative(key, start + shift, end + shift);
+    }
+
+    @Override
+    public long linearSearchNative128(long key, long start, long end) {
+        return delegate.linearSearchNative128(key, start, end);
+    }
+
+    @Override
+    public long binarySearchNativeUB(long key, long start, long end) {
+        return delegate.binarySearchNativeUB(key, start + shift, end + shift);
+    }
+
+    @Override
+    public long binarySearchNative128(long key, long start, long end) {
+        return delegate.binarySearchNative128(key, start, end);
+    }
+
+    @Override
     public long size() {
         return size;
     }
@@ -132,13 +161,6 @@ public class ShiftedLongArray implements LongArray {
         return delegate.isSortedN(sz, shift + start, shift + end);
     }
 
-    public void sortLargeSpanN(SortingContext ctx, int sz, long start, long end) throws IOException {
-        delegate.sortLargeSpanN(ctx, sz, start, end);
-    }
-
-    public void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
-        delegate.sortLargeSpan(ctx, start, end);
-    }
 
     public long searchN(int sz, long key) {
         if (size < 128) {
@@ -216,14 +238,7 @@ public class ShiftedLongArray implements LongArray {
     public long binarySearchUpperBound(long key, long fromIndex, long toIndex) {
         return translateSearchResult(1, delegate.binarySearchUpperBound(key, fromIndex + shift, toIndex+shift));
     }
-    @Override
-    public long linearSearchUpperBound(long key, long fromIndex, long toIndex) {
-        return translateSearchResult(1, delegate.linearSearchUpperBound(key, fromIndex + shift, toIndex+shift));
-    }
-    @Override
-    public long binarySearchUpperBoundN(int sz, long key, long fromIndex, long toIndex) {
-        return translateSearchResult(sz, delegate.binarySearchUpperBoundN(sz, key, fromIndex + shift, toIndex+shift));
-    }
+
     private long translateSearchResult(int sz, long delegatedIdx) {
         long ret;
 

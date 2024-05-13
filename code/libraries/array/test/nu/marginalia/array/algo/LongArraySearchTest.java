@@ -47,11 +47,12 @@ class LongArraySearchTest {
     }
 
     @Test
-    void linearSearchUpperBound() {
-        linearSearchUpperBoundTester(basicArray);
-        linearSearchUpperBoundTester(shiftedArray);
-        linearSearchUpperBoundTester(segmentArray);
+    void binarySearchUpperBoundNative() {
+        binarySearchUpperBoundNativeTester(basicArray);
+        binarySearchUpperBoundNativeTester(shiftedArray);
+        binarySearchUpperBoundNativeTester(segmentArray);
     }
+
 
     @Test
     public void testEmptyRange() {
@@ -59,8 +60,6 @@ class LongArraySearchTest {
         assertTrue(segmentArray.linearSearchN(2, 0, 0, 0) < 0);
         assertTrue(segmentArray.binarySearch(0, 0, 0) < 0);
         assertTrue(segmentArray.linearSearch(0, 0, 0) < 0);
-
-        assertEquals(0, segmentArray.linearSearchUpperBound(0, 0, 0));
     }
 
     void linearSearchTester(LongArray array) {
@@ -112,12 +111,10 @@ class LongArraySearchTest {
             }
         }
     }
-    void linearSearchUpperBoundTester(LongArray array) {
-        for (int i = 0; i < array.size() * 3; i++) {
-            long ret = array.linearSearchUpperBound(i, 0, array.size());
-            long ret2 = array.binarySearchUpperBound(i, 0, array.size());
 
-            assertEquals(ret, ret2);
+    void binarySearchUpperBoundNativeTester(LongArray array) {
+        for (int i = 0; i < array.size() * 3; i++) {
+            long ret = array.binarySearchNativeUB(i, 0, array.size());
 
             if ((i % 3) == 0) {
                 assertTrue(ret >= 0);
@@ -125,13 +122,11 @@ class LongArraySearchTest {
             }
             else {
                 if (i > 0 && ret > 0 && ret < array.size()) {
-                    System.out.println(ret);
                     assertTrue(array.get(ret-1) < i);
                 }
             }
         }
     }
-
     @Test
     void retain() {
         long[] vals = new long[128];

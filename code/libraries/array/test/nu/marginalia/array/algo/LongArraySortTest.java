@@ -62,9 +62,37 @@ class LongArraySortTest {
     }
 
     @Test
+    public void testNative() {
+        LongArray array = LongArray.allocate(4);
+        array.set(0, 1);
+        array.set(1, 4);
+        array.set(2, 3);
+        array.set(3, 2);
+        array.quickSortNative(0, 4);
+        assertTrue(array.isSorted(0, 4));
+        assertEquals(1, array.get(0));
+        assertEquals(2, array.get(1));
+        assertEquals(3, array.get(2));
+        assertEquals(4, array.get(3));
+
+        array.set(2, 5);
+        array.quickSortNative(2, 4);
+
+        assertEquals(4, array.get(2));
+        assertEquals(5, array.get(3));
+
+        assertTrue(array.isSorted(2, 4));
+    }
+    @Test
     public void quickSortStressTest() throws IOException {
         LongArray array = LongArray.allocate(65536);
         sortAlgorithmTester(array, LongArraySort::quickSort);
+    }
+
+    @Test
+    public void nativeSortTest() throws IOException {
+        LongArray array = LongArray.allocate(65536);
+        sortAlgorithmTester(array, LongArraySort::quickSortNative);
     }
 
 

@@ -12,6 +12,7 @@ import java.lang.foreign.Arena;
 
 public interface LongArray extends LongArrayBase, LongArrayTransformations, LongArraySearch, LongArraySort, AutoCloseable {
     int WORD_SIZE = 8;
+    int foo  = 3;
 
     @Deprecated
     static LongArray allocate(long size) {

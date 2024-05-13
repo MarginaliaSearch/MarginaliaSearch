@@ -1,5 +1,6 @@
 package nu.marginalia.array.algo;
 
+import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 
 public interface LongArraySearch extends LongArrayBase {
@@ -7,6 +8,38 @@ public interface LongArraySearch extends LongArrayBase {
     int LINEAR_SEARCH_CUTOFF = 32;
 
     default long linearSearch(long key, long fromIndex, long toIndex) {
+        if (NativeAlgos.isAvailable) {
+            return linearSearchNative(key, fromIndex, toIndex);
+        } else {
+            return linearSearchJava(key, fromIndex, toIndex);
+        }
+    }
+
+    default long linearSearchN(int sz, long key, long fromIndex, long toIndex) {
+        if (NativeAlgos.isAvailable && sz == 2) {
+            return linearSearchNative128(key, fromIndex, toIndex);
+        } else {
+            return linearSearchNJava(sz, key, fromIndex, toIndex);
+        }
+    }
+
+    default long binarySearchUpperBound(long key, long fromIndex, long toIndex) {
+        if (NativeAlgos.isAvailable) {
+            return binarySearchNativeUB(key, fromIndex, toIndex);
+        } else {
+            return binarySearchUpperBoundJava(key, fromIndex, toIndex);
+        }
+    }
+
+    default long binarySearchN(int sz, long key, long fromIndex, long toIndex) {
+        if (NativeAlgos.isAvailable && sz == 2) {
+            return binarySearchNative128(key, fromIndex, toIndex);
+        } else {
+            return binarySearchNJava(sz, key, fromIndex, toIndex);
+        }
+    }
+
+    default long linearSearchJava(long key, long fromIndex, long toIndex) {
         long pos;
 
         for (pos = fromIndex; pos < toIndex; pos++) {
@@ -19,16 +52,7 @@ public interface LongArraySearch extends LongArrayBase {
         return encodeSearchMiss(1, pos - 1);
     }
 
-    default long linearSearchUpperBound(long key, long fromIndex, long toIndex) {
-
-        for (long pos = fromIndex; pos < toIndex; pos++) {
-            if (get(pos) >= key) return pos;
-        }
-
-        return toIndex;
-    }
-
-    default long linearSearchN(int sz, long key, long fromIndex, long toIndex) {
+    default long linearSearchNJava(int sz, long key, long fromIndex, long toIndex) {
         long pos;
 
         for (pos = fromIndex; pos < toIndex; pos+=sz) {
@@ -60,7 +84,7 @@ public interface LongArraySearch extends LongArrayBase {
         return linearSearch(key, fromIndex + low, fromIndex + high + 1);
     }
 
-    default long binarySearchN(int sz, long key, long fromIndex, long toIndex) {
+    default long binarySearchNJava(int sz, long key, long fromIndex, long toIndex) {
         long low = 0;
         long high = (toIndex - fromIndex)/sz - 1;
 
@@ -87,7 +111,7 @@ public interface LongArraySearch extends LongArrayBase {
     }
 
 
-    default long binarySearchUpperBound(long key, long fromIndex, long toIndex) {
+    default long binarySearchUpperBoundJava(long key, long fromIndex, long toIndex) {
         long low = 0;
         long high = (toIndex - fromIndex) - 1;
 
@@ -110,28 +134,6 @@ public interface LongArraySearch extends LongArrayBase {
         return toIndex;
     }
 
-    default long binarySearchUpperBoundN(int sz, long key, long fromIndex, long toIndex) {
-        long low = 0;
-        long high = (toIndex - fromIndex)/sz - 1;
-
-        while (high - low >= LINEAR_SEARCH_CUTOFF) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(fromIndex + sz*mid);
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return fromIndex + sz*mid;
-        }
-
-        for (fromIndex += low; fromIndex < toIndex; fromIndex+=sz) {
-            if (get(fromIndex) >= key) return fromIndex;
-        }
-
-        return toIndex;
-    }
 
     default void retain(LongQueryBuffer buffer, long boundary, long searchStart, long searchEnd) {
 

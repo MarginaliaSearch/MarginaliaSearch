@@ -1,5 +1,6 @@
 package nu.marginalia.array.page;
 
+import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 
@@ -126,6 +127,36 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     }
 
     @Override
+    public void quickSortNative(long start, long end) {
+        NativeAlgos.sort(segment, start, end);
+    }
+    @Override
+    public void quickSortNative128(long start, long end) {
+        NativeAlgos.sort128(segment, start, end);
+    }
+
+    @Override
+    public long linearSearchNative(long key, long start, long end) {
+        return NativeAlgos.linearSearch64(key, segment, start, end);
+    }
+
+    @Override
+    public long linearSearchNative128(long key, long start, long end) {
+        return NativeAlgos.linearSearch128(key, segment, start, end);
+    }
+
+    @Override
+    public long binarySearchNativeUB(long key, long start, long end) {
+        return NativeAlgos.binarySearch64Upper(key, segment, start, end);
+    }
+
+    @Override
+    public long binarySearchNative128(long key, long start, long end) {
+        return NativeAlgos.binarySearch128(key, segment, start, end);
+    }
+
+
+    @Override
     public ByteBuffer getByteBuffer() {
         return segment.asByteBuffer();
     }
@@ -146,6 +177,7 @@ public class SegmentLongArray implements PartitionPage, LongArray {
             segment.force();
         }
     }
+
 
     public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
         return new ArrayRangeReference<>(this, start, end);

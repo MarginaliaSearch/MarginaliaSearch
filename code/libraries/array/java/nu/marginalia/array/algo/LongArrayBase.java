@@ -8,6 +8,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 
 public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
+
     long get(long pos);
 
     void set(long pos, long value);
@@ -26,6 +27,12 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
         }
     }
 
+    void quickSortNative(long start, long end);
+    void quickSortNative128(long start, long end);
+    long linearSearchNative(long key, long start, long end);
+    long linearSearchNative128(long key, long start, long end);
+    long binarySearchNativeUB(long key, long start, long end);
+    long binarySearchNative128(long key, long start, long end);
     default void increment(long pos) {
         set(pos, get(pos) + 1);
     }
