@@ -1,36 +1,23 @@
-// $nicotine-dark: #acae89;
-// $nicotine-light: #f8f8ee;
-// $fg-dark: #000;
-// $fg-light: #fff;
-// $highlight-dark: #2f4858;
-// $highlight-light: #3F5F6F;
-// $highlight-light2: #eee;
-// $border-color: #ccc;
-// $border-color2: #aaa;
-// $heading-fonts: serif;
-// $visited: #fcc;
-
 :root {
-  --clr-bg: #fff;
-  --clr-text: #000; // $fg-dark
+  --clr-bg-page: hsl(60, 42%, 95%); // $nicotine-light
 
-  --clr-bg-page: #f8f8ee; // $nicotine-light
+  --clr-bg-ui: hsl(0, 0%, 100%);
+  --clr-text-ui: #000; // $fg-dark
 
-  --clr-bg-theme: #3F5F6F; // $highlight-light
+  --clr-bg-theme: hsl(200, 28%, 34%); // $highlight-light
   --clr-text-theme: #fff; // $fg-light
 
-  --clr-bg-highlight: #eee; // $highlight-light2
+  --clr-bg-highlight: hsl(0, 0%, 93%); // $highlight-light2
   --clr-text-highlight: #111111;
 
-  --clr-bg-accent: #acae89; // $nicotine-dark
+  --clr-bg-accent: hsl(63, 19%, 61%); // $nicotine-dark
+  --clr-border-accent: hsl(63, 19%, 35%);
+
+  --clr-border: #aaa; // $border-color2
+  
+  --clr-shadow: var(--clr-border); 
 
   --clr-text-visited: #fcc; // $visited
-
-  --clr-border: #ccc; // $border-color
-  --clr-border-dim: #aaa; // $border-color2
-  --clr-border-dark: #888;
-
-  --clr-shadow: var(--clr-border); 
 
   --font-family: sans-serif;
   --font-size: 14px;
@@ -39,23 +26,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --clr-bg: #2f2f2f;
-    --clr-text: #ddd;
-    --clr-bg-page: #161616;
+    --clr-bg-page: hsl(0, 0%, 6%);
 
-    --clr-bg-theme: #111111;
-    --clr-text-theme: var(--clr-text);
+    --clr-bg-ui: hsl(0, 0%, 18%);
+    --clr-text-ui: #ddd;
 
-    --clr-bg-highlight: #606060;
-    --clr-text-highlight: #eee;
+    --clr-bg-theme: hsl(0, 0%, 2%);
+    --clr-text-theme: var(--clr-text-ui);
 
-    --clr-bg-accent: var(--clr-bg);
+    --clr-bg-highlight: hsl(0, 0%, 11%);
+    --clr-text-highlight: #fff;
 
-    --clr-border: #666666;
-    --clr-border-dim: #444444;
-    --clr-border-dark: #222222;
+    --clr-bg-accent: hsl(200, 32%, 28%);
+    --clr-border-accent: hsl(200, 8%, 12%);
+
+    --clr-border: hsl(0, 0%, 30%);
 
     --clr-shadow: #000;
+    
   }
 }
 
@@ -79,7 +67,7 @@ progress {
 
 body {
   background-color: var(--clr-bg-page);
-  color: var(--clr-text);
+  color: var(--clr-text-ui);
   font-family: var(--font-family);
   font-size: var(--font-size);
   line-height: 1.6;
@@ -172,9 +160,9 @@ body {
 }
 
 .dialog {
-  border: 1px solid var(--clr-border-dim);
+  border: 1px solid var(--clr-border);
   box-shadow: 0 0 1ch var(--clr-shadow);
-  background-color: var(--clr-bg);
+  background-color: var(--clr-bg-ui);
   padding: 1ch;
 
   h2 {
@@ -190,15 +178,15 @@ body {
 
 header {
   background-color: var(--clr-bg-accent);
-  color: var(--clr-text);
-  border: 1px solid var(--clr-border-dark);
-  box-shadow: 0 0 0.5ch var(--clr-border-dark);
+  border: 1px solid var(--clr-border-accent);
+  color: var(--clr-text-ui);
+  box-shadow: 0 0 0.5ch var(--clr-shadow);
   margin-bottom: 1ch;
 
   nav {
     a {
       text-decoration: none;
-      color: var(--clr-text);
+      color: var(--clr-text-ui);
 
       padding: .5ch;
       display: inline-block;
@@ -206,9 +194,9 @@ header {
 
     a.extra {
       background: #ccc linear-gradient(45deg,
-              rgba(255,100,100,1) 0%,
-              rgba(100,255,100,1) 50%,
-              rgba(100,100,255,1) 100%);
+              hsl(0, 100%, 70%) 0%,
+              hsl(120, 100%, 70%) 50%,
+              hsl(240, 100%, 70%) 100%);
       color: black;
       text-shadow: 0 0 0.5ch #fff;
     }
@@ -267,7 +255,7 @@ header {
   background-color: var(--clr-);
   padding: 1ch;
   margin: 1ch;
-  border: 1px solid var(--clr-border-dim);
+  border: 1px solid var(--clr-border);
   box-shadow: 0 0 1ch var(--clr-shadow);
 }
 
@@ -281,7 +269,7 @@ section.cards {
 
   .card {
     border: 2px #ccc;
-    background-color: #fff;
+    background-color: var(--clr-ui);
     border-left: 1px solid #ecb;
     border-top: 1px solid #ecb;
     box-shadow: #0008 0 0 5px;
@@ -330,7 +318,7 @@ section.cards {
 
 .positions {
   box-shadow: 0 0 2px #888;
-  background-color: var(--clr-bg-highlight);
+  backdrop-filter: brightness(90%);
   color: var(--clr-text-highlight);
   padding: 2px;
   margin-right: -1ch;
@@ -367,8 +355,8 @@ footer {
     flex-basis: 40ch;
     flex-grow: 1.1;
 
-    background-color: var(--clr-bg);
-    border-left: 1px solid var(--clr-border-dim);
+    background-color: var(--clr-bg-ui);
+    border-left: 1px solid var(--clr-border);
     box-shadow: -1px -1px 5px var(--clr-shadow);
 
     padding-left: 1ch;
@@ -392,7 +380,7 @@ footer {
   margin: 0;
   padding: 0.5ch;
   background-color: var(--clr-bg-theme);
-  border-bottom: 1px solid var(--clr-border-dim);
+  border-bottom: 1px solid var(--clr-border);
   font-family: var(--font-family-heading);
   font-weight: normal;
   color: var(--clr-text-theme);
@@ -495,7 +483,7 @@ footer {
   @extend .shadowbox;
 
   padding: 0.5ch;
-  background-color: var(--clr-bg);
+  background-color: var(--clr-bg-ui);
   display: grid;
   grid-template-columns: max-content 0 auto max-content;
   grid-gap: 0.5ch;
@@ -511,7 +499,6 @@ footer {
     color: var(--clr-text-theme);
     font-family: var(--font-family-heading);
     font-weight: normal;
-    border: 1px solid;
     text-align: center;
   }
 
@@ -524,15 +511,17 @@ footer {
     font-family: monospace;
     font-size: 12pt;
     padding: 0.5ch;
-    border: 1px solid var(--clr-border-dim);
+    border: 1px solid var(--clr-border);
+    background-color: inherit;
   }
 
   input[type="submit"] {
     font-size: 12pt;
-    border: 1px solid var(--clr-border-dim);
-    background-color: var(--clr-bg);
+    border: 1px solid var(--clr-border);
+    background-color: var(--clr-bg-ui);
   }
 
+  // white suggesitons looks fine in dark mode
   .suggestions {
     background-color: #fff;
     padding: .5ch;
@@ -543,7 +532,7 @@ footer {
     width: 300px;
     border-left: 1px solid #ccc;
     border-top: 1px solid #ccc;
-    box-shadow: 5px 5px 5px #888;
+    box-shadow: 5px 5px 5px var(--clr-shadow);
     z-index: 10;
 
     a {
@@ -580,7 +569,7 @@ footer {
 #filters {
   @extend .shadowbox;
   margin-top: 1ch;
-  background-color: var(--clr-bg);
+  background-color: var(--clr-bg-ui);
 
   h2 {
     @extend .heading;
@@ -589,13 +578,13 @@ footer {
   h3 {
     @extend .heading;
     background-color: var(--clr-bg-highlight);
+    color: var(--clr-text-highlight);
     font-family: sans-serif;
-    color: #000;
     border-bottom: 1px solid #000;
   }
 
   hr {
-    border-top: 0.5px solid var(--clr-border-dim);
+    border-top: 0.5px solid var(--clr-border);
     border-bottom: none;
   }
   ul {
@@ -646,7 +635,7 @@ footer {
   h2 {
     a {
       word-break: break-all;
-      color: var(--clr-text);
+      color: var(--clr-text-ui);
       text-decoration: none;
     }
     font-size: 12pt;
@@ -655,14 +644,14 @@ footer {
   }
 
   .description {
-    background-color: var(--clr-bg);
+    background-color: var(--clr-bg-ui);
     word-break: break-word;
     padding: 1ch;
     margin: 0;
   }
 
   ul.additional-results {
-    background-color: var(--clr-bg);
+    background-color: var(--clr-bg-ui);
     padding: 1ch;
     list-style: none;
     margin: 0;
