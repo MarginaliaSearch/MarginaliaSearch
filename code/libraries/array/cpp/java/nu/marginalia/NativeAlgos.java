@@ -12,6 +12,19 @@ import java.nio.file.Path;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
+/** This class provides access to native implementations of key algorithms
+ *  used in index construction and querying.
+ *  <p></p>
+ *  The native implementations are provided in a shared library, which is
+ *  loaded at runtime. The shared library is copied from the resources
+ *  to a temporary file, and then loaded using the foreign linker API.
+ *  <p></p>
+ *  isAvailable is a boolean flag that indicates whether the native
+ *  implementations are available. If the shared library cannot be loaded,
+ *  isAvailable will be false.  This flag must be checked before calling
+ *  any of the native functions.
+ * */
+@SuppressWarnings("preview")
 public class NativeAlgos {
     private final MethodHandle qsortHandle;
     private final MethodHandle qsort128Handle;
@@ -21,11 +34,14 @@ public class NativeAlgos {
     private final MethodHandle binarySearch64UpperHandle;
 
     public static final NativeAlgos instance;
+
+    /** Indicates whether the native implementations are available */
     public static final boolean isAvailable;
 
     private static final Logger logger = LoggerFactory.getLogger(NativeAlgos.class);
 
-    private NativeAlgos(Path libFile) throws Exception {
+
+    private NativeAlgos(Path libFile) {
         var libraryLookup = SymbolLookup.libraryLookup(libFile, Arena.global());
         var nativeLinker = Linker.nativeLinker();
 
@@ -56,10 +72,11 @@ public class NativeAlgos {
     static {
         Path libFile;
         NativeAlgos nativeAlgosI = null;
-        // copy resource to temp file
+        // copy resource to temp file so it can be loaded
         try (var is = NativeAlgos.class.getClassLoader().getResourceAsStream("libcpp.so")) {
             var tempFile = File.createTempFile("libcpp", ".so");
             tempFile.deleteOnExit();
+
 
             try (var os = new FileOutputStream(tempFile)) {
                 is.transferTo(os);
@@ -69,7 +86,7 @@ public class NativeAlgos {
             nativeAlgosI = new NativeAlgos(libFile);
         }
         catch (Exception e) {
-
+            logger.info("Failed to load native library, likely not built");
         }
 
         instance = nativeAlgosI;

@@ -20,27 +20,27 @@ public class QuicksortBenchmark {
         LongArray array = LongArrayFactory.onHeapShared(size);
     }
 
-    @Fork(value = 2, warmups = 5)
-    @Warmup(iterations = 1)
+    @Fork(value = 5, warmups = 1)
+    @Warmup(iterations = 5)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public LongArray javaSort(BenchState state) {
         var array = state.array;
 
-        array.quickSortN(2, 0, array.size());
+        array.quickSortJava(0, array.size());
 
         return array;
     }
 
-    @Fork(value = 2, warmups = 5)
-    @Warmup(iterations = 1)
+    @Fork(value = 5, warmups = 1)
+    @Warmup(iterations = 5)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public LongArray cppSort(BenchState state) {
 
         var array = state.array;
 
-        array.quickSortNative128(0, array.size());
+        array.quickSortNative(0, array.size());
 
         return array;
     }

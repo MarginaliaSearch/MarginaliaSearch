@@ -11,6 +11,10 @@ use-after-free results in a harmless exception rather than a SIGSEGV.
 Internally the array objects use Arena allocators to manage memory, and need to be closed to free the memory.  Both
 confined and shared memory can be allocated, as per the MemorySegment API.
 
+Native code is used to implement some of the more performance critical algorithms, 
+such as quicksort and binary search.  These are available in the [cpp](cpp) subproject.
+Java implementations are available as a fallback, but are somewhat slower.
+
 The library is implemented in a fairly unidiomatic way using interfaces to accomplish diamond inheritance. 
 
 ## Quick demo:

@@ -104,6 +104,15 @@ public interface LongArraySort extends LongArrayBase {
         }
     }
 
+    default void quickSortJava(long start, long end) {
+        if (end - start < 64) {
+            insertionSort(start, end);
+        }
+        else {
+            SortAlgoQuickSort._quickSortLH(this, start, end - 1);
+        }
+    }
+
     default void quickSortN(int wordSize, long start, long end) {
         assert ((end - start) % wordSize) == 0;
 
@@ -116,6 +125,15 @@ public interface LongArraySort extends LongArrayBase {
         else {
             SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
         }
+    }
+
+    default void quickSortJavaN(int wordSize, long start, long end) {
+        assert ((end - start) % wordSize) == 0;
+
+        if (end == start)
+            return;
+
+        SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
     }
 
     default void mergeSortN(int wordSize, long start, long end, Path tmpDir) throws IOException {
