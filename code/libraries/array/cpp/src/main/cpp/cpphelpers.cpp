@@ -2,7 +2,17 @@
 #include <algorithm>
 #include <stdio.h>
 
-struct p2 {
+/* Pair of 64-bit integers. */
+/* The struct is packed to ensure that the struct is exactly 16 bytes in size, as we need to pointer
+   alias on an array of 8 byte longs.  Since structs guarantee that the first element is at offset 0,
+   and __attribute__((packed)) guarantees that the struct is exactly 16 bytes in size, the only reasonable
+   implementation is that the struct is laid out as 2 64-bit integers.  This assumption works only as
+   long as there are at most 2 fields.
+
+   This is a non-portable low level hack, but all this code strongly assumes a x86-64 Linux environment.
+   For other environments (e.g. outside of prod), the Java implementation code will have to do.
+*/
+struct __attribute__((packed)) p64x2 {
     int64_t a;
     int64_t b;
 };
@@ -12,27 +22,19 @@ void ms_sort_64(int64_t* area, uint64_t start, uint64_t end) {
 }
 
 void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
-  struct p2 *startp = (struct p2 *) &area[start];
-  struct p2 *endp = (struct p2 *) &area[end];
-
-  // sort based on the first element of the pair
-  std::sort(startp, endp, [](struct p2& fst, struct p2& snd) {
+  std::sort(
+    reinterpret_cast<p64x2 *>(&area[start]),
+    reinterpret_cast<p64x2 *>(&area[end]),
+    [](const p64x2& fst, const p64x2& snd) {
     return fst.a < snd.a;
   });
 }
 
-int64_t encodeSearchMiss64(int64_t value) {
+inline int64_t encodeSearchMiss64(int64_t value) {
     return -1 - std::max(int64_t(0), value);
 }
-int64_t encodeSearchMiss128(int64_t value) {
+inline int64_t encodeSearchMiss128(int64_t value) {
     return -2 - std::max(int64_t(0), value);
-}
-
-int64_t decodeSearchMiss64(long value) {
-    return -value - 1;
-}
-int64_t decodeSearchMiss128(long value) {
-    return -value - 2;
 }
 
 int64_t ms_linear_search_64(int64_t key, int64_t* area, uint64_t fromIndex, uint64_t toIndex) {
@@ -59,30 +61,6 @@ int64_t ms_linear_search_128(int64_t key, int64_t* area, uint64_t fromIndex, uin
 
     return encodeSearchMiss128(pos - 2);
 }
-
-/**         long low = 0;
-            long high = (toIndex - fromIndex)/sz - 1;
-
-            while (high - low >= LINEAR_SEARCH_CUTOFF) {
-                long mid = (low + high) >>> 1;
-                long midVal = get(fromIndex + sz*mid);
-
-                if (midVal < key)
-                    low = mid + 1;
-                else if (midVal > key)
-                    high = mid - 1;
-                else
-                    return fromIndex + sz*mid;
-            }
-
-            for (fromIndex += low*sz; fromIndex < toIndex; fromIndex+=sz) {
-                long val = get(fromIndex);
-
-                if (val == key) return fromIndex;
-                if (val > key) return encodeSearchMiss(sz, fromIndex);
-            }
-
-            return encodeSearchMiss(sz, toIndex - sz); */
 
 int64_t ms_binary_search_128(int64_t key, int64_t* area, uint64_t fromIndex, uint64_t toIndex) {
    int64_t low = 0;

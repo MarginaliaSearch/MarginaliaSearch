@@ -86,7 +86,7 @@ class LongArraySortTest {
     @Test
     public void quickSortStressTest() throws IOException {
         LongArray array = LongArray.allocate(65536);
-        sortAlgorithmTester(array, LongArraySort::quickSort);
+        sortAlgorithmTester(array, LongArraySort::quickSortJava);
     }
 
     @Test

@@ -18,7 +18,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 // with a shellscript as gradle's c++ tasks are kind of insufferable
 
 tasks.register('compileCpp', Exec) {
-    inputs.files('src/main/cpp/cpphelpers.cpp', 'src/main/public/cpphelpers.h')
+    inputs.files('compile.sh', 'src/main/cpp/cpphelpers.cpp', 'src/main/public/cpphelpers.h')
     outputs.file 'resources/libcpp.so'
     commandLine 'sh', 'compile.sh'
 }

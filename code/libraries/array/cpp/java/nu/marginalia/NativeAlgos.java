@@ -80,12 +80,14 @@ public class NativeAlgos {
 
             try (var os = new FileOutputStream(tempFile)) {
                 is.transferTo(os);
+                os.flush();
             }
 
             libFile = tempFile.toPath();
             nativeAlgosI = new NativeAlgos(libFile);
         }
         catch (Exception e) {
+            e.printStackTrace();
             logger.info("Failed to load native library, likely not built");
         }
 
