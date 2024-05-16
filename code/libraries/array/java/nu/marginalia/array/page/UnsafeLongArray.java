@@ -52,7 +52,7 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
     }
 
     public static UnsafeLongArray onHeap(Arena arena, long size) {
-        return new UnsafeLongArray(arena.allocate(WORD_SIZE*size, 8), arena);
+        return new UnsafeLongArray(arena.allocate(WORD_SIZE*size, 16), arena);
     }
 
     public static UnsafeLongArray fromMmapReadOnly(Arena arena, Path file, long offset, long size) throws IOException {

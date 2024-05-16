@@ -32,7 +32,7 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     }
 
     public static SegmentLongArray onHeap(Arena arena, long size) {
-        return new SegmentLongArray(arena.allocate(WORD_SIZE*size, 8), arena);
+        return new SegmentLongArray(arena.allocate(WORD_SIZE*size, 16), arena);
     }
 
     public static SegmentLongArray fromMmapReadOnly(Arena arena, Path file, long offset, long size) throws IOException {
