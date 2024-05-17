@@ -136,27 +136,6 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     }
 
     @Override
-    public long linearSearchNative(long key, long start, long end) {
-        return NativeAlgos.linearSearch64(key, segment, start, end);
-    }
-
-    @Override
-    public long linearSearchNative128(long key, long start, long end) {
-        return NativeAlgos.linearSearch128(key, segment, start, end);
-    }
-
-    @Override
-    public long binarySearchNativeUB(long key, long start, long end) {
-        return NativeAlgos.binarySearch64Upper(key, segment, start, end);
-    }
-
-    @Override
-    public long binarySearchNative128(long key, long start, long end) {
-        return NativeAlgos.binarySearch128(key, segment, start, end);
-    }
-
-
-    @Override
     public ByteBuffer getByteBuffer() {
         return segment.asByteBuffer();
     }

@@ -3,7 +3,6 @@ package nu.marginalia.array.delegate;
 import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.LongArraySearch;
-import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.array.functional.*;
 
@@ -85,26 +84,6 @@ public class ShiftedLongArray implements LongArray {
     }
 
     @Override
-    public long linearSearchNative(long key, long start, long end) {
-        return delegate.linearSearchNative(key, start + shift, end + shift);
-    }
-
-    @Override
-    public long linearSearchNative128(long key, long start, long end) {
-        return delegate.linearSearchNative128(key, start, end);
-    }
-
-    @Override
-    public long binarySearchNativeUB(long key, long start, long end) {
-        return delegate.binarySearchNativeUB(key, start + shift, end + shift);
-    }
-
-    @Override
-    public long binarySearchNative128(long key, long start, long end) {
-        return delegate.binarySearchNative128(key, start, end);
-    }
-
-    @Override
     public long size() {
         return size;
     }
@@ -162,81 +141,24 @@ public class ShiftedLongArray implements LongArray {
     }
 
 
-    public long searchN(int sz, long key) {
-        if (size < 128) {
-            return linearSearchN(sz, key);
-        }
-        else {
-            return binarySearchN(sz, key);
-        }
-    }
-
     public long search(long key) {
-        if (size < 128) {
-            return linearSearch(key);
-        }
-        else {
-            return binarySearch(key);
-        }
-    }
-
-    public long linearSearch(long key) {
-        return linearSearch(key, 0, size);
-    }
-
-    public long binarySearch(long key) {
         return binarySearch(key, 0, size);
-    }
-
-    public long binarySearchN(int sz, long key) {
-        return binarySearchN(sz, key, 0, size);
-    }
-
-    public long linearSearchN(int sz, long key) {
-        return linearSearchN(sz, key, 0, size);
     }
 
     public void retain(LongQueryBuffer buffer, long boundary) {
         retain(buffer, boundary, 0, size);
     }
-    public void retainN(LongQueryBuffer buffer, int sz, long boundary) {
-        if (sz == 1)
-            retain(buffer, boundary, 0, size);
-        else
-            retainN(buffer, sz, boundary, 0, size);
-    }
-
     public void reject(LongQueryBuffer buffer, long boundary) {
         reject(buffer, boundary, 0, size);
     }
 
-    public void rejectN(LongQueryBuffer buffer, int sz, long boundary) {
-        if (sz == 1)
-            reject(buffer, boundary, 0, size);
-        else
-            rejectN(buffer, sz, boundary, 0, size);
-
-    }
-
     @Override
-    public long linearSearch(long key, long fromIndex, long toIndex) {
-        return translateSearchResult(1, delegate.linearSearch(key, fromIndex + shift, toIndex+shift));
-    }
-    @Override
-    public long linearSearchN(int sz, long key, long fromIndex, long toIndex) {
-        return translateSearchResult(sz, delegate.linearSearch(key, fromIndex + shift, toIndex+shift));
+    public long binarySearchN(int sz, long key, long fromIndex, long toIndex) {
+        return delegate.binarySearchN(sz, key, fromIndex + shift, toIndex+shift) - shift;
     }
     @Override
     public long binarySearch(long key, long fromIndex, long toIndex) {
-        return translateSearchResult(1, delegate.binarySearch(key, fromIndex + shift, toIndex+shift));
-    }
-    @Override
-    public long binarySearchN(int sz, long key, long fromIndex, long toIndex) {
-        return translateSearchResult(sz, delegate.binarySearchN(sz, key, fromIndex + shift, toIndex+shift));
-    }
-    @Override
-    public long binarySearchUpperBound(long key, long fromIndex, long toIndex) {
-        return translateSearchResult(1, delegate.binarySearchUpperBound(key, fromIndex + shift, toIndex+shift));
+        return delegate.binarySearch(key, fromIndex + shift, toIndex+shift) - shift;
     }
 
     private long translateSearchResult(int sz, long delegatedIdx) {

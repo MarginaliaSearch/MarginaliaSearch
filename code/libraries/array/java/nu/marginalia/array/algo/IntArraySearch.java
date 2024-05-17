@@ -16,7 +16,7 @@ public interface IntArraySearch extends IntArrayBase {
             if (val > key) break;
         }
 
-        return LongArraySearch.encodeSearchMiss(1, pos - 1);
+        return encodeSearchMiss(1, pos - 1);
     }
 
     default long binarySearch(int key, long fromIndex, long toIndex) {
@@ -119,4 +119,9 @@ public interface IntArraySearch extends IntArrayBase {
         }
 
     }
+
+    static long encodeSearchMiss(int entrySize, long value) {
+        return -entrySize - Math.max(0, value);
+    }
+
 }
