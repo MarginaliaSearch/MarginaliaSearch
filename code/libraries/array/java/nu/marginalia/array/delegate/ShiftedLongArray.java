@@ -161,15 +161,6 @@ public class ShiftedLongArray implements LongArray {
         return delegate.binarySearch(key, fromIndex + shift, toIndex+shift) - shift;
     }
 
-    private long translateSearchResult(int sz, long delegatedIdx) {
-        long ret;
-
-        if (delegatedIdx >= 0) ret = delegatedIdx - shift;
-        else ret = LongArraySearch.encodeSearchMiss(sz, Math.max(0, LongArraySearch.decodeSearchMiss(sz, delegatedIdx) - shift));
-
-        return ret;
-    }
-
     public void retain(LongQueryBuffer buffer, long boundary, long searchStart, long searchEnd) {
         delegate.retain(buffer, boundary, searchStart + shift, searchEnd + shift);
     }
