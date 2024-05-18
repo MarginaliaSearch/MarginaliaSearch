@@ -1,7 +1,6 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.algo.LongArraySearch;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
@@ -151,10 +150,7 @@ public class BTreeReader {
         for (int i = 0; i < keys.length; i++) {
             long key = keys[i];
             searchStart = data.binarySearchN(ctx.entrySize, key, searchStart, data.size());
-            if (searchStart < 0) {
-                searchStart = LongArraySearch.decodeSearchMiss(ctx.entrySize, searchStart);
-            }
-            else {
+            if (data.get(searchStart) == key) {
                 ret[i] = data.get(searchStart + offset);
             }
         }
@@ -215,7 +211,7 @@ public class BTreeReader {
 
             final long searchStart = layerOffsets[layer] + offset;
 
-            final long nextLayerOffset = index.binarySearchUpperBound(key, searchStart, searchStart + ctx.pageSize()) - searchStart;
+            final long nextLayerOffset = index.binarySearch(key, searchStart, searchStart + ctx.pageSize()) - searchStart;
 
             layer --;
             boundary = index.get(searchStart + nextLayerOffset);
@@ -257,7 +253,13 @@ public class BTreeReader {
 
             long searchEnd = searchStart + min(remainingTotal, remainingBlock);
 
-            return data.binarySearchN(ctx.entrySize, key, searchStart, searchEnd);
+            long ret = data.binarySearchN(ctx.entrySize, key, searchStart, searchEnd);
+            if (data.get(ret) == key) {
+                return ret;
+            }
+            else {
+                return -1 - ret;
+            }
         }
 
         public void retainData(LongQueryBuffer buffer) {

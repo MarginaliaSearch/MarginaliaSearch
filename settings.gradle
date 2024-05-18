@@ -36,6 +36,7 @@ include 'code:index:index-forward'
 include 'code:index:index-reverse'
 
 include 'code:libraries:array'
+include 'code:libraries:array:cpp'
 include 'code:libraries:geo-ip'
 include 'code:libraries:btree'
 include 'code:libraries:easy-lsh'

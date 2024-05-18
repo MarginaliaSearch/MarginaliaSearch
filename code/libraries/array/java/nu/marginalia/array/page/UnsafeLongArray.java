@@ -1,5 +1,6 @@
 package nu.marginalia.array.page;
 
+import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
     }
 
     public static UnsafeLongArray onHeap(Arena arena, long size) {
-        return new UnsafeLongArray(arena.allocate(WORD_SIZE*size, 8), arena);
+        return new UnsafeLongArray(arena.allocate(WORD_SIZE*size, 16), arena);
     }
 
     public static UnsafeLongArray fromMmapReadOnly(Arena arena, Path file, long offset, long size) throws IOException {
@@ -271,6 +272,16 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
             channelIndexB += lengthB;
             segmentIndexB += lengthB;
         }
+    }
+
+    @Override
+    public void quickSortNative(long start, long end) {
+        NativeAlgos.sort(segment, start, end);
+    }
+
+    @Override
+    public void quickSortNative128(long start, long end) {
+        NativeAlgos.sort128(segment, start, end);
     }
 
 }

@@ -107,10 +107,6 @@ class SortAlgoQuickSort {
 
         long pivot = array.get(pivotPoint);
 
-        assert (pivotPoint - low) >= 0;
-        assert (pivotPoint - low) % wordSize == 0;
-
-
         long i = low - wordSize;
         long j = high + wordSize;
 

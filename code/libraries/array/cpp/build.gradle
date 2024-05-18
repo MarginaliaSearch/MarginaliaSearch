@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+dependencies {
+    implementation libs.bundles.slf4j
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+// We use a custom task to compile the C++ code into a shared library
+// with a shellscript as gradle's c++ tasks are kind of insufferable
+
+tasks.register('compileCpp', Exec) {
+    inputs.files('compile.sh', 'src/main/cpp/cpphelpers.cpp', 'src/main/public/cpphelpers.h')
+    outputs.file 'resources/libcpp.so'
+    commandLine 'sh', 'compile.sh'
+}
+
+processResources.dependsOn('compileCpp')

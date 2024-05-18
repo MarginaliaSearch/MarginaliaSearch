@@ -6,6 +6,9 @@ import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.api.domains.DomainInfoClient;
+import nu.marginalia.api.domains.model.DomainInformation;
+import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
@@ -16,9 +19,11 @@ import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchModule;
 import nu.marginalia.search.SearchService;
 import nu.marginalia.service.ServiceId;
@@ -38,8 +43,10 @@ import spark.Spark;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 
@@ -69,6 +76,7 @@ public class SearchServicePaperDoll extends AbstractModule {
     private static HikariDataSource dataSource;
 
     private static List<DecoratedSearchResultItem> results = new ArrayList<>();
+    private static List<SimilarDomain> dummyLinks = new ArrayList<>();
     private static QueryResponse searchResponse;
     private static final Gson gson = GsonFactory.get();
 
@@ -118,28 +126,66 @@ public class SearchServicePaperDoll extends AbstractModule {
         System.setProperty("search.websiteUrl", "http://localhost:9999/");
 
         try (var conn = dataSource.getConnection();
-             var ps = conn.prepareStatement("""
+             var newsStmt = conn.prepareStatement("""
                             INSERT INTO SEARCH_NEWS_FEED(TITLE, LINK, SOURCE, LIST_DATE)
                             VALUES (?, ?, ?, ?)
-                            """)) {
-            ps.setString(1, "Lex Luthor elected president");
-            ps.setString(2, "https://www.example.com/foo");
-            ps.setString(3, "Daily Planet");
-            ps.setDate(4, new java.sql.Date(System.currentTimeMillis()));
-            ps.execute();
+                            """);
+             var domainStmt = conn.prepareStatement("""
+                            INSERT INTO EC_DOMAIN(ID, DOMAIN_NAME, DOMAIN_TOP, NODE_AFFINITY)
+                            VALUES (?, ?, ?, ?)
+                            """);
+             var randomStmt = conn.prepareStatement("""
+                            INSERT INTO EC_RANDOM_DOMAINS(DOMAIN_ID, DOMAIN_SET)
+                            VALUES (?, ?) 
+                            """)
+             ) {
+            newsStmt.setString(1, "Lex Luthor elected president");
+            newsStmt.setString(2, "https://www.example.com/foo");
+            newsStmt.setString(3, "Daily Planet");
+            newsStmt.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            newsStmt.execute();
 
-            ps.setString(1, "Besieged Alesian onlookers confused as Caesar builds a wall around his wall around the city walls");
-            ps.setString(2, "https://www.example2.com/bar");
-            ps.setString(3, "The Gaulish Observer");
-            ps.setDate(4, new java.sql.Date(System.currentTimeMillis()));
-            ps.execute();
+            newsStmt.setString(1, "Besieged Alesian onlookers confused as Caesar builds a wall around his wall around the city walls");
+            newsStmt.setString(2, "https://www.example2.com/bar");
+            newsStmt.setString(3, "The Gaulish Observer");
+            newsStmt.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            newsStmt.execute();
 
-            ps.setString(1, "Marginalia acquires Google");
-            ps.setString(2, "https://www.example3.com/baz");
-            ps.setString(3, "The Dependent");
-            ps.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            newsStmt.setString(1, "Marginalia acquires Google");
+            newsStmt.setString(2, "https://www.example3.com/baz");
+            newsStmt.setString(3, "The Dependent");
+            newsStmt.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            newsStmt.execute();
 
-            ps.execute();
+            domainStmt.setInt(1, 1);
+            domainStmt.setString(2, "www.example.com");
+            domainStmt.setString(3, "example.com");
+            domainStmt.setInt(4, 1);
+            domainStmt.execute();
+
+            domainStmt.setInt(1, 2);
+            domainStmt.setString(2, "www.example2.com");
+            domainStmt.setString(3, "example2.com");
+            domainStmt.setInt(4, 2);
+            domainStmt.execute();
+
+            domainStmt.setInt(1, 3);
+            domainStmt.setString(2, "www.example3.com");
+            domainStmt.setString(3, "example3.com");
+            domainStmt.setInt(4, 3);
+            domainStmt.execute();
+
+            randomStmt.setInt(1, 1);
+            randomStmt.setInt(2, 0);
+            randomStmt.execute();
+
+            randomStmt.setInt(1, 2);
+            randomStmt.setInt(2, 0);
+            randomStmt.execute();
+
+            randomStmt.setInt(1, 3);
+            randomStmt.setInt(2, 0);
+            randomStmt.execute();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -161,6 +207,7 @@ public class SearchServicePaperDoll extends AbstractModule {
         );
     }
 
+    @SneakyThrows
     @Test
     public void run() {
         if (!Boolean.getBoolean("runPaperDoll")) {
@@ -181,9 +228,75 @@ public class SearchServicePaperDoll extends AbstractModule {
             return gson.toJson(suggestions);
         });
 
+        Spark.get("/screenshot/*", (rq, rsp) -> {
+            rsp.type("image/svg+xml");
+            return """
+                <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                <svg
+                   xmlns="http://www.w3.org/2000/svg"
+                   width="640px"
+                   height="480px"
+                   viewBox="0 0 640 480"
+                   version="1.1">
+                  <g>
+                    <rect
+                       style="fill:#808080"
+                       id="rect288"
+                       width="595.41992"
+                       height="430.01825"
+                       x="23.034981"
+                       y="27.850344" />
+                    <text
+                       xml:space="preserve"
+                      style="font-size:100px;fill:#909090;font-family:sans-serif;"
+                       x="20"
+                       y="120">Placeholder</text>
+                    <text
+                       xml:space="preserve"
+                       style="font-size:32px;fill:#000000;font-family:monospace;"
+                       x="320" y="240" dominant-baseline="middle" text-anchor="middle">Lorem Ipsum As F</text>
+                  </g>
+                </svg>
+                """;
+        });
+
         registerSearchResult("https://www.example.com/foo", "Foo", "Lorem ipsum dolor sit amet", Set.of(), 0.5, 0.5, ~0L);
         registerSearchResult("https://www.example2.com/bar", "Bar", "Some text goes here", Set.of(), 0.5, 0.5, 1L);
         registerSearchResult("https://www.example3.com/baz", "All HTML Features", "This one's got every feature", EnumSet.allOf(HtmlFeature.class), 0.5, 0.5, 1L);
+
+
+
+        dummyLinks.add(new SimilarDomain(
+                new EdgeUrl("https://www.example.com/foo"),
+                1,
+                0.5,
+                0.5,
+                true,
+                true,
+                true,
+                SimilarDomain.LinkType.FOWARD
+        ));
+        dummyLinks.add(new SimilarDomain(
+                new EdgeUrl("https://www.example2.com/foo"),
+                2,
+                0.5,
+                1,
+                false,
+                false,
+                true,
+                SimilarDomain.LinkType.BACKWARD
+        ));
+        dummyLinks.add(new SimilarDomain(
+                new EdgeUrl("https://www.example3.com/foo"),
+                3,
+                0,
+                0.5,
+                false,
+                false,
+                false,
+                SimilarDomain.LinkType.BIDIRECTIONAL
+        ));
+
 
         for (;;);
     }
@@ -199,6 +312,38 @@ public class SearchServicePaperDoll extends AbstractModule {
         var qsMock = Mockito.mock(QueryClient.class);
         when(qsMock.search(any())).thenReturn(searchResponse);
         bind(QueryClient.class).toInstance(qsMock);
+
+        var asMock = Mockito.mock(DomainInfoClient.class);
+
+        when(asMock.isAccepting()).thenReturn(true);
+        when(asMock.linkedDomains(anyInt(), anyInt())).thenReturn(CompletableFuture.completedFuture(dummyLinks));
+        when(asMock.similarDomains(anyInt(), anyInt())).thenReturn(CompletableFuture.completedFuture(dummyLinks));
+        when(asMock.domainInformation(anyInt())).thenReturn(CompletableFuture.completedFuture(
+                new DomainInformation(new EdgeDomain("www.example.com"),
+                        false,
+                        123,
+                        123,
+                        123,
+                        123,
+                        123,
+                        1,
+                        0.5,
+                        false,
+                        false,
+                        false,
+                        "127.0.0.1",
+                        1,
+                        "ACME",
+                        "CA",
+                        "CA",
+                        "Exemplary")
+        ));
+
+        bind(DomainInfoClient.class).toInstance(asMock);
+
+        var sss = Mockito.mock(ScreenshotService.class);
+        when(sss.hasScreenshot(anyInt())).thenReturn(true);
+        bind(ScreenshotService.class).toInstance(sss);
     }
 
 }
