@@ -16,7 +16,6 @@ bad support for. It's designed to be able to easily replaced when *Java's Foreig
 
 * [easy-lsh](easy-lsh/) is a simple locality-sensitive hash for document deduplication
 * [guarded-regex](guarded-regex/) makes predicated regular expressions clearer
-* [big-string](big-string/) offers seamless string compression
 * [random-write-funnel](random-write-funnel/) is a tool for reducing write amplification when constructing 
 large files out of order.
 * [next-prime](next-prime/) naive brute force prime sieve.
