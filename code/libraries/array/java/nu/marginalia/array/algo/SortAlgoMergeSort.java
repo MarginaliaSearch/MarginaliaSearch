@@ -1,38 +1,17 @@
 package nu.marginalia.array.algo;
 
 import java.io.IOException;
-import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
+@Deprecated
 class SortAlgoMergeSort {
-    static void _mergeSort(IntArraySort array, long start, int length, IntBuffer workBuffer) {
-        int width = Math.min(Integer.highestOneBit(length), 1 << 16);
-
-        // Do in-memory sorting up until internalSortLimit first
-        for (int i = 0; i < length; i += width) {
-            array.quickSort(start + i, start + i + Math.min(width, length-i));
-        }
-
-        // Then finish with merge sort
-        for (width = 1; width < length; width*=2) {
-
-            for (int i = 0; i < length; i += 2*width) {
-                _merge(array, start, i, Math.min(i+width, length), Math.min(i+2*width, length), workBuffer);
-            }
-
-            workBuffer.clear();
-            array.set(start, start + length, workBuffer, 0);
-        }
-
-    }
-
 
     static void _mergeSort(LongArraySort array, long start, int length, LongBuffer workBuffer) {
         int width = Math.min(Integer.highestOneBit(length), 1 << 16);
 
         // Do in-memory sorting up until internalSortLimit first
         for (int i = 0; i < length; i += width) {
-            array.quickSort(start + i, start + i + Math.min(width, length-i));
+            array.sort(start + i, start + i + Math.min(width, length-i));
         }
 
         // Then finish with merge sort
@@ -110,19 +89,4 @@ class SortAlgoMergeSort {
         }
     }
 
-    static void _merge(IntArraySort array, long offset, int left, int right, int end, IntBuffer workBuffer) {
-        long idxL = left;
-        long idxR = right;
-
-        for (int putPos = left; putPos < end; putPos++) {
-            if (idxL < right && (idxR >= end || array.get(offset+idxL) < array.get(offset+idxR))) {
-                workBuffer.put(putPos, array.get(offset+idxL));
-                idxL++;
-            }
-            else {
-                workBuffer.put(putPos, array.get(offset+idxR));
-                idxR++;
-            }
-        }
-    }
 }

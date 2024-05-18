@@ -1,6 +1,6 @@
 package nu.marginalia.index.query.filter;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 public class QueryFilterLetThrough implements QueryFilterStepIf {
 

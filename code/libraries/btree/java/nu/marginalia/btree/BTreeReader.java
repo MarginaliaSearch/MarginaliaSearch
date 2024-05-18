@@ -1,7 +1,7 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
 

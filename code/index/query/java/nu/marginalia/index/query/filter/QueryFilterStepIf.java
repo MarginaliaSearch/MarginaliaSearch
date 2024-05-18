@@ -1,6 +1,6 @@
 package nu.marginalia.index.query.filter;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 public interface QueryFilterStepIf extends Comparable<QueryFilterStepIf> {
     boolean test(long value);

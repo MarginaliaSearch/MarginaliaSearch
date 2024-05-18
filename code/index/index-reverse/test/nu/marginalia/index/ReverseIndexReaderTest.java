@@ -1,7 +1,6 @@
 package nu.marginalia.index;
 
-import nu.marginalia.array.algo.SortingContext;
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReversePreindex;
 import nu.marginalia.index.construction.TestJournalFactory;
@@ -22,14 +21,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReverseIndexReaderTest {
     TestJournalFactory journalFactory;
     Path tempDir;
-    SortingContext sortingContext;
 
     @BeforeEach
     public void setUp() throws IOException {
         journalFactory = new TestJournalFactory();
 
         tempDir = Files.createTempDirectory("sort");
-        sortingContext = new SortingContext(Path.of("invalid"), 1<<20);
     }
 
     @AfterEach
@@ -64,7 +61,6 @@ class ReverseIndexReaderTest {
         var indexReader = createIndex(
                 new EntryDataWithWordMeta(100, 101, wm(50, 51), wm(51, 52)),
                 new EntryDataWithWordMeta(101, 101, wm(51, 53), wm(52, 54))
-
         );
 
         assertEquals(1, indexReader.numDocuments(50));

@@ -1,6 +1,6 @@
 package nu.marginalia.index.query.filter;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +60,7 @@ public class QueryFilterAnyOf implements QueryFilterStepIf {
         for (var step : steps)
         {
             var slice = buffer.slice(start, endOfValidData);
-            slice.data.quickSort(0, slice.size());
+            slice.data.sort(0, slice.size());
 
             step.apply(slice);
             start += slice.end;
@@ -73,7 +73,7 @@ public class QueryFilterAnyOf implements QueryFilterStepIf {
 
         // After all filters have been applied, we must re-sort all the retained data
         // to uphold the sortedness contract
-        buffer.data.quickSort(0, buffer.end);
+        buffer.data.sort(0, buffer.end);
     }
 
     public String describe() {

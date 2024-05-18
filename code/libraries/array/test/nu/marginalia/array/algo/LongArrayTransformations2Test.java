@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class LongArrayTransformations2Test {
     LongArray basic;
-    LongArray paged;
     LongArray shifted;
 
     final int size = 1026;
@@ -19,7 +18,6 @@ class LongArrayTransformations2Test {
     @BeforeEach
     public void setUp() {
         basic = LongArray.allocate(size);
-        paged = LongArray.allocate(size);
         shifted = LongArray.allocate(size+30).shifted(30);
 
         long[] vals = new long[size];
@@ -27,26 +25,22 @@ class LongArrayTransformations2Test {
             vals[i] = i+10;
         }
         basic.set(0, vals);
-        paged.set(0, vals);
         shifted.set(0, vals);
     }
     @Test
     void forEach() {
         foreachTester(basic);
-        foreachTester(paged);
         foreachTester(shifted);
     }
     @Test
     void transformEach() {
         transformTester(basic);
-        transformTester(paged);
         transformTester(shifted);
     }
 
     @Test
     void transformEachIO() throws IOException {
         transformTesterIO(basic);
-        transformTesterIO(paged);
         transformTesterIO(shifted);
     }
 

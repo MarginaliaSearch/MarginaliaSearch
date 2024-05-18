@@ -1,7 +1,7 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.functional.LongIOTransformer;
+import nu.marginalia.array.algo.LongArrayTransformations;
 import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.btree.model.BTreeContext;
 
@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /** Constructs the BTrees in a reverse index */
-public class ReverseIndexBTreeTransformer implements LongIOTransformer {
+public class ReverseIndexBTreeTransformer implements LongArrayTransformations.LongIOTransformer {
     private final BTreeWriter writer;
     private final FileChannel intermediateChannel;
 

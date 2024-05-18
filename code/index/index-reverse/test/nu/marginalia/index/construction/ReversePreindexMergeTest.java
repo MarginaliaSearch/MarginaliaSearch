@@ -1,7 +1,6 @@
 
 package nu.marginalia.index.construction;
 
-import nu.marginalia.array.algo.SortingContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,6 @@ class ReversePreindexMergeTest {
     Path wordsIdFile;
     Path docsFile;
     Path tempDir;
-    SortingContext sortingContext;
 
     @BeforeEach
     public void setUp() throws IOException  {
@@ -30,7 +28,6 @@ class ReversePreindexMergeTest {
         wordsIdFile = Files.createTempFile("words", ".dat");
         docsFile = Files.createTempFile("docs", ".dat");
         tempDir = Files.createTempDirectory("sort");
-        sortingContext = new SortingContext(Path.of("invalid"), 1<<20);
     }
 
     @AfterEach

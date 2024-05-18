@@ -1,7 +1,7 @@
 package nu.marginalia.index.query;
 
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,5 @@
 package nu.marginalia.array.page;
 
-import nu.marginalia.NativeAlgos;
-import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +10,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -23,7 +20,9 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
 /** Variant of SegmentLongArray that uses Unsafe to access the memory.
  * */
-public class UnsafeLongArray implements PartitionPage, LongArray {
+
+@SuppressWarnings("preview")
+public class UnsafeLongArray implements LongArray {
 
     private static final Unsafe unsafe = UnsafeProvider.getUnsafe();
     private static final Logger logger = LoggerFactory.getLogger(UnsafeLongArray.class);
@@ -115,6 +114,11 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
     }
 
     @Override
+    public MemorySegment getMemorySegment() {
+        return segment;
+    }
+
+    @Override
     public void set(long start, long end, LongBuffer buffer, int bufferStart) {
         for (int i = 0; i < end - start; i++) {
             unsafe.putLong(segment.address() + (start + i) * JAVA_LONG.byteSize(), buffer.get(bufferStart + i));
@@ -144,11 +148,6 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
     }
 
     @Override
-    public ByteBuffer getByteBuffer() {
-        return segment.asByteBuffer();
-    }
-
-    @Override
     public void write(Path filename) throws IOException {
         try (var arena = Arena.ofConfined()) {
             var destSegment = UnsafeLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize() / JAVA_LONG.byteSize());
@@ -170,10 +169,6 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
                 throw new RuntimeException("Failed to force channel", e);
             }
         }
-    }
-
-    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
-        return new ArrayRangeReference<>(this, start, end);
     }
 
     public void chanelChannelTransfer(FileChannel source,
@@ -272,16 +267,6 @@ public class UnsafeLongArray implements PartitionPage, LongArray {
             channelIndexB += lengthB;
             segmentIndexB += lengthB;
         }
-    }
-
-    @Override
-    public void quickSortNative(long start, long end) {
-        NativeAlgos.sort(segment, start, end);
-    }
-
-    @Override
-    public void quickSortNative128(long start, long end) {
-        NativeAlgos.sort128(segment, start, end);
     }
 
 }

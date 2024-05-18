@@ -72,7 +72,7 @@ public class ReversePreindexWordSegments {
         }
 
         // Sort the words file
-        words.quickSort(0, counts.size());
+        words.sort(0, counts.size());
 
         // Populate the counts
         for (i = 0; i < countsMap.size(); i++) {

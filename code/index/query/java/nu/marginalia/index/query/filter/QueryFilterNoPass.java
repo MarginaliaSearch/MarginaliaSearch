@@ -1,6 +1,6 @@
 package nu.marginalia.index.query.filter;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 public class QueryFilterNoPass implements QueryFilterStepIf {
     static final QueryFilterStepIf instance = new QueryFilterNoPass();

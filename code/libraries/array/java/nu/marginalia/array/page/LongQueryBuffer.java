@@ -1,4 +1,4 @@
-package nu.marginalia.array.buffer;
+package nu.marginalia.array.page;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;

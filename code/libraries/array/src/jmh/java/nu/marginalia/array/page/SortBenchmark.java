@@ -1,6 +1,8 @@
 package nu.marginalia.array.page;
 
+import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.algo.LongArraySort;
 import org.openjdk.jmh.annotations.*;
 
 import java.lang.foreign.Arena;
@@ -30,31 +32,7 @@ public class SortBenchmark {
     public LongArray msSort64(BenchState state) {
         var array = state.msArray;
 
-        array.quickSortJavaN(2, 0, array.size());
-
-        return array;
-    }
-
-    @Fork(value = 5, warmups = 5)
-    @Warmup(iterations = 1)
-    @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    public LongArray msSort128(BenchState state) {
-        var array = state.msArray;
-
-        array.quickSortJavaN(2, 0, array.size());
-
-        return array;
-    }
-
-    @Fork(value = 5, warmups = 5)
-    @Warmup(iterations = 1)
-    @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    public LongArray usSort128(BenchState state) {
-        var array = state.usArray;
-
-        array.quickSortJavaN(2, 0, array.size());
+        LongArraySort.quickSortJava(array, 0, array.size());
 
         return array;
     }
@@ -66,7 +44,55 @@ public class SortBenchmark {
     public LongArray usSort64(BenchState state) {
         var array = state.usArray;
 
-        array.quickSortJavaN(2, 0, array.size());
+        LongArraySort.quickSortJava(array,0, array.size());
+
+        return array;
+    }
+
+    @Fork(value = 5, warmups = 5)
+    @Warmup(iterations = 1)
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public LongArray msSort128(BenchState state) {
+        var array = state.msArray;
+
+        LongArraySort.quickSortJavaN(array,2, 0, array.size());
+
+        return array;
+    }
+
+    @Fork(value = 5, warmups = 5)
+    @Warmup(iterations = 1)
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public LongArray usSort128(BenchState state) {
+        var array = state.usArray;
+
+        LongArraySort.quickSortJavaN(array,2, 0, array.size());
+
+        return array;
+    }
+
+    @Fork(value = 5, warmups = 5)
+    @Warmup(iterations = 1)
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public LongArray msSort128_2(BenchState state) {
+        var array = state.msArray;
+
+        LongArraySort.quickSortJava2(array, 0, array.size());
+
+        return array;
+    }
+
+    @Fork(value = 5, warmups = 5)
+    @Warmup(iterations = 1)
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public LongArray usSort128_2(BenchState state) {
+        var array = state.usArray;
+
+        LongArraySort.quickSortJava2(array,0, array.size());
 
         return array;
     }
@@ -82,7 +108,7 @@ public class SortBenchmark {
 
         var array = state.usArray; // realistically doesn't matter
 
-        array.quickSortNative128(0, array.size());
+        NativeAlgos.sort128(array.getMemorySegment(), 0, array.size());
 
         return array;
     }
@@ -95,7 +121,7 @@ public class SortBenchmark {
 
         var array = state.usArray; // realistically doesn't matter
 
-        array.quickSortNative(0, array.size());
+        NativeAlgos.sort(array.getMemorySegment(), 0, array.size());
 
         return array;
     }

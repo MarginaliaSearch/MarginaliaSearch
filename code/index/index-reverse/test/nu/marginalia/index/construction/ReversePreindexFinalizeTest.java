@@ -2,7 +2,6 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.btree.model.BTreeHeader;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +23,6 @@ class ReversePreindexFinalizeTest {
     Path wordsIdFile;
     Path docsFile;
     Path tempDir;
-    SortingContext sortingContext;
 
     @BeforeEach
     public void setUp() throws IOException  {
@@ -34,7 +32,6 @@ class ReversePreindexFinalizeTest {
         wordsIdFile = Files.createTempFile("words", ".dat");
         docsFile = Files.createTempFile("docs", ".dat");
         tempDir = Files.createTempDirectory("sort");
-        sortingContext = new SortingContext(Path.of("invalid"), 1<<20);
     }
 
     @AfterEach

@@ -1,6 +1,7 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.NativeAlgos;
+import nu.marginalia.array.LongArray;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -84,33 +85,29 @@ public interface LongArraySort extends LongArrayBase {
         return true;
     }
 
-    default void insertionSort(long start, long end) {
-        SortAlgoInsertionSort._insertionSort(this, start, end);
+    static void insertionSort(LongArraySort array, long start, long end) {
+        SortAlgoInsertionSort._insertionSort(array, start, end);
     }
 
-    default void insertionSortN(int sz, long start, long end) {
-        SortAlgoInsertionSort._insertionSortN(this, sz, start, end);
-    }
-
-    default void quickSort(long start, long end) {
-        if (end - start < 64) {
-            insertionSort(start, end);
-        }
-        else if (NativeAlgos.isAvailable) {
-            quickSortNative(start, end);
+    static void insertionSortN(LongArraySort array, int sz, long start, long end) {
+        if (sz == 2) {
+            SortAlgoInsertionSort._insertionSort2(array, start, end);
         }
         else {
+            SortAlgoInsertionSort._insertionSortN(array, sz, start, end);
+        }
+    }
+
+    default void sort(long start, long end) {
+        if (NativeAlgos.isAvailable) {
+            NativeAlgos.sort(getMemorySegment(), start, end);
+        } else {
             SortAlgoQuickSort._quickSortLH(this, start, end - 1);
         }
     }
 
-    default void quickSortJava(long start, long end) {
-        if (end - start < 64) {
-            insertionSort(start, end);
-        }
-        else {
-            SortAlgoQuickSort._quickSortLH(this, start, end - 1);
-        }
+    static void quickSortJava(LongArray array, long start, long end) {
+        SortAlgoQuickSort._quickSortLH(array, start, end - 1);
     }
 
     default void quickSortN(int wordSize, long start, long end) {
@@ -119,23 +116,39 @@ public interface LongArraySort extends LongArrayBase {
         if (end == start)
             return;
 
-        if (NativeAlgos.isAvailable && wordSize == 2) {
-            quickSortNative128(start, end);
+        if (wordSize == 2) {
+            if (NativeAlgos.isAvailable) {
+                NativeAlgos.sort128(getMemorySegment(), start, end);
+            }
+            else {
+                SortAlgoQuickSort._quickSortLH2(this, start, end - 2);
+            }
         }
         else {
             SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
         }
     }
 
-    default void quickSortJavaN(int wordSize, long start, long end) {
+    static void quickSortJavaN(LongArray array, int wordSize, long start, long end) {
         assert ((end - start) % wordSize) == 0;
 
         if (end == start)
             return;
 
-        SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
+        SortAlgoQuickSort._quickSortLHN(array, wordSize, start, end - wordSize);
     }
 
+    static void quickSortJava2(LongArray array, long start, long end) {
+        assert ((end - start) % 2) == 0;
+
+        if (end == start)
+            return;
+
+        SortAlgoQuickSort._quickSortLH2(array, start, end - 2);
+    }
+
+    /** Don't use this method, it's slow. */
+    @Deprecated
     default void mergeSortN(int wordSize, long start, long end, Path tmpDir) throws IOException {
         int length = (int) (end - start);
         assert (length % wordSize) == 0;
@@ -152,6 +165,8 @@ public interface LongArraySort extends LongArrayBase {
     }
 
 
+    /** Don't use this method, it's slow. */
+    @Deprecated
     default void mergeSort(long start, long end, Path tmpDir) throws IOException {
         int length = (int) (end - start);
 

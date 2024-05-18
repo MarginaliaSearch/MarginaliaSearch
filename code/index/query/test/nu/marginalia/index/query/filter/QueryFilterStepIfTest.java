@@ -1,6 +1,6 @@
 package nu.marginalia.index.query.filter;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

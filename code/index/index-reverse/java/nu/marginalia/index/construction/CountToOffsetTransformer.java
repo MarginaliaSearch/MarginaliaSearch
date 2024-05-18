@@ -1,6 +1,6 @@
 package nu.marginalia.index.construction;
 
-import nu.marginalia.array.functional.LongTransformer;
+import nu.marginalia.array.algo.LongArrayTransformations;
 
 /**
  * Transforms an array of item-counts into an array of item-offsets such that the previous counts would fit into an
@@ -9,7 +9,7 @@ import nu.marginalia.array.functional.LongTransformer;
  * [ 1, 2, 3, 5, ... ] -> [ 0, 1, 3, 6, 11, ... ]
  *
  */
-public class CountToOffsetTransformer implements LongTransformer {
+public class CountToOffsetTransformer implements LongArrayTransformations.LongTransformer {
     long offset = 0;
 
     public final int entrySize;

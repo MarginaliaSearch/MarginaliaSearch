@@ -1,14 +1,11 @@
 package nu.marginalia.array.page;
 
-import nu.marginalia.NativeAlgos;
-import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -18,7 +15,8 @@ import java.nio.file.StandardOpenOption;
 
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
-public class SegmentLongArray implements PartitionPage, LongArray {
+@SuppressWarnings("preview")
+public class SegmentLongArray implements LongArray {
 
     @Nullable
     private final Arena arena;
@@ -127,20 +125,6 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     }
 
     @Override
-    public void quickSortNative(long start, long end) {
-        NativeAlgos.sort(segment, start, end);
-    }
-    @Override
-    public void quickSortNative128(long start, long end) {
-        NativeAlgos.sort128(segment, start, end);
-    }
-
-    @Override
-    public ByteBuffer getByteBuffer() {
-        return segment.asByteBuffer();
-    }
-
-    @Override
     public void write(Path filename) throws IOException {
         try (var arena = Arena.ofConfined()) {
             var destSegment = SegmentLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize() / JAVA_LONG.byteSize());
@@ -157,10 +141,6 @@ public class SegmentLongArray implements PartitionPage, LongArray {
         }
     }
 
-
-    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
-        return new ArrayRangeReference<>(this, start, end);
-    }
 
     @Override
     public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
@@ -188,4 +168,8 @@ public class SegmentLongArray implements PartitionPage, LongArray {
 
     }
 
+    @Override
+    public MemorySegment getMemorySegment() {
+        return segment;
+    }
 }
