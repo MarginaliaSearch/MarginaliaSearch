@@ -2,7 +2,20 @@ package nu.marginalia.btree.model;
 
 import nu.marginalia.array.LongArray;
 
-public record BTreeHeader(int layers, int numEntries, long indexOffsetLongs, long dataOffsetLongs) {
+
+/**
+ * The header of a BTree segment.
+ *
+ * @param layers The number of index layers in the BTree
+ * @param numEntries The number of entries in the BTree
+ * @param indexOffsetLongs The offset of the index data in longs from the start of the BTree
+ * @param dataOffsetLongs The offset of the data in longs from the start of the BTree
+ */
+public record BTreeHeader(int layers,
+                          int numEntries,
+                          long indexOffsetLongs,
+                          long dataOffsetLongs) {
+
     public BTreeHeader {
         assert (layers >= 0);
         assert (numEntries >= 0);
@@ -20,6 +33,14 @@ public record BTreeHeader(int layers, int numEntries, long indexOffsetLongs, lon
         this(array.get(offset), array.get(offset+1), array.get(offset+2));
     }
 
+    public long[] getRelativeLayerOffsets(BTreeContext ctx) {
+        long[] layerOffsets = new long[layers()];
+        for (int i = 0; i < layers(); i++) {
+            layerOffsets[i] = relativeIndexLayerOffset(ctx, i);
+        }
+        return layerOffsets;
+    }
+
     public long relativeIndexLayerOffset(BTreeContext ctx, int n) {
         long offset = 0;
 
@@ -28,14 +49,6 @@ public record BTreeHeader(int layers, int numEntries, long indexOffsetLongs, lon
         }
 
         return offset;
-    }
-
-    public long[] getRelativeLayerOffsets(BTreeContext ctx) {
-        long[] layerOffsets = new long[layers()];
-        for (int i = 0; i < layers(); i++) {
-            layerOffsets[i] = relativeIndexLayerOffset(ctx, i);
-        }
-        return layerOffsets;
     }
 
 }

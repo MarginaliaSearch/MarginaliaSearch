@@ -23,37 +23,39 @@ public class BTreeWriter {
     public long write(long offset, int numEntries, BTreeWriteCallback writeIndexCallback)
             throws IOException
     {
-        BTreeHeader header = makeHeader(offset, numEntries);
+        BTreeHeader header = makeHeader(ctx, offset, numEntries);
 
-        writeHeader(header, map, offset);
+        // Write the header
+        map.set(offset, ((long) header.layers() << 32L) | ((long)header.numEntries() & 0xFFFF_FFFFL));
+        map.set(offset+1, header.indexOffsetLongs());
+        map.set(offset+2, header.dataOffsetLongs());
 
+        // Calculate the data range
         final long startRange = header.dataOffsetLongs();
         final long endRange = startRange + (long) numEntries * ctx.entrySize;
 
+        // Prepare to write the data
         var slice = map.range(startRange, endRange);
 
         final BTreeDogEar dogEar = createDogEar(ctx, header, slice);
 
         writeIndexCallback.write(slice);
 
+        // Sanity checks to ensure the b-tree is written correctly
         if (!dogEar.verify()) {
             throw new IllegalStateException("Dog ear was not overwritten: " + header);
         }
-
         assert slice.isSortedN(ctx.entrySize, 0, (long) numEntries * ctx.entrySize) : "Provided data was not sorted";
 
-        if (header.layers() >= 1) { // Omit layer if data fits within a single block
+        // Write the index if there is enough data to warrant it
+        if (header.layers() >= 1) {
             writeIndex(header);
         }
 
-        return ctx.calculateSize(numEntries);
+        // Return the size of the written data
+        return endRange - offset;
     }
 
-    private void writeHeader(BTreeHeader header, LongArray map, long offset) {
-        map.set(offset, ((long) header.layers() << 32L) | ((long)header.numEntries() & 0xFFFF_FFFFL));
-        map.set(offset+1, header.indexOffsetLongs());
-        map.set(offset+2, header.dataOffsetLongs());
-    }
 
     private BTreeDogEar createDogEar(BTreeContext ctx, BTreeHeader header, LongArray slice) {
         if (BTreeWriter.class.desiredAssertionStatus()) {
@@ -67,51 +69,24 @@ public class BTreeWriter {
     public static BTreeHeader makeHeader(BTreeContext ctx, long baseOffset, int numEntries) {
         final int numLayers = ctx.numIndexLayers(numEntries);
 
-        final long indexOffset = baseOffset
-                + BTreeHeader.BTreeHeaderSizeLongs
-                + headerPaddingSize(ctx, baseOffset, numLayers);
-        final long dataOffset = indexOffset
-                + indexSize(ctx, numEntries, numLayers);
+        // Calculate the offset for the index relative to the header start
+        long indexOffset = baseOffset + BTreeHeader.BTreeHeaderSizeLongs;
+
+        if (numLayers > 0) {
+            // Align the index to the next page
+            indexOffset += (int) (ctx.pageSize() - ((baseOffset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
+        }
+
+        // Calculate the offset for the data relative to the header start
+        long dataOffset = indexOffset;
+        for (int layer = 0; layer < numLayers; layer++) {
+            dataOffset += ctx.indexLayerSize(numEntries, layer);
+        }
 
         return new BTreeHeader(numLayers, numEntries, indexOffset, dataOffset);
     }
 
-    private static long indexSize(BTreeContext ctx, int numWords, int numLayers) {
-        if (numLayers == 0) {
-            return 0; // Special treatment for small tables
-        }
-
-        long size = 0;
-        for (int layer = 0; layer < numLayers; layer++) {
-            size += ctx.indexLayerSize(numWords, layer);
-        }
-
-        return size;
-    }
-
-    private static int headerPaddingSize(BTreeContext ctx, long baeOffset, int numLayers) {
-        final int padding;
-        if (numLayers == 0) {
-            padding = 0;
-        }
-        else {
-            /* If this the amount of data is big enough to be a b-tree and not just
-             * a sorted list, there needs to be padding between the header and the index
-             * in order to get aligned blocks
-             */
-            padding = (int) (ctx.pageSize() - ((baeOffset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
-        }
-        return padding;
-    }
-
-    public BTreeHeader makeHeader(long offset, int numEntries) {
-        return makeHeader(ctx, offset, numEntries);
-    }
-
-
     private void writeIndex(BTreeHeader header) {
-        var layerOffsets = header.getRelativeLayerOffsets(ctx);
-
         long indexedDataStepSize = ctx.pageSize();
 
         /*  Index layer 0 indexes the data itself
@@ -121,46 +96,60 @@ public class BTreeWriter {
          */
         for (int layer = 0; layer < header.layers(); layer++,
                 indexedDataStepSize*=ctx.pageSize()) {
-
-            writeIndexLayer(header, layerOffsets, indexedDataStepSize, layer);
+            writeIndexLayer(header, indexedDataStepSize, layer);
         }
 
     }
 
+    /** Write an index layer
+     *
+     * @param header The header of the BTree
+     * @param stepSize The step size of the indexed data
+     * @param layer The layer to write
+     */
     private void writeIndexLayer(BTreeHeader header,
-                                 long[] layerOffsets,
-                                 final long indexedDataStepSize,
+                                 final long stepSize,
                                  final int layer) {
 
-        final long indexOffsetBase = layerOffsets[layer] + header.indexOffsetLongs();
-        final long dataOffsetBase = header.dataOffsetLongs();
+        final long layerStart = header.indexOffsetLongs() + header.relativeIndexLayerOffset(ctx, layer);
+        final long dataStart = header.dataOffsetLongs();
 
-        final long dataEntriesMax = header.numEntries();
-        final int entrySize = ctx.entrySize;
+        long writeOffset = 0;
 
-        final long lastDataEntryOffset = indexedDataStepSize - 1;
+        // Write the index layer
 
-        long indexWord = 0;
+        // Each index layer implicitly indexes the data layer below it,
+        // so that for the data segment corresponding to each index value,
+        // has values that are smaller than or equal to the index value.
 
-        for (long dataPtr = 0;
-             dataPtr + lastDataEntryOffset < dataEntriesMax;
-             dataPtr += indexedDataStepSize)
+        // Thus to construct the index, we take the last value of each data segment
+        // and write it to the index layer
+
+        for (long readOffset = 0;
+             readOffset + stepSize <= header.numEntries();
+             readOffset += stepSize)
         {
-            long dataOffset = dataOffsetBase + (dataPtr + lastDataEntryOffset) * entrySize;
-            map.set(indexOffsetBase + indexWord++, map.get(dataOffset));
+            final long dest = layerStart + writeOffset++;
+
+            final long src = dataStart
+                    + readOffset * ctx.entrySize      // relative offset of the data range
+                    + (stepSize - 1) * ctx.entrySize; // relative offset of the last entry in the data range
+
+            map.set(dest, map.get(src));
         }
 
-            // If the index block is not completely filled with data,
-            // top up the remaining index block with LONG_MAX
+        // If the index block is not completely filled with data,
+        // top up the remaining index block with LONG_MAX as we require
+        // the index to be fully populated and sorted for the binary search
+        // to work
 
-            final long trailerStart = indexOffsetBase + indexWord;
-            final long trailerEnd = trailerStart
-                    + ctx.pageSize()
-                    - (int) (indexWord % ctx.pageSize());
-
-            if (trailerStart < trailerEnd) {
-                map.fill(trailerStart, trailerEnd, Long.MAX_VALUE);
-            }
+        final long trailerStart = layerStart + writeOffset;
+        final long trailerEnd = trailerStart
+                + ctx.pageSize()
+                - (int) (writeOffset % ctx.pageSize());
+        if (trailerStart < trailerEnd) {
+            map.fill(trailerStart, trailerEnd, Long.MAX_VALUE);
+        }
     }
 
 

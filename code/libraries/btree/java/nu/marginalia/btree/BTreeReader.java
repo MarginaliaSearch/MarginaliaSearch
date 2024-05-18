@@ -243,13 +243,16 @@ public class BTreeReader {
                 throw new IllegalStateException("Looking for data in an index layer");
             }
 
-            long searchStart = offset * ctx.entrySize;
-            long remainingTotal = dataBlockEnd - offset * ctx.entrySize;
-            long remainingBlock;
+            final long searchStart = offset * ctx.entrySize;
+            final long remainingTotal = dataBlockEnd - offset * ctx.entrySize;
+            final long remainingBlock;
 
-            remainingBlock = (layerOffsets.length == 0)
-                    ? remainingTotal
-                    : (long) ctx.pageSize() * ctx.entrySize;
+            if (layerOffsets.length == 0) {
+                remainingBlock = remainingTotal;
+            }
+            else {
+                remainingBlock = (long) ctx.pageSize() * ctx.entrySize;
+            }
 
             long searchEnd = searchStart + min(remainingTotal, remainingBlock);
 
