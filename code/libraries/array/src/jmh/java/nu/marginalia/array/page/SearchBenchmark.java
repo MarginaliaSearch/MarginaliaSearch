@@ -56,7 +56,7 @@ public class SearchBenchmark {
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearchN(2, 0, array.size(), key);
+            ret += array.binarySearchN(2, key, 0, array.size());
         }
 
         return ret;
@@ -71,7 +71,7 @@ public class SearchBenchmark {
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearch(0, array.size(), key);
+            ret += array.binarySearch(key, 0, array.size());
         }
 
         return ret;
@@ -86,7 +86,7 @@ public class SearchBenchmark {
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearchN(2, 0, array.size(), key);
+            ret += array.binarySearchN(2, key, 0, array.size());
         }
 
         return ret;
