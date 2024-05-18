@@ -34,7 +34,7 @@ public class BTreeReaderQueryDataWithIndexTest {
 
         long[] data = reader.queryData(keys, 1);
 
-        assertArrayEquals(data, new long[] { 0, 5, 0, 10, 0, 15, 0, 20, 0, 25 });
+        assertArrayEquals(new long[] { 0, 5, 0, 10, 0, 15, 0, 20, 0, 25 }, data);
     }
 
 }
