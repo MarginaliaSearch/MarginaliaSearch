@@ -252,7 +252,7 @@ header {
     @extend .heading;
   }
 
-  background-color: var(--clr-);
+  background-color: var(--clr-bg-ui);
   padding: 1ch;
   margin: 1ch;
   border: 1px solid var(--clr-border);
@@ -268,11 +268,10 @@ section.cards {
   justify-content: flex-start;
 
   .card {
-    border: 2px #ccc;
-    background-color: var(--clr-ui);
+    background-color: var(--clr-bg-ui);
     border-left: 1px solid #ecb;
     border-top: 1px solid #ecb;
-    box-shadow: #0008 0 0 5px;
+    box-shadow: var(--clr-shadow) 0 0 5px;
 
     h2 {
       @extend .heading;
@@ -281,7 +280,7 @@ section.cards {
 
     h2 a {
       display: block !important;
-      color: #fff;
+      color: inherit;
       text-decoration: none;
     }
     a:focus img  {
@@ -313,11 +312,17 @@ section.cards {
       padding-right: 1ch;
       line-height: 1.6;
     }
+
+    @media (prefers-color-scheme: dark) {
+      & {
+        border: 1px solid var(--clr-border);
+      }
+    }
   }
 }
 
 .positions {
-  box-shadow: 0 0 2px #888;
+  box-shadow: 0 0 2px var(--clr-shadow);
   backdrop-filter: brightness(90%);
   color: var(--clr-text-highlight);
   padding: 2px;
