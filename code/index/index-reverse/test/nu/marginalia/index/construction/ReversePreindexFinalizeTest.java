@@ -69,8 +69,8 @@ class ReversePreindexFinalizeTest {
         var docsArray = LongArrayFactory.mmapForReadingConfined(docsFile);
         var wordsArray = LongArrayFactory.mmapForReadingConfined(wordsFile);
 
-        var docsHeader = BTreeReader.readHeader(docsArray, 0);
-        var wordsHeader = BTreeReader.readHeader(wordsArray, 0);
+        var docsHeader = new BTreeHeader(docsArray, 0);
+        var wordsHeader = new BTreeHeader(wordsArray, 0);
 
         assertEquals(1, docsHeader.numEntries());
         assertEquals(1, wordsHeader.numEntries());
@@ -107,7 +107,7 @@ class ReversePreindexFinalizeTest {
         var wordsArray = LongArrayFactory.mmapForReadingConfined(wordsFile);
 
 
-        var wordsHeader = BTreeReader.readHeader(wordsArray, 0);
+        var wordsHeader = new BTreeHeader(wordsArray, 0);
 
         System.out.println(wordsHeader);
 
@@ -123,14 +123,14 @@ class ReversePreindexFinalizeTest {
 
         BTreeHeader docsHeader;
 
-        docsHeader  = BTreeReader.readHeader(docsArray, offset1);
+        docsHeader = new BTreeHeader(docsArray, offset1);
         System.out.println(docsHeader);
         assertEquals(1, docsHeader.numEntries());
 
         assertEquals(100, docsArray.get(docsHeader.dataOffsetLongs() + 0));
         assertEquals(51, docsArray.get(docsHeader.dataOffsetLongs() + 1));
 
-        docsHeader  = BTreeReader.readHeader(docsArray, offset2);
+        docsHeader = new BTreeHeader(docsArray, offset2);
         System.out.println(docsHeader);
         assertEquals(1, docsHeader.numEntries());
 

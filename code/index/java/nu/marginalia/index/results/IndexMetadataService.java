@@ -18,21 +18,24 @@ import static nu.marginalia.index.results.model.TermCoherenceGroupList.TermCoher
 import static nu.marginalia.index.results.model.TermMetadataForCombinedDocumentIds.DocumentsWithMetadata;
 
 public class IndexMetadataService {
-    private final StatefulIndex index;
+    private final StatefulIndex statefulIndex;
 
     @Inject
     public IndexMetadataService(StatefulIndex index) {
-        this.index = index;
+        this.statefulIndex = index;
     }
 
     public TermMetadataForCombinedDocumentIds getTermMetadataForDocuments(CombinedDocIdList combinedIdsAll,
                                                                           TermIdList termIdsList)
     {
+        var currentIndex = statefulIndex.get();
+
         Long2ObjectArrayMap<DocumentsWithMetadata> termdocToMeta =
                 new Long2ObjectArrayMap<>(termIdsList.size());
 
         for (long termId : termIdsList.array()) {
-            var metadata = index.getTermMetadata(termId, combinedIdsAll);
+            var metadata = currentIndex.getMetadata(termId, combinedIdsAll);
+
             termdocToMeta.put(termId,
                     new DocumentsWithMetadata(combinedIdsAll, metadata));
         }

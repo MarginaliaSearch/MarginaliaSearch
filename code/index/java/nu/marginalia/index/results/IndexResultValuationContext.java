@@ -5,6 +5,7 @@ import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggre
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
+import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
@@ -24,7 +25,7 @@ import java.util.List;
  * It holds the data required to perform the scoring, as there is strong
  * reasons to cache this data, and performs the calculations */
 public class IndexResultValuationContext {
-    private final StatefulIndex statefulIndex;
+    private final CombinedIndexReader index;
     private final QueryParams queryParams;
 
     private final TermMetadataForCombinedDocumentIds termMetadataForCombinedDocumentIds;
@@ -42,7 +43,7 @@ public class IndexResultValuationContext {
                                        ResultRankingContext rankingContext,
                                        SearchParameters params
                                ) {
-        this.statefulIndex = statefulIndex;
+        this.index = statefulIndex.get();
         this.rankingContext = rankingContext;
         this.searchResultValuator = searchResultValuator;
 
@@ -67,8 +68,8 @@ public class IndexResultValuationContext {
         if (!searchTerms.coherences.test(termMetadataForCombinedDocumentIds, combinedId))
             return null;
 
-        long docMetadata = statefulIndex.getDocumentMetadata(docId);
-        int htmlFeatures = statefulIndex.getHtmlFeatures(docId);
+        long docMetadata = index.getDocumentMetadata(docId);
+        int htmlFeatures = index.getHtmlFeatures(docId);
 
         SearchResultItem searchResult = new SearchResultItem(docId,
                 docMetadata,

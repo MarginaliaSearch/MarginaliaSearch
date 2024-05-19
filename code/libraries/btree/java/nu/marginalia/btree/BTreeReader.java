@@ -19,7 +19,7 @@ public class BTreeReader {
 
     public BTreeReader(LongArray file, BTreeContext ctx, long offset) {
         this.ctx = ctx;
-        this.header = readHeader(file, offset);
+        this.header = new BTreeHeader(file, offset);
 
         dataBlockEnd = (long) ctx.entrySize * header.numEntries();
         index = file.range(header.indexOffsetLongs(), header.dataOffsetLongs());
@@ -33,10 +33,6 @@ public class BTreeReader {
     }
     public LongArray index() {
         return index;
-    }
-
-    public static BTreeHeader readHeader(LongArray file, long fileOffset) {
-        return new BTreeHeader(file, fileOffset);
     }
 
     public BTreeHeader getHeader() {
@@ -153,7 +149,6 @@ public class BTreeReader {
             pointer.walkToData(keys[i]);
 
             long dataAddress = pointer.findData(keys[i]);
-
             if (dataAddress >= 0) {
                 ret[i] = data.get(dataAddress + offset);
             }
