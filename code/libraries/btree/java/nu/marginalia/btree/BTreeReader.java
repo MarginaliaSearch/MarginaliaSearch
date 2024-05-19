@@ -5,8 +5,6 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
 
-import java.util.Arrays;
-
 import static java.lang.Math.min;
 
 public class BTreeReader {
@@ -149,13 +147,20 @@ public class BTreeReader {
 
     private long[] queryDataWithIndex(long[] keys, int offset) {
         BTreePointer pointer = new BTreePointer(header);
-        long[] ret = Arrays.copyOf(keys, keys.length);
+        long[] ret = new long[keys.length];
 
-        for (int i = 0; i < keys.length;) {
+        for (int i = 0; i < keys.length; i++) {
             pointer.walkToData(keys[i]);
-            i = pointer.extractData(ret, i, offset);
+
+            long dataAddress = pointer.findData(keys[i]);
+
+            if (dataAddress >= 0) {
+                ret[i] = data.get(dataAddress + offset);
+            }
+
             pointer.resetToRoot();
         }
+
         return ret;
     }
 
@@ -239,46 +244,6 @@ public class BTreeReader {
             }
         }
 
-        public int extractData(long[] input, int idx, int offset) {
-
-            long dataOffset = findData(input[idx]);
-
-            if (dataOffset >= 0) {
-                input[idx++] = data.get(dataOffset + offset);
-
-                if (idx < input.length && input[idx] < maxValueInBlock) {
-                    long relOffsetInBlock = dataOffset - pointerOffset * ctx.entrySize;
-
-                    long remainingTotal = dataBlockEnd - dataOffset;
-                    long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
-
-                    long searchEnd = dataOffset + min(remainingTotal, remainingBlock);
-
-                    while (dataOffset < searchEnd
-                        && idx < input.length
-                        && input[idx] <= maxValueInBlock)
-                    {
-                        long value = data.get(dataOffset);
-
-                        if (value == input[idx]) {
-                            input[idx++] = data.get(dataOffset + offset);
-                            dataOffset += ctx.entrySize;
-                        }
-                        else if (value > input[idx]) {
-                            input[idx++] = 0;
-                        }
-                        else if (value < input[idx]) {
-                            dataOffset += ctx.entrySize;
-                        }
-                    }
-                }
-            }
-            else {
-                input[idx++] = 0;
-            }
-
-            return idx;
-        }
         /** Retain any data entry matching the current key
          * in the buffer within the current data block.
          * <p></p>
@@ -287,19 +252,19 @@ public class BTreeReader {
          * */
         public void retainData(LongQueryBuffer buffer) {
 
-            long dataOffset = findData(buffer.currentValue());
-            if (dataOffset >= 0) {
+            long dataIndex = findData(buffer.currentValue());
+            if (dataIndex >= 0) {
                 buffer.retainAndAdvance();
 
                 if (buffer.hasMore() && buffer.currentValue() <= maxValueInBlock) {
-                    long relOffsetInBlock = dataOffset - pointerOffset * ctx.entrySize;
+                    long relOffsetInBlock = dataIndex - pointerOffset * ctx.entrySize;
 
-                    long remainingTotal = dataBlockEnd - dataOffset;
+                    long remainingTotal = dataBlockEnd - dataIndex;
                     long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
 
-                    long searchEnd = dataOffset + min(remainingTotal, remainingBlock);
+                    long searchEnd = dataIndex + min(remainingTotal, remainingBlock);
 
-                    data.retainN(buffer, ctx.entrySize, maxValueInBlock, dataOffset, searchEnd);
+                    data.retainN(buffer, ctx.entrySize, maxValueInBlock, dataIndex, searchEnd);
                 }
             }
             else {
@@ -315,19 +280,19 @@ public class BTreeReader {
          * */
         public void rejectData(LongQueryBuffer buffer) {
 
-            long dataOffset = findData(buffer.currentValue());
-            if (dataOffset >= 0) {
+            long dataIndex = findData(buffer.currentValue());
+            if (dataIndex >= 0) {
                 buffer.rejectAndAdvance();
 
                 if (buffer.hasMore() && buffer.currentValue() <= maxValueInBlock) {
-                    long relOffsetInBlock = dataOffset - pointerOffset * ctx.entrySize;
+                    long relOffsetInBlock = dataIndex - pointerOffset * ctx.entrySize;
 
-                    long remainingTotal = dataBlockEnd - dataOffset;
+                    long remainingTotal = dataBlockEnd - dataIndex;
                     long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
 
-                    long searchEnd = dataOffset + min(remainingTotal, remainingBlock);
+                    long searchEnd = dataIndex + min(remainingTotal, remainingBlock);
 
-                    data.rejectN(buffer, ctx.entrySize, maxValueInBlock, dataOffset, searchEnd);
+                    data.rejectN(buffer, ctx.entrySize, maxValueInBlock, dataIndex, searchEnd);
                 }
             }
             else {
