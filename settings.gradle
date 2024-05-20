@@ -100,7 +100,6 @@ include 'third-party:symspell'
 include 'third-party:rdrpostagger'
 include 'third-party:openzim'
 include 'third-party:count-min-sketch'
-include 'third-party:monkey-patch-opennlp'
 include 'third-party:commons-codec'
 include 'third-party:parquet-floor'
 include 'third-party:encyclopedia-marginalia-nu'
@@ -176,8 +175,8 @@ dependencyResolutionManagement {
 
             library('crawlercommons', 'com.github.crawler-commons', 'crawler-commons').version('1.3')
 
-            library('stanford.corenlp','edu.stanford.nlp','stanford-corenlp').version('4.4.0')
-            library('opennlp','org.apache.opennlp','opennlp-tools').version('1.9.4')
+            library('stanford.corenlp','edu.stanford.nlp','stanford-corenlp').version('4.5.5')
+            library('opennlp','org.apache.opennlp','opennlp-tools').version('2.3.3')
             library('fasttext','com.github.vinhkhuc','jfasttext').version('0.5')
             library('roaringbitmap','org.roaringbitmap','RoaringBitmap').version('0.9.32')
             library('opencsv','com.opencsv','opencsv').version('5.6')
