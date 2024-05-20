@@ -15,6 +15,7 @@ import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.ServiceId;
+import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 
 import org.slf4j.Logger;
@@ -22,8 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -161,17 +161,17 @@ public class ExecutorClient {
         }
     }
 
-    public void transferFile(int node, FileStorageId fileId, String path, OutputStream destOutputStream) {
-        String uriPath = STR."/transfer/file/\{fileId.id()}";
+    public URL remoteFileURL(FileStorage fileStorage, String path) {
+        String uriPath = STR."/transfer/file/\{fileStorage.id()}";
         String uriQuery = STR."path=\{URLEncoder.encode(path, StandardCharsets.UTF_8)}";
 
-        var service = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, node))
+        var service = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, fileStorage.node()))
                 .stream().findFirst().orElseThrow();
 
-        try (var urlStream = service.endpoint().toURL(uriPath, uriQuery).openStream()) {
-            urlStream.transferTo(destOutputStream);
+        try {
+            return service.endpoint().toURL(uriPath, uriQuery);
         }
-        catch (IOException | URISyntaxException ex) {
+        catch (URISyntaxException|MalformedURLException ex) {
             throw new RuntimeException(ex);
         }
     }

@@ -1,5 +1,6 @@
 package nu.marginalia.control.node.svc;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
@@ -23,10 +24,16 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import javax.annotation.Nullable;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class ControlNodeService {
     private final FileStorageService fileStorageService;
@@ -38,6 +45,8 @@ public class ControlNodeService {
     private final ServiceMonitors monitors;
     private final RedirectControl redirectControl;
     private final NodeConfigurationService nodeConfigurationService;
+
+    private final ControlCrawlDataService crawlDataService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -51,7 +60,7 @@ public class ControlNodeService {
             HikariDataSource dataSource,
             ServiceMonitors monitors,
             RedirectControl redirectControl,
-            NodeConfigurationService nodeConfigurationService)
+            NodeConfigurationService nodeConfigurationService, ControlCrawlDataService crawlDataService)
     {
         this.fileStorageService = fileStorageService;
         this.rendererFactory = rendererFactory;
@@ -62,6 +71,7 @@ public class ControlNodeService {
         this.monitors = monitors;
         this.redirectControl = redirectControl;
         this.nodeConfigurationService = nodeConfigurationService;
+        this.crawlDataService = crawlDataService;
     }
 
     public void register() throws IOException {
@@ -72,6 +82,7 @@ public class ControlNodeService {
         var storageConfRenderer = rendererFactory.renderer("control/node/node-storage-conf");
         var storageListRenderer = rendererFactory.renderer("control/node/node-storage-list");
         var storageDetailsRenderer = rendererFactory.renderer("control/node/node-storage-details");
+        var storageCrawlParquetDetails = rendererFactory.renderer("control/node/node-storage-crawl-parquet-details");
         var configRenderer = rendererFactory.renderer("control/node/node-config");
 
 
@@ -83,6 +94,8 @@ public class ControlNodeService {
         Spark.get("/nodes/:id/storage/", this::nodeStorageConfModel, storageConfRenderer::render);
         Spark.get("/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
         Spark.get("/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
+
+        Spark.get("/nodes/:id/storage/:fid/crawl-parquet-info", crawlDataService::crawlParquetInfo, storageCrawlParquetDetails::render);
 
         Spark.post("/nodes/:id/process/:processBase/stop", this::stopProcess,
                 redirectControl.renderRedirectAcknowledgement("Stopping", "../..")
@@ -210,7 +223,8 @@ public class ControlNodeService {
 
     private Object nodeStorageDetailsModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
-        var storage = getFileStorageWithRelatedEntries(nodeId, FileStorageId.parse(request.queryParams("fid")));
+        var fsid = FileStorageId.parse(request.queryParams("fid"));
+        var storage = getFileStorageWithRelatedEntries(nodeId, fsid);
 
         String view = switch(storage.type()) {
             case BACKUP -> "backup";
@@ -221,13 +235,25 @@ public class ControlNodeService {
             default -> throw new IllegalStateException(storage.type().toString());
         };
 
-        return Map.of(
-                "tab", Map.of("storage", true),
-                "view", Map.of(view, true),
-                "node", nodeConfigurationService.get(nodeId),
-                "storage", storage
-                );
+        var ret = new HashMap<>();
+
+        ret.put("tab", Map.of("storage", true));
+        ret.put("view", Map.of(view, true));
+        ret.put("node", nodeConfigurationService.get(nodeId));
+        ret.put("storage", storage);
+
+        if (storage.type() == FileStorageType.CRAWL_DATA) {
+            var cdFiles = crawlDataService.getCrawlDataFiles(fsid,
+                    request.queryParams("filterDomain"),
+                    request.queryParams("afterDomain")
+            );
+            ret.put("crawlDataFiles", cdFiles);
+        }
+
+        return ret;
+
     }
+
 
     private Object nodeConfigModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));

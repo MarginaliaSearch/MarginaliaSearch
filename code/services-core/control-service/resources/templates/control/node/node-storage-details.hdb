@@ -62,6 +62,39 @@
             {{/with}}
         </table>
 
+        {{#if view.crawl}}
+          <h1 class="my-3">Crawl Data</h1>
+          <table class="table">
+            <tr>
+            <th>Domain</th>
+            <th>Count</th>
+            </tr>
+            <form method="get" action="/nodes/{{node.id}}/storage/details">
+                <tr>
+                    <input type="hidden" name="fid" value="{{storage.id}}">
+                    <td> <input type="text" name="filterDomain" value="{{crawlDataFiles.filter}}" placeholder="Filter"> <button class="btn btn-secondary btn-sm" type="submit">Filter</button> </td>
+                    <td></td>
+                </tr>
+            </form>
+
+            {{#each crawlDataFiles.files}}
+                <tr>
+                    <td><a href="/nodes/{{node.id}}/storage/{{storage.id}}/crawl-parquet-info?path={{{path}}}">{{domain}}</a></td>
+                    <td>{{count}}</td>
+                </tr>
+            {{/each}}
+
+            {{#if crawlDataFiles.nextAfter}}
+            <tr>
+                <td></td>
+                <td>
+                    <a href="/nodes/{{node.id}}/storage/details?fid={{storage.id}}&filter={{crawlDataFiles.filter}}&afterDomain={{crawlDataFiles.nextAfter}}">Next</a>
+                </td>
+            </tr>
+            {{/if}}
+
+            </table>
+        {{/if}}
 
         {{#with storage}}
             {{>control/partials/storage-details/related}}

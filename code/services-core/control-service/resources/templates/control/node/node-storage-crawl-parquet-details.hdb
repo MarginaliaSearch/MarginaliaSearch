@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en-US">
+{{> control/partials/head-includes }}
+<head><title>Control Service: Node {{node.id}}</title></head>
+<body>
+{{> control/partials/nav}}
+
+<div class="container">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/nodes">nodes</a></li>
+            <li class="breadcrumb-item">node-{{node.id}}</li>
+        </ol>
+    </nav>
+
+    {{> control/node/partial-node-nav }}
+
+    <div class="container">
+        {{>control/partials/storage-types}}
+
+        <h1>Crawl Parquet Info</h1>
+
+        <h2>Summary</h2>
+        <table class="table">
+            <tr>
+            <th>Domain</th><th>Filename</th>
+            </tr>
+            <td>{{domain}}</td>
+            <td>
+                <a href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">{{path}}</a>
+            </td>
+            <tr>
+                <th>HTTP Status</th>
+                <th>Count</th>
+            </tr>
+            {{#each byStatusCode}}
+            <tr>
+                <td>{{statusCode}}</td>
+                <td>{{count}}</td>
+            </tr>
+            {{/each}}
+            <tr>
+                <th>Content Type</th>
+                <th>Count</th>
+            </tr>
+            {{#each byContentType}}
+            <tr>
+                <td>{{contentType}}</td>
+                <td>{{count}}</td>
+            </tr>
+            {{/each}}
+        </table>
+
+        <h2>Contents</h2>
+        <table class="table">
+            <tr>
+            <th>URL</th>
+            <th>Content Type</th>
+            <th>HTTP Status</th>
+            <th>Has Body</th>
+            </tr>
+            <tr>
+            <th colspan="2">ETag</th>
+            <th colspan="2">Last Modified</th>
+            </tr>
+            {{#each records}}
+            <tr>
+                <td>
+                    <a href="{{url}}" rel="noreferrer noopener">{{url}}</a>
+                </td>
+                <td>{{contentType}}</td>
+                <td>{{httpStatus}}</td>
+                <td>{{#if hasBody}}&check;{{/if}}</td>
+            </tr>
+            <tr>
+                <td colspan="2">{{etag}}</td>
+                <td colspan="2">{{lastModified}}</td>
+            </tr>
+            {{/each}}
+        </table>
+    </div>
+
+
+
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>
