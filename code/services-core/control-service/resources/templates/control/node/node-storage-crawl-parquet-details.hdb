@@ -30,26 +30,6 @@
             <td>
                 <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Parquet</a>
             </td>
-            <tr>
-                <th>HTTP Status</th>
-                <th>Count</th>
-            </tr>
-            {{#each byStatusCode}}
-            <tr>
-                <td>{{statusCode}}</td>
-                <td>{{count}}</td>
-            </tr>
-            {{/each}}
-            <tr>
-                <th>Content Type</th>
-                <th>Count</th>
-            </tr>
-            {{#each byContentType}}
-            <tr>
-                <td>{{contentType}}</td>
-                <td>{{count}}</td>
-            </tr>
-            {{/each}}
         </table>
 
         <h2>Contents</h2>
@@ -62,6 +42,33 @@
             <th>ETag</th>
             <th>Last Modified</th>
             </tr>
+
+            <form>
+                <input type="hidden" name="fid" value="{{storage.id}}">
+                <input type="hidden" name="path" value="{{path}}">
+            <tr>
+                <td>
+                    <input type="text" class="" id="urlGlob" name="urlGlob" value="{{urlGlob}}">
+                </td>
+                <td>
+                    <select name="contentType" id="contentType">
+                        <option value="ALL">All</option>
+                        {{#each byContentType}} <option value="{{contentType}}" {{#if filtered}}selected{{/if}}>{{contentType}}</option> {{/each}}
+                    </select>
+                </td>
+                <td>
+                    <select name="httpStatus" id="httpStatus">
+                        <option value="ALL">All</option>
+                        {{#each byStatusCode}} <option value="{{statusCode}}" {{#if filtered}}selected{{/if}}>{{statusCode}}</option> {{/each}}
+                    </select>
+                </td>
+                <td colspan="2"></td>
+                <td>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </td>
+            </tr>
+            </form>
+
             {{#each records}}
             <tr>
                 <td>
@@ -88,6 +95,7 @@
                 <td>{{lastModified}}</td>
             </tr>
             {{/each}}
+
 
             <tr>
                 {{#with pagination}}

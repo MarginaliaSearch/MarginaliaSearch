@@ -55,6 +55,9 @@ public class ControlCrawlDataService {
         String path = request.queryParams("path");
 
         int after = Integer.parseInt(request.queryParamOrDefault("page", "0"));
+        String urlGlob = request.queryParamOrDefault("urlGlob", "");
+        String selectedContentType = request.queryParamOrDefault("contentType", "ALL");
+        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL");
 
         var url = executorClient.remoteFileURL(fileStorageService.getStorage(fsid), path).toString();
 
@@ -65,8 +68,7 @@ public class ControlCrawlDataService {
 
         String domain;
         try (var conn = DriverManager.getConnection("jdbc:duckdb:");
-             var stmt = conn.createStatement())
-        {
+             var stmt = conn.createStatement()) {
             ResultSet rs;
 
             rs = stmt.executeQuery(DUCKDB."SELECT domain FROM \{url} LIMIT 1");
@@ -78,7 +80,7 @@ public class ControlCrawlDataService {
                                        ORDER BY httpStatus
                                        """);
             while (rs.next()) {
-                byStatusCode.add(new SummaryStatusCode(rs.getInt(1), rs.getInt(2)));
+                byStatusCode.add(new SummaryStatusCode(rs.getInt(1), rs.getInt(2), selectedHttpStatus.equals(rs.getString(1))));
             }
 
             rs = stmt.executeQuery(DUCKDB."""
@@ -88,13 +90,20 @@ public class ControlCrawlDataService {
                                         ORDER BY contentType
                                         """);
             while (rs.next()) {
-                byContentType.add(new SummaryContentType(rs.getString(1), rs.getInt(2)));
+                byContentType.add(new SummaryContentType(rs.getString(1), rs.getInt(2), selectedContentType.equals(rs.getString(1))));
             }
 
-            rs = stmt.executeQuery(DUCKDB."""
-                                          SELECT url, contentType, httpStatus, body != '', etagHeader, lastModifiedHeader
-                                          FROM \{url} LIMIT 10 OFFSET \{after}
-                                          """);
+
+            var query = DUCKDB."SELECT url, contentType, httpStatus, body != '', etagHeader, lastModifiedHeader FROM \{url} WHERE 1=1";
+            if (!urlGlob.isBlank())
+                query += DUCKDB." AND url LIKE \{urlGlob.replace('*', '%')}";
+            if (!selectedContentType.equals("ALL"))
+                query += DUCKDB." AND contentType = \{selectedContentType}";
+            if (!selectedHttpStatus.equals("ALL"))
+                query += DUCKDB." AND httpStatus = \{selectedHttpStatus}";
+            query += DUCKDB." LIMIT 10 OFFSET \{after}";
+
+            rs = stmt.executeQuery(query);
             while (rs.next()) {
                 records.add(new CrawlDataRecordSummary(rs.getString(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4), rs.getString(5), rs.getString(6)));
             }
@@ -104,6 +113,9 @@ public class ControlCrawlDataService {
 
         ret.put("tab", Map.of("storage", true));
         ret.put("view", Map.of("crawl", true));
+        ret.put("selectedContentType", Map.of(selectedContentType, true));
+        ret.put("selectedHttpStatus", Map.of(selectedHttpStatus, true));
+        ret.put("urlGlob", urlGlob);
 
         ret.put("pagination", new Pagination(after + 10, after - 10));
 
@@ -152,9 +164,9 @@ public class ControlCrawlDataService {
                 afterDomain);
     }
 
-    public record SummaryContentType(String contentType, int count) {}
+    public record SummaryContentType(String contentType, int count, boolean filtered) {}
 
-    public record SummaryStatusCode(int statusCode, int count) {}
+    public record SummaryStatusCode(int statusCode, int count, boolean filtered) {}
     public record Pagination(int next, int prev) {
         public boolean isPrevPage() {
             return prev >= 0;
