@@ -113,11 +113,11 @@ public class ControlCrawlDataService {
 
         ret.put("tab", Map.of("storage", true));
         ret.put("view", Map.of("crawl", true));
-        ret.put("selectedContentType", Map.of(selectedContentType, true));
-        ret.put("selectedHttpStatus", Map.of(selectedHttpStatus, true));
+        ret.put("contentType", selectedContentType);
+        ret.put("httpStatus", selectedHttpStatus);
         ret.put("urlGlob", urlGlob);
 
-        ret.put("pagination", new Pagination(after + 10, after - 10));
+        ret.put("pagination", new Pagination(after + 10, after - 10, records.size()));
 
         ret.put("node", nodeConfigurationService.get(nodeId));
         ret.put("storage", fileStorageService.getStorage(fsid));
@@ -167,10 +167,14 @@ public class ControlCrawlDataService {
     public record SummaryContentType(String contentType, int count, boolean filtered) {}
 
     public record SummaryStatusCode(int statusCode, int count, boolean filtered) {}
-    public record Pagination(int next, int prev) {
+    public record Pagination(int next, int prev, int count) {
         public boolean isPrevPage() {
             return prev >= 0;
         }
+        public boolean isNextPage() {
+            return count == 10;
+        }
+
     }
 
     public record CrawlDataRecordSummary(String url, String contentType, int httpStatus, boolean hasBody, String etag, String lastModified) {

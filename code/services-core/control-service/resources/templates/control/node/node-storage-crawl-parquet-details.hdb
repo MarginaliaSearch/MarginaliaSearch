@@ -101,12 +101,30 @@
                 {{#with pagination}}
                     <td>
                         {{#if prevPage}}
-                        <a href="/nodes/{{node.id}}/storage/crawl-parquet-info?fid={{storage.id}}&path={{path}}&page={{prev}}">Previous</a>
+                            <form action>
+                                <input type="hidden" name="fid" value="{{storage.id}}">
+                                <input type="hidden" name="path" value="{{path}}">
+                                <input type="hidden" name="urlGlob" value="{{urlGlob}}">
+                                <input type="hidden" name="contentType" value="{{{contentType}}}">
+                                <input type="hidden" name="httpStatus" value="{{httpStatus}}">
+                                <input type="hidden" name="page" value="{{prev}}">
+                                <button class="btn btn-small btn-primary" type="submit">Previous</button>
+                            </form>
                         {{/if}}
                     </td>
                     <td colspan="4"></td>
                     <td>
-                        <a href="/nodes/{{node.id}}/storage/crawl-parquet-info?fid={{storage.id}}&path={{path}}&page={{next}}">Next</a>
+                        {{#if nextPage}}
+                            <form action>
+                                <input type="hidden" name="fid" value="{{storage.id}}">
+                                <input type="hidden" name="path" value="{{path}}">
+                                <input type="hidden" name="urlGlob" value="{{urlGlob}}">
+                                <input type="hidden" name="contentType" value="{{{contentType}}}">
+                                <input type="hidden" name="httpStatus" value="{{httpStatus}}">
+                                <input type="hidden" name="page" value="{{next}}">
+                                <button class="btn btn-small btn-primary" type="submit">Next</button>
+                            </form>
+                        {{/if}}
                     </td>
                 {{/with}}
             </tr>
