@@ -24,11 +24,11 @@
         <h2>Summary</h2>
         <table class="table">
             <tr>
-            <th>Domain</th><th>Filename</th>
+            <th>Domain</th><th>File</th>
             </tr>
             <td>{{domain}}</td>
             <td>
-                <a href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">{{path}}</a>
+                <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Parquet</a>
             </td>
             <tr>
                 <th>HTTP Status</th>
@@ -59,25 +59,49 @@
             <th>Content Type</th>
             <th>HTTP Status</th>
             <th>Has Body</th>
-            </tr>
-            <tr>
-            <th colspan="2">ETag</th>
-            <th colspan="2">Last Modified</th>
+            <th>ETag</th>
+            <th>Last Modified</th>
             </tr>
             {{#each records}}
             <tr>
                 <td>
-                    <a href="{{url}}" rel="noreferrer noopener">{{url}}</a>
+                    <span style="word-break: break-word; font-family: monospace">{{url}}</span> <a href="{{url}}" rel="noreferrer noopener">[Visit]</a>
                 </td>
                 <td>{{contentType}}</td>
-                <td>{{httpStatus}}</td>
+                {{#if good}}
+                    <td class="text-success">{{httpStatus}}</td>
+                {{/if}}
+                {{#if redirect}}
+                    <td class="text-info">{{httpStatus}}</td>
+                {{/if}}
+                {{#if clientError}}
+                    <td class="text-warning">{{httpStatus}}</td>
+                {{/if}}
+                {{#if serverError}}
+                    <td class="text-danger">{{httpStatus}}</td>
+                {{/if}}
+                {{#if unknownStatus}}
+                    <td>{{httpStatus}}</td>
+                {{/if}}
                 <td>{{#if hasBody}}&check;{{/if}}</td>
-            </tr>
-            <tr>
-                <td colspan="2">{{etag}}</td>
-                <td colspan="2">{{lastModified}}</td>
+                <td style="word-break: break-all; font-family: monospace">{{etag}}</td>
+                <td>{{lastModified}}</td>
             </tr>
             {{/each}}
+
+            <tr>
+                {{#with pagination}}
+                    <td>
+                        {{#if prevPage}}
+                        <a href="/nodes/{{node.id}}/storage/crawl-parquet-info?fid={{storage.id}}&path={{path}}&page={{prev}}">Previous</a>
+                        {{/if}}
+                    </td>
+                    <td colspan="4"></td>
+                    <td>
+                        <a href="/nodes/{{node.id}}/storage/crawl-parquet-info?fid={{storage.id}}&path={{path}}&page={{next}}">Next</a>
+                    </td>
+                {{/with}}
+            </tr>
         </table>
     </div>
 

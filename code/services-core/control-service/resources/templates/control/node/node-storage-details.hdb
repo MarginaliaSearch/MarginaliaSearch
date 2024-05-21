@@ -79,7 +79,7 @@
 
             {{#each crawlDataFiles.files}}
                 <tr>
-                    <td><a href="/nodes/{{node.id}}/storage/{{storage.id}}/crawl-parquet-info?path={{{path}}}">{{domain}}</a></td>
+                    <td><a href="/nodes/{{node.id}}/storage/crawl-parquet-info?fid={{storage.id}}&path={{{path}}}">{{domain}}</a></td>
                     <td>{{count}}</td>
                 </tr>
             {{/each}}

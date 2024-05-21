@@ -95,7 +95,7 @@ public class ControlNodeService {
         Spark.get("/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
         Spark.get("/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
 
-        Spark.get("/nodes/:id/storage/:fid/crawl-parquet-info", crawlDataService::crawlParquetInfo, storageCrawlParquetDetails::render);
+        Spark.get("/nodes/:id/storage/crawl-parquet-info", crawlDataService::crawlParquetInfo, storageCrawlParquetDetails::render);
 
         Spark.post("/nodes/:id/process/:processBase/stop", this::stopProcess,
                 redirectControl.renderRedirectAcknowledgement("Stopping", "../..")

@@ -18,10 +18,7 @@ import java.io.InputStreamReader;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /** Service for inspecting crawl data within the control service.
@@ -53,9 +50,11 @@ public class ControlCrawlDataService {
 
     public Object crawlParquetInfo(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
-        var fsid = FileStorageId.parse(request.params("fid"));
+        var fsid = FileStorageId.parse(request.queryParams("fid"));
 
         String path = request.queryParams("path");
+
+        int after = Integer.parseInt(request.queryParamOrDefault("page", "0"));
 
         var url = executorClient.remoteFileURL(fileStorageService.getStorage(fsid), path).toString();
 
@@ -94,24 +93,29 @@ public class ControlCrawlDataService {
 
             rs = stmt.executeQuery(DUCKDB."""
                                           SELECT url, contentType, httpStatus, body != '', etagHeader, lastModifiedHeader
-                                          FROM \{url} LIMIT 10
+                                          FROM \{url} LIMIT 10 OFFSET \{after}
                                           """);
             while (rs.next()) {
                 records.add(new CrawlDataRecordSummary(rs.getString(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4), rs.getString(5), rs.getString(6)));
             }
         }
 
-        return Map.of(
-                "tab", Map.of("storage", true),
-                "view", Map.of("crawl", true),
-                "node", nodeConfigurationService.get(nodeId),
-                "storage", fileStorageService.getStorage(fsid),
-                "path", path,
-                "domain", domain,
-                "byStatusCode", byStatusCode,
-                "byContentType", byContentType,
-                "records", records)
-                ;
+        Map<String, Object> ret = new HashMap<>();
+
+        ret.put("tab", Map.of("storage", true));
+        ret.put("view", Map.of("crawl", true));
+
+        ret.put("pagination", new Pagination(after + 10, after - 10));
+
+        ret.put("node", nodeConfigurationService.get(nodeId));
+        ret.put("storage", fileStorageService.getStorage(fsid));
+        ret.put("path", path);
+        ret.put("domain", domain);
+        ret.put("byStatusCode", byStatusCode);
+        ret.put("byContentType", byContentType);
+        ret.put("records", records);
+
+        return ret;
     }
 
     public ControlCrawlDataService.CrawlDataFileList getCrawlDataFiles(FileStorageId fsid,
@@ -151,8 +155,19 @@ public class ControlCrawlDataService {
     public record SummaryContentType(String contentType, int count) {}
 
     public record SummaryStatusCode(int statusCode, int count) {}
+    public record Pagination(int next, int prev) {
+        public boolean isPrevPage() {
+            return prev >= 0;
+        }
+    }
 
-    public record CrawlDataRecordSummary(String url, String contentType, int httpStatus, boolean hasBody, String etag, String lastModified) {}
+    public record CrawlDataRecordSummary(String url, String contentType, int httpStatus, boolean hasBody, String etag, String lastModified) {
+        public boolean isGood() { return httpStatus >= 200 && httpStatus < 300; }
+        public boolean isRedirect() { return httpStatus >= 300 && httpStatus < 400; }
+        public boolean isClientError() { return httpStatus >= 400 && httpStatus < 500; }
+        public boolean isServerError() { return httpStatus >= 500; }
+        public boolean isUnknownStatus() { return httpStatus < 200; }
+    }
 
     public record CrawlDataFile(String domain, String path, int count) {}
 
