@@ -53,13 +53,13 @@
                 <td>
                     <select name="contentType" id="contentType">
                         <option value="ALL">All</option>
-                        {{#each byContentType}} <option value="{{contentType}}" {{#if filtered}}selected{{/if}}>{{contentType}}</option> {{/each}}
+                        {{#each byContentType}} <option value="{{contentType}}" {{#if filtered}}selected{{/if}}>{{contentType}} ({{count}})</option> {{/each}}
                     </select>
                 </td>
                 <td>
                     <select name="httpStatus" id="httpStatus">
                         <option value="ALL">All</option>
-                        {{#each byStatusCode}} <option value="{{statusCode}}" {{#if filtered}}selected{{/if}}>{{statusCode}}</option> {{/each}}
+                        {{#each byStatusCode}} <option value="{{statusCode}}" {{#if filtered}}selected{{/if}}>{{statusCode}} ({{count}})</option> {{/each}}
                     </select>
                 </td>
                 <td colspan="2"></td>

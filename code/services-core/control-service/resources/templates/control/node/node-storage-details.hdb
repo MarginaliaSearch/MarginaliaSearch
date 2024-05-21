@@ -88,7 +88,7 @@
             <tr>
                 <td></td>
                 <td>
-                    <a href="/nodes/{{node.id}}/storage/details?fid={{storage.id}}&filter={{crawlDataFiles.filter}}&afterDomain={{crawlDataFiles.nextAfter}}">Next</a>
+                    <a href="/nodes/{{node.id}}/storage/details?fid={{storage.id}}&filterDomain={{crawlDataFiles.filter}}&afterDomain={{crawlDataFiles.nextAfter}}">Next</a>
                 </td>
             </tr>
             {{/if}}
