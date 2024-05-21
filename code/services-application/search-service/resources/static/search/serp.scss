@@ -17,7 +17,9 @@
   
   --clr-shadow: var(--clr-border); 
 
-  --clr-text-visited: #fcc; // $visited
+  --clr-link: #0066cc;
+  --clr-link-visited: #531a89;
+  --clr-heading-link-visited: #fcc; // $visited
 
   --font-family: sans-serif;
   --font-size: 14px;
@@ -43,7 +45,10 @@
     --clr-border: hsl(0, 0%, 30%);
 
     --clr-shadow: #000;
-    
+
+    --clr-link: #8a8aff;
+    --clr-link-visited: #ffadff;
+    --clr-heading-link-visited: var(--clr-link-visited);
   }
 }
 
@@ -55,11 +60,23 @@ html {
   color-scheme: light dark;
 }
 
+a {
+  color: var(--clr-link);
+}
+
+a:visited {
+  color: var(--clr-link-visited);
+}
+
+input, textarea, select {
+  color: inherit;
+}
+
 h1 a, h2 a {
   color: var(--clr-text-theme);
 }
 h1 a:visited, h2 a:visited {
-  color: var(--clr-text-visited);
+  color: var(--clr-heading-link-visited);
 }
 progress {
   width: 10ch;
@@ -187,9 +204,12 @@ header {
     a {
       text-decoration: none;
       color: var(--clr-text-ui);
-
       padding: .5ch;
       display: inline-block;
+    }
+
+    a:visited {
+      color: var(--clr-text-ui);
     }
 
     a.extra {
@@ -524,6 +544,7 @@ footer {
     font-size: 12pt;
     border: 1px solid var(--clr-border);
     background-color: var(--clr-bg-ui);
+    cursor: pointer;
   }
 
   // white suggesitons looks fine in dark mode
@@ -633,7 +654,7 @@ footer {
       text-shadow: 0 0 1ch #000; // guarantee decent contrast across background colors
     }
     a:visited {
-      color: var(--clr-text-visited);
+      color: var(--clr-heading-link-visited);
     }
   }
 
