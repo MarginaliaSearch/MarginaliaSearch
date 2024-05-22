@@ -1,6 +1,6 @@
 package nu.marginalia.array.algo;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 public interface LongArraySearch extends LongArrayBase {
 

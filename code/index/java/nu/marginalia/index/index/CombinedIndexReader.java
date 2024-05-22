@@ -1,8 +1,14 @@
 package nu.marginalia.index.index;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.index.ReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.model.QueryParams;
+import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
@@ -15,9 +21,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
-/** A reader for the combined forward and reverse indexes */
+/** A reader for the combined forward and reverse indexes.
+ * <p></p>
+ * This class does not deal with the lifecycle of the indexes,
+ * that is the responsibility of {@link StatefulIndex}.
+ * */
 public class CombinedIndexReader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -66,12 +80,91 @@ public class CombinedIndexReader {
     }
 
     /** Returns the number of occurrences of the word in the full index */
-    public long numHits(long word) {
+    public int numHits(long word) {
         return reverseIndexFullReader.numDocuments(word);
     }
 
+    public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
+
+        if (!isLoaded()) {
+            logger.warn("Index reader not ready");
+            return Collections.emptyList();
+        }
+
+        List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
+
+        final long[] termPriority = terms.sortedDistinctIncludes(this::compareKeywords);
+        List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(terms.compiledQuery());
+
+        // Remove any paths that do not contain all prioritized terms, as this means
+        // the term is missing from the index and can never be found
+        paths.removeIf(containsAll(termPriority).negate());
+
+        for (var path : paths) {
+            LongList elements = new LongArrayList(path);
+
+            elements.sort((a, b) -> {
+                for (int i = 0; i < termPriority.length; i++) {
+                    if (termPriority[i] == a)
+                        return -1;
+                    if (termPriority[i] == b)
+                        return 1;
+                }
+                return 0;
+            });
+
+            var head = findFullWord(elements.getLong(0));
+            for (int i = 1; i < elements.size(); i++) {
+                head.addInclusionFilter(hasWordFull(elements.getLong(i)));
+            }
+            queryHeads.add(head);
+
+            // If there are few paths, we can afford to check the priority index as well
+            if (paths.size() < 4) {
+                var prioHead = findPriorityWord(elements.getLong(0));
+                for (int i = 1; i < elements.size(); i++) {
+                    prioHead.addInclusionFilter(hasWordPrio(elements.getLong(i)));
+                }
+                queryHeads.add(prioHead);
+            }
+        }
+
+        // Add additional conditions to the query heads
+        for (var query : queryHeads) {
+
+            // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
+            for (long term : terms.advice()) {
+                query = query.also(term);
+            }
+
+            for (long term : terms.excludes()) {
+                query = query.not(term);
+            }
+
+            // Run these filter steps last, as they'll worst-case cause as many page faults as there are
+            // items in the buffer
+            query.addInclusionFilter(filterForParams(params));
+        }
+
+        return queryHeads
+                .stream()
+                .map(IndexQueryBuilder::build)
+                .toList();
+    }
+
+    private Predicate<LongSet> containsAll(long[] permitted) {
+        LongSet permittedTerms = new LongOpenHashSet(permitted);
+        return permittedTerms::containsAll;
+    }
+
+    private int compareKeywords(long a, long b) {
+        return Long.compare(
+                numHits(a),
+                numHits(b)
+        );
+    }
     /** Returns the number of occurrences of the word in the priority index */
-    public long numHitsPrio(long word) {
+    public int numHitsPrio(long word) {
         return reverseIndexPriorityReader.numDocuments(word);
     }
 

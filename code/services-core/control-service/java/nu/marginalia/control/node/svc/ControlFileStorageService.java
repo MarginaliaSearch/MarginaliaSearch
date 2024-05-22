@@ -60,8 +60,7 @@ public class ControlFileStorageService {
         return redirectToOverview(request);
     }
 
-    public Object downloadFileFromStorage(Request request, Response response) throws IOException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    public Object downloadFileFromStorage(Request request, Response response) throws IOException, SQLException {
         var fileStorageId = FileStorageId.parse(request.params("fid"));
 
         String path = request.queryParams("path");
@@ -73,7 +72,11 @@ public class ControlFileStorageService {
         else
             response.type("application/octet-stream");
 
-        executorClient.transferFile(nodeId, fileStorageId, path, response.raw().getOutputStream());
+        var storage = fileStorageService.getStorage(fileStorageId);
+
+        try (var urlStream = executorClient.remoteFileURL(storage, path).openStream()) {
+            urlStream.transferTo(response.raw().getOutputStream());
+        }
 
         return "";
     }
@@ -100,6 +103,7 @@ public class ControlFileStorageService {
 
         return "";
     }
+
     public Object flagFileForDeletionRequest(Request request, Response response) throws SQLException {
         FileStorageId fid = new FileStorageId(Long.parseLong(request.params(":fid")));
         fileStorageService.flagFileForDeletion(fid);

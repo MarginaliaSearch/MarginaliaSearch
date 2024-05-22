@@ -14,10 +14,7 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.*;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
@@ -81,7 +78,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             .labelNames("node")
             .register();
 
-    private final StatefulIndex index;
+    private final StatefulIndex statefulIndex;
     private final SearchSetsService searchSetsService;
 
     private final IndexResultValuatorService resultValuator;
@@ -92,13 +89,13 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
-                            StatefulIndex index,
+                            StatefulIndex statefulIndex,
                             SearchSetsService searchSetsService,
                             IndexResultValuatorService resultValuator)
     {
         var nodeId = serviceConfiguration.node();
         this.nodeName = Integer.toString(nodeId);
-        this.index = index;
+        this.statefulIndex = statefulIndex;
         this.searchSetsService = searchSetsService;
         this.resultValuator = resultValuator;
     }
@@ -210,7 +207,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
     private SearchResultSet executeSearch(SearchParameters params) throws SQLException, InterruptedException {
 
-        if (!index.isLoaded()) {
+        if (!statefulIndex.isLoaded()) {
             // Short-circuit if the index is not loaded, as we trivially know that there can be no results
             return new SearchResultSet(List.of());
         }
@@ -271,7 +268,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
             var terms = new SearchTerms(parameters.query, parameters.compiledQueryIds);
 
-            for (var indexQuery : index.createQueries(terms, parameters.queryParams)) {
+            var currentIndex = statefulIndex.get();
+            for (var indexQuery : currentIndex.createQueries(terms, parameters.queryParams)) {
                 workerPool.execute(new IndexLookup(indexQuery, parameters.budget));
             }
 
@@ -438,10 +436,12 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         BitSet ngramsMask = new BitSet(compiledQuery.size());
         BitSet regularMask = new BitSet(compiledQuery.size());
 
+        var currentIndex = statefulIndex.get();
+
         for (int idx = 0; idx < compiledQueryIds.size(); idx++) {
             long id = compiledQueryIds.at(idx);
-            full[idx] = index.getTermFrequency(id);
-            prio[idx] = index.getTermFrequencyPrio(id);
+            full[idx] = currentIndex.numHits(id);
+            prio[idx] = currentIndex.numHitsPrio(id);
 
             if (compiledQuery.at(idx).contains("_")) {
                 ngramsMask.set(idx);
@@ -451,7 +451,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             }
         }
 
-        return new ResultRankingContext(index.getTotalDocCount(),
+        return new ResultRankingContext(currentIndex.totalDocCount(),
                 rankingParams,
                 ngramsMask,
                 regularMask,

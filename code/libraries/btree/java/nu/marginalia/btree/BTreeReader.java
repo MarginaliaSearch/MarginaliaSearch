@@ -1,7 +1,7 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
 
@@ -19,7 +19,7 @@ public class BTreeReader {
 
     public BTreeReader(LongArray file, BTreeContext ctx, long offset) {
         this.ctx = ctx;
-        this.header = readHeader(file, offset);
+        this.header = new BTreeHeader(file, offset);
 
         dataBlockEnd = (long) ctx.entrySize * header.numEntries();
         index = file.range(header.indexOffsetLongs(), header.dataOffsetLongs());
@@ -33,10 +33,6 @@ public class BTreeReader {
     }
     public LongArray index() {
         return index;
-    }
-
-    public static BTreeHeader readHeader(LongArray file, long fileOffset) {
-        return new BTreeHeader(file, fileOffset);
     }
 
     public BTreeHeader getHeader() {
@@ -58,12 +54,8 @@ public class BTreeReader {
         else while (buffer.hasMore()) {
             long val = buffer.currentValue();
 
-            if (!pointer.walkToData(val)) {
-                buffer.rejectAndAdvance();
-            }
-            else {
-                pointer.retainData(buffer);
-            }
+            pointer.walkToData(val);
+            pointer.retainData(buffer);
 
             pointer.resetToRoot();
         }
@@ -80,12 +72,8 @@ public class BTreeReader {
         else while (buffer.hasMore()) {
             long val = buffer.currentValue();
 
-            if (pointer.walkToData(val) && pointer.containsData(val)) {
-                buffer.rejectAndAdvance();
-            }
-            else {
-                buffer.retainAndAdvance();
-            }
+            pointer.walkToData(val);
+            pointer.rejectData(buffer);
 
             pointer.resetToRoot();
         }
@@ -99,11 +87,7 @@ public class BTreeReader {
     public long findEntry(final long key) {
         BTreePointer ip = new BTreePointer(header);
 
-        while (!ip.isDataLayer()) {
-            if (!ip.walkToChild(key)) {
-                return -1;
-            }
-        }
+        ip.walkToData(key);
 
         return ip.findData(key);
     }
@@ -161,19 +145,17 @@ public class BTreeReader {
         BTreePointer pointer = new BTreePointer(header);
         long[] ret = new long[keys.length];
 
-        // FIXME: this function could be re-written like retain() and would be much faster
         for (int i = 0; i < keys.length; i++) {
-            if (i > 0) {
-                pointer.resetToRoot();
+            pointer.walkToData(keys[i]);
+
+            long dataAddress = pointer.findData(keys[i]);
+            if (dataAddress >= 0) {
+                ret[i] = data.get(dataAddress + offset);
             }
 
-            if (pointer.walkToData(keys[i])) {
-                long dataAddress = pointer.findData(keys[i]);
-                if (dataAddress >= 0) {
-                    ret[i] = data.get(dataAddress + offset);
-                }
-            }
+            pointer.resetToRoot();
         }
+
         return ret;
     }
 
@@ -181,75 +163,70 @@ public class BTreeReader {
         private final long[] layerOffsets;
 
         private int layer;
-        private long offset;
-        private long boundary;
+        private long pointerOffset;
+        private long maxValueInBlock;
 
         public String toString() {
             return getClass().getSimpleName() + "[" +
                 "layer = " + layer + " ," +
-                "offset = " + offset + "]";
+                "offset = " + pointerOffset + "]";
         }
 
         public BTreePointer(BTreeHeader header) {
             layer = header.layers() - 1;
-            offset = 0;
+            pointerOffset = 0;
             layerOffsets = header.getRelativeLayerOffsets(ctx);
-            boundary = Long.MAX_VALUE;
+            maxValueInBlock = Long.MAX_VALUE;
         }
 
         public void resetToRoot() {
             this.layer = header.layers() - 1;
-            this.offset = 0;
-            this.boundary = Long.MAX_VALUE;
+            this.pointerOffset = 0;
+            this.maxValueInBlock = Long.MAX_VALUE;
         }
 
-        public int layer() {
-            return layer;
-        }
+        /** Move the pointer to the next layer in the direction of the provided key */
+        public void walkTowardChild(long key) {
 
-        public boolean walkToChild(long key) {
-
-            final long searchStart = layerOffsets[layer] + offset;
+            final long searchStart = layerOffsets[layer] + pointerOffset;
 
             final long nextLayerOffset = index.binarySearch(key, searchStart, searchStart + ctx.pageSize()) - searchStart;
 
             layer --;
-            boundary = index.get(searchStart + nextLayerOffset);
-            offset = ctx.pageSize() * (offset + nextLayerOffset);
-
-
-            return true;
+            maxValueInBlock = index.get(searchStart + nextLayerOffset);
+            pointerOffset = ctx.pageSize() * (pointerOffset + nextLayerOffset);
         }
 
-        public boolean walkToData(long key) {
+        /** Move the pointer to the data layer associated with key */
+        public void walkToData(long key) {
             while (!isDataLayer()) {
-                if (!walkToChild(key)) {
-                    return false;
-                }
+                walkTowardChild(key);
             }
-            return true;
         }
 
         public boolean isDataLayer() {
             return layer < 0;
         }
 
-        public boolean containsData(long key) {
-            return findData(key) >= 0;
-        }
-
+        /** Find the data entry matching key
+         *
+         * @return file offset of entry matching keyRaw, negative if absent
+         */
         public long findData(long key) {
             if (layer >= 0) {
                 throw new IllegalStateException("Looking for data in an index layer");
             }
 
-            long searchStart = offset * ctx.entrySize;
-            long remainingTotal = dataBlockEnd - offset * ctx.entrySize;
-            long remainingBlock;
+            final long searchStart = pointerOffset * ctx.entrySize;
+            final long remainingTotal = dataBlockEnd - pointerOffset * ctx.entrySize;
+            final long remainingBlock;
 
-            remainingBlock = (layerOffsets.length == 0)
-                    ? remainingTotal
-                    : (long) ctx.pageSize() * ctx.entrySize;
+            if (layerOffsets.length == 0) {
+                remainingBlock = remainingTotal;
+            }
+            else {
+                remainingBlock = (long) ctx.pageSize() * ctx.entrySize;
+            }
 
             long searchEnd = searchStart + min(remainingTotal, remainingBlock);
 
@@ -262,22 +239,27 @@ public class BTreeReader {
             }
         }
 
+        /** Retain any data entry matching the current key
+         * in the buffer within the current data block.
+         * <p></p>
+         * This is much faster than looping with findData() and retain() for each key
+         * since the index doesn't need to be re-traversed.
+         * */
         public void retainData(LongQueryBuffer buffer) {
 
-            long dataOffset = findData(buffer.currentValue());
-            if (dataOffset >= 0) {
+            long dataIndex = findData(buffer.currentValue());
+            if (dataIndex >= 0) {
                 buffer.retainAndAdvance();
 
-                if (buffer.hasMore() && buffer.currentValue() <= boundary) {
-                    long blockBase = offset * ctx.entrySize;
-                    long relOffset = dataOffset - blockBase;
+                if (buffer.hasMore() && buffer.currentValue() <= maxValueInBlock) {
+                    long relOffsetInBlock = dataIndex - pointerOffset * ctx.entrySize;
 
-                    long remainingTotal = dataBlockEnd - dataOffset;
-                    long remainingBlock = ctx.pageSize() - relOffset;
+                    long remainingTotal = dataBlockEnd - dataIndex;
+                    long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
 
-                    long searchEnd = dataOffset + min(remainingTotal, remainingBlock);
+                    long searchEnd = dataIndex + min(remainingTotal, remainingBlock);
 
-                    data.retainN(buffer, ctx.entrySize, boundary, dataOffset, searchEnd);
+                    data.retainN(buffer, ctx.entrySize, maxValueInBlock, dataIndex, searchEnd);
                 }
             }
             else {
@@ -286,22 +268,26 @@ public class BTreeReader {
 
         }
 
+        /** Reject any data entry matching the current key in the buffer within the current data block
+         * <p></p>
+         * This is much faster than looping with findData() and retain() for each key
+         * since the index doesn't need to be re-traversed.
+         * */
         public void rejectData(LongQueryBuffer buffer) {
 
-            long dataOffset = findData(buffer.currentValue());
-            if (dataOffset >= 0) {
+            long dataIndex = findData(buffer.currentValue());
+            if (dataIndex >= 0) {
                 buffer.rejectAndAdvance();
 
-                if (buffer.hasMore() && buffer.currentValue() <= boundary) {
-                    long blockBase = offset * ctx.entrySize;
-                    long relOffset = dataOffset - blockBase;
+                if (buffer.hasMore() && buffer.currentValue() <= maxValueInBlock) {
+                    long relOffsetInBlock = dataIndex - pointerOffset * ctx.entrySize;
 
-                    long remainingTotal = dataBlockEnd - dataOffset;
-                    long remainingBlock = ctx.pageSize() - relOffset;
+                    long remainingTotal = dataBlockEnd - dataIndex;
+                    long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
 
-                    long searchEnd = dataOffset + min(remainingTotal, remainingBlock);
+                    long searchEnd = dataIndex + min(remainingTotal, remainingBlock);
 
-                    data.rejectN(buffer, ctx.entrySize, boundary, dataOffset, searchEnd);
+                    data.rejectN(buffer, ctx.entrySize, maxValueInBlock, dataIndex, searchEnd);
                 }
             }
             else {

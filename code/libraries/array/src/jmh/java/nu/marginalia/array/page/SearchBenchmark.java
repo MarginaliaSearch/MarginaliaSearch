@@ -10,14 +10,14 @@ import java.util.Random;
 public class SearchBenchmark {
 
     @State(Scope.Benchmark)
-    public static class SortState {
+    public static class SearchState {
 
-        public SortState()
+        public SearchState()
         {
             msArray.transformEach(0, size, (pos,old) -> ~pos);
             usArray.transformEach(0, size, (pos,old) -> ~pos);
-            msArray.quickSortJava(0, size);
-            usArray.quickSortJava(0, size);
+            msArray.sort(0, size);
+            usArray.sort(0, size);
             keys = new long[1000];
             Random r = new Random();
             for (int i = 0; i < 1000; i++) {
@@ -36,27 +36,12 @@ public class SearchBenchmark {
     @Warmup(iterations = 5)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public long msSort64(SortState state) {
+    public long msSearch64(SearchState state) {
         var array = state.usArray;
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearchNJava(2, key, 0, array.size());
-        }
-
-        return ret;
-    }
-
-    @Fork(value = 3, warmups = 5)
-    @Warmup(iterations = 5)
-    @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    public long msSort64_2(SortState state) {
-        var array = state.usArray;
-
-        long ret = 0;
-        for (var key : state.keys) {
-            ret += array.binarySearchNJava2(2, key, 0, array.size());
+            ret += array.binarySearch(key, 0, array.size());
         }
 
         return ret;
@@ -66,12 +51,12 @@ public class SearchBenchmark {
     @Warmup(iterations = 1)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public long msSort128(SortState state) {
+    public long msSearch128(SearchState state) {
         var array = state.msArray;
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearchNJava(2, 0, array.size(), key);
+            ret += array.binarySearchN(2, key, 0, array.size());
         }
 
         return ret;
@@ -81,12 +66,12 @@ public class SearchBenchmark {
     @Warmup(iterations = 1)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public long usSort64(SortState state) {
+    public long usSearch64(SearchState state) {
         var array = state.usArray;
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearchUpperBoundJava(0, array.size(), key);
+            ret += array.binarySearch(key, 0, array.size());
         }
 
         return ret;
@@ -96,12 +81,12 @@ public class SearchBenchmark {
     @Warmup(iterations = 1)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public long usSort128(SortState state) {
+    public long usSearch128(SearchState state) {
         var array = state.usArray;
 
         long ret = 0;
         for (var key : state.keys) {
-            ret += array.binarySearchNJava(2, 0, array.size(), key);
+            ret += array.binarySearchN(2, key, 0, array.size());
         }
 
         return ret;

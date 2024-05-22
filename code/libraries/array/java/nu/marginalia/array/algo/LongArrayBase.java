@@ -3,32 +3,42 @@ package nu.marginalia.array.algo;
 import nu.marginalia.array.LongArray;
 
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 
+@SuppressWarnings("preview")
 public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
 
+    /** Get a value from the array at the specified position */
     long get(long pos);
 
+    /** Set a value in the array at the specified position */
     void set(long pos, long value);
 
+
+    /** Return the memory segment backing the array */
+    MemorySegment getMemorySegment();
+
+    /** Set a sequence of value in the array starting at the specified position */
     default void set(long pos, long... value) {
         for (int i = 0; i < value.length; i++) {
             set(pos+i, value[i]);
         }
     }
 
+    /** Return the size of the array */
     long size();
 
+
+    /** Fill the array with the specified value at the provided range */
     default void fill(long start, long end, long val) {
         for (long v = start; v < end; v++) {
             set(v, val);
         }
     }
 
-    void quickSortNative(long start, long end);
-    void quickSortNative128(long start, long end);
     default void increment(long pos) {
         set(pos, get(pos) + 1);
     }
@@ -46,6 +56,16 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
             set(pos1+i, get(pos2+i));
             set(pos2+i, tmp);
         }
+    }
+
+    default void swap2(long pos1, long pos2) {
+        long tmp = get(pos1);
+        set(pos1, get(pos2));
+        set(pos2, tmp);
+
+        tmp = get(pos1 + 1);
+        set(pos1 + 1, get(pos2 + 1));
+        set(pos2 + 1, tmp);
     }
 
     default long getAndIncrement(long pos) {

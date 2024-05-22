@@ -1,6 +1,6 @@
 package nu.marginalia.index.query;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 /** An EntrySource is a source of entries for a query.
  */

@@ -177,9 +177,9 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     }
 
     @Override
-    public Set<InstanceAddress> getEndpoints(ServiceKey<?> key) {
+    public List<InstanceAddress> getEndpoints(ServiceKey<?> key) {
         try {
-            Set<InstanceAddress> ret = new HashSet<>();
+            List<InstanceAddress> ret = new ArrayList<>();
             for (var uuid : curatorFramework
                     .getChildren()
                     .forPath(key.toPath())) {
@@ -204,7 +204,7 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
             return ret;
         }
         catch (Exception ex) {
-            return Set.of();
+            return List.of();
         }
     }
 

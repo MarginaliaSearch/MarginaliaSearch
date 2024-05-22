@@ -36,11 +36,9 @@ try (var array = LongArrayFactory.mmapForWritingConfined(Path.of("/tmp/test"), 1
 
 ## Query Buffers
 
-The classes [IntQueryBuffer](java/nu/marginalia/array/buffer/IntQueryBuffer.java)
-and [LongQueryBuffer](java/nu/marginalia/array/buffer/LongQueryBuffer.java) are used
-heavily in the search engine's query processing.
+The class and [LongQueryBuffer](java/nu/marginalia/array/buffer/LongQueryBuffer.java) is used heavily in the search engine's query processing.
 
-They are dual-pointer buffers that offer tools for filtering data.
+It is a dual-pointer buffer that offers tools for filtering data.
 
 ```java
 LongQueryBuffer buffer = new LongQueryBuffer(1000);
@@ -78,8 +76,7 @@ buffer.finalizeFiltering();
 ```
 
 
-Especially noteworthy are the operations `retain()` and `reject()` in
-[IntArraySearch](java/nu/marginalia/array/algo/IntArraySearch.java) and [LongArraySearch](java/nu/marginalia/array/algo/LongArraySearch.java).
+Especially noteworthy are the operations `retain()` and `reject()` in [LongArraySearch](java/nu/marginalia/array/algo/LongArraySearch.java).
 They keep or remove all items in the buffer that exist in the referenced range of the array,
 which must be sorted.
 

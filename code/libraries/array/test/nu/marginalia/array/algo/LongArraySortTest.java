@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LongArraySortTest {
 
     LongArray basic;
-    LongArray paged;
     LongArray shifted;
     LongArray segment;
 
@@ -32,7 +31,6 @@ class LongArraySortTest {
     @BeforeEach
     public void setUp() {
         basic = LongArray.allocate(size);
-        paged = LongArray.allocate(size);
         shifted = LongArray.allocate(size+30).shifted(30);
         segment = LongArrayFactory.onHeapConfined(size + 30).shifted(30);
 
@@ -46,12 +44,10 @@ class LongArraySortTest {
         }
 
         basic.set(0, values);
-        paged.set(0, values);
         shifted.set(0, values);
         segment.set(0, values);
 
         basic.transformEach(0, size, (i, old) -> values[(int) i]);
-        paged.transformEach(0, size, (i, old) -> values[(int) i]);
         shifted.transformEach(0, size, (i, old) -> values[(int) i]);
         segment.transformEach(0, size, (i, old) -> values[(int) i]);
     }
@@ -68,7 +64,7 @@ class LongArraySortTest {
         array.set(1, 4);
         array.set(2, 3);
         array.set(3, 2);
-        array.quickSortNative(0, 4);
+        array.sort(0, 4);
         assertTrue(array.isSorted(0, 4));
         assertEquals(1, array.get(0));
         assertEquals(2, array.get(1));
@@ -76,13 +72,14 @@ class LongArraySortTest {
         assertEquals(4, array.get(3));
 
         array.set(2, 5);
-        array.quickSortNative(2, 4);
+        array.sort(2, 4);
 
         assertEquals(4, array.get(2));
         assertEquals(5, array.get(3));
 
         assertTrue(array.isSorted(2, 4));
     }
+
     @Test
     public void quickSortStressTest() throws IOException {
         LongArray array = LongArray.allocate(65536);
@@ -92,7 +89,7 @@ class LongArraySortTest {
     @Test
     public void nativeSortTest() throws IOException {
         LongArray array = LongArray.allocate(65536);
-        sortAlgorithmTester(array, LongArraySort::quickSortNative);
+        sortAlgorithmTester(array, LongArraySort::sort);
     }
 
 
@@ -166,41 +163,33 @@ class LongArraySortTest {
 
     @Test
     void insertionSort() {
-        basic.insertionSort(0, size);
+        LongArraySort.insertionSort(basic, 0, size);
         assertTrue(basic.isSorted(0, 128));
 
-        paged.insertionSort(0, size);
-        assertTrue(paged.isSorted(0, 128));
-
-        shifted.insertionSort(0, size);
+        LongArraySort.insertionSort(shifted, 0, size);
         assertTrue(shifted.isSorted(0, 128));
 
-        segment.insertionSort(0, size);
+        LongArraySort.insertionSort(segment, 0, size);
         assertTrue(segment.isSorted(0, 128));
 
         verifyValuesPresent(basic);
-        verifyValuesPresent(paged);
         verifyValuesPresent(shifted);
         verifyValuesPresent(segment);
     }
 
     @Test
     void quickSort() {
-        basic.quickSort(0, size);
+        basic.sort(0, size);
         assertTrue(basic.isSorted(0, size));
 
-        paged.quickSort(0, size);
-        assertTrue(paged.isSorted(0, size));
-
-        shifted.quickSort(0, size);
+        shifted.sort(0, size);
         assertTrue(shifted.isSorted(0, size));
 
-        segment.quickSort(0, size);
+        segment.sort(0, size);
         assertTrue(segment.isSorted(0, size));
 
 
         verifyValuesPresent(basic);
-        verifyValuesPresent(paged);
         verifyValuesPresent(shifted);
         verifyValuesPresent(segment);
 
@@ -211,9 +200,6 @@ class LongArraySortTest {
         basic.mergeSort(0, size, Path.of("/tmp"));
         assertTrue(basic.isSorted(0, size));
 
-        paged.mergeSort(0, size, Path.of("/tmp"));
-        assertTrue(paged.isSorted(0, size));
-
         shifted.mergeSort(0, size, Path.of("/tmp"));
         assertTrue(shifted.isSorted(0, size));
 
@@ -221,7 +207,6 @@ class LongArraySortTest {
         assertTrue(segment.isSorted(0, size));
 
         verifyValuesPresent(basic);
-        verifyValuesPresent(paged);
         verifyValuesPresent(shifted);
         verifyValuesPresent(segment);
     }
@@ -231,7 +216,7 @@ class LongArraySortTest {
         var array = LongArray.allocate(1000);
         var random = new Random();
         array.transformEach(0, 1000, (i, val) -> random.nextInt(0, 2000));
-        array.quickSort(0, 1000);
+        array.sort(0, 1000);
         Set<Long> expectedValues = new HashSet<>();
         array.forEach(0, 1000, (i, v) -> expectedValues.add(v));
 

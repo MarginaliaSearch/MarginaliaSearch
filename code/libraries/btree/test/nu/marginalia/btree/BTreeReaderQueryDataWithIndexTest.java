@@ -11,7 +11,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class BTreeReaderQueryDataWithIndexTest {
-    BTreeContext ctx = new BTreeContext(5, 2, BTreeBlockSize.BS_32);
+    BTreeContext ctx = new BTreeContext(5, 2, BTreeBlockSize.BS_64);
     LongArray array;
 
     @BeforeEach
@@ -34,7 +34,7 @@ public class BTreeReaderQueryDataWithIndexTest {
 
         long[] data = reader.queryData(keys, 1);
 
-        assertArrayEquals(data, new long[] { 0, 5, 0, 10, 0, 15, 0, 20, 0, 25 });
+        assertArrayEquals(new long[] { 0, 5, 0, 10, 0, 15, 0, 20, 0, 25 }, data);
     }
 
 }

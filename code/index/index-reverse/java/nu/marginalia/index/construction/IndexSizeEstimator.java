@@ -1,13 +1,13 @@
 package nu.marginalia.index.construction;
 
-import nu.marginalia.array.functional.LongBinaryOperation;
+import nu.marginalia.array.algo.LongArrayTransformations;
 import nu.marginalia.btree.model.BTreeContext;
 
 /** Calculates the necessary size of an index from an array of offsets (@see CountToOffsetTransformer)<p>
  *
  * Used with LongArray.fold()
  * */
-public class IndexSizeEstimator implements LongBinaryOperation {
+public class IndexSizeEstimator implements LongArrayTransformations.LongBinaryOperation {
     private final BTreeContext bTreeContext;
     private final int entrySize;
 

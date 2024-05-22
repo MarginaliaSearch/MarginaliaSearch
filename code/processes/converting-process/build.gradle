@@ -39,7 +39,6 @@ dependencies {
     implementation project(':code:libraries:guarded-regex')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:geo-ip')
-    implementation project(':code:libraries:big-string')
     implementation project(':code:libraries:language-processing')
 
     implementation project(':code:process-models:processed-data')

@@ -158,22 +158,11 @@ public class TwoArrayOperations {
      * Count the number of distinct elements in two sorted arrays.
      */
     public static long countDistinctElements(LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {
-        var directRangeA = a.directRangeIfPossible(aStart, aEnd);
-        var directRangeB = b.directRangeIfPossible(bStart, bEnd);
-
         // Ensure that the arrays are sorted
         if (TwoArrayOperations.class.desiredAssertionStatus()) {
             assert (a.isSorted(aStart, aEnd));
             assert (b.isSorted(bStart, bEnd));
         }
-
-        a = directRangeA.array();
-        aStart = directRangeA.start();
-        aEnd = directRangeA.end();
-
-        b = directRangeB.array();
-        bStart = directRangeB.start();
-        bEnd = directRangeB.end();
 
         return countDistinctElementsDirect(a, b, aStart, aEnd, bStart, bEnd);
     }
@@ -188,16 +177,13 @@ public class TwoArrayOperations {
             assert (b.isSortedN(stepSize, bStart, bEnd));
         }
 
-        var directRangeA = a.directRangeIfPossible(aStart, aEnd);
-        var directRangeB = b.directRangeIfPossible(bStart, bEnd);
-
         return countDistinctElementsDirectN(stepSize,
-                directRangeA.array(),
-                directRangeB.array(),
-                directRangeA.start(),
-                directRangeA.end(),
-                directRangeB.start(),
-                directRangeB.end());
+                a,
+                b,
+                aStart,
+                aEnd,
+                bStart,
+                bEnd);
     }
 
     private static long countDistinctElementsDirect(LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {

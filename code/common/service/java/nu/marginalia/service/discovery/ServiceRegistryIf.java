@@ -6,7 +6,7 @@ import static nu.marginalia.service.discovery.property.ServiceEndpoint.*;
 
 import nu.marginalia.service.discovery.property.ServiceKey;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 /** A service registry that allows services to register themselves and
@@ -42,7 +42,7 @@ public interface ServiceRegistryIf {
     int requestPort(String externalHost, ServiceKey<?> key);
 
     /** Get all endpoints for the service on the specified node and schema. */
-    Set<InstanceAddress> getEndpoints(ServiceKey<?> schema);
+    List<InstanceAddress> getEndpoints(ServiceKey<?> schema);
 
     /** Register a monitor to be notified when the service registry changes.
      * <p></p>

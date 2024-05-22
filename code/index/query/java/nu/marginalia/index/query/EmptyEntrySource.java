@@ -1,6 +1,6 @@
 package nu.marginalia.index.query;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 
 /** Dummy EntrySource that returns no entries. */
 public class EmptyEntrySource implements EntrySource {

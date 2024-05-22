@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LongArraySortNTest {
 
     LongArray basic;
-    LongArray paged;
     LongArray shifted;
     LongArray segment;
 
@@ -33,7 +32,6 @@ class LongArraySortNTest {
     @BeforeEach
     public void setUp() {
         basic = LongArray.allocate(size);
-        paged = LongArray.allocate(size);
         shifted = LongArray.allocate(size+30).shifted(30);
         segment = LongArrayFactory.onHeapShared(size + 30).shifted(30);
 
@@ -47,7 +45,6 @@ class LongArraySortNTest {
         }
 
         basic.set(0, values);
-        paged.set(0, values);
         shifted.set(0, values);
         segment.set(0, values);
 
@@ -62,7 +59,7 @@ class LongArraySortNTest {
     @Test
     public void quickSortStressTest() throws IOException {
         LongArray array = LongArray.allocate(65536);
-        sortAlgorithmTester(array, LongArraySort::quickSort);
+        sortAlgorithmTester(array, LongArraySort::sort);
     }
 
 
@@ -132,20 +129,16 @@ class LongArraySortNTest {
 
     @Test
     void insertionSortN() {
-        basic.insertionSortN(2, 0, size);
+        LongArraySort.insertionSortN(basic, 2, 0, size);
         assertTrue(basic.isSortedN(2, 0, size));
 
-        paged.insertionSortN(2, 0, size);
-        assertTrue(paged.isSortedN(2, 0, size));
-
-        shifted.insertionSortN(2, 0, size);
+        LongArraySort.insertionSortN(shifted, 2, 0, size);
         assertTrue(shifted.isSortedN(2, 0, size));
 
-        segment.insertionSortN(2, 0, size);
+        LongArraySort.insertionSortN(segment, 2, 0, size);
         assertTrue(segment.isSortedN(2, 0, size));
 
         compare(basic, dataAsPairs);
-        compare(paged, dataAsPairs);
         compare(shifted, dataAsPairs);
         compare(segment, dataAsPairs);
     }
@@ -155,9 +148,6 @@ class LongArraySortNTest {
         basic.quickSortN(2, 0, size);
         assertTrue(basic.isSortedN(2, 0, size));
 
-        paged.quickSortN(2, 0, size);
-        assertTrue(paged.isSortedN(2, 0, size));
-
         shifted.quickSortN(2, 0, size);
         assertTrue(shifted.isSortedN(2, 0, size));
 
@@ -165,7 +155,6 @@ class LongArraySortNTest {
         assertTrue(segment.isSortedN(2, 0, size));
 
         compare(basic, dataAsPairs);
-        compare(paged, dataAsPairs);
         compare(shifted, dataAsPairs);
         compare(segment, dataAsPairs);
     }
@@ -176,9 +165,6 @@ class LongArraySortNTest {
         basic.mergeSortN(2, 0, size, Path.of("/tmp"));
         assertTrue(basic.isSortedN(2, 0, size));
 
-        paged.mergeSortN(2, 0, size, Path.of("/tmp"));
-        assertTrue(paged.isSortedN(2, 0, size));
-
         shifted.mergeSortN(2, 0, size, Path.of("/tmp"));
         assertTrue(shifted.isSortedN(2, 0, size));
 
@@ -186,7 +172,6 @@ class LongArraySortNTest {
         assertTrue(segment.isSortedN(2, 0, size));
 
         compare(basic, dataAsPairs);
-        compare(paged, dataAsPairs);
         compare(shifted, dataAsPairs);
         compare(segment, dataAsPairs);
     }

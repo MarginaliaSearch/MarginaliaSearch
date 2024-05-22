@@ -1,7 +1,7 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeBlockSize;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.util.NextPrimeUtil;
@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 

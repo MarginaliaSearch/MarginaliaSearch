@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-US">
+{{> control/partials/head-includes }}
+<head><title>Control Service: Node {{node.id}}</title></head>
+<body>
+{{> control/partials/nav}}
+
+<div class="container">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/nodes">nodes</a></li>
+            <li class="breadcrumb-item">node-{{node.id}}</li>
+        </ol>
+    </nav>
+
+    {{> control/node/partial-node-nav }}
+
+    <div class="container">
+        {{>control/partials/storage-types}}
+
+        <h1>Crawl Parquet Info</h1>
+
+        <h2>Summary</h2>
+        <table class="table">
+            <tr>
+            <th>Domain</th><th>File</th>
+            </tr>
+            <td>{{domain}}</td>
+            <td>
+                <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Parquet</a>
+            </td>
+        </table>
+
+        <h2>Contents</h2>
+        <table class="table">
+            <tr>
+            <th>URL</th>
+            <th>Content Type</th>
+            <th>HTTP Status</th>
+            <th>Has Body</th>
+            <th>ETag</th>
+            <th>Last Modified</th>
+            </tr>
+
+            <form>
+                <input type="hidden" name="fid" value="{{storage.id}}">
+                <input type="hidden" name="path" value="{{path}}">
+            <tr>
+                <td>
+                    <input type="text" class="" id="urlGlob" name="urlGlob" value="{{urlGlob}}">
+                </td>
+                <td>
+                    <select name="contentType" id="contentType">
+                        <option value="ALL">All</option>
+                        {{#each byContentType}} <option value="{{contentType}}" {{#if filtered}}selected{{/if}}>{{contentType}} ({{count}})</option> {{/each}}
+                    </select>
+                </td>
+                <td>
+                    <select name="httpStatus" id="httpStatus">
+                        <option value="ALL">All</option>
+                        {{#each byStatusCode}} <option value="{{statusCode}}" {{#if filtered}}selected{{/if}}>{{statusCode}} ({{count}})</option> {{/each}}
+                    </select>
+                </td>
+                <td colspan="2"></td>
+                <td>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </td>
+            </tr>
+            </form>
+
+            {{#each records}}
+            <tr>
+                <td>
+                    <span style="word-break: break-word; font-family: monospace">{{url}}</span> <a href="{{url}}" rel="noreferrer noopener">[Visit]</a>
+                </td>
+                <td>{{contentType}}</td>
+                {{#if good}}
+                    <td class="text-success">{{httpStatus}}</td>
+                {{/if}}
+                {{#if redirect}}
+                    <td class="text-info">{{httpStatus}}</td>
+                {{/if}}
+                {{#if clientError}}
+                    <td class="text-warning">{{httpStatus}}</td>
+                {{/if}}
+                {{#if serverError}}
+                    <td class="text-danger">{{httpStatus}}</td>
+                {{/if}}
+                {{#if unknownStatus}}
+                    <td>{{httpStatus}}</td>
+                {{/if}}
+                <td>{{#if hasBody}}&check;{{/if}}</td>
+                <td style="word-break: break-all; font-family: monospace">{{etag}}</td>
+                <td>{{lastModified}}</td>
+            </tr>
+            {{/each}}
+
+
+            <tr>
+                {{#with pagination}}
+                    <td>
+                        {{#if prevPage}}
+                            <form action>
+                                <input type="hidden" name="fid" value="{{storage.id}}">
+                                <input type="hidden" name="path" value="{{path}}">
+                                <input type="hidden" name="urlGlob" value="{{urlGlob}}">
+                                <input type="hidden" name="contentType" value="{{{contentType}}}">
+                                <input type="hidden" name="httpStatus" value="{{httpStatus}}">
+                                <input type="hidden" name="page" value="{{prev}}">
+                                <button class="btn btn-small btn-primary" type="submit">Previous</button>
+                            </form>
+                        {{/if}}
+                    </td>
+                    <td colspan="4"></td>
+                    <td>
+                        {{#if nextPage}}
+                            <form action>
+                                <input type="hidden" name="fid" value="{{storage.id}}">
+                                <input type="hidden" name="path" value="{{path}}">
+                                <input type="hidden" name="urlGlob" value="{{urlGlob}}">
+                                <input type="hidden" name="contentType" value="{{{contentType}}}">
+                                <input type="hidden" name="httpStatus" value="{{httpStatus}}">
+                                <input type="hidden" name="page" value="{{next}}">
+                                <button class="btn btn-small btn-primary" type="submit">Next</button>
+                            </form>
+                        {{/if}}
+                    </td>
+                {{/with}}
+            </tr>
+        </table>
+    </div>
+
+
+
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

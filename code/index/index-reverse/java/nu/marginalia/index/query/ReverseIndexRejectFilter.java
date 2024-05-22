@@ -1,6 +1,6 @@
 package nu.marginalia.index.query;
 
-import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 

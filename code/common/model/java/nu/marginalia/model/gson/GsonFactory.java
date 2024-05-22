@@ -2,8 +2,6 @@ package nu.marginalia.model.gson;
 
 import com.google.gson.*;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
-import nu.marginalia.bigstring.BigString;
-import nu.marginalia.bigstring.CompressedBigString;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 
@@ -23,9 +21,6 @@ public class GsonFactory {
                     }
                 })
                 .registerTypeAdapter(EdgeDomain.class, (JsonDeserializer<EdgeDomain>) (json, typeOfT, context) -> new EdgeDomain(json.getAsString()))
-                .registerTypeAdapter(BigString.class, (JsonDeserializer<BigString>) (json, typeOfT, context) -> BigString.encode(json.getAsString()))
-                .registerTypeAdapter(BigString.class, (JsonSerializer<BigString>) (src, typeOfT, context) -> new JsonPrimitive(src.decode()))
-                .registerTypeAdapter(CompressedBigString.class, (JsonSerializer<BigString>) (src, typeOfT, context) -> new JsonPrimitive(src.decode()))
                 .serializeSpecialFloatingPointValues()
                 .create();
     }

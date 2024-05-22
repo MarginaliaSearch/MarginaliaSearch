@@ -50,6 +50,8 @@ dependencies {
     implementation libs.zstd
     implementation libs.handlebars
 
+    implementation libs.duckdb
+
     implementation libs.trove
     implementation libs.spark
     implementation libs.fastutil

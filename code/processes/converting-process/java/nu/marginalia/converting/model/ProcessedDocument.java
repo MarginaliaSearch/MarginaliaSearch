@@ -6,13 +6,16 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.EdgeUrl;
 
+import javax.annotation.Nullable;
 import java.util.OptionalDouble;
 
 @ToString @Getter
 public class ProcessedDocument {
     public EdgeUrl url;
 
+    @Nullable
     public ProcessedDocumentDetails details;
+    @Nullable
     public DocumentKeywordsBuilder words;
 
     public UrlIndexingState state;

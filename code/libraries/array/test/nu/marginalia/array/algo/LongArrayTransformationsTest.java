@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class LongArrayTransformationsTest {
     LongArray basic;
-    LongArray paged;
     LongArray shifted;
 
     final int size = 1026;
@@ -18,12 +17,10 @@ class LongArrayTransformationsTest {
     @BeforeEach
     public void setUp() {
         basic = LongArray.allocate(size);
-        paged = LongArray.allocate(size);
         shifted = LongArray.allocate(size+30).shifted(30);
 
         for (int i = 0; i < basic.size(); i++) {
             basic.set(i, 3L*i);
-            paged.set(i, 3L*i);
             shifted.set(i, 3L*i);
         }
     }
@@ -31,28 +28,24 @@ class LongArrayTransformationsTest {
     @Test
     void transformEach() {
         transformTester(basic);
-        transformTester(paged);
         transformTester(shifted);
     }
 
     @Test
     void transformEachIO() throws IOException {
         transformTesterIO(basic);
-        transformTesterIO(paged);
         transformTesterIO(shifted);
     }
 
     @Test
     void fold() {
         assertEquals(3*(5+6+7+8+9), basic.fold(0, 5, 10, Long::sum));
-        assertEquals(3*(5+6+7+8+9), paged.fold(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), shifted.fold(0, 5, 10, Long::sum));
     }
 
     @Test
     void foldIO() throws IOException {
         assertEquals(3*(5+6+7+8+9), basic.foldIO(0, 5, 10, Long::sum));
-        assertEquals(3*(5+6+7+8+9), paged.foldIO(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), shifted.foldIO(0, 5, 10, Long::sum));
     }
 

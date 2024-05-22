@@ -29,7 +29,7 @@ class BTreeWriterTest {
         BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
         BTreeWriter writer = new BTreeWriter(null, ctx);
 
-        var header = writer.makeHeader(1024, ctx.pageSize()/2);
+        var header = writer.makeHeader(ctx, 1024, ctx.pageSize()/2);
         assertEquals(1024 + BTreeHeader.BTreeHeaderSizeLongs, header.dataOffsetLongs());
         assertEquals(header.dataOffsetLongs(), header.indexOffsetLongs());
     }
@@ -42,13 +42,13 @@ class BTreeWriterTest {
         int wsq = ctx.pageSize()*ctx.pageSize();
         int wcub = ctx.pageSize()*ctx.pageSize()*ctx.pageSize();
 
-        assertEquals(2, writer.makeHeader(1024, wsq-1).layers());
-        assertEquals(2, writer.makeHeader(1024, wsq).layers());
-        assertEquals(3, writer.makeHeader(1024, wsq+1).layers());
+        assertEquals(2, writer.makeHeader(ctx, 1024, wsq-1).layers());
+        assertEquals(2, writer.makeHeader(ctx, 1024, wsq).layers());
+        assertEquals(3, writer.makeHeader(ctx, 1024, wsq+1).layers());
 
-        assertEquals(3, writer.makeHeader(1024, wcub-1).layers());
-        assertEquals(3, writer.makeHeader(1024, wcub).layers());
-        assertEquals(4, writer.makeHeader(1024, wcub+1).layers());
+        assertEquals(3, writer.makeHeader(ctx, 1024, wcub-1).layers());
+        assertEquals(3, writer.makeHeader(ctx, 1024, wcub).layers());
+        assertEquals(4, writer.makeHeader(ctx, 1024, wcub+1).layers());
     }
 
     @Test
@@ -57,12 +57,12 @@ class BTreeWriterTest {
         BTreeWriter writer = new BTreeWriter(null, ctx);
 
         int wcub = ctx.pageSize()*ctx.pageSize()*ctx.pageSize();
-        System.out.println(writer.makeHeader(1025, wcub).relativeIndexLayerOffset(ctx, 0));
-        System.out.println(writer.makeHeader(1025, wcub).relativeIndexLayerOffset(ctx, 1));
-        System.out.println(writer.makeHeader(1025, wcub).relativeIndexLayerOffset(ctx, 2));
+        System.out.println(writer.makeHeader(ctx,1025, wcub).relativeIndexLayerOffset(ctx, 0));
+        System.out.println(writer.makeHeader(ctx,1025, wcub).relativeIndexLayerOffset(ctx, 1));
+        System.out.println(writer.makeHeader(ctx,1025, wcub).relativeIndexLayerOffset(ctx, 2));
 
         for (int i = 0; i < 1024; i++) {
-            var header = writer.makeHeader(0, i);
+            var header = writer.makeHeader(ctx,0, i);
 
 
 //            printTreeLayout(i, header, ctx);

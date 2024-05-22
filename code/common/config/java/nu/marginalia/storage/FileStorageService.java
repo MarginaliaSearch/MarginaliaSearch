@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -29,7 +30,8 @@ public class FileStorageService {
     private static final DateTimeFormatter dirNameDatePattern = DateTimeFormatter.ofPattern("__uu-MM-dd'T'HH_mm_ss.SSS"); // filesystem safe ISO8601
 
     @Inject
-    public FileStorageService(HikariDataSource dataSource, @Named("wmsa-system-node") Integer node) {
+    public FileStorageService(HikariDataSource dataSource,
+                              @Named("wmsa-system-node") Integer node) {
         this.dataSource = dataSource;
         this.node = node;
 
@@ -123,6 +125,7 @@ public class FileStorageService {
             }
         }
     }
+
 
     public void relateFileStorages(FileStorageId source, FileStorageId target) {
         try (var conn = dataSource.getConnection();
