@@ -22,12 +22,16 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /** Service for inspecting crawl data within the control service.
- *
+ * <p></p>
  * Uses remote calls to the executor service to fetch information about the crawl data.
  * Both directly, when inspecting the crawler log, and indirectly via duckdb when
  * inspecting the parquet files.  The duckdb calls rely on range queries to fetch
  * only the relevant data from the files, so that the UI remains responsive even when
  * dealing with large (100MB+ files).
+ * <p></p>
+ * This service is built in a fairly "raw" manner, for the purpose of not adding architectural
+ * overhead by modelling the data in a more structured way through an API; instead the data is
+ * fetched and presented directly to the UI.
  */
 @Singleton
 public class ControlCrawlDataService {
@@ -63,13 +67,15 @@ public class ControlCrawlDataService {
 
         List<SummaryStatusCode> byStatusCode = new ArrayList<>();
         List<SummaryContentType> byContentType = new ArrayList<>();
-
         List<CrawlDataRecordSummary> records = new ArrayList<>();
 
+        // Fetch the data from the parquet file using DuckDB
         String domain;
         try (var conn = DriverManager.getConnection("jdbc:duckdb:");
              var stmt = conn.createStatement()) {
             ResultSet rs;
+
+            // Summarize by status code
 
             rs = stmt.executeQuery(DUCKDB."SELECT domain FROM \{url} LIMIT 1");
             domain = rs.next() ? rs.getString(1) : "NO DOMAIN";
@@ -80,8 +86,14 @@ public class ControlCrawlDataService {
                                        ORDER BY httpStatus
                                        """);
             while (rs.next()) {
-                byStatusCode.add(new SummaryStatusCode(rs.getInt(1), rs.getInt(2), selectedHttpStatus.equals(rs.getString(1))));
+                final boolean isCurrentFilter = selectedContentType.equals(rs.getString("httpStatus"));
+                final int status = rs.getInt("httpStatus");
+                final int cnt = rs.getInt("cnt");
+
+                byStatusCode.add(new SummaryStatusCode(status, cnt, isCurrentFilter));
             }
+
+            // Summarize by content type
 
             rs = stmt.executeQuery(DUCKDB."""
                                         SELECT contentType, COUNT(*) as cnt
@@ -90,11 +102,16 @@ public class ControlCrawlDataService {
                                         ORDER BY contentType
                                         """);
             while (rs.next()) {
-                byContentType.add(new SummaryContentType(rs.getString(1), rs.getInt(2), selectedContentType.equals(rs.getString(1))));
+                final boolean isCurrentFilter = selectedContentType.equals(rs.getString("contentType"));
+                final String contentType = rs.getString("contentType");
+                final int cnt = rs.getInt("cnt");
+
+                byContentType.add(new SummaryContentType(contentType, cnt, isCurrentFilter));
             }
 
+            // Extract the document data
 
-            var query = DUCKDB."SELECT url, contentType, httpStatus, body != '', etagHeader, lastModifiedHeader FROM \{url} WHERE 1=1";
+            var query = DUCKDB."SELECT url, contentType, httpStatus, body != '' as bodied, etagHeader, lastModifiedHeader FROM \{url} WHERE 1=1";
             if (!urlGlob.isBlank())
                 query += DUCKDB." AND url LIKE \{urlGlob.replace('*', '%')}";
             if (!selectedContentType.equals("ALL"))
@@ -105,7 +122,14 @@ public class ControlCrawlDataService {
 
             rs = stmt.executeQuery(query);
             while (rs.next()) {
-                records.add(new CrawlDataRecordSummary(rs.getString(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4), rs.getString(5), rs.getString(6)));
+
+                records.add(new CrawlDataRecordSummary(
+                        rs.getString("url"),
+                        rs.getString("contentType"),
+                        rs.getInt("httpStatus"),
+                        rs.getBoolean("bodied"),
+                        rs.getString("etagHeader"),
+                        rs.getString("lastModifiedHeader")));
             }
         }
 
@@ -113,19 +137,21 @@ public class ControlCrawlDataService {
 
         ret.put("tab", Map.of("storage", true));
         ret.put("view", Map.of("crawl", true));
-        ret.put("contentType", selectedContentType);
-        ret.put("httpStatus", selectedHttpStatus);
-        ret.put("urlGlob", urlGlob);
-
-        ret.put("pagination", new Pagination(after + 10, after - 10, records.size()));
 
         ret.put("node", nodeConfigurationService.get(nodeId));
         ret.put("storage", fileStorageService.getStorage(fsid));
         ret.put("path", path);
         ret.put("domain", domain);
+
+        ret.put("contentType", selectedContentType);
+        ret.put("httpStatus", selectedHttpStatus);
+        ret.put("urlGlob", urlGlob);
+
         ret.put("byStatusCode", byStatusCode);
         ret.put("byContentType", byContentType);
+
         ret.put("records", records);
+        ret.put("pagination", new Pagination(after + 10, after - 10, records.size()));
 
         return ret;
     }
@@ -206,6 +232,7 @@ public class ControlCrawlDataService {
 
     // DuckDB template processor that deals with quoting and escaping values
     // in the SQL query; this offers a very basic protection against accidental SQL injection
+    @SuppressWarnings("preview")
     static StringTemplate.Processor<String, IllegalArgumentException> DUCKDB = st -> {
         StringBuilder sb = new StringBuilder();
         Iterator<String> fragmentsIter = st.fragments().iterator();

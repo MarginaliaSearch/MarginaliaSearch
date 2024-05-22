@@ -21,8 +21,6 @@ import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -161,18 +159,24 @@ public class ExecutorClient {
         }
     }
 
+    /** Get the URL to download a file from a (possibly remote) file storage.
+     * The endpoint is compatible with range requests.
+     * */
     public URL remoteFileURL(FileStorage fileStorage, String path) {
         String uriPath = STR."/transfer/file/\{fileStorage.id()}";
         String uriQuery = STR."path=\{URLEncoder.encode(path, StandardCharsets.UTF_8)}";
 
-        var service = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, fileStorage.node()))
-                .stream().findFirst().orElseThrow();
+        var endpoints = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, fileStorage.node()));
+        if (endpoints.isEmpty()) {
+            throw new RuntimeException("No endpoints for node " + fileStorage.node());
+        }
+        var service = endpoints.getFirst();
 
         try {
             return service.endpoint().toURL(uriPath, uriQuery);
         }
         catch (URISyntaxException|MalformedURLException ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Failed to construct URL for path", ex);
         }
     }
 

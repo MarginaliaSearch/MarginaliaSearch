@@ -63,7 +63,7 @@ public class GrpcServerTest {
 
         var mockRegistry = Mockito.mock(ServiceRegistryIf.class);
         when(mockRegistry.getEndpoints(any())).thenReturn(
-                Set.of(new ServiceEndpoint("127.0.0.1", port).asInstance(serverUUID)));
+                List.of(new ServiceEndpoint("127.0.0.1", port).asInstance(serverUUID)));
 
         var client = createClient(mockRegistry);
         client.onChange();
@@ -83,7 +83,7 @@ public class GrpcServerTest {
 
         server1.start();
 
-        Set<ServiceEndpoint.InstanceAddress> endpoints = new HashSet<>();
+        List<ServiceEndpoint.InstanceAddress> endpoints = new ArrayList<>();
         endpoints.add(new ServiceEndpoint("127.0.0.1", port).asInstance(serverUUID1));
 
         var mockRegistry = Mockito.mock(ServiceRegistryIf.class);

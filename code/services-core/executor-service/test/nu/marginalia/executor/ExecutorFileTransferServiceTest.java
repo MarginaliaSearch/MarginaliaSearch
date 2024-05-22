@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import spark.Spark;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -16,6 +18,11 @@ class ExecutorFileTransferServiceTest {
 
     @Test
     public void test() throws SQLException, InterruptedException {
+        // Test requires this file to exist
+        if (!Files.exists(Path.of("/tmp/crawl.parquet"))) {
+            return;
+        }
+
         var fileStorage = Mockito.mock(FileStorageService.class);
 
         when(fileStorage.getStorage(Mockito.any(FileStorageId.class))).thenReturn(new FileStorage(null,
@@ -37,18 +44,18 @@ class ExecutorFileTransferServiceTest {
         Thread.sleep(1000);
 
 
-    try (var conn = DriverManager.getConnection("jdbc:duckdb:");
-         var stmt = conn.createStatement())
-    {
-        var rs = stmt.executeQuery("""
-            SELECT COUNT(*) AS cnt, httpStatus 
-            FROM 'http://hostname:9998/transfer/file/0?path=crawl.parquet' 
-            GROUP BY httpStatus
-            """);
-        while (rs.next()) {
-            System.out.println(rs.getInt("CNT") + " " + rs.getInt("httpStatus"));
+        try (var conn = DriverManager.getConnection("jdbc:duckdb:");
+             var stmt = conn.createStatement()) {
+            var rs = stmt.executeQuery("""
+                SELECT COUNT(*) AS cnt, httpStatus 
+                FROM 'http://localhost:9998/transfer/file/0?path=crawl.parquet' 
+                GROUP BY httpStatus
+                """);
+            while (rs.next()) {
+                System.out.println(rs.getInt("CNT") + " " + rs.getInt("httpStatus"));
+            }
         }
-    }
-        for(;;);
+
+        Spark.stop();
     }
 }
