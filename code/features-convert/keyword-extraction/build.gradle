@@ -26,7 +26,10 @@ dependencies {
     implementation libs.jsoup
     implementation libs.commons.lang3
 
-    implementation libs.guice
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.guava
 
     implementation libs.trove

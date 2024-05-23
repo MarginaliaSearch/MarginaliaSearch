@@ -179,7 +179,7 @@ dependencyResolutionManagement {
             library('opennlp','org.apache.opennlp','opennlp-tools').version('2.3.3')
             library('fasttext','com.github.vinhkhuc','jfasttext').version('0.5')
             library('roaringbitmap','org.roaringbitmap','RoaringBitmap').version('0.9.32')
-            library('opencsv','com.opencsv','opencsv').version('5.6')
+            library('opencsv','com.opencsv','opencsv').version('5.9')
             library('bucket4j','com.github.vladimir-bukhtoyarov','bucket4j-core').version('7.5.0')
 
             library('gson','com.google.code.gson','gson').version('2.10.1')
@@ -213,6 +213,12 @@ dependencyResolutionManagement {
 
             library('curator-framework', 'org.apache.curator','curator-framework').version('5.6.0')
             library('curator-x-discovery', 'org.apache.curator','curator-x-discovery').version('5.6.0')
+
+            library('jetty-server','org.eclipse.jetty','jetty-server').version('9.4.54.v20240208')
+            library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
+            library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
+
+            bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
             bundle('slf4j.test', ['slf4j.jdk14'])

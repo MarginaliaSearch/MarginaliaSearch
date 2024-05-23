@@ -25,11 +25,21 @@ dependencies {
 
     implementation libs.prometheus
     implementation libs.notnull
-    implementation libs.guice
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.gson
     implementation libs.bundles.protobuf
     implementation libs.roaringbitmap
-    implementation libs.bundles.grpc
+    implementation libs.guava
+    libs.bundles.grpc.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'com.google.guava'
+        }
+    }
+
+
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

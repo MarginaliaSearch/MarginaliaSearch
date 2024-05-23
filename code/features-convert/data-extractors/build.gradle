@@ -30,7 +30,10 @@ dependencies {
 
 
     implementation libs.bundles.slf4j
-    implementation libs.guice
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.trove
     implementation libs.commons.lang3
     implementation libs.commons.compress

@@ -34,7 +34,10 @@ dependencies {
     implementation libs.notnull
     implementation libs.commons.compress
     implementation libs.commons.io
-    implementation libs.guice
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.gson
 
     testImplementation libs.bundles.slf4j.test

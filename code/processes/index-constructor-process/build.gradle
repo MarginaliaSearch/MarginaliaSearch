@@ -35,7 +35,12 @@ dependencies {
     implementation project(':code:index:index-journal')
 
     implementation libs.bundles.slf4j
-    implementation libs.guice
+    
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+
     implementation libs.bundles.mariadb
     implementation libs.bundles.gson
 

@@ -12,8 +12,14 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation libs.spark
-    implementation libs.guice
+    implementation dependencies.create(libs.spark.get()) {
+        exclude group: 'org.eclipse.jetty'
+    }
+    implementation libs.bundles.jetty
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.gson
 
     implementation libs.bundles.slf4j

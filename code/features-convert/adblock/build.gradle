@@ -19,7 +19,10 @@ dependencies {
     implementation project(':code:common:config')
 
     implementation libs.bundles.slf4j
-    implementation libs.guice
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.notnull
     implementation libs.jsoup
 

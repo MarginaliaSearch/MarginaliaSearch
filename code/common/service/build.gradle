@@ -16,11 +16,25 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:config')
 
-    implementation libs.spark
-    implementation libs.guice
+    implementation dependencies.create(libs.spark.get()) {
+        exclude group: 'org.eclipse.jetty'
+    }
+    implementation libs.bundles.jetty
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
 
     implementation libs.bundles.curator
-    implementation libs.bundles.grpc
+    implementation libs.guava
+    libs.bundles.grpc.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'com.google.guava'
+        }
+    }
+
+    implementation libs.guava
+
     implementation libs.bundles.prometheus
     implementation libs.bundles.slf4j
     implementation libs.bucket4j

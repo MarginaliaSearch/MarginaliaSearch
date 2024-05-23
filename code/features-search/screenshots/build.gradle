@@ -20,8 +20,14 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.notnull
-    implementation libs.guice
-    implementation libs.spark
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation dependencies.create(libs.spark.get()) {
+        exclude group: 'org.eclipse.jetty'
+    }
+    implementation libs.bundles.jetty
     implementation libs.bundles.mariadb
     implementation libs.commons.io
 

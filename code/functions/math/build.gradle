@@ -18,9 +18,19 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus
-    implementation libs.bundles.grpc
+    implementation libs.guava
+    libs.bundles.grpc.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'com.google.guava'
+        }
+    }
+
+
     implementation libs.notnull
-    implementation libs.guice
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil

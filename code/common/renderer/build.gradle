@@ -17,8 +17,14 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.bundles.handlebars
-    implementation libs.guice
-    implementation libs.spark
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation dependencies.create(libs.spark.get()) {
+        exclude group: 'org.eclipse.jetty'
+    }
+    implementation libs.bundles.jetty
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
