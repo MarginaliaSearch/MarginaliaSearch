@@ -295,15 +295,23 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         words.addAllSyntheticTerms(FileLinks.createFileLinkKeywords(lp, domain));
         words.addAllSyntheticTerms(FileLinks.createFileEndingKeywords(doc));
-        words.addAllSyntheticTerms(createLinkKeywords(lp));
+        words.addAllSyntheticTerms(createLinkKeywords(lp, domain));
     }
 
-    private Set<String> createLinkKeywords(LinkProcessor lp) {
+    private Set<String> createLinkKeywords(LinkProcessor lp, EdgeDomain domain) {
         final Set<String> linkTerms = new HashSet<>();
 
         for (var fd : lp.getForeignDomains()) {
             linkTerms.add("links:"+fd.toString().toLowerCase());
             linkTerms.add("links:"+fd.getTopDomain().toLowerCase());
+        }
+
+        // Add keyword terms for the first 128 external links, with no prefix
+        for (EdgeUrl link : lp.getSeenUrls()) {
+            if (linkTerms.size() > 128) break;
+            if (domain.hasSameTopDomain(link.domain)) continue;
+
+            linkTerms.add(link.toString());
         }
 
         return linkTerms;

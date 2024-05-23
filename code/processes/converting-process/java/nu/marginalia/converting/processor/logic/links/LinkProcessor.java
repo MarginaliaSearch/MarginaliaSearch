@@ -32,6 +32,10 @@ public class LinkProcessor {
         ret.feedLinks = new ArrayList<>();
     }
 
+    public Set<EdgeUrl> getSeenUrls() {
+        return seenUrls;
+    }
+
     public Set<EdgeDomain> getForeignDomains() {
         return foreignDomains;
     }
