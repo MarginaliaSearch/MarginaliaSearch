@@ -32,7 +32,10 @@
 
         {{#unless results}}
             <div class="infobox">
-                No search results found.
+                No search results found.  If you believe this is an error, consider either
+                <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/issues">submitting an issue on GitHub</a>,
+                or sending an email to <a href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a> describing
+                the problem.
             </div>
         {{/unless}}
 
