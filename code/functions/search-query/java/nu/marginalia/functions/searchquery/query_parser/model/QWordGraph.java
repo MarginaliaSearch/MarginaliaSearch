@@ -77,6 +77,20 @@ public class QWordGraph implements Iterable<QWord> {
     }
 
 
+    /** Add a link from the previous word to the next word for every adjacent word in the graph;
+     * except for when the provided word is preceeded by the start token and succeeded by the
+     * end token. */
+    public void addOmitLink(QWord qw) {
+        for (var prev : getPrev(qw)) {
+            for (var next : getNext(qw)) {
+                if (prev.isBeg() && next.isEnd())
+                    continue;
+
+                addLink(prev, next);
+            }
+        }
+    }
+
     public void addLink(QWord from, QWord to) {
         links.add(new QWordGraphLink(from, to));
         fromTo.computeIfAbsent(from.ord(), k -> new ArrayList<>()).add(to);

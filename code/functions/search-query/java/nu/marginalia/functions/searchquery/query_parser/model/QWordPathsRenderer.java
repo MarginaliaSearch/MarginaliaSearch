@@ -10,11 +10,16 @@ public class QWordPathsRenderer {
     private final Set<QWordPath> paths;
 
     private QWordPathsRenderer(Collection<QWordPath> paths) {
-        this.paths = Set.copyOf(paths);
+        this.paths = new HashSet<>(paths.size());
+        for (var path : paths) {
+            if (!path.isEmpty()) {
+                this.paths.add(path);
+            }
+        }
     }
 
     private QWordPathsRenderer(QWordGraph graph) {
-        this.paths = Set.copyOf(QWordGraphPathLister.listPaths(graph));
+        this(Set.copyOf(QWordGraphPathLister.listPaths(graph)));
     }
 
     public static String render(QWordGraph graph) {

@@ -196,4 +196,20 @@ public class QueryFactoryTest {
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
+
+    @Test
+    public void testExpansion4() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("The Vietnam of computer science");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testExpansion5() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("The");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
 }
