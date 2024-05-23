@@ -105,17 +105,17 @@ class ZkServiceRegistryTest {
         registry1.announceInstance(uuid1);
         registry2.announceInstance(uuid2);
 
-        assertEquals(Set.of(endpoint1.asInstance(uuid1)),
+        assertEquals(List.of(endpoint1.asInstance(uuid1)),
                 registry1.getEndpoints(key1));
 
-        assertEquals(Set.of(endpoint2.asInstance(uuid2)),
+        assertEquals(List.of(endpoint2.asInstance(uuid2)),
                 registry1.getEndpoints(key2));
 
         registry1.shutDown();
         Thread.sleep(100);
 
-        assertEquals(Set.of(), registry2.getEndpoints(key1));
-        assertEquals(Set.of(endpoint2.asInstance(uuid2)), registry2.getEndpoints(key2));
+        assertEquals(List.of(), registry2.getEndpoints(key1));
+        assertEquals(List.of(endpoint2.asInstance(uuid2)), registry2.getEndpoints(key2));
     }
 
     @Test
@@ -136,12 +136,12 @@ class ZkServiceRegistryTest {
 
         assertEquals(Set.of(endpoint1.asInstance(uuid1),
                         endpoint2.asInstance(uuid2)),
-                registry1.getEndpoints(key));
+                new HashSet<>(registry1.getEndpoints(key)));
 
         registry1.shutDown();
         Thread.sleep(100);
 
-        assertEquals(Set.of(endpoint2.asInstance(uuid2)), registry2.getEndpoints(key));
+        assertEquals(List.of(endpoint2.asInstance(uuid2)), registry2.getEndpoints(key));
     }
 
     @Test
@@ -161,8 +161,8 @@ class ZkServiceRegistryTest {
         registry1.announceInstance(uuid1);
         registry2.announceInstance(uuid2);
 
-        assertEquals(Set.of(endpoint1.asInstance(uuid1)), registry1.getEndpoints(key1));
-        assertEquals(Set.of(endpoint2.asInstance(uuid2)), registry1.getEndpoints(key2));
+        assertEquals(List.of(endpoint1.asInstance(uuid1)), registry1.getEndpoints(key1));
+        assertEquals(List.of(endpoint2.asInstance(uuid2)), registry1.getEndpoints(key2));
     }
 
     @Test
