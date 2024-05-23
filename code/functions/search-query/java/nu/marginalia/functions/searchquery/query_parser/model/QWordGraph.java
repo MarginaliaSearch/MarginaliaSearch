@@ -21,7 +21,6 @@ public class QWordGraph implements Iterable<QWord> {
     private final List<QWordGraphLink> links = new ArrayList<>();
     private final Map<Integer, List<QWord>> fromTo = new HashMap<>();
     private final Map<Integer, List<QWord>> toFrom = new HashMap<>();
-
     private int wordId = 0;
 
     public QWordGraph(String... words) {
@@ -74,21 +73,6 @@ public class QWordGraph implements Iterable<QWord> {
                 .flatMap(next -> getPrev(next).stream())
                 .filter(prevNext::contains)
                 .collect(Collectors.toList());
-    }
-
-
-    /** Add a link from the previous word to the next word for every adjacent word in the graph;
-     * except for when the provided word is preceeded by the start token and succeeded by the
-     * end token. */
-    public void addOmitLink(QWord qw) {
-        for (var prev : getPrev(qw)) {
-            for (var next : getNext(qw)) {
-                if (prev.isBeg() && next.isEnd())
-                    continue;
-
-                addLink(prev, next);
-            }
-        }
     }
 
     public void addLink(QWord from, QWord to) {

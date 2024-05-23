@@ -61,6 +61,7 @@ public class QueryFactoryTest {
             lines.limit(1000).forEach(line -> {
                 String[] parts = line.split("\t");
                 if (parts.length == 2) {
+                    System.out.println(parts[1]);
                     System.out.println(parseAndGetSpecs(parts[1]).getQuery().compiledQuery);
                 }
             });
@@ -209,6 +210,13 @@ public class QueryFactoryTest {
     public void testExpansion5() {
         long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("The");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }    @Test
+
+    public void testExpansion6() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("burning the nerves in the neck");
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }

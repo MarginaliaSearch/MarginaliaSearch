@@ -1,5 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser.model;
 
+import nu.marginalia.language.WordPatterns;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Objects;
@@ -32,7 +34,9 @@ public class QWordGraphPathLister {
                            QWord start,
                            QWord end)
     {
-        stack.addLast(start);
+        boolean isStopword = WordPatterns.isStopWord(start.word());
+        if (!isStopword)
+            stack.addLast(start);
 
         if (Objects.equals(start, end)) {
             var nodes = new HashSet<>(stack);
@@ -52,6 +56,7 @@ public class QWordGraphPathLister {
             }
         }
 
-        stack.removeLast();
+        if (!isStopword)
+            stack.removeLast();
     }
 }

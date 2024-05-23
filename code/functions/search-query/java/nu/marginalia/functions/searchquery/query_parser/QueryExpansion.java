@@ -23,7 +23,6 @@ public class QueryExpansion {
     private final NgramLexicon lexicon;
 
     private final List<ExpansionStrategy> expansionStrategies = List.of(
-            this::omitStopWords,
             this::joinDashes,
             this::splitWordNum,
             this::joinTerms,
@@ -55,14 +54,6 @@ public class QueryExpansion {
 
     private static final Pattern dashPattern = Pattern.compile("-");
     private static final Pattern numWordBoundary = Pattern.compile("[0-9][a-zA-Z]|[a-zA-Z][0-9]");
-
-    public void omitStopWords(QWordGraph graph) {
-        for (var qw : graph) {
-            if (WordPatterns.isStopWord(qw.word())) {
-                graph.addOmitLink(qw);
-            }
-        }
-    }
 
     // Turn 'lawn-chair' into 'lawnchair'
     public void joinDashes(QWordGraph graph) {
