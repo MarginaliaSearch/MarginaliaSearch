@@ -3,14 +3,18 @@ package nu.marginalia.model.processed;
 import blue.strategic.parquet.Dehydrator;
 import blue.strategic.parquet.Hydrator;
 import blue.strategic.parquet.ValueWriter;
+import gnu.trove.list.TIntList;
 import gnu.trove.list.TLongList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.roaringbitmap.RoaringBitmap;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +61,8 @@ public class DocumentRecord {
     public List<String> words;
     @Nullable
     public TLongList metas;
+    @Nullable
+    public List<RoaringBitmap> positions;
 
     public static Hydrator<DocumentRecord, DocumentRecord> newHydrator() {
         return new DocumentDataHydrator();
@@ -83,9 +89,11 @@ public class DocumentRecord {
             Types.optional(FLOAT).named("quality"),
             Types.optional(INT32).named("pubYear"),
             Types.repeated(INT64).named("wordMeta"),
+            Types.repeated(BINARY).named("positions"),
             Types.repeated(BINARY).as(stringType()).named("word")
     );
 
+    @SneakyThrows
     public DocumentRecord add(String heading, Object value) {
         switch (heading) {
             case "domain" -> domain = (String) value;
@@ -113,6 +121,16 @@ public class DocumentRecord {
                 }
                 this.metas.add((long) value);
             }
+            case "positions" -> {
+                if (this.positions == null) {
+                    this.positions = new ArrayList<>(100);
+                }
+                byte[] array = (byte[]) value;
+                ByteBuffer buffer = ByteBuffer.wrap(array);
+                var rb = new RoaringBitmap();
+                rb.deserialize(buffer);
+                this.positions.add(rb);
+            }
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }
         return this;
@@ -139,9 +157,17 @@ public class DocumentRecord {
         if (pubYear != null) {
             valueWriter.write("pubYear", pubYear);
         }
-
         if (metas != null) {
             valueWriter.writeList("wordMeta", metas);
+        }
+        if (positions != null) {
+            List<byte[]> pos = new ArrayList<>(positions.size());
+            for (RoaringBitmap bitmap : positions) {
+                ByteBuffer baos = ByteBuffer.allocate(bitmap.serializedSizeInBytes());
+                bitmap.serialize(baos);
+                pos.add(baos.array());
+            }
+            valueWriter.writeList("positions", pos);
         }
 
         if (words != null) {

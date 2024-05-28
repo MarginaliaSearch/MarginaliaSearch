@@ -36,7 +36,7 @@ public class DocumentKeywordsBuilder {
             wordArray[i] = entry.getKey();
         }
 
-        return new DocumentKeywords(wordArray, meta);
+        return new DocumentKeywords(wordArray, meta, null);
     }
 
     public DocumentKeywordsBuilder(int capacity) {

@@ -5,7 +5,9 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
+import org.roaringbitmap.RoaringBitmap;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +29,7 @@ public class DocumentRecordKeywordsProjection {
 
     public List<String> words;
     public TLongList metas;
+    public List<RoaringBitmap> positions;
 
     public boolean hasKeywords() {
         return words != null && metas != null;
@@ -40,6 +43,7 @@ public class DocumentRecordKeywordsProjection {
         return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata");
     }
 
+    @SneakyThrows
     public DocumentRecordKeywordsProjection add(String heading, Object value) {
         switch (heading) {
             case "domain" -> domain = (String) value;
@@ -56,6 +60,16 @@ public class DocumentRecordKeywordsProjection {
                     this.metas = new TLongArrayList(100);
                 }
                 this.metas.add((long) value);
+            }
+            case "position" -> {
+                if (this.positions == null) {
+                    this.positions = new ArrayList<>(100);
+                }
+                byte[] array = (byte[]) value;
+                ByteBuffer buffer = ByteBuffer.wrap(array);
+                var rb = new RoaringBitmap();
+                rb.deserialize(buffer);
+                this.positions.add(rb);
             }
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }

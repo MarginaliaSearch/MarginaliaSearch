@@ -10,6 +10,7 @@ import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.DocumentRecordKeywordsProjection;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +67,8 @@ public class KeywordLoaderService {
 
         var words = new DocumentKeywords(
                 projection.words.toArray(String[]::new),
-                projection.metas.toArray()
+                projection.metas.toArray(),
+                projection.positions.toArray(RoaringBitmap[]::new)
         );
 
         writer.putWords(combinedId,

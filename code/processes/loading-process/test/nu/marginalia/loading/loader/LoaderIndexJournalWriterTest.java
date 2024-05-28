@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.roaringbitmap.RoaringBitmap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,11 +52,13 @@ class LoaderIndexJournalWriterTest {
     public void testBreakup() throws Exception {
         String[] keywords = new String[2000];
         long[] metadata = new long[2000];
+        RoaringBitmap[] positions = new RoaringBitmap[2000];
         for (int i = 0; i < 2000; i++) {
             keywords[i] = Integer.toString(i);
             metadata[i] = i+1;
+            positions[i] = new RoaringBitmap();
         }
-        DocumentKeywords words = new DocumentKeywords(keywords, metadata);
+        DocumentKeywords words = new DocumentKeywords(keywords, metadata, positions);
         writer.putWords(1, 0, new DocumentMetadata(0),
                 words);
 

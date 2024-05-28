@@ -1,6 +1,7 @@
 package nu.marginalia.keyword.model;
 
 import nu.marginalia.model.idx.WordMetadata;
+import org.roaringbitmap.RoaringBitmap;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,22 +13,17 @@ public final class DocumentKeywords implements Serializable {
 
     public final String[] keywords;
     public final long[] metadata;
+    public final RoaringBitmap[] positions;
 
     public DocumentKeywords(String[] keywords,
-                            long[] metadata)
+                            long[] metadata,
+                            RoaringBitmap[] positions)
     {
         this.keywords = keywords;
         this.metadata = metadata;
+        this.positions = positions;
 
         assert keywords.length == metadata.length;
-
-        if (DocumentKeywords.class.desiredAssertionStatus()) {
-            for (int i = 0; i < metadata.length; i++) {
-                if (metadata[i] == 0) {
-                    System.err.println("Bad metadata for keyword " + keywords[i]);
-                }
-            }
-        }
     }
 
     @Override

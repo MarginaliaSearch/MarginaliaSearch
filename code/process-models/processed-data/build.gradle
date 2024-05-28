@@ -18,6 +18,7 @@ dependencies {
     implementation project(':third-party:parquet-floor')
 
     implementation libs.notnull
+    implementation libs.roaringbitmap
     implementation libs.trove
     implementation libs.bundles.parquet
 

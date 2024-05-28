@@ -24,6 +24,7 @@ dependencies {
     implementation libs.notnull
 
     implementation libs.jsoup
+    implementation libs.roaringbitmap
     implementation libs.commons.lang3
 
     implementation libs.guava

@@ -80,6 +80,7 @@ dependencies {
     implementation libs.bundles.mariadb
     implementation libs.bundles.nlp
 
+    implementation libs.roaringbitmap
     implementation libs.trove
     implementation libs.fastutil
 

@@ -50,6 +50,7 @@ dependencies {
     implementation libs.gson
     implementation libs.commons.lang3
     implementation libs.zstd
+    implementation libs.roaringbitmap
     implementation libs.trove
     implementation libs.bundles.mariadb
 

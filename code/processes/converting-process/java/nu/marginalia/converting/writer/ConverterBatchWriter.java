@@ -17,6 +17,7 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.processed.DocumentRecord;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
+import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,12 +121,14 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         0L,
                         null,
                         null,
+                        null,
                         null);
             }
             else {
                 var wb = document.words.build();
                 List<String> words = Arrays.asList(wb.keywords);
-                TLongList metas = new TLongArrayList(wb.metadata);
+                TLongArrayList metas = new TLongArrayList(wb.metadata);
+                List<RoaringBitmap> positions = Arrays.asList(wb.positions);
 
                 documentWriter.write(new DocumentRecord(
                         domainName,
@@ -143,7 +146,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         document.details.metadata.encode(),
                         document.details.pubYear,
                         words,
-                        metas
+                        metas,
+                        positions
                 ));
 
             }
