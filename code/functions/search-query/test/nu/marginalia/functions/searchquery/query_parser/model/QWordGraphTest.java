@@ -15,21 +15,21 @@ class QWordGraphTest {
 
         // ^ -  a - b - c - $
         //       \- d -/
-        QWordGraph graph = new QWordGraph("a", "b", "c");
+        QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("b"), "d");
 
         var reachability = graph.forwardReachability();
 
-        System.out.println(reachability.get(graph.node("a")));
+        System.out.println(reachability.get(graph.node("q")));
         System.out.println(reachability.get(graph.node("b")));
         System.out.println(reachability.get(graph.node("c")));
         System.out.println(reachability.get(graph.node("d")));
 
-        assertEquals(Set.of(graph.node(" ^ ")), reachability.get(graph.node("a")));
-        assertEquals(Set.of(graph.node(" ^ "), graph.node("a")), reachability.get(graph.node("b")));
-        assertEquals(Set.of(graph.node(" ^ "), graph.node("a")), reachability.get(graph.node("d")));
-        assertEquals(Set.of(graph.node(" ^ "), graph.node("a"), graph.node("b"), graph.node("d")), reachability.get(graph.node("c")));
-        assertEquals(Set.of(graph.node(" ^ "), graph.node("a"), graph.node("b"), graph.node("d"), graph.node("c")), reachability.get(graph.node(" $ ")));
+        assertEquals(Set.of(graph.node(" ^ ")), reachability.get(graph.node("q")));
+        assertEquals(Set.of(graph.node(" ^ "), graph.node("q")), reachability.get(graph.node("b")));
+        assertEquals(Set.of(graph.node(" ^ "), graph.node("q")), reachability.get(graph.node("d")));
+        assertEquals(Set.of(graph.node(" ^ "), graph.node("q"), graph.node("b"), graph.node("d")), reachability.get(graph.node("c")));
+        assertEquals(Set.of(graph.node(" ^ "), graph.node("q"), graph.node("b"), graph.node("d"), graph.node("c")), reachability.get(graph.node(" $ ")));
     }
 
 
@@ -39,12 +39,12 @@ class QWordGraphTest {
 
         // ^ -  a - b - c - $
         //       \- d -/
-        QWordGraph graph = new QWordGraph("a", "b", "c");
+        QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("b"), "d");
 
         var reachability = graph.reverseReachability();
 
-        System.out.println(reachability.get(graph.node("a")));
+        System.out.println(reachability.get(graph.node("q")));
         System.out.println(reachability.get(graph.node("b")));
         System.out.println(reachability.get(graph.node("c")));
         System.out.println(reachability.get(graph.node("d")));
@@ -52,8 +52,8 @@ class QWordGraphTest {
         assertEquals(Set.of(graph.node(" $ ")), reachability.get(graph.node("c")));
         assertEquals(Set.of(graph.node(" $ "), graph.node("c")), reachability.get(graph.node("b")));
         assertEquals(Set.of(graph.node(" $ "), graph.node("c")), reachability.get(graph.node("d")));
-        assertEquals(Set.of(graph.node(" $ "), graph.node("c"), graph.node("b"), graph.node("d")), reachability.get(graph.node("a")));
-        assertEquals(Set.of(graph.node(" $ "), graph.node("c"), graph.node("b"), graph.node("d"), graph.node("a")), reachability.get(graph.node(" ^ ")));
+        assertEquals(Set.of(graph.node(" $ "), graph.node("c"), graph.node("b"), graph.node("d")), reachability.get(graph.node("q")));
+        assertEquals(Set.of(graph.node(" $ "), graph.node("c"), graph.node("b"), graph.node("d"), graph.node("q")), reachability.get(graph.node(" ^ ")));
     }
 
     @Test
@@ -62,20 +62,20 @@ class QWordGraphTest {
 
         // ^ -  a - b - c - $
         //       \- d -/
-        QWordGraph graph = new QWordGraph("a", "b", "c");
+        QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("b"), "d");
 
-        assertEquals("a c ( b | d )", graph.compileToQuery());
+        assertEquals("q c ( b | d )", graph.compileToQuery());
     }
 
     @Test
     void testCompile2() {
         // Construct a graph like
 
-        // ^ -  a - b - c - $
-        QWordGraph graph = new QWordGraph("a", "b", "c");
+        // ^ -  b - c - d - $
+        QWordGraph graph = new QWordGraph("b", "c", "d");
 
-        assertEquals("a b c", graph.compileToQuery());
+        assertEquals("b c d", graph.compileToQuery());
     }
 
     @Test
@@ -84,9 +84,9 @@ class QWordGraphTest {
 
         // ^ -  a - b - c - $
         //   \- d -/
-        QWordGraph graph = new QWordGraph("a", "b", "c");
-        graph.addVariant(graph.node("a"), "d");
-        assertEquals("b c ( a | d )", graph.compileToQuery());
+        QWordGraph graph = new QWordGraph("q", "b", "c");
+        graph.addVariant(graph.node("q"), "d");
+        assertEquals("b c ( q | d )", graph.compileToQuery());
     }
 
     @Test
@@ -95,9 +95,9 @@ class QWordGraphTest {
 
         // ^ -  a - b - c - $
         //           \- d -/
-        QWordGraph graph = new QWordGraph("a", "b", "c");
+        QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("c"), "d");
-        assertEquals("a b ( c | d )", graph.compileToQuery());
+        assertEquals("q b ( c | d )", graph.compileToQuery());
     }
 
     @Test // this test is a bit flaky, the order of the variants is not guaranteed
@@ -107,9 +107,9 @@ class QWordGraphTest {
         //       /- e -\
         // ^ -  a - b - c - $
         //           \- d -/
-        QWordGraph graph = new QWordGraph("a", "b", "c");
+        QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("c"), "d");
         graph.addVariant(graph.node("b"), "e");
-        assertEquals("a ( c ( b | e ) | d ( b | e ) )", graph.compileToQuery());
+        assertEquals("q ( c ( b | e ) | d ( b | e ) )", graph.compileToQuery());
     }
 }
