@@ -10,6 +10,7 @@ import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.roaringbitmap.RoaringBitmap;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -21,10 +22,8 @@ import java.util.Set;
 
 class DocumentKeywordExtractorTest {
 
-    DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(
-            new TermFrequencyDict(WmsaHome.getLanguageModels()),
-            new NgramLexicon(WmsaHome.getLanguageModels()));
-    SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+    static DocumentKeywordExtractor extractor = new DocumentKeywordExtractor();
+    static SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
     @Test
     public void testWordPattern() {
@@ -41,24 +40,6 @@ class DocumentKeywordExtractorTest {
         Assertions.assertFalse(extractor.matchesWordPattern("Stulpnagelstrasse"));
     }
 
-
-    @Test
-    public void testEmptyMetadata() throws URISyntaxException {
-        var dld = se.extractSentences("""
-                Some sample text, I'm not sure what even triggers this
-                """, "A title perhaps?");
-        var keywordBuilder = extractor.extractKeywords(dld, new EdgeUrl("https://www.example.com/invalid"));
-        var keywords = keywordBuilder.build();
-
-        var pointer = keywords.newPointer();
-        while (pointer.advancePointer()) {
-            if (pointer.getMetadata() == 0L) {
-                System.out.println("Aha! " + pointer.getKeyword());
-            }
-        }
-
-    }
-
     @Test
     public void testKeyboards2() throws IOException, URISyntaxException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/keyboards.html"),
@@ -69,7 +50,7 @@ class DocumentKeywordExtractorTest {
 
         var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
 
-        keywords.getWords().forEach((k, v) -> {
+        keywords.getWordToMeta().forEach((k, v) -> {
             if (k.contains("_")) {
                 System.out.println(k + " " + new WordMetadata(v));
             }
@@ -112,21 +93,22 @@ class DocumentKeywordExtractorTest {
         var keywordsBuilt = keywords.build();
         var ptr = keywordsBuilt.newPointer();
 
-        Map<String, WordMetadata> dirtyAndBlues = new HashMap<>();
+        Map<String, WordMetadata> flags = new HashMap<>();
+        Map<String, RoaringBitmap> positions = new HashMap<>();
 
         while (ptr.advancePointer()) {
+            System.out.println(ptr.getKeyword() + " " + ptr.getMetadata() + " " + ptr.getPositions());
             if (Set.of("dirty", "blues").contains(ptr.getKeyword())) {
-                Assertions.assertNull(
-                        dirtyAndBlues.put(ptr.getKeyword(), new WordMetadata(ptr.getMetadata()))
-                );
+                flags.put(ptr.getKeyword(), new WordMetadata(ptr.getMetadata()));
+                positions.put(ptr.getKeyword(), ptr.getPositions());
             }
         }
 
-        Assertions.assertTrue(dirtyAndBlues.containsKey("dirty"));
-        Assertions.assertTrue(dirtyAndBlues.containsKey("blues"));
+        Assertions.assertTrue(flags.containsKey("dirty"));
+        Assertions.assertTrue(flags.containsKey("blues"));
         Assertions.assertNotEquals(
-                dirtyAndBlues.get("dirty"),
-                dirtyAndBlues.get("blues")
+                positions.get("dirty"),
+                positions.get("blues")
                 );
     }
 
@@ -139,8 +121,7 @@ class DocumentKeywordExtractorTest {
         doc.filter(new DomPruningFilter(0.5));
 
         DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(
-                new TermFrequencyDict(WmsaHome.getLanguageModels()),
-                new NgramLexicon(WmsaHome.getLanguageModels()));
+                new TermFrequencyDict(WmsaHome.getLanguageModels()));
         SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://math.byu.edu/wiki/index.php/All_You_Need_To_Know_About_Earning_Money_Online"));

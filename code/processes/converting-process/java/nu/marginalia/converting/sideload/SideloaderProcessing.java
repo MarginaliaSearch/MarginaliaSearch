@@ -69,7 +69,7 @@ public class SideloaderProcessing {
             ret.words = details.words();
 
             for (String keyword : extraKeywords)
-                ret.words.add(keyword, WordFlags.Subjects.asBit());
+                ret.words.addMeta(keyword, WordFlags.Subjects.asBit());
 
             if (type == GeneratorType.WIKI) {
                 ret.words.addAllSyntheticTerms(List.of("generator:wiki"));

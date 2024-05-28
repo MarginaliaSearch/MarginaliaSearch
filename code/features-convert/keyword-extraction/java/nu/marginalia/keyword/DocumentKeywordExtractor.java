@@ -1,6 +1,6 @@
 package nu.marginalia.keyword;
 
-import nu.marginalia.segmentation.NgramLexicon;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -9,27 +9,32 @@ import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.EdgeUrl;
 
 import com.google.inject.Inject;
+
 import java.util.*;
 import java.util.stream.Stream;
+
 
 public class DocumentKeywordExtractor {
 
     private final KeywordExtractor keywordExtractor;
     private final TermFrequencyDict dict;
-    private final NgramLexicon ngramLexicon;
 
 
     @Inject
-    public DocumentKeywordExtractor(TermFrequencyDict dict, NgramLexicon ngramLexicon) {
+    public DocumentKeywordExtractor(TermFrequencyDict dict) {
         this.dict = dict;
-        this.ngramLexicon = ngramLexicon;
+        this.keywordExtractor = new KeywordExtractor();
+    }
+
+    // for tests
+    public DocumentKeywordExtractor() {
+        this.dict = new TermFrequencyDict(WmsaHome.getLanguageModels());
         this.keywordExtractor = new KeywordExtractor();
     }
 
 
     public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData dld, EdgeUrl url) {
 
-        var bitmask = new KeywordPositionBitmask(keywordExtractor, dld);
         var tfIdfCounts = new WordsTfIdfCounts(dict, keywordExtractor, dld);
 
         var titleKeywords = new TitleKeywords(keywordExtractor, dld);
@@ -39,7 +44,6 @@ public class DocumentKeywordExtractor {
         var urlKeywords = new UrlKeywords(url);
 
         var keywordMetadata = KeywordMetadata.builder()
-                .bitmask(bitmask)
                 .tfIdfCounts(tfIdfCounts)
                 .titleKeywords(titleKeywords)
                 .nameLikeKeywords(nameLikeKeywords)
@@ -51,14 +55,14 @@ public class DocumentKeywordExtractor {
 
         createSimpleWords(wordsBuilder, keywordMetadata, dld);
 
-        createWordsFromSet(wordsBuilder, keywordMetadata, tfIdfCounts);
-        createWordsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
-        createWordsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
-        createWordsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
+        createNGramTermsFromSet(wordsBuilder, keywordMetadata, tfIdfCounts);
+        createNGramTermsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
+        createNGramTermsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
+        createNGramTermsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
 
         var importantWords = getImportantWords(tfIdfCounts, nameLikeKeywords, subjectLikeKeywords, wordsBuilder);
-        wordsBuilder.addImportantWords(importantWords);
 
+        wordsBuilder.addImportantWords(importantWords);
         wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
 
         return wordsBuilder;
@@ -77,36 +81,30 @@ public class DocumentKeywordExtractor {
                 .sorted(tfIdfCounts.reversed())
                 .limit(16)
                 .filter(w -> tfIdfCounts.termFrequencyDictValue(w) > 100)
-                .sorted(Comparator.comparing(w -> tfIdfCounts.termFrequencyDictValue(w)))
+                .sorted(Comparator.comparing(tfIdfCounts::termFrequencyDictValue))
                 .limit(6)
                 .map(w -> w.word)
                 .toList();
     }
 
-    private void createWordsFromSet(DocumentKeywordsBuilder wordsBuilder,
-                                   KeywordMetadata metadata,
-                                   WordReps words) {
-
+    private void createNGramTermsFromSet(DocumentKeywordsBuilder wordsBuilder,
+                                         KeywordMetadata metadata,
+                                         WordReps words) {
         for (var rep : words.getReps()) {
-
             var word = rep.word;
 
             if (!word.isBlank()) {
                 long meta = metadata.getMetadataForWord(rep.stemmed);
-
-                assert meta != 0L : "Missing meta for " + rep.word;
-
-                wordsBuilder.add(word, meta);
+                wordsBuilder.addMeta(word, meta);
             }
         }
     }
-
-
 
     private void createSimpleWords(DocumentKeywordsBuilder wordsBuilder,
                                   KeywordMetadata metadata,
                                   DocumentLanguageData documentLanguageData)
     {
+        int pos = 0;
         for (var sent : documentLanguageData.sentences) {
 
             if (wordsBuilder.size() > 1500)
@@ -119,10 +117,11 @@ public class DocumentKeywordExtractor {
 
                 String w = word.wordLowerCase();
                 if (matchesWordPattern(w)) {
-                    long meta = metadata.getMetadataForWord(word.stemmed());
-                    assert meta != 0L : "Missing meta for " + word.word();
+                    /* Add information about term positions */
+                    wordsBuilder.addPos(word.wordLowerCase(), pos++);
 
-                    wordsBuilder.add(w, meta);
+                    /* Add metadata for word */
+                    wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));
                 }
             }
 
@@ -130,9 +129,8 @@ public class DocumentKeywordExtractor {
                 var rep = new WordRep(sent, names);
 
                 long meta = metadata.getMetadataForWord(rep.stemmed);
-                assert meta != 0L : "Missing meta for " + rep.word;
 
-                wordsBuilder.add(rep.word, meta);
+                wordsBuilder.addMeta(rep.word, meta);
             }
 
             for (int i = 0; i < sent.ngrams.length; i++) {
@@ -140,9 +138,8 @@ public class DocumentKeywordExtractor {
                 var ngramStemmed = sent.ngramStemmed[i];
 
                 long meta = metadata.getMetadataForWord(ngramStemmed);
-                assert meta != 0L : "Missing meta for " + ngram;
 
-                wordsBuilder.add(ngram, meta);
+                wordsBuilder.addMeta(ngram, meta);
             }
 
         }

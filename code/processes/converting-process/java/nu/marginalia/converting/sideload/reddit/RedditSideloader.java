@@ -166,7 +166,7 @@ public class RedditSideloader implements SideloadSource {
             }
 
             for (var keyword : extraKeywords) {
-                doc.words.add(keyword, WordFlags.Subjects.asBit());
+                doc.words.addMeta(keyword, WordFlags.Subjects.asBit());
             }
 
             // Insert topology information

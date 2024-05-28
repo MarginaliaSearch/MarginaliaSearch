@@ -22,10 +22,8 @@ import java.nio.file.Path;
 
 public class SentenceStatisticsExperiment extends LegacyExperiment {
 
-    NgramLexicon lexicon = new NgramLexicon(WmsaHome.getLanguageModels());
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
-    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(
-            new TermFrequencyDict(WmsaHome.getLanguageModels()), lexicon);
+    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
     Path filename;
     PrintWriter writer;
 

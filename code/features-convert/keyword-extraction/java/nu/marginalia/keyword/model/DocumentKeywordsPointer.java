@@ -1,5 +1,7 @@
 package nu.marginalia.keyword.model;
 
+import org.roaringbitmap.RoaringBitmap;
+
 /** Pointer into a {@see DocumentKeywords}.  It starts out before the first position,
  * forward with advancePointer().
  * */
@@ -25,6 +27,11 @@ public class DocumentKeywordsPointer {
     /** Return the metadata associated with the current position */
     public long getMetadata() {
         return keywords.metadata[pos];
+    }
+
+    /** Return the positions associated with the current position */
+    public RoaringBitmap getPositions() {
+        return keywords.positions[pos];
     }
 
     /** Advance the current position,
