@@ -1,4 +1,4 @@
-# Roadmap
+# Roadmap 2024-2025
 
 This is a roadmap with major features planned for Marginalia Search.
 
@@ -8,14 +8,15 @@ be implemented as well.
 Major goals:
 
 * Reach 1 billion pages indexed
-* Improve technical ability of indexing and search
+* Improve technical ability of indexing and search.  Although this area has improved a bit, the
+  search engine is still not very good at dealing with longer queries.
 
 ## Proper Position Index
 
 The search engine uses a fixed width bit mask to indicate word positions.  It has the benefit
 of being very fast to evaluate and works well for what it is, but is inaccurate and has the 
 drawback of making support for quoted search terms inaccurate and largely reliant on indexing 
-word n-grams known beforehand.
+word n-grams known beforehand.  This limits the ability to interpret longer queries.
 
 The positions mask should be supplemented or replaced with a more accurate (e.g.) gamma coded positions
 list, as is the civilized way of doing this.
@@ -36,7 +37,7 @@ Retaining the ability to independently crawl the web is still strongly desirable
 
 The search engine has a bit of a problem showing spicy content mixed in with the results.  It would be desirable
 to have a way to filter this out.  It's likely something like a URL blacklist (e.g. [UT1](https://dsi.ut-capitole.fr/blacklists/index_en.php) )
-combined with naive bayesian filter would go a long way, or something more sophisticated,
+combined with naive bayesian filter would go a long way, or something more sophisticated...?
 
 ## Additional Language Support
 
