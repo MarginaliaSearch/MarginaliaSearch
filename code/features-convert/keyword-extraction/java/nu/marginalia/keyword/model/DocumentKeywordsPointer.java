@@ -1,6 +1,6 @@
 package nu.marginalia.keyword.model;
 
-import org.roaringbitmap.RoaringBitmap;
+import nu.marginalia.sequence.GammaCodedSequence;
 
 /** Pointer into a {@see DocumentKeywords}.  It starts out before the first position,
  * forward with advancePointer().
@@ -30,7 +30,7 @@ public class DocumentKeywordsPointer {
     }
 
     /** Return the positions associated with the current position */
-    public RoaringBitmap getPositions() {
+    public GammaCodedSequence getPositions() {
         return keywords.positions[pos];
     }
 

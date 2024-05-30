@@ -5,15 +5,16 @@ import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.segmentation.NgramLexicon;
+import nu.marginalia.sequence.EliasGammaCodec;
+import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.roaringbitmap.RoaringBitmap;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,13 +95,24 @@ class DocumentKeywordExtractorTest {
         var ptr = keywordsBuilt.newPointer();
 
         Map<String, WordMetadata> flags = new HashMap<>();
-        Map<String, RoaringBitmap> positions = new HashMap<>();
+        Map<String, GammaCodedSequence> positions = new HashMap<>();
+
+        ByteBuffer work = ByteBuffer.allocate(1024);
 
         while (ptr.advancePointer()) {
             System.out.println(ptr.getKeyword() + " " + ptr.getMetadata() + " " + ptr.getPositions());
+
+            int[] vals = ptr.getPositions().decode().toIntArray();
+            for (int i = 0; i < vals.length; i++) {
+                vals[i] = vals[i] + 1;
+            }
+            var out = EliasGammaCodec.encode(work, vals);
+            System.out.println(out.capacity() + "/" + vals.length * 4);
+
             if (Set.of("dirty", "blues").contains(ptr.getKeyword())) {
                 flags.put(ptr.getKeyword(), new WordMetadata(ptr.getMetadata()));
                 positions.put(ptr.getKeyword(), ptr.getPositions());
+
             }
         }
 

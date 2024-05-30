@@ -1,17 +1,20 @@
 package nu.marginalia.keyword.model;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import lombok.Getter;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
-import org.roaringbitmap.RoaringBitmap;
+import nu.marginalia.sequence.GammaCodedSequence;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 
 @Getter
 public class DocumentKeywordsBuilder {
     public final Object2LongLinkedOpenHashMap<String> wordToMeta;
-    public final HashMap<String, RoaringBitmap> wordToPos;
+    public final HashMap<String, IntList> wordToPos;
 
     /** These ware keywords that had signals of high relevance */
     public final Set<String> importantWords = new HashSet<>();
@@ -28,21 +31,18 @@ public class DocumentKeywordsBuilder {
     public DocumentKeywords build() {
         final String[] wordArray = new String[wordToMeta.size()];
         final long[] meta = new long[wordToMeta.size()];
-        final RoaringBitmap[] positions = new RoaringBitmap[wordToMeta.size()];
+        final GammaCodedSequence[] positions = new GammaCodedSequence[wordToMeta.size()];
 
         var iter = wordToMeta.object2LongEntrySet().fastIterator();
 
+        ByteBuffer workArea = ByteBuffer.allocate(1024);
         for (int i = 0; iter.hasNext(); i++) {
             var entry = iter.next();
 
             meta[i] = entry.getLongValue();
             wordArray[i] = entry.getKey();
-            positions[i] = wordToPos.get(entry.getKey());
-            if (positions[i] == null) {
-                positions[i] = new RoaringBitmap();
-            }
+            positions[i] = GammaCodedSequence.generate(workArea, wordToPos.get(entry.getKey()));
         }
-
 
         return new DocumentKeywords(wordArray, meta, positions);
     }
@@ -63,7 +63,7 @@ public class DocumentKeywordsBuilder {
         if (word.length() > MAX_WORD_LENGTH)
             return;
 
-        wordToPos.computeIfAbsent(word, k -> new RoaringBitmap()).add(pos);
+        wordToPos.computeIfAbsent(word, k -> new IntArrayList()).add(pos);
     }
 
     public void addImportantWords(Collection<String> words) {

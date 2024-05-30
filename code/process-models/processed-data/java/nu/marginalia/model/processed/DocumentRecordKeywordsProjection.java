@@ -4,10 +4,9 @@ import blue.strategic.parquet.Hydrator;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.jetbrains.annotations.NotNull;
-import org.roaringbitmap.RoaringBitmap;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +28,7 @@ public class DocumentRecordKeywordsProjection {
 
     public List<String> words;
     public TLongList metas;
-    public List<RoaringBitmap> positions;
+    public List<GammaCodedSequence> positions;
 
     public boolean hasKeywords() {
         return words != null && metas != null;
@@ -65,11 +64,7 @@ public class DocumentRecordKeywordsProjection {
                 if (this.positions == null) {
                     this.positions = new ArrayList<>(100);
                 }
-                byte[] array = (byte[]) value;
-                ByteBuffer buffer = ByteBuffer.wrap(array);
-                var rb = new RoaringBitmap();
-                rb.deserialize(buffer);
-                this.positions.add(rb);
+                this.positions.add(new GammaCodedSequence((byte[]) value));
             }
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }

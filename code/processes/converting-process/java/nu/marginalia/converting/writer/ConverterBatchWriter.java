@@ -17,11 +17,12 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.processed.DocumentRecord;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
-import org.roaringbitmap.RoaringBitmap;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -102,6 +103,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
 
         String domainName = domain.toString();
 
+        ByteBuffer workArea = ByteBuffer.allocate(1024);
+
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
             if (document.details == null) {
@@ -128,7 +131,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                 var wb = document.words.build();
                 List<String> words = Arrays.asList(wb.keywords);
                 TLongArrayList metas = new TLongArrayList(wb.metadata);
-                List<RoaringBitmap> positions = Arrays.asList(wb.positions);
+                List<GammaCodedSequence> positions = Arrays.asList(wb.positions);
 
                 documentWriter.write(new DocumentRecord(
                         domainName,

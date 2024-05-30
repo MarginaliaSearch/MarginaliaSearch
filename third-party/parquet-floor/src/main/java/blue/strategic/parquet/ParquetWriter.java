@@ -139,6 +139,15 @@ public final class ParquetWriter<T> implements Closeable {
             }
 
             @Override
+            public void writeBinarySerializableList(String name, List<? extends BinarySerializable> value) {
+                if (value.isEmpty()) {
+                    return;
+                }
+
+                SimpleWriteSupport.this.writeBinarySerializableList(name, value);
+            }
+
+            @Override
             public void writeList(String name, TIntList value) {
                 if (value.isEmpty()) {
                     return;
@@ -204,6 +213,18 @@ public final class ParquetWriter<T> implements Closeable {
 
             for (int i = 0; i < values.size(); i++) {
                 writeValue(type, values.get(i));
+            }
+
+            recordConsumer.endField(name, fieldIndex);
+        }
+
+        private void writeBinarySerializableList(String name, List<? extends BinarySerializable> values) {
+            int fieldIndex = schema.getFieldIndex(name);
+            PrimitiveType type = schema.getType(fieldIndex).asPrimitiveType();
+            recordConsumer.startField(name, fieldIndex);
+
+            for (var value : values) {
+                writeValue(type, value.bytes());
             }
 
             recordConsumer.endField(name, fieldIndex);

@@ -3,18 +3,15 @@ package nu.marginalia.model.processed;
 import blue.strategic.parquet.Dehydrator;
 import blue.strategic.parquet.Hydrator;
 import blue.strategic.parquet.ValueWriter;
-import gnu.trove.list.TIntList;
 import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.roaringbitmap.RoaringBitmap;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +59,7 @@ public class DocumentRecord {
     @Nullable
     public TLongList metas;
     @Nullable
-    public List<RoaringBitmap> positions;
+    public List<GammaCodedSequence> positions;
 
     public static Hydrator<DocumentRecord, DocumentRecord> newHydrator() {
         return new DocumentDataHydrator();
@@ -125,11 +122,7 @@ public class DocumentRecord {
                 if (this.positions == null) {
                     this.positions = new ArrayList<>(100);
                 }
-                byte[] array = (byte[]) value;
-                ByteBuffer buffer = ByteBuffer.wrap(array);
-                var rb = new RoaringBitmap();
-                rb.deserialize(buffer);
-                this.positions.add(rb);
+                this.positions.add(new GammaCodedSequence((byte[]) value));
             }
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }
@@ -161,13 +154,7 @@ public class DocumentRecord {
             valueWriter.writeList("wordMeta", metas);
         }
         if (positions != null) {
-            List<byte[]> pos = new ArrayList<>(positions.size());
-            for (RoaringBitmap bitmap : positions) {
-                ByteBuffer baos = ByteBuffer.allocate(bitmap.serializedSizeInBytes());
-                bitmap.serialize(baos);
-                pos.add(baos.array());
-            }
-            valueWriter.writeList("positions", pos);
+            valueWriter.writeBinarySerializableList("positions", positions);
         }
 
         if (words != null) {

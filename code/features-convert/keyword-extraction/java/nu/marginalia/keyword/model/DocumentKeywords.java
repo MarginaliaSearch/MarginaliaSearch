@@ -1,7 +1,7 @@
 package nu.marginalia.keyword.model;
 
 import nu.marginalia.model.idx.WordMetadata;
-import org.roaringbitmap.RoaringBitmap;
+import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -13,11 +13,11 @@ public final class DocumentKeywords implements Serializable {
 
     public final String[] keywords;
     public final long[] metadata;
-    public final RoaringBitmap[] positions;
+    public final GammaCodedSequence[] positions;
 
     public DocumentKeywords(String[] keywords,
                             long[] metadata,
-                            RoaringBitmap[] positions)
+                            GammaCodedSequence[] positions)
     {
         this.keywords = keywords;
         this.metadata = metadata;

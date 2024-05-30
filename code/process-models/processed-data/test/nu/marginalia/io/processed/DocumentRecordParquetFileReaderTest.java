@@ -1,14 +1,14 @@
 package nu.marginalia.io.processed;
 
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.model.processed.DocumentRecord;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.roaringbitmap.RoaringBitmap;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,14 +34,7 @@ class DocumentRecordParquetFileReaderTest {
     @Test
     public void test() throws IOException {
 
-        var rb1 = new RoaringBitmap();
-        rb1.add(1);
-        rb1.add(2);
-        rb1.add(3);
-        var rb2 = new RoaringBitmap();
-        rb2.add(1);
-        rb2.add(4);
-        rb2.add(5);
+        ByteBuffer workArea = ByteBuffer.allocate(1024);
 
         var doc = new DocumentRecord(
                 "www.marginalia.nu",
@@ -60,7 +53,10 @@ class DocumentRecordParquetFileReaderTest {
                 null,
                 List.of("Hello", "world"),
                 new TLongArrayList(new long[] { 2L, 3L}),
-                List.of(rb1, rb2)
+                List.of(
+                        GammaCodedSequence.generate(workArea, 1, 2, 3),
+                        GammaCodedSequence.generate(workArea, 1, 4, 5)
+                        )
         );
 
         try (var writer = new DocumentRecordParquetFileWriter(parquetFile)) {
@@ -76,7 +72,8 @@ class DocumentRecordParquetFileReaderTest {
         List<String> words = IntStream.range(0, 100000).mapToObj(Integer::toString).toList();
         TLongArrayList metas = new TLongArrayList(LongStream.range(0, 100000).toArray());
 
-        List<RoaringBitmap> poses = Stream.generate(RoaringBitmap::new).limit(100000).toList();
+        ByteBuffer workArea = ByteBuffer.allocate(1024);
+        List<GammaCodedSequence> poses = Stream.generate(() -> GammaCodedSequence.generate(workArea, 3, 4)).limit(100000).toList();
 
         var doc = new DocumentRecord(
                 "www.marginalia.nu",

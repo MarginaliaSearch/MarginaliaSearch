@@ -9,5 +9,6 @@ public interface ValueWriter {
     void write(String name, Object value);
     void writeList(String name, List<?> value);
     void writeList(String name, TLongList value);
+    void writeBinarySerializableList(String name, List<? extends BinarySerializable> value);
     void writeList(String name, TIntList value);
 }

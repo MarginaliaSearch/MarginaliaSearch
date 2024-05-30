@@ -104,7 +104,10 @@ public class DocumentKeywordExtractor {
                                   KeywordMetadata metadata,
                                   DocumentLanguageData documentLanguageData)
     {
-        int pos = 0;
+        // we use 1-based indexing since the data
+        // will be gamma encoded, and it can't represent 0
+        int pos = 1;
+
         for (var sent : documentLanguageData.sentences) {
 
             if (wordsBuilder.size() > 1500)
