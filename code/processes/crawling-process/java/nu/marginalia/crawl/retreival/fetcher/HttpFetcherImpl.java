@@ -183,6 +183,8 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         getBuilder.url(url.toString())
                 .addHeader("Accept-Encoding", "gzip")
+                .addHeader("Accept-Language", "en,*;q=0.5")
+                .addHeader("Accept", "text/html, application/xhtml+xml, */*;q=0.8")
                 .addHeader("User-agent", userAgentString);
 
         contentTags.paint(getBuilder);
@@ -225,6 +227,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
             getBuilder.url(url.toString())
                     .addHeader("Accept-Encoding", "gzip")
+                    .addHeader("Accept", "text/*, */*;q=0.9")
                     .addHeader("User-agent", userAgentString);
 
             HttpFetchResult result = recorder.fetch(client, getBuilder.build());
