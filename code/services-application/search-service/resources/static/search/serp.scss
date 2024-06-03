@@ -28,9 +28,8 @@
   --font-family-heading: serif; // $heading-fonts
 }
 
- 
-:root[data-theme='dark'] {
 
+@mixin dark-theme-mixin {
   color-scheme: dark;
 
   --clr-bg-page: hsl(0, 0%, 6%);
@@ -55,7 +54,17 @@
   --clr-link-visited: #ffadff;
   --clr-heading-link-visited: var(--clr-link-visited);
 }
+ 
+:root[data-theme='dark'] {
+  @include dark-theme-mixin;
+}
 
+// Makes theme match the user's OS preference when JS is disabled
+@media (prefers-color-scheme: dark) {
+  :root:not(:has([data-has-js="true"])) {
+    @include dark-theme-mixin;
+  }
+}
 
 * {
   box-sizing: border-box;
@@ -234,6 +243,11 @@ header {
 #theme {
   margin-left: auto;
   margin-right: .5ch;
+  display: none;
+
+  [data-has-js='true'] & {
+    display: block;
+  }
 }
 
 #complaint {
