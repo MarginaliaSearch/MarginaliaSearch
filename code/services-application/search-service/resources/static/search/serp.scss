@@ -61,7 +61,7 @@
 
 // Makes theme match the user's OS preference when JS is disabled
 @media (prefers-color-scheme: dark) {
-  :root:not(:has([data-has-js="true"])) {
+  :root:not([data-has-js="true"]) {
     @include dark-theme-mixin;
   }
 }
@@ -737,7 +737,7 @@ footer {
 }
 
 @media (max-device-width: 624px) {
-  body[data-has-js="true"] { // This property is set via js so we can selectively enable these changes only if JS is enabled;
+  [data-has-js="true"] body { // This property is set via js so we can selectively enable these changes only if JS is enabled;
                              // This is desirable since mobile navigation is JS-driven.  If JS is disabled, having a squished
                              // GUI is better than having no working UI.
     margin: 0 !important;
