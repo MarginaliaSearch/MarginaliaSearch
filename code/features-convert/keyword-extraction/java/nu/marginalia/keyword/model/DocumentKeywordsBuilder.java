@@ -41,7 +41,7 @@ public class DocumentKeywordsBuilder {
 
             meta[i] = entry.getLongValue();
             wordArray[i] = entry.getKey();
-            positions[i] = GammaCodedSequence.generate(workArea, wordToPos.get(entry.getKey()));
+            positions[i] = GammaCodedSequence.generate(workArea, wordToPos.getOrDefault(entry.getKey(), IntList.of()));
         }
 
         return new DocumentKeywords(wordArray, meta, positions);

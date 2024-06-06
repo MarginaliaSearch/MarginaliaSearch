@@ -92,26 +92,17 @@ class DocumentKeywordExtractorTest {
         );
 
         var keywordsBuilt = keywords.build();
-        var ptr = keywordsBuilt.newPointer();
 
         Map<String, WordMetadata> flags = new HashMap<>();
         Map<String, GammaCodedSequence> positions = new HashMap<>();
 
-        ByteBuffer work = ByteBuffer.allocate(1024);
+        for (int i = 0; i < keywordsBuilt.size(); i++) {
+            String keyword = keywordsBuilt.keywords[i];
+            long metadata = keywordsBuilt.metadata[i];
 
-        while (ptr.advancePointer()) {
-            System.out.println(ptr.getKeyword() + " " + ptr.getMetadata() + " " + ptr.getPositions());
-
-            int[] vals = ptr.getPositions().decode().toIntArray();
-            for (int i = 0; i < vals.length; i++) {
-                vals[i] = vals[i] + 1;
-            }
-            var out = EliasGammaCodec.encode(work, vals);
-            System.out.println(out.capacity() + "/" + vals.length * 4);
-
-            if (Set.of("dirty", "blues").contains(ptr.getKeyword())) {
-                flags.put(ptr.getKeyword(), new WordMetadata(ptr.getMetadata()));
-                positions.put(ptr.getKeyword(), ptr.getPositions());
+            if (Set.of("dirty", "blues").contains(keyword)) {
+                flags.put(keyword, new WordMetadata(metadata));
+                positions.put(keyword, keywordsBuilt.positions[i]);
 
             }
         }

@@ -12,6 +12,9 @@ public interface IndexJournalReader {
     int FILE_HEADER_SIZE_LONGS = 2;
     int FILE_HEADER_SIZE_BYTES = 8 * FILE_HEADER_SIZE_LONGS;
 
+    int DOCUMENT_HEADER_SIZE_BYTES = 24;
+    int TERM_HEADER_SIZE_BYTES = 17;
+
     /** Create a reader for a single file. */
     static IndexJournalReader singleFile(Path fileName) throws IOException {
         return new IndexJournalReaderSingleFile(fileName);
@@ -25,22 +28,23 @@ public interface IndexJournalReader {
     default void forEachWordId(LongConsumer consumer) {
         var ptr = this.newPointer();
         while (ptr.nextDocument()) {
-            while (ptr.nextRecord()) {
-                consumer.accept(ptr.wordId());
+            for (var termData : ptr) {
+                consumer.accept(termData.termId());
             }
         }
     }
 
-    default void forEachDocId(LongConsumer consumer) {
-        var ptr = this.newPointer();
-        while (ptr.nextDocument()) {
-            consumer.accept(ptr.documentId());
+    default void forEachDocId(LongConsumer consumer) throws IOException {
+        try (var ptr = this.newPointer()) {
+            while (ptr.nextDocument()) {
+                consumer.accept(ptr.documentId());
+            }
         }
     }
 
     /** Create a new pointer to the journal.  The IndexJournalPointer is
      * a two-tiered iterator that allows both iteration over document records
-     * and their keywords
+     * and the terms within each document.
      */
     IndexJournalPointer newPointer();
 

@@ -2,18 +2,20 @@ package nu.marginalia.index.journal.reader;
 
 import com.github.luben.zstd.ZstdInputStream;
 import lombok.SneakyThrows;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.index.journal.model.IndexJournalEntryTermData;
 import nu.marginalia.index.journal.model.IndexJournalFileHeader;
 import nu.marginalia.index.journal.reader.pointer.IndexJournalPointer;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Iterator;
 
 public class IndexJournalReaderSingleFile implements IndexJournalReader {
 
-    private Path journalFile;
+    private final Path journalFile;
     public final IndexJournalFileHeader fileHeader;
 
     @Override
@@ -58,8 +60,6 @@ class SingleFileJournalPointer implements IndexJournalPointer {
     private final IndexJournalFileHeader fileHeader;
     private final DataInputStream dataInputStream;
     private IndexJournalReadEntry entry;
-    private IndexJournalEntryData entryData;
-    private int recordIdx = -2;
     private int docIdx = -1;
 
     public SingleFileJournalPointer(
@@ -73,9 +73,6 @@ class SingleFileJournalPointer implements IndexJournalPointer {
     @SneakyThrows
     @Override
     public boolean nextDocument() {
-        recordIdx = -2;
-        entryData = null;
-
         if (++docIdx < fileHeader.fileSizeRecords()) {
             entry = IndexJournalReadEntry.read(dataInputStream);
             return true;
@@ -83,19 +80,6 @@ class SingleFileJournalPointer implements IndexJournalPointer {
 
         dataInputStream.close();
 
-        return false;
-    }
-
-    @Override
-    public boolean nextRecord() {
-        if (entryData == null) {
-            entryData = entry.readEntry();
-        }
-
-        recordIdx += 2;
-        if (recordIdx < entryData.size()) {
-            return true;
-        }
         return false;
     }
 
@@ -109,22 +93,21 @@ class SingleFileJournalPointer implements IndexJournalPointer {
         return entry.docMeta();
     }
 
+
     @Override
-    public long wordId() {
-        return entryData.get(recordIdx);
+    public int documentFeatures() { return entry.documentFeatures(); }
+
+    /** Return an iterator over the terms in the current document.
+     *  This iterator is not valid after calling nextDocument().
+     */
+    @NotNull
+    @Override
+    public Iterator<IndexJournalEntryTermData> iterator() {
+        return entry.iterator();
     }
 
     @Override
-    public long wordMeta() {
-        return entryData.get(recordIdx + 1);
-    }
-
-    @Override
-    public int documentFeatures() {
-        if (entryData == null) {
-            entryData = entry.readEntry();
-        }
-
-        return entry.header.documentFeatures();
+    public void close() throws IOException {
+        dataInputStream.close();
     }
 }

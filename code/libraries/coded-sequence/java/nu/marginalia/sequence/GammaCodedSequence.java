@@ -16,6 +16,8 @@ import java.util.StringJoiner;
  * */
 public class GammaCodedSequence implements BinarySerializable, Iterable<Integer> {
     private final ByteBuffer raw;
+    int startPos = 0;
+    int startLimit = 0;
 
     /** Create a new GammaCodedSequence from a sequence of integers.
      *
@@ -37,12 +39,16 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
 
     public GammaCodedSequence(ByteBuffer bytes) {
         this.raw = bytes;
+        startPos = bytes.position();
+        startLimit = bytes.limit();
     }
 
     public GammaCodedSequence(byte[] bytes) {
         raw = ByteBuffer.allocate(bytes.length);
         raw.put(bytes);
         raw.clear();
+        startPos = 0;
+        startLimit = bytes.length;
     }
 
     /** Return the raw bytes of the sequence. */
@@ -52,19 +58,27 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
             return raw.array();
         }
         else {
-            raw.clear();
-
             byte[] bytes = new byte[raw.capacity()];
-            raw.get(bytes, 0, bytes.length);
+            raw.get(0, bytes, 0, bytes.length);
             return bytes;
         }
     }
 
     @Override
     public IntIterator iterator() {
-        raw.clear();
+        raw.position(startPos);
+        raw.limit(startLimit);
 
         return EliasGammaCodec.decode(raw);
+    }
+
+    public IntList values() {
+        var intItr = iterator();
+        IntArrayList ret = new IntArrayList(8);
+        while (intItr.hasNext()) {
+            ret.add(intItr.nextInt());
+        }
+        return ret;
     }
 
     /** Decode the sequence into an IntList;
@@ -93,5 +107,16 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
             sj.add(i.toString());
         }
         return sj.toString();
+    }
+
+    public ByteBuffer buffer() {
+        raw.position(startPos);
+        raw.limit(startLimit);
+
+        return raw;
+    }
+
+    public int size() {
+        return raw.capacity();
     }
 }

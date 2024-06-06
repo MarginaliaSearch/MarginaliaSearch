@@ -7,13 +7,14 @@ import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
@@ -44,6 +45,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import javax.annotation.CheckReturnValue;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -549,13 +551,13 @@ public class IndexQueryServiceIntegrationTest {
                         meta.documentMetadata.encode()
                 );
 
-                long[] dataArray = new long[words.size() * 2];
-                for (int i = 0; i < words.size(); i++) {
-                    dataArray[2*i] = hasher.hashNearlyASCII(words.get(i).keyword);
-                    dataArray[2*i+1] = words.get(i).termMetadata;
-                }
-                var entry = new IndexJournalEntryData(dataArray);
-                indexJournalWriter.put(header, entry);
+                String[] keywords = words.stream().map(w -> w.keyword).toArray(String[]::new);
+                long[] metadata = words.stream().map(w -> w.termMetadata).mapToLong(Long::longValue).toArray();
+                GammaCodedSequence[] positions = new GammaCodedSequence[words.size()]; // FIXME: positions?
+                Arrays.setAll(positions, i -> new GammaCodedSequence(ByteBuffer.allocate(1)));
+
+                indexJournalWriter.put(header,
+                        new IndexJournalEntryData(keywords, metadata, positions));
             });
 
             var linkdbWriter = new DocumentDbWriter(

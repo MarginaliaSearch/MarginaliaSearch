@@ -16,12 +16,15 @@ public class IndexJournalReaderPagingImpl implements IndexJournalReader {
     private final List<IndexJournalReader> readers;
 
     public IndexJournalReaderPagingImpl(Path baseDir) throws IOException {
-        var inputFiles = IndexJournalFileNames.findJournalFiles(baseDir);
-        if (inputFiles.isEmpty())
+        this(IndexJournalFileNames.findJournalFiles(baseDir));
+
+        if (readers.isEmpty())
             logger.warn("Creating paging index journal file in {}, found no inputs!", baseDir);
         else
-            logger.info("Creating paging index journal reader for {} inputs", inputFiles.size());
+            logger.info("Creating paging index journal reader for {} inputs", readers.size());
+    }
 
+    public IndexJournalReaderPagingImpl(List<Path> inputFiles) throws IOException {
         this.readers = new ArrayList<>(inputFiles.size());
 
         for (var inputFile : inputFiles) {

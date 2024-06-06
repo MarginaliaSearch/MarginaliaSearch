@@ -78,7 +78,7 @@ public class BitReader {
 
         int result = 0;
 
-        for (;;) {
+        do {
             // Ensure we have bits to read
             if (bitPosition <= 0) {
                 if (underlying.hasRemaining())
@@ -96,10 +96,8 @@ public class BitReader {
             // Subtract the number of bits read from the current position
             bitPosition -= zeroes;
 
-            // If bitPosition isn't zero, we've found a 1 and can stop
-            if (bitPosition > 0)
-                break;
-        }
+            // If bit position is not positive, we've found a 1 and can stop
+        } while (bitPosition <= 0);
 
         return result;
     }

@@ -4,9 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
@@ -18,9 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.sql.SQLException;
 
-import static nu.marginalia.index.journal.model.IndexJournalEntryData.MAX_LENGTH;
 
 @Singleton
 public class LoaderIndexJournalWriter {
@@ -28,12 +26,11 @@ public class LoaderIndexJournalWriter {
     private final IndexJournalWriter indexWriter;
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
 
-    private final MurmurHash3_128 hasher = new MurmurHash3_128();
-    private final long[] buffer = new long[MAX_LENGTH * 2];
+    private final long[] buffer = new long[65536];
 
 
     @Inject
-    public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException, SQLException {
+    public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException {
         var indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
 
         var existingIndexFiles = IndexJournalFileNames.findJournalFiles(indexArea);
@@ -68,26 +65,10 @@ public class LoaderIndexJournalWriter {
             return;
         }
 
-        var pointer = wordSet.newPointer();
+        var header = new IndexJournalEntryHeader(combinedId, features, metadata);
+        var data = new IndexJournalEntryData(wordSet.keywords, wordSet.metadata, wordSet.positions);
 
-        while (pointer.hasMore()) {
-            int i = 0;
-
-            while (i < buffer.length
-                && pointer.advancePointer())
-            {
-                final long hashedKeyword = hasher.hashKeyword(pointer.getKeyword());
-
-                buffer[i++] = hashedKeyword;
-                buffer[i++] = pointer.getMetadata();
-            }
-
-            var entry = new IndexJournalEntryData(i, buffer);
-            var header = new IndexJournalEntryHeader(combinedId, features, metadata);
-
-            indexWriter.put(header, entry);
-        }
-
+        indexWriter.put(header, data);
     }
 
     public void close() throws Exception {

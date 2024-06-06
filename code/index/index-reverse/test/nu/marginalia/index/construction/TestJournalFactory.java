@@ -5,6 +5,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
+import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,12 +61,18 @@ public class TestJournalFactory {
 
         var writer = new IndexJournalWriterSingleFileImpl(jf);
         for (var entry : entries) {
-            long[] data = new long[entry.wordIds.length * 2];
-            for (int i = 0; i < entry.wordIds.length; i++)
-                data[i*2] = entry.wordIds[i];
+            long[] termIds = new long[entry.wordIds.length];
+            long[] meta = new long[entry.wordIds.length];
+
+            GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
+            for (int i = 0; i < entry.wordIds.length; i++) {
+                termIds[i] = entry.wordIds[i];
+                meta[i] = 0;
+                positions[i] = new GammaCodedSequence(new byte[1]);
+            }
 
             writer.put(new IndexJournalEntryHeader(entries.length, 0, entry.docId, entry.docMeta),
-                    new IndexJournalEntryData(data));
+                    new IndexJournalEntryData(termIds, meta, positions));
         }
         writer.close();
         var ret = new IndexJournalReaderSingleFile(jf);
@@ -77,14 +84,18 @@ public class TestJournalFactory {
 
         var writer = new IndexJournalWriterSingleFileImpl(jf);
         for (var entry : entries) {
-            long[] data = new long[entry.wordIds.length * 2];
+
+            long[] termIds = new long[entry.wordIds.length];
+            long[] meta = new long[entry.wordIds.length];
+            GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
-                data[i * 2] = entry.wordIds[i].wordId;
-                data[i * 2 + 1] = entry.wordIds[i].meta;
+                termIds[i] = entry.wordIds[i].wordId;
+                meta[i] = entry.wordIds[i].meta;
+                positions[i] = new GammaCodedSequence(new byte[1]);
             }
 
             writer.put(new IndexJournalEntryHeader(entries.length, 0, entry.docId, entry.docMeta),
-                    new IndexJournalEntryData(data));
+                    new IndexJournalEntryData(termIds, meta, positions));
         }
         writer.close();
         var ret = new IndexJournalReaderSingleFile(jf);

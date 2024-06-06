@@ -2,12 +2,14 @@ package nu.marginalia.index;
 
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.construction.ReversePreindex;
 import nu.marginalia.index.construction.TestJournalFactory;
 import nu.marginalia.index.construction.TestJournalFactory.EntryDataWithWordMeta;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -89,7 +91,9 @@ class ReverseIndexReaderTest {
 
     private ReverseIndexReader createIndex(EntryDataWithWordMeta... scenario) throws IOException {
         var reader = journalFactory.createReader(scenario);
-        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader,
+                Mockito.mock(PositionsFileConstructor.class),
+                DocIdRewriter.identity(), tempDir);
 
 
         Path docsFile = tempDir.resolve("docs.dat");

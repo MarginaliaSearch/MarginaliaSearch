@@ -8,15 +8,16 @@ import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -300,7 +302,18 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 "test", "test", 0., "HTML5", 0, null, 0, 10
         ));
 
-        indexJournalWriter.put(header, new IndexJournalEntryData(data));
+        String[] keywords = IntStream.range(0, factors.length).mapToObj(Integer::toString).toArray(String[]::new);
+        long[] metadata = new long[factors.length];
+        for (int i = 0; i < factors.length; i++) {
+            metadata[i] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
+        }
+        GammaCodedSequence[] positions = new GammaCodedSequence[factors.length];
+        ByteBuffer wa = ByteBuffer.allocate(16);
+        for (int i = 0; i < factors.length; i++) {
+            positions[i] = GammaCodedSequence.generate(wa, i + 1);
+        }
+
+        indexJournalWriter.put(header, new IndexJournalEntryData(keywords, metadata, positions));
     }
 
     @SneakyThrows
@@ -309,19 +322,24 @@ public class IndexQueryServiceIntegrationSmokeTest {
         long fullId = UrlIdCodec.encodeId(domain, id);
         var header = new IndexJournalEntryHeader(factors.length, 0, fullId, DocumentMetadata.defaultValue());
 
-        long[] data = new long[factors.length*2];
-        for (int i = 0; i < factors.length; i++) {
-            data[2*i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
-        }
-
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
                 "test", "test", 0., "HTML5", 0, null, 0, 10
         ));
 
 
-        indexJournalWriter.put(header, new IndexJournalEntryData(data));
+        String[] keywords = IntStream.range(0, factors.length).mapToObj(Integer::toString).toArray(String[]::new);
+        long[] metadata = new long[factors.length];
+        for (int i = 0; i < factors.length; i++) {
+            metadata[i] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
+        }
+        GammaCodedSequence[] positions = new GammaCodedSequence[factors.length];
+        ByteBuffer wa = ByteBuffer.allocate(16);
+        for (int i = 0; i < factors.length; i++) {
+            positions[i] = GammaCodedSequence.generate(wa, i);
+        }
+
+        indexJournalWriter.put(header, new IndexJournalEntryData(keywords, metadata, positions));
     }
 
 }

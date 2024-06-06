@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,18 +49,22 @@ public class ReverseIndexConstructor {
             return;
         }
 
+        Path positionsFile = tmpDir.resolve("positions.dat");
+        Files.deleteIfExists(positionsFile);
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName)) {
 
             heartbeat.progress(CreateReverseIndexSteps.CONSTRUCT);
 
-            try (var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes")) {
+            try (var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
+                 PositionsFileConstructor posConstructor = new PositionsFileConstructor(positionsFile);
+            ) {
 
                 AtomicInteger progress = new AtomicInteger(0);
                 inputs
                     .parallelStream()
                     .map(in -> {
                         preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
-                        return construct(in);
+                        return construct(in, posConstructor);
                     })
                     .reduce(this::merge)
                     .ifPresent((index) -> {
@@ -73,9 +78,9 @@ public class ReverseIndexConstructor {
     }
 
     @SneakyThrows
-    private ReversePreindexReference construct(Path input) {
+    private ReversePreindexReference construct(Path input, PositionsFileConstructor positionsFileConstructor) {
         return ReversePreindex
-                .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
+                .constructPreindex(readerSource.construct(input), positionsFileConstructor, docIdRewriter, tmpDir)
                 .closeToReference();
     }
 

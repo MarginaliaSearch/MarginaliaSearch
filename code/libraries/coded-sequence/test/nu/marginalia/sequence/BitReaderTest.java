@@ -115,8 +115,9 @@ class BitReaderTest {
     }
 
     @Test
-    public void testTakeWhileZeroOverInt32() {
+    public void testTakeWhileZeroOverInt64() {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
+        writer.put(0, 32);
         writer.put(0, 32);
         writer.put(0, 2);
         writer.putBit(true);
@@ -124,7 +125,7 @@ class BitReaderTest {
 
         var reader = new BitReader(buffer);
         int val = reader.takeWhileZero();
-        assertEquals(34, val);
+        assertEquals(66, val);
         assertTrue(reader.getBit());
     }
 }

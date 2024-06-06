@@ -72,6 +72,17 @@ public class BitWriter {
         }
     }
 
+    /** Write the provided value in a gamma-coded format,
+     * e.g. by first finding the number of significant bits,
+     * then writing that many zeroes, then the bits themselves
+     */
+    public void putGammaCoded(int value) {
+        int bits = 1 + Integer.numberOfTrailingZeros(Integer.highestOneBit(value));
+
+        put(0, bits);
+        put(value, bits);
+    }
+
     public ByteBuffer finish() {
         finishLastByte();
 

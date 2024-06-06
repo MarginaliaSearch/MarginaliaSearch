@@ -1,77 +1,36 @@
 package nu.marginalia.index.journal.model;
 
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.hash.MurmurHash3_128;
+import nu.marginalia.sequence.GammaCodedSequence;
 
-import java.util.Arrays;
-import java.util.Iterator;
+public record IndexJournalEntryData(long[] termIds,
+                                    long[] metadata,
+                                    GammaCodedSequence[] positions) {
 
-/** The keyword data of an index journal entry.
- *  The data itself is an interleaved array of
- *  word ids and metadata.
- * <p>
- *  Odd entries are term ids, even entries are encoded WordMetadata records.
- *  </p>
- *  <p>The civilized way of reading the journal data is to use an IndexJournalReader</p>
- *
- * @see WordMetadata
- * @see IndexJournalReader
- */
-public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Record> {
-    private final int size;
-    public final long[] underlyingArray;
-
-    public static final int MAX_LENGTH = 1000;
-    public static final int ENTRY_SIZE = 2;
-
-    public IndexJournalEntryData(long[] underlyingArray) {
-        this.size = underlyingArray.length;
-        this.underlyingArray = underlyingArray;
+    public IndexJournalEntryData {
+        assert termIds.length == metadata.length;
+        assert termIds.length == positions.length;
     }
 
-    public IndexJournalEntryData(int size, long[] underlyingArray) {
-        this.size = size;
-        this.underlyingArray = underlyingArray;
+    public IndexJournalEntryData(String[] keywords,
+                                 long[] metadata,
+                                 GammaCodedSequence[] positions)
+    {
+        this(termIds(keywords), metadata, positions);
     }
 
-    public long get(int idx) {
-        if (idx >= size)
-            throw new ArrayIndexOutOfBoundsException(idx + " vs " + size);
-        return underlyingArray[idx];
-    }
+    private static final MurmurHash3_128 hash = new MurmurHash3_128();
 
     public int size() {
-        return size;
-    }
-    public long[] toArray() {
-        if (size == underlyingArray.length)
-            return underlyingArray;
-        else
-            return Arrays.copyOf(underlyingArray, size);
+        return termIds.length;
     }
 
-    public String toString() {
-        return String.format("%s[%s]", getClass().getSimpleName(), Arrays.toString(toArray()));
-    }
 
-    public Iterator<Record> iterator() {
-        return new EntryIterator();
-    }
-
-    private class EntryIterator implements Iterator<Record> {
-        int pos = -ENTRY_SIZE;
-
-        public boolean hasNext() {
-            return pos + 2*ENTRY_SIZE - 1 < size;
+    private static long[] termIds(String[] keywords) {
+        long[] termIds = new long[keywords.length];
+        for (int i = 0; i < keywords.length; i++) {
+            termIds[i] = hash.hashKeyword(keywords[i]);
         }
-
-        @Override
-        public Record next() {
-            pos+=ENTRY_SIZE;
-
-            return new Record(underlyingArray[pos], underlyingArray[pos+1]);
-        }
+        return termIds;
     }
-
-    public record Record(long wordId, long metadata) {}
 }

@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
  * the associated ReversePreindexWordSegments data
  */
 public class ReversePreindexDocuments {
+    private static PositionsFileConstructor positionsFileConstructor;
     final Path file;
     public  final LongArray documents;
     private static final int RECORD_SIZE_LONGS = 2;
@@ -36,7 +37,9 @@ public class ReversePreindexDocuments {
             Path workDir,
             IndexJournalReader reader,
             DocIdRewriter docIdRewriter,
+            PositionsFileConstructor positionsFileConstructor,
             ReversePreindexWordSegments segments) throws IOException {
+        ReversePreindexDocuments.positionsFileConstructor = positionsFileConstructor;
 
         createUnsortedDocsFile(docsFile, workDir, reader, segments, docIdRewriter);
 
@@ -75,14 +78,14 @@ public class ReversePreindexDocuments {
             var pointer = reader.newPointer();
             while (pointer.nextDocument()) {
                 long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
-                while (pointer.nextRecord()) {
-                    long wordId = pointer.wordId();
-                    long wordMeta = pointer.wordMeta();
+                for (var termData : pointer) {
+                    long termId = termData.termId();
 
-                    long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
+                    long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
+                    long posOffset = positionsFileConstructor.add((byte) termData.metadata(), termData.positions());
 
                     assembly.put(offset + 0, rankEncodedId);
-                    assembly.put(offset + 1, wordMeta);
+                    assembly.put(offset + 1, posOffset);
                 }
             }
 

@@ -2,12 +2,14 @@ package nu.marginalia.index.forward;
 
 import lombok.SneakyThrows;
 import nu.marginalia.index.domainrankings.DomainRankings;
-import nu.marginalia.index.journal.model.IndexJournalEntry;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
+import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,40 +71,40 @@ class ForwardIndexConverterTest {
         TestUtil.clearTempDir(dataDir);
     }
 
-    public int[] getFactorsI(int id) {
-        return IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
-    }
-
     long createId(long url, long domain) {
         return UrlIdCodec.encodeId((int) domain, (int) url);
     }
 
     public void createEntry(IndexJournalWriter writer, int id) {
-        int[] factors = getFactorsI(id);
-
-        var entryBuilder = IndexJournalEntry.builder(createId(id, id/20), id%5);
-
-        for (int i = 0; i+1 < factors.length; i+=2) {
-            entryBuilder.add(factors[i], -factors[i+1]);
-        }
-
-        writer.put(entryBuilder.build());
+        writer.put(
+                new IndexJournalEntryHeader(createId(id, id/20),
+                        id%3,
+                        (id % 5)),
+                new IndexJournalEntryData(
+                    new String[]{},
+                    new long[]{},
+                    new GammaCodedSequence[]{}
+                )
+        );
     }
 
     @Test
     void testForwardIndex() throws IOException {
 
-        new ForwardIndexConverter(new FakeProcessHeartbeat(), new IndexJournalReaderSingleFile(indexFile), docsFileId, docsFileData, new DomainRankings()).convert();
+        new ForwardIndexConverter(new FakeProcessHeartbeat(),
+                new IndexJournalReaderSingleFile(indexFile),
+                docsFileId,
+                docsFileData,
+                new DomainRankings()).convert();
 
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData);
 
         for (int i = 36; i < workSetSize; i++) {
             long docId = createId(i, i/20);
             assertEquals(0x00FF000000000000L | (i % 5), forwardReader.getDocMeta(docId));
+            assertEquals((i % 3), forwardReader.getHtmlFeatures(docId));
             assertEquals(i/20, UrlIdCodec.getDomainId(docId));
         }
-
     }
-
 
 }

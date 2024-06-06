@@ -2,8 +2,9 @@ package nu.marginalia.index.journal.writer;
 
 import com.github.luben.zstd.ZstdDirectBufferCompressingStream;
 import lombok.SneakyThrows;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,8 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
 
     private static final int ZSTD_BUFFER_SIZE = 8192;
     private static final int DATA_BUFFER_SIZE = 8192;
+
+    private final MurmurHash3_128 hasher = new MurmurHash3_128();
 
     private final ByteBuffer dataBuffer = ByteBuffer.allocateDirect(DATA_BUFFER_SIZE);
 
@@ -75,36 +78,48 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
 
     @Override
     @SneakyThrows
-    public int put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
+    public int put(IndexJournalEntryHeader header,
+                   IndexJournalEntryData data)
+    {
         if (dataBuffer.capacity() - dataBuffer.position() < 3*8) {
             dataBuffer.flip();
             compressingStream.compress(dataBuffer);
             dataBuffer.clear();
         }
 
-        dataBuffer.putInt(entry.size());
+        final long[] keywords = data.termIds();
+        final long[] metadata = data.metadata();
+        final var positions = data.positions();
+
+        int recordSize = 0; // document header size is 3 longs
+        for (int i = 0; i < keywords.length; i++) {
+            // term header size is 2 longs
+            recordSize += IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].size();
+        }
+
+        dataBuffer.putInt(recordSize);
         dataBuffer.putInt(header.documentFeatures());
         dataBuffer.putLong(header.combinedId());
         dataBuffer.putLong(header.documentMeta());
 
-        for (int i = 0; i < entry.size(); ) {
-            int remaining = (dataBuffer.capacity() - dataBuffer.position()) / 8;
-            if (remaining <= 0) {
+        for (int i = 0; i < keywords.length; i++) {
+            int requiredSize = IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].size();
+
+            if (dataBuffer.capacity() - dataBuffer.position() < requiredSize) {
                 dataBuffer.flip();
                 compressingStream.compress(dataBuffer);
                 dataBuffer.clear();
             }
-            else while (remaining-- > 0 && i < entry.size()) {
 
-                dataBuffer.putLong(entry.underlyingArray[i++]);
-            }
+            dataBuffer.putLong(keywords[i]);
+            dataBuffer.putLong(metadata[i]);
+            dataBuffer.put((byte) positions[i].size());
+            dataBuffer.put(positions[i].buffer());
         }
 
         numEntries++;
 
-        final int bytesWritten = 8 * ( /*header = 3 longs */ 3 + entry.size());
-
-        return bytesWritten;
+        return recordSize;
     }
 
     public void close() throws IOException {
@@ -121,7 +136,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
 
 
         // Finalize the file by writing a header in the beginning
-        ByteBuffer header = ByteBuffer.allocate(16);
+        ByteBuffer header = ByteBuffer.allocate(IndexJournalReader.FILE_HEADER_SIZE_BYTES);
         header.putLong(numEntries);
         header.putLong(0);  // reserved for future use
         header.flip();

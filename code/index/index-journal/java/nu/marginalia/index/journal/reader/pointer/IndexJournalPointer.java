@@ -1,5 +1,10 @@
 package nu.marginalia.index.journal.reader.pointer;
 
+import nu.marginalia.index.journal.model.IndexJournalEntryTermData;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.function.LongPredicate;
 
 /**
@@ -13,7 +18,7 @@ import java.util.function.LongPredicate;
  * nextDocument() will move the pointer from doc1 to doc2;<br>
  * nextRecord() will move the pointer from word1 to word2...<br>
  */
-public interface IndexJournalPointer {
+public interface IndexJournalPointer extends Iterable<IndexJournalEntryTermData>, AutoCloseable {
     /**
      * Advance to the next document in the journal,
      * returning true if such a document exists.
@@ -21,11 +26,6 @@ public interface IndexJournalPointer {
      * record (if it exists).
      */
     boolean nextDocument();
-
-    /**
-     * Advance to the next record in the journal
-     */
-    boolean nextRecord();
 
     /**
      * Get the id associated with the current document
@@ -36,16 +36,6 @@ public interface IndexJournalPointer {
      * Get the metadata associated with the current document
      */
     long documentMeta();
-
-    /**
-     * Get the wordId associated with the current record
-     */
-    long wordId();
-
-    /**
-     * Get the termMeta associated with the current record
-     */
-    long wordMeta();
 
     /**
      * Get the documentFeatures associated with the current record
@@ -64,6 +54,8 @@ public interface IndexJournalPointer {
     default IndexJournalPointer filterWordMeta(LongPredicate filter) {
         return new FilteringJournalPointer(this, filter);
     }
+
+    void close() throws IOException;
 }
 
 class JoiningJournalPointer implements IndexJournalPointer {
@@ -87,11 +79,6 @@ class JoiningJournalPointer implements IndexJournalPointer {
     }
 
     @Override
-    public boolean nextRecord() {
-        return pointers[pIndex].nextRecord();
-    }
-
-    @Override
     public long documentId() {
         return pointers[pIndex].documentId();
     }
@@ -101,19 +88,27 @@ class JoiningJournalPointer implements IndexJournalPointer {
         return pointers[pIndex].documentMeta();
     }
 
-    @Override
-    public long wordId() {
-        return pointers[pIndex].wordId();
-    }
-
-    @Override
-    public long wordMeta() {
-        return pointers[pIndex].wordMeta();
-    }
 
     @Override
     public int documentFeatures() {
         return pointers[pIndex].documentFeatures();
+    }
+
+    @NotNull
+    @Override
+    public Iterator<IndexJournalEntryTermData> iterator() {
+        return pointers[pIndex].iterator();
+    }
+
+    public void close() {
+        for (var p : pointers) {
+            try {
+                p.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }
 
@@ -128,14 +123,10 @@ class FilteringJournalPointer implements IndexJournalPointer {
 
     @Override
     public boolean nextDocument() {
-        return base.nextDocument();
-    }
-
-    @Override
-    public boolean nextRecord() {
-        while (base.nextRecord()) {
-            if (filter.test(wordMeta()))
+        while (base.nextDocument()) {
+            if (iterator().hasNext()) {
                 return true;
+            }
         }
         return false;
     }
@@ -151,17 +142,48 @@ class FilteringJournalPointer implements IndexJournalPointer {
     }
 
     @Override
-    public long wordId() {
-        return base.wordId();
-    }
-
-    @Override
-    public long wordMeta() {
-        return base.wordMeta();
-    }
-
-    @Override
     public int documentFeatures() {
         return base.documentFeatures();
+    }
+
+    @NotNull
+    @Override
+    public Iterator<IndexJournalEntryTermData> iterator() {
+
+        return new Iterator<>() {
+            private final Iterator<IndexJournalEntryTermData> baseIter = base.iterator();
+            private IndexJournalEntryTermData value = null;
+
+            @Override
+            public boolean hasNext() {
+                if (value != null) {
+                    return true;
+                }
+                while (baseIter.hasNext()) {
+                    value = baseIter.next();
+                    if (filter.test(value.metadata())) {
+                        return true;
+                    }
+                }
+                value = null;
+                return false;
+            }
+
+            @Override
+            public IndexJournalEntryTermData next() {
+                if (hasNext()) {
+                    var ret = value;
+                    value = null;
+                    return ret;
+                } else {
+                    throw new IllegalStateException("No more elements");
+                }
+            }
+        };
+    }
+
+    @Override
+    public void close() throws IOException {
+        base.close();
     }
 }

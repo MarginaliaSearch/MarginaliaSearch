@@ -100,6 +100,7 @@ class ReversePreindexDocsTest {
 
         assertEquals(expected, actual);
     }
+
     @Test
     public void testDocs2() throws IOException {
         var reader = journalFactory.createReader(
@@ -108,7 +109,7 @@ class ReversePreindexDocsTest {
         );
 
         var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), segme.nts);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(-100, 0, 4, new long[] { -0xF00BA3L, 0, 0xF00BA4L, 0 }),

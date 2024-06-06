@@ -33,6 +33,7 @@ public class SearchMain extends MainClass {
                 new ServiceDiscoveryModule(),
                 new DatabaseModule(false)
         );
+        
 
         // Orchestrate the boot order for the services
         var registry = injector.getInstance(ServiceRegistryIf.class);
