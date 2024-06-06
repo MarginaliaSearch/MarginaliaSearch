@@ -23,17 +23,20 @@ public class ReverseIndexConstructor {
 
     private final Path outputFileDocs;
     private final Path outputFileWords;
+    private final Path outputFilePositions;
     private final JournalReaderSource readerSource;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
     public ReverseIndexConstructor(Path outputFileDocs,
                                    Path outputFileWords,
+                                   Path outputFilePositions,
                                    JournalReaderSource readerSource,
                                    DocIdRewriter docIdRewriter,
                                    Path tmpDir) {
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
+        this.outputFilePositions = outputFilePositions;
         this.readerSource = readerSource;
         this.docIdRewriter = docIdRewriter;
         this.tmpDir = tmpDir;
@@ -49,30 +52,27 @@ public class ReverseIndexConstructor {
             return;
         }
 
-        Path positionsFile = tmpDir.resolve("positions.dat");
-        Files.deleteIfExists(positionsFile);
-        try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName)) {
-
+        try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName);
+             var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
+             var posConstructor = new PositionsFileConstructor(outputFilePositions)
+        ) {
             heartbeat.progress(CreateReverseIndexSteps.CONSTRUCT);
 
-            try (var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
-                 PositionsFileConstructor posConstructor = new PositionsFileConstructor(positionsFile);
-            ) {
+            AtomicInteger progress = new AtomicInteger(0);
 
-                AtomicInteger progress = new AtomicInteger(0);
-                inputs
-                    .parallelStream()
-                    .map(in -> {
-                        preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
-                        return construct(in, posConstructor);
-                    })
-                    .reduce(this::merge)
-                    .ifPresent((index) -> {
-                        heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
-                        finalizeIndex(index);
-                        heartbeat.progress(CreateReverseIndexSteps.FINISHED);
-                    });
-            }
+            inputs
+                .parallelStream()
+                .map(in -> {
+                    preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
+                    return construct(in, posConstructor);
+                })
+                .reduce(this::merge)
+                .ifPresent((index) -> {
+                    heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
+                    finalizeIndex(index);
+                    heartbeat.progress(CreateReverseIndexSteps.FINISHED);
+                });
+
             heartbeat.progress(CreateReverseIndexSteps.FINISHED);
         }
     }

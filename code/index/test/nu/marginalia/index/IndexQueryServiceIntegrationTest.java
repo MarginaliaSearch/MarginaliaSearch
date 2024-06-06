@@ -484,26 +484,43 @@ public class IndexQueryServiceIntegrationTest {
 
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor =
+                new ReverseIndexConstructor(
+                    outputFileDocs,
+                    outputFileWords,
+                    outputFilePositions,
+                    IndexJournalReader::singleFile,
+                    DocIdRewriter.identity(),
+                    tmpDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
 
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+        Path outputFilePositions = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.POSITIONS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor = new ReverseIndexConstructor(
+                outputFileDocs,
+                outputFileWords,
+                outputFilePositions,
+                IndexJournalReader::singleFile,
+                DocIdRewriter.identity(),
+                tmpDir);
+
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createForwardIndex() throws SQLException, IOException {

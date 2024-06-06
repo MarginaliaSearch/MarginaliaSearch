@@ -13,16 +13,21 @@ public class ReverseIndexFullFileNames {
                 case NEXT -> basePath.resolve("rev-docs.dat.next");
                 case CURRENT -> basePath.resolve("rev-docs.dat");
             };
+            case POSITIONS -> switch (version) {
+                case NEXT -> basePath.resolve("rev-positions.dat.next");
+                case CURRENT -> basePath.resolve("rev-positions.dat");
+            };
         };
     }
 
     public enum FileVersion {
         CURRENT,
-        NEXT
+        NEXT,
     }
 
     public enum FileIdentifier {
         WORDS,
-        DOCS
+        DOCS,
+        POSITIONS,
     }
 }

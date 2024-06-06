@@ -13,6 +13,10 @@ public class ReverseIndexPrioFileNames {
                 case NEXT -> basePath.resolve("rev-prio-docs.dat.next");
                 case CURRENT -> basePath.resolve("rev-prio-docs.dat");
             };
+            case POSITIONS -> switch (version) {
+                case NEXT -> basePath.resolve("rev-prio-positions.dat.next");
+                case CURRENT -> basePath.resolve("rev-prio-positions.dat");
+            };
         };
     }
 
@@ -23,6 +27,7 @@ public class ReverseIndexPrioFileNames {
 
     public enum FileIdentifier {
         WORDS,
-        DOCS
+        DOCS,
+        POSITIONS,
     }
 }
