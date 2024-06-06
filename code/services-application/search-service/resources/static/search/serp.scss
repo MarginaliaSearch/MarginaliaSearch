@@ -1,4 +1,6 @@
 :root {
+  color-scheme: light;
+
   --clr-bg-page: hsl(60, 42%, 95%); // $nicotine-light
 
   --clr-bg-ui: hsl(0, 0%, 100%);
@@ -26,38 +28,46 @@
   --font-family-heading: serif; // $heading-fonts
 }
 
+
+@mixin dark-theme-mixin {
+  color-scheme: dark;
+
+  --clr-bg-page: hsl(0, 0%, 6%);
+
+  --clr-bg-ui: hsl(0, 0%, 18%);
+  --clr-text-ui: #ddd;
+
+  --clr-bg-theme: hsl(0, 0%, 2%);
+  --clr-text-theme: var(--clr-text-ui);
+
+  --clr-bg-highlight: hsl(0, 0%, 11%);
+  --clr-text-highlight: #fff;
+
+  --clr-bg-accent: hsl(200, 32%, 28%);
+  --clr-border-accent: hsl(200, 8%, 12%);
+
+  --clr-border: hsl(0, 0%, 30%);
+
+  --clr-shadow: #000;
+
+  --clr-link: #8a8aff;
+  --clr-link-visited: #ffadff;
+  --clr-heading-link-visited: var(--clr-link-visited);
+}
+ 
+:root[data-theme='dark'] {
+  @include dark-theme-mixin;
+}
+
+// Makes theme match the user's OS preference when JS is disabled
 @media (prefers-color-scheme: dark) {
-  :root {
-    --clr-bg-page: hsl(0, 0%, 6%);
-
-    --clr-bg-ui: hsl(0, 0%, 18%);
-    --clr-text-ui: #ddd;
-
-    --clr-bg-theme: hsl(0, 0%, 2%);
-    --clr-text-theme: var(--clr-text-ui);
-
-    --clr-bg-highlight: hsl(0, 0%, 11%);
-    --clr-text-highlight: #fff;
-
-    --clr-bg-accent: hsl(200, 32%, 28%);
-    --clr-border-accent: hsl(200, 8%, 12%);
-
-    --clr-border: hsl(0, 0%, 30%);
-
-    --clr-shadow: #000;
-
-    --clr-link: #8a8aff;
-    --clr-link-visited: #ffadff;
-    --clr-heading-link-visited: var(--clr-link-visited);
+  :root:not([data-has-js="true"]) {
+    @include dark-theme-mixin;
   }
 }
 
 * {
   box-sizing: border-box;
-}
-
-html {
-  color-scheme: light dark;
 }
 
 a {
@@ -199,6 +209,9 @@ header {
   color: var(--clr-text-ui);
   box-shadow: 0 0 0.5ch var(--clr-shadow);
   margin-bottom: 1ch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
   nav {
     a {
@@ -225,6 +238,15 @@ header {
       background: var(--clr-bg-theme);
       color: var(--clr-text-theme);
     }
+  }
+}
+
+#theme {
+  padding: .5ch;
+  display: none;
+
+  [data-has-js='true'] & {
+    display: block;
   }
 }
 
@@ -333,10 +355,8 @@ section.cards {
       line-height: 1.6;
     }
 
-    @media (prefers-color-scheme: dark) {
-      & {
-        border: 1px solid var(--clr-border);
-      }
+    [data-theme='dark'] & {
+      border: 1px solid var(--clr-border);
     }
   }
 }
@@ -525,6 +545,8 @@ footer {
     font-family: var(--font-family-heading);
     font-weight: normal;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
   }
 
   #suggestions-anchor {
@@ -717,7 +739,7 @@ footer {
 }
 
 @media (max-device-width: 624px) {
-  body[data-has-js="true"] { // This property is set via js so we can selectively enable these changes only if JS is enabled;
+  [data-has-js="true"] body { // This property is set via js so we can selectively enable these changes only if JS is enabled;
                              // This is desirable since mobile navigation is JS-driven.  If JS is disabled, having a squished
                              // GUI is better than having no working UI.
     margin: 0 !important;
@@ -733,6 +755,8 @@ footer {
     #mcfeast {
       display: inline;
       float: right;
+      width: 2rem;
+      font-size: 1rem;
     }
 
     #menu-close {
