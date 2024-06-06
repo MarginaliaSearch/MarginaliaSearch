@@ -211,6 +211,7 @@ header {
   margin-bottom: 1ch;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 
   nav {
     a {
@@ -241,8 +242,7 @@ header {
 }
 
 #theme {
-  margin-left: auto;
-  margin-right: .5ch;
+  padding: .5ch;
   display: none;
 
   [data-has-js='true'] & {
@@ -545,6 +545,8 @@ footer {
     font-family: var(--font-family-heading);
     font-weight: normal;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
   }
 
   #suggestions-anchor {
@@ -753,6 +755,8 @@ footer {
     #mcfeast {
       display: inline;
       float: right;
+      width: 2rem;
+      font-size: 1rem;
     }
 
     #menu-close {
