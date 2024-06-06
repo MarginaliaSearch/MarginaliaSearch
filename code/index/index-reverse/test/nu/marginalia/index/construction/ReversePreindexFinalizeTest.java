@@ -2,7 +2,6 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.btree.model.BTreeHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReversePreindexFinalizeTest {
     TestJournalFactory journalFactory;
+    Path positionsFile;
     Path countsFile;
     Path wordsIdFile;
     Path docsFile;
@@ -28,6 +28,7 @@ class ReversePreindexFinalizeTest {
     public void setUp() throws IOException  {
         journalFactory = new TestJournalFactory();
 
+        positionsFile = Files.createTempFile("positions", ".dat");
         countsFile = Files.createTempFile("counts", ".dat");
         wordsIdFile = Files.createTempFile("words", ".dat");
         docsFile = Files.createTempFile("docs", ".dat");
@@ -51,7 +52,9 @@ class ReversePreindexFinalizeTest {
     @Test
     public void testFinalizeSimple() throws IOException {
         var reader = journalFactory.createReader(new EntryDataWithWordMeta(100, 101, wm(50, 51)));
-        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader,
+                new PositionsFileConstructor(positionsFile),
+                DocIdRewriter.identity(), tempDir);
 
 
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
@@ -89,7 +92,9 @@ class ReversePreindexFinalizeTest {
                 new EntryDataWithWordMeta(101, 101, wm(51, 52))
                 );
 
-        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader,
+                new PositionsFileConstructor(positionsFile),
+                DocIdRewriter.identity(), tempDir);
 
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
         preindex.delete();

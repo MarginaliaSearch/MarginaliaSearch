@@ -8,6 +8,20 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+/** A class for constructing a positions file.  This class is thread-safe.
+ *
+ * <p></p>
+ *
+ * The positions data is concatenated in the file, with each term's metadata
+ * followed by its positions.  The metadata is a single byte, and the positions
+ * are encoded using the Elias Gamma code, with zero padded bits at the end to
+ * get octet alignment.
+ *
+ * <p></p>
+ *
+ * It is the responsibility of the caller to keep track of the byte offset of
+ * each posting in the file.
+ */
 public class PositionsFileConstructor implements AutoCloseable {
     private final Path file;
     private final FileChannel channel;

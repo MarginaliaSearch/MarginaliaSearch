@@ -19,11 +19,13 @@ class ReversePreindexMergeTest {
     Path wordsIdFile;
     Path docsFile;
     Path tempDir;
+    Path positionsFile;
 
     @BeforeEach
     public void setUp() throws IOException  {
         journalFactory = new TestJournalFactory();
 
+        positionsFile = Files.createTempFile("positions", ".dat");
         countsFile = Files.createTempFile("counts", ".dat");
         wordsIdFile = Files.createTempFile("words", ".dat");
         docsFile = Files.createTempFile("docs", ".dat");
@@ -51,8 +53,8 @@ class ReversePreindexMergeTest {
         var reader1 = journalFactory.createReader(leftData.toArray(EntryDataWithWordMeta[]::new));
         var reader2 = journalFactory.createReader(rightData.toArray(EntryDataWithWordMeta[]::new));
 
-        var left = ReversePreindex.constructPreindex(reader1, DocIdRewriter.identity(), tempDir);
-        var right = ReversePreindex.constructPreindex(reader2, DocIdRewriter.identity(), tempDir);
+        var left = ReversePreindex.constructPreindex(reader1, new PositionsFileConstructor(positionsFile), DocIdRewriter.identity(), tempDir);
+        var right = ReversePreindex.constructPreindex(reader2, new PositionsFileConstructor(positionsFile), DocIdRewriter.identity(), tempDir);
         return ReversePreindex.merge(tempDir, left, right);
     }
 
