@@ -16,6 +16,7 @@ import java.util.StringJoiner;
  * */
 public class GammaCodedSequence implements BinarySerializable, Iterable<Integer> {
     private final ByteBuffer raw;
+
     int startPos = 0;
     int startLimit = 0;
 
@@ -41,6 +42,12 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         this.raw = bytes;
         startPos = bytes.position();
         startLimit = bytes.limit();
+    }
+
+    public GammaCodedSequence(ByteBuffer bytes, int startPos, int startLimit) {
+        this.raw = bytes;
+        this.startPos = startPos;
+        this.startLimit = startLimit;
     }
 
     public GammaCodedSequence(byte[] bytes) {
@@ -72,23 +79,23 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         return EliasGammaCodec.decode(raw);
     }
 
+    /** Return an iterator over the sequence with a constant offset applied to each value.
+     * This is useful for comparing sequences with different offsets, and adds zero
+     * extra cost to the decoding process which is already based on adding
+     * relative differences.
+     * */
+    public IntIterator offsetIterator(int offset) {
+        raw.position(startPos);
+        raw.limit(startLimit);
+
+        return EliasGammaCodec.decodeWithOffset(raw, offset);
+    }
+
     public IntList values() {
         var intItr = iterator();
         IntArrayList ret = new IntArrayList(8);
         while (intItr.hasNext()) {
             ret.add(intItr.nextInt());
-        }
-        return ret;
-    }
-
-    /** Decode the sequence into an IntList;
-     * this is a somewhat slow operation,
-     * iterating over the data directly more performant */
-    public IntList decode() {
-        IntArrayList ret = new IntArrayList(8);
-        var iter = iterator();
-        while (iter.hasNext()) {
-            ret.add(iter.nextInt());
         }
         return ret;
     }
@@ -116,7 +123,11 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         return raw;
     }
 
-    public int size() {
+    public int bufferSize() {
         return raw.capacity();
+    }
+
+    public int valueCount() {
+        return EliasGammaCodec.readCount(buffer());
     }
 }

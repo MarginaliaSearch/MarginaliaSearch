@@ -13,7 +13,6 @@ import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
@@ -135,6 +134,53 @@ public class IndexQueryServiceIntegrationSmokeTest {
         long[] actual = rsp.results
                 .stream()
                 .mapToLong(i -> i.rawIndexResult.getDocumentId())
+                .toArray();
+
+        System.out.println(Arrays.toString(actual));
+        System.out.println(Arrays.toString(ids));
+        Assertions.assertArrayEquals(ids, actual);
+    }
+
+    @Test
+    public void testSimple() throws Exception {
+        var linkdbWriter = new DocumentDbWriter(
+                IndexLocations.getLinkdbLivePath(fileStorageService)
+                        .resolve(DOCDB_FILE_NAME)
+        );
+        for (int i = 1; i < 512; i++) {
+            loadData(linkdbWriter, i);
+        }
+        linkdbWriter.close();
+        documentDbReader.reconnect();
+
+        indexJournalWriter.close();
+        constructIndex();
+        statefulIndex.switchIndex();
+
+        var rsp = queryService.justQuery(
+                SearchSpecification.builder()
+                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
+                        .queryStrategy(QueryStrategy.SENTENCE)
+                        .year(SpecificationLimit.none())
+                        .quality(SpecificationLimit.none())
+                        .size(SpecificationLimit.none())
+                        .rank(SpecificationLimit.none())
+                        .rankingParams(ResultRankingParameters.sensibleDefaults())
+                        .domains(new ArrayList<>())
+                        .searchSetIdentifier("NONE")
+                        .query(
+                                SearchQuery.builder("2")
+                                .include("2")
+                                .build()
+                        ).build()
+        );
+
+        int[] idxes = new int[] { 62, 222, 382, 60, 124, 220, 284, 380, 444, 122 };
+        long[] ids = IntStream.of(idxes).mapToLong(Long::valueOf).toArray();
+        long[] actual = rsp.results
+                .stream()
+                .mapToLong(i -> i.rawIndexResult.getDocumentId())
+                .map(UrlIdCodec::getDocumentOrdinal)
                 .toArray();
 
         System.out.println(Arrays.toString(actual));
@@ -297,7 +343,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
         return UrlIdCodec.encodeId((32 - (id % 32)), id);
     }
 
-    MurmurHash3_128 hasher = new MurmurHash3_128();
     @SneakyThrows
     public void loadData(DocumentDbWriter ldbw, int id) {
         int[] factors = IntStream
@@ -305,30 +350,26 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 .filter(v -> (id % v) == 0)
                 .toArray();
 
+        System.out.println("id:" + id + " factors: " + Arrays.toString(factors));
+
         long fullId = fullId(id);
 
-        var header = new IndexJournalEntryHeader(factors.length, 0, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
-
-        long[] data = new long[factors.length * 2];
-        for (int i = 0; i < factors.length; i++) {
-            data[2 * i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
-            data[2 * i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
-        }
+        var header = new IndexJournalEntryHeader(factors.length, 0, 100, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
                 "test", "test", 0., "HTML5", 0, null, 0, 10
         ));
 
-        String[] keywords = IntStream.range(0, factors.length).mapToObj(Integer::toString).toArray(String[]::new);
+        String[] keywords = IntStream.of(factors).mapToObj(Integer::toString).toArray(String[]::new);
         long[] metadata = new long[factors.length];
         for (int i = 0; i < factors.length; i++) {
             metadata[i] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
         GammaCodedSequence[] positions = new GammaCodedSequence[factors.length];
-        ByteBuffer wa = ByteBuffer.allocate(16);
+        ByteBuffer wa = ByteBuffer.allocate(32);
         for (int i = 0; i < factors.length; i++) {
-            positions[i] = GammaCodedSequence.generate(wa, i + 1);
+            positions[i] = GammaCodedSequence.generate(wa, factors);
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(keywords, metadata, positions));
@@ -338,7 +379,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     public void loadDataWithDomain(DocumentDbWriter ldbw, int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
         long fullId = UrlIdCodec.encodeId(domain, id);
-        var header = new IndexJournalEntryHeader(factors.length, 0, fullId, DocumentMetadata.defaultValue());
+        var header = new IndexJournalEntryHeader(factors.length, 0, 100, fullId, DocumentMetadata.defaultValue());
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
@@ -346,7 +387,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         ));
 
 
-        String[] keywords = IntStream.range(0, factors.length).mapToObj(Integer::toString).toArray(String[]::new);
+        String[] keywords = IntStream.of(factors).mapToObj(Integer::toString).toArray(String[]::new);
         long[] metadata = new long[factors.length];
         for (int i = 0; i < factors.length; i++) {
             metadata[i] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
@@ -354,7 +395,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         GammaCodedSequence[] positions = new GammaCodedSequence[factors.length];
         ByteBuffer wa = ByteBuffer.allocate(16);
         for (int i = 0; i < factors.length; i++) {
-            positions[i] = GammaCodedSequence.generate(wa, i);
+            positions[i] = GammaCodedSequence.generate(wa, i + 1);
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(keywords, metadata, positions));

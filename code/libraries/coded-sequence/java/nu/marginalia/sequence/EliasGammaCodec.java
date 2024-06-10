@@ -17,12 +17,13 @@ public class EliasGammaCodec implements IntIterator {
 
     private final BitReader reader;
     int rem = 0;
-    private int last = 0;
+    private int last;
     private int next = 0;
 
-    private EliasGammaCodec(ByteBuffer buffer) {
+    private EliasGammaCodec(ByteBuffer buffer, int zero) {
         reader = new BitReader(buffer);
 
+        last = zero;
         int bits = reader.takeWhileZero();
 
         if (!reader.hasMore()) {
@@ -33,9 +34,24 @@ public class EliasGammaCodec implements IntIterator {
         }
     }
 
+    public static int readCount(ByteBuffer buffer) {
+        var reader = new BitReader(buffer);
+
+        if (reader.getCurrentValue() > 0) {
+            int bits = reader.takeWhileZero();
+            return reader.get(bits);
+        }
+        else {
+            return 0;
+        }
+    }
+
     /** Decode a sequence of integers from a ByteBuffer using the Elias Gamma code */
     public static IntIterator decode(ByteBuffer buffer) {
-        return new EliasGammaCodec(buffer);
+        return new EliasGammaCodec(buffer, 0);
+    }
+    public static IntIterator decodeWithOffset(ByteBuffer buffer, int offset) {
+        return new EliasGammaCodec(buffer, offset);
     }
 
     /** Encode a sequence of integers into a ByteBuffer using the Elias Gamma code.

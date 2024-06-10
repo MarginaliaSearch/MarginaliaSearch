@@ -8,6 +8,18 @@ import java.util.stream.Stream;
  *
  */
 public sealed interface CqExpression {
+    /**  Create a new query for the provided data using this expression as the root */
+    default <T> CompiledQuery<T> newQuery(T[] data) {
+        return new CompiledQuery<>(this, data);
+    }
+    /**  Create a new query for the provided data using this expression as the root */
+    default CompiledQueryInt newQuery(int[] data) {
+        return new CompiledQueryInt(this, new CqDataInt(data));
+    }
+    /**  Create a new query for the provided data using this expression as the root */
+    default CompiledQueryLong newQuery(long[] data) {
+        return new CompiledQueryLong(this, new CqDataLong(data));
+    }
 
     Stream<Word> stream();
 

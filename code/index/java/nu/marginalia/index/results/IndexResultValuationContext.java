@@ -1,25 +1,22 @@
 package nu.marginalia.index.results;
 
 import nu.marginalia.api.searchquery.model.compiled.*;
-import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
-import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.results.model.QuerySearchTerms;
-import nu.marginalia.index.results.model.TermMetadataForCombinedDocumentIds;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.ranking.results.ResultValuator;
+import nu.marginalia.sequence.GammaCodedSequence;
 
 import javax.annotation.Nullable;
-import java.util.List;
+
+import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.*;
 
 /** This class is responsible for calculating the score of a search result.
  * It holds the data required to perform the scoring, as there is strong
@@ -28,94 +25,74 @@ public class IndexResultValuationContext {
     private final CombinedIndexReader index;
     private final QueryParams queryParams;
 
-    private final TermMetadataForCombinedDocumentIds termMetadataForCombinedDocumentIds;
-    private final QuerySearchTerms searchTerms;
-
     private final ResultRankingContext rankingContext;
     private final ResultValuator searchResultValuator;
     private final CompiledQuery<String> compiledQuery;
-    private final CompiledQueryLong compiledQueryIds;
 
-    public IndexResultValuationContext(IndexMetadataService metadataService,
-                                       ResultValuator searchResultValuator,
-                                       CombinedDocIdList ids,
+    public IndexResultValuationContext(ResultValuator searchResultValuator,
                                        StatefulIndex statefulIndex,
                                        ResultRankingContext rankingContext,
-                                       SearchParameters params
-                               ) {
+                                       SearchParameters params)
+    {
         this.index = statefulIndex.get();
         this.rankingContext = rankingContext;
         this.searchResultValuator = searchResultValuator;
 
         this.queryParams = params.queryParams;
         this.compiledQuery = params.compiledQuery;
-        this.compiledQueryIds = params.compiledQueryIds;
-
-        this.searchTerms = metadataService.getSearchTerms(params.compiledQuery, params.query);
-
-        this.termMetadataForCombinedDocumentIds = metadataService.getTermMetadataForDocuments(ids,
-                searchTerms.termIdsAll);
     }
 
-    private final long flagsFilterMask =
-            WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit() | WordFlags.ExternalLink.asBit();
+    private final long flagsFilterMask = WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit() | WordFlags.ExternalLink.asBit();
 
     @Nullable
-    public SearchResultItem calculatePreliminaryScore(long combinedId) {
+    public SearchResultItem calculatePreliminaryScore(long combinedId,
+                                                      QuerySearchTerms searchTerms,
+                                                      long[] wordFlags,
+                                                      GammaCodedSequence[] positions)
+    {
+
+
+        // FIXME: Reconsider coherence logic with the new position data
+//        if (!searchTerms.coherences.test(termMetadataForCombinedDocumentIds, combinedId))
+//            return null;
+
+        CompiledQuery<GammaCodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
+        CompiledQueryLong wordFlagsQuery = compiledQuery.root.newQuery(wordFlags);
+        int[] counts = new int[compiledQuery.size()];
+        for (int i = 0; i < counts.length; i++) {
+            if (positions[i] != null) {
+                counts[i] = positions[i].valueCount();
+            }
+        }
+        CompiledQueryInt positionsCountQuery = compiledQuery.root.newQuery(counts);
+
+        // If the document is not relevant to the query, abort early to reduce allocations and
+        // avoid unnecessary calculations
+        if (testRelevance(wordFlagsQuery, positionsCountQuery)) {
+            return null;
+        }
+
 
         long docId = UrlIdCodec.removeRank(combinedId);
-
-        if (!searchTerms.coherences.test(termMetadataForCombinedDocumentIds, combinedId))
-            return null;
-
         long docMetadata = index.getDocumentMetadata(docId);
         int htmlFeatures = index.getHtmlFeatures(docId);
-
-        SearchResultItem searchResult = new SearchResultItem(docId,
-                docMetadata,
-                htmlFeatures,
-                hasPrioTerm(combinedId));
-
-        long[] wordMetas = new long[compiledQuery.size()];
-        SearchResultKeywordScore[] scores = new SearchResultKeywordScore[compiledQuery.size()];
-
-        for (int i = 0; i < wordMetas.length; i++) {
-            final long termId = compiledQueryIds.at(i);
-            final String term = compiledQuery.at(i);
-
-            wordMetas[i] = termMetadataForCombinedDocumentIds.getTermMetadata(termId, combinedId);
-            scores[i] = new SearchResultKeywordScore(term, termId, wordMetas[i]);
-        }
-
-
-        // DANGER: IndexResultValuatorService assumes that searchResult.keywordScores has this specific order, as it needs
-        // to be able to re-construct its own CompiledQuery<SearchResultKeywordScore> for re-ranking the results.  This is
-        // a very flimsy assumption.
-        searchResult.keywordScores.addAll(List.of(scores));
-
-        CompiledQueryLong wordMetasQuery = new CompiledQueryLong(compiledQuery.root, new CqDataLong(wordMetas));
-
-
-        boolean allSynthetic = CompiledQueryAggregates.booleanAggregate(wordMetasQuery, WordFlags.Synthetic::isPresent);
-        int flagsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(wordMeta & flagsFilterMask));
-        int positionsCount = CompiledQueryAggregates.intMaxMinAggregate(wordMetasQuery, wordMeta -> Long.bitCount(WordMetadata.decodePositions(wordMeta)));
-
-        if (!meetsQueryStrategyRequirements(wordMetasQuery, queryParams.queryStrategy())) {
-            return null;
-        }
-
-        if (flagsCount == 0 && !allSynthetic && positionsCount == 0)
-            return null;
+        int docSize = index.getDocumentSize(docId);
 
         double score = searchResultValuator.calculateSearchResultValue(
-                wordMetasQuery,
+                wordFlagsQuery,
+                positionsCountQuery,
+                positionsQuery,
                 docMetadata,
                 htmlFeatures,
-                5000, // use a dummy value here as it's not present in the index
+                docSize,
                 rankingContext,
                 null);
 
-        if (searchResult.hasPrioTerm) {
+        SearchResultItem searchResult = new SearchResultItem(docId,
+                docMetadata,
+                htmlFeatures);
+
+        if (hasPrioTerm(searchTerms, positions)) {
             score = 0.75 * score;
         }
 
@@ -124,13 +101,32 @@ public class IndexResultValuationContext {
         return searchResult;
     }
 
-    private boolean hasPrioTerm(long combinedId) {
-        for (var term : searchTerms.termIdsPrio.array()) {
-            if (termMetadataForCombinedDocumentIds.hasTermMeta(term, combinedId)) {
+    private boolean testRelevance(CompiledQueryLong wordFlagsQuery, CompiledQueryInt countsQuery) {
+        boolean allSynthetic = booleanAggregate(wordFlagsQuery, WordFlags.Synthetic::isPresent);
+        int flagsCount = intMaxMinAggregate(wordFlagsQuery, flags ->  Long.bitCount(flags & flagsFilterMask));
+        int positionsCount = intMaxMinAggregate(countsQuery, p -> p);
+
+        if (!meetsQueryStrategyRequirements(wordFlagsQuery, queryParams.queryStrategy())) {
+            return true;
+        }
+        if (flagsCount == 0 && !allSynthetic && positionsCount == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean hasPrioTerm(QuerySearchTerms searchTerms, GammaCodedSequence[] positions) {
+        var allTerms = searchTerms.termIdsAll;
+        var prioTerms = searchTerms.termIdsPrio;
+
+        for (int i = 0; i < allTerms.size(); i++) {
+            if (positions[i] != null && prioTerms.contains(allTerms.at(i))) {
                 return true;
             }
         }
-        return  false;
+
+        return false;
     }
 
     private boolean meetsQueryStrategyRequirements(CompiledQueryLong queryGraphScores,
@@ -142,7 +138,7 @@ public class IndexResultValuationContext {
             return true;
         }
 
-        return CompiledQueryAggregates.booleanAggregate(queryGraphScores,
+        return booleanAggregate(queryGraphScores,
                 docs -> meetsQueryStrategyRequirements(docs, queryParams.queryStrategy()));
     }
 

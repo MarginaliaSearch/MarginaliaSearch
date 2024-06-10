@@ -3,6 +3,8 @@ package nu.marginalia.index;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
+import nu.marginalia.index.positions.TermData;
+import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.query.EmptyEntrySource;
 import nu.marginalia.index.query.EntrySource;
 import nu.marginalia.index.query.ReverseIndexRejectFilter;
@@ -14,9 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.concurrent.Executors;
 
 public class ReverseIndexReader {
@@ -27,8 +29,15 @@ public class ReverseIndexReader {
     private final BTreeReader wordsBTreeReader;
     private final String name;
 
-    public ReverseIndexReader(String name, Path words, Path documents) throws IOException {
+    private final PositionsFileReader positionsFileReader;
+
+    public ReverseIndexReader(String name,
+                              Path words,
+                              Path documents,
+                              PositionsFileReader positionsFileReader) throws IOException {
         this.name = name;
+
+        this.positionsFileReader = positionsFileReader;
 
         if (!Files.exists(words) || !Files.exists(documents)) {
             this.words = null;
@@ -133,31 +142,29 @@ public class ReverseIndexReader {
                 offset);
     }
 
-    public long[] getTermMeta(long termId, long[] docIds) {
+    public TermData[] getTermData(Arena arena,
+                                  long termId,
+                                  long[] docIds)
+    {
+        var ret = new TermData[docIds.length];
+
         long offset = wordOffset(termId);
 
         if (offset < 0) {
             // This is likely a bug in the code, but we can't throw an exception here
             logger.debug("Missing offset for word {}", termId);
-            return new long[docIds.length];
+            return ret;
         }
-
-        assert isUniqueAndSorted(docIds) : "The input array docIds is assumed to be unique and sorted, was " + Arrays.toString(docIds);
 
         var reader = createReaderNew(offset);
-        return reader.queryData(docIds, 1);
-    }
 
-    private boolean isUniqueAndSorted(long[] ids) {
-        if (ids.length == 0)
-            return true;
+        // Read the size and offset of the position data
+        var offsets = reader.queryData(docIds, 1);
 
-        for (int i = 1; i < ids.length; i++) {
-            if(ids[i] <= ids[i-1])
-                return false;
+        for (int i = 0; i < docIds.length; i++) {
+            ret[i] = positionsFileReader.getTermData(arena, offsets[i]);
         }
-
-        return true;
+        return ret;
     }
 
     public void close() {
@@ -166,5 +173,14 @@ public class ReverseIndexReader {
 
         if (words != null)
             words.close();
+
+        if (positionsFileReader != null) {
+            try {
+                positionsFileReader.close();
+            } catch (IOException e) {
+                logger.error("Failed to close positions file reader", e);
+            }
+        }
     }
+
 }

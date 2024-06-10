@@ -1,5 +1,6 @@
 package nu.marginalia.index.construction;
 
+import nu.marginalia.index.positions.PositionCodec;
 import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class PositionsFileConstructor implements AutoCloseable {
     /** Add a term to the positions file
      * @param termMeta the term metadata
      * @param positions the positions of the term
-     * @return the offset of the term in the file
+     * @return the offset of the term in the file, with the size of the data in the highest byte
      */
     public long add(byte termMeta, GammaCodedSequence positions) throws IOException {
         synchronized (file) {
@@ -53,12 +54,20 @@ public class PositionsFileConstructor implements AutoCloseable {
             workBuffer.put(termMeta);
             workBuffer.put(positionBuffer);
 
+            long ret = PositionCodec.encode(size, offset);
+
             offset += size;
-            return offset;
+
+            return ret;
         }
     }
 
     public void close() throws IOException {
+        while (workBuffer.position() < workBuffer.limit()) {
+            workBuffer.flip();
+            channel.write(workBuffer);
+        }
+
         channel.force(false);
         channel.close();
     }

@@ -17,14 +17,17 @@ import nu.marginalia.model.idx.DocumentMetadata;
  */
 public record IndexJournalEntryHeader(int entrySize,
                                       int documentFeatures,
+                                      int documentSize,
                                       long combinedId,
                                       long documentMeta) {
 
     public IndexJournalEntryHeader(long combinedId,
                                    int documentFeatures,
+                                   int documentSize,
                                    long documentMeta) {
         this(-1,
                 documentFeatures,
+                documentSize,
                 combinedId,
                 documentMeta);
     }

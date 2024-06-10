@@ -28,12 +28,17 @@ public class IndexJournalReadEntry implements Iterable<IndexJournalEntryTermData
     public static IndexJournalReadEntry read(DataInputStream inputStream) throws IOException {
 
         final long sizeBlock = inputStream.readLong();
+        final int entrySize = (int) (sizeBlock >>> 48L);
+        final int docSize = (int) ((sizeBlock >>> 32L) & 0xFFFFL);
+        final int docFeatures = (int) (sizeBlock & 0xFFFF_FFFFL);
         final long docId = inputStream.readLong();
         final long meta = inputStream.readLong();
 
+
         var header = new IndexJournalEntryHeader(
-                (int) (sizeBlock >>> 32L),
-                (int) (sizeBlock & 0xFFFF_FFFFL),
+                entrySize,
+                docFeatures,
+                docSize,
                 docId,
                 meta);
 
@@ -55,6 +60,10 @@ public class IndexJournalReadEntry implements Iterable<IndexJournalEntryTermData
 
     public int documentFeatures() {
         return header.documentFeatures();
+    }
+
+    public int documentSize() {
+        return header.documentSize();
     }
 
     public int domainId() {
@@ -88,7 +97,7 @@ class TermDataIterator implements Iterator<IndexJournalEntryTermData> {
     public IndexJournalEntryTermData next() {
         // read the metadata for the term
         long termId = buffer.getLong();
-        long meta = buffer.getLong();
+        long meta = buffer.getShort();
 
         // read the size of the sequence data
         int size = buffer.get() & 0xFF;

@@ -8,11 +8,13 @@ import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class TestJournalFactory {
     Path tempDir = Files.createTempDirectory("journal");
@@ -50,10 +52,10 @@ public class TestJournalFactory {
                     '}';
         }
     }
-    public record WordWithMeta(long wordId, long meta) {}
+    public record WordWithMeta(long wordId, long meta, GammaCodedSequence gcs) {}
 
-    public static WordWithMeta wm(long wordId, long meta) {
-        return new WordWithMeta(wordId, meta);
+    public static WordWithMeta wm(long wordId, long meta, int... positions) {
+        return new WordWithMeta(wordId, meta, GammaCodedSequence.generate(ByteBuffer.allocate(128), positions));
     }
 
     IndexJournalReader createReader(EntryData... entries) throws IOException {
@@ -71,7 +73,7 @@ public class TestJournalFactory {
                 positions[i] = new GammaCodedSequence(new byte[1]);
             }
 
-            writer.put(new IndexJournalEntryHeader(entries.length, 0, entry.docId, entry.docMeta),
+            writer.put(new IndexJournalEntryHeader(entries.length, 0, 15, entry.docId, entry.docMeta),
                     new IndexJournalEntryData(termIds, meta, positions));
         }
         writer.close();
@@ -91,10 +93,10 @@ public class TestJournalFactory {
             for (int i = 0; i < entry.wordIds.length; i++) {
                 termIds[i] = entry.wordIds[i].wordId;
                 meta[i] = entry.wordIds[i].meta;
-                positions[i] = new GammaCodedSequence(new byte[1]);
+                positions[i] = Objects.requireNonNullElseGet(entry.wordIds[i].gcs, () -> new GammaCodedSequence(new byte[1]));
             }
 
-            writer.put(new IndexJournalEntryHeader(entries.length, 0, entry.docId, entry.docMeta),
+            writer.put(new IndexJournalEntryHeader(entries.length, 0, 15, entry.docId, entry.docMeta),
                     new IndexJournalEntryData(termIds, meta, positions));
         }
         writer.close();

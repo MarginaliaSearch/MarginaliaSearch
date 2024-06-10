@@ -2,7 +2,6 @@ package nu.marginalia.index.journal.writer;
 
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.model.IndexJournalEntryTermData;
 
 import java.io.IOException;
 

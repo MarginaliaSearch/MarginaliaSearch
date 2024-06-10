@@ -32,13 +32,11 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
     public SearchResultItem(long combinedId,
                             long encodedDocMetadata,
-                            int htmlFeatures,
-                            boolean hasPrioTerm) {
+                            int htmlFeatures) {
         this.combinedId = combinedId;
         this.encodedDocMetadata = encodedDocMetadata;
         this.keywordScores = new ArrayList<>();
         this.htmlFeatures = htmlFeatures;
-        this.hasPrioTerm = hasPrioTerm;
     }
 
 

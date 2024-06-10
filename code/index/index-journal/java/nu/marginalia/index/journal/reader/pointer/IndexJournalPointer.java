@@ -42,6 +42,8 @@ public interface IndexJournalPointer extends Iterable<IndexJournalEntryTermData>
      */
     int documentFeatures();
 
+    int documentSize();
+
     /** Concatenate a number of journal pointers */
     static IndexJournalPointer concatenate(IndexJournalPointer... pointers) {
         if (pointers.length == 1)
@@ -94,6 +96,11 @@ class JoiningJournalPointer implements IndexJournalPointer {
         return pointers[pIndex].documentFeatures();
     }
 
+    @Override
+    public int documentSize() {
+        return pointers[pIndex].documentSize();
+    }
+
     @NotNull
     @Override
     public Iterator<IndexJournalEntryTermData> iterator() {
@@ -144,6 +151,12 @@ class FilteringJournalPointer implements IndexJournalPointer {
     @Override
     public int documentFeatures() {
         return base.documentFeatures();
+    }
+
+
+    @Override
+    public int documentSize() {
+        return base.documentSize();
     }
 
     @NotNull

@@ -36,6 +36,10 @@ public class SearchQuery {
     @Deprecated // why does this exist?
     private double value = 0;
 
+    public static SearchQueryBuilder builder(String compiledQuery) {
+        return new SearchQueryBuilder(compiledQuery);
+    }
+
     public SearchQuery() {
         this.compiledQuery = "";
         this.searchTermsInclude = new ArrayList<>();
@@ -81,5 +85,45 @@ public class SearchQuery {
         return sb.toString();
     }
 
+    public static class SearchQueryBuilder {
+        private final String compiledQuery;
+        private List<String> searchTermsInclude = new ArrayList<>();
+        private List<String> searchTermsExclude = new ArrayList<>();
+        private List<String> searchTermsAdvice = new ArrayList<>();
+        private List<String> searchTermsPriority = new ArrayList<>();
+        private List<List<String>> searchTermCoherences = new ArrayList<>();
 
+        private SearchQueryBuilder(String compiledQuery) {
+            this.compiledQuery = compiledQuery;
+        }
+
+        public SearchQueryBuilder include(String... terms) {
+            searchTermsInclude.addAll(List.of(terms));
+            return this;
+        }
+
+        public SearchQueryBuilder exclude(String... terms) {
+            searchTermsExclude.addAll(List.of(terms));
+            return this;
+        }
+
+        public SearchQueryBuilder advice(String... terms) {
+            searchTermsAdvice.addAll(List.of(terms));
+            return this;
+        }
+
+        public SearchQueryBuilder priority(String... terms) {
+            searchTermsPriority.addAll(List.of(terms));
+            return this;
+        }
+
+        public SearchQueryBuilder coherences(String... coherences) {
+            searchTermCoherences.add(List.of(coherences));
+            return this;
+        }
+
+        public SearchQuery build() {
+            return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermCoherences);
+        }
+    }
 }

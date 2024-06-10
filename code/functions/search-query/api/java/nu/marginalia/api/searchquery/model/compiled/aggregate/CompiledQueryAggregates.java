@@ -2,6 +2,7 @@ package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 
 import java.util.ArrayList;
@@ -36,7 +37,10 @@ public class CompiledQueryAggregates {
     public static <T> int intMaxMinAggregate(CompiledQuery<T> query, ToIntFunction<T> operator) {
         return query.root.visit(new CqIntMaxMinOperator(query, operator));
     }
-
+    /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
+    public static <T> int intMaxMinAggregate(CompiledQueryInt query, IntUnaryOperator operator) {
+        return query.root.visit(new CqIntMaxMinOperator(query, operator));
+    }
     /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
     public static int intMaxMinAggregate(CompiledQueryLong query, LongToIntFunction operator) {
         return query.root.visit(new CqIntMaxMinOperator(query, operator));

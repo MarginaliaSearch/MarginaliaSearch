@@ -97,6 +97,9 @@ class SingleFileJournalPointer implements IndexJournalPointer {
     @Override
     public int documentFeatures() { return entry.documentFeatures(); }
 
+    @Override
+    public int documentSize() { return entry.documentSize(); }
+
     /** Return an iterator over the terms in the current document.
      *  This iterator is not valid after calling nextDocument().
      */

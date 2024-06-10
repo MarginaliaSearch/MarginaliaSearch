@@ -75,6 +75,7 @@ public class KeywordLoaderService {
         writer.putWords(combinedId,
                 projection.htmlFeatures,
                 projection.documentMetadata,
+                projection.length,
                 words);
     }
 }

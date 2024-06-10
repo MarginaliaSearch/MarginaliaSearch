@@ -26,6 +26,8 @@ public class DocumentRecordKeywordsProjection {
     public int htmlFeatures;
     public long documentMetadata;
 
+    public int length;
+
     public List<String> words;
     public TLongList metas;
     public List<GammaCodedSequence> positions;
@@ -39,13 +41,14 @@ public class DocumentRecordKeywordsProjection {
     }
 
     public static Collection<String> requiredColumns() {
-        return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata");
+        return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata", "length");
     }
 
     @SneakyThrows
     public DocumentRecordKeywordsProjection add(String heading, Object value) {
         switch (heading) {
             case "domain" -> domain = (String) value;
+            case "length" -> length = (Integer) value;
             case "ordinal" -> ordinal = (Integer) value;
             case "htmlFeatures" -> htmlFeatures = (Integer) value;
             case "documentMetadata" -> documentMetadata = (Long) value;

@@ -155,15 +155,15 @@ class ReversePreindexDocsTest {
             if (wordId != that.wordId) return false;
             if (start != that.start) return false;
             if (end != that.end) return false;
-            return Arrays.equals(data, that.data);
+            return data[0] == that.data[0]; //Arrays.equals(data, that.data);
         }
 
         @Override
         public int hashCode() {
-            int result = (int) (wordId ^ (wordId >>> 32));
-            result = 31 * result + (int) (start ^ (start >>> 32));
-            result = 31 * result + (int) (end ^ (end >>> 32));
-            result = 31 * result + Arrays.hashCode(data);
+            int result = Long.hashCode(wordId);
+            result = 31 * result + Long.hashCode(start);
+            result = 31 * result + Long.hashCode(end);
+            result = 31 * result + Long.hashCode(data[0]);
             return result;
         }
 

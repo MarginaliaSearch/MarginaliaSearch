@@ -79,9 +79,7 @@ class ReversePreindexFinalizeTest {
         assertEquals(1, wordsHeader.numEntries());
 
         assertEquals(100, docsArray.get(docsHeader.dataOffsetLongs() + 0));
-        assertEquals(51, docsArray.get(docsHeader.dataOffsetLongs() + 1));
         assertEquals(50, wordsArray.get(wordsHeader.dataOffsetLongs()));
-        assertEquals(0, wordsArray.get(wordsHeader.dataOffsetLongs() + 1));
     }
 
 
@@ -122,9 +120,7 @@ class ReversePreindexFinalizeTest {
         long offset2 = wordsArray.get(wordsHeader.dataOffsetLongs() + 3);
 
         assertEquals(50, wordsArray.get(wordsHeader.dataOffsetLongs()));
-        assertEquals(0, wordsArray.get(wordsHeader.dataOffsetLongs() + 1));
         assertEquals(50, wordsArray.get(wordsHeader.dataOffsetLongs()));
-        assertEquals(0, wordsArray.get(wordsHeader.dataOffsetLongs() + 1));
 
         BTreeHeader docsHeader;
 
@@ -133,13 +129,11 @@ class ReversePreindexFinalizeTest {
         assertEquals(1, docsHeader.numEntries());
 
         assertEquals(100, docsArray.get(docsHeader.dataOffsetLongs() + 0));
-        assertEquals(51, docsArray.get(docsHeader.dataOffsetLongs() + 1));
 
         docsHeader = new BTreeHeader(docsArray, offset2);
         System.out.println(docsHeader);
         assertEquals(1, docsHeader.numEntries());
 
         assertEquals(101, docsArray.get(docsHeader.dataOffsetLongs() + 0));
-        assertEquals(52, docsArray.get(docsHeader.dataOffsetLongs() + 1));
     }
 }

@@ -1,5 +1,7 @@
 package nu.marginalia.ranking.results;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -14,6 +16,7 @@ import nu.marginalia.ranking.results.factors.*;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,15 +36,15 @@ public class ResultValuator {
         this.termCoherenceFactor = termCoherenceFactor;
     }
 
-    public double calculateSearchResultValue(CompiledQueryLong wordMeta,
-                                             long documentMetadata,
+    public double calculateSearchResultValue(CompiledQueryLong wordFlagsQuery,
+                                             CompiledQueryInt positionsCountQuery, CompiledQuery<GammaCodedSequence> positionsQuery, long documentMetadata,
                                              int features,
                                              int length,
                                              ResultRankingContext ctx,
                                              @Nullable Consumer<ResultRankingDetails> detailsConsumer
                                              )
     {
-        if (wordMeta.isEmpty())
+        if (wordFlagsQuery.isEmpty())
             return Double.MAX_VALUE;
 
         if (length < 0) {
@@ -82,12 +85,11 @@ public class ResultValuator {
                            + temporalBias
                            + flagsPenalty;
 
-        double tcfOverlap = rankingParams.tcfOverlapWeight * termCoherenceFactor.calculateOverlap(wordMeta);
-        double tcfJaccard = rankingParams.tcfJaccardWeight * termCoherenceFactor.calculateAvgMutualJaccard(wordMeta, ctx);
+        // FIXME: need a weighting factor here
+        double tcfAvgDist = 25. / termCoherenceFactor.calculateAvgMinDistance(positionsQuery, ctx);
 
-        double bM25F = rankingParams.bm25FullWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forRegular(rankingParams.fullParams, wordMeta.data, length, ctx));
-        double bM25N = rankingParams.bm25NgramWeight * wordMeta.root.visit(Bm25FullGraphVisitor.forNgrams(rankingParams.fullParams, wordMeta.data, length, ctx));
-        double bM25P = rankingParams.bm25PrioWeight * wordMeta.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordMeta.data, ctx));
+        double bM25F = rankingParams.bm25FullWeight * wordFlagsQuery.root.visit(new Bm25FullGraphVisitor(rankingParams.fullParams, positionsCountQuery.data, length, ctx));
+        double bM25P = rankingParams.bm25PrioWeight * wordFlagsQuery.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordFlagsQuery.data, ctx));
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
@@ -112,10 +114,10 @@ public class ResultValuator {
                             temporalBias,
                             flagsPenalty,
                             overallPart,
-                            tcfOverlap,
-                            tcfJaccard,
+                            0,
+                            0,
                             bM25F,
-                            bM25N,
+                            0, // FIXME: Remove from model
                             bM25P)
             );
 
@@ -125,8 +127,8 @@ public class ResultValuator {
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
         double ret = normalize(
-                      tcfOverlap + tcfJaccard
-                      + bM25F + bM25P + bM25N
+                      tcfAvgDist
+                      + bM25F + bM25P
                       + overallPartPositive,
                 overallPartNegative);
 

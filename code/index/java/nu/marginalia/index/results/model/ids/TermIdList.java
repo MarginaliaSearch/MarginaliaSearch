@@ -11,6 +11,7 @@ public final class TermIdList {
 
     public TermIdList(long[] array) {
         this.array = array;
+        Arrays.sort(this.array);
     }
 
     public TermIdList(LongArrayList list) {
@@ -27,6 +28,15 @@ public final class TermIdList {
 
     public long[] array() {
         return array;
+    }
+
+    public long at(int i) {
+        return array[i];
+    }
+
+    public boolean contains(long id) {
+        // Implicitly sorted
+        return Arrays.binarySearch(array, id) >= 0;
     }
 
     @Override

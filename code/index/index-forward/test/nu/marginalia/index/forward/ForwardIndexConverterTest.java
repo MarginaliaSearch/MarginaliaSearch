@@ -79,6 +79,7 @@ class ForwardIndexConverterTest {
         writer.put(
                 new IndexJournalEntryHeader(createId(id, id/20),
                         id%3,
+                        15,
                         (id % 5)),
                 new IndexJournalEntryData(
                     new String[]{},

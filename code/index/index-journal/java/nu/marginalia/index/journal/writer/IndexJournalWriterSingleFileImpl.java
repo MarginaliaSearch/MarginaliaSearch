@@ -81,12 +81,6 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
     public int put(IndexJournalEntryHeader header,
                    IndexJournalEntryData data)
     {
-        if (dataBuffer.capacity() - dataBuffer.position() < 3*8) {
-            dataBuffer.flip();
-            compressingStream.compress(dataBuffer);
-            dataBuffer.clear();
-        }
-
         final long[] keywords = data.termIds();
         final long[] metadata = data.metadata();
         final var positions = data.positions();
@@ -94,16 +88,30 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
         int recordSize = 0; // document header size is 3 longs
         for (int i = 0; i < keywords.length; i++) {
             // term header size is 2 longs
-            recordSize += IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].size();
+            recordSize += IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].bufferSize();
         }
 
-        dataBuffer.putInt(recordSize);
+        if (recordSize > Short.MAX_VALUE) {
+            // This should never happen, but if it does, we should log it and deal with it in a way that doesn't corrupt the file
+            // (32 KB is *a lot* of data for a single document, larger than the uncompressed HTML of most documents)
+            logger.error("Omitting entry: Record size {} exceeds maximum representable size of {}", recordSize, Short.MAX_VALUE);
+            return 0;
+        }
+
+        if (dataBuffer.capacity() - dataBuffer.position() < 3*8) {
+            dataBuffer.flip();
+            compressingStream.compress(dataBuffer);
+            dataBuffer.clear();
+        }
+
+        dataBuffer.putShort((short) recordSize);
+        dataBuffer.putShort((short) Math.clamp(0, header.documentSize(), Short.MAX_VALUE));
         dataBuffer.putInt(header.documentFeatures());
         dataBuffer.putLong(header.combinedId());
         dataBuffer.putLong(header.documentMeta());
 
         for (int i = 0; i < keywords.length; i++) {
-            int requiredSize = IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].size();
+            int requiredSize = IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].bufferSize();
 
             if (dataBuffer.capacity() - dataBuffer.position() < requiredSize) {
                 dataBuffer.flip();
@@ -112,8 +120,8 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
             }
 
             dataBuffer.putLong(keywords[i]);
-            dataBuffer.putLong(metadata[i]);
-            dataBuffer.put((byte) positions[i].size());
+            dataBuffer.putShort((short) metadata[i]);
+            dataBuffer.put((byte) positions[i].bufferSize());
             dataBuffer.put(positions[i].buffer());
         }
 

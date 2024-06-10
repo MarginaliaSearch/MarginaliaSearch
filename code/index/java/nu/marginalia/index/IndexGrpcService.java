@@ -281,10 +281,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             awaitCompletion();
 
             // Return the best results
-            return new SearchResultSet(
-                    resultValuator.selectBestResults(parameters,
-                            resultRankingContext,
-                            resultHeap));
+            return new SearchResultSet(resultValuator.selectBestResults(parameters, resultHeap));
         }
 
         /** Wait for all tasks to complete */

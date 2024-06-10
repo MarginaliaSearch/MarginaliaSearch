@@ -7,8 +7,6 @@ import gnu.trove.list.array.TLongArrayList;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
-import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
@@ -21,12 +19,13 @@ import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.ranking.results.ResultValuator;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Consumer;
 
 @Singleton
 public class IndexResultValuatorService {
@@ -53,35 +52,53 @@ public class IndexResultValuatorService {
                                               ResultRankingContext rankingContext,
                                               CombinedDocIdList resultIds)
     {
-        final var evaluator = createValuationContext(params, rankingContext, resultIds);
+        IndexResultValuationContext evaluator =
+                new IndexResultValuationContext(resultValuator, statefulIndex, rankingContext, params);
 
         List<SearchResultItem> results = new ArrayList<>(resultIds.size());
 
-        for (long id : resultIds.array()) {
-            var score = evaluator.calculatePreliminaryScore(id);
-            if (score != null) {
-                results.add(score);
+        try (var arena = Arena.ofConfined()) {
+            // Batch-fetch the word metadata for the documents
+
+            var searchTerms = metadataService.getSearchTerms(params.compiledQuery, params.query);
+            var termsForDocs = metadataService.getTermMetadataForDocuments(arena, resultIds, searchTerms.termIdsAll);
+
+            // Prepare data for the document.  We do this outside of the calculation function to avoid
+            // hash lookups in the inner loop, as it's very hot code and we don't want thrashing in there;
+            // out here we can rely on implicit array ordering to match up the data.
+
+            var ra = resultIds.array();
+            long[] flags = new long[searchTerms.termIdsAll.size()];
+            GammaCodedSequence[] positions = new GammaCodedSequence[searchTerms.termIdsAll.size()];
+
+            for (int i = 0; i < ra.length; i++) {
+                long id = ra[i];
+
+                // Prepare term-level data for the document
+                for (int ti = 0; ti < flags.length; ti++) {
+                    long tid = searchTerms.termIdsAll.at(ti);
+                    var tfd = termsForDocs.get(tid);
+
+                    assert tfd != null : "No term data for term " + ti;
+
+                    flags[ti] = tfd.flag(i);
+                    positions[ti] = tfd.position(i);
+                }
+
+                // Calculate the preliminary score
+
+                var score = evaluator.calculatePreliminaryScore(id, searchTerms, flags, positions);
+                if (score != null) {
+                    results.add(score);
+                }
             }
+
+            return results;
         }
-
-        return results;
-    }
-
-    private IndexResultValuationContext createValuationContext(SearchParameters params,
-                                                               ResultRankingContext rankingContext,
-                                                               CombinedDocIdList resultIds)
-    {
-        return new IndexResultValuationContext(metadataService,
-                resultValuator,
-                resultIds,
-                statefulIndex,
-                rankingContext,
-                params);
     }
 
 
     public List<DecoratedSearchResultItem> selectBestResults(SearchParameters params,
-                                                     ResultRankingContext rankingContext,
                                                      Collection<SearchResultItem> results) throws SQLException {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
@@ -101,14 +118,13 @@ public class IndexResultValuatorService {
             item.resultsFromDomain = domainCountFilter.getCount(item);
         }
 
-        return decorateAndRerank(resultsList, params.compiledQuery, rankingContext);
+        return decorateResults(resultsList, params.compiledQuery);
     }
 
     /** Decorate the result items with additional information from the link database
      * and calculate an updated ranking with the additional information */
-    public List<DecoratedSearchResultItem> decorateAndRerank(List<SearchResultItem> rawResults,
-                                                             CompiledQuery<String> compiledQuery,
-                                                             ResultRankingContext rankingContext)
+    public List<DecoratedSearchResultItem> decorateResults(List<SearchResultItem> rawResults,
+                                                           CompiledQuery<String> compiledQuery)
             throws SQLException
     {
         TLongList idsList = new TLongArrayList(rawResults.size());
@@ -131,42 +147,18 @@ public class IndexResultValuatorService {
                 continue;
             }
 
-            // Reconstruct the compiledquery for re-valuation
-            //
-            // CAVEAT:  This hinges on a very fragile that IndexResultValuationContext puts them in the same
-            // order as the data for the CompiledQuery<String>.
-            long[] wordMetas = new long[compiledQuery.size()];
-
-            for (int i = 0; i < compiledQuery.size(); i++) {
-                var score = result.keywordScores.get(i);
-                wordMetas[i] = score.encodedWordMetadata();
-            }
-
-            CompiledQueryLong metaQuery = new CompiledQueryLong(compiledQuery.root, new CqDataLong(wordMetas));
-
             resultItems.add(createCombinedItem(
                     result,
-                    docData,
-                    metaQuery,
-                    rankingContext));
+                    docData));
         }
         return resultItems;
     }
 
     private DecoratedSearchResultItem createCombinedItem(SearchResultItem result,
-                                                         DocdbUrlDetail docData,
-                                                         CompiledQueryLong wordMetas,
-                                                         ResultRankingContext rankingContext) {
+                                                         DocdbUrlDetail docData) {
 
         ResultRankingDetailsExtractor detailsExtractor = new ResultRankingDetailsExtractor();
-        Consumer<ResultRankingDetails> detailConsumer = rankingContext.params.exportDebugData ? detailsExtractor::set : null;
-
-        double score = resultValuator.calculateSearchResultValue(wordMetas,
-                result.encodedDocMetadata,
-                result.htmlFeatures,
-                docData.wordsTotal(),
-                rankingContext,
-                detailConsumer);
+       //  Consumer<ResultRankingDetails> detailConsumer = rankingContext.params.exportDebugData ? detailsExtractor::set : null;
 
         return new DecoratedSearchResultItem(
                 result,
@@ -179,8 +171,8 @@ public class IndexResultValuatorService {
                 docData.pubYear(),
                 docData.dataHash(),
                 docData.wordsTotal(),
-                bestPositions(wordMetas),
-                score,
+                0L, //bestPositions(wordMetas),
+                result.getScore(),
                 detailsExtractor.get()
         );
     }

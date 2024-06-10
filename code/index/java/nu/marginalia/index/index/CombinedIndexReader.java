@@ -14,12 +14,13 @@ import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
-import nu.marginalia.index.results.model.ids.DocMetadataList;
+import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -169,8 +170,11 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
-    public DocMetadataList getMetadata(long wordId, CombinedDocIdList docIds) {
-        return new DocMetadataList(reverseIndexFullReader.getTermMeta(wordId, docIds.array()));
+    public TermMetadataList getTermMetadata(Arena arena,
+                                            long wordId,
+                                            CombinedDocIdList docIds)
+    {
+        return new TermMetadataList(reverseIndexFullReader.getTermData(arena, wordId, docIds.array()));
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -186,7 +190,11 @@ public class CombinedIndexReader {
     /** Retrieves the HTML features for the specified document */
     public int getHtmlFeatures(long docId) {
         return forwardIndexReader.getHtmlFeatures(docId);
+    }    /** Retrieves the HTML features for the specified document */
+    public int getDocumentSize(long docId) {
+        return forwardIndexReader.getDocumentSize(docId);
     }
+
 
     /** Close the indexes (this is not done immediately)
      * */

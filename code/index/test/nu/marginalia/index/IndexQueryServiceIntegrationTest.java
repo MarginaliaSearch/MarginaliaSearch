@@ -565,6 +565,7 @@ public class IndexQueryServiceIntegrationTest {
                 var header = new IndexJournalEntryHeader(
                         doc,
                         meta.features,
+                        100,
                         meta.documentMetadata.encode()
                 );
 
