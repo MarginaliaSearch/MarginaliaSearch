@@ -41,7 +41,7 @@ public class DocumentRecordKeywordsProjection {
     }
 
     public static Collection<String> requiredColumns() {
-        return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata", "length");
+        return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata", "length", "positions");
     }
 
     @SneakyThrows
@@ -63,7 +63,7 @@ public class DocumentRecordKeywordsProjection {
                 }
                 this.metas.add((long) value);
             }
-            case "position" -> {
+            case "positions" -> {
                 if (this.positions == null) {
                     this.positions = new ArrayList<>(100);
                 }
