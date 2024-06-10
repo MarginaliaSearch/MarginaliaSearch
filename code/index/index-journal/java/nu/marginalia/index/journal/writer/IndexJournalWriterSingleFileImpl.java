@@ -105,7 +105,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
         }
 
         dataBuffer.putShort((short) recordSize);
-        dataBuffer.putShort((short) Math.clamp(0, header.documentSize(), Short.MAX_VALUE));
+        dataBuffer.putShort((short) Math.clamp(header.documentSize(), 0, Short.MAX_VALUE));
         dataBuffer.putInt(header.documentFeatures());
         dataBuffer.putLong(header.combinedId());
         dataBuffer.putLong(header.documentMeta());
