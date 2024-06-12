@@ -27,7 +27,7 @@ function setupTypeahead() {
 
                 for (i=0;i<items.length;i++) {
                     item = document.createElement('a');
-                    item.innerHTML=items[i];
+                    item.textContent=items[i];
                     item.setAttribute('href', '#')
 
                     function suggestionClickHandler(e) {
