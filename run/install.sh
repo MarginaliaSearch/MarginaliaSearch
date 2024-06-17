@@ -184,13 +184,16 @@ A working setup needs at all the services
 * index [ http port is internal ]
 * executor [ http port is internal ]
 
-The index and executor services should be on the same partition e.g. index:1 and executor:1,
-which should be a number larger than 0.  You can have multiple pairs of index and executor partitions,
-but the pair should run on the same physical machine with the same install directory.
+Since you will need to manage ports yourself, you must assign distinct ports-pairs to each service.
 
-The query service can use any partition number.
+* An index and executor services should exist on the same partition e.g. index:1 and executor:1. The partition
+number is the last digit of the service name, and should be positive.  You can have multiple pairs of index
+and executor partitions, but the pair should run on the same physical machine with the same install directory.
 
-The control service should be on partition 1.
+* The query service can use any partition number.
+
+* The control service should be on partition 1.
+
 EOF
 
 echo
