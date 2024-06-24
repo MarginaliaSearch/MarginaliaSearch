@@ -76,10 +76,6 @@ public class BitReader {
 
     /** Read bits until a 1 is encountered */
     public int takeWhileZero() {
-        if (bitPosition <= 0) {
-            readNext();
-        }
-
         int result = 0;
 
         do {
@@ -118,7 +114,7 @@ public class BitReader {
             bitPosition = 64;
         }
         else if (remainingCapacity >= 4) {
-            currentValue = underlying.getInt() & 0xFFFFFFFFL;
+            currentValue = underlying.getInt() & 0xFFFF_FFFFL;
             bitPosition = 32;
         }
         else if (remainingCapacity >= 2) {

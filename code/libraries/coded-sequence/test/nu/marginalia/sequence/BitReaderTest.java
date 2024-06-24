@@ -1,5 +1,6 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.io.BitReader;
 import nu.marginalia.sequence.io.BitWriter;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,15 @@ import java.nio.ByteBuffer;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BitReaderTest {
+
+
+    @Test
+    void emptySequence() {
+        var writer = new BitWriter(ByteBuffer.allocate(1024));
+        var buffer = writer.finish();
+
+        assertEquals(IntList.of(), new GammaCodedSequence(buffer).values());
+    }
 
     @Test
     void getBit() {
