@@ -17,8 +17,8 @@ import java.util.StringJoiner;
 public class GammaCodedSequence implements BinarySerializable, Iterable<Integer> {
     private final ByteBuffer raw;
 
-    int startPos = 0;
-    int startLimit = 0;
+    private final int startPos;
+    private final int startLimit;
 
     /** Create a new GammaCodedSequence from a sequence of integers.
      *
@@ -116,6 +116,9 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         return sj.toString();
     }
 
+    /** Return the backing ByteBuffer of the sequence, configured with a position and limit
+     * that is equal to the relevant data range
+     */
     public ByteBuffer buffer() {
         raw.position(startPos);
         raw.limit(startLimit);
@@ -123,11 +126,17 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         return raw;
     }
 
+    /** Return the number of bytes used by the sequence in the buffer */
     public int bufferSize() {
-        return raw.capacity();
+        return startLimit - startPos;
     }
 
+    /** Return the number of items in the sequence */
     public int valueCount() {
+        // if the first byte is zero, the sequence is empty and we can skip decoding
+        if (0 == raw.get(startPos))
+            return 0;
+
         return EliasGammaCodec.readCount(buffer());
     }
 }

@@ -88,7 +88,7 @@ public class BitWriter {
 
         var outBuffer = ByteBuffer.allocate(totalMeaningfulBytes);
 
-        outBuffer.put(underlying.array(), 0, totalMeaningfulBytes);
+        outBuffer.put(0, underlying, 0, totalMeaningfulBytes);
 
         outBuffer.position(0);
         outBuffer.limit(totalMeaningfulBytes);
