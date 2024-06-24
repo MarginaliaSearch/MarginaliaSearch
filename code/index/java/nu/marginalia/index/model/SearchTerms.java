@@ -15,7 +15,9 @@ public final class SearchTerms {
     private final LongList advice;
     private final LongList excludes;
     private final LongList priority;
-    private final List<LongList> coherences;
+
+    private final List<LongList> coherencesMandatory;
+    private final List<LongList> coherencesOptional;
 
     private final CompiledQueryLong compiledQueryIds;
 
@@ -24,7 +26,10 @@ public final class SearchTerms {
     {
         this.excludes = new LongArrayList();
         this.priority = new LongArrayList();
-        this.coherences = new ArrayList<>();
+
+        this.coherencesMandatory = new ArrayList<>();
+        this.coherencesOptional = new ArrayList<>();
+
         this.advice = new LongArrayList();
         this.compiledQueryIds = compiledQueryIds;
 
@@ -35,11 +40,16 @@ public final class SearchTerms {
         for (var coherence : query.searchTermCoherences) {
             LongList parts = new LongArrayList(coherence.size());
 
-            for (var word : coherence) {
+            for (var word : coherence.terms()) {
                 parts.add(getWordId(word));
             }
 
-            coherences.add(parts);
+            if (coherence.mandatory()) {
+                coherencesMandatory.add(parts);
+            }
+            else {
+                coherencesOptional.add(parts);
+            }
         }
 
         for (var word : query.searchTermsExclude) {
@@ -72,10 +82,12 @@ public final class SearchTerms {
         return priority;
     }
 
-    public List<LongList> coherences() {
-        return coherences;
+    public List<LongList> coherencesMandatory() {
+        return coherencesMandatory;
     }
-
+    public List<LongList> coherencesOptional() {
+        return coherencesOptional;
+    }
     public CompiledQueryLong compiledQuery() { return compiledQueryIds; }
 
 }

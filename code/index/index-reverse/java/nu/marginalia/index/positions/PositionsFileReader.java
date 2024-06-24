@@ -1,5 +1,8 @@
 package nu.marginalia.index.positions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.channels.FileChannel;
@@ -8,6 +11,7 @@ import java.nio.file.StandardOpenOption;
 
 public class PositionsFileReader implements AutoCloseable {
     private final FileChannel positions;
+    private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
         this.positions = FileChannel.open(positionsFile, StandardOpenOption.READ);

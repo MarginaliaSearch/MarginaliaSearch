@@ -133,6 +133,9 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
 
     /** Return the number of items in the sequence */
     public int valueCount() {
+        if (startPos == startLimit)
+            return 0;
+
         // if the first byte is zero, the sequence is empty and we can skip decoding
         if (0 == raw.get(startPos))
             return 0;

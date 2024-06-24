@@ -162,6 +162,8 @@ public class ReverseIndexReader {
         var offsets = reader.queryData(docIds, 1);
 
         for (int i = 0; i < docIds.length; i++) {
+            if (offsets[i] == 0)
+                continue;
             ret[i] = positionsFileReader.getTermData(arena, offsets[i]);
         }
         return ret;

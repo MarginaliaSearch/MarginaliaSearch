@@ -184,4 +184,10 @@ message RpcQuery {
 /* Defines a group of search terms that must exist in close proximity within the document */
 message RpcCoherences {
   repeated string coherences = 1;
+  TYPE type = 2;
+
+  enum TYPE {
+    OPTIONAL = 0;
+    MANDATORY = 1;
+  };
 }

@@ -15,6 +15,7 @@ import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.index.results.model.ids.TermIdList;
 
 import java.lang.foreign.Arena;
+import java.util.ArrayList;
 
 import static nu.marginalia.index.results.model.TermCoherenceGroupList.TermCoherenceGroup;
 
@@ -77,12 +78,15 @@ public class IndexMetadataService {
             }
         }
 
+        var constraints = new ArrayList<TermCoherenceGroup>();
+        for (var coherence : searchQuery.searchTermCoherences) {
+            constraints.add(new TermCoherenceGroup(coherence, termIdsList));
+        }
+
         return new QuerySearchTerms(termToId,
                 new TermIdList(termIdsList),
                 new TermIdList(termIdsPrio),
-                new TermCoherenceGroupList(
-                        searchQuery.searchTermCoherences.stream().map(TermCoherenceGroup::new).toList()
-                )
+                new TermCoherenceGroupList(constraints)
         );
     }
 

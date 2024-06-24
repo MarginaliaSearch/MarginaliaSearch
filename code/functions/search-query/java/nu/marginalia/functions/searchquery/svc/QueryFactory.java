@@ -2,16 +2,13 @@ package nu.marginalia.functions.searchquery.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.query.SearchQuery;
+import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -60,7 +57,7 @@ public class QueryFactory {
         List<String> searchTermsInclude = new ArrayList<>();
         List<String> searchTermsAdvice = new ArrayList<>();
         List<String> searchTermsPriority = new ArrayList<>();
-        List<List<String>> searchTermCoherences = new ArrayList<>();
+        List<SearchCoherenceConstraint> searchTermCoherences = new ArrayList<>();
 
         SpecificationLimit qualityLimit = SpecificationLimit.none();
         SpecificationLimit year = SpecificationLimit.none();
@@ -88,7 +85,7 @@ public class QueryFactory {
                         searchTermsAdvice.add(str);
 
                         // Require that the terms appear in the same sentence
-                        searchTermCoherences.add(Arrays.asList(parts));
+                        searchTermCoherences.add(SearchCoherenceConstraint.mandatory(parts));
 
                         // Require that each term exists in the document
                         // (needed for ranking)
@@ -140,7 +137,12 @@ public class QueryFactory {
         }
 
         var expansion = queryExpansion.expandQuery(searchTermsInclude);
-        searchTermCoherences.addAll(expansion.extraCoherences());
+
+        // Query expansion may produce suggestions for coherence constraints,
+        // add these to the query
+        for (var coh : expansion.extraCoherences()) {
+            searchTermCoherences.add(SearchCoherenceConstraint.optional(coh));
+        }
 
         var searchQuery = new SearchQuery(
                 expansion.compiledQuery(),

@@ -1,6 +1,7 @@
 package nu.marginalia.index.client;
 
 import nu.marginalia.api.searchquery.IndexProtobufCodec;
+import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
@@ -41,7 +42,9 @@ class IndexProtobufCodecTest {
                 List.of("c", "d"),
                 List.of("e", "f"),
                 List.of("g", "h"),
-                List.of(List.of("i", "j"), List.of("k"))
+                List.of(
+                        new SearchCoherenceConstraint(true, List.of("i", "j")),
+                        new SearchCoherenceConstraint(false,  List.of("k")))
                 ),
                 s -> IndexProtobufCodec.convertRpcQuery(IndexProtobufCodec.convertRpcQuery(s))
         );

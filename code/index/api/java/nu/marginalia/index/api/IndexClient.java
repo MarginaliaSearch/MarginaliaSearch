@@ -23,6 +23,7 @@ public class IndexClient {
     private static final Logger logger = LoggerFactory.getLogger(IndexClient.class);
     private final GrpcMultiNodeChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
     private static final ExecutorService executor = Executors.newFixedThreadPool(32);
+
     @Inject
     public IndexClient(GrpcChannelPoolFactory channelPoolFactory) {
         this.channelPool = channelPoolFactory.createMulti(

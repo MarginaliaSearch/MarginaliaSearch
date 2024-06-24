@@ -50,11 +50,8 @@ public class IndexResultValuationContext {
                                                       long[] wordFlags,
                                                       GammaCodedSequence[] positions)
     {
-
-
-        // FIXME: Reconsider coherence logic with the new position data
-//        if (!searchTerms.coherences.test(termMetadataForCombinedDocumentIds, combinedId))
-//            return null;
+        if (!searchTerms.coherences.testMandatory(positions))
+            return null;
 
         CompiledQuery<GammaCodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
         CompiledQueryLong wordFlagsQuery = compiledQuery.root.newQuery(wordFlags);
@@ -71,7 +68,6 @@ public class IndexResultValuationContext {
         if (testRelevance(wordFlagsQuery, positionsCountQuery)) {
             return null;
         }
-
 
         long docId = UrlIdCodec.removeRank(combinedId);
         long docMetadata = index.getDocumentMetadata(docId);

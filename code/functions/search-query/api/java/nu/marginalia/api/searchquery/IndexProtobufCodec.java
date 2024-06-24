@@ -1,5 +1,6 @@
 package nu.marginalia.api.searchquery;
 
+import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -48,11 +49,19 @@ public class IndexProtobufCodec {
     }
 
     public static SearchQuery convertRpcQuery(RpcQuery query) {
-        List<List<String>>  coherences = new ArrayList<>();
+        List<SearchCoherenceConstraint>  coherences = new ArrayList<>();
 
         for (int j = 0; j < query.getCoherencesCount(); j++) {
             var coh = query.getCoherences(j);
-            coherences.add(new ArrayList<>(coh.getCoherencesList()));
+            if (coh.getType() == RpcCoherences.TYPE.OPTIONAL) {
+                coherences.add(new SearchCoherenceConstraint(false, List.copyOf(coh.getCoherencesList())));
+            }
+            else if (coh.getType() == RpcCoherences.TYPE.MANDATORY) {
+                coherences.add(new SearchCoherenceConstraint(true, List.copyOf(coh.getCoherencesList())));
+            }
+            else {
+                throw new IllegalArgumentException("Unknown coherence type: " + coh.getType());
+            }
         }
 
         return new SearchQuery(
@@ -75,7 +84,9 @@ public class IndexProtobufCodec {
                         .addAllPriority(searchQuery.getSearchTermsPriority());
 
         for (var coherences : searchQuery.searchTermCoherences) {
-            subqueryBuilder.addCoherencesBuilder().addAllCoherences(coherences);
+            subqueryBuilder.addCoherencesBuilder()
+                    .addAllCoherences(coherences.terms())
+                    .setType(coherences.mandatory() ? RpcCoherences.TYPE.MANDATORY : RpcCoherences.TYPE.OPTIONAL);
         }
 
         return subqueryBuilder.build();

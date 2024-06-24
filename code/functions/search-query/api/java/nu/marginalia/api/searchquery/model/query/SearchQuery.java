@@ -31,7 +31,7 @@ public class SearchQuery {
     public final List<String> searchTermsPriority;
 
     /** Terms that we require to be in the same sentence */
-    public final List<List<String>> searchTermCoherences;
+    public final List<SearchCoherenceConstraint> searchTermCoherences;
 
     @Deprecated // why does this exist?
     private double value = 0;
@@ -54,7 +54,7 @@ public class SearchQuery {
                        List<String> searchTermsExclude,
                        List<String> searchTermsAdvice,
                        List<String> searchTermsPriority,
-                       List<List<String>> searchTermCoherences) {
+                       List<SearchCoherenceConstraint> searchTermCoherences) {
         this.compiledQuery = compiledQuery;
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
@@ -80,7 +80,7 @@ public class SearchQuery {
         if (!searchTermsExclude.isEmpty()) sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsAdvice.isEmpty()) sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsPriority.isEmpty()) sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));
-        if (!searchTermCoherences.isEmpty()) sb.append("coherences=").append(searchTermCoherences.stream().map(coh->coh.stream().collect(Collectors.joining(",", "[", "] "))).collect(Collectors.joining(", ")));
+        if (!searchTermCoherences.isEmpty()) sb.append("coherences=").append(searchTermCoherences.stream().map(coh->coh.terms().stream().collect(Collectors.joining(",", "[", "] "))).collect(Collectors.joining(", ")));
 
         return sb.toString();
     }
@@ -91,7 +91,7 @@ public class SearchQuery {
         private List<String> searchTermsExclude = new ArrayList<>();
         private List<String> searchTermsAdvice = new ArrayList<>();
         private List<String> searchTermsPriority = new ArrayList<>();
-        private List<List<String>> searchTermCoherences = new ArrayList<>();
+        private List<SearchCoherenceConstraint> searchTermCoherences = new ArrayList<>();
 
         private SearchQueryBuilder(String compiledQuery) {
             this.compiledQuery = compiledQuery;
@@ -117,8 +117,8 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQueryBuilder coherences(String... coherences) {
-            searchTermCoherences.add(List.of(coherences));
+        public SearchQueryBuilder coherences(SearchCoherenceConstraint constraint) {
+            searchTermCoherences.add(constraint);
             return this;
         }
 
