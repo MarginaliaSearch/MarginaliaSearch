@@ -13,7 +13,7 @@ public interface IndexJournalReader {
     int FILE_HEADER_SIZE_BYTES = 8 * FILE_HEADER_SIZE_LONGS;
 
     int DOCUMENT_HEADER_SIZE_BYTES = 24;
-    int TERM_HEADER_SIZE_BYTES = 11;
+    int TERM_HEADER_SIZE_BYTES = 12;
 
     /** Create a reader for a single file. */
     static IndexJournalReader singleFile(Path fileName) throws IOException {

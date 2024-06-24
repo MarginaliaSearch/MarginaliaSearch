@@ -2,10 +2,10 @@ package nu.marginalia.index.journal.writer;
 
 import com.github.luben.zstd.ZstdDirectBufferCompressingStream;
 import lombok.SneakyThrows;
-import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +20,8 @@ import java.nio.file.attribute.PosixFilePermissions;
 /** IndexJournalWriter implementation that creates a single journal file */
 public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
 
-    private static final int ZSTD_BUFFER_SIZE = 8192;
-    private static final int DATA_BUFFER_SIZE = 8192;
-
-    private final MurmurHash3_128 hasher = new MurmurHash3_128();
+    private static final int ZSTD_BUFFER_SIZE = 1<<16;
+    private static final int DATA_BUFFER_SIZE = 1<<16;
 
     private final ByteBuffer dataBuffer = ByteBuffer.allocateDirect(DATA_BUFFER_SIZE);
 
@@ -83,51 +81,50 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
     {
         final long[] keywords = data.termIds();
         final long[] metadata = data.metadata();
-        final var positions = data.positions();
+        final GammaCodedSequence[] positions = data.positions();
 
-        int recordSize = 0; // document header size is 3 longs
-        for (int i = 0; i < keywords.length; i++) {
-            // term header size is 2 longs
-            recordSize += IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].bufferSize();
+        int entrySize = 0;
+        for (var position : positions) {
+            entrySize += IndexJournalReader.TERM_HEADER_SIZE_BYTES + position.bufferSize();
         }
+        int totalSize = IndexJournalReader.DOCUMENT_HEADER_SIZE_BYTES + entrySize;
 
-        if (recordSize > Short.MAX_VALUE) {
+        if (entrySize > DATA_BUFFER_SIZE) {
             // This should never happen, but if it does, we should log it and deal with it in a way that doesn't corrupt the file
-            // (32 KB is *a lot* of data for a single document, larger than the uncompressed HTML of most documents)
-            logger.error("Omitting entry: Record size {} exceeds maximum representable size of {}", recordSize, Short.MAX_VALUE);
+            // (64 KB is *a lot* of data for a single document, larger than the uncompressed HTML in like the 95%th percentile of web pages)
+            logger.error("Omitting entry: Record size {} exceeds maximum representable size of {}", entrySize, DATA_BUFFER_SIZE);
             return 0;
         }
 
-        if (dataBuffer.capacity() - dataBuffer.position() < 3*8) {
+        if (dataBuffer.remaining() < totalSize) {
             dataBuffer.flip();
             compressingStream.compress(dataBuffer);
             dataBuffer.clear();
         }
 
-        dataBuffer.putShort((short) recordSize);
+        if (dataBuffer.remaining() < totalSize) {
+            logger.error("Omitting entry: Record size {} exceeds buffer size of {}", totalSize, dataBuffer.capacity());
+            return 0;
+        }
+
+        assert entrySize < (1 << 16) : "Entry size must not exceed USHORT_MAX";
+
+        dataBuffer.putShort((short) entrySize);
         dataBuffer.putShort((short) Math.clamp(header.documentSize(), 0, Short.MAX_VALUE));
         dataBuffer.putInt(header.documentFeatures());
         dataBuffer.putLong(header.combinedId());
         dataBuffer.putLong(header.documentMeta());
 
         for (int i = 0; i < keywords.length; i++) {
-            int requiredSize = IndexJournalReader.TERM_HEADER_SIZE_BYTES + positions[i].bufferSize();
-
-            if (dataBuffer.capacity() - dataBuffer.position() < requiredSize) {
-                dataBuffer.flip();
-                compressingStream.compress(dataBuffer);
-                dataBuffer.clear();
-            }
-
             dataBuffer.putLong(keywords[i]);
             dataBuffer.putShort((short) metadata[i]);
-            dataBuffer.put((byte) positions[i].bufferSize());
+            dataBuffer.putShort((short) positions[i].bufferSize());
             dataBuffer.put(positions[i].buffer());
         }
 
         numEntries++;
 
-        return recordSize;
+        return totalSize;
     }
 
     public void close() throws IOException {

@@ -10,7 +10,6 @@ import nu.marginalia.index.journal.model.IndexJournalEntryTermData;
 import nu.marginalia.index.journal.reader.IndexJournalReaderPagingImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;

@@ -22,18 +22,13 @@ public class IndexJournalReadEntry implements Iterable<IndexJournalEntryTermData
         this.initialPos = buffer.position();
     }
 
-
-    static ThreadLocal<ByteBuffer> pool = ThreadLocal.withInitial(() -> ByteBuffer.allocate(8*65536));
-
     public static IndexJournalReadEntry read(DataInputStream inputStream) throws IOException {
 
-        final long sizeBlock = inputStream.readLong();
-        final int entrySize = (int) (sizeBlock >>> 48L);
-        final int docSize = (int) ((sizeBlock >>> 32L) & 0xFFFFL);
-        final int docFeatures = (int) (sizeBlock & 0xFFFF_FFFFL);
+        final int entrySize = (inputStream.readShort() & 0xFFFF);
+        final int docSize = inputStream.readShort();
+        final int docFeatures = inputStream.readInt();
         final long docId = inputStream.readLong();
         final long meta = inputStream.readLong();
-
 
         var header = new IndexJournalEntryHeader(
                 entrySize,
@@ -42,12 +37,9 @@ public class IndexJournalReadEntry implements Iterable<IndexJournalEntryTermData
                 docId,
                 meta);
 
-        var workArea = pool.get();
-        inputStream.readFully(workArea.array(), 0, header.entrySize());
-        workArea.position(0);
-        workArea.limit(header.entrySize());
-
-        return new IndexJournalReadEntry(header, workArea);
+        byte[] buffer = new byte[entrySize];
+        inputStream.readFully(buffer);
+        return new IndexJournalReadEntry(header, ByteBuffer.wrap(buffer));
     }
 
     public long docId() {
@@ -100,7 +92,7 @@ class TermDataIterator implements Iterator<IndexJournalEntryTermData> {
         long meta = buffer.getShort();
 
         // read the size of the sequence data
-        int size = buffer.get() & 0xFF;
+        int size = buffer.getShort() & 0xFFFF;
 
         // slice the buffer to get the sequence data
         var slice = buffer.slice(buffer.position(), size);
