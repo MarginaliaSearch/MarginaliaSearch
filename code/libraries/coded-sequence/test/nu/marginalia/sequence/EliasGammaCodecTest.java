@@ -31,6 +31,13 @@ class EliasGammaCodecTest {
     }
 
     @Test
+    public void valueCount() {
+        var ret = EliasGammaCodec.encode(work, new int[] { 1, 3, 5, 16, 32, 64 });
+        var count = EliasGammaCodec.readCount(ret);
+        assertEquals(6, count);
+    }
+
+    @Test
     public void testCodec2() {
         var ret = EliasGammaCodec.encode(work, new int[] { 1, 256 });
 

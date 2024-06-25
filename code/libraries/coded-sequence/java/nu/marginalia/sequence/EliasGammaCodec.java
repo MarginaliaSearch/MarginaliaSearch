@@ -37,12 +37,12 @@ public class EliasGammaCodec implements IntIterator {
     public static int readCount(ByteBuffer buffer) {
         var reader = new BitReader(buffer);
 
-        if (reader.getCurrentValue() > 0) {
-            int bits = reader.takeWhileZero();
-            return reader.get(bits);
+        int bits = reader.takeWhileZero();
+        if (!reader.hasMore()) {
+            return 0;
         }
         else {
-            return 0;
+            return reader.get(bits);
         }
     }
 
