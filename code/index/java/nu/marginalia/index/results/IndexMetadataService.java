@@ -78,14 +78,17 @@ public class IndexMetadataService {
             }
         }
 
+        var idsAll = new TermIdList(termIdsList);
+        var idsPrio = new TermIdList(termIdsPrio);
+
         var constraints = new ArrayList<TermCoherenceGroup>();
         for (var coherence : searchQuery.searchTermCoherences) {
-            constraints.add(new TermCoherenceGroup(coherence, termIdsList));
+            constraints.add(new TermCoherenceGroup(coherence, idsAll));
         }
 
         return new QuerySearchTerms(termToId,
-                new TermIdList(termIdsList),
-                new TermIdList(termIdsPrio),
+                idsAll,
+                idsPrio,
                 new TermCoherenceGroupList(constraints)
         );
     }

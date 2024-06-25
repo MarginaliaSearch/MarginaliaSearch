@@ -39,6 +39,10 @@ public final class TermIdList {
         return Arrays.binarySearch(array, id) >= 0;
     }
 
+    public int indexOf(long id) {
+        return Arrays.binarySearch(array, id);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;

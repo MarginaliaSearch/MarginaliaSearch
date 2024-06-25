@@ -1,9 +1,9 @@
 package nu.marginalia.index.results.model;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.index.model.SearchTermsUtil;
+import nu.marginalia.index.results.model.ids.TermIdList;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
@@ -55,7 +55,7 @@ public class TermCoherenceGroupList {
 
         public final int size;
         public final boolean mandatory;
-        public TermCoherenceGroup(SearchCoherenceConstraint cons, LongList termIdsAll) {
+        public TermCoherenceGroup(SearchCoherenceConstraint cons, TermIdList termIdsAll) {
             offsets = new int[cons.size()];
             present = new BitSet(cons.size());
             mandatory = cons.mandatory();
@@ -87,7 +87,7 @@ public class TermCoherenceGroupList {
                 // so that when we intersect them, an overlap means that the terms are
                 // in the correct order.  Note the offset is negative!
 
-                sequences[si++] = positions[oi].offsetIterator(-oi);
+                sequences[si++] = positions[offset].offsetIterator(-oi);
             }
 
             return SequenceOperations.intersectSequences(sequences);
