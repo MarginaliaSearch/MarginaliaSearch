@@ -11,7 +11,6 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.DocumentRecordKeywordsProjection;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.sequence.GammaCodedSequence;
-import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +54,7 @@ public class KeywordLoaderService {
             logger.info("Loading keywords from {}", file);
 
             stream.filter(DocumentRecordKeywordsProjection::hasKeywords)
-                    .forEach(proj -> insertKeywords(domainIdRegistry, proj));
+                  .forEach(proj -> insertKeywords(domainIdRegistry, proj));
         }
     }
 
@@ -77,5 +76,13 @@ public class KeywordLoaderService {
                 projection.documentMetadata,
                 projection.length,
                 words);
+    }
+
+    public void close() {
+        try {
+            writer.close();
+        } catch (Exception e) {
+            logger.error("Failed to close writer", e);
+        }
     }
 }

@@ -10,6 +10,7 @@ import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.processed.DomainRecord;
 import nu.marginalia.model.processed.DomainWithIp;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +109,7 @@ public class DomainLoaderService {
         return domainNamesAll;
     }
 
-    public boolean loadDomainMetadata(DomainIdRegistry domainIdRegistry, ProcessHeartbeatImpl heartbeat, LoaderInputData inputData) {
+    public boolean loadDomainMetadata(DomainIdRegistry domainIdRegistry, ProcessHeartbeat heartbeat, LoaderInputData inputData) {
 
         var files = inputData.listDomainFiles();
 

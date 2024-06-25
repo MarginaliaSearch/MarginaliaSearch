@@ -45,7 +45,6 @@ public class LoaderMain extends ProcessMainClass {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final DocumentDbWriter documentDbWriter;
-    private final LoaderIndexJournalWriter journalWriter;
     private final DomainLoaderService domainService;
     private final DomainLinksLoaderService linksService;
     private final KeywordLoaderService keywordLoaderService;
@@ -79,7 +78,6 @@ public class LoaderMain extends ProcessMainClass {
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
                       DocumentDbWriter documentDbWriter,
-                      LoaderIndexJournalWriter journalWriter,
                       DomainLoaderService domainService,
                       DomainLinksLoaderService linksService,
                       KeywordLoaderService keywordLoaderService,
@@ -92,7 +90,6 @@ public class LoaderMain extends ProcessMainClass {
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.documentDbWriter = documentDbWriter;
-        this.journalWriter = journalWriter;
         this.domainService = domainService;
         this.linksService = linksService;
         this.keywordLoaderService = keywordLoaderService;
@@ -132,7 +129,7 @@ public class LoaderMain extends ProcessMainClass {
             logger.error("Error", ex);
         }
         finally {
-            journalWriter.close();
+            keywordLoaderService.close();
             documentDbWriter.close();
             heartbeat.shutDown();
         }

@@ -205,7 +205,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         return searchSetsService.getSearchSetByName(request.getSearchSetIdentifier());
     }
 
-    private SearchResultSet executeSearch(SearchParameters params) throws SQLException, InterruptedException {
+    // accessible for tests
+    public SearchResultSet executeSearch(SearchParameters params) throws SQLException, InterruptedException {
 
         if (!statefulIndex.isLoaded()) {
             // Short-circuit if the index is not loaded, as we trivially know that there can be no results

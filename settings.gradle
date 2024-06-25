@@ -95,6 +95,7 @@ include 'code:process-models:processed-data'
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
+include 'code:tools:integration-test'
 
 include 'third-party:porterstemmer'
 include 'third-party:symspell'

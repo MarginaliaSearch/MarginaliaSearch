@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:processes:crawling-process')
+    implementation project(':code:processes:converting-process')
+    implementation project(':code:processes:loading-process')
+    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:process-models:processed-data')
+    implementation project(':code:processes:index-constructor-process')
+    implementation project(':code:index')
+    implementation project(':code:functions:search-query:api')
+    implementation project(':code:index:index-reverse')
+    implementation project(':code:index:index-forward')
+    implementation project(':code:index:query')
+    implementation project(':code:index:index-journal')
+    implementation project(':code:functions:link-graph:partition')
+    implementation project(':code:libraries:array')
+    implementation project(':code:common:db')
+    implementation project(':code:common:config')
+    implementation project(':code:common:linkdb')
+    implementation project(':code:common:process')
+    implementation project(':code:common:service')
+    implementation project(':code:common:model')
+
+    implementation libs.bundles.slf4j
+    implementation libs.bundles.grpc
+    implementation libs.mockito
+    implementation libs.notnull
+    implementation libs.guice
+    implementation libs.fastutil
+    implementation libs.trove
+    testImplementation libs.bundles.junit
+}
+

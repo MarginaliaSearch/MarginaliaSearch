@@ -124,7 +124,9 @@ public class DocumentKeywordsBuilder {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[ ");
-        wordToMeta.forEach((word, meta) -> sb.append(word).append("->").append(new WordMetadata(meta)).append(' '));
+        wordToMeta.forEach((word, meta) -> {
+            sb.append(word).append("->").append(new WordMetadata(meta).flagSet()).append(',').append(wordToPos.getOrDefault(word, new IntArrayList())).append(' ');
+        });
         return sb.append(']').toString();
     }
 

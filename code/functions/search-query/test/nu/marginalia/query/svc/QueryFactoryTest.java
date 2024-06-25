@@ -212,11 +212,20 @@ public class QueryFactoryTest {
         var subquery = parseAndGetSpecs("The");
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
-    }    @Test
+    }
 
+    @Test
     public void testExpansion6() {
         long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("burning the nerves in the neck");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testExpansion7() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("amazing work being done");
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }

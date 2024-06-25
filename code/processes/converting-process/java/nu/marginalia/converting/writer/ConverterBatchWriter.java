@@ -1,6 +1,5 @@
 package nu.marginalia.converting.writer;
 
-import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
@@ -102,8 +101,6 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         int ordinal = 0;
 
         String domainName = domain.toString();
-
-        ByteBuffer workArea = ByteBuffer.allocate(1024);
 
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();

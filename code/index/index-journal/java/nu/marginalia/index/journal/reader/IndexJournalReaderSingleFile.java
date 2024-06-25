@@ -31,10 +31,10 @@ public class IndexJournalReaderSingleFile implements IndexJournalReader {
 
     private static IndexJournalFileHeader readHeader(Path file) throws IOException {
         try (var raf = new RandomAccessFile(file.toFile(), "r")) {
+            long recordCount = raf.readLong();
             long unused = raf.readLong();
-            long wordCount = raf.readLong();
 
-            return new IndexJournalFileHeader(unused, wordCount);
+            return new IndexJournalFileHeader(recordCount, unused);
         }
     }
 
