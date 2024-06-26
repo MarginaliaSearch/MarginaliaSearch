@@ -1,6 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser;
 
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
+import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.util.transform_list.TransformList;
 
@@ -104,19 +105,38 @@ public class QueryParser {
         String str = t.str();
 
         if (str.startsWith("q") && str.matches("q[=><]\\d+")) {
-            entity.replace(new QueryToken.QualityTerm(str.substring(1)));
+            var limit = parseSpecificationLimit(str.substring(1));
+            entity.replace(new QueryToken.QualityTerm(limit, str));
         } else if (str.startsWith("near:")) {
             entity.replace(new QueryToken.NearTerm(str.substring(5)));
         } else if (str.startsWith("year") && str.matches("year[=><]\\d{4}")) {
-            entity.replace(new QueryToken.YearTerm(str.substring(4)));
+            var limit = parseSpecificationLimit(str.substring(4));
+            entity.replace(new QueryToken.YearTerm(limit, str));
         } else if (str.startsWith("size") && str.matches("size[=><]\\d+")) {
-            entity.replace(new QueryToken.SizeTerm(str.substring(4)));
+            var limit = parseSpecificationLimit(str.substring(4));
+            entity.replace(new QueryToken.SizeTerm(limit, str));
         } else if (str.startsWith("rank") && str.matches("rank[=><]\\d+")) {
-            entity.replace(new QueryToken.RankTerm(str.substring(4)));
+            var limit = parseSpecificationLimit(str.substring(4));
+            entity.replace(new QueryToken.RankTerm(limit, str));
         } else if (str.startsWith("qs=")) {
             entity.replace(new QueryToken.QsTerm(str.substring(3)));
         } else if (str.contains(":")) {
             entity.replace(new QueryToken.AdviceTerm(str, t.displayStr()));
+        }
+    }
+
+    private static SpecificationLimit parseSpecificationLimit(String str) {
+        int startChar = str.charAt(0);
+
+        int val = Integer.parseInt(str.substring(1));
+        if (startChar == '=') {
+            return SpecificationLimit.equals(val);
+        } else if (startChar == '<') {
+            return SpecificationLimit.lessThan(val);
+        } else if (startChar == '>') {
+            return SpecificationLimit.greaterThan(val);
+        } else {
+            return SpecificationLimit.none();
         }
     }
 

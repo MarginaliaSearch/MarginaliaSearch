@@ -169,7 +169,8 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
                         .query(
-                                SearchQuery.builder("2")
+                                SearchQuery.builder()
+                                .compiledQuery("2")
                                 .include("2")
                                 .build()
                         ).build()

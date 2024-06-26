@@ -53,11 +53,7 @@ public class QueryFactory {
             basicQuery.clear();
         }
 
-        List<String> searchTermsExclude = new ArrayList<>();
-        List<String> searchTermsInclude = new ArrayList<>();
-        List<String> searchTermsAdvice = new ArrayList<>();
-        List<String> searchTermsPriority = new ArrayList<>();
-        List<SearchCoherenceConstraint> searchTermCoherences = new ArrayList<>();
+        SearchQuery.SearchQueryBuilder queryBuilder = SearchQuery.builder();
 
         SpecificationLimit qualityLimit = SpecificationLimit.none();
         SpecificationLimit year = SpecificationLimit.none();
@@ -77,51 +73,48 @@ public class QueryFactory {
 
                     if (parts.length > 1) {
                         // Require that the terms appear in sequence
-                        searchTermCoherences.add(SearchCoherenceConstraint.mandatory(parts));
+                        queryBuilder.coherenceConstraint(SearchCoherenceConstraint.mandatory(parts));
 
                         // Construct a regular query from the parts in the quoted string
-                        searchTermsInclude.addAll(Arrays.asList(parts));
+                        queryBuilder.include(parts);
 
                         // Prefer that the actual n-gram is present
-                        searchTermsPriority.add(str);
+                        queryBuilder.priority(str);
                     }
                     else {
                         // If the quoted word is a single word, we don't need to do more than include it in the search
-                        searchTermsInclude.add(str);
+                        queryBuilder.include(str);
                     }
                 }
+
                 case QueryToken.LiteralTerm(String str, String displayStr) -> {
                     analyzeSearchTerm(problems, str, displayStr);
                     searchTermsHuman.addAll(Arrays.asList(displayStr.split("\\s+")));
 
-                    searchTermsInclude.add(str);
+                    queryBuilder.include(str);
                 }
 
-
-                case QueryToken.ExcludeTerm(String str, String displayStr) -> searchTermsExclude.add(str);
-                case QueryToken.PriorityTerm(String str, String displayStr) -> searchTermsPriority.add(str);
+                case QueryToken.ExcludeTerm(String str, String displayStr) -> queryBuilder.exclude(str);
+                case QueryToken.PriorityTerm(String str, String displayStr) -> queryBuilder.priority(str);
                 case QueryToken.AdviceTerm(String str, String displayStr) -> {
-                    searchTermsAdvice.add(str);
+                    queryBuilder.advice(str);
 
                     if (str.toLowerCase().startsWith("site:")) {
                         domain = str.substring("site:".length());
                     }
                 }
 
-                case QueryToken.YearTerm(String str) -> year = parseSpecificationLimit(str);
-                case QueryToken.SizeTerm(String str) -> size = parseSpecificationLimit(str);
-                case QueryToken.RankTerm(String str) -> rank = parseSpecificationLimit(str);
-                case QueryToken.QualityTerm(String str) -> qualityLimit = parseSpecificationLimit(str);
+                case QueryToken.YearTerm(SpecificationLimit limit, String displayStr) -> year = limit;
+                case QueryToken.SizeTerm(SpecificationLimit limit, String displayStr) -> size = limit;
+                case QueryToken.RankTerm(SpecificationLimit limit, String displayStr) -> rank = limit;
+                case QueryToken.QualityTerm(SpecificationLimit limit, String displayStr) -> qualityLimit = limit;
                 case QueryToken.QsTerm(String str) -> queryStrategy = parseQueryStrategy(str);
 
                 default -> {}
             }
         }
 
-        if (searchTermsInclude.isEmpty() && !searchTermsAdvice.isEmpty()) {
-            searchTermsInclude.addAll(searchTermsAdvice);
-            searchTermsAdvice.clear();
-        }
+        queryBuilder.promoteNonRankingTerms();
 
         List<Integer> domainIds = params.domainIds();
 
@@ -131,25 +124,18 @@ public class QueryFactory {
             limits = limits.forSingleDomain();
         }
 
-        var expansion = queryExpansion.expandQuery(searchTermsInclude);
+        var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsInclude);
 
         // Query expansion may produce suggestions for coherence constraints,
         // add these to the query
         for (var coh : expansion.extraCoherences()) {
-            searchTermCoherences.add(SearchCoherenceConstraint.optional(coh));
+            queryBuilder.coherenceConstraint(SearchCoherenceConstraint.optional(coh));
         }
 
-        var searchQuery = new SearchQuery(
-                expansion.compiledQuery(),
-                searchTermsInclude,
-                searchTermsExclude,
-                searchTermsAdvice,
-                searchTermsPriority,
-                searchTermCoherences
-        );
+        queryBuilder.compiledQuery(expansion.compiledQuery());
 
         var specsBuilder = SearchSpecification.builder()
-                .query(searchQuery)
+                .query(queryBuilder.build())
                 .humanQuery(query)
                 .quality(qualityLimit)
                 .year(year)
@@ -180,20 +166,7 @@ public class QueryFactory {
             problems.add("Search term \"" + displayStr + "\" too long");
         }
     }
-    private SpecificationLimit parseSpecificationLimit(String str) {
-        int startChar = str.charAt(0);
 
-        int val = Integer.parseInt(str.substring(1));
-        if (startChar == '=') {
-            return SpecificationLimit.equals(val);
-        } else if (startChar == '<') {
-            return SpecificationLimit.lessThan(val);
-        } else if (startChar == '>') {
-            return SpecificationLimit.greaterThan(val);
-        } else {
-            return SpecificationLimit.none();
-        }
-    }
 
     private QueryStrategy parseQueryStrategy(String str) {
         return switch (str.toUpperCase()) {
@@ -207,15 +180,5 @@ public class QueryFactory {
             case "TOPIC" -> QueryStrategy.TOPIC;
             default -> QueryStrategy.AUTO;
         };
-    }
-
-
-    private boolean anyPartIsStopWord(String[] parts) {
-        for (String part : parts) {
-            if (WordPatterns.isStopWord(part)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

@@ -36,8 +36,8 @@ public class SearchQuery {
     @Deprecated // why does this exist?
     private double value = 0;
 
-    public static SearchQueryBuilder builder(String compiledQuery) {
-        return new SearchQueryBuilder(compiledQuery);
+    public static SearchQueryBuilder builder() {
+        return new SearchQueryBuilder();
     }
 
     public SearchQuery() {
@@ -86,15 +86,19 @@ public class SearchQuery {
     }
 
     public static class SearchQueryBuilder {
-        private final String compiledQuery;
-        private List<String> searchTermsInclude = new ArrayList<>();
-        private List<String> searchTermsExclude = new ArrayList<>();
-        private List<String> searchTermsAdvice = new ArrayList<>();
-        private List<String> searchTermsPriority = new ArrayList<>();
-        private List<SearchCoherenceConstraint> searchTermCoherences = new ArrayList<>();
+        private String compiledQuery;
+        public final List<String> searchTermsInclude = new ArrayList<>();
+        public final List<String> searchTermsExclude = new ArrayList<>();
+        public final List<String> searchTermsAdvice = new ArrayList<>();
+        public final List<String> searchTermsPriority = new ArrayList<>();
+        public final List<SearchCoherenceConstraint> searchTermCoherences = new ArrayList<>();
 
-        private SearchQueryBuilder(String compiledQuery) {
-            this.compiledQuery = compiledQuery;
+        private SearchQueryBuilder() {
+        }
+
+        public SearchQueryBuilder compiledQuery(String query) {
+            this.compiledQuery = query;
+            return this;
         }
 
         public SearchQueryBuilder include(String... terms) {
@@ -117,13 +121,21 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQueryBuilder coherences(SearchCoherenceConstraint constraint) {
+        public SearchQueryBuilder coherenceConstraint(SearchCoherenceConstraint constraint) {
             searchTermCoherences.add(constraint);
             return this;
         }
 
         public SearchQuery build() {
             return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermCoherences);
+        }
+
+        /** If there are no ranking terms, promote the advice terms to ranking terms */
+        public void promoteNonRankingTerms() {
+            if (searchTermsInclude.isEmpty() && !searchTermsAdvice.isEmpty()) {
+                searchTermsInclude.addAll(searchTermsAdvice);
+                searchTermsAdvice.clear();
+            }
         }
     }
 }
