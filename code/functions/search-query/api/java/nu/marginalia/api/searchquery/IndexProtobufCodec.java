@@ -86,7 +86,8 @@ public class IndexProtobufCodec {
         for (var coherences : searchQuery.searchTermCoherences) {
             subqueryBuilder.addCoherencesBuilder()
                     .addAllCoherences(coherences.terms())
-                    .setType(coherences.mandatory() ? RpcCoherences.TYPE.MANDATORY : RpcCoherences.TYPE.OPTIONAL);
+                    .setType(coherences.mandatory() ? RpcCoherences.TYPE.MANDATORY : RpcCoherences.TYPE.OPTIONAL)
+                    .build();
         }
 
         return subqueryBuilder.build();

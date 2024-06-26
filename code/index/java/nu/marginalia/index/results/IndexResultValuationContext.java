@@ -74,6 +74,8 @@ public class IndexResultValuationContext {
         int htmlFeatures = index.getHtmlFeatures(docId);
         int docSize = index.getDocumentSize(docId);
 
+        int bestCoherence = searchTerms.coherences.testOptional(positions);
+
         double score = searchResultValuator.calculateSearchResultValue(
                 wordFlagsQuery,
                 positionsCountQuery,
@@ -81,8 +83,8 @@ public class IndexResultValuationContext {
                 docMetadata,
                 htmlFeatures,
                 docSize,
-                rankingContext,
-                null);
+                bestCoherence,
+                rankingContext, null);
 
         SearchResultItem searchResult = new SearchResultItem(docId,
                 docMetadata,

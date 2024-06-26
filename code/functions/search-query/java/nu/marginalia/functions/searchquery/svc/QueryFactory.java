@@ -75,23 +75,18 @@ public class QueryFactory {
 
                     String[] parts = StringUtils.split(str, '_');
 
-                    // Checking for stop words here is a bit of a stop-gap to fix the issue of stop words being
-                    // required in the query (which is a problem because they are not indexed). How to do this
-                    // in a clean way is a bit of an open problem that may not get resolved until query-parsing is
-                    // improved.
-
-                    if (parts.length > 1 && !anyPartIsStopWord(parts)) {
-                        // Prefer that the actual n-gram is present
-                        searchTermsAdvice.add(str);
-
-                        // Require that the terms appear in the same sentence
+                    if (parts.length > 1) {
+                        // Require that the terms appear in sequence
                         searchTermCoherences.add(SearchCoherenceConstraint.mandatory(parts));
 
-                        // Require that each term exists in the document
-                        // (needed for ranking)
+                        // Construct a regular query from the parts in the quoted string
                         searchTermsInclude.addAll(Arrays.asList(parts));
+
+                        // Prefer that the actual n-gram is present
+                        searchTermsPriority.add(str);
                     }
                     else {
+                        // If the quoted word is a single word, we don't need to do more than include it in the search
                         searchTermsInclude.add(str);
                     }
                 }

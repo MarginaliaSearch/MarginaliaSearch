@@ -40,6 +40,7 @@ public class ResultValuator {
                                              CompiledQueryInt positionsCountQuery, CompiledQuery<GammaCodedSequence> positionsQuery, long documentMetadata,
                                              int features,
                                              int length,
+                                             int bestCoherence,
                                              ResultRankingContext ctx,
                                              @Nullable Consumer<ResultRankingDetails> detailsConsumer
                                              )
@@ -83,7 +84,8 @@ public class ResultValuator {
                            + rankingBonus
                            + topologyBonus
                            + temporalBias
-                           + flagsPenalty;
+                           + flagsPenalty
+                           + bestCoherence;
 
         // FIXME: need a weighting factor here
         double tcfAvgDist = 25. / termCoherenceFactor.calculateAvgMinDistance(positionsQuery, ctx);

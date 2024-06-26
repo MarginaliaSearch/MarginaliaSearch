@@ -229,4 +229,12 @@ public class QueryFactoryTest {
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
+
+    @Test
+    public void testExpansion8() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("success often consists of");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
 }

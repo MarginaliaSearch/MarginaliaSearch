@@ -166,6 +166,11 @@ public class QueryExpansion {
             graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
         }
 
+        // also create a segmentation that is just the entire query
+        coherences.add(nodes.stream()
+                .map(QWord::word)
+                .collect(Collectors.toList()));
+
         return coherences;
     }
 
