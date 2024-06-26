@@ -1,19 +1,17 @@
 package nu.marginalia.functions.searchquery;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Histogram;
-import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.functions.searchquery.svc.QueryFactory;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,18 +31,18 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
 
     private final QueryFactory queryFactory;
-    private final DomainBlacklist blacklist;
     private final IndexClient indexClient;
+
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
-                            DomainBlacklist blacklist,
                             IndexClient indexClient)
     {
         this.queryFactory = queryFactory;
-        this.blacklist = blacklist;
         this.indexClient = indexClient;
     }
 
+    /** GRPC endpoint that parses a query, delegates it to the index partitions, and then collects the results.
+     */
     public void query(RpcQsQuery request, StreamObserver<RpcQsResponse> responseObserver)
     {
         try {
@@ -55,16 +53,20 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                 var params = QueryProtobufCodec.convertRequest(request);
                 var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
 
-                RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
-                List<RpcDecoratedResultItem> bestItems = executeQueries(indexRequest, request.getQueryLimits().getResultsTotal());
+                var indexRequest = QueryProtobufCodec.convertQuery(request, query);
 
+                // Execute the query on the index partitions
+                List<RpcDecoratedResultItem> bestItems = indexClient.executeQueries(indexRequest);
+
+                 // Convert results to response and send it back
                 var responseBuilder = RpcQsResponse.newBuilder()
                         .addAllResults(bestItems)
                         .setSpecs(indexRequest)
                         .addAllSearchTermsHuman(query.searchTermsHuman);
 
-                if (query.domain != null)
+                if (query.domain != null) {
                     responseBuilder.setDomain(query.domain);
+                }
 
                 responseObserver.onNext(responseBuilder.build());
                 responseObserver.onCompleted();
@@ -75,44 +77,19 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         }
     }
 
-    private static final Comparator<RpcDecoratedResultItem> comparator =
-            Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
+    public record DetailedDirectResult(ProcessedQuery processedQuery,
+                                       List<DecoratedSearchResultItem> result) {}
 
-
-    private boolean isBlacklisted(RpcDecoratedResultItem item) {
-        return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));
-    }
-
+    /** Local query execution, without GRPC. */
     public DetailedDirectResult executeDirect(
             String originalQuery,
             QueryParams params,
-            ResultRankingParameters rankingParameters,
-            int count) {
+            ResultRankingParameters rankingParameters) {
 
         var query = queryFactory.createQuery(params, rankingParameters);
+        var items = indexClient.executeQueries(QueryProtobufCodec.convertQuery(originalQuery, query));
 
-        var items = executeQueries(
-                QueryProtobufCodec.convertQuery(originalQuery, query),
-                count)
-                .stream().map(QueryProtobufCodec::convertQueryResult)
-                .toList();
-
-        return new DetailedDirectResult(query, items);
-    }
-
-    public record DetailedDirectResult(ProcessedQuery processedQuery,
-                                List<DecoratedSearchResultItem> result) {}
-
-    @SneakyThrows
-    List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
-        var results = indexClient.executeQueries(indexRequest);
-
-        results.sort(comparator);
-        results.removeIf(this::isBlacklisted);
-        if (results.size() > totalSize) {
-            results = results.subList(0, totalSize);
-        }
-        return results;
+        return new DetailedDirectResult(query, Lists.transform(items, QueryProtobufCodec::convertQueryResult));
     }
 
 }
