@@ -71,8 +71,6 @@ public class SearchParameters {
         this.budget = new IndexSearchBudget(limits.timeoutMs() / 2);
         this.query = IndexProtobufCodec.convertRpcQuery(request.getQuery());
 
-        System.out.println(query);
-
         this.limitByDomain = limits.resultsByDomain();
         this.limitTotal = limits.resultsTotal();
 
