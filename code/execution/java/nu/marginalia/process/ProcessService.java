@@ -19,6 +19,8 @@ import org.slf4j.MarkerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +34,7 @@ public class ProcessService {
     private final ServiceEventLog eventLog;
 
     private final ConcurrentHashMap<ProcessId, Process> processes = new ConcurrentHashMap<>();
+    private final int node;
 
 
     public static ProcessService.ProcessId translateExternalIdBase(String id) {
@@ -78,6 +81,7 @@ public class ProcessService {
     @Inject
     public ProcessService(BaseServiceParams params) {
         this.eventLog = params.eventLog;
+        this.node = params.configuration.node();
     }
 
 
@@ -86,7 +90,7 @@ public class ProcessService {
         List<String> args = new ArrayList<>();
         String javaHome = System.getProperty("java.home");
 
-        args.add(STR."\{javaHome}/bin/java");
+        args.add(javaHome + "/bin/java");
         args.add("-cp");
         args.add(System.getProperty("java.class.path"));
 
@@ -94,6 +98,7 @@ public class ProcessService {
         else args.add("-da");
 
         args.add("--enable-preview");
+        args.add("--enable-native-access=ALL-UNNAMED");
 
         String loggingOpts = System.getProperty("log4j2.configurationFile");
         if (loggingOpts != null) {
@@ -102,6 +107,17 @@ public class ProcessService {
 
         if (System.getProperty("system.serviceNode") != null) {
             args.add("-Dsystem.serviceNode=" + System.getProperty("system.serviceNode"));
+        }
+
+        if (Boolean.getBoolean("system.profile")) {
+            // add jfr options
+            args.add("-XX:+FlightRecorder");
+            String jfrFileName = "/var/log/wmsa/profile-%s-%d-%s.jfr".formatted(
+                    processId.toString(),
+                    node,
+                    LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(':', '.')
+            );
+            args.add("-XX:StartFlightRecording=filename=%s,name=%s".formatted(jfrFileName, processId.toString()));
         }
 
         args.addAll(processId.envOpts());
