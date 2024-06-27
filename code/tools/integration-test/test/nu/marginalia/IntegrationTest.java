@@ -2,9 +2,9 @@ package nu.marginalia;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
-import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
-import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.QueryProtobufCodec;
+import nu.marginalia.api.searchquery.RpcQsQuery;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
@@ -13,6 +13,7 @@ import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
+import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.index.IndexGrpcService;
 import nu.marginalia.index.ReverseIndexFullFileNames;
 import nu.marginalia.index.ReverseIndexPrioFileNames;
@@ -22,10 +23,7 @@ import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.model.SearchParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
@@ -43,6 +41,8 @@ import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
+import nu.marginalia.test.IntegrationTestModule;
+import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 
@@ -92,6 +92,9 @@ public class IntegrationTest {
     IndexGrpcService indexGrpcService;
     @Inject
     DocumentDbReader documentDbReader;
+
+    @Inject
+    QueryFactory queryFactory;
 
     @BeforeEach
     public void setupTest() throws IOException {
@@ -203,26 +206,24 @@ public class IntegrationTest {
         documentDbReader.reconnect();
 
         /** QUERY */
-        var rs = indexGrpcService.executeSearch(new SearchParameters(new SearchSpecification(
-                new SearchQuery("problem solving process",
-                        List.of("problem", "solving", "process"),
-                        List.of(),
-                        List.of(),
-                        List.of(),
-                        List.of(new SearchCoherenceConstraint(true, List.of("problem", "solving", "process")))
-                ),
-                null,
-                "NONE",
-                "feynman",
-                SpecificationLimit.none(),
-                SpecificationLimit.none(),
-                SpecificationLimit.none(),
-                SpecificationLimit.none(),
-                new QueryLimits(10, 10, 100, 100),
-                QueryStrategy.AUTO,
-                ResultRankingParameters.sensibleDefaults()
-        ), new SearchSetAny()));
 
+        var request = RpcQsQuery.newBuilder()
+                .setQueryLimits(RpcQueryLimits.newBuilder()
+                        .setTimeoutMs(1000)
+                        .setResultsTotal(100)
+                        .setResultsByDomain(10)
+                        .setFetchSize(1000)
+                        .build())
+                .setQueryStrategy("AUTO")
+                .setHumanQuery("problem solving process")
+                .build();
+
+        var params = QueryProtobufCodec.convertRequest(request);
+
+        var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
+
+        var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+        var rs = indexGrpcService.executeSearch(new SearchParameters(indexRequest, new SearchSetAny()));
 
         System.out.println(rs);
     }

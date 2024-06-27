@@ -27,6 +27,7 @@ dependencies {
     implementation project(':code:index:query')
     implementation project(':code:index:index-journal')
     implementation project(':code:functions:link-graph:partition')
+    implementation project(':code:functions:search-query')
     implementation project(':code:libraries:array')
     implementation project(':code:common:db')
     implementation project(':code:common:config')

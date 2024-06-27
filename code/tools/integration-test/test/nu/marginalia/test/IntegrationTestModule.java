@@ -1,4 +1,4 @@
-package nu.marginalia;
+package nu.marginalia.test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -6,6 +6,10 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import gnu.trove.list.array.TIntArrayList;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.LanguageModels;
+import nu.marginalia.ProcessConfiguration;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;

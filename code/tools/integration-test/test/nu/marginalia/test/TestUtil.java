@@ -1,4 +1,4 @@
-package nu.marginalia;
+package nu.marginalia.test;
 
 
 import java.io.File;
