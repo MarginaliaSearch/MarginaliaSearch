@@ -1,15 +1,15 @@
-package nu.marginalia.functions.searchquery.svc;
+package nu.marginalia.functions.searchquery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
+import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

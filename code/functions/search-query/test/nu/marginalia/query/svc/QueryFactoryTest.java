@@ -5,7 +5,7 @@ import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
-import nu.marginalia.functions.searchquery.svc.QueryFactory;
+import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;

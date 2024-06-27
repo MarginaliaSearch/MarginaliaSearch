@@ -10,7 +10,6 @@ import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.api.IndexClient;
-import nu.marginalia.functions.searchquery.svc.QueryFactory;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
