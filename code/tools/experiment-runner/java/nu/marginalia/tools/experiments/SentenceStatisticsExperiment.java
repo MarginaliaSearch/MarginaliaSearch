@@ -17,6 +17,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -45,6 +46,7 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
 
         logLine("Processing: " + domain.domain);
 
+        ByteBuffer workArea = ByteBuffer.allocate(8192);
         for (var doc : domain.doc) {
             if (doc.documentBody == null) continue;
 
@@ -55,7 +57,7 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
             var dld = se.extractSentences(parsed);
             var keywords = documentKeywordExtractor.extractKeywords(dld, new EdgeUrl(doc.url));
 
-            keywords.build();
+            keywords.build(workArea);
         }
 
         return true;

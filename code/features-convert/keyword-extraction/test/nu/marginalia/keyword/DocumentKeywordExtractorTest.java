@@ -91,7 +91,7 @@ class DocumentKeywordExtractorTest {
                 new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
         );
 
-        var keywordsBuilt = keywords.build();
+        var keywordsBuilt = keywords.build(ByteBuffer.allocate(1024));
 
         Map<String, WordMetadata> flags = new HashMap<>();
         Map<String, GammaCodedSequence> positions = new HashMap<>();

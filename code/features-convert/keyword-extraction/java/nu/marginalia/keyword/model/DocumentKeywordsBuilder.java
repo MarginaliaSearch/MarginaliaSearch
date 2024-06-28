@@ -28,14 +28,13 @@ public class DocumentKeywordsBuilder {
         this(1600);
     }
 
-    public DocumentKeywords build() {
+    public DocumentKeywords build(ByteBuffer workArea) {
         final String[] wordArray = new String[wordToMeta.size()];
         final long[] meta = new long[wordToMeta.size()];
         final GammaCodedSequence[] positions = new GammaCodedSequence[wordToMeta.size()];
 
         var iter = wordToMeta.object2LongEntrySet().fastIterator();
 
-        ByteBuffer workArea = ByteBuffer.allocate(1024);
         for (int i = 0; iter.hasNext(); i++) {
             var entry = iter.next();
 

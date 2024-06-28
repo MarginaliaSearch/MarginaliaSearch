@@ -215,14 +215,18 @@ public class IntegrationTest {
                         .setFetchSize(1000)
                         .build())
                 .setQueryStrategy("AUTO")
-                .setHumanQuery("problem solving process")
+                .setHumanQuery("\"This is how thinking works\"")
                 .build();
 
         var params = QueryProtobufCodec.convertRequest(request);
 
         var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
 
+
         var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+
+        System.out.println(indexRequest);
+
         var rs = indexGrpcService.executeSearch(new SearchParameters(indexRequest, new SearchSetAny()));
 
         System.out.println(rs);

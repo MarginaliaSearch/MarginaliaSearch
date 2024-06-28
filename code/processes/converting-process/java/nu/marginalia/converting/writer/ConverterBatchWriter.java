@@ -102,6 +102,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
 
         String domainName = domain.toString();
 
+        ByteBuffer workArea = ByteBuffer.allocate(16384);
+
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
             if (document.details == null) {
@@ -125,7 +127,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         null);
             }
             else {
-                var wb = document.words.build();
+                var wb = document.words.build(workArea);
                 List<String> words = Arrays.asList(wb.keywords);
                 TLongArrayList metas = new TLongArrayList(wb.metadata);
                 List<GammaCodedSequence> positions = Arrays.asList(wb.positions);
