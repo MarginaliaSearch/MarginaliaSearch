@@ -40,6 +40,7 @@ public class ReversePreindex {
      * will have randomly assigned names.
      */
     public static ReversePreindex constructPreindex(IndexJournalReader reader,
+                                                    PositionsFileConstructor positionsFileConstructor,
                                                     DocIdRewriter docIdRewriter,
                                                     Path workDir) throws IOException
     {
@@ -48,7 +49,7 @@ public class ReversePreindex {
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
         var segments = ReversePreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, positionsFileConstructor, segments);
         return new ReversePreindex(segments, docs);
     }
 

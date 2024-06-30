@@ -4,6 +4,7 @@ import blue.strategic.parquet.Hydrator;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -25,8 +26,11 @@ public class DocumentRecordKeywordsProjection {
     public int htmlFeatures;
     public long documentMetadata;
 
+    public int length;
+
     public List<String> words;
     public TLongList metas;
+    public List<GammaCodedSequence> positions;
 
     public boolean hasKeywords() {
         return words != null && metas != null;
@@ -37,12 +41,14 @@ public class DocumentRecordKeywordsProjection {
     }
 
     public static Collection<String> requiredColumns() {
-        return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata");
+        return List.of("domain", "ordinal", "htmlFeatures", "word", "wordMeta", "documentMetadata", "length", "positions");
     }
 
+    @SneakyThrows
     public DocumentRecordKeywordsProjection add(String heading, Object value) {
         switch (heading) {
             case "domain" -> domain = (String) value;
+            case "length" -> length = (Integer) value;
             case "ordinal" -> ordinal = (Integer) value;
             case "htmlFeatures" -> htmlFeatures = (Integer) value;
             case "documentMetadata" -> documentMetadata = (Long) value;
@@ -56,6 +62,12 @@ public class DocumentRecordKeywordsProjection {
                     this.metas = new TLongArrayList(100);
                 }
                 this.metas.add((long) value);
+            }
+            case "positions" -> {
+                if (this.positions == null) {
+                    this.positions = new ArrayList<>(100);
+                }
+                this.positions.add(new GammaCodedSequence((byte[]) value));
             }
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }

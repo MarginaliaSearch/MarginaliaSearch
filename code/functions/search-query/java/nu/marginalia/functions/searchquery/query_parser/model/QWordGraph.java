@@ -248,16 +248,29 @@ public class QWordGraph implements Iterable<QWord> {
     @Override
     public Iterator<QWord> iterator() {
         return new Iterator<>() {
+            QWord next = null;
             QWord pos = QWord.beg();
 
             @Override
             public boolean hasNext() {
-                return !pos.isEnd();
+                if (next == null) {
+                    if (pos.isEnd()) {
+                        return false;
+                    }
+                    next = getNextOriginal(pos).getFirst();
+                }
+
+                return !next.isEnd();
             }
 
             @Override
             public QWord next() {
-                pos = getNextOriginal(pos).getFirst();
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                pos = next;
+                next = null;
                 return pos;
             }
         };

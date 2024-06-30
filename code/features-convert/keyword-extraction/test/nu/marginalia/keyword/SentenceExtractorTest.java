@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SentenceExtractorTest {
     static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-    static NgramLexicon ngramLexicon = new NgramLexicon(lm);
     static SentenceExtractor se = new SentenceExtractor(lm);
 
     @SneakyThrows
@@ -36,7 +35,7 @@ class SentenceExtractorTest {
 
         var dict = new TermFrequencyDict(lm);
         var url = new EdgeUrl("https://memex.marginalia.nu/");
-        DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict, ngramLexicon);
+        DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
 
         for (;;) {
             long total = 0;

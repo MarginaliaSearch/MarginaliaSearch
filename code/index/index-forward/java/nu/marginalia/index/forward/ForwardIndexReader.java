@@ -82,8 +82,18 @@ public class ForwardIndexReader {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
-        return (int) data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) & 0xFFFF_FFFFL);
     }
+
+    public int getDocumentSize(long docId) {
+        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
+        long offset = idxForDoc(docId);
+        if (offset < 0) return 0;
+
+        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L);
+    }
+
 
     private int idxForDoc(long docId) {
         assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";

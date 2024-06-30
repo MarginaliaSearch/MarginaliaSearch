@@ -15,6 +15,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:coded-sequence')
     implementation project(':code:index:query')
     implementation project(':code:index:index-journal')
     implementation project(':code:common:model')

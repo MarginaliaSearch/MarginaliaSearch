@@ -5,13 +5,16 @@ import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
+import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class TestJournalFactory {
     Path tempDir = Files.createTempDirectory("journal");
@@ -49,10 +52,10 @@ public class TestJournalFactory {
                     '}';
         }
     }
-    public record WordWithMeta(long wordId, long meta) {}
+    public record WordWithMeta(long wordId, long meta, GammaCodedSequence gcs) {}
 
-    public static WordWithMeta wm(long wordId, long meta) {
-        return new WordWithMeta(wordId, meta);
+    public static WordWithMeta wm(long wordId, long meta, int... positions) {
+        return new WordWithMeta(wordId, meta, GammaCodedSequence.generate(ByteBuffer.allocate(128), positions));
     }
 
     IndexJournalReader createReader(EntryData... entries) throws IOException {
@@ -60,12 +63,18 @@ public class TestJournalFactory {
 
         var writer = new IndexJournalWriterSingleFileImpl(jf);
         for (var entry : entries) {
-            long[] data = new long[entry.wordIds.length * 2];
-            for (int i = 0; i < entry.wordIds.length; i++)
-                data[i*2] = entry.wordIds[i];
+            long[] termIds = new long[entry.wordIds.length];
+            long[] meta = new long[entry.wordIds.length];
 
-            writer.put(new IndexJournalEntryHeader(entries.length, 0, entry.docId, entry.docMeta),
-                    new IndexJournalEntryData(data));
+            GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
+            for (int i = 0; i < entry.wordIds.length; i++) {
+                termIds[i] = entry.wordIds[i];
+                meta[i] = 0;
+                positions[i] = new GammaCodedSequence(new byte[1]);
+            }
+
+            writer.put(new IndexJournalEntryHeader(entries.length, 0, 15, entry.docId, entry.docMeta),
+                    new IndexJournalEntryData(termIds, meta, positions));
         }
         writer.close();
         var ret = new IndexJournalReaderSingleFile(jf);
@@ -77,14 +86,18 @@ public class TestJournalFactory {
 
         var writer = new IndexJournalWriterSingleFileImpl(jf);
         for (var entry : entries) {
-            long[] data = new long[entry.wordIds.length * 2];
+
+            long[] termIds = new long[entry.wordIds.length];
+            long[] meta = new long[entry.wordIds.length];
+            GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
-                data[i * 2] = entry.wordIds[i].wordId;
-                data[i * 2 + 1] = entry.wordIds[i].meta;
+                termIds[i] = entry.wordIds[i].wordId;
+                meta[i] = entry.wordIds[i].meta;
+                positions[i] = Objects.requireNonNullElseGet(entry.wordIds[i].gcs, () -> new GammaCodedSequence(new byte[1]));
             }
 
-            writer.put(new IndexJournalEntryHeader(entries.length, 0, entry.docId, entry.docMeta),
-                    new IndexJournalEntryData(data));
+            writer.put(new IndexJournalEntryHeader(entries.length, 0, 15, entry.docId, entry.docMeta),
+                    new IndexJournalEntryData(termIds, meta, positions));
         }
         writer.close();
         var ret = new IndexJournalReaderSingleFile(jf);

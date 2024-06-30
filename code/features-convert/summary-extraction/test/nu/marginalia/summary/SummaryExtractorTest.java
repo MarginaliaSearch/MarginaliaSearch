@@ -26,9 +26,7 @@ class SummaryExtractorTest {
 
     @BeforeEach
     public void setUp() {
-        keywordExtractor = new DocumentKeywordExtractor(
-                new TermFrequencyDict(WmsaHome.getLanguageModels()),
-                new NgramLexicon(WmsaHome.getLanguageModels()));
+        keywordExtractor = new DocumentKeywordExtractor();
         setenceExtractor = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         summaryExtractor = new SummaryExtractor(255,

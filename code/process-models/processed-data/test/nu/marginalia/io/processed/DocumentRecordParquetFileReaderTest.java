@@ -2,16 +2,19 @@ package nu.marginalia.io.processed;
 
 import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.model.processed.DocumentRecord;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,6 +33,9 @@ class DocumentRecordParquetFileReaderTest {
 
     @Test
     public void test() throws IOException {
+
+        ByteBuffer workArea = ByteBuffer.allocate(1024);
+
         var doc = new DocumentRecord(
                 "www.marginalia.nu",
                 "https://www.marginalia.nu/",
@@ -46,7 +52,11 @@ class DocumentRecordParquetFileReaderTest {
                 4L,
                 null,
                 List.of("Hello", "world"),
-                new TLongArrayList(new long[] { 2, 3})
+                new TLongArrayList(new long[] { 2L, 3L}),
+                List.of(
+                        GammaCodedSequence.generate(workArea, 1, 2, 3),
+                        GammaCodedSequence.generate(workArea, 1, 4, 5)
+                        )
         );
 
         try (var writer = new DocumentRecordParquetFileWriter(parquetFile)) {
@@ -61,6 +71,9 @@ class DocumentRecordParquetFileReaderTest {
     public void testHugePayload() throws IOException {
         List<String> words = IntStream.range(0, 100000).mapToObj(Integer::toString).toList();
         TLongArrayList metas = new TLongArrayList(LongStream.range(0, 100000).toArray());
+
+        ByteBuffer workArea = ByteBuffer.allocate(1024);
+        List<GammaCodedSequence> poses = Stream.generate(() -> GammaCodedSequence.generate(workArea, 3, 4)).limit(100000).toList();
 
         var doc = new DocumentRecord(
                 "www.marginalia.nu",
@@ -78,7 +91,8 @@ class DocumentRecordParquetFileReaderTest {
                 5L,
                 null,
                 words,
-                metas
+                metas,
+                poses
         );
 
         try (var writer = new DocumentRecordParquetFileWriter(parquetFile)) {

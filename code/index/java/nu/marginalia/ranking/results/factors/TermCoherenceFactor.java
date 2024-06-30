@@ -1,66 +1,44 @@
 package nu.marginalia.ranking.results.factors;
 
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
-import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.SequenceOperations;
 
 /** Rewards documents where terms appear frequently within the same sentences
  */
 public class TermCoherenceFactor {
 
-    /** Calculate a factor that rewards the best total position overlap
-     * between the terms in the query.  This is high when all the terms
-     * found in the same sentences.
-     */
-    public double calculateOverlap(CompiledQueryLong wordMetadataQuery) {
-        if (wordMetadataQuery.size() < 2)
-            return 0;
-
-        long mask = CompiledQueryAggregates.longBitmaskAggregate(wordMetadataQuery,
-                score -> score >>> WordMetadata.POSITIONS_SHIFT);
-
-        return bitsSetFactor(mask);
-    }
-
-    /** Calculate a factor that rewards the best average mutual Jaccard index
-     * between the terms in the query.  This is high when the several terms are frequently
-     * found in the same sentences.
-     */
-    public double calculateAvgMutualJaccard(CompiledQueryLong wordMetadataQuery, ResultRankingContext ctx) {
+    public double calculateAvgMinDistance(CompiledQuery<GammaCodedSequence> positions, ResultRankingContext ctx) {
         double sum = 0;
         int cnt = 0;
 
-        for (int i = 0; i < wordMetadataQuery.size(); i++) {
+        for (int i = 0; i < positions.size(); i++) {
 
             // Skip terms that are not in the regular mask
             if (!ctx.regularMask.get(i))
                 continue;
 
-            long imask = WordMetadata.decodePositions(wordMetadataQuery.at(i));
+            var posi = positions.at(i);
 
             // Skip terms that are not in the document
-            if (imask == 0L)
+            if (posi == null)
                 continue;
 
-            for (int j = i + 1; j < wordMetadataQuery.size(); j++) {
+            for (int j = i + 1; j < positions.size(); j++) {
 
                 // Skip terms that are not in the regular mask
                 if (!ctx.regularMask.get(j))
                     continue;
 
-                long jmask = WordMetadata.decodePositions(wordMetadataQuery.at(j));
+                var posj = positions.at(j);
 
                 // Skip terms that are not in the document
-                if (jmask == 0L)
+                if (posj == null)
                     continue;
 
-                long quot = Long.bitCount(imask & jmask);
-                long rem = Long.bitCount(imask | jmask);
-
-                // rem is always > 0 because imask and jmask are not both 0
-
-                sum += quot/(double) rem;
+                int distance = SequenceOperations.minDistance(posi.iterator(), posj.iterator());
+                sum += distance;
                 cnt++;
             }
         }
@@ -68,15 +46,8 @@ public class TermCoherenceFactor {
         if (cnt > 0) {
             return sum / cnt;
         } else {
-            return 0;
+            return 1000.;
         }
     }
-
-    double bitsSetFactor(long mask) {
-        final int bitsSetInMask = Long.bitCount(mask);
-
-        return Math.pow(bitsSetInMask/(double) WordMetadata.POSITIONS_COUNT, 0.25);
-    }
-
 
 }

@@ -1,6 +1,5 @@
 package nu.marginalia.converting.writer;
 
-import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
@@ -17,10 +16,12 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.processed.DocumentRecord;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -101,6 +102,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
 
         String domainName = domain.toString();
 
+        ByteBuffer workArea = ByteBuffer.allocate(16384);
+
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
             if (document.details == null) {
@@ -120,12 +123,14 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         0L,
                         null,
                         null,
+                        null,
                         null);
             }
             else {
-                var wb = document.words.build();
+                var wb = document.words.build(workArea);
                 List<String> words = Arrays.asList(wb.keywords);
-                TLongList metas = new TLongArrayList(wb.metadata);
+                TLongArrayList metas = new TLongArrayList(wb.metadata);
+                List<GammaCodedSequence> positions = Arrays.asList(wb.positions);
 
                 documentWriter.write(new DocumentRecord(
                         domainName,
@@ -143,7 +148,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         document.details.metadata.encode(),
                         document.details.pubYear,
                         words,
-                        metas
+                        metas,
+                        positions
                 ));
 
             }

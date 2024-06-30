@@ -13,7 +13,7 @@ import java.util.List;
 public class Bm25FullGraphVisitor implements CqExpression.DoubleVisitor {
     private static final long AVG_LENGTH = 5000;
 
-    private final CqDataLong wordMetaData;
+    private final CqDataInt counts;
     private final CqDataInt frequencies;
     private final Bm25Parameters bm25Parameters;
 
@@ -22,31 +22,16 @@ public class Bm25FullGraphVisitor implements CqExpression.DoubleVisitor {
 
     private final BitSet mask;
 
-    private Bm25FullGraphVisitor(Bm25Parameters bm25Parameters,
-                                CqDataLong wordMetaData,
+    public Bm25FullGraphVisitor(Bm25Parameters bm25Parameters,
+                                CqDataInt counts,
                                 int length,
-                                BitSet mask,
                                 ResultRankingContext ctx) {
         this.length = length;
         this.bm25Parameters = bm25Parameters;
         this.docCount = ctx.termFreqDocCount();
-        this.wordMetaData = wordMetaData;
+        this.counts = counts;
         this.frequencies = ctx.fullCounts;
-        this.mask = mask;
-    }
-
-    public static Bm25FullGraphVisitor forRegular(Bm25Parameters bm25Parameters,
-                                                  CqDataLong wordMetaData,
-                                                  int length,
-                                                  ResultRankingContext ctx) {
-        return new Bm25FullGraphVisitor(bm25Parameters, wordMetaData, length, ctx.regularMask, ctx);
-    }
-
-    public static Bm25FullGraphVisitor forNgrams(Bm25Parameters bm25Parameters,
-                                                 CqDataLong wordMetaData,
-                                                 int length,
-                                                 ResultRankingContext ctx) {
-        return new Bm25FullGraphVisitor(bm25Parameters, wordMetaData, length, ctx.ngramsMask, ctx);
+        this.mask = ctx.regularMask;
     }
 
     @Override
@@ -73,7 +58,7 @@ public class Bm25FullGraphVisitor implements CqExpression.DoubleVisitor {
             return 0;
         }
 
-        double count = Long.bitCount(WordMetadata.decodePositions(wordMetaData.get(idx)));
+        double count = counts.get(idx);
 
         int freq = frequencies.get(idx);
 

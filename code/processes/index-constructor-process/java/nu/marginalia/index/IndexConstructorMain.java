@@ -106,29 +106,35 @@ public class IndexConstructorMain extends ProcessMainClass {
         heartbeat.shutDown();
     }
 
-    private void createFullReverseIndex() throws SQLException, IOException {
+    private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords,
+        var constructor = new ReverseIndexConstructor(
+                outputFileDocs,
+                outputFileWords,
+                outputFilePositions,
                 IndexJournalReader::singleFile,
-                this::addRankToIdEncoding, tmpDir)
-                    .createReverseIndex(heartbeat,
-                            "createReverseIndexFull",
-                            workDir);
+                this::addRankToIdEncoding,
+                tmpDir);
+
+        constructor.createReverseIndex(heartbeat, "createReverseIndexFull", workDir);
 
     }
 
-    private void createPrioReverseIndex() throws SQLException, IOException {
+    private void createPrioReverseIndex() throws IOException {
 
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+        Path outputFilePositions = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.POSITIONS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
@@ -136,12 +142,15 @@ public class IndexConstructorMain extends ProcessMainClass {
         // important to the document.  This filter will act on the encoded {@see WordMetadata}
         LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords,
+        var constructor = new ReverseIndexConstructor(
+                outputFileDocs,
+                outputFileWords,
+                outputFilePositions,
                 (path) -> IndexJournalReader.singleFile(path).filtering(wordMetaFilter),
-                this::addRankToIdEncoding, tmpDir)
-                .createReverseIndex(heartbeat,
-                        "createReverseIndexPrio",
-                        workDir);
+                this::addRankToIdEncoding,
+                tmpDir);
+
+        constructor.createReverseIndex(heartbeat, "createReverseIndexPrio", workDir);
     }
 
     private static LongPredicate getPriorityIndexWordMetaFilter() {

@@ -15,12 +15,14 @@ dependencies {
     implementation 'org.jgrapht:jgrapht-core:1.5.2'
 
     implementation project(':third-party:commons-codec')
+    implementation project(':third-party:parquet-floor')
 
     implementation project(':code:index:api')
     implementation project(':code:functions:link-graph:api')
 
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:coded-sequence')
 
     implementation project(':code:common:db')
     implementation project(':code:common:config')

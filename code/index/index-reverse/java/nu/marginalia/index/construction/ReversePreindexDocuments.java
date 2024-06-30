@@ -21,10 +21,13 @@ import java.util.concurrent.TimeUnit;
  * the associated ReversePreindexWordSegments data
  */
 public class ReversePreindexDocuments {
-    final Path file;
-    public  final LongArray documents;
+    public final LongArray documents;
+
+    private static PositionsFileConstructor positionsFileConstructor;
     private static final int RECORD_SIZE_LONGS = 2;
     private static final Logger logger = LoggerFactory.getLogger(ReversePreindexDocuments.class);
+
+    public final Path file;
 
     public ReversePreindexDocuments(LongArray documents, Path file) {
         this.documents = documents;
@@ -36,7 +39,9 @@ public class ReversePreindexDocuments {
             Path workDir,
             IndexJournalReader reader,
             DocIdRewriter docIdRewriter,
+            PositionsFileConstructor positionsFileConstructor,
             ReversePreindexWordSegments segments) throws IOException {
+        ReversePreindexDocuments.positionsFileConstructor = positionsFileConstructor;
 
         createUnsortedDocsFile(docsFile, workDir, reader, segments, docIdRewriter);
 
@@ -67,22 +72,25 @@ public class ReversePreindexDocuments {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
-        try (RandomFileAssembler assembly = RandomFileAssembler.create(workDir, fileSizeLongs)) {
+        try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
+             var pointer = reader.newPointer())
+        {
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
-            var pointer = reader.newPointer();
             while (pointer.nextDocument()) {
                 long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
-                while (pointer.nextRecord()) {
-                    long wordId = pointer.wordId();
-                    long wordMeta = pointer.wordMeta();
+                for (var termData : pointer) {
+                    long termId = termData.termId();
 
-                    long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
+                    long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
+
+                    // write position data to the positions file and get the offset
+                    long encodedPosOffset = positionsFileConstructor.add((byte) termData.metadata(), termData.positions());
 
                     assembly.put(offset + 0, rankEncodedId);
-                    assembly.put(offset + 1, wordMeta);
+                    assembly.put(offset + 1, encodedPosOffset);
                 }
             }
 

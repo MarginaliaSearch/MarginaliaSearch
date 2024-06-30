@@ -6,6 +6,7 @@ import blue.strategic.parquet.ValueWriter;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
 import org.jetbrains.annotations.NotNull;
@@ -57,6 +58,8 @@ public class DocumentRecord {
     public List<String> words;
     @Nullable
     public TLongList metas;
+    @Nullable
+    public List<GammaCodedSequence> positions;
 
     public static Hydrator<DocumentRecord, DocumentRecord> newHydrator() {
         return new DocumentDataHydrator();
@@ -83,9 +86,11 @@ public class DocumentRecord {
             Types.optional(FLOAT).named("quality"),
             Types.optional(INT32).named("pubYear"),
             Types.repeated(INT64).named("wordMeta"),
+            Types.repeated(BINARY).named("positions"),
             Types.repeated(BINARY).as(stringType()).named("word")
     );
 
+    @SneakyThrows
     public DocumentRecord add(String heading, Object value) {
         switch (heading) {
             case "domain" -> domain = (String) value;
@@ -113,6 +118,12 @@ public class DocumentRecord {
                 }
                 this.metas.add((long) value);
             }
+            case "positions" -> {
+                if (this.positions == null) {
+                    this.positions = new ArrayList<>(100);
+                }
+                this.positions.add(new GammaCodedSequence((byte[]) value));
+            }
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }
         return this;
@@ -139,9 +150,11 @@ public class DocumentRecord {
         if (pubYear != null) {
             valueWriter.write("pubYear", pubYear);
         }
-
         if (metas != null) {
             valueWriter.writeList("wordMeta", metas);
+        }
+        if (positions != null) {
+            valueWriter.writeBinarySerializableList("positions", positions);
         }
 
         if (words != null) {

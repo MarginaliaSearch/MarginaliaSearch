@@ -14,8 +14,8 @@ public class DocumentRecordParquetFileWriter implements AutoCloseable {
                 file.toFile(), DocumentRecord.newDehydrator());
     }
 
-    public void write(DocumentRecord domainData) throws IOException {
-        writer.write(domainData);
+    public void write(DocumentRecord documentRecord) throws IOException {
+        writer.write(documentRecord);
     }
 
     public void close() throws IOException {

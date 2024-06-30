@@ -48,10 +48,9 @@ public class QueryBasicInterface {
                 domainCount, count, 250, 8192
         ), set);
 
-        var detailedDirectResult = queryGRPCService.executeDirect(queryParams,
-                params,
-                ResultRankingParameters.sensibleDefaults(),
-                count);
+        var detailedDirectResult = queryGRPCService.executeDirect(
+                queryParams, params, ResultRankingParameters.sensibleDefaults()
+        );
 
         var results = detailedDirectResult.result();
 
@@ -85,10 +84,9 @@ public class QueryBasicInterface {
 
         var rankingParams = rankingParamsFromRequest(request);
 
-        var detailedDirectResult = queryGRPCService.executeDirect(queryString,
-                queryParams,
-                rankingParams,
-                count);
+        var detailedDirectResult = queryGRPCService.executeDirect(
+                queryString, queryParams, rankingParams
+        );
 
         var results = detailedDirectResult.result();
 

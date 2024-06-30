@@ -4,11 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.index.CombinedIndexReader;
+import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,17 +39,18 @@ public class IndexFactory {
     }
 
     public ReverseIndexReader getReverseIndexReader() throws IOException {
-
         return new ReverseIndexReader("full",
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.CURRENT),
-                ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT)
+                ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT),
+                new PositionsFileReader(ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.CURRENT))
         );
     }
 
     public ReverseIndexReader getReverseIndexPrioReader() throws IOException {
         return new ReverseIndexReader("prio",
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
-                ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT)
+                ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
+                null
         );
     }
 

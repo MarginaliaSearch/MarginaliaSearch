@@ -2,14 +2,10 @@ package nu.marginalia.keyword;
 
 import lombok.Builder;
 import nu.marginalia.keyword.extractors.*;
-import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.model.idx.WordFlags;
-
-import java.util.EnumSet;
 
 class KeywordMetadata {
 
-    private final KeywordPositionBitmask bitmask;
     private final TitleKeywords titleKeywords;
     private final NameLikeKeywords nameLikeKeywords;
     private final SubjectLikeKeywords subjectLikeKeywords;
@@ -18,14 +14,12 @@ class KeywordMetadata {
 
     @Builder
     public KeywordMetadata(
-            KeywordPositionBitmask bitmask,
             TitleKeywords titleKeywords,
             NameLikeKeywords nameLikeKeywords,
             SubjectLikeKeywords subjectLikeKeywords,
             UrlKeywords urlKeywords,
-            WordsTfIdfCounts tfIdfCounts) {
-
-        this.bitmask = bitmask;
+            WordsTfIdfCounts tfIdfCounts)
+    {
         this.titleKeywords = titleKeywords;
         this.nameLikeKeywords = nameLikeKeywords;
         this.subjectLikeKeywords = subjectLikeKeywords;
@@ -36,29 +30,33 @@ class KeywordMetadata {
     public long getMetadataForWord(String stemmed) {
 
         int tfidf = tfIdfCounts.getTfIdf(stemmed);
-        EnumSet<WordFlags> flags = EnumSet.noneOf(WordFlags.class);
+        long flags = 0;
 
-        if (tfidf > 100)
-            flags.add(WordFlags.TfIdfHigh);
+        if (tfidf > 100) {
+            flags |= WordFlags.TfIdfHigh.asBit();
+        }
 
-        if (subjectLikeKeywords.contains(stemmed))
-            flags.add(WordFlags.Subjects);
+        if (subjectLikeKeywords.contains(stemmed)) {
+            flags |= WordFlags.Subjects.asBit();
+        }
 
-        if (nameLikeKeywords.contains(stemmed))
-            flags.add(WordFlags.NamesWords);
+        if (nameLikeKeywords.contains(stemmed)) {
+            flags |= WordFlags.NamesWords.asBit();
+        }
 
-        if (titleKeywords.contains(stemmed))
-            flags.add(WordFlags.Title);
+        if (titleKeywords.contains(stemmed)) {
+            flags |= WordFlags.Title.asBit();
+        }
 
-        if (urlKeywords.containsUrl(stemmed))
-            flags.add(WordFlags.UrlPath);
+        if (urlKeywords.containsUrl(stemmed)) {
+            flags |= WordFlags.UrlPath.asBit();
+        }
 
-        if (urlKeywords.containsDomain(stemmed))
-            flags.add(WordFlags.UrlDomain);
+        if (urlKeywords.containsDomain(stemmed)) {
+            flags |= WordFlags.UrlDomain.asBit();
+        }
 
-        long positions = bitmask.get(stemmed);
-
-        return new WordMetadata(positions, flags).encode();
+        return flags;
     }
 
 }

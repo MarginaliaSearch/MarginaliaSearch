@@ -49,13 +49,14 @@ public class IndexJournalWriterPagingImpl implements IndexJournalWriter {
 
     @Override
     @SneakyThrows
-    public int put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
+    public int put(IndexJournalEntryHeader header, IndexJournalEntryData data)
+    {
         if (bytesWritten >= sizeLimitBytes) {
             bytesWritten = 0;
             switchToNextWriter();
         }
 
-        int writtenNow = currentWriter.put(header, entry);
+        int writtenNow = currentWriter.put(header, data);
         bytesWritten += writtenNow;
 
         return writtenNow;

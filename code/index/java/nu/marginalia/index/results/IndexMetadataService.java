@@ -10,12 +10,14 @@ import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.QuerySearchTerms;
 import nu.marginalia.index.results.model.TermCoherenceGroupList;
-import nu.marginalia.index.results.model.TermMetadataForCombinedDocumentIds;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.index.results.model.ids.TermIdList;
 
+import java.lang.foreign.Arena;
+import java.util.ArrayList;
+
 import static nu.marginalia.index.results.model.TermCoherenceGroupList.TermCoherenceGroup;
-import static nu.marginalia.index.results.model.TermMetadataForCombinedDocumentIds.DocumentsWithMetadata;
 
 public class IndexMetadataService {
     private final StatefulIndex statefulIndex;
@@ -25,22 +27,19 @@ public class IndexMetadataService {
         this.statefulIndex = index;
     }
 
-    public TermMetadataForCombinedDocumentIds getTermMetadataForDocuments(CombinedDocIdList combinedIdsAll,
-                                                                          TermIdList termIdsList)
+    public Long2ObjectArrayMap<TermMetadataList>
+        getTermMetadataForDocuments(Arena arena, CombinedDocIdList combinedIdsAll, TermIdList termIdsList)
     {
         var currentIndex = statefulIndex.get();
 
-        Long2ObjectArrayMap<DocumentsWithMetadata> termdocToMeta =
+        Long2ObjectArrayMap<TermMetadataList> termdocToMeta =
                 new Long2ObjectArrayMap<>(termIdsList.size());
 
         for (long termId : termIdsList.array()) {
-            var metadata = currentIndex.getMetadata(termId, combinedIdsAll);
-
-            termdocToMeta.put(termId,
-                    new DocumentsWithMetadata(combinedIdsAll, metadata));
+            termdocToMeta.put(termId, currentIndex.getTermMetadata(arena, termId, combinedIdsAll));
         }
 
-        return new TermMetadataForCombinedDocumentIds(termdocToMeta);
+        return termdocToMeta;
     }
 
     public QuerySearchTerms getSearchTerms(CompiledQuery<String> compiledQuery, SearchQuery searchQuery) {
@@ -79,12 +78,18 @@ public class IndexMetadataService {
             }
         }
 
+        var idsAll = new TermIdList(termIdsList);
+        var idsPrio = new TermIdList(termIdsPrio);
+
+        var constraints = new ArrayList<TermCoherenceGroup>();
+        for (var coherence : searchQuery.searchTermCoherences) {
+            constraints.add(new TermCoherenceGroup(coherence, idsAll));
+        }
+
         return new QuerySearchTerms(termToId,
-                new TermIdList(termIdsList),
-                new TermIdList(termIdsPrio),
-                new TermCoherenceGroupList(
-                        searchQuery.searchTermCoherences.stream().map(TermCoherenceGroup::new).toList()
-                )
+                idsAll,
+                idsPrio,
+                new TermCoherenceGroupList(constraints)
         );
     }
 

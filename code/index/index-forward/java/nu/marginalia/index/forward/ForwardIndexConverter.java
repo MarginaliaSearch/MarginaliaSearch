@@ -83,8 +83,10 @@ public class ForwardIndexConverter {
                 int ranking = domainRankings.getRanking(domainId);
                 long meta = DocumentMetadata.encodeRank(pointer.documentMeta(), ranking);
 
+                long features = pointer.documentFeatures() | ((long) pointer.documentSize() << 32L);
+
                 docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
-                docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, pointer.documentFeatures());
+                docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, features);
             }
 
             progress.progress(TaskSteps.FORCE);

@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** A pair of file-backed arrays of sorted wordIds
- * and the count of documents associated with each wordId.
+ * and the count of documents associated with each termId.
  */
 public class ReversePreindexWordSegments {
     public final LongArray wordIds;
@@ -34,7 +34,7 @@ public class ReversePreindexWordSegments {
         this.countsFile = countsFile;
     }
 
-    /** Returns a long-long hash map where each key is a wordId,
+    /** Returns a long-long hash map where each key is a termId,
      * and each value is the start offset of the data.
      */
     public Long2LongOpenHashMap asMap(int recordSize) {
@@ -188,7 +188,7 @@ public class ReversePreindexWordSegments {
 
             if (i == fileSize) {
                 // We've reached the end of the iteration and there is no
-                // "next" wordId to fetch
+                // "next" termId to fetch
                 wordId = Long.MIN_VALUE;
                 return false;
             }
