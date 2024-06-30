@@ -7,6 +7,8 @@ import lombok.Getter;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.sequence.GammaCodedSequence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -23,6 +25,9 @@ public class DocumentKeywordsBuilder {
     // granted, some of these words are word n-grams, but 64 ought to
     // be plenty. The lexicon writer has another limit that's higher.
     private final int MAX_WORD_LENGTH = 64;
+    private final int MAX_POSITIONS_PER_WORD = 100;
+
+    private static final Logger logger = LoggerFactory.getLogger(DocumentKeywordsBuilder.class);
 
     public DocumentKeywordsBuilder() {
         this(1600);
@@ -40,7 +45,15 @@ public class DocumentKeywordsBuilder {
 
             meta[i] = entry.getLongValue();
             wordArray[i] = entry.getKey();
-            positions[i] = GammaCodedSequence.generate(workArea, wordToPos.getOrDefault(entry.getKey(), IntList.of()));
+
+            var posList = wordToPos.getOrDefault(entry.getKey(), IntList.of());
+
+            if (posList.size() > MAX_POSITIONS_PER_WORD) {
+                logger.info("Truncating positions for word {}: was {}", entry.getKey(), posList.size());
+                posList.subList(MAX_POSITIONS_PER_WORD, posList.size()).clear();
+            }
+
+            positions[i] = GammaCodedSequence.generate(workArea, posList);
         }
 
         return new DocumentKeywords(wordArray, meta, positions);
