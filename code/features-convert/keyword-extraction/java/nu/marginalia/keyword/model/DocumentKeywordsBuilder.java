@@ -25,7 +25,7 @@ public class DocumentKeywordsBuilder {
     // granted, some of these words are word n-grams, but 64 ought to
     // be plenty. The lexicon writer has another limit that's higher.
     private final int MAX_WORD_LENGTH = 64;
-    private final int MAX_POSITIONS_PER_WORD = 256;
+    private final int MAX_POSITIONS_PER_WORD = 512;
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentKeywordsBuilder.class);
 
@@ -49,7 +49,6 @@ public class DocumentKeywordsBuilder {
             var posList = wordToPos.getOrDefault(entry.getKey(), IntList.of());
 
             if (posList.size() > MAX_POSITIONS_PER_WORD) {
-                logger.info("Truncating positions for word '{}', count was {}", entry.getKey(), posList.size());
                 posList.subList(MAX_POSITIONS_PER_WORD, posList.size()).clear();
             }
 
