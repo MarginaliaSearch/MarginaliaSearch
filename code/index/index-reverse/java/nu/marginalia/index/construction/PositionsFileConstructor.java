@@ -24,11 +24,12 @@ import java.nio.file.StandardOpenOption;
  * each posting in the file.
  */
 public class PositionsFileConstructor implements AutoCloseable {
+    private final ByteBuffer workBuffer = ByteBuffer.allocate(65536);
+    
     private final Path file;
     private final FileChannel channel;
 
     private long offset;
-    private final ByteBuffer workBuffer = ByteBuffer.allocate(8192);
 
     public PositionsFileConstructor(Path file) throws IOException {
         this.file = file;
@@ -38,21 +39,21 @@ public class PositionsFileConstructor implements AutoCloseable {
 
     /** Add a term to the positions file
      * @param termMeta the term metadata
-     * @param positions the positions of the term
+     * @param positionsBuffer the positions of the term
      * @return the offset of the term in the file, with the size of the data in the highest byte
      */
-    public long add(byte termMeta, GammaCodedSequence positions) throws IOException {
+    public long add(byte termMeta, ByteBuffer positionsBuffer) throws IOException {
         synchronized (file) {
-            var positionBuffer = positions.buffer();
-            int size = 1 + positionBuffer.remaining();
+            int size = 1 + positionsBuffer.remaining();
 
             if (workBuffer.remaining() < size) {
                 workBuffer.flip();
                 channel.write(workBuffer);
                 workBuffer.clear();
             }
+
             workBuffer.put(termMeta);
-            workBuffer.put(positionBuffer);
+            workBuffer.put(positionsBuffer);
 
             long ret = PositionCodec.encode(size, offset);
 

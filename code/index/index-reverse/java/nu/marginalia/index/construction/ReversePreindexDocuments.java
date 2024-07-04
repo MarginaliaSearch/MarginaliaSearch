@@ -87,7 +87,7 @@ public class ReversePreindexDocuments {
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
 
                     // write position data to the positions file and get the offset
-                    long encodedPosOffset = positionsFileConstructor.add((byte) termData.metadata(), termData.positions());
+                    long encodedPosOffset = positionsFileConstructor.add((byte) termData.metadata(), termData.positionsBuffer());
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);
