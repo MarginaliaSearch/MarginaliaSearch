@@ -1,8 +1,11 @@
 package nu.marginalia.contenttype;
 
 import java.nio.charset.*;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DocumentBodyToString {
+    private static final Map<String, Charset> charsetMap = new ConcurrentHashMap<>();
 
     /** Get the string data from a document body, given the content type and charset */
     public static String getStringData(ContentType type, byte[] data) {
@@ -11,7 +14,7 @@ public class DocumentBodyToString {
             if (type.charset() == null || type.charset().isBlank())
                 charset = StandardCharsets.UTF_8;
             else {
-                charset = Charset.forName(type.charset());
+                charset = charsetMap.computeIfAbsent(type.charset(), Charset::forName);
             }
         }
         catch (IllegalCharsetNameException ex) {
