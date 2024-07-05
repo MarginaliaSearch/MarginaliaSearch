@@ -31,10 +31,10 @@
                 <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Parquet</a>
             </td>
             <td>
-                <form method="post" action="/nodes/{{node.id}}/actions/recrawl-single-domain">
+                <form method="post" action="/nodes/{{node.id}}/actions/recrawl-single-domain" onsubmit="return confirm('Confirm recrawl of {{domain}}')">
                     <input type="hidden" name="source" value="{{storage.id}}">
                     <input type="hidden" name="targetDomainName" value="{{domain}}">
-                    <button type="submit" class="btn btn-primary" onsubmit="return confirm('Confirm recrawl of {{domain}}')">Trigger Recrawl</button>
+                    <button type="submit" class="btn btn-primary">Trigger Recrawl</button>
                 </form>
             </td>
 
