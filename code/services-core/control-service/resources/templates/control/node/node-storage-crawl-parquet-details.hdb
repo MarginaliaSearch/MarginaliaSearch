@@ -24,12 +24,20 @@
         <h2>Summary</h2>
         <table class="table">
             <tr>
-            <th>Domain</th><th>File</th>
+            <th>Domain</th><th>File</th><th>Crawl</th>
             </tr>
             <td>{{domain}}</td>
             <td>
                 <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Parquet</a>
             </td>
+            <td>
+                <form method="post" action="/nodes/{{node.id}}/actions/recrawl-single-domain">
+                    <input type="hidden" name="source" value="{{storage.id}}">
+                    <input type="hidden" name="targetDomainName" value="{{domain}}">
+                    <button type="submit" class="btn btn-primary" onsubmit="return confirm('Confirm recrawl of {{domain}}')">Trigger Recrawl</button>
+                </form>
+            </td>
+
         </table>
 
         <h2>Contents</h2>

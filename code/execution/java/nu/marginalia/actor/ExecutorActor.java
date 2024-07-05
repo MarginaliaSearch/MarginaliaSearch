@@ -3,6 +3,7 @@ package nu.marginalia.actor;
 public enum ExecutorActor {
     CRAWL,
     RECRAWL,
+    RECRAWL_SINGLE_DOMAIN,
     CONVERT_AND_LOAD,
     PROC_CONVERTER_SPAWNER,
     PROC_LOADER_SPAWNER,

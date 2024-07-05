@@ -14,8 +14,24 @@ public class CrawlRequest {
      */
     public List<FileStorageId> specStorage;
 
+    /** (optional)  Name of a single domain to be re-crawled */
+    public String targetDomainName;
+
     /** File storage where the crawl data will be written.  If it contains existing crawl data,
      * this crawl data will be referenced for e-tags and last-mofified checks.
      */
     public FileStorageId crawlStorage;
+
+    public static CrawlRequest forSpec(FileStorageId specStorage, FileStorageId crawlStorage) {
+        return new CrawlRequest(List.of(specStorage), null, crawlStorage);
+    }
+
+    public static CrawlRequest forSingleDomain(String targetDomainName, FileStorageId crawlStorage) {
+        return new CrawlRequest(null, targetDomainName, crawlStorage);
+    }
+
+    public static CrawlRequest forRecrawl(FileStorageId crawlStorage) {
+        return new CrawlRequest(null, null, crawlStorage);
+    }
+
 }

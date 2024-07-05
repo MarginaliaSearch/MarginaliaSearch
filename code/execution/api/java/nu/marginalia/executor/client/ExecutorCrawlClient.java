@@ -44,6 +44,15 @@ public class ExecutorCrawlClient {
                         .build());
     }
 
+    public void triggerRecrawlSingleDomain(int node, FileStorageId fid, String domainName) {
+        channelPool.call(ExecutorCrawlApiBlockingStub::triggerSingleDomainRecrawl)
+                .forNode(node)
+                .run(RpcFileStorageIdWithDomainName.newBuilder()
+                        .setFileStorageId(fid.id())
+                        .setTargetDomainName(domainName)
+                        .build());
+    }
+
     public void triggerConvert(int node, FileStorageId fid) {
         channelPool.call(ExecutorCrawlApiBlockingStub::triggerConvert)
                 .forNode(node)

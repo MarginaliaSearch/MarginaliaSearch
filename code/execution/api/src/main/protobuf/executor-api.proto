@@ -22,6 +22,7 @@ service ExecutorApi {
 service ExecutorCrawlApi {
   rpc triggerCrawl(RpcFileStorageId) returns (Empty) {}
   rpc triggerRecrawl(RpcFileStorageId) returns (Empty) {}
+  rpc triggerSingleDomainRecrawl(RpcFileStorageIdWithDomainName) returns (Empty) {}
   rpc triggerConvert(RpcFileStorageId) returns (Empty) {}
   rpc triggerConvertAndLoad(RpcFileStorageId) returns (Empty) {}
   rpc loadProcessedData(RpcFileStorageIds) returns (Empty) {}
@@ -54,6 +55,10 @@ message RpcProcessId {
 }
 message RpcFileStorageId {
   int64 fileStorageId = 1;
+}
+message RpcFileStorageIdWithDomainName {
+  int64 fileStorageId = 1;
+  string targetDomainName = 2;
 }
 message RpcFileStorageIds {
   repeated int64 fileStorageIds = 1;

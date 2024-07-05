@@ -26,6 +26,7 @@ public class ExecutorActorControlService {
     private final ExecutorActorStateMachines stateMachines;
     public Map<ExecutorActor, ActorPrototype> actorDefinitions = new HashMap<>();
     private final int node;
+
     @Inject
     public ExecutorActorControlService(MessageQueueFactory messageQueueFactory,
                                        BaseServiceParams baseServiceParams,
@@ -33,6 +34,7 @@ public class ExecutorActorControlService {
                                        ConvertAndLoadActor convertAndLoadActor,
                                        CrawlActor crawlActor,
                                        RecrawlActor recrawlActor,
+                                       RecrawlSingleDomainActor recrawlSingleDomainActor,
                                        RestoreBackupActor restoreBackupActor,
                                        ConverterMonitorActor converterMonitorFSM,
                                        CrawlerMonitorActor crawlerMonitorActor,
@@ -57,6 +59,8 @@ public class ExecutorActorControlService {
 
         register(ExecutorActor.CRAWL, crawlActor);
         register(ExecutorActor.RECRAWL, recrawlActor);
+        register(ExecutorActor.RECRAWL_SINGLE_DOMAIN, recrawlSingleDomainActor);
+
         register(ExecutorActor.CONVERT, convertActor);
         register(ExecutorActor.RESTORE_BACKUP, restoreBackupActor);
         register(ExecutorActor.CONVERT_AND_LOAD, convertAndLoadActor);
