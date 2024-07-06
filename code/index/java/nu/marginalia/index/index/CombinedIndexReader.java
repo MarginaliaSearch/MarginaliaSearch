@@ -5,7 +5,8 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
-import nu.marginalia.index.ReverseIndexReader;
+import nu.marginalia.index.FullReverseIndexReader;
+import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchTerms;
@@ -38,29 +39,24 @@ public class CombinedIndexReader {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ForwardIndexReader forwardIndexReader;
-    private final ReverseIndexReader reverseIndexFullReader;
-    private final ReverseIndexReader reverseIndexPriorityReader;
+    private final FullReverseIndexReader reverseIndexFullReader;
+    private final PrioReverseIndexReader reverseIndexPriorityReader;
 
     public CombinedIndexReader(ForwardIndexReader forwardIndexReader,
-                               ReverseIndexReader reverseIndexFullReader,
-                               ReverseIndexReader reverseIndexPriorityReader) {
+                               FullReverseIndexReader reverseIndexFullReader,
+                               PrioReverseIndexReader reverseIndexPriorityReader) {
         this.forwardIndexReader = forwardIndexReader;
         this.reverseIndexFullReader = reverseIndexFullReader;
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
     public IndexQueryBuilderImpl newQueryBuilder(IndexQuery query) {
-        return new IndexQueryBuilderImpl(reverseIndexFullReader, reverseIndexPriorityReader, query);
+        return new IndexQueryBuilderImpl(reverseIndexFullReader, query);
     }
 
     public QueryFilterStepIf hasWordFull(long termId) {
         return reverseIndexFullReader.also(termId);
     }
-
-    public QueryFilterStepIf hasWordPrio(long termId) {
-        return reverseIndexPriorityReader.also(termId);
-    }
-
 
     /** Creates a query builder for terms in the priority index */
     public IndexQueryBuilder findPriorityWord(long wordId) {
@@ -124,7 +120,7 @@ public class CombinedIndexReader {
             if (paths.size() < 4) {
                 var prioHead = findPriorityWord(elements.getLong(0));
                 for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordPrio(elements.getLong(i)));
+                    prioHead.addInclusionFilter(hasWordFull(elements.getLong(i)));
                 }
                 queryHeads.add(prioHead);
             }

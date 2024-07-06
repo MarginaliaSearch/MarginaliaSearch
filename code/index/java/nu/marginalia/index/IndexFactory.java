@@ -38,19 +38,18 @@ public class IndexFactory {
         return IndexLocations.getSearchSetsPath(fileStorageService);
     }
 
-    public ReverseIndexReader getReverseIndexReader() throws IOException {
-        return new ReverseIndexReader("full",
+    public FullReverseIndexReader getReverseIndexReader() throws IOException {
+        return new FullReverseIndexReader("full",
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.CURRENT),
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT),
                 new PositionsFileReader(ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.CURRENT))
         );
     }
 
-    public ReverseIndexReader getReverseIndexPrioReader() throws IOException {
-        return new ReverseIndexReader("prio",
+    public PrioReverseIndexReader getReverseIndexPrioReader() throws IOException {
+        return new PrioReverseIndexReader("prio",
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
-                ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
-                null
+                ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT)
         );
     }
 

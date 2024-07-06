@@ -22,7 +22,7 @@ import java.util.List;
 import static nu.marginalia.index.construction.full.TestJournalFactory.wm;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReverseIndexReaderTest {
+class FullReverseIndexReaderTest {
     TestJournalFactory journalFactory;
     Path tempDir;
 
@@ -82,7 +82,7 @@ class ReverseIndexReaderTest {
 
     }
 
-    private long[] readEntries(ReverseIndexReader reader, long wordId) {
+    private long[] readEntries(FullReverseIndexReader reader, long wordId) {
         var es = reader.documents(wordId);
         assertTrue(es.hasMore());
         LongQueryBuffer buffer = new LongQueryBuffer(4);
@@ -91,7 +91,7 @@ class ReverseIndexReaderTest {
         return buffer.copyData();
     }
 
-    private ReverseIndexReader createIndex(EntryDataWithWordMeta... scenario) throws IOException {
+    private FullReverseIndexReader createIndex(EntryDataWithWordMeta... scenario) throws IOException {
         var reader = journalFactory.createReader(scenario);
 
         Path posFile = tempDir.resolve("positions.dat");
@@ -106,7 +106,7 @@ class ReverseIndexReaderTest {
             preindex.delete();
         }
 
-        return new ReverseIndexReader("test", wordsFile, docsFile, new PositionsFileReader(posFile));
+        return new FullReverseIndexReader("test", wordsFile, docsFile, new PositionsFileReader(posFile));
 
     }
 }

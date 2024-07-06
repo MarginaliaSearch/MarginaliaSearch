@@ -22,7 +22,7 @@ public class ReverseIndexSelfTest {
     public static void runSelfTest2(LongArray wordsDataRange, LongArray documents) {
         logger.info("Starting test 2");
         for (long i = 1; i < wordsDataRange.size(); i+=2) {
-            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.fullDocsBTreeContext, wordsDataRange.get(i));
             var header = docsBTreeReader.getHeader();
             var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
 
@@ -49,7 +49,7 @@ public class ReverseIndexSelfTest {
     public static void runSelfTest4(LongArray wordsDataRange, LongArray documents) {
         logger.info("Starting test 4");
         for (long i = 1; i < wordsDataRange.size(); i+=2) {
-            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.fullDocsBTreeContext, wordsDataRange.get(i));
             var header = docsBTreeReader.getHeader();
             var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
             for (int j = 0; j < docRange.size(); j+=2) {
@@ -84,7 +84,7 @@ public class ReverseIndexSelfTest {
     public static void runSelfTest6(LongArray wordsDataRange, LongArray documents) {
         logger.info("Starting test 6");
         for (long i = 1; i < wordsDataRange.size(); i+=2) {
-            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.fullDocsBTreeContext, wordsDataRange.get(i));
             var header = docsBTreeReader.getHeader();
             var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
             Long prev = null;

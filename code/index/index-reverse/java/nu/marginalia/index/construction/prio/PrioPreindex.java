@@ -7,7 +7,6 @@ import nu.marginalia.index.ReverseIndexParameters;
 import nu.marginalia.index.construction.CountToOffsetTransformer;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.IndexSizeEstimator;
-import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,6 @@ public class PrioPreindex {
      * will have randomly assigned names.
      */
     public static PrioPreindex constructPreindex(IndexJournalReader reader,
-                                                 PositionsFileConstructor positionsFileConstructor,
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
     {
@@ -53,7 +51,7 @@ public class PrioPreindex {
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
         var segments = PrioPreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        var docs = PrioPreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, positionsFileConstructor, segments);
+        var docs = PrioPreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, segments);
         return new PrioPreindex(segments, docs);
     }
 
@@ -81,16 +79,16 @@ public class PrioPreindex {
         Files.deleteIfExists(outputFileWords);
 
         // Estimate the size of the docs index data
-        offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(2));
-        IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.docsBTreeContext, 2);
+        offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(1));
+        IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.prioDocsBTreeContext, 1);
         offsets.fold(0, 0, offsets.size(), sizeEstimator);
 
         // Write the docs file
         LongArray finalDocs = LongArrayFactory.mmapForWritingConfined(outputFileDocs, sizeEstimator.size);
         try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
             offsets.transformEachIO(0, offsets.size(),
-                    new PrioIndexBTreeTransformer(finalDocs, 2,
-                            ReverseIndexParameters.docsBTreeContext,
+                    new PrioIndexBTreeTransformer(finalDocs, 1,
+                            ReverseIndexParameters.prioDocsBTreeContext,
                             intermediateDocChannel));
             intermediateDocChannel.force(false);
         }
@@ -137,9 +135,9 @@ public class PrioPreindex {
         PrioPreindexWordSegments mergingSegment =
                 createMergedSegmentWordFile(destDir, left.segments, right.segments);
 
-        var mergingIter = mergingSegment.constructionIterator(2);
-        var leftIter = left.segments.iterator(2);
-        var rightIter = right.segments.iterator(2);
+        var mergingIter = mergingSegment.constructionIterator(1);
+        var leftIter = left.segments.iterator(1);
+        var rightIter = right.segments.iterator(1);
 
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
@@ -200,7 +198,7 @@ public class PrioPreindex {
         // duplicates in the data, so we need to shrink it to the actual size we wrote.
 
         mergedDocuments = shrinkMergedDocuments(mergedDocuments,
-                docsFile, 2 * mergingSegment.totalSize());
+                docsFile, mergingSegment.totalSize());
 
         return new PrioPreindex(
                 mergingSegment,
@@ -274,8 +272,7 @@ public class PrioPreindex {
                 leftIter.startOffset, leftIter.endOffset,
                 rightIter.startOffset, rightIter.endOffset);
 
-        long distinct = segSize / 2;
-        destIter.putNext(distinct);
+        destIter.putNext(segSize);
         leftIter.next();
         rightIter.next();
     }
@@ -297,7 +294,7 @@ public class PrioPreindex {
                 mergingIter.startOffset,
                 end);
 
-        boolean putNext = mergingIter.putNext(size / 2);
+        boolean putNext = mergingIter.putNext(size);
         boolean iterNext = sourceIter.next();
 
         if (!putNext && iterNext)

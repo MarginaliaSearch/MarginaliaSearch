@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
-public class ReverseIndexReader {
+public class FullReverseIndexReader {
     private final LongArray words;
     private final LongArray documents;
     private final long wordsDataOffset;
@@ -31,10 +31,10 @@ public class ReverseIndexReader {
 
     private final PositionsFileReader positionsFileReader;
 
-    public ReverseIndexReader(String name,
-                              Path words,
-                              Path documents,
-                              PositionsFileReader positionsFileReader) throws IOException {
+    public FullReverseIndexReader(String name,
+                                  Path words,
+                                  Path documents,
+                                  PositionsFileReader positionsFileReader) throws IOException {
         this.name = name;
 
         this.positionsFileReader = positionsFileReader;
@@ -138,7 +138,7 @@ public class ReverseIndexReader {
     private BTreeReader createReaderNew(long offset) {
         return new BTreeReader(
                 documents,
-                ReverseIndexParameters.docsBTreeContext,
+                ReverseIndexParameters.fullDocsBTreeContext,
                 offset);
     }
 

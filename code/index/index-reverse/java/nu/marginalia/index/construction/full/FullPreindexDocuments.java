@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /** A LongArray with document data, segmented according to
- * the associated ReversePreindexWordSegments data
+ * the associated FullPreindexWordSegments data
  */
 public class FullPreindexDocuments {
     public final LongArray documents;

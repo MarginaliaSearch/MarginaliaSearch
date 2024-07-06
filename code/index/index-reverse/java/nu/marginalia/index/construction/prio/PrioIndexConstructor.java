@@ -55,8 +55,7 @@ public class PrioIndexConstructor {
         }
 
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName);
-             var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
-             var posConstructor = new PositionsFileConstructor(outputFilePositions)
+             var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes")
         ) {
             heartbeat.progress(CreateReverseIndexSteps.CONSTRUCT);
 
@@ -66,7 +65,7 @@ public class PrioIndexConstructor {
                 .parallelStream()
                 .map(in -> {
                     preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
-                    return construct(in, posConstructor);
+                    return construct(in);
                 })
                 .reduce(this::merge)
                 .ifPresent((index) -> {
@@ -80,9 +79,9 @@ public class PrioIndexConstructor {
     }
 
     @SneakyThrows
-    private PrioPreindexReference construct(Path input, PositionsFileConstructor positionsFileConstructor) {
+    private PrioPreindexReference construct(Path input) {
         return PrioPreindex
-                .constructPreindex(readerSource.construct(input), positionsFileConstructor, docIdRewriter, tmpDir)
+                .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
                 .closeToReference();
     }
 

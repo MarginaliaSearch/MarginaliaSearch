@@ -18,6 +18,7 @@ import nu.marginalia.index.IndexGrpcService;
 import nu.marginalia.index.ReverseIndexFullFileNames;
 import nu.marginalia.index.ReverseIndexPrioFileNames;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
@@ -269,7 +270,7 @@ public class IntegrationTest {
         // important to the document.  This filter will act on the encoded {@see WordMetadata}
         LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
 
-        var constructor = new FullIndexConstructor(
+        var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,

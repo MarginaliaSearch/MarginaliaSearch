@@ -58,7 +58,7 @@ public class TestJournalFactory {
         return new WordWithMeta(wordId, meta, GammaCodedSequence.generate(ByteBuffer.allocate(128), positions));
     }
 
-    IndexJournalReader createReader(EntryData... entries) throws IOException {
+    public IndexJournalReader createReader(EntryData... entries) throws IOException {
         Path jf = Files.createTempFile(tempDir, "journal", ".dat");
 
         var writer = new IndexJournalWriterSingleFileImpl(jf);

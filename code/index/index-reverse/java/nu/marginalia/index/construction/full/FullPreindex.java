@@ -82,7 +82,7 @@ public class FullPreindex {
 
         // Estimate the size of the docs index data
         offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(2));
-        IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.docsBTreeContext, 2);
+        IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.fullDocsBTreeContext, 2);
         offsets.fold(0, 0, offsets.size(), sizeEstimator);
 
         // Write the docs file
@@ -90,7 +90,7 @@ public class FullPreindex {
         try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
             offsets.transformEachIO(0, offsets.size(),
                     new FullIndexBTreeTransformer(finalDocs, 2,
-                            ReverseIndexParameters.docsBTreeContext,
+                            ReverseIndexParameters.fullDocsBTreeContext,
                             intermediateDocChannel));
             intermediateDocChannel.force(false);
         }
