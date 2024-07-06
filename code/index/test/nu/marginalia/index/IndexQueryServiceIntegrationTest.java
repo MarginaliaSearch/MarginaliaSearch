@@ -7,13 +7,13 @@ import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.index.construction.full.FullIndexConstructor;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -493,7 +493,7 @@ public class IndexQueryServiceIntegrationTest {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         var constructor =
-                new ReverseIndexConstructor(
+                new FullIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
@@ -513,7 +513,7 @@ public class IndexQueryServiceIntegrationTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new ReverseIndexConstructor(
+        var constructor = new FullIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,

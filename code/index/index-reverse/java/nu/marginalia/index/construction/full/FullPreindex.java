@@ -1,9 +1,13 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.ReverseIndexParameters;
+import nu.marginalia.index.construction.CountToOffsetTransformer;
+import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.IndexSizeEstimator;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +29,13 @@ import static nu.marginalia.array.algo.TwoArrayOperations.*;
  * the union of their data.  This operation requires no additional
  * RAM.
  */
-public class ReversePreindex {
-    final ReversePreindexWordSegments segments;
-    final ReversePreindexDocuments documents;
+public class FullPreindex {
+    final FullPreindexWordSegments segments;
+    final FullPreindexDocuments documents;
 
-    private static final Logger logger = LoggerFactory.getLogger(ReversePreindex.class);
+    private static final Logger logger = LoggerFactory.getLogger(FullPreindex.class);
 
-    public ReversePreindex(ReversePreindexWordSegments segments, ReversePreindexDocuments documents) {
+    public FullPreindex(FullPreindexWordSegments segments, FullPreindexDocuments documents) {
         this.segments = segments;
         this.documents = documents;
     }
@@ -39,27 +43,27 @@ public class ReversePreindex {
     /** Constructs a new preindex with the data associated with reader.  The backing files
      * will have randomly assigned names.
      */
-    public static ReversePreindex constructPreindex(IndexJournalReader reader,
-                                                    PositionsFileConstructor positionsFileConstructor,
-                                                    DocIdRewriter docIdRewriter,
-                                                    Path workDir) throws IOException
+    public static FullPreindex constructPreindex(IndexJournalReader reader,
+                                                 PositionsFileConstructor positionsFileConstructor,
+                                                 DocIdRewriter docIdRewriter,
+                                                 Path workDir) throws IOException
     {
         Path segmentWordsFile = Files.createTempFile(workDir, "segment_words", ".dat");
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
-        var segments = ReversePreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, positionsFileConstructor, segments);
-        return new ReversePreindex(segments, docs);
+        var segments = FullPreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, positionsFileConstructor, segments);
+        return new FullPreindex(segments, docs);
     }
 
     /**  Close the associated memory mapped areas and return
      * a dehydrated version of this object that can be re-opened
      * later.
      */
-    public ReversePreindexReference closeToReference() {
+    public FullPreindexReference closeToReference() {
         try {
-            return new ReversePreindexReference(segments, documents);
+            return new FullPreindexReference(segments, documents);
         }
         finally {
             segments.force();
@@ -85,7 +89,7 @@ public class ReversePreindex {
         LongArray finalDocs = LongArrayFactory.mmapForWritingConfined(outputFileDocs, sizeEstimator.size);
         try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
             offsets.transformEachIO(0, offsets.size(),
-                    new ReverseIndexBTreeTransformer(finalDocs, 2,
+                    new FullIndexBTreeTransformer(finalDocs, 2,
                             ReverseIndexParameters.docsBTreeContext,
                             intermediateDocChannel));
             intermediateDocChannel.force(false);
@@ -126,11 +130,11 @@ public class ReversePreindex {
         documents.delete();
     }
 
-    public static ReversePreindex merge(Path destDir,
-                                        ReversePreindex left,
-                                        ReversePreindex right) throws IOException {
+    public static FullPreindex merge(Path destDir,
+                                     FullPreindex left,
+                                     FullPreindex right) throws IOException {
 
-        ReversePreindexWordSegments mergingSegment =
+        FullPreindexWordSegments mergingSegment =
                 createMergedSegmentWordFile(destDir, left.segments, right.segments);
 
         var mergingIter = mergingSegment.constructionIterator(2);
@@ -198,18 +202,18 @@ public class ReversePreindex {
         mergedDocuments = shrinkMergedDocuments(mergedDocuments,
                 docsFile, 2 * mergingSegment.totalSize());
 
-        return new ReversePreindex(
+        return new FullPreindex(
                 mergingSegment,
-                new ReversePreindexDocuments(mergedDocuments, docsFile)
+                new FullPreindexDocuments(mergedDocuments, docsFile)
         );
     }
 
     /** Create a segment word file with each word from both inputs, with zero counts for all the data.
      * This is an intermediate product in merging.
      */
-    static ReversePreindexWordSegments createMergedSegmentWordFile(Path destDir,
-                                                                   ReversePreindexWordSegments left,
-                                                                   ReversePreindexWordSegments right) throws IOException {
+    static FullPreindexWordSegments createMergedSegmentWordFile(Path destDir,
+                                                                FullPreindexWordSegments left,
+                                                                FullPreindexWordSegments right) throws IOException {
         Path segmentWordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
         Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
 
@@ -228,7 +232,7 @@ public class ReversePreindex {
 
         LongArray counts = LongArrayFactory.mmapForWritingConfined(segmentCountsFile, segmentsSize);
 
-        return new ReversePreindexWordSegments(wordIdsFile, counts, segmentWordsFile, segmentCountsFile);
+        return new FullPreindexWordSegments(wordIdsFile, counts, segmentWordsFile, segmentCountsFile);
     }
 
     /** It's possible we overestimated the necessary size of the documents file,
@@ -256,12 +260,12 @@ public class ReversePreindex {
     /** Merge contents of the segments indicated by leftIter and rightIter into the destionation
      * segment, and advance the construction iterator with the appropriate size.
      */
-    private static void mergeSegments(ReversePreindexWordSegments.SegmentIterator leftIter,
-                                      ReversePreindexWordSegments.SegmentIterator rightIter,
-                                      ReversePreindexDocuments left,
-                                      ReversePreindexDocuments right,
+    private static void mergeSegments(FullPreindexWordSegments.SegmentIterator leftIter,
+                                      FullPreindexWordSegments.SegmentIterator rightIter,
+                                      FullPreindexDocuments left,
+                                      FullPreindexDocuments right,
                                       LongArray dest,
-                                      ReversePreindexWordSegments.SegmentConstructionIterator destIter)
+                                      FullPreindexWordSegments.SegmentConstructionIterator destIter)
     {
         long segSize = mergeArrays2(dest,
                 left.documents,
@@ -279,10 +283,10 @@ public class ReversePreindex {
     /** Copy the data from the source segment at the position and length indicated by sourceIter,
      * into the destination segment, and advance the construction iterator.
      */
-    private static boolean copySegment(ReversePreindexWordSegments.SegmentIterator sourceIter,
-                                    LongArray dest,
-                                    FileChannel sourceChannel,
-                                    ReversePreindexWordSegments.SegmentConstructionIterator mergingIter) throws IOException {
+    private static boolean copySegment(FullPreindexWordSegments.SegmentIterator sourceIter,
+                                       LongArray dest,
+                                       FileChannel sourceChannel,
+                                       FullPreindexWordSegments.SegmentConstructionIterator mergingIter) throws IOException {
 
         long size = sourceIter.endOffset - sourceIter.startOffset;
         long start = mergingIter.startOffset;

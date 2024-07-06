@@ -3,13 +3,11 @@ package nu.marginalia.index;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.ReverseIndexConstructor;
+import nu.marginalia.index.construction.full.FullIndexConstructor;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
@@ -33,7 +31,6 @@ import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.sequence.GammaCodedSequence;
-import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
 import org.junit.jupiter.api.AfterEach;
@@ -247,7 +244,7 @@ public class CombinedIndexReaderTest {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         var constructor =
-                new ReverseIndexConstructor(
+                new FullIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
@@ -267,7 +264,7 @@ public class CombinedIndexReaderTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new ReverseIndexConstructor(
+        var constructor = new FullIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,

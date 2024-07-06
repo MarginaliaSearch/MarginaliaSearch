@@ -1,4 +1,4 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
 import nu.marginalia.array.LongArray;
 import org.junit.jupiter.api.AfterEach;
@@ -11,10 +11,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nu.marginalia.index.construction.TestJournalFactory.*;
+import static nu.marginalia.index.construction.full.TestJournalFactory.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReversePreindexWordSegmentsTest {
+class FullPreindexWordSegmentsTest {
     Path countsFile;
     Path wordsIdFile;
     Path docsFile;
@@ -51,7 +51,7 @@ class ReversePreindexWordSegmentsTest {
                 new EntryData(-0xF00BA3L, 0, 1L<<33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
         var iter = segments.iterator(1);
 
         List<TestSegmentData> expected = List.of(
@@ -72,7 +72,7 @@ class ReversePreindexWordSegmentsTest {
                 new EntryData(-0xF00BA3L, 0, 5, 5)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
         var iter = segments.iterator(1);
 
         List<TestSegmentData> expected = List.of(
@@ -94,7 +94,7 @@ class ReversePreindexWordSegmentsTest {
                 new EntryData(-0xF00BA3L, 0, 10, 40, -100, 33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
         var iter = segments.iterator(1);
 
         List<TestSegmentData> expected = List.of(
@@ -120,7 +120,7 @@ class ReversePreindexWordSegmentsTest {
                 new EntryData(0xF00BA4L, 0, 15, 30, -100, 33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
         var iter = segments.iterator(1);
 
         List<TestSegmentData> expected = List.of(
@@ -148,7 +148,7 @@ class ReversePreindexWordSegmentsTest {
         LongArray countsArray = LongArray.allocate(4);
         wordsArray.set(0, -1, -2, -3, -4);
         countsArray.set(0, 2, 1, 3, 5);
-        var segments = new ReversePreindexWordSegments(wordsArray, countsArray, null, null);
+        var segments = new FullPreindexWordSegments(wordsArray, countsArray, null, null);
 
         var ritr = segments.iterator(1);
         assertTrue(ritr.hasMorePositions());
@@ -196,7 +196,7 @@ class ReversePreindexWordSegmentsTest {
         LongArray wordsArray = LongArray.allocate(4);
         LongArray countsArray = LongArray.allocate(4);
         wordsArray.set(0, -1, -2, -3, -4);
-        var segments = new ReversePreindexWordSegments(wordsArray, countsArray, null, null);
+        var segments = new FullPreindexWordSegments(wordsArray, countsArray, null, null);
 
         var citr = segments.constructionIterator(1);
         assertEquals(-1, citr.wordId);

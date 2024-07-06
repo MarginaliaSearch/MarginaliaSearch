@@ -1,33 +1,33 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.prio;
 
 import nu.marginalia.array.LongArrayFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** This is a dehydrated version of a ReversePreIndex, that only
+/** This is a dehydrated version of a PrioPreIndex, that only
  * keeps references to its location on disk but does not hold associated
  * memory maps.
  */
-public record ReversePreindexReference(
+public record PrioPreindexReference(
         Path wordsFile,
         Path countsFile,
         Path documentsFile
 )
 {
-    public ReversePreindexReference(ReversePreindexWordSegments segments, ReversePreindexDocuments documents) {
+    public PrioPreindexReference(PrioPreindexWordSegments segments, PrioPreindexDocuments documents) {
         this(segments.wordsFile, segments.countsFile, documents.file);
     }
 
-    public ReversePreindex open() throws IOException {
-        return new ReversePreindex(
-            new ReversePreindexWordSegments(
+    public PrioPreindex open() throws IOException {
+        return new PrioPreindex(
+            new PrioPreindexWordSegments(
                     LongArrayFactory.mmapForModifyingShared(wordsFile),
                     LongArrayFactory.mmapForModifyingShared(countsFile),
                     wordsFile,
                     countsFile
             ),
-            new ReversePreindexDocuments(
+            new PrioPreindexDocuments(
                     LongArrayFactory.mmapForModifyingShared(documentsFile),
                     documentsFile
             )

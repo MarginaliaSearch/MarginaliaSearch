@@ -1,8 +1,11 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.prio;
 
 import lombok.SneakyThrows;
-import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.JournalReaderSource;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.IndexJournalFileNames;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,9 +13,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ReverseIndexConstructor {
+public class PrioIndexConstructor {
 
-    private static final Logger logger = LoggerFactory.getLogger(ReverseIndexConstructor.class);
+    private static final Logger logger = LoggerFactory.getLogger(PrioIndexConstructor.class);
 
     public enum CreateReverseIndexSteps {
         CONSTRUCT,
@@ -27,12 +30,12 @@ public class ReverseIndexConstructor {
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
-    public ReverseIndexConstructor(Path outputFileDocs,
-                                   Path outputFileWords,
-                                   Path outputFilePositions,
-                                   JournalReaderSource readerSource,
-                                   DocIdRewriter docIdRewriter,
-                                   Path tmpDir) {
+    public PrioIndexConstructor(Path outputFileDocs,
+                                Path outputFileWords,
+                                Path outputFilePositions,
+                                JournalReaderSource readerSource,
+                                DocIdRewriter docIdRewriter,
+                                Path tmpDir) {
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
         this.outputFilePositions = outputFilePositions;
@@ -77,20 +80,20 @@ public class ReverseIndexConstructor {
     }
 
     @SneakyThrows
-    private ReversePreindexReference construct(Path input, PositionsFileConstructor positionsFileConstructor) {
-        return ReversePreindex
+    private PrioPreindexReference construct(Path input, PositionsFileConstructor positionsFileConstructor) {
+        return PrioPreindex
                 .constructPreindex(readerSource.construct(input), positionsFileConstructor, docIdRewriter, tmpDir)
                 .closeToReference();
     }
 
     @SneakyThrows
-    private ReversePreindexReference merge(ReversePreindexReference leftR, ReversePreindexReference rightR) {
+    private PrioPreindexReference merge(PrioPreindexReference leftR, PrioPreindexReference rightR) {
 
         var left = leftR.open();
         var right = rightR.open();
 
         try {
-            return ReversePreindex.merge(tmpDir, left, right).closeToReference();
+            return PrioPreindex.merge(tmpDir, left, right).closeToReference();
         }
         finally {
             left.delete();
@@ -101,7 +104,7 @@ public class ReverseIndexConstructor {
     }
 
     @SneakyThrows
-    private void finalizeIndex(ReversePreindexReference finalPR) {
+    private void finalizeIndex(PrioPreindexReference finalPR) {
         var finalP = finalPR.open();
         finalP.finalizeIndex(outputFileDocs, outputFileWords);
         finalP.delete();

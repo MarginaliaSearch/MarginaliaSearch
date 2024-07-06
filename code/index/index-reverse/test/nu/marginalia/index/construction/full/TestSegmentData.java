@@ -1,4 +1,4 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.prio;
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
@@ -14,17 +14,17 @@ import java.nio.file.Path;
 /** A pair of file-backed arrays of sorted wordIds
  * and the count of documents associated with each termId.
  */
-public class ReversePreindexWordSegments {
+public class PrioPreindexWordSegments {
     public final LongArray wordIds;
     public final LongArray counts;
 
     final Path wordsFile;
     final Path countsFile;
 
-    public ReversePreindexWordSegments(LongArray wordIds,
-                                       LongArray counts,
-                                       Path wordsFile,
-                                       Path countsFile)
+    public PrioPreindexWordSegments(LongArray wordIds,
+                                    LongArray counts,
+                                    Path wordsFile,
+                                    Path countsFile)
     {
         assert wordIds.size() == counts.size();
 
@@ -51,9 +51,9 @@ public class ReversePreindexWordSegments {
         return ret;
     }
 
-    public static ReversePreindexWordSegments construct(IndexJournalReader reader,
-                                                        Path wordIdsFile,
-                                                        Path countsFile)
+    public static PrioPreindexWordSegments construct(IndexJournalReader reader,
+                                                     Path wordIdsFile,
+                                                     Path countsFile)
     throws IOException
     {
         Long2IntOpenHashMap countsMap = new Long2IntOpenHashMap(100_000, 0.75f);
@@ -79,7 +79,7 @@ public class ReversePreindexWordSegments {
             counts.set(i, countsMap.get(words.get(i)));
         }
 
-        return new ReversePreindexWordSegments(words, counts, wordIdsFile, countsFile);
+        return new PrioPreindexWordSegments(words, counts, wordIdsFile, countsFile);
     }
 
     public SegmentIterator iterator(int recordSize) {

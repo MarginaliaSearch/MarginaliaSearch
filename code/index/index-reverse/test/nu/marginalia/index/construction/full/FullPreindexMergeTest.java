@@ -1,6 +1,8 @@
 
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
+import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,10 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static nu.marginalia.index.construction.TestJournalFactory.*;
+import static nu.marginalia.index.construction.full.TestJournalFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ReversePreindexMergeTest {
+class FullPreindexMergeTest {
     TestJournalFactory journalFactory;
     Path countsFile;
     Path wordsIdFile;
@@ -46,19 +48,19 @@ class ReversePreindexMergeTest {
         Files.delete(tempDir);
     }
 
-    public ReversePreindex runMergeScenario(
+    public FullPreindex runMergeScenario(
             List<EntryDataWithWordMeta> leftData,
             List<EntryDataWithWordMeta> rightData
     ) throws IOException {
         var reader1 = journalFactory.createReader(leftData.toArray(EntryDataWithWordMeta[]::new));
         var reader2 = journalFactory.createReader(rightData.toArray(EntryDataWithWordMeta[]::new));
 
-        var left = ReversePreindex.constructPreindex(reader1, new PositionsFileConstructor(positionsFile), DocIdRewriter.identity(), tempDir);
-        var right = ReversePreindex.constructPreindex(reader2, new PositionsFileConstructor(positionsFile), DocIdRewriter.identity(), tempDir);
-        return ReversePreindex.merge(tempDir, left, right);
+        var left = FullPreindex.constructPreindex(reader1, new PositionsFileConstructor(positionsFile), DocIdRewriter.identity(), tempDir);
+        var right = FullPreindex.constructPreindex(reader2, new PositionsFileConstructor(positionsFile), DocIdRewriter.identity(), tempDir);
+        return FullPreindex.merge(tempDir, left, right);
     }
 
-    private List<TestSegmentData> getData(ReversePreindex merged) {
+    private List<TestSegmentData> getData(FullPreindex merged) {
         var iter = merged.segments.iterator(2);
         List<TestSegmentData> actual = new ArrayList<>();
         while (iter.next()) {

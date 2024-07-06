@@ -4,9 +4,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
-import nu.marginalia.index.construction.ReversePreindex;
-import nu.marginalia.index.construction.TestJournalFactory;
-import nu.marginalia.index.construction.TestJournalFactory.EntryDataWithWordMeta;
+import nu.marginalia.index.construction.full.FullPreindex;
+import nu.marginalia.index.construction.full.TestJournalFactory;
+import nu.marginalia.index.construction.full.TestJournalFactory.EntryDataWithWordMeta;
 import nu.marginalia.index.positions.PositionsFileReader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nu.marginalia.index.construction.TestJournalFactory.wm;
+import static nu.marginalia.index.construction.full.TestJournalFactory.wm;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReverseIndexReaderTest {
@@ -99,7 +99,7 @@ class ReverseIndexReaderTest {
         Path wordsFile = tempDir.resolve("words.dat");
 
         try (var positionsFileConstructor = new PositionsFileConstructor(posFile)) {
-            var preindex = ReversePreindex.constructPreindex(reader,
+            var preindex = FullPreindex.constructPreindex(reader,
                     positionsFileConstructor,
                     DocIdRewriter.identity(), tempDir);
             preindex.finalizeIndex(docsFile, wordsFile);

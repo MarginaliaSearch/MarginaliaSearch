@@ -14,7 +14,7 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.ReverseIndexConstructor;
+import nu.marginalia.index.construction.full.FullIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -291,7 +291,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new ReverseIndexConstructor(
+        var constructor = new FullIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
@@ -313,7 +313,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new ReverseIndexConstructor(
+        var constructor = new FullIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,

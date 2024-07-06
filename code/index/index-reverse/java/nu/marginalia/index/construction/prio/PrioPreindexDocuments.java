@@ -1,8 +1,10 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.prio;
 
 import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.rwf.RandomFileAssembler;
 import org.slf4j.Logger;
@@ -20,35 +22,35 @@ import java.util.concurrent.TimeUnit;
 /** A LongArray with document data, segmented according to
  * the associated ReversePreindexWordSegments data
  */
-public class ReversePreindexDocuments {
+public class PrioPreindexDocuments {
     public final LongArray documents;
 
     private static PositionsFileConstructor positionsFileConstructor;
     private static final int RECORD_SIZE_LONGS = 2;
-    private static final Logger logger = LoggerFactory.getLogger(ReversePreindexDocuments.class);
+    private static final Logger logger = LoggerFactory.getLogger(PrioPreindexDocuments.class);
 
     public final Path file;
 
-    public ReversePreindexDocuments(LongArray documents, Path file) {
+    public PrioPreindexDocuments(LongArray documents, Path file) {
         this.documents = documents;
         this.file = file;
     }
 
-    public static ReversePreindexDocuments construct(
+    public static PrioPreindexDocuments construct(
             Path docsFile,
             Path workDir,
             IndexJournalReader reader,
             DocIdRewriter docIdRewriter,
             PositionsFileConstructor positionsFileConstructor,
-            ReversePreindexWordSegments segments) throws IOException {
-        ReversePreindexDocuments.positionsFileConstructor = positionsFileConstructor;
+            PrioPreindexWordSegments segments) throws IOException {
+        PrioPreindexDocuments.positionsFileConstructor = positionsFileConstructor;
 
         createUnsortedDocsFile(docsFile, workDir, reader, segments, docIdRewriter);
 
         LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
         sortDocsFile(docsFileMap, segments);
 
-        return new ReversePreindexDocuments(docsFileMap, docsFile);
+        return new PrioPreindexDocuments(docsFileMap, docsFile);
     }
 
     public FileChannel createDocumentsFileChannel() throws IOException {
@@ -67,7 +69,7 @@ public class ReversePreindexDocuments {
     private static void createUnsortedDocsFile(Path docsFile,
                                                Path workDir,
                                                IndexJournalReader reader,
-                                               ReversePreindexWordSegments segments,
+                                               PrioPreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
@@ -99,7 +101,7 @@ public class ReversePreindexDocuments {
     }
 
     @SneakyThrows
-    private static void sortDocsFile(LongArray docsFileMap, ReversePreindexWordSegments segments) throws IOException {
+    private static void sortDocsFile(LongArray docsFileMap, PrioPreindexWordSegments segments) throws IOException {
 
         var iter = segments.iterator(RECORD_SIZE_LONGS);
 

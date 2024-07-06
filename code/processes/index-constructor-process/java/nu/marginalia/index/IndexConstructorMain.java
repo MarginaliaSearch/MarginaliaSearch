@@ -6,10 +6,11 @@ import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.index.construction.ReverseIndexConstructor;
+import nu.marginalia.index.construction.full.FullIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
@@ -117,7 +118,7 @@ public class IndexConstructorMain extends ProcessMainClass {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new ReverseIndexConstructor(
+        var constructor = new FullIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,
@@ -142,7 +143,7 @@ public class IndexConstructorMain extends ProcessMainClass {
         // important to the document.  This filter will act on the encoded {@see WordMetadata}
         LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
 
-        var constructor = new ReverseIndexConstructor(
+        var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,

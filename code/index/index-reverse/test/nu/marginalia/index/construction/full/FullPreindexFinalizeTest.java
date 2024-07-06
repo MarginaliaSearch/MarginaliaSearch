@@ -1,8 +1,10 @@
 
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.model.BTreeHeader;
+import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,11 +14,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static nu.marginalia.index.construction.TestJournalFactory.*;
+import static nu.marginalia.index.construction.full.TestJournalFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ReversePreindexFinalizeTest {
+class FullPreindexFinalizeTest {
     TestJournalFactory journalFactory;
     Path positionsFile;
     Path countsFile;
@@ -52,7 +54,7 @@ class ReversePreindexFinalizeTest {
     @Test
     public void testFinalizeSimple() throws IOException {
         var reader = journalFactory.createReader(new EntryDataWithWordMeta(100, 101, wm(50, 51)));
-        var preindex = ReversePreindex.constructPreindex(reader,
+        var preindex = FullPreindex.constructPreindex(reader,
                 new PositionsFileConstructor(positionsFile),
                 DocIdRewriter.identity(), tempDir);
 
@@ -90,7 +92,7 @@ class ReversePreindexFinalizeTest {
                 new EntryDataWithWordMeta(101, 101, wm(51, 52))
                 );
 
-        var preindex = ReversePreindex.constructPreindex(reader,
+        var preindex = FullPreindex.constructPreindex(reader,
                 new PositionsFileConstructor(positionsFile),
                 DocIdRewriter.identity(), tempDir);
 

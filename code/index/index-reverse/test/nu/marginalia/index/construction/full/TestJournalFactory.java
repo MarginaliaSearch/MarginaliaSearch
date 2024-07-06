@@ -1,4 +1,4 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;

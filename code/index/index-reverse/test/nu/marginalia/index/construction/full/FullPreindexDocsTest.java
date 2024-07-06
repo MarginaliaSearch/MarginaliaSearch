@@ -1,5 +1,7 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
+import nu.marginalia.index.construction.DocIdRewriter;
+import nu.marginalia.index.construction.PositionsFileConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,10 +13,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static nu.marginalia.index.construction.TestJournalFactory.EntryData;
+import static nu.marginalia.index.construction.full.TestJournalFactory.EntryData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ReversePreindexDocsTest {
+class FullPreindexDocsTest {
     Path countsFile;
     Path wordsIdFile;
     Path docsFile;
@@ -57,8 +59,8 @@ class ReversePreindexDocsTest {
                 new EntryData(-0xF00BA3L, 0, 10, 40, -100, 33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), new PositionsFileConstructor(positionsFile), segments);
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), new PositionsFileConstructor(positionsFile), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(-100, 0, 2, new long[] { -0xF00BA3L, 0 }),
@@ -86,8 +88,8 @@ class ReversePreindexDocsTest {
                 new EntryData(-0xF00BA3L, 0, 4, 4)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(),
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(),
                 new PositionsFileConstructor(positionsFile),
                 segments);
 
@@ -115,8 +117,8 @@ class ReversePreindexDocsTest {
                 new EntryData(0xF00BA4L, 0, 15, 30, -100, 33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(),
+        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(),
                 new PositionsFileConstructor(positionsFile),
                 segments);
 

@@ -1,4 +1,4 @@
-package nu.marginalia.index.construction;
+package nu.marginalia.index.construction.full;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.LongArrayTransformations;
@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /** Constructs the BTrees in a reverse index */
-public class ReverseIndexBTreeTransformer implements LongArrayTransformations.LongIOTransformer {
+public class FullIndexBTreeTransformer implements LongArrayTransformations.LongIOTransformer {
     private final BTreeWriter writer;
     private final FileChannel intermediateChannel;
 
@@ -18,10 +18,10 @@ public class ReverseIndexBTreeTransformer implements LongArrayTransformations.Lo
     long start = 0;
     long writeOffset = 0;
 
-    public ReverseIndexBTreeTransformer(LongArray urlsFileMap,
-                                        int entrySize,
-                                        BTreeContext bTreeContext,
-                                        FileChannel intermediateChannel) {
+    public FullIndexBTreeTransformer(LongArray urlsFileMap,
+                                     int entrySize,
+                                     BTreeContext bTreeContext,
+                                     FileChannel intermediateChannel) {
         this.writer = new BTreeWriter(urlsFileMap, bTreeContext);
         this.entrySize = entrySize;
         this.intermediateChannel = intermediateChannel;
