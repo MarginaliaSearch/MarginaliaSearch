@@ -35,9 +35,9 @@ class PositionsFileReaderTest {
         ByteBuffer workArea = ByteBuffer.allocate(8192);
         long key1, key2, key3;
         try (PositionsFileConstructor constructor = new PositionsFileConstructor(file)) {
-            key1 = constructor.add((byte) 43, GammaCodedSequence.generate(workArea, 1, 2, 3));
-            key2 = constructor.add((byte) 51, GammaCodedSequence.generate(workArea, 2, 3, 5, 1000, 5000, 20241));
-            key3 = constructor.add((byte) 61, GammaCodedSequence.generate(workArea, 3, 5, 7));
+            key1 = constructor.add((byte) 43, GammaCodedSequence.generate(workArea, 1, 2, 3).buffer());
+            key2 = constructor.add((byte) 51, GammaCodedSequence.generate(workArea, 2, 3, 5, 1000, 5000, 20241).buffer());
+            key3 = constructor.add((byte) 61, GammaCodedSequence.generate(workArea, 3, 5, 7).buffer());
         }
 
         System.out.println("key1: " + Long.toHexString(key1));
