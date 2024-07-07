@@ -265,7 +265,7 @@ public class PrioPreindex {
                                       LongArray dest,
                                       PrioPreindexWordSegments.SegmentConstructionIterator destIter)
     {
-        long segSize = mergeArrays2(dest,
+        long segSize = mergeArrays(dest,
                 left.documents,
                 right.documents,
                 destIter.startOffset,
