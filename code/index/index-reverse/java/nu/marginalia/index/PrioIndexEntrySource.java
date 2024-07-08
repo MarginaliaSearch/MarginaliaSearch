@@ -42,6 +42,7 @@ public class PrioIndexEntrySource implements EntrySource {
     @SneakyThrows
     @SuppressWarnings("preview")
     public void read(LongQueryBuffer buffer) {
+        buffer.reset();
         buffer.end = min(buffer.end, endOffsetL - posL);
 
         var byteBuffer = buffer.data.getMemorySegment().asByteBuffer();

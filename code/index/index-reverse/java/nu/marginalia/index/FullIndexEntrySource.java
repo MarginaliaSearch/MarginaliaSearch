@@ -36,6 +36,7 @@ public class FullIndexEntrySource implements EntrySource {
 
     @Override
     public void read(LongQueryBuffer buffer) {
+        buffer.reset();
         buffer.end = min(buffer.end, endOffset - pos);
         reader.readData(buffer.data, buffer.end, pos);
         pos += buffer.end;
