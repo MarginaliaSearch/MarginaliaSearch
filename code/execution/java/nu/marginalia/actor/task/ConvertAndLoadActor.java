@@ -146,7 +146,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
-                    yield new Error("Repartition failed");
+                    yield new Error("Forward index construction failed");
                 else
                     yield new ReindexFull();
             }
@@ -155,7 +155,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
-                    yield new Error("Repartition failed");
+                    yield new Error("Full index construction failed");
                 else
                     yield new ReindexPrio();
             }
@@ -164,7 +164,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
-                    yield new Error("Repartition failed");
+                    yield new Error("Prio index construction failed");
                 else
                     yield new SwitchIndex();
             }
