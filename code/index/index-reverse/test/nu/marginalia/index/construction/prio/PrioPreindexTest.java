@@ -19,7 +19,7 @@ import static nu.marginalia.index.construction.full.TestJournalFactory.wm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FullPreindexTest {
+class PrioPreindexTest {
     Path countsFile;
     Path wordsIdFile;
     Path docsFile;
@@ -82,5 +82,44 @@ class FullPreindexTest {
         assertEquals(2, lqb.size());
         assertEquals(100, lqb.copyData()[0]);
         assertEquals(104, lqb.copyData()[1]);
+    }
+
+
+    @Test
+    public void testFinalizeLargeData() throws IOException {
+        EntryDataWithWordMeta[] entries = new EntryDataWithWordMeta[10000];
+        for (int i = 0; i < 10000; i++) {
+            entries[i] = new EntryDataWithWordMeta(100 + i, 101, wm(50, 51));
+        }
+        var journalReader = journalFactory.createReader(entries);
+
+        var preindex = PrioPreindex.constructPreindex(journalReader, DocIdRewriter.identity(), tempDir);
+        preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
+        preindex.delete();
+
+        Path wordsFile = tempDir.resolve("words.dat");
+        Path docsFile =  tempDir.resolve("docs.dat");
+
+        assertTrue(Files.exists(wordsFile));
+        assertTrue(Files.exists(docsFile));
+
+        var indexReader = new PrioReverseIndexReader("test", wordsFile, docsFile);
+
+        var entrySource = indexReader.documents(50);
+        var lqb = new LongQueryBuffer(32);
+        entrySource.read(lqb);
+
+        assertEquals(32, lqb.size());
+        var dataArray = lqb.copyData();
+        for (int i = 0; i < 32; i++) {
+            assertEquals(100 + i, dataArray[i]);
+        }
+
+        entrySource.read(lqb);
+        assertEquals(32, lqb.size());
+        dataArray = lqb.copyData();
+        for (int i = 0; i < 32; i++) {
+            assertEquals(100 + 32 + i, dataArray[i]);
+        }
     }
 }

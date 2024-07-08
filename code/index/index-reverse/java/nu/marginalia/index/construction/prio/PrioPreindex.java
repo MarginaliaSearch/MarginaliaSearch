@@ -6,7 +6,6 @@ import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.ReverseIndexParameters;
 import nu.marginalia.index.construction.CountToOffsetTransformer;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.IndexSizeEstimator;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,17 +79,12 @@ public class PrioPreindex {
 
         // Estimate the size of the docs index data
         offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(1));
-        IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.prioDocsBTreeContext, 1);
-        offsets.fold(0, 0, offsets.size(), sizeEstimator);
 
         // Write the docs file
-        LongArray finalDocs = LongArrayFactory.mmapForWritingConfined(outputFileDocs, sizeEstimator.size);
-        try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
-            offsets.transformEachIO(0, offsets.size(),
-                    new PrioIndexBTreeTransformer(finalDocs, 1,
-                            ReverseIndexParameters.prioDocsBTreeContext,
-                            intermediateDocChannel));
-            intermediateDocChannel.force(false);
+        try (var intermediateDocChannel = documents.createDocumentsFileChannel();
+             var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+        ) {
+            offsets.transformEachIO(0, offsets.size(), new PrioDocIdsTransformer(destFileChannel, intermediateDocChannel));
         }
 
         LongArray wordIds = segments.wordIds;
@@ -115,11 +109,8 @@ public class PrioPreindex {
             }
         });
 
-        finalDocs.force();
-        finalDocs.close();
         wordsArray.force();
         wordsArray.close();
-
     }
 
     /** Delete all files associated with this pre-index */

@@ -101,7 +101,7 @@ public class FullReverseIndexReader {
         if (offset < 0) // No documents
             return new EmptyEntrySource();
 
-        return new ReverseIndexEntrySource(name, createReaderNew(offset), 2, termId);
+        return new FullIndexEntrySource(name, createReaderNew(offset), 2, termId);
     }
 
     /** Create a filter step requiring the specified termId to exist in the documents */

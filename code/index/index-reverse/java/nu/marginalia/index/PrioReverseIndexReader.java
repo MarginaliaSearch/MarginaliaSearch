@@ -9,16 +9,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class PrioReverseIndexReader {
     private final LongArray words;
-    private final LongArray documents;
     private final long wordsDataOffset;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final BTreeReader wordsBTreeReader;
     private final String name;
+
+    private final FileChannel documentsChannel;
 
     public PrioReverseIndexReader(String name,
                                   Path words,
@@ -27,8 +30,8 @@ public class PrioReverseIndexReader {
 
         if (!Files.exists(words) || !Files.exists(documents)) {
             this.words = null;
-            this.documents = null;
             this.wordsBTreeReader = null;
+            this.documentsChannel = null;
             this.wordsDataOffset = -1;
             return;
         }
@@ -36,11 +39,11 @@ public class PrioReverseIndexReader {
         logger.info("Switching reverse index");
 
         this.words = LongArrayFactory.mmapForReadingShared(words);
-        this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
 
+        documentsChannel = (FileChannel) Files.newByteChannel(documents);
     }
 
     /** Calculate the offset of the word in the documents.
@@ -67,30 +70,49 @@ public class PrioReverseIndexReader {
         if (offset < 0) // No documents
             return new EmptyEntrySource();
 
-        return new ReverseIndexEntrySource(name, createReaderNew(offset), 1, termId);
+        // Read the number of documents
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        try {
+            documentsChannel.read(buffer, offset);
+        }
+        catch (IOException e) {
+            logger.error("Failed to read documents channel", e);
+            return new EmptyEntrySource();
+        }
+
+        return new PrioIndexEntrySource(name,
+                (int) buffer.getLong(0),
+                documentsChannel,
+                offset + 8,
+                termId);
     }
 
     /** Return the number of documents with the termId in the index */
     public int numDocuments(long termId) {
+
         long offset = wordOffset(termId);
 
-        if (offset < 0)
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        try {
+            documentsChannel.read(buffer, offset);
+        }
+        catch (IOException e) {
+            logger.error("Failed to read documents channel", e);
             return 0;
+        }
 
-        return createReaderNew(offset).numEntries();
+        return (int) buffer.getLong(0);
+
     }
 
-    /** Create a BTreeReader for the document offset associated with a termId */
-    private BTreeReader createReaderNew(long offset) {
-        return new BTreeReader(
-                documents,
-                ReverseIndexParameters.prioDocsBTreeContext,
-                offset);
-    }
 
     public void close() {
-        if (documents != null)
-            documents.close();
+        try {
+            documentsChannel.close();
+        }
+        catch (IOException e) {
+            logger.error("Failed to close documents channel", e);
+        }
 
         if (words != null)
             words.close();
