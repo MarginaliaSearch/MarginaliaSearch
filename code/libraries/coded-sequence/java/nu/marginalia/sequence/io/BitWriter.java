@@ -72,40 +72,42 @@ public class BitWriter {
         }
     }
 
-    /** Write the provided value in a gamma-coded format,
+    /** Write the provided value in a Elias gamma-coded format,
      * e.g. by first finding the number of significant bits,
      * then writing that many zeroes, then the bits themselves
      */
-    public void putGammaCoded(int value) {
-        int bits = 1 + Integer.numberOfTrailingZeros(Integer.highestOneBit(value));
+    public void putGamma(int value) {
+        int bits = Integer.numberOfTrailingZeros(Integer.highestOneBit(value));
 
         put(0, bits);
+        put(value, 1 + bits);
+    }
+
+    /** Write the provided value in an Elias delta-coded format,
+     * e.g. by first finding the number of significant bits,
+     * then writing that many zeroes, then the bits themselves
+     */
+    public void putDelta(int value) {
+        int bits = 1 + Integer.numberOfTrailingZeros(Integer.highestOneBit(value));
+
+        putGamma(bits + 1);
         put(value, bits);
     }
 
+    /** Flush the changes to the writer's internal buffer and
+     * return the buffer, ready for reading.  If the internal buffer
+     * is intended to be re-used, the returned value should be copied
+     * to a new buffer by the caller.
+     */
     public ByteBuffer finish() {
         finishLastByte();
 
-        var outBuffer = ByteBuffer.allocate(totalMeaningfulBytes);
+        underlying.position(0);
+        underlying.limit(totalMeaningfulBytes);
 
-        outBuffer.put(0, underlying, 0, totalMeaningfulBytes);
-
-        outBuffer.position(0);
-        outBuffer.limit(totalMeaningfulBytes);
-
-        return outBuffer;
+        return underlying;
     }
 
-    public ByteBuffer finish(ByteBuffer outBuffer) {
-        finishLastByte();
-
-        outBuffer.put(underlying.array(), 0, totalMeaningfulBytes);
-
-        outBuffer.position(0);
-        outBuffer.limit(totalMeaningfulBytes);
-
-        return outBuffer;
-    }
 
     private void finishLastByte() {
         // It's possible we have a few bits left over that have yet to be written

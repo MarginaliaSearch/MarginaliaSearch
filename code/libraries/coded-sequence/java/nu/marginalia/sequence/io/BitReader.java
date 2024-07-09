@@ -20,10 +20,6 @@ public class BitReader {
         this.currentValue = 0;
     }
 
-    public long getCurrentValue() {
-        return currentValue;
-    }
-
     /** Read the next bit from the buffer */
     public boolean getBit() {
         if (bitPosition <= 0) {
@@ -100,6 +96,16 @@ public class BitReader {
         } while (bitPosition <= 0);
 
         return result;
+    }
+
+    public int getGamma() {
+        int bits = takeWhileZero();
+        return get(bits);
+    }
+
+    public int getDelta() {
+        int bits = getGamma() - 1;
+        return get(bits);
     }
 
     public boolean hasMore() {

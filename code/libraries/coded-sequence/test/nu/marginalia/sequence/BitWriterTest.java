@@ -31,7 +31,7 @@ class BitWriterTest {
         byte expected = (byte) 0b0111_1110;
 
         assertEquals(expected, actual);
-        assertEquals(1, out.capacity());
+        assertEquals(1, out.limit());
     }
 
     @Test
@@ -53,7 +53,7 @@ class BitWriterTest {
         byte expected = (byte) 0b1011_1110;
 
         assertEquals(expected, actual, STR."was \{Integer.toBinaryString(actual & 0xFF)}");
-        assertEquals(1, out.capacity());
+        assertEquals(1, out.limit());
     }
 
 
@@ -77,7 +77,7 @@ class BitWriterTest {
 
         var out = writer.finish();
 
-        assertEquals(2, out.capacity());
+        assertEquals(2, out.limit());
 
         byte actual1 = out.get(0);
         byte actual2 = out.get(1);
@@ -112,7 +112,7 @@ class BitWriterTest {
 
         var out = writer.finish();
 
-        assertEquals(5, out.capacity());
+        assertEquals(5, out.limit());
 
         for (int i = 0; i < 4; i++) {
             byte actual1 = out.get(i);
@@ -135,7 +135,7 @@ class BitWriterTest {
 
         writer.put(1, 1);
         var ret = writer.finish();
-        assertEquals(1, ret.capacity());
+        assertEquals(1, ret.limit());
         assertEquals((byte)0b1000_0000, ret.get(0));
     }
 
@@ -146,7 +146,7 @@ class BitWriterTest {
 
         writer.put(1, 4);
         var ret = writer.finish();
-        assertEquals(1, ret.capacity());
+        assertEquals(1, ret.limit());
         assertEquals((byte)0b0001_0000, ret.get(0));
     }
 
@@ -157,7 +157,7 @@ class BitWriterTest {
 
         writer.put(3, 8);
         var ret = writer.finish();
-        assertEquals(1, ret.capacity());
+        assertEquals(1, ret.limit());
         assertEquals((byte)0b0000_0011, ret.get(0));
     }
 
@@ -168,7 +168,7 @@ class BitWriterTest {
 
         writer.put(~0, 8);
         var ret = writer.finish();
-        assertEquals(1, ret.capacity());
+        assertEquals(1, ret.limit());
         assertEquals((byte)0b1111_1111, ret.get(0));
     }
 
@@ -184,7 +184,7 @@ class BitWriterTest {
 
         var ret = writer.finish();
 
-        assertEquals(4, ret.capacity());
+        assertEquals(4, ret.limit());
         assertEquals((byte)0b1111_1111, ret.get(0));
         assertEquals((byte)0, ret.get(1));
         assertEquals((byte)0b1111_1111, ret.get(2));
@@ -202,7 +202,7 @@ class BitWriterTest {
 
         var ret = writer.finish();
 
-        assertEquals(6, ret.capacity());
+        assertEquals(6, ret.limit());
         assertEquals((byte)0b1111_1111, ret.get(0));
         assertEquals((byte)0b1111_1111, ret.get(1));
         assertEquals((byte)0b1111_1111, ret.get(2));
@@ -223,7 +223,7 @@ class BitWriterTest {
 
         var ret = writer.finish();
 
-        assertEquals(6, ret.capacity());
+        assertEquals(6, ret.limit());
         assertEquals((byte)0b0011_1111, ret.get(0));
         assertEquals((byte)0b1111_1111, ret.get(1));
         assertEquals((byte)0b1111_1111, ret.get(2));
@@ -259,7 +259,7 @@ class BitWriterTest {
 
         var ret = writer.finish();
 
-        assertEquals(1, ret.capacity());
+        assertEquals(1, ret.limit());
         assertEquals(0, ret.get(0));
 
         var reader = new BitReader(ret);

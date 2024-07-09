@@ -24,7 +24,7 @@ public class EliasGammaCodec implements IntIterator {
         reader = new BitReader(buffer);
 
         last = zero;
-        int bits = reader.takeWhileZero();
+        int bits = 1 + reader.takeWhileZero();
 
         if (!reader.hasMore()) {
             rem = 0;
@@ -37,7 +37,7 @@ public class EliasGammaCodec implements IntIterator {
     public static int readCount(ByteBuffer buffer) {
         var reader = new BitReader(buffer);
 
-        int bits = reader.takeWhileZero();
+        int bits = 1 + reader.takeWhileZero();
         if (!reader.hasMore()) {
             return 0;
         }
@@ -64,7 +64,7 @@ public class EliasGammaCodec implements IntIterator {
 
         var writer = new BitWriter(workArea);
 
-        writer.putGammaCoded(sequence.size());
+        writer.putGamma(sequence.size());
 
         int last = 0;
 
@@ -76,10 +76,23 @@ public class EliasGammaCodec implements IntIterator {
             // can't encode zeroes
             assert delta > 0 : "Sequence must be strictly increasing and may not contain zeroes or negative values";
 
-            writer.putGammaCoded(delta);
+            writer.putGamma(delta);
         }
 
-        return writer.finish();
+        // Finish the writer and return the work buffer, positioned and limited around
+        // the relevant data
+
+        var buffer = writer.finish();
+
+        // Copy the contents of the writer's internal buffer to a new ByteBuffer that is correctly sized,
+        // this lets us re-use the internal buffer for subsequent calls to encode without worrying about
+        // accidentally overwriting the previous data.
+
+        var outBuffer = ByteBuffer.allocate(buffer.limit());
+        outBuffer.put(buffer);
+        outBuffer.flip();
+
+        return outBuffer;
     }
 
     /** Encode a sequence of integers into a ByteBuffer using the Elias Gamma code.
@@ -95,7 +108,7 @@ public class EliasGammaCodec implements IntIterator {
         if (next > 0) return true;
         if (!reader.hasMore() || --rem < 0) return false;
 
-        int bits = reader.takeWhileZero();
+        int bits = 1 + reader.takeWhileZero();
 
         if (!reader.hasMore()) return false;
         
