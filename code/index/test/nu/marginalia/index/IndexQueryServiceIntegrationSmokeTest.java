@@ -7,6 +7,7 @@ import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
@@ -313,7 +314,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor(
+        var constructor = new PrioIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,

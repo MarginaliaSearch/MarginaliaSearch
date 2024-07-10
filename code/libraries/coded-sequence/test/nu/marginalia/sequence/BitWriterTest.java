@@ -133,7 +133,7 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(1, 1);
+        writer.putBits(1, 1);
         var ret = writer.finish();
         assertEquals(1, ret.limit());
         assertEquals((byte)0b1000_0000, ret.get(0));
@@ -144,7 +144,7 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(1, 4);
+        writer.putBits(1, 4);
         var ret = writer.finish();
         assertEquals(1, ret.limit());
         assertEquals((byte)0b0001_0000, ret.get(0));
@@ -155,7 +155,7 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(3, 8);
+        writer.putBits(3, 8);
         var ret = writer.finish();
         assertEquals(1, ret.limit());
         assertEquals((byte)0b0000_0011, ret.get(0));
@@ -166,7 +166,7 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(~0, 8);
+        writer.putBits(~0, 8);
         var ret = writer.finish();
         assertEquals(1, ret.limit());
         assertEquals((byte)0b1111_1111, ret.get(0));
@@ -177,10 +177,10 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(~0, 8);
-        writer.put(0, 8);
-        writer.put(~0, 8);
-        writer.put(1, 1);
+        writer.putBits(~0, 8);
+        writer.putBits(0, 8);
+        writer.putBits(~0, 8);
+        writer.putBits(1, 1);
 
         var ret = writer.finish();
 
@@ -196,9 +196,9 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(~0, 24);
-        writer.put(0, 16);
-        writer.put(1, 1);
+        writer.putBits(~0, 24);
+        writer.putBits(0, 16);
+        writer.putBits(1, 1);
 
         var ret = writer.finish();
 
@@ -216,10 +216,10 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(0, 2);
-        writer.put(~0, 24);
-        writer.put(0, 16);
-        writer.put(1, 1);
+        writer.putBits(0, 2);
+        writer.putBits(~0, 24);
+        writer.putBits(0, 16);
+        writer.putBits(1, 1);
 
         var ret = writer.finish();
 
@@ -237,8 +237,8 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(1, 6);
-        writer.put(702, 11);
+        writer.putBits(1, 6);
+        writer.putBits(702, 11);
 
         var ret = writer.finish();
 
@@ -254,8 +254,8 @@ class BitWriterTest {
         var buffer = ByteBuffer.allocate(1024);
         var writer = new BitWriter(buffer);
 
-        writer.put(0, 6);
-        writer.put(0, 2);
+        writer.putBits(0, 6);
+        writer.putBits(0, 2);
 
         var ret = writer.finish();
 
@@ -281,8 +281,8 @@ class BitWriterTest {
             int a = r.nextInt(0, 1<<aw - 1);
             int b = r.nextInt(0, 1<<bw - 1);
             System.out.println(a + "/" + aw + "," + b + "/" + bw);
-            writer.put(a, aw);
-            writer.put(b, bw);
+            writer.putBits(a, aw);
+            writer.putBits(b, bw);
             var ret = writer.finish();
 
             var reader = new BitReader(ret);
@@ -293,5 +293,35 @@ class BitWriterTest {
             assertEquals(b, rb);
             System.out.println(a + "," + b);
         }
+    }
+
+    @Test
+    void testGamma() {
+        var buffer = ByteBuffer.allocate(8192);
+        var writer = new BitWriter(buffer);
+        writer.putGamma(1);
+        writer.putGamma(2);
+        writer.putGamma(30);
+        var ret = writer.finish();
+
+        var reader = new BitReader(ret);
+        assertEquals(1, reader.getGamma());
+        assertEquals(2, reader.getGamma());
+        assertEquals(30, reader.getGamma());
+    }
+
+    @Test
+    void testDelta() {
+        var buffer = ByteBuffer.allocate(8192);
+        var writer = new BitWriter(buffer);
+        writer.putDelta(1);
+        writer.putDelta(2);
+        writer.putDelta(30);
+        var ret = writer.finish();
+
+        var reader = new BitReader(ret);
+        assertEquals(1, reader.getDelta());
+        assertEquals(2, reader.getDelta());
+        assertEquals(30, reader.getDelta());
     }
 }

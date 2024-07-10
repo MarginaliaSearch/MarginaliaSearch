@@ -5,7 +5,6 @@ import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.sequence.EliasGammaCodec;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;

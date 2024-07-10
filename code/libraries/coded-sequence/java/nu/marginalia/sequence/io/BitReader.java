@@ -100,11 +100,11 @@ public class BitReader {
 
     public int getGamma() {
         int bits = takeWhileZero();
-        return get(bits);
+        return get(bits + 1);
     }
 
     public int getDelta() {
-        int bits = getGamma() - 1;
+        int bits = getGamma();
         return get(bits);
     }
 

@@ -25,7 +25,7 @@ class BitReaderTest {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
         writer.putBit(true);
         writer.putBit(false);
-        writer.put(0, 32);
+        writer.putBits(0, 32);
         writer.putBit(true);
         writer.putBit(false);
         var buffer = writer.finish();
@@ -59,7 +59,7 @@ class BitReaderTest {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
         writer.putBit(true);
         writer.putBit(false);
-        writer.put(0, 32);
+        writer.putBits(0, 32);
         writer.putBit(true);
         writer.putBit(false);
         var buffer = writer.finish();
@@ -103,7 +103,7 @@ class BitReaderTest {
     @Test
     public void testTakeWhileZero() {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
-        writer.put(0, 4);
+        writer.putBits(0, 4);
         writer.putBit(true);
         var buffer = writer.finish();
 
@@ -116,7 +116,7 @@ class BitReaderTest {
     @Test
     public void testTakeWhileZeroAllZero() {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
-        writer.put(0, 8);
+        writer.putBits(0, 8);
         var buffer = writer.finish();
 
         var reader = new BitReader(buffer);
@@ -127,9 +127,9 @@ class BitReaderTest {
     @Test
     public void testTakeWhileZeroOverInt64() {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
-        writer.put(0, 32);
-        writer.put(0, 32);
-        writer.put(0, 2);
+        writer.putBits(0, 32);
+        writer.putBits(0, 32);
+        writer.putBits(0, 2);
         writer.putBit(true);
         var buffer = writer.finish();
 

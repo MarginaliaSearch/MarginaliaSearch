@@ -48,7 +48,7 @@ public class BitWriter {
     }
 
     /** Write the lowest width bits of the value to the buffer */
-    public void put(int value, int width) {
+    public void putBits(int value, int width) {
         assert width <= 32 : "Attempting to write more than 32 bits from a single integer";
 
         int rem = (64 - bitPosition);
@@ -72,15 +72,24 @@ public class BitWriter {
         }
     }
 
+    static int numberOfSignificantBits(int value) {
+        // we could also do 1 + Integer.numberOfTrailingZeros(Integer.highestOneBit(value))
+        // but it's doubtful it makes much of a difference either way
+
+        return Integer.SIZE - Integer.numberOfLeadingZeros(value);
+    }
+
     /** Write the provided value in a Elias gamma-coded format,
      * e.g. by first finding the number of significant bits,
      * then writing that many zeroes, then the bits themselves
      */
     public void putGamma(int value) {
-        int bits = Integer.numberOfTrailingZeros(Integer.highestOneBit(value));
+        assert value > 0 : "Attempting to write an Elias gamma coded value less than or equal to zero";
 
-        put(0, bits);
-        put(value, 1 + bits);
+        int bits = numberOfSignificantBits(value);
+
+        putBits(0, bits - 1);
+        putBits(value, bits);
     }
 
     /** Write the provided value in an Elias delta-coded format,
@@ -88,10 +97,12 @@ public class BitWriter {
      * then writing that many zeroes, then the bits themselves
      */
     public void putDelta(int value) {
-        int bits = 1 + Integer.numberOfTrailingZeros(Integer.highestOneBit(value));
+        assert value > 0 : "Attempting to write an Elias delta coded value less than or equal to zero";
 
-        putGamma(bits + 1);
-        put(value, bits);
+        int bits = numberOfSignificantBits(value);
+
+        putGamma(bits);
+        putBits(value, bits);
     }
 
     /** Flush the changes to the writer's internal buffer and

@@ -11,18 +11,18 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class EliasGammaCodecTest {
+class EliasGammaSequenceIteratorTest {
 
     ByteBuffer work = ByteBuffer.allocate(65536);
 
     @Test
     public void testCodec() {
-        var ret = EliasGammaCodec.encode(work, new int[] { 1, 3, 5, 16, 32, 64 });
+        var ret = GammaCodedSequence.encode(work, new int[] { 1, 3, 5, 16, 32, 64 });
 
         List<Integer> decoded = new ArrayList<>();
         List<Integer> expected = List.of(1, 3, 5, 16, 32, 64);
 
-        var sequence = EliasGammaCodec.decode(ret);
+        var sequence = new GammaCodedSequence.EliasGammaSequenceIterator(ret);
         while (sequence.hasNext()) {
             decoded.add(sequence.nextInt());
         }
@@ -32,19 +32,19 @@ class EliasGammaCodecTest {
 
     @Test
     public void valueCount() {
-        var ret = EliasGammaCodec.encode(work, new int[] { 1, 3, 5, 16, 32, 64 });
-        var count = EliasGammaCodec.readCount(ret);
+        var ret = GammaCodedSequence.encode(work, new int[] { 1, 3, 5, 16, 32, 64 });
+        var count = GammaCodedSequence.EliasGammaSequenceIterator.readCount(ret);
         assertEquals(6, count);
     }
 
     @Test
     public void testCodec2() {
-        var ret = EliasGammaCodec.encode(work, new int[] { 1, 256 });
+        var ret = GammaCodedSequence.encode(work, new int[] { 1, 256 });
 
         List<Integer> decoded = new ArrayList<>();
         List<Integer> expected = List.of(1, 256);
 
-        var sequence = EliasGammaCodec.decode(ret);
+        var sequence = new GammaCodedSequence.EliasGammaSequenceIterator(ret);
         while (sequence.hasNext()) {
             decoded.add(sequence.nextInt());
         }
@@ -61,13 +61,13 @@ class EliasGammaCodecTest {
             sequence[0] = 1;
             sequence[1] = 1 + r.nextInt(1, 512);
 
-            var ret = EliasGammaCodec.encode(work, sequence);
+            var ret = GammaCodedSequence.encode(work, sequence);
 
             List<Integer> decoded = new ArrayList<>();
             List<Integer> expected = IntStream.of(sequence).boxed().toList();
 
             try {
-                var codedData = EliasGammaCodec.decode(ret);
+                var codedData = new GammaCodedSequence.EliasGammaSequenceIterator(ret);
                 while (codedData.hasNext()) {
                     decoded.add(codedData.nextInt());
                 }
