@@ -3,6 +3,7 @@ package nu.marginalia.array.page;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /** A buffer for long values that can be used to filter and manipulate the data.
@@ -162,6 +163,11 @@ public class LongQueryBuffer {
         }
 
         finalizeFiltering();
+    }
+
+    @SuppressWarnings("preview")
+    public ByteBuffer asByteBuffer() {
+        return data.getMemorySegment().asByteBuffer();
     }
 
     public String toString() {

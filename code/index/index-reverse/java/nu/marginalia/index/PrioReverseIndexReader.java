@@ -70,20 +70,9 @@ public class PrioReverseIndexReader {
         if (offset < 0) // No documents
             return new EmptyEntrySource();
 
-        // Read the number of documents
-        ByteBuffer buffer = ByteBuffer.allocate(8);
-        try {
-            documentsChannel.read(buffer, offset);
-        }
-        catch (IOException e) {
-            logger.error("Failed to read documents channel", e);
-            return new EmptyEntrySource();
-        }
-
         return new PrioIndexEntrySource(name,
-                (int) buffer.getLong(0),
                 documentsChannel,
-                offset + 8,
+                offset,
                 termId);
     }
 
@@ -92,7 +81,7 @@ public class PrioReverseIndexReader {
 
         long offset = wordOffset(termId);
 
-        ByteBuffer buffer = ByteBuffer.allocate(8);
+        ByteBuffer buffer = ByteBuffer.allocate(4);
         try {
             documentsChannel.read(buffer, offset);
         }
@@ -101,7 +90,7 @@ public class PrioReverseIndexReader {
             return 0;
         }
 
-        return (int) buffer.getLong(0);
+        return buffer.getInt(0) & 0x3FFF_FFFF;
 
     }
 

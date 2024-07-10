@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static nu.marginalia.index.construction.full.TestJournalFactory.*;
@@ -60,7 +61,8 @@ class PrioPreindexTest {
     public void testFinalizeSimple() throws IOException {
         var journalReader = journalFactory.createReader(
                 new EntryDataWithWordMeta(100, 101, wm(50, 51)),
-                new EntryDataWithWordMeta(104, 101, wm(50, 52))
+                new EntryDataWithWordMeta(104, 101, wm(50, 52)),
+                new EntryDataWithWordMeta(106, 101, wm(50, 52))
         );
 
         var preindex = PrioPreindex.constructPreindex(journalReader, DocIdRewriter.identity(), tempDir);
@@ -79,9 +81,10 @@ class PrioPreindexTest {
         var lqb = new LongQueryBuffer(32);
         entrySource.read(lqb);
 
-        assertEquals(2, lqb.size());
+        assertEquals(3, lqb.size());
         assertEquals(100, lqb.copyData()[0]);
         assertEquals(104, lqb.copyData()[1]);
+        assertEquals(106, lqb.copyData()[2]);
     }
 
 

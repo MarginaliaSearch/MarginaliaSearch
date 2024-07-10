@@ -1,17 +1,26 @@
 package nu.marginalia.index.construction.prio;
 
 import nu.marginalia.array.algo.LongArrayTransformations;
+import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.sequence.io.BitWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 /** Constructs document ids list priority reverse index */
 public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTransformer {
+
+    private static final Logger logger = LoggerFactory.getLogger(PrioDocIdsTransformer.class);
+
     private final FileChannel writeChannel;
     private final FileChannel readChannel;
 
-    private final ByteBuffer buffer = ByteBuffer.allocate(8192);
+    private final ByteBuffer readBuffer = ByteBuffer.allocate(8192).order(ByteOrder.LITTLE_ENDIAN);
+    private final ByteBuffer writeBuffer = ByteBuffer.allocate(8192);
 
     long startL = 0;
     long writeOffsetB = 0;
@@ -33,25 +42,99 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
         }
 
         readChannel.position(startL * 8);
+        readBuffer.clear();
+        writeBuffer.clear();
 
-        buffer.clear();
-        buffer.putLong(sizeL);
+        int toBeRead = 8 * (sizeL);
 
-        int toBeWrittenB = 8 * (1 + sizeL);
+        var bitWriter = new BitWriter(writeBuffer);
+
+        int prevRank = -1;
+        int prevDomainId = -1;
+        int prevDocOrd = -1;
+        boolean wroteHeader = false;
+
         do {
-            buffer.limit(Math.min(buffer.capacity(), toBeWrittenB));
-            readChannel.read(buffer);
-            buffer.flip();
+            readBuffer.limit(Math.min(readBuffer.capacity(), toBeRead));
+            readChannel.read(readBuffer);
+            readBuffer.flip();
 
-            while (buffer.hasRemaining()) {
-                int written = writeChannel.write(buffer, writeOffsetB);
-                writeOffsetB += written;
-                toBeWrittenB -= written;
+            if (!wroteHeader) {
+                // write 11b header
+                bitWriter.putBits(3, 2);
+                // encode number of items
+                bitWriter.putBits(sizeL, 30);
+
+
+                long firstItem = readBuffer.getLong();
+
+                prevRank = UrlIdCodec.getRank(firstItem);
+                prevDomainId = UrlIdCodec.getDomainId(firstItem);
+                prevDocOrd = UrlIdCodec.getDocumentOrdinal(firstItem);
+
+                bitWriter.putBits(prevRank, 7);
+                bitWriter.putBits(prevDomainId, 31);
+                bitWriter.putBits(prevDocOrd, 26);
+
+                wroteHeader = true;
             }
 
-            buffer.clear();
-        } while (toBeWrittenB > 0);
+            while (readBuffer.hasRemaining()) {
+                long nextId = readBuffer.getLong();
 
+                // break down id components
+                int rank = UrlIdCodec.getRank(nextId);
+                int domainId = UrlIdCodec.getDomainId(nextId);
+                int docOrd = UrlIdCodec.getDocumentOrdinal(nextId);
+
+                // encode components
+                if (rank != prevRank) {
+                    bitWriter.putBits(0b10, 2);
+                    bitWriter.putGamma(rank - prevRank);
+                    bitWriter.putBits(domainId, 31);
+                    bitWriter.putBits(docOrd, 26);
+                }
+                else if (domainId != prevDomainId) {
+                    bitWriter.putBits(0b01, 2);
+                    bitWriter.putDelta(domainId - prevDomainId);
+                    bitWriter.putDelta(1 + docOrd);
+                }
+                else if (docOrd != prevDocOrd) {
+                    bitWriter.putBits(0b00, 2);
+                    bitWriter.putGamma(docOrd - prevDocOrd);
+                }
+                else {
+                    logger.warn("Unexpected duplicate document id: {}", nextId);
+                }
+
+                prevDocOrd = docOrd;
+                prevDomainId = domainId;
+                prevRank = rank;
+
+                if (writeBuffer.remaining() < 16) {
+                    writeBuffer.flip();
+                    int written = writeChannel.write(writeBuffer, writeOffsetB);
+                    writeOffsetB += written;
+                    writeBuffer.clear();
+                }
+            }
+
+            toBeRead -= readBuffer.limit();
+            readBuffer.clear();
+        } while (toBeRead > 0);
+
+        // write lingering data
+
+        // ensure any half-written data is flushed to the buffer
+        bitWriter.finishLastByte();
+
+        writeBuffer.flip();
+        while (writeBuffer.hasRemaining()) {
+            int written = writeChannel.write(writeBuffer, writeOffsetB);
+            writeOffsetB += written;
+        }
+
+        // update the start input pointer
         startL = endL;
         return startOffsetB;
     }

@@ -40,6 +40,14 @@ public class UrlIdCodec {
         return ((long) domainId << 26) | documentOrdinal;
     }
 
+    /** Encode a URL id with a ranking element */
+    public static long encodeId(int rank, int domainId, int documentOrdinal) {
+        domainId &= 0x7FFF_FFFF;
+        documentOrdinal &= 0x03FF_FFFF;
+        rank &= 0x3F;
+
+        return  ((long) rank << 57) | ((long) domainId << 26) | documentOrdinal;
+    }
     /** Add a ranking element to an existing combined URL id.
      *
      * @param rank [0,1] the importance of the domain, low is good

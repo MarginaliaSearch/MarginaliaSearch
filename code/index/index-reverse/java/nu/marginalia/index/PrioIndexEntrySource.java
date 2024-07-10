@@ -3,23 +3,32 @@ package nu.marginalia.index;
 import lombok.SneakyThrows;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.query.EntrySource;
+import nu.marginalia.sequence.io.BitReader;
+import nu.marginalia.model.id.UrlIdCodec;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
-
-import static java.lang.Math.min;
 
 public class PrioIndexEntrySource implements EntrySource {
     private final String name;
 
-    int posL;
-    int endOffsetL;
+    private final ByteBuffer readData = ByteBuffer.allocate(1024);
+    private final BitReader bitReader = new BitReader(readData);
 
     private final FileChannel docsFileChannel;
-    private final long dataOffsetStartB;
+    private long dataOffsetStartB;
     private final long wordId;
 
+    private final int numItems;
+    private int readItems = 0;
+
+    int prevRank = -1;
+    int prevDomainId = -1;
+    int prevDocOrd = -1;
+
     public PrioIndexEntrySource(String name,
-                                int numEntriesL,
                                 FileChannel docsFileChannel,
                                 long dataOffsetStartB,
                                 long wordId)
@@ -29,41 +38,101 @@ public class PrioIndexEntrySource implements EntrySource {
         this.dataOffsetStartB = dataOffsetStartB;
         this.wordId = wordId;
 
-        posL = 0;
-        endOffsetL = posL + numEntriesL;
+        // sneaky read of the header to get item count upfront
+
+        try {
+            readData.limit(4);
+
+            int rb = docsFileChannel.read(readData, dataOffsetStartB);
+            assert rb == 4;
+            readData.flip();
+            numItems = readData.getInt() & 0x3FFF_FFFF;
+
+            readData.position(0);
+            readData.limit(0);
+        }
+        catch (IOException ex) {
+            throw new IllegalStateException("Failed to read index data.", ex);
+        }
     }
 
     @Override
     public void skip(int n) {
-        posL += n;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     @SneakyThrows
     @SuppressWarnings("preview")
     public void read(LongQueryBuffer buffer) {
-        buffer.reset();
-        buffer.end = min(buffer.end, endOffsetL - posL);
+        var outputBuffer = buffer.asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
+        outputBuffer.clear();
 
-        var byteBuffer = buffer.data.getMemorySegment().asByteBuffer();
-        byteBuffer.clear();
-        byteBuffer.limit(buffer.end * 8);
+        while (readItems++ < numItems && outputBuffer.hasRemaining()) {
+            fillReadBuffer();
 
-        while (byteBuffer.hasRemaining()) {
-            int rb = docsFileChannel.read(byteBuffer, dataOffsetStartB + posL * 8L + byteBuffer.position());
-            if (rb == -1) {
-                throw new IllegalStateException("Unexpected end of file while reading index data.");
+            int rank;
+            int domainId;
+            int docOrd;
+
+            int code = bitReader.get(2);
+            if (code == 0b11) {
+                // header
+                bitReader.get(30); // skip 30 bits for the size header
+
+                rank = bitReader.get(7);
+                domainId = bitReader.get(31);
+                docOrd = bitReader.get(26);
             }
+            else if (code == 0b10) {
+                rank = prevRank + bitReader.getGamma();
+                domainId = bitReader.get(31);
+                docOrd = bitReader.get(26);
+            }
+            else if (code == 0b01) {
+                rank = prevRank;
+                domainId = bitReader.getDelta() + prevDomainId;
+                docOrd = bitReader.getDelta() - 1;
+            }
+            else if (code == 0b00) {
+                rank = prevRank;
+                domainId = prevDomainId;
+                docOrd = prevDocOrd + bitReader.getGamma();
+            }
+            else {
+                throw new IllegalStateException("??? found code " + code);
+            }
+
+            long encodedId = UrlIdCodec.encodeId(rank, domainId, docOrd);
+
+            outputBuffer.putLong(
+                    encodedId
+            );
+
+            prevRank = rank;
+            prevDomainId = domainId;
+            prevDocOrd = docOrd;
         }
 
-        posL += buffer.end;
+        buffer.end = outputBuffer.position() / 8;
+
         buffer.uniq();
     }
 
+    private void fillReadBuffer() throws IOException {
+        if (readData.remaining() < 8) {
+            readData.compact();
+            int rb = docsFileChannel.read(readData, dataOffsetStartB);
+            if (rb > 0) {
+                dataOffsetStartB += rb;
+            }
+            readData.flip();
+        }
+    }
 
     @Override
     public boolean hasMore() {
-        return posL < endOffsetL;
+        return readItems < numItems;
     }
 
 

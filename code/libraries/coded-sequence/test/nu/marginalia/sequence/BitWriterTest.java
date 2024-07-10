@@ -324,4 +324,21 @@ class BitWriterTest {
         assertEquals(2, reader.getDelta());
         assertEquals(30, reader.getDelta());
     }
+
+    @Test
+    void testGamma2() {
+        var buffer = ByteBuffer.allocate(8192);
+        var writer = new BitWriter(buffer);
+        writer.putBits(0, 2);
+        writer.putGamma(4);
+        writer.putBits(0, 2);
+        writer.putGamma(2);
+        var ret = writer.finish();
+
+        var reader = new BitReader(ret);
+        reader.get(2);
+        assertEquals(4, reader.getGamma());
+        reader.get(2);
+        assertEquals(2, reader.getGamma());
+    }
 }

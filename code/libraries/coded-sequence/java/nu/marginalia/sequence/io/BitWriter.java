@@ -120,7 +120,8 @@ public class BitWriter {
     }
 
 
-    private void finishLastByte() {
+    /** Finish writing any partially written bit fields to the buffer */
+    public void finishLastByte() {
         // It's possible we have a few bits left over that have yet to be written
         // to the underlying buffer. We need to write them out now.
 
