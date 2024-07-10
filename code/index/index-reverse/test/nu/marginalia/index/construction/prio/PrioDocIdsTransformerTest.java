@@ -10,6 +10,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,19 +42,24 @@ class PrioDocIdsTransformerTest {
     @Test
     public void testDomainIdDocOrd() throws IOException {
 
-        // Write 5 longs to the input file as data
-        try (var dos = new DataOutputStream(Files.newOutputStream(inputFile))) {
-            dos.writeLong(UrlIdCodec.encodeId(0, 0));
-            dos.writeLong(UrlIdCodec.encodeId(0, 1));
-            dos.writeLong(UrlIdCodec.encodeId(1, 0));
-            dos.writeLong(UrlIdCodec.encodeId(4, 51) | 0x7000_0000_0000_0000L);
+
+        try (var writeChannel = (FileChannel) Files.newByteChannel(inputFile, StandardOpenOption.WRITE)) {
+            var buffer = ByteBuffer.allocate(128).order(ByteOrder.LITTLE_ENDIAN);
+
+            buffer.putLong(UrlIdCodec.encodeId(0, 0));
+            buffer.putLong(UrlIdCodec.encodeId(0, 1));
+            buffer.putLong(UrlIdCodec.encodeId(1, 0));
+            buffer.putLong(UrlIdCodec.encodeId(4, 51) | 0x7000_0000_0000_0000L);
+
+            writeChannel.write(buffer.flip());
         }
 
         try (var writeChannel = (FileChannel) Files.newByteChannel(outputFile, StandardOpenOption.WRITE);
-             var readChannel = (FileChannel) Files.newByteChannel(inputFile))
+             var readChannel = (FileChannel) Files.newByteChannel(inputFile);
+             var transformer = new PrioDocIdsTransformer(writeChannel, readChannel))
         {
             // Transform two segments of the input file and write them to the output file with prefixed sizes
-            var transformer = new PrioDocIdsTransformer(writeChannel, readChannel);
+
             transformer.transform(0, 4);
         }
 
@@ -107,7 +113,7 @@ class PrioDocIdsTransformerTest {
             int code = reader.get(2);
             assertEquals(2, code); // increment doc ordinal
 
-            int diffRank = reader.getGamma() - 1;
+            int diffRank = reader.getGamma();
             rank += diffRank;
             assertEquals(56, rank);
 

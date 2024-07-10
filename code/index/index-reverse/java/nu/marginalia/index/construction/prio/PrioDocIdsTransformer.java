@@ -12,7 +12,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 /** Constructs document ids list priority reverse index */
-public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTransformer {
+public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTransformer, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(PrioDocIdsTransformer.class);
 
@@ -43,7 +43,6 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
 
         readChannel.position(startL * 8);
         readBuffer.clear();
-        writeBuffer.clear();
 
         int toBeRead = 8 * (sizeL);
 
@@ -80,6 +79,13 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
             }
 
             while (readBuffer.hasRemaining()) {
+                if (writeBuffer.remaining() < 16) {
+                    writeBuffer.flip();
+                    int written = writeChannel.write(writeBuffer, writeOffsetB);
+                    writeOffsetB += written;
+                    writeBuffer.clear();
+                }
+
                 long nextId = readBuffer.getLong();
 
                 // break down id components
@@ -111,12 +117,6 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
                 prevDomainId = domainId;
                 prevRank = rank;
 
-                if (writeBuffer.remaining() < 16) {
-                    writeBuffer.flip();
-                    int written = writeChannel.write(writeBuffer, writeOffsetB);
-                    writeOffsetB += written;
-                    writeBuffer.clear();
-                }
             }
 
             toBeRead -= readBuffer.limit();
@@ -128,14 +128,16 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
         // ensure any half-written data is flushed to the buffer
         bitWriter.finishLastByte();
 
-        writeBuffer.flip();
-        while (writeBuffer.hasRemaining()) {
-            int written = writeChannel.write(writeBuffer, writeOffsetB);
-            writeOffsetB += written;
-        }
-
         // update the start input pointer
         startL = endL;
         return startOffsetB;
+    }
+
+    @Override
+    public void close() throws IOException {
+        writeBuffer.flip();
+        int written = writeChannel.write(writeBuffer, writeOffsetB);
+        writeOffsetB += written;
+        writeBuffer.clear();
     }
 }

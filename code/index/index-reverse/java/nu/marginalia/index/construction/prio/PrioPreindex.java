@@ -82,9 +82,10 @@ public class PrioPreindex {
 
         // Write the docs file
         try (var intermediateDocChannel = documents.createDocumentsFileChannel();
-             var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+             var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+             var transformer = new PrioDocIdsTransformer(destFileChannel, intermediateDocChannel)
         ) {
-            offsets.transformEachIO(0, offsets.size(), new PrioDocIdsTransformer(destFileChannel, intermediateDocChannel));
+            offsets.transformEachIO(0, offsets.size(), transformer);
         }
 
         LongArray wordIds = segments.wordIds;
