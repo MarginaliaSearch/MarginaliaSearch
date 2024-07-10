@@ -81,6 +81,9 @@ public class PrioReverseIndexReader {
 
         long offset = wordOffset(termId);
 
+        if (offset < 0) // No documents
+            return 0;
+
         ByteBuffer buffer = ByteBuffer.allocate(4);
         try {
             documentsChannel.read(buffer, offset);
