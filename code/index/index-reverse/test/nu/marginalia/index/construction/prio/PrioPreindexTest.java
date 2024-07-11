@@ -4,7 +4,9 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.full.TestJournalFactory;
+import nu.marginalia.model.id.UrlIdCodec;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,8 +14,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static nu.marginalia.index.construction.full.TestJournalFactory.*;
 import static nu.marginalia.index.construction.full.TestJournalFactory.wm;
@@ -87,12 +89,41 @@ class PrioPreindexTest {
         assertEquals(106, lqb.copyData()[2]);
     }
 
-
     @Test
     public void testFinalizeLargeData() throws IOException {
-        EntryDataWithWordMeta[] entries = new EntryDataWithWordMeta[10000];
-        for (int i = 0; i < 10000; i++) {
-            entries[i] = new EntryDataWithWordMeta(100 + i, 101, wm(50, 51));
+        int rankComponent = 0;
+        int domainComponent = 0;
+        int docOrdinal = 0;
+        var random = new Random();
+        long[] documentIds = new long[10000];
+
+        for (int i = 0; i < documentIds.length; i++) {
+            int scenario = random.nextInt(0, 3);
+
+            // Avoid going into scenario 3 when we've already reached max rank
+            // instead fall back into scenario 0 as this should be the more common
+            // of the two
+            if (rankComponent == 63 && scenario == 2) {
+                scenario = 0;
+            }
+
+            if (scenario == 0) {
+                docOrdinal += random.nextInt(1, 100);
+            } else if (scenario == 1) {
+                domainComponent+=random.nextInt(1, 1000);
+                docOrdinal=random.nextInt(0, 10000);
+            } else {
+                rankComponent = Math.min(63, rankComponent + random.nextInt(1, 2));
+                domainComponent=random.nextInt(0, 10000);
+                docOrdinal=random.nextInt(0, 10000);
+            }
+
+            documentIds[i] = UrlIdCodec.encodeId(rankComponent, domainComponent, docOrdinal);
+        }
+
+        EntryDataWithWordMeta[] entries = new EntryDataWithWordMeta[documentIds.length];
+        for (int i = 0; i < documentIds.length; i++) {
+            entries[i] = new EntryDataWithWordMeta(documentIds[i], 101, wm(50, 51));
         }
         var journalReader = journalFactory.createReader(entries);
 
@@ -108,21 +139,39 @@ class PrioPreindexTest {
 
         var indexReader = new PrioReverseIndexReader("test", wordsFile, docsFile);
 
+        int items = indexReader.numDocuments(50);
+        assertEquals(documentIds.length, items);
+
         var entrySource = indexReader.documents(50);
         var lqb = new LongQueryBuffer(32);
-        entrySource.read(lqb);
 
-        assertEquals(32, lqb.size());
-        var dataArray = lqb.copyData();
-        for (int i = 0; i < 32; i++) {
-            assertEquals(100 + i, dataArray[i]);
+        for (int pos = 0; pos < documentIds.length;) {
+            if (!entrySource.hasMore()) {
+                Assertions.fail("Out of data @ " + pos);
+            }
+
+            entrySource.read(lqb);
+
+            var dataArray = lqb.copyData();
+            for (int i = 0; i < lqb.size(); i++) {
+
+                long currValue = dataArray[i];
+
+                if (documentIds[i + pos] != currValue) {
+                    System.out.println("Mismatch at position " + (i + pos));
+
+                    long prevValue = documentIds[i + pos - 1];
+
+                    assertTrue(currValue > prevValue, "Current value is not greater than previous value");
+
+                    System.out.println("Prev: " + prevValue + " -> " +  UrlIdCodec.getRank(prevValue) + " " + UrlIdCodec.getDomainId(prevValue) + " " + UrlIdCodec.getDocumentOrdinal(prevValue));
+                    System.out.println("Curr: " + currValue + " -> " + UrlIdCodec.getRank(currValue) + " " + UrlIdCodec.getDomainId(currValue) + " " + UrlIdCodec.getDocumentOrdinal(currValue));
+
+                    Assertions.fail();
+                }
+            }
+            pos += lqb.size();
         }
 
-        entrySource.read(lqb);
-        assertEquals(32, lqb.size());
-        dataArray = lqb.copyData();
-        for (int i = 0; i < 32; i++) {
-            assertEquals(100 + 32 + i, dataArray[i]);
-        }
     }
 }
