@@ -206,9 +206,13 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         private final BitReader reader;
         int rem = 0;
         private int last;
-        private int next = 0;
+        private int next = Integer.MIN_VALUE;
 
         public EliasGammaSequenceIterator(ByteBuffer buffer, int zero) {
+            if (zero == Integer.MIN_VALUE) {
+                throw new IllegalArgumentException("Integer.MIN_VALUE is a reserved offset that may not be used as zero point");
+            }
+
             reader = new BitReader(buffer);
 
             last = zero;
@@ -243,13 +247,14 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         // This is BitWriter.getGamma with more checks in place for streaming iteration
         @Override
         public boolean hasNext() {
-            if (next > 0) return true;
+            if (next != Integer.MIN_VALUE) return true;
             if (!reader.hasMore() || --rem < 0) return false;
 
             int bits = 1 + reader.takeWhileZero();
 
             if (reader.hasMore()) {
                 int delta = reader.get(bits);
+
                 last += delta;
                 next = last;
 
@@ -263,7 +268,7 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         public int nextInt() {
             if (hasNext()) {
                 int ret = next;
-                next = -1;
+                next = Integer.MIN_VALUE;
                 return ret;
             }
             throw new ArrayIndexOutOfBoundsException("No more data to read");
