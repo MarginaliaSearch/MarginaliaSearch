@@ -37,9 +37,8 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
         final int sizeL = (int) ((endL - startL));
         final long startOffsetB = writeOffsetB;
 
-        if (sizeL == 0) {
-            return -1;
-        }
+        if (sizeL == 0)
+            throw new IllegalStateException("Empty range");
 
         readChannel.position(startL * 8);
         readBuffer.clear();
