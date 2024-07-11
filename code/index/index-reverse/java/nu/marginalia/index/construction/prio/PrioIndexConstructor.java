@@ -3,7 +3,6 @@ package nu.marginalia.index.construction.prio;
 import lombok.SneakyThrows;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.JournalReaderSource;
-import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.IndexJournalFileNames;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
@@ -25,20 +24,17 @@ public class PrioIndexConstructor {
 
     private final Path outputFileDocs;
     private final Path outputFileWords;
-    private final Path outputFilePositions;
     private final JournalReaderSource readerSource;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
     public PrioIndexConstructor(Path outputFileDocs,
                                 Path outputFileWords,
-                                Path outputFilePositions,
                                 JournalReaderSource readerSource,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
-        this.outputFilePositions = outputFilePositions;
         this.readerSource = readerSource;
         this.docIdRewriter = docIdRewriter;
         this.tmpDir = tmpDir;

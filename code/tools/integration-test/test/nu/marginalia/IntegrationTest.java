@@ -261,7 +261,6 @@ public class IntegrationTest {
 
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-        Path outputFilePositions = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.POSITIONS, ReverseIndexPrioFileNames.FileVersion.NEXT);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
@@ -273,7 +272,6 @@ public class IntegrationTest {
         var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
-                outputFilePositions,
                 (path) -> IndexJournalReader.singleFile(path).filtering(wordMetaFilter),
                 this::addRankToIdEncoding,
                 tmpDir);

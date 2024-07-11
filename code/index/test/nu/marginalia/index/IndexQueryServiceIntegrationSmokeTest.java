@@ -307,7 +307,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-        Path outputFilePositions = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.POSITIONS, ReverseIndexPrioFileNames.FileVersion.NEXT);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
@@ -317,7 +316,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
         var constructor = new PrioIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
-                    outputFilePositions,
                     IndexJournalReader::singleFile,
                     DocIdRewriter.identity(),
                     tmpDir);

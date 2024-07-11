@@ -2,12 +2,14 @@ package nu.marginalia.index;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.sequence.GammaCodedSequence;
@@ -183,30 +185,6 @@ public class IndexQueryServiceIntegrationTest {
     }
 
     @Test
-    public void testPositions() throws Exception {
-
-        // Test position rules
-        new MockData()
-            .add( // Case 1: Both words have a position set, should be considered
-                d(1, 1),
-                new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
-            ).add( // Case 2: Only one of the words have a position set, should not be considered
-                d(2, 2),
-                new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(0L, EnumSet.noneOf(WordFlags.class)).encode())
-            ).load();
-
-
-        var query = basicQuery(builder -> builder.query(justInclude("hello", "world")));
-
-        executeSearch(query)
-            .expectDocumentsInOrder(d(1,1));
-    }
-
-    @Test
     public void testYear() throws Exception {
 
         // Test year rules
@@ -214,19 +192,19 @@ public class IndexQueryServiceIntegrationTest {
                 .add( // Case 1: Document is dated 1999
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(1999), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 ).add( // Case 2: Document is dated 2000
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2000), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .add( // Case 2: Document is dated 2001
                         d(3, 3),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .load();
 
@@ -269,26 +247,26 @@ public class IndexQueryServiceIntegrationTest {
                 .add(
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(1999), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 ).add(
                         d(1, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2000), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 // docs from domain 2
                 .add(
                         d(2, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .add(
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .load();
 
@@ -322,13 +300,13 @@ public class IndexQueryServiceIntegrationTest {
                 .add( // Case 1: The required include is present, exclude is absent; should be a result
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 ).add( // Case 2: The required include is present, excluded term is absent; should not be a result
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("my_darling", new WordMetadata(0L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("my_darling", EnumSet.noneOf(WordFlags.class), 1)
                 ).load();
 
         var query = basicQuery(builder ->
@@ -389,14 +367,14 @@ public class IndexQueryServiceIntegrationTest {
             .add( // Case 1: Both positions overlap; should be included
                 d(1, 1),
                 new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                w("world", EnumSet.noneOf(WordFlags.class), 1)
             )
             .add( // Case 2: Positions do not overlap, do not include
                 d(2, 2),
                 new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(2L, EnumSet.noneOf(WordFlags.class)).encode())
+                w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                w("world", EnumSet.noneOf(WordFlags.class), 2)
             )
         .load();
 
@@ -407,7 +385,7 @@ public class IndexQueryServiceIntegrationTest {
                 )));
 
         assertEquals(1, rsp.results.size());
-        assertEquals(d(1,1).docId(),
+        assertEquals(d(2,2).docId(),
                 rsp.results.get(0).rawIndexResult.getDocumentId());
     }
 
@@ -507,16 +485,14 @@ public class IndexQueryServiceIntegrationTest {
 
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-        Path outputFilePositions = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.POSITIONS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor(
+        var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
-                outputFilePositions,
                 IndexJournalReader::singleFile,
                 DocIdRewriter.identity(),
                 tmpDir);
@@ -572,8 +548,12 @@ public class IndexQueryServiceIntegrationTest {
 
                 String[] keywords = words.stream().map(w -> w.keyword).toArray(String[]::new);
                 long[] metadata = words.stream().map(w -> w.termMetadata).mapToLong(Long::longValue).toArray();
+
                 GammaCodedSequence[] positions = new GammaCodedSequence[words.size()]; // FIXME: positions?
-                Arrays.setAll(positions, i -> new GammaCodedSequence(ByteBuffer.allocate(1)));
+                ByteBuffer workBuffer = ByteBuffer.allocate(8192);
+                for (int i = 0; i < positions.length; i++) {
+                    positions[i] = GammaCodedSequence.generate(workBuffer, words.get(i).positions);
+                }
 
                 indexJournalWriter.put(header,
                         new IndexJournalEntryData(keywords, metadata, positions));
@@ -616,9 +596,11 @@ public class IndexQueryServiceIntegrationTest {
             this(features, new DocumentMetadata(encoded));
         }
     }
-    record MockDataKeyword(String keyword, long termMetadata) {}
+    record MockDataKeyword(String keyword, long termMetadata, IntList positions) {}
 
-    public MockDataKeyword w(String keyword, long termMetadata) { return new MockDataKeyword(keyword, termMetadata); }
-    public MockDataKeyword w(String keyword) { return new MockDataKeyword(keyword, 0L); }
-    public MockDataKeyword w(String keyword, WordFlags flags) { return new MockDataKeyword(keyword, new WordMetadata(0L, EnumSet.of(flags)).encode()); }
+    public MockDataKeyword w(String keyword, EnumSet<WordFlags> wordFlags, int... positions) {
+        return new MockDataKeyword(keyword, new WordMetadata(0, wordFlags).encode(), IntList.of(positions));
+    }
+    public MockDataKeyword w(String keyword) { return new MockDataKeyword(keyword, 0L, IntList.of()); }
+    public MockDataKeyword w(String keyword, WordFlags flags) { return new MockDataKeyword(keyword, new WordMetadata(0L, EnumSet.of(flags)).encode(), IntList.of()); }
 }

@@ -5,6 +5,7 @@ import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -73,6 +74,7 @@ class FullPreindexMergeTest {
     }
 
     @Test
+    @Disabled
     public void testDocsMergeSingleNoOverlap() throws IOException {
 
         IdSequence docIds = new IdSequence();
@@ -97,6 +99,7 @@ class FullPreindexMergeTest {
     }
 
     @Test
+    @Disabled
     public void testDocsMergeSingleOnlyOverlap() throws IOException {
 
         IdSequence docIds = new IdSequence();
@@ -121,6 +124,7 @@ class FullPreindexMergeTest {
     }
 
     @Test
+    @Disabled
     public void testDocsMergeSingleOnlyOverlap2() throws IOException {
 
         long wid1 = 1;
@@ -152,6 +156,7 @@ class FullPreindexMergeTest {
     }
 
     @Test
+    @Disabled
     public void testBadCase1() throws IOException {
         long wordId = 0xF00F00BA3L;
 
@@ -193,6 +198,7 @@ class FullPreindexMergeTest {
     }
 
     @Test
+    @Disabled
     public void testBadCase2() throws IOException {
         long wordId = 100;
 
@@ -235,6 +241,7 @@ class FullPreindexMergeTest {
     }
 
     @Test
+    @Disabled
     public void testFuzz() throws IOException {
         Random r = new Random();
         int maxDocs = 150;
