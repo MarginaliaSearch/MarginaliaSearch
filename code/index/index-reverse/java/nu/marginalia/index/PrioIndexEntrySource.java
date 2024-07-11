@@ -68,7 +68,7 @@ public class PrioIndexEntrySource implements EntrySource {
         var outputBuffer = buffer.asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
         outputBuffer.clear();
 
-        while (readItems++ < numItems && outputBuffer.hasRemaining()) {
+        while (outputBuffer.hasRemaining() && readItems++ < numItems) {
             fillReadBuffer();
 
             int rank;
