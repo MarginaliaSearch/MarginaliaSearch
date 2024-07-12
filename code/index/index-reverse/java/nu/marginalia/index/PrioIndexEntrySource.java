@@ -15,7 +15,7 @@ public class PrioIndexEntrySource implements EntrySource {
     private final String name;
 
     private final ByteBuffer readData = ByteBuffer.allocate(1024);
-    private final BitReader bitReader = new BitReader(readData);
+    private final BitReader bitReader = new BitReader(readData, this::fillReadBuffer);
 
     private final FileChannel docsFileChannel;
     private long dataOffsetStartB;
@@ -69,8 +69,6 @@ public class PrioIndexEntrySource implements EntrySource {
         outputBuffer.clear();
 
         while (outputBuffer.hasRemaining() && readItems++ < numItems) {
-            fillReadBuffer();
-
             int rank;
             int domainId;
             int docOrd;
@@ -119,14 +117,17 @@ public class PrioIndexEntrySource implements EntrySource {
         buffer.uniq();
     }
 
-    private void fillReadBuffer() throws IOException {
-        if (readData.remaining() < 8) {
+    private void fillReadBuffer() {
+        try {
             readData.compact();
             int rb = docsFileChannel.read(readData, dataOffsetStartB);
             if (rb > 0) {
                 dataOffsetStartB += rb;
             }
             readData.flip();
+        }
+        catch (IOException ex) {
+            throw new IllegalStateException("Failed to read index data.", ex);
         }
     }
 

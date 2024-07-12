@@ -1,5 +1,8 @@
 package nu.marginalia.sequence.io;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.ByteBuffer;
 
 /** A utility class for reading bits from a ByteBuffer
@@ -7,6 +10,9 @@ import java.nio.ByteBuffer;
  */
 public class BitReader {
     private final ByteBuffer underlying;
+    private final Runnable refillCallback;
+
+    private static final Logger logger = LoggerFactory.getLogger(BitReader.class);
 
     /** The current value being decoded */
     private long currentValue;
@@ -14,10 +20,21 @@ public class BitReader {
     /** Bit index in the current value */
     private int bitPosition;
 
-    public BitReader(ByteBuffer buffer) {
+
+    /** Create a new BitReader for the given buffer.  The supplied callback will be
+     * invoked when the underlying buffer is out of data.  The callback should
+     * refill the buffer with more data.
+     */
+    public BitReader(ByteBuffer buffer, Runnable refillCallback) {
         this.underlying = buffer;
+        this.refillCallback = refillCallback;
         this.bitPosition = 0;
         this.currentValue = 0;
+    }
+
+    /** Create a new BitReader for the given buffer */
+    public BitReader(ByteBuffer buffer) {
+        this(buffer, () -> { throw new IllegalStateException("No more data to read and no re-fill callback provided"); });
     }
 
     /** Read the next bit from the buffer */
@@ -132,7 +149,8 @@ public class BitReader {
             bitPosition = 8;
         }
         else { // There's no more data to read!
-            throw new ArrayIndexOutOfBoundsException("No more data to read");
+            refillCallback.run();
+            readNext();
         }
     }
 }
