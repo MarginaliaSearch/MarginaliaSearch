@@ -119,25 +119,26 @@ message RpcQueryLimits {
   int32 fetchSize = 4; // Size of the fetch buffer in the index service
 }
 
+/** Parameters for the result ranking function */
 message RpcResultRankingParameters {
-  double fullK = 1; // BM25 parameter
-  double fullB = 2; // BM25 parameter
-  double prioK = 3; // BM25 parameter
-  double prioB = 4; // BM25 parameter
+  double bm25K = 1; // BM25 parameter
+  double bm25B = 2; // BM25 parameter
+
   int32 shortDocumentThreshold = 5;
   double shortDocumentPenalty = 6;
   double domainRankBonus = 7;
   double qualityPenalty = 8;
   int32 shortSentenceThreshold = 9;
   double shortSentencePenalty = 10;
-  double bm25FullWeight = 11;
-  double bm25NgramWeight = 12;
-  double bm25PrioWeight = 13;
-  double tcfOverlapWeight = 14;
-  double tcfJaccardWeight = 15;
+  double bm25Weight = 11;
+  double tcfAvgDistWeight = 12;
+  double tcfFirstPositionWeight = 13;
+  // 14, 15 unused
   RpcTemporalBias temporalBias = 16;
   double temporalBiasWeight = 17;
+
   bool exportDebugData = 18;
+
 }
 
 message RpcResultRankingDetails {
@@ -155,6 +156,7 @@ message RpcResultRankingInputs {
   repeated string flags = 7;
 }
 
+/** Summary of the output of the ranking function */
 message RpcResultRankingOutputs {
   double averageSentenceLengthPenalty = 1;
   double qualityPenalty = 2;
@@ -164,11 +166,10 @@ message RpcResultRankingOutputs {
   double temporalBias = 6;
   double flagsPenalty = 7;
   double overallPart = 8;
-  double tcfOverlap = 9;
-  double tcfJaccard = 10;
-  double bM25F = 11;
-  double bM25N = 12;
-  double bM25P = 13;
+  double bm25Part = 9;
+  // 10-14 unused
+  double tcfAvgDist = 15;
+  double tcfFirstPosition = 16;
 }
 
 /* Defines a single subquery */

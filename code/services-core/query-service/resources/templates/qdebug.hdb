@@ -31,22 +31,16 @@
         <div class="col-sm-2"><input type="text" class="form-control" id="shortDocumentPenalty" name="shortDocumentPenalty" value="{{shortDocumentPenalty}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="tcfJaccardWeight">TCF Jaccard Weight</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="tcfJaccardWeight" name="tcfJaccardWeight" value="{{tcfJaccardWeight}}"></div>
-        <div class="col-sm-2"><label for="tcfOverlapWeight">TCF Overlap Weight</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="tcfOverlapWeight" name="tcfOverlapWeight" value="{{tcfOverlapWeight}}"></div>
+        <div class="col-sm-2"><label for="tcfAvgDist">TCF Average Distance</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfAvgDist" name="tcfAvgDist" value="{{tcfAvgDist}}"></div>
+        <div class="col-sm-2"><label for="tcfFirstPosition">TCF First Position Weight</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfFirstPosition" name="tcfFirstPosition" value="{{tcfFirstPosition}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="fullParams.k1">Full Params K1</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="fullParams.k1" name="fullParams.k1" value="{{fullParams.k}}"></div>
-        <div class="col-sm-2"><label for="fullParams.b">Full Params B</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="fullParams.b" name="fullParams.b" value="{{fullParams.b}}"></div>
-    </div>
-    <div class="row my-2">
-        <div class="col-sm-2"><label for="prioParams.k1">Prio Params K1</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="prioParams.k1" name="prioParams.k1" value="{{prioParams.k}}"></div>
-        <div class="col-sm-2"><label for="prioParams.b">Prio Params B</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="prioParams.b" name="prioParams.b" value="{{prioParams.b}}"></div>
+        <div class="col-sm-2"><label for="bm25.k1">BM25 K1</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="bm25.k1" name="bm25.k1" value="{{bm25Params.k}}"></div>
+        <div class="col-sm-2"><label for="bm25.b">BM25 B</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="bm25.b" name="bm25.b" value="{{bm25Params.b}}"></div>
     </div>
     <div class="row my-2">
         <div class="col-sm-2"><label for="temporalBias">Temporal Bias</label></div>
@@ -67,12 +61,8 @@
         <div class="col-sm-2"><input type="text" class="form-control" id="shortSentencePenalty" name="shortSentencePenalty" value="{{shortSentencePenalty}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="bm25FullWeight">BM25 Full Weight</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="bm25FullWeight" name="bm25FullWeight" value="{{bm25FullWeight}}"></div>
-        <div class="col-sm-2"><label for="bm25NgramWeight">BM25 Ngram Weight</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="bm25NgramWeight" name="bm25NgramWeight" value="{{bm25NgramWeight}}"></div>
-        <div class="col-sm-2"><label for="bm25PrioWeight">BM25 Prio Weight</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="bm25PrioWeight" name="bm25PrioWeight" value="{{bm25PrioWeight}}"></div>
+        <div class="col-sm-2"><label for="bm25FullWeight">BM25 Weight</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="bm25Weight" name="bm25Weight" value="{{bm25Weight}}"></div>
     </div>
 
     {{/with}}
@@ -130,11 +120,9 @@
         <div><small class="text-muted">Temporal Bias: {{temporalBias}}</small></div>
         <div><small class="text-muted">Flags Penalty: {{flagsPenalty}}</small></div>
         <div><small class="text-muted">Overall Part: {{overallPart}}</small></div>
-        <div><small class="text-muted">TCF Overlap: {{tcfOverlap}}</small></div>
-        <div><small class="text-muted">TCF Jaccard: {{tcfJaccard}}</small></div>
-        <div><small class="text-muted">BM25 Full: {{bM25F}}</small></div>
-        <div><small class="text-muted">BM25 Ngram: {{bM25N}}</small></div>
-        <div><small class="text-muted">BM25 Prio: {{bM25P}}</small></div>
+        <div><small class="text-muted">TCF Avg Distance: {{tcfAvgDist}}</small></div>
+        <div><small class="text-muted">TCF First Position: {{tcfFirstPosition}}</small></div>
+        <div><small class="text-muted">BM25: {{bM25}}</small></div>
     {{/with}}
 
 </div>

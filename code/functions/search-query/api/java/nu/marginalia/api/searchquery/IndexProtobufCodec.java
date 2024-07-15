@@ -98,19 +98,16 @@ public class IndexProtobufCodec {
             return ResultRankingParameters.sensibleDefaults();
 
         return new ResultRankingParameters(
-                new Bm25Parameters(params.getFullK(), params.getFullB()),
-                new Bm25Parameters(params.getPrioK(), params.getPrioB()),
+                new Bm25Parameters(params.getBm25K(), params.getBm25B()),
                 params.getShortDocumentThreshold(),
                 params.getShortDocumentPenalty(),
                 params.getDomainRankBonus(),
                 params.getQualityPenalty(),
                 params.getShortSentenceThreshold(),
                 params.getShortSentencePenalty(),
-                params.getBm25FullWeight(),
-                params.getBm25NgramWeight(),
-                params.getBm25PrioWeight(),
-                params.getTcfJaccardWeight(),
-                params.getTcfOverlapWeight(),
+                params.getBm25Weight(),
+                params.getTcfFirstPositionWeight(),
+                params.getTcfAvgDistWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight(),
                 params.getExportDebugData()
@@ -125,21 +122,17 @@ public class IndexProtobufCodec {
         }
 
         var builder = RpcResultRankingParameters.newBuilder()
-                        .setFullB(rankingParams.fullParams.b())
-                        .setFullK(rankingParams.fullParams.k())
-                        .setPrioB(rankingParams.prioParams.b())
-                        .setPrioK(rankingParams.prioParams.k())
+                        .setBm25B(rankingParams.bm25Params.b())
+                        .setBm25K(rankingParams.bm25Params.k())
                         .setShortDocumentThreshold(rankingParams.shortDocumentThreshold)
                         .setShortDocumentPenalty(rankingParams.shortDocumentPenalty)
                         .setDomainRankBonus(rankingParams.domainRankBonus)
                         .setQualityPenalty(rankingParams.qualityPenalty)
                         .setShortSentenceThreshold(rankingParams.shortSentenceThreshold)
                         .setShortSentencePenalty(rankingParams.shortSentencePenalty)
-                        .setBm25FullWeight(rankingParams.bm25FullWeight)
-                        .setBm25NgramWeight(rankingParams.bm25NgramWeight)
-                        .setBm25PrioWeight(rankingParams.bm25PrioWeight)
-                        .setTcfOverlapWeight(rankingParams.tcfOverlapWeight)
-                        .setTcfJaccardWeight(rankingParams.tcfJaccardWeight)
+                        .setBm25Weight(rankingParams.bm25Weight)
+                        .setTcfAvgDistWeight(rankingParams.tcfAvgDist)
+                        .setTcfFirstPositionWeight(rankingParams.tcfFirstPosition)
                         .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
                         .setExportDebugData(rankingParams.exportDebugData);
 
@@ -176,11 +169,9 @@ public class IndexProtobufCodec {
                 .setTemporalBias(outputs.temporalBias())
                 .setFlagsPenalty(outputs.flagsPenalty())
                 .setOverallPart(outputs.overallPart())
-                .setTcfOverlap(outputs.tcfOverlap())
-                .setTcfJaccard(outputs.tcfJaccard())
-                .setBM25F(outputs.bM25F())
-                .setBM25N(outputs.bM25N())
-                .setBM25P(outputs.bM25P())
+                .setTcfAvgDist(outputs.tcfAvgDist())
+                .setTcfFirstPosition(outputs.tcfFirstPosition())
+                .setBm25Part(outputs.bm25())
                 .build();
     }
 

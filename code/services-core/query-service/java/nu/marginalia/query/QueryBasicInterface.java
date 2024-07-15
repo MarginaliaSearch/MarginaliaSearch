@@ -106,23 +106,17 @@ public class QueryBasicInterface {
                 .qualityPenalty(doubleFromRequest(request, "qualityPenalty", sensibleDefaults.qualityPenalty))
                 .shortDocumentThreshold(intFromRequest(request, "shortDocumentThreshold", sensibleDefaults.shortDocumentThreshold))
                 .shortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.shortDocumentPenalty))
-                .tcfJaccardWeight(doubleFromRequest(request, "tcfJaccardWeight", sensibleDefaults.tcfJaccardWeight))
-                .tcfOverlapWeight(doubleFromRequest(request, "tcfOverlapWeight", sensibleDefaults.tcfOverlapWeight))
-                .fullParams(new Bm25Parameters(
-                        doubleFromRequest(request, "fullParams.k1", sensibleDefaults.fullParams.k()),
-                        doubleFromRequest(request, "fullParams.b", sensibleDefaults.fullParams.b())
-                ))
-                .prioParams(new Bm25Parameters(
-                        doubleFromRequest(request, "prioParams.k1", sensibleDefaults.prioParams.k()),
-                        doubleFromRequest(request, "prioParams.b", sensibleDefaults.prioParams.b())
+                .tcfFirstPosition(doubleFromRequest(request, "tcfFirstPosition", sensibleDefaults.tcfFirstPosition))
+                .tcfAvgDist(doubleFromRequest(request, "tcfAvgDist", sensibleDefaults.tcfAvgDist))
+                .bm25Params(new Bm25Parameters(
+                        doubleFromRequest(request, "bm25.k1", sensibleDefaults.bm25Params.k()),
+                        doubleFromRequest(request, "bm25.b", sensibleDefaults.bm25Params.b())
                 ))
                 .temporalBias(ResultRankingParameters.TemporalBias.valueOf(stringFromRequest(request, "temporalBias", sensibleDefaults.temporalBias.toString())))
                 .temporalBiasWeight(doubleFromRequest(request, "temporalBiasWeight", sensibleDefaults.temporalBiasWeight))
                 .shortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.shortSentenceThreshold))
                 .shortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.shortSentencePenalty))
-                .bm25FullWeight(doubleFromRequest(request, "bm25FullWeight", sensibleDefaults.bm25FullWeight))
-                .bm25NgramWeight(doubleFromRequest(request, "bm25NgramWeight", sensibleDefaults.bm25NgramWeight))
-                .bm25PrioWeight(doubleFromRequest(request, "bm25PrioWeight", sensibleDefaults.bm25PrioWeight))
+                .bm25Weight(doubleFromRequest(request, "bm25Weight", sensibleDefaults.bm25Weight))
                 .exportDebugData(true)
                 .build();
     }

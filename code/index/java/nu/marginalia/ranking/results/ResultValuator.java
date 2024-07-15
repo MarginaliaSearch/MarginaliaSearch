@@ -88,10 +88,10 @@ public class ResultValuator {
                            + bestCoherence;
 
         // FIXME: need a weighting factor here
-        double tcfAvgDist = 25. / termCoherenceFactor.calculateAvgMinDistance(positionsQuery, ctx);
+        double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / termCoherenceFactor.calculateAvgMinDistance(positionsQuery, ctx));
+        double tcfFirstPosition = 0.;
 
-        double bM25F = rankingParams.bm25FullWeight * wordFlagsQuery.root.visit(new Bm25FullGraphVisitor(rankingParams.fullParams, positionsCountQuery.data, length, ctx));
-        double bM25P = rankingParams.bm25PrioWeight * wordFlagsQuery.root.visit(new Bm25PrioGraphVisitor(rankingParams.prioParams, wordFlagsQuery.data, ctx));
+        double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25FullGraphVisitor(rankingParams.bm25Params, positionsCountQuery.data, length, ctx));
 
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
@@ -116,11 +116,9 @@ public class ResultValuator {
                             temporalBias,
                             flagsPenalty,
                             overallPart,
-                            0,
-                            0,
-                            bM25F,
-                            0, // FIXME: Remove from model
-                            bM25P)
+                            bM25,
+                            tcfAvgDist,
+                            tcfFirstPosition)
             );
 
             detailsConsumer.accept(details);
@@ -129,8 +127,8 @@ public class ResultValuator {
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
         double ret = normalize(
-                      tcfAvgDist
-                      + bM25F + bM25P
+                  tcfAvgDist + tcfFirstPosition
+                      + bM25
                       + overallPartPositive,
                 overallPartNegative);
 

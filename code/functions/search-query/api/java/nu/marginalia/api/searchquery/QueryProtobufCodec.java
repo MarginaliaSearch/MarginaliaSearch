@@ -157,11 +157,10 @@ public class QueryProtobufCodec {
                 outputs.getTemporalBias(),
                 outputs.getFlagsPenalty(),
                 outputs.getOverallPart(),
-                outputs.getTcfOverlap(),
-                outputs.getTcfJaccard(),
-                outputs.getBM25F(),
-                outputs.getBM25N(),
-                outputs.getBM25P()
+                outputs.getBm25Part(),
+                outputs.getTcfAvgDist(),
+                outputs.getTcfFirstPosition()
+
         );
     }
 
