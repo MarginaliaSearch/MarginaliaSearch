@@ -25,9 +25,6 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     /** How did the subqueries match against the document ? */
     public final List<SearchResultKeywordScore> keywordScores;
 
-    /** How many other potential results existed in the same domain */
-    public int resultsFromDomain;
-
     public boolean hasPrioTerm;
 
     public SearchResultItem(long combinedId,

@@ -20,7 +20,7 @@ import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
-import nu.marginalia.index.results.IndexResultValuatorService;
+import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
@@ -81,7 +81,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     private final StatefulIndex statefulIndex;
     private final SearchSetsService searchSetsService;
 
-    private final IndexResultValuatorService resultValuator;
+    private final IndexResultRankingService resultValuator;
 
     private final String nodeName;
 
@@ -91,7 +91,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
                             StatefulIndex statefulIndex,
                             SearchSetsService searchSetsService,
-                            IndexResultValuatorService resultValuator)
+                            IndexResultRankingService resultValuator)
     {
         var nodeId = serviceConfiguration.node();
         this.nodeName = Integer.toString(nodeId);
@@ -135,7 +135,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
                 var rawItem = RpcRawResultItem.newBuilder();
                 rawItem.setCombinedId(rawResult.combinedId);
-                rawItem.setResultsFromDomain(rawResult.resultsFromDomain);
                 rawItem.setHtmlFeatures(rawResult.htmlFeatures);
                 rawItem.setEncodedDocMetadata(rawResult.encodedDocMetadata);
                 rawItem.setHasPriorityTerms(rawResult.hasPrioTerm);
@@ -159,6 +158,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setUrlQuality(result.urlQuality)
                         .setWordsTotal(result.wordsTotal)
                         .setBestPositions(result.bestPositions)
+                        .setResultsFromDomain(result.resultsFromDomain)
                         .setRawItem(rawItem);
 
                 var rankingDetails = IndexProtobufCodec.convertRankingDetails(result.rankingDetails);

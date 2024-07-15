@@ -32,6 +32,7 @@ public final class CombinedDocIdList {
     public int size() {
         return data.length;
     }
+    public long at(int i) { return data[i]; }
 
     public LongStream stream() {
         return Arrays.stream(data);

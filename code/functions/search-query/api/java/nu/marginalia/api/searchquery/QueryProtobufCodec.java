@@ -130,6 +130,7 @@ public class QueryProtobufCodec {
                 results.getWordsTotal(),
                 results.getBestPositions(),
                 results.getRankingScore(),
+                results.getResultsFromDomain(),
                 convertRankingDetails(results.getRankingDetails())
         );
     }
@@ -187,7 +188,6 @@ public class QueryProtobufCodec {
                 rawItem.getEncodedDocMetadata(),
                 rawItem.getHtmlFeatures(),
                 keywordScores,
-                rawItem.getResultsFromDomain(),
                 rawItem.getHasPriorityTerms(),
                 Double.NaN // Not set
         );
@@ -256,6 +256,7 @@ public class QueryProtobufCodec {
                 rpcDecoratedResultItem.getWordsTotal(),
                 rpcDecoratedResultItem.getBestPositions(),
                 rpcDecoratedResultItem.getRankingScore(),
+                rpcDecoratedResultItem.getResultsFromDomain(),
                 convertRankingDetails(rpcDecoratedResultItem.getRankingDetails())
         );
     }

@@ -3,7 +3,6 @@ package nu.marginalia.index.index;
 import java.util.List;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.FullReverseIndexReader;
-import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.filter.QueryFilterAnyOf;

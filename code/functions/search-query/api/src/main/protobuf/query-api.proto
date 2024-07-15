@@ -93,12 +93,12 @@ message RpcDecoratedResultItem {
   double rankingScore = 11; // The ranking score of this search result item, lower is better
   int64 bestPositions = 12;
   RpcResultRankingDetails rankingDetails = 13; // optional, only present if exportDebugData is true in RpcResultRankingParameters
+  int32 resultsFromDomain = 14;
 }
 
 /** A raw index-service view of a search result */
 message RpcRawResultItem {
   int64 combinedId = 1; // raw ID with bit-encoded ranking information still present
-  int32 resultsFromDomain = 2; // number of other results from the same domain
   int64 encodedDocMetadata = 3; // bit encoded document metadata
   int32 htmlFeatures = 4; // bitmask encoding features of the document
   repeated RpcResultKeywordScore keywordScores = 5;

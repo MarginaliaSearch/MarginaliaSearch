@@ -87,7 +87,7 @@ public class SearchQueryIndexService {
                     detail.features,
                     DomainIndexingState.ACTIVE,
                     detail.rankingScore, // termScore
-                    detail.resultsFromDomain(),
+                    detail.resultsFromDomain,
                     getPositionsString(detail),
                     Long.bitCount(detail.bestPositions),
                     detail.rawIndexResult,

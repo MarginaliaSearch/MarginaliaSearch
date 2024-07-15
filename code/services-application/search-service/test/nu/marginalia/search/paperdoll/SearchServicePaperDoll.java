@@ -103,6 +103,7 @@ public class SearchServicePaperDoll extends AbstractModule {
                 400,
                 positions,
                 score,
+                4,
                 null)
         );
     }
