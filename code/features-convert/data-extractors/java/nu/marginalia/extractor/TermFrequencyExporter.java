@@ -54,7 +54,7 @@ public class TermFrequencyExporter implements ExporterIf {
         TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
         AtomicInteger docCount = new AtomicInteger();
 
-        SimpleBlockingThreadPool sjp = new SimpleBlockingThreadPool("exporter", Math.clamp(2, 16, Runtime.getRuntime().availableProcessors() / 2), 4);
+        SimpleBlockingThreadPool sjp = new SimpleBlockingThreadPool("exporter", Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16), 4);
         Path crawlerLogFile = inputDir.resolve("crawler.log");
 
         for (var item : WorkLog.iterable(crawlerLogFile)) {
