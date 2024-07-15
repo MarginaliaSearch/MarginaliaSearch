@@ -48,6 +48,22 @@ public class ExecutorCrawlGrpcService extends ExecutorCrawlApiGrpc.ExecutorCrawl
     }
 
     @Override
+    public void triggerSingleDomainRecrawl(RpcFileStorageIdWithDomainName request, StreamObserver<Empty> responseObserver) {
+        try {
+            actorControlService.startFrom(ExecutorActor.RECRAWL_SINGLE_DOMAIN,
+                    new RecrawlSingleDomainActor.Initial(
+                            FileStorageId.of(request.getFileStorageId()),
+                            request.getTargetDomainName()));
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void triggerConvert(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             actorControlService.startFrom(ExecutorActor.CONVERT,

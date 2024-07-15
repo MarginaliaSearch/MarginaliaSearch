@@ -50,7 +50,9 @@ public class CrawlActor extends RecordActorPrototype {
                 storageService.relateFileStorages(storage.id(), dataArea.id());
 
                 // Send convert request
-                long msgId = mqCrawlerOutbox.sendAsync(new CrawlRequest(List.of(fid), dataArea.id()));
+                long msgId = mqCrawlerOutbox.sendAsync(
+                        CrawlRequest.forSpec(fid, dataArea.id())
+                );
 
                 yield new Crawl(msgId);
             }

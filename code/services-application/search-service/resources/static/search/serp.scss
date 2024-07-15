@@ -1,33 +1,102 @@
-$nicotine-dark: #acae89;
-$nicotine-light: #f8f8ee;
-$fg-dark: #000;
-$fg-light: #fff;
-$highlight-dark: #2f4858;
-$highlight-light: #3F5F6F;
-$highlight-light2: #eee;
-$border-color: #ccc;
-$border-color2: #aaa;
-$heading-fonts: serif;
-$visited: #fcc;
+:root {
+  color-scheme: light;
+
+  --clr-bg-page: hsl(60, 42%, 95%); // $nicotine-light
+
+  --clr-bg-ui: hsl(0, 0%, 100%);
+  --clr-text-ui: #000; // $fg-dark
+
+  --clr-bg-theme: hsl(200, 28%, 34%); // $highlight-light
+  --clr-text-theme: #fff; // $fg-light
+
+  --clr-bg-highlight: hsl(0, 0%, 93%); // $highlight-light2
+  --clr-text-highlight: #111111;
+
+  --clr-bg-accent: hsl(63, 19%, 61%); // $nicotine-dark
+  --clr-border-accent: hsl(63, 19%, 35%);
+
+  --clr-border: #aaa; // $border-color2
+  
+  --clr-shadow: var(--clr-border); 
+
+  --clr-link: #0066cc;
+  --clr-link-visited: #531a89;
+  --clr-heading-link-visited: #fcc; // $visited
+
+  --font-family: sans-serif;
+  --font-size: 14px;
+  --font-family-heading: serif; // $heading-fonts
+}
+
+
+@mixin dark-theme-mixin {
+  color-scheme: dark;
+
+  --clr-bg-page: hsl(0, 0%, 6%);
+
+  --clr-bg-ui: hsl(0, 0%, 18%);
+  --clr-text-ui: #ddd;
+
+  --clr-bg-theme: hsl(0, 0%, 2%);
+  --clr-text-theme: var(--clr-text-ui);
+
+  --clr-bg-highlight: hsl(0, 0%, 11%);
+  --clr-text-highlight: #fff;
+
+  --clr-bg-accent: hsl(200, 32%, 28%);
+  --clr-border-accent: hsl(200, 8%, 12%);
+
+  --clr-border: hsl(0, 0%, 30%);
+
+  --clr-shadow: #000;
+
+  --clr-link: #8a8aff;
+  --clr-link-visited: #ffadff;
+  --clr-heading-link-visited: var(--clr-link-visited);
+}
+ 
+:root[data-theme='dark'] {
+  @include dark-theme-mixin;
+}
+
+// Makes theme match the user's OS preference when JS is disabled
+@media (prefers-color-scheme: dark) {
+  :root:not([data-has-js="true"]) {
+    @include dark-theme-mixin;
+  }
+}
 
 * {
   box-sizing: border-box;
 }
+
+a {
+  color: var(--clr-link);
+}
+
+a:visited {
+  color: var(--clr-link-visited);
+}
+
+input, textarea, select {
+  color: inherit;
+}
+
 h1 a, h2 a {
-  color: $fg-light;
+  color: var(--clr-text-theme);
 }
 h1 a:visited, h2 a:visited {
-  color: $visited;
+  color: var(--clr-heading-link-visited);
 }
 progress {
   width: 10ch;
 }
 
 body {
-  background-color: $nicotine-light;
-  color: $fg-dark;
-  font-family: sans-serif;
-  font-size: 14px;
+  background-color: var(--clr-bg-page);
+  color: var(--clr-text-ui);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
   line-height: 1.6;
   margin-left: auto;
   margin-right: auto;
@@ -99,28 +168,28 @@ body {
     li {
       display: inline;
       padding: 1ch;
-      background-color: $highlight-light2;
+      background-color: var(--clr-bg-highlight);
 
       a {
         text-decoration: none;
         display: inline-block;
-        color: #000;
+        color: var(--clr-text-highlight);
       }
     }
 
     li.current {
-      background-color: $highlight-light;
+      background-color: var(--clr-bg-theme);
       a {
-        color: #fff;
+        color: var(--clr-text-theme);
       }
     }
   }
 }
 
 .dialog {
-  border: 1px solid $border-color2;
-  box-shadow: 0 0 1ch $border-color;
-  background-color: #fff;
+  border: 1px solid var(--clr-border);
+  box-shadow: 0 0 1ch var(--clr-shadow);
+  background-color: var(--clr-bg-ui);
   padding: 1ch;
 
   h2 {
@@ -129,40 +198,55 @@ body {
     font-weight: normal;
     padding: 0.5ch;
     font-size: 12pt;
-    background-color: $highlight-light;
-    color: #fff;
+    background-color: var(--clr-bg-theme);
+    color: var(--clr-text-theme);
   }
 }
 
 header {
-  background-color: $nicotine-dark;
-  color: #fff;
-  border: 1px solid #888;
-  box-shadow: 0 0 0.5ch #888;
+  background-color: var(--clr-bg-accent);
+  border: 1px solid var(--clr-border-accent);
+  color: var(--clr-text-ui);
+  box-shadow: 0 0 0.5ch var(--clr-shadow);
   margin-bottom: 1ch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
   nav {
     a {
       text-decoration: none;
-      color: #000;
-
+      color: var(--clr-text-ui);
       padding: .5ch;
       display: inline-block;
     }
 
+    a:visited {
+      color: var(--clr-text-ui);
+    }
+
     a.extra {
       background: #ccc linear-gradient(45deg,
-              rgba(255,100,100,1) 0%,
-              rgba(100,255,100,1) 50%,
-              rgba(100,100,255,1) 100%);
+              hsl(0, 100%, 70%) 0%,
+              hsl(120, 100%, 70%) 50%,
+              hsl(240, 100%, 70%) 100%);
       color: black;
       text-shadow: 0 0 0.5ch #fff;
     }
 
     a:hover, a:focus {
-      background: #2f4858;
-      color: #fff !important;
+      background: var(--clr-bg-theme);
+      color: var(--clr-text-theme);
     }
+  }
+}
+
+#theme {
+  padding: .5ch;
+  display: none;
+
+  [data-has-js='true'] & {
+    display: block;
   }
 }
 
@@ -210,11 +294,11 @@ header {
     @extend .heading;
   }
 
-  background-color: #fff;
+  background-color: var(--clr-bg-ui);
   padding: 1ch;
   margin: 1ch;
-  border: 1px solid $border-color2;
-  box-shadow: 0 0 1ch $border-color;
+  border: 1px solid var(--clr-border);
+  box-shadow: 0 0 1ch var(--clr-shadow);
 }
 
 section.cards {
@@ -226,11 +310,10 @@ section.cards {
   justify-content: flex-start;
 
   .card {
-    border: 2px #ccc;
-    background-color: #fff;
+    background-color: var(--clr-bg-ui);
     border-left: 1px solid #ecb;
     border-top: 1px solid #ecb;
-    box-shadow: #0008 0 0 5px;
+    box-shadow: var(--clr-shadow) 0 0 5px;
 
     h2 {
       @extend .heading;
@@ -239,7 +322,7 @@ section.cards {
 
     h2 a {
       display: block !important;
-      color: #fff;
+      color: inherit;
       text-decoration: none;
     }
     a:focus img  {
@@ -271,12 +354,17 @@ section.cards {
       padding-right: 1ch;
       line-height: 1.6;
     }
+
+    [data-theme='dark'] & {
+      border: 1px solid var(--clr-border);
+    }
   }
 }
 
 .positions {
-  box-shadow: 0 0 2px #888;
-  background-color: #e4e4e4;
+  box-shadow: 0 0 2px var(--clr-shadow);
+  backdrop-filter: brightness(90%);
+  color: var(--clr-text-highlight);
   padding: 2px;
   margin-right: -1ch;
   margin-left: 1ch;
@@ -297,13 +385,13 @@ footer {
 
   h1 {
     font-weight: normal;
-    border-bottom: 4px solid $highlight-light;
+    border-bottom: 4px solid var(--clr-bg-theme);
   }
 
   h2 {
     font-size: 14pt;
     font-weight: normal;
-    border-bottom: 2px solid $highlight-dark;
+    border-bottom: 2px solid var(--clr-bg-theme);
     width: 80%;
   }
 
@@ -312,9 +400,9 @@ footer {
     flex-basis: 40ch;
     flex-grow: 1.1;
 
-    background-color: #fff;
-    border-left: 1px solid $border-color2;
-    box-shadow: -1px -1px 5px $border-color;
+    background-color: var(--clr-bg-ui);
+    border-left: 1px solid var(--clr-border);
+    box-shadow: -1px -1px 5px var(--clr-shadow);
 
     padding-left: 1ch;
     padding-right: 1ch;
@@ -329,18 +417,18 @@ footer {
 }
 
 .shadowbox {
-  box-shadow: 0 0 1ch $border-color2;
-  border: 1px solid $border-color;
+  box-shadow: 0 0 1ch var(--clr-shadow);
+  border: 1px solid var(--clr-border);
 }
 
 .heading {
   margin: 0;
   padding: 0.5ch;
-  background-color: $highlight-light;
-  border-bottom: 1px solid $border-color2;
-  font-family: $heading-fonts;
+  background-color: var(--clr-bg-theme);
+  border-bottom: 1px solid var(--clr-border);
+  font-family: var(--font-family-heading);
   font-weight: normal;
-  color: $fg-light;
+  color: var(--clr-text-theme);
   font-size: 12pt;
   word-break: break-word;
 }
@@ -440,7 +528,7 @@ footer {
   @extend .shadowbox;
 
   padding: 0.5ch;
-  background-color: $fg-light;
+  background-color: var(--clr-bg-ui);
   display: grid;
   grid-template-columns: max-content 0 auto max-content;
   grid-gap: 0.5ch;
@@ -452,12 +540,13 @@ footer {
     padding: 0.5ch;
     font-size: 14pt;
     word-break: keep-all;
-    background-color: $highlight-light;
-    color: $fg-light;
-    font-family: $heading-fonts;
+    background-color: var(--clr-bg-theme);
+    color: var(--clr-text-theme);
+    font-family: var(--font-family-heading);
     font-weight: normal;
-    border: 1px solid;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
   }
 
   #suggestions-anchor {
@@ -469,18 +558,18 @@ footer {
     font-family: monospace;
     font-size: 12pt;
     padding: 0.5ch;
-    border: 1px solid $border-color2;
-    background-color: $fg-light;
-    color: $fg-dark;
+    border: 1px solid var(--clr-border);
+    background-color: inherit;
   }
 
   input[type="submit"] {
     font-size: 12pt;
-    border: 1px solid $border-color2;
-    background-color: $fg-light;
-    color: $fg-dark;
+    border: 1px solid var(--clr-border);
+    background-color: var(--clr-bg-ui);
+    cursor: pointer;
   }
 
+  // white suggesitons looks fine in dark mode
   .suggestions {
     background-color: #fff;
     padding: .5ch;
@@ -491,7 +580,7 @@ footer {
     width: 300px;
     border-left: 1px solid #ccc;
     border-top: 1px solid #ccc;
-    box-shadow: 5px 5px 5px #888;
+    box-shadow: 5px 5px 5px var(--clr-shadow);
     z-index: 10;
 
     a {
@@ -528,22 +617,22 @@ footer {
 #filters {
   @extend .shadowbox;
   margin-top: 1ch;
-  background-color: $fg-light;
+  background-color: var(--clr-bg-ui);
 
   h2 {
     @extend .heading;
-    background-color: $highlight-light;
+    background-color: var(--clr-bg-theme);
   }
   h3 {
     @extend .heading;
-    background-color: $highlight-light2;
+    background-color: var(--clr-bg-highlight);
+    color: var(--clr-text-highlight);
     font-family: sans-serif;
-    color: #000;
     border-bottom: 1px solid #000;
   }
 
   hr {
-    border-top: 0.5px solid $border-color2;
+    border-top: 0.5px solid var(--clr-border);
     border-bottom: none;
   }
   ul {
@@ -553,17 +642,17 @@ footer {
     li {
       padding: 1ch;
       a {
-        color: $fg-dark;
+        color: inherit;
         text-decoration: none;
       }
       a:hover, a:focus {
-        border-bottom: 1px solid $highlight-light;
+        border-bottom: 1px solid var(--clr-bg-theme);
       }
     }
 
     li.current {
-      border-left: 4px solid $highlight-light;
-      background-color: $highlight-light2;
+      border-left: 4px solid var(--clr-bg-theme);
+      background-color: var(--clr-bg-highlight);
       a {
         margin-left: -4px;
       }
@@ -576,46 +665,46 @@ footer {
   margin: 1ch 0 2ch 0;
 
   .url {
-    background-color: $highlight-light;
+    background-color: var(--clr-bg-theme);
     padding-left: 0.5ch;
 
     a {
       word-break: break-all;
       font-family: monospace;
       font-size: 8pt;
-      color: $fg-light;
+      color: var(--clr-text-theme);
       text-shadow: 0 0 1ch #000; // guarantee decent contrast across background colors
     }
     a:visited {
-      color: $visited;
+      color: var(--clr-heading-link-visited);
     }
   }
 
   h2 {
     a {
       word-break: break-all;
-      color: $fg-dark;
+      color: var(--clr-text-ui);
       text-decoration: none;
     }
     font-size: 12pt;
     @extend .heading;
-    background-color: $highlight-light2;
+    background-color:var(--clr-bg-highlight);
   }
 
   .description {
-    background-color: $fg-light;
+    background-color: var(--clr-bg-ui);
     word-break: break-word;
     padding: 1ch;
     margin: 0;
   }
 
   ul.additional-results {
-    background-color: $fg-light;
+    background-color: var(--clr-bg-ui);
     padding: 1ch;
     list-style: none;
     margin: 0;
     a {
-        color: $fg-dark;
+        color: inherit;
     }
   }
 }
@@ -631,7 +720,7 @@ footer {
   display: flex;
   font-size: 10pt;
   padding: 1ch;
-  background-color: #eee;
+  background-color: var(--clr-bg-highlight);
 
   > * {
     margin-right: 1ch;
@@ -645,12 +734,12 @@ footer {
     padding-left: 4px;
   }
   a {
-    color: #000;
+    color: var(--clr-text-highlight);
   }
 }
 
 @media (max-device-width: 624px) {
-  body[data-has-js="true"] { // This property is set via js so we can selectively enable these changes only if JS is enabled;
+  [data-has-js="true"] body { // This property is set via js so we can selectively enable these changes only if JS is enabled;
                              // This is desirable since mobile navigation is JS-driven.  If JS is disabled, having a squished
                              // GUI is better than having no working UI.
     margin: 0 !important;
@@ -666,6 +755,8 @@ footer {
     #mcfeast {
       display: inline;
       float: right;
+      width: 2rem;
+      font-size: 1rem;
     }
 
     #menu-close {

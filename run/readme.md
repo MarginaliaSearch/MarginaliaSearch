@@ -3,10 +3,10 @@
 This directory is a staging area for running the system.  It contains scripts
 and templates for installing the system on a server, and for running it locally.
 
-See [https://docs.marginalia.nu/](https://docs.marginalia.nu/) for additional
-documentation.
-
 ## Requirements
+
+**x86-64 Linux** - The system is only tested on x86-64 Linux.  It may work on other
+platforms, but for lack of suitable hardware, this can not be guaranteed.
 
 **Docker** - It is a bit of a pain to install, but if you follow
 [this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track for ubuntu-like systems.
@@ -15,7 +15,12 @@ documentation.
 The civilized way of installing this is to use [SDKMAN](https://sdkman.io/);
 graalce is a good distribution choice but it doesn't matter too much.
 
-## Set up
+## Quick Set up
+
+[https://docs.marginalia.nu/](https://docs.marginalia.nu/) has a more comprehensive guide for the install
+and operation of the search engine.  This is a quick guide for the impatient.
+
+---
 
 To go from a clean check out of the git repo to a running search engine,
 follow these steps. 
@@ -51,6 +56,8 @@ you for which installation mode you want to use.  The options are:
 2. Full Marginalia Search instance - This will install an instance of the search engine
    configured like [search.marginalia.nu](https://search.marginalia.nu).  This is useful
    for local development and testing.
+3. Non-docker installation - This will install the system outside of docker. 
+   This is still an experimental run-mode.
 
 It will also prompt you for account details for a new mariadb instance, which will be
 created for you.  The database will be initialized with the schema and data required

@@ -210,8 +210,8 @@ dependencyResolutionManagement {
             library('sqlite','org.xerial','sqlite-jdbc').version('3.41.2.2')
             library('javax.annotation','javax.annotation','javax.annotation-api').version('1.3.2')
 
-            library('parquet-column', 'org.apache.parquet','parquet-column').version('1.13.1')
-            library('parquet-hadoop', 'org.apache.parquet','parquet-hadoop').version('1.13.1')
+            library('parquet-column', 'org.apache.parquet','parquet-column').version('1.14.0')
+            library('parquet-hadoop', 'org.apache.parquet','parquet-hadoop').version('1.14.0')
 
             library('curator-framework', 'org.apache.curator','curator-framework').version('5.6.0')
             library('curator-x-discovery', 'org.apache.curator','curator-x-discovery').version('5.6.0')

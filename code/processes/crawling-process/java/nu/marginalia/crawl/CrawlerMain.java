@@ -23,6 +23,7 @@ import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
@@ -136,7 +137,12 @@ public class CrawlerMain extends ProcessMainClass {
 
             var instructions = crawler.fetchInstructions();
             try {
-                crawler.run(instructions.specProvider, instructions.outputDir);
+                if (instructions.targetDomainName != null) {
+                    crawler.runForSingleDomain(instructions.targetDomainName, instructions.outputDir);
+                }
+                else {
+                    crawler.run(instructions.specProvider, instructions.outputDir);
+                }
                 instructions.ok();
             } catch (Exception ex) {
                 logger.error("Crawler failed", ex);
@@ -200,6 +206,26 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
+    public void runForSingleDomain(String targetDomainName, Path outputDir) throws Exception {
+
+        heartbeat.start();
+
+        try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler-" + targetDomainName.replace('/', '-') + ".log"));
+             WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
+             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
+        ) {
+            var spec = new CrawlSpecRecord(targetDomainName, 1000, null);
+            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, workLog);
+            task.run();
+        }
+        catch (Exception ex) {
+            logger.warn("Exception in crawler", ex);
+        }
+        finally {
+            heartbeat.shutDown();
+        }
+    }
+
     class CrawlTask implements SimpleBlockingThreadPool.Task {
 
         private final CrawlSpecRecord specification;
@@ -216,7 +242,8 @@ public class CrawlerMain extends ProcessMainClass {
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WarcArchiverIf warcArchiver,
-                  WorkLog workLog) {
+                  WorkLog workLog)
+        {
             this.specification = specification;
             this.anchorTagsSource = anchorTagsSource;
             this.outputDir = outputDir;
@@ -303,11 +330,19 @@ public class CrawlerMain extends ProcessMainClass {
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
-        CrawlRequest(CrawlSpecProvider specProvider, Path outputDir, MqMessage message, MqSingleShotInbox inbox) {
+        private final String targetDomainName;
+
+        CrawlRequest(CrawlSpecProvider specProvider,
+                     String targetDomainName,
+                     Path outputDir,
+                     MqMessage message,
+                     MqSingleShotInbox inbox)
+        {
             this.message = message;
             this.inbox = inbox;
             this.specProvider = specProvider;
             this.outputDir = outputDir;
+            this.targetDomainName = targetDomainName;
         }
 
 
@@ -325,6 +360,7 @@ public class CrawlerMain extends ProcessMainClass {
         var inbox = messageQueueFactory.createSingleShotInbox(CRAWLER_INBOX, node, UUID.randomUUID());
 
         logger.info("Waiting for instructions");
+
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.crawling.CrawlRequest.class.getSimpleName());
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
 
@@ -350,6 +386,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         return new CrawlRequest(
                 specProvider,
+                request.targetDomainName,
                 crawlData.asPath(),
                 msg,
                 inbox);

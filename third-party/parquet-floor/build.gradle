@@ -9,7 +9,7 @@ java {
 }
 
 dependencies {
-    implementation ('org.apache.parquet:parquet-column:1.13.1') {
+    implementation ('org.apache.parquet:parquet-column:1.14.0') {
         transitive = true
     }
     implementation('org.apache.parquet:parquet-hadoop:1.13.1') {

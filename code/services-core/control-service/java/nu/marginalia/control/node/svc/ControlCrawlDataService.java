@@ -86,7 +86,7 @@ public class ControlCrawlDataService {
                                        ORDER BY httpStatus
                                        """);
             while (rs.next()) {
-                final boolean isCurrentFilter = selectedContentType.equals(rs.getString("httpStatus"));
+                final boolean isCurrentFilter = selectedHttpStatus.equals(rs.getString("httpStatus"));
                 final int status = rs.getInt("httpStatus");
                 final int cnt = rs.getInt("cnt");
 

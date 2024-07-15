@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Singleton
@@ -86,6 +87,9 @@ public class ControlNodeActionsService {
                 redirectControl.renderRedirectAcknowledgement("Crawling", "..")
         );
         Spark.post("/nodes/:id/actions/recrawl", this::triggerAutoRecrawl,
+                redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
+        );
+        Spark.post("/nodes/:id/actions/recrawl-single-domain", this::triggerSingleDomainRecrawl,
                 redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
         );
         Spark.post("/nodes/:id/actions/process", this::triggerProcess,
@@ -211,6 +215,21 @@ public class ControlNodeActionsService {
         crawlClient.triggerRecrawl(
                 nodeId,
                 toCrawl
+        );
+
+        return "";
+    }
+
+    private Object triggerSingleDomainRecrawl(Request request, Response response) throws SQLException {
+        int nodeId = Integer.parseInt(request.params("id"));
+
+        var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
+        var targetDomainName = Objects.requireNonNull(request.queryParams("targetDomainName"));
+
+        crawlClient.triggerRecrawlSingleDomain(
+                nodeId,
+                toCrawl,
+                targetDomainName
         );
 
         return "";

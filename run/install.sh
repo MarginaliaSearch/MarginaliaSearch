@@ -41,7 +41,7 @@ echo
 echo "1) barebones instance (1 node)"
 echo "2) barebones instance (2 nodes)"
 echo "3) full Marginalia Search instance?"
-echo "4) non-docker install? (not recommended)"
+echo "4) non-docker install? (proof-of-concept, not recommended)"
 echo
 
 read -p "Enter 1, 2, 3, or 4: " INSTANCE_TYPE
@@ -149,17 +149,24 @@ elif [ "${INSTANCE_TYPE}" == "4" ]; then
   envsubst < install/docker-compose-scaffold.yml.template >${INSTALL_DIR}/docker-compose.yml
 
 cat <<EOF > ${INSTALL_DIR}/README
-Quick note about running Marginalia Search in a non-docker environment:
+Quick note about running Marginalia Search in a non-docker environment.
 
-* The template sets up a sample (in-docker) setup for
-  mariadb and zookeeper.  These can also be run outside
-  of docker, but you will need to update the db.properties
-  file and "zookeeper-hosts" in the system.properties
-  file to point to the correct locations/addresses.
-* Each service is spawned by the same launcher.  When building
-  the project with "gradlew assemble", the launcher is put in
-  "code/services-core/single-service-runner/build/distributions/marginalia.tar".
-  This needs to be extracted.
+Beware that this installation mode is more of a proof-of-concept and demonstration that the
+system is not unhealthily dependent on docker, than a production-ready setup, and is not
+recommended for production use!  The container setup is much more robust and easier to manage.
+
+Note: This script only sets up an install directory, and does not build the system.
+You will need to build the system with "gradlew assemble" before you can run it.
+
+Each service is spawned by the same launcher.  After building the project with
+"gradlew assemble", the launcher is put in "code/services-core/single-service-runner/build/distributions/marginalia.tar".
+This needs to be extracted!
+
+Note: The template sets up a sample (in-docker) setup for mariadb and zookeeper.  These can also be run outside
+of docker, but you will need to update the db.properties file and "zookeeper-hosts" in the system.properties
+file to point to the correct locations/addresses.
+
+Running:
 
 To launch a process you need to unpack it, and then run the launcher with the
 appropriate arguments.  For example:
@@ -177,13 +184,16 @@ A working setup needs at all the services
 * index [ http port is internal ]
 * executor [ http port is internal ]
 
-The index and executor services should be on the same partition e.g. index:1 and executor:1,
-which should be a number larger than 0.  You can have multiple pairs of index and executor partitions,
-but the pair should run on the same physical machine with the same install directory.
+Since you will need to manage ports yourself, you must assign distinct ports-pairs to each service.
 
-The query service can use any partition number.
+* An index and executor services should exist on the same partition e.g. index:1 and executor:1. The partition
+number is the last digit of the service name, and should be positive.  You can have multiple pairs of index
+and executor partitions, but the pair should run on the same physical machine with the same install directory.
 
-The control service should be on partition 1.
+* The query service can use any partition number.
+
+* The control service should be on partition 1.
+
 EOF
 
 echo

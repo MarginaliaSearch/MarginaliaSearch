@@ -8,7 +8,7 @@ import java.security.NoSuchAlgorithmException;
 class WarcDigestBuilder {
     private final MessageDigest digest;
 
-    private static final String digestAlgorithm = "SHA-1";
+    private static final String digestAlgorithm = "SHA-256";
 
     public WarcDigestBuilder() throws NoSuchAlgorithmException {
         this.digest = MessageDigest.getInstance(digestAlgorithm);

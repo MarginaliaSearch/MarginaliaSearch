@@ -6,6 +6,7 @@ import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,6 +25,10 @@ public class AnchorTagsImpl implements AnchorTagsSource {
 
         logger.info("Loading atags from " + atagsPath);
 
+        if (!Files.exists(atagsPath)) {
+            throw new IllegalArgumentException("atags file does not exist: " + atagsPath);
+        }
+
         try (var stmt = duckdbConnection.createStatement()) {
             // Insert the domains into a temporary table, then use that to filter the atags table
 
@@ -35,13 +40,18 @@ public class AnchorTagsImpl implements AnchorTagsSource {
                 }
             }
 
-            // Project the atags table down to only the relevant domains.  This looks like an SQL injection
-            // vulnerability if you're a validation tool, but the string comes from a trusted source.
+            // This is a SQL injection vulnerability if you're a validation tool, but the string comes from a trusted source
+            // -- we validate nonetheless to present a better error message
+            String path = atagsPath.toAbsolutePath().toString();
+            if (path.contains("'")) {
+                throw new IllegalArgumentException("atags file path contains a single quote: " + path + " and would break the query.");
+            }
+
             stmt.executeUpdate("""
                 create table atags as 
                     select * from '%s'  
                     where dest in (select * from domains)
-                """.formatted(atagsPath.toAbsolutePath()));
+                """.formatted(path));
 
             // Free up the memory used by the domains table
             stmt.executeUpdate("drop table domains");
