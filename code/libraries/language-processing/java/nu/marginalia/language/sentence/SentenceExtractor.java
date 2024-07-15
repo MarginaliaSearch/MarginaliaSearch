@@ -59,7 +59,7 @@ public class SentenceExtractor {
             logger.error("Could not initialize sentence detector", ex);
         }
 
-        synchronized (this) {
+        synchronized (SentenceExtractor.class) {
             if (ngramLexicon == null) {
                 ngramLexicon = new NgramLexicon(models);
             }
