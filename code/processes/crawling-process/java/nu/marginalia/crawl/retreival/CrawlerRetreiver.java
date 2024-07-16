@@ -120,7 +120,9 @@ public class CrawlerRetreiver implements AutoCloseable {
         final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(rootUrl.domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
-        sniffRootDocument(rootUrl);
+        delayTimer.waitFetchDelay(0); // initial delay after robots.txt
+        sniffRootDocument(rootUrl, delayTimer);
+        delayTimer.waitFetchDelay(0); // delay after sniffing
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
         int recrawled = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
@@ -193,13 +195,28 @@ public class CrawlerRetreiver implements AutoCloseable {
         return fetchedCount;
     }
 
-    private void sniffRootDocument(EdgeUrl rootUrl) {
+    private void sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
         try {
             logger.debug("Configuring link filter");
 
             var url = rootUrl.withPathAndParam("/", null);
 
-            var result = fetcher.fetchContent(url, warcRecorder, ContentTags.empty());
+            HttpFetchResult result = null;
+
+            for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
+                try {
+                    result = fetcher.fetchContent(url, warcRecorder, ContentTags.empty());
+                    break;
+                }
+                catch (RateLimitException ex) {
+                    timer.waitRetryDelay(ex);
+                }
+                catch (Exception ex) {
+                    logger.warn("Failed to fetch {}", url, ex);
+                    result = new HttpFetchResult.ResultException(ex);
+                }
+            }
+
             if (!(result instanceof HttpFetchResult.ResultOk ok))
                 return;
 
