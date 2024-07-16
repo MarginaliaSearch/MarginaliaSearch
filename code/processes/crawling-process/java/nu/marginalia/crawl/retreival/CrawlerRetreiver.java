@@ -127,7 +127,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         if (recrawled > 0) {
             // If we have reference data, we will always grow the crawl depth a bit
-            crawlFrontier.increaseDepth(1.5);
+            crawlFrontier.increaseDepth(1.5, 2500);
         }
 
         // Add external links to the crawl frontier
