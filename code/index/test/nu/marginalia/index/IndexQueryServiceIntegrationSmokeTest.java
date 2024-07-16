@@ -177,7 +177,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         ).build()
         );
 
-        int[] idxes = new int[] { 62, 222, 382, 60, 124, 220, 284, 380, 444, 122 };
+        int[] idxes = new int[] { 504, 360, 420, 480, 240, 180, 300, 120, 280, 440 };
         long[] ids = IntStream.of(idxes).mapToLong(Long::valueOf).toArray();
         long[] actual = rsp.results
                 .stream()
