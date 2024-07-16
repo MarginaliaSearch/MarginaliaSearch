@@ -66,8 +66,8 @@ fi
 
 download_model model/English.DICT https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.DICT
 download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.RDR
-download_model model/opennlp-sentence.bin https://mirrors.estointernet.in/apache/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin
-download_model model/opennlp-tokens.bin https://mirrors.estointernet.in/apache/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin
+download_model model/opennlp-sentence.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin
+download_model model/opennlp-tokens.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin
 download_model model/segments.bin https://downloads.marginalia.nu/model/segments.bin a2650796c77968b1bd9db0d7c01e3150
 download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/tfreq-new-algo3.bin a38f0809f983723001dfc784d88ebb6d
 download_model model/lid.176.ftz https://downloads.marginalia.nu/model/lid.176.ftz 340156704bb8c8e50c4abf35a7ec2569
