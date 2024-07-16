@@ -1,6 +1,5 @@
 package nu.marginalia.sequence;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.io.BitReader;
 import nu.marginalia.sequence.io.BitWriter;
 import org.junit.jupiter.api.Test;
@@ -10,15 +9,6 @@ import java.nio.ByteBuffer;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BitReaderTest {
-
-
-    @Test
-    void emptySequence() {
-        var writer = new BitWriter(ByteBuffer.allocate(1024));
-        var buffer = writer.finish();
-
-        assertEquals(IntList.of(), new GammaCodedSequence(buffer).values());
-    }
 
     @Test
     void getBit() {
@@ -101,6 +91,25 @@ class BitReaderTest {
     }
 
     @Test
+    void getSevens2() {
+        // Fuzz test that probes int32 misalignments
+        var writer = new BitWriter(ByteBuffer.allocate(1024));
+
+        for (int i = 0; i < 729; i++) {
+            writer.putBits(73, 7);
+        }
+
+        var buffer = writer.finish();
+
+        var reader = new BitReader(buffer);
+
+        for (int i = 0; i < 729; i++) {
+            int val = reader.get(7);
+            assertEquals(0b1001001, val);
+        }
+    }
+
+    @Test
     public void testTakeWhileZero() {
         var writer = new BitWriter(ByteBuffer.allocate(1024));
         writer.putBits(0, 4);
@@ -111,17 +120,6 @@ class BitReaderTest {
         int val = reader.takeWhileZero();
         assertEquals(4, val);
         assertTrue(reader.getBit());
-    }
-
-    @Test
-    public void testTakeWhileZeroAllZero() {
-        var writer = new BitWriter(ByteBuffer.allocate(1024));
-        writer.putBits(0, 8);
-        var buffer = writer.finish();
-
-        var reader = new BitReader(buffer);
-        int val = reader.takeWhileZero();
-        assertEquals(8, val);
     }
 
     @Test

@@ -138,10 +138,6 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         if (startPos == startLimit)
             return 0;
 
-        // if the first byte is zero, the sequence is empty and we can skip decoding
-        if (0 == raw.get(startPos))
-            return 0;
-
         return EliasGammaSequenceIterator.readCount(buffer());
     }
 
@@ -151,12 +147,9 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
      * or equal to zero.
      */
     public static ByteBuffer encode(ByteBuffer workArea, IntList sequence) {
-        if (sequence.isEmpty())
-            return ByteBuffer.allocate(0);
-
         var writer = new BitWriter(workArea);
 
-        writer.putGamma(sequence.size());
+        writer.putGamma(sequence.size() + 1);
 
         int last = 0;
 
@@ -216,14 +209,7 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
             reader = new BitReader(buffer);
 
             last = zero;
-            int bits = 1 + reader.takeWhileZero();
-
-            if (!reader.hasMore()) {
-                rem = 0;
-            }
-            else {
-                rem = reader.get(bits);
-            }
+            rem = reader.getGamma() - 1;
         }
 
         public EliasGammaSequenceIterator(ByteBuffer buffer) {
@@ -233,13 +219,7 @@ public class GammaCodedSequence implements BinarySerializable, Iterable<Integer>
         public static int readCount(ByteBuffer buffer) {
             var reader = new BitReader(buffer);
 
-            int bits = 1 + reader.takeWhileZero();
-            if (!reader.hasMore()) {
-                return 0;
-            }
-            else {
-                return reader.get(bits);
-            }
+            return reader.getGamma() - 1;
         }
 
 

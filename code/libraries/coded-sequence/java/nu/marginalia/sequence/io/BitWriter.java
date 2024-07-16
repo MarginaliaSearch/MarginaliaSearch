@@ -101,6 +101,8 @@ public class BitWriter {
 
         int bits = numberOfSignificantBits(value);
 
+        assert bits >= 1; // invariant
+
         putGamma(bits);
         putBits(value, bits);
     }

@@ -31,6 +31,20 @@ class EliasGammaSequenceIteratorTest {
     }
 
     @Test
+    public void testCodecEmpty() {
+        var ret = GammaCodedSequence.encode(work, new int[] { });
+
+        List<Integer> decoded = new ArrayList<>();
+        List<Integer> expected = List.of();
+
+        var sequence = new GammaCodedSequence.EliasGammaSequenceIterator(ret);
+        while (sequence.hasNext()) {
+            decoded.add(sequence.nextInt());
+        }
+
+        assertEquals(expected, decoded);
+    }
+    @Test
     public void valueCount() {
         var ret = GammaCodedSequence.encode(work, new int[] { 1, 3, 5, 16, 32, 64 });
         var count = GammaCodedSequence.EliasGammaSequenceIterator.readCount(ret);

@@ -161,11 +161,13 @@ class PrioPreindexTest {
                     System.out.println("Mismatch at position " + (i + pos));
 
                     long prevValue = documentIds[i + pos - 1];
-
-                    assertTrue(currValue > prevValue, "Current value is not greater than previous value");
+                    long expectedValue = documentIds[i + pos];
 
                     System.out.println("Prev: " + prevValue + " -> " +  UrlIdCodec.getRank(prevValue) + " " + UrlIdCodec.getDomainId(prevValue) + " " + UrlIdCodec.getDocumentOrdinal(prevValue));
                     System.out.println("Curr: " + currValue + " -> " + UrlIdCodec.getRank(currValue) + " " + UrlIdCodec.getDomainId(currValue) + " " + UrlIdCodec.getDocumentOrdinal(currValue));
+                    System.out.println("Exp: " + expectedValue + " -> " + UrlIdCodec.getRank(expectedValue) + " " + UrlIdCodec.getDomainId(expectedValue) + " " + UrlIdCodec.getDocumentOrdinal(expectedValue));
+
+                    assertTrue(currValue > prevValue, "Current value is not greater than previous value");
 
                     Assertions.fail();
                 }

@@ -49,8 +49,10 @@ public class BitReader {
 
     /** Read the next width bits from the buffer */
     public int get(int width) {
-        if (width == 0)
+        if (width == 0) {
             return 0;
+        }
+        assert width <= 32;
 
         if (bitPosition <= 0) {
             readNext();
@@ -94,9 +96,7 @@ public class BitReader {
         do {
             // Ensure we have bits to read
             if (bitPosition <= 0) {
-                if (underlying.hasRemaining())
-                    readNext();
-                else break;
+                readNext();
             }
 
             // Count the number of leading zeroes in the current value
@@ -117,12 +117,24 @@ public class BitReader {
 
     public int getGamma() {
         int bits = takeWhileZero();
-        return get(bits + 1);
+        int ret = get(bits + 1);
+
+        // The highest bit in the gamma coded value must be set, we can use this invariant
+        // to detect data corruption early
+        assert (ret & (1 << bits)) != 0 : "Highest bit in gamma coded return value not set";
+
+        return ret;
     }
 
     public int getDelta() {
         int bits = getGamma();
-        return get(bits);
+        int ret = get(bits);
+
+        // The highest bit in the delta coded value must be set, we can use this invariant
+        // to detect data corruption early
+        assert (ret & (1 << (bits-1))) != 0 : "Highest bit in delta coded return value not set";
+
+        return ret;
     }
 
     public boolean hasMore() {
