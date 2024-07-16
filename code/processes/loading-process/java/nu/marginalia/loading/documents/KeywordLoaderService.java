@@ -10,7 +10,7 @@ import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.DocumentRecordKeywordsProjection;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,7 @@ public class KeywordLoaderService {
         var words = new DocumentKeywords(
                 projection.words.toArray(String[]::new),
                 projection.metas.toArray(),
-                projection.positions.toArray(GammaCodedSequence[]::new)
+                projection.positions.toArray(CodedSequence[]::new)
         );
 
         writer.putWords(combinedId,

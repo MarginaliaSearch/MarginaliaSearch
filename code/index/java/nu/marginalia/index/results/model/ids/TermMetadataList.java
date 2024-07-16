@@ -1,7 +1,7 @@
 package nu.marginalia.index.results.model.ids;
 
 import nu.marginalia.index.positions.TermData;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -28,7 +28,7 @@ public final class TermMetadataList {
      * may be null if the term is not in the document
      */
     @Nullable
-    public GammaCodedSequence position(int i) {
+    public CodedSequence position(int i) {
         if (array[i] == null)
             return null;
 

@@ -1,11 +1,11 @@
 package nu.marginalia.index.journal.model;
 
 import nu.marginalia.hash.MurmurHash3_128;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 
 public record IndexJournalEntryData(long[] termIds,
                                     long[] metadata,
-                                    GammaCodedSequence[] positions) {
+                                    CodedSequence[] positions) {
 
     public IndexJournalEntryData {
         assert termIds.length == metadata.length;
@@ -14,7 +14,7 @@ public record IndexJournalEntryData(long[] termIds,
 
     public IndexJournalEntryData(String[] keywords,
                                  long[] metadata,
-                                 GammaCodedSequence[] positions)
+                                 CodedSequence[] positions)
     {
         this(termIds(keywords), metadata, positions);
     }

@@ -1,6 +1,5 @@
 package nu.marginalia.sequence;
 
-import blue.strategic.parquet.BinarySerializable;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -16,7 +15,7 @@ import java.util.StringJoiner;
  * and offers convenience methods for decoding and iterating
  * over the data.
  * */
-public class GammaCodedSequence implements BinarySerializable, Iterable<Integer> {
+public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
     private final ByteBuffer raw;
 
     private final int startPos;

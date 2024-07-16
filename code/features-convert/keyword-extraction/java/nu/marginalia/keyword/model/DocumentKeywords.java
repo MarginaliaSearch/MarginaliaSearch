@@ -1,6 +1,6 @@
 package nu.marginalia.keyword.model;
 
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,11 +12,11 @@ public final class DocumentKeywords implements Serializable {
 
     public final String[] keywords;
     public final long[] metadata;
-    public final GammaCodedSequence[] positions;
+    public final CodedSequence[] positions;
 
     public DocumentKeywords(String[] keywords,
                             long[] metadata,
-                            GammaCodedSequence[] positions)
+                            CodedSequence[] positions)
     {
         this.keywords = keywords;
         this.metadata = metadata;

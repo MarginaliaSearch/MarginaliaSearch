@@ -5,6 +5,7 @@ import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;
@@ -93,7 +94,7 @@ class DocumentKeywordExtractorTest {
         var keywordsBuilt = keywords.build(ByteBuffer.allocate(1024));
 
         Map<String, WordMetadata> flags = new HashMap<>();
-        Map<String, GammaCodedSequence> positions = new HashMap<>();
+        Map<String, CodedSequence> positions = new HashMap<>();
 
         for (int i = 0; i < keywordsBuilt.size(); i++) {
             String keyword = keywordsBuilt.keywords[i];

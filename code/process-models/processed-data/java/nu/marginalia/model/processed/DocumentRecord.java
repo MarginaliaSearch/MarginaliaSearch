@@ -6,6 +6,7 @@ import blue.strategic.parquet.ValueWriter;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
@@ -59,7 +60,7 @@ public class DocumentRecord {
     @Nullable
     public TLongList metas;
     @Nullable
-    public List<GammaCodedSequence> positions;
+    public List<CodedSequence> positions;
 
     public static Hydrator<DocumentRecord, DocumentRecord> newHydrator() {
         return new DocumentDataHydrator();

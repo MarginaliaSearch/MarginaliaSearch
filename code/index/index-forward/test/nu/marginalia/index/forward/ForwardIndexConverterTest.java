@@ -9,6 +9,7 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -84,7 +85,7 @@ class ForwardIndexConverterTest {
                 new IndexJournalEntryData(
                     new String[]{},
                     new long[]{},
-                    new GammaCodedSequence[]{}
+                    new CodedSequence[]{}
                 )
         );
     }

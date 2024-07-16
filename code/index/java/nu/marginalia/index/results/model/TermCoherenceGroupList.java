@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.ids.TermIdList;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class TermCoherenceGroupList {
         }
     }
 
-    public boolean testMandatory(GammaCodedSequence[] positions) {
+    public boolean testMandatory(CodedSequence[] positions) {
         for (var coherenceSet : mandatoryGroups) {
             if (!coherenceSet.test(positions)) {
                 return false;
@@ -38,7 +38,7 @@ public class TermCoherenceGroupList {
         return true;
     }
 
-    public int testOptional(GammaCodedSequence[] positions) {
+    public int testOptional(CodedSequence[] positions) {
         int best = 0;
         for (var coherenceSet : mandatoryGroups) {
             if (coherenceSet.test(positions)) {
@@ -71,7 +71,7 @@ public class TermCoherenceGroupList {
             }
         }
 
-        public boolean test(GammaCodedSequence[] positions) {
+        public boolean test(CodedSequence[] positions) {
             IntIterator[] sequences = new IntIterator[present.cardinality()];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {

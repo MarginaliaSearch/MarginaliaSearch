@@ -22,7 +22,7 @@ import nu.marginalia.index.results.model.ids.TermIdList;
 import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,7 @@ public class IndexResultRankingService {
             // thrashing in there; out here we can rely on implicit array ordering to match up the data.
 
             long[] flags = new long[termCount];
-            GammaCodedSequence[] positions = new GammaCodedSequence[termCount];
+            CodedSequence[] positions = new CodedSequence[termCount];
 
             // Iterate over documents by their index in the combinedDocIds, as we need the index for the
             // term data arrays as well

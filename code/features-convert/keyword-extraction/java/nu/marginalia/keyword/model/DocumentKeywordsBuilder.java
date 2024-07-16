@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import lombok.Getter;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class DocumentKeywordsBuilder {
     public DocumentKeywords build(ByteBuffer workArea) {
         final String[] wordArray = new String[wordToMeta.size()];
         final long[] meta = new long[wordToMeta.size()];
-        final GammaCodedSequence[] positions = new GammaCodedSequence[wordToMeta.size()];
+        final CodedSequence[] positions = new CodedSequence[wordToMeta.size()];
 
         var iter = wordToMeta.object2LongEntrySet().fastIterator();
 

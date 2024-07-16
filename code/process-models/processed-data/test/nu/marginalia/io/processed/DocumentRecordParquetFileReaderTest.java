@@ -2,6 +2,7 @@ package nu.marginalia.io.processed;
 
 import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.model.processed.DocumentRecord;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +74,7 @@ class DocumentRecordParquetFileReaderTest {
         TLongArrayList metas = new TLongArrayList(LongStream.range(0, 100000).toArray());
 
         ByteBuffer workArea = ByteBuffer.allocate(1024);
-        List<GammaCodedSequence> poses = Stream.generate(() -> GammaCodedSequence.generate(workArea, 3, 4)).limit(100000).toList();
+        List<CodedSequence> poses = Stream.generate(() -> (CodedSequence) GammaCodedSequence.generate(workArea, 3, 4)).limit(100000).toList();
 
         var doc = new DocumentRecord(
                 "www.marginalia.nu",

@@ -16,7 +16,7 @@ import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
 import javax.annotation.Nullable;
@@ -50,10 +50,10 @@ public class IndexResultScoreCalculator {
     public SearchResultItem calculateScore(long combinedId,
                                            QuerySearchTerms searchTerms,
                                            long[] wordFlags,
-                                           GammaCodedSequence[] positions)
+                                           CodedSequence[] positions)
     {
 
-        CompiledQuery<GammaCodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
+        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
 
         int[] counts = new int[compiledQuery.size()];
 
@@ -116,7 +116,7 @@ public class IndexResultScoreCalculator {
         return false;
     }
 
-    private boolean hasPrioTerm(QuerySearchTerms searchTerms, GammaCodedSequence[] positions) {
+    private boolean hasPrioTerm(QuerySearchTerms searchTerms, CodedSequence[] positions) {
         var allTerms = searchTerms.termIdsAll;
         var prioTerms = searchTerms.termIdsPrio;
 
@@ -166,7 +166,7 @@ public class IndexResultScoreCalculator {
 
     public double calculateSearchResultValue(CompiledQueryLong wordFlagsQuery,
                                              CompiledQueryInt positionsCountQuery,
-                                             CompiledQuery<GammaCodedSequence> positionsQuery, long documentMetadata,
+                                             CompiledQuery<CodedSequence> positionsQuery, long documentMetadata,
                                              int features,
                                              int length,
                                              int bestCoherence,
@@ -305,7 +305,7 @@ public class IndexResultScoreCalculator {
     }
 
 
-    public static double calculateAvgMinDistance(CompiledQuery<GammaCodedSequence> positions, ResultRankingContext ctx) {
+    public static double calculateAvgMinDistance(CompiledQuery<CodedSequence> positions, ResultRankingContext ctx) {
         double sum = 0;
         int cnt = 0;
 

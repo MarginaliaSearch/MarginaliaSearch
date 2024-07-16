@@ -1,5 +1,6 @@
 package nu.marginalia.index.journal.model;
 
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.nio.ByteBuffer;
@@ -17,7 +18,7 @@ public record IndexJournalEntryTermData(
         long metadata,
         ByteBuffer positionsBuffer)
 {
-    public GammaCodedSequence positions() {
+    public CodedSequence positions() {
         return new GammaCodedSequence(positionsBuffer);
     }
 

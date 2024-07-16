@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.TermMetadataList;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 
 import javax.annotation.Nullable;
 
@@ -25,7 +25,7 @@ public class TermMetadataForCombinedDocumentIds {
     }
 
     @Nullable
-    public GammaCodedSequence getPositions(long termId, long combinedId) {
+    public CodedSequence getPositions(long termId, long combinedId) {
         var metaByCombinedId = termdocToMeta.get(termId);
 
         if (metaByCombinedId == null) {

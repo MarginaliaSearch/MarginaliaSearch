@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.CodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +81,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
     {
         final long[] keywords = data.termIds();
         final long[] metadata = data.metadata();
-        final GammaCodedSequence[] positions = data.positions();
+        final CodedSequence[] positions = data.positions();
 
         int entrySize = 0;
         for (var position : positions) {

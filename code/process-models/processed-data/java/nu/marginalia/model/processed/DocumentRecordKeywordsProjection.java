@@ -4,6 +4,7 @@ import blue.strategic.parquet.Hydrator;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import lombok.*;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,7 @@ public class DocumentRecordKeywordsProjection {
 
     public List<String> words;
     public TLongList metas;
-    public List<GammaCodedSequence> positions;
+    public List<CodedSequence> positions;
 
     public boolean hasKeywords() {
         return words != null && metas != null;

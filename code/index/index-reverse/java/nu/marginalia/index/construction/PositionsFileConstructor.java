@@ -1,7 +1,6 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.index.positions.PositionCodec;
-import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
