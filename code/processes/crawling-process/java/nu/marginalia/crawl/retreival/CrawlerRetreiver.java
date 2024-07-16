@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CrawlerRetreiver implements AutoCloseable {
 
@@ -90,6 +92,10 @@ public class CrawlerRetreiver implements AutoCloseable {
                 new EdgeUrl("http", new EdgeDomain(domain), null, "/", null));
 
         try {
+            // Sleep a bit to avoid hammering the server with requests, we just probed it
+            TimeUnit.SECONDS.sleep(1);
+
+            // Fetch the domain
             return crawlDomain(oldCrawlData, probeResult, domainLinks);
         }
         catch (Exception ex) {
