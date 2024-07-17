@@ -1,4 +1,4 @@
-package nu.marginalia.util;
+package nu.marginalia.btree;
 
 public class NextPrimeUtil {
 

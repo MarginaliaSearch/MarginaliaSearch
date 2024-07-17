@@ -12,7 +12,6 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:libraries:array')
-    implementation project(':code:libraries:next-prime')
 
     implementation libs.bundles.slf4j
 
