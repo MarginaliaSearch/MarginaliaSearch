@@ -37,14 +37,14 @@ import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.test.IntegrationTestModule;
 import nu.marginalia.test.TestUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -52,7 +52,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.function.LongPredicate;
 
 import static nu.marginalia.index.journal.reader.IndexJournalReader.FILE_HEADER_SIZE_BYTES;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
@@ -265,34 +264,14 @@ public class IntegrationTest {
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        // The priority index only includes words that have bits indicating they are
-        // important to the document.  This filter will act on the encoded {@see WordMetadata}
-        LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
-
         var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
-                (path) -> IndexJournalReader.singleFile(path).filtering(wordMetaFilter),
+                (path) -> IndexJournalReader.singleFile(path).filtering(r -> r != 0),
                 this::addRankToIdEncoding,
                 tmpDir);
 
         constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", workDir);
-    }
-
-    private static LongPredicate getPriorityIndexWordMetaFilter() {
-
-        long highPriorityFlags =
-                WordFlags.Title.asBit()
-                        | WordFlags.Subjects.asBit()
-                        | WordFlags.TfIdfHigh.asBit()
-                        | WordFlags.NamesWords.asBit()
-                        | WordFlags.UrlDomain.asBit()
-                        | WordFlags.UrlPath.asBit()
-                        | WordFlags.Site.asBit()
-                        | WordFlags.ExternalLink.asBit()
-                        | WordFlags.SiteAdjacent.asBit();
-
-        return r -> WordMetadata.hasAnyFlags(r, highPriorityFlags);
     }
 
     private void createForwardIndex() throws IOException {

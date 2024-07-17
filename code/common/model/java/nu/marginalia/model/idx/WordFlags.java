@@ -4,15 +4,11 @@ package nu.marginalia.model.idx;
 import java.util.EnumSet;
 
 public enum WordFlags {
-
     /** Word appears in title */
     Title,
 
     /** Word appears to be the subject in several sentences */
     Subjects,
-
-    /** Word has high tf-idf */
-    TfIdfHigh,
 
     /** Word is a likely named object. This is a weaker version of Subjects. */
     NamesWords,

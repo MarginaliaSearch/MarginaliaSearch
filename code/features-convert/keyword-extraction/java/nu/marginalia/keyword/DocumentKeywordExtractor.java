@@ -1,16 +1,16 @@
 package nu.marginalia.keyword;
 
+import com.google.inject.Inject;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
-import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 
-import com.google.inject.Inject;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 
@@ -44,7 +44,6 @@ public class DocumentKeywordExtractor {
         var urlKeywords = new UrlKeywords(url);
 
         var keywordMetadata = KeywordMetadata.builder()
-                .tfIdfCounts(tfIdfCounts)
                 .titleKeywords(titleKeywords)
                 .nameLikeKeywords(nameLikeKeywords)
                 .subjectLikeKeywords(subjectLikeKeywords)
@@ -55,7 +54,6 @@ public class DocumentKeywordExtractor {
 
         createSimpleWords(wordsBuilder, keywordMetadata, dld);
 
-        createNGramTermsFromSet(wordsBuilder, keywordMetadata, tfIdfCounts);
         createNGramTermsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
         createNGramTermsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
         createNGramTermsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
@@ -69,7 +67,7 @@ public class DocumentKeywordExtractor {
     }
 
     private static Collection<String> getImportantWords(WordsTfIdfCounts tfIdfCounts, NameLikeKeywords nameLikeKeywords, SubjectLikeKeywords subjectLikeKeywords, DocumentKeywordsBuilder wordsBuilder) {
-        return Stream.of(tfIdfCounts, nameLikeKeywords, subjectLikeKeywords)
+        return Stream.of(nameLikeKeywords, subjectLikeKeywords)
                 .flatMap(k -> k.getReps().stream())
                 .filter(w -> {
                     if (w.word.length() < 3)
