@@ -1,13 +1,12 @@
 package nu.marginalia.keyword.extractors;
 
-import com.google.common.base.CharMatcher;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.keyword.WordReps;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
-import nu.marginalia.keyword.KeywordExtractor;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,13 +20,11 @@ public class NameLikeKeywords implements WordReps {
         Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>(1000);
         HashMap<String, HashSet<WordRep>> instances = new HashMap<>(1000);
 
-        final var isUpperCase = CharMatcher.forPredicate(Character::isUpperCase);
-
         for (int i = 0; i < dld.sentences.length; i++) {
             DocumentSentence sent = dld.sentences[i];
             var keywords = keywordExtractor.getProperNames(sent);
             for (var span : keywords) {
-                if (span.size() <= 1 && isUpperCase.matchesAllOf(sent.words[span.start]))
+                if (span.size() <= 1 && sent.isAllCaps(span.start))
                     continue;
 
                 var stemmed = sent.constructStemmedWordFromSpan(span);

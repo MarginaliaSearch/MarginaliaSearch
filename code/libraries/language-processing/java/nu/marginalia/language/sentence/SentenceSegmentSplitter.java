@@ -2,25 +2,18 @@ package nu.marginalia.language.sentence;
 
 import com.google.common.base.CharMatcher;
 import gnu.trove.list.array.TIntArrayList;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import nu.marginalia.language.encoding.AsciiFlattener;
-import nu.marginalia.language.model.WordSeparator;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static nu.marginalia.language.WordPatterns.*;
+import static nu.marginalia.language.WordPatterns.MAX_WORD_LENGTH;
 
 public class SentenceSegmentSplitter {
 
-    @AllArgsConstructor
-    @Getter
-    public static class SeparatedSentence {
-        String[] words;
-        int[] separators;
-    }
+    public record SeparatedSentence(String[] words, BitSet separators) { }
 
     private static final CharMatcher noiseCharacterMatcher = CharMatcher.anyOf("/*-");
 
@@ -43,7 +36,7 @@ public class SentenceSegmentSplitter {
      * @param segment The sentence to split
      * @return A list of words and separators
      */
-    public static SeparatedSentence splitSegment(String segment) {
+    public static SeparatedSentence splitSegment(String segment, int maxLength) {
         String flatSegment = AsciiFlattener.flattenUnicode(segment);
 
         var matcher = wordBreakPattern.matcher(flatSegment);
@@ -77,7 +70,7 @@ public class SentenceSegmentSplitter {
         }
 
         List<String> ret = new ArrayList<>(words.size());
-        TIntArrayList seps = new TIntArrayList(words.size());
+        BitSet seps = new BitSet(separators.size());
 
         String[] parts = words.toArray(String[]::new);
         for (int i = 0; i < parts.length; i++) {
@@ -89,7 +82,9 @@ public class SentenceSegmentSplitter {
                 continue;
 
             ret.add(parts[i]);
-            seps.add(separators.getQuick(i));
+            if (separators.getQuick(i) > 0) {
+                seps.set(i);
+            }
         }
 
         for (int i = 0; i < ret.size(); i++) {
@@ -101,13 +96,26 @@ public class SentenceSegmentSplitter {
             if (part.endsWith("'") && part.length() > 1) {
                 ret.set(i, part.substring(0, part.length()-1));
             }
+            while (part.endsWith(".")) {
+                part = part.substring(0, part.length()-1);
+                ret.set(i, part);
+            }
+        }
+
+        if (ret.size() > maxLength) {
+            ret.subList(maxLength, ret.size()).clear();
+            seps = seps.get(0, maxLength);
         }
 
         return new SeparatedSentence(
                 ret.toArray(String[]::new),
-                seps.toArray()
+                seps
         );
     }
 
 
+    public static final class WordSeparator {
+        public static final int COMMA = 0;
+        public static final int SPACE = 1;
+    }
 }

@@ -3,7 +3,6 @@ package nu.marginalia.keyword;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordSpan;
-import nu.marginalia.language.model.WordSeparator;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -20,15 +19,15 @@ public class KeywordExtractor {
         }
 
         for (int i = 1; i < sentence.length(); i++) {
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { continue; }
 
             if (isProperNoun(i, sentence) && isProperNoun(i-1, sentence))
                 spans.add(new WordSpan(i-1, i+1));
         }
 
         for (int i = 2; i < sentence.length(); i++) {
-            if (sentence.separators[i-2] == WordSeparator.COMMA) { continue; }
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { i++; continue; }
+            if (sentence.isSeparatorComma(i-2)) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { i++; continue; }
 
             if (isProperNoun(i, sentence)
                 && (isJoiner(sentence, i-1) || isProperNoun(i-1, sentence))
@@ -37,9 +36,9 @@ public class KeywordExtractor {
         }
 
         for (int i = 3; i < sentence.length(); i++) {
-            if (sentence.separators[i-3] == WordSeparator.COMMA) { continue; }
-            if (sentence.separators[i-2] == WordSeparator.COMMA) { i++; continue; }
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { i+=2; continue; }
+            if (sentence.isSeparatorComma(i-3)) { continue; }
+            if (sentence.isSeparatorComma(i-2)) { i++; continue; }
+            if (sentence.isSeparatorComma(i-1)) { i+=2; continue; }
 
             if (isProperNoun(i, sentence) && isProperNoun(i-3, sentence)) {
                 if (isProperNoun(i - 1, sentence) && isProperNoun(i - 2, sentence))
@@ -66,7 +65,7 @@ public class KeywordExtractor {
         }
 
         for (int i = 1; i < sentence.length(); i++) {
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { continue; }
 
             if (isNoun(i, sentence)
                     && (isNoun(i-1, sentence)) || "JJ".equals(sentence.posTags[i-1])) {
@@ -75,8 +74,8 @@ public class KeywordExtractor {
         }
 
         for (int i = 2; i < sentence.length(); i++) {
-            if (sentence.separators[i-2] == WordSeparator.COMMA) { continue; }
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { i++; continue; }
+            if (sentence.isSeparatorComma(i-2)) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { i++; continue; }
 
             if ((isNoun(i, sentence))
                     && (isJoiner(sentence, i-1) || isNoun(i-1, sentence))
@@ -85,9 +84,9 @@ public class KeywordExtractor {
         }
 
         for (int i = 3; i < sentence.length(); i++) {
-            if (sentence.separators[i-3] == WordSeparator.COMMA) { continue; }
-            if (sentence.separators[i-2] == WordSeparator.COMMA) { i++; continue; }
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { i+=2; continue; }
+            if (sentence.isSeparatorComma(i-3)) { continue; }
+            if (sentence.isSeparatorComma(i-2)) { i++; continue; }
+            if (sentence.isSeparatorComma(i-1)) { i+=2; continue; }
 
             if (isNoun(i, sentence) && (isNoun(i-3, sentence) || "JJ".equals(sentence.posTags[i-3]))) {
                 if (isNoun(i - 1, sentence) && isNoun(i - 2, sentence))
@@ -119,7 +118,7 @@ public class KeywordExtractor {
         }
 
         for (int i = 1; i < sentence.length(); i++) {
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { continue; }
 
             if (isName(i, sentence)) {
                 if (isName(i - 1, sentence) || isTopAdj(i-1, sentence))
@@ -131,8 +130,8 @@ public class KeywordExtractor {
         }
 
         for (int i = 2; i < sentence.length(); i++) {
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { i++; continue; }
-            if (sentence.separators[i-2] == WordSeparator.COMMA) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { i++; continue; }
+            if (sentence.isSeparatorComma(i-2)) { continue; }
 
             if (isName(i, sentence)) {
                 if ((isName(i-1, sentence) || isTopAdj(i-1, sentence))
@@ -149,9 +148,9 @@ public class KeywordExtractor {
         }
 
         for (int i = 3; i < sentence.length(); i++) {
-            if (sentence.separators[i-1] == WordSeparator.COMMA) { i+=2; continue; }
-            if (sentence.separators[i-2] == WordSeparator.COMMA) { i++; continue; }
-            if (sentence.separators[i-3] == WordSeparator.COMMA) { continue; }
+            if (sentence.isSeparatorComma(i-1)) { i+=2; continue; }
+            if (sentence.isSeparatorComma(i-2)) { i++; continue; }
+            if (sentence.isSeparatorComma(i-3)) { continue; }
 
             if (isName(i, sentence) &&
                     (isName(i-1, sentence) || isTopAdj(i-1, sentence)) &&
@@ -217,7 +216,7 @@ public class KeywordExtractor {
     private boolean isViableSpanForWord(DocumentSentence sentence, WordSpan w) {
 
         for (int i = w.start; i < w.end-1; i++) {
-            if (sentence.separators[i] == WordSeparator.COMMA) {
+            if (sentence.isSeparatorComma(i)) {
                 return false;
             }
         }

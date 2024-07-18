@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -123,10 +122,6 @@ public class TermFrequencyExporter implements ExporterIf {
                 for (var sent : dld.sentences) {
                     for (var word : sent) {
                         words.add(longHash(word.stemmed().getBytes(StandardCharsets.UTF_8)));
-                    }
-
-                    for (var ngram : sent.ngramStemmed) {
-                        words.add(longHash(ngram.getBytes()));
                     }
                 }
 

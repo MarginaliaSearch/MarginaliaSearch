@@ -190,7 +190,9 @@ class TitleKeywordsTest {
     public void extractTitleWords() {
         var se = new SentenceExtractor(TestLanguageModels.getLanguageModels());
 
-        var reps = new TitleKeywords(new KeywordExtractor(), se.extractSentences(Jsoup.parse(document))).getReps();
+        var dld = se.extractSentences(Jsoup.parse(document));
+
+        var reps = new TitleKeywords(new KeywordExtractor(), dld).getReps();
         var words = reps.stream().map(rep -> rep.word).collect(Collectors.toSet());
 
         Set<String> expected = Set.of(

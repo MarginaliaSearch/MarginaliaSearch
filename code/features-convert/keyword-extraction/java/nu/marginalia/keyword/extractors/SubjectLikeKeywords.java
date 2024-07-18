@@ -6,7 +6,6 @@ import nu.marginalia.keyword.WordReps;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.model.WordSpan;
-import nu.marginalia.language.model.WordSeparator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -36,8 +35,7 @@ public class SubjectLikeKeywords implements WordReps {
                 if (kw.end + 2 >= sentence.length()) {
                     continue;
                 }
-                if (sentence.separators[kw.end] == WordSeparator.COMMA
-                        || sentence.separators[kw.end + 1] == WordSeparator.COMMA)
+                if (sentence.isSeparatorComma(kw.end) || sentence.isSeparatorComma(kw.end + 1))
                     continue;
 
                 String nextTag = sentence.posTags[kw.end];

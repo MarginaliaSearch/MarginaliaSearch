@@ -1,14 +1,17 @@
 package nu.marginalia.language.sentence;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SentenceExtractorTest {
     private static SentenceExtractor sentenceExtractor;
@@ -20,26 +23,25 @@ class SentenceExtractorTest {
 
     @Test
     void testParen() {
-        var dld = sentenceExtractor.extractSentence("I am (very) tall");
+        var dld = sentenceExtractor.extractSentence("I am (very) tall", EnumSet.noneOf(HtmlTag.class));
 
         System.out.println(dld);
     }
 
     @Test
     void testPolishArtist() {
-        var dld = sentenceExtractor.extractSentence("Uklański");
+        var dld = sentenceExtractor.extractSentence("Uklański", EnumSet.noneOf(HtmlTag.class));
 
-        assertEquals(1, dld.words.length);
-        assertEquals("Uklanski", dld.words[0]);
+        assertEquals(1, dld.wordsLowerCase.length);
         assertEquals("uklanski", dld.wordsLowerCase[0]);
     }
 
     @Test
     void testJava() {
-        var dld = sentenceExtractor.extractSentence("Foreign Function & Memory API");
+        var dld = sentenceExtractor.extractSentence("Foreign Function & Memory API", EnumSet.noneOf(HtmlTag.class));
 
-        assertEquals(4, dld.words.length);
-        assertArrayEquals(new String[] {"Foreign", "Function", "Memory", "API"}, dld.words);
+        assertEquals(4, dld.wordsLowerCase.length);
+        assertArrayEquals(new String[] {"foreign", "function", "memory", "api"}, dld.wordsLowerCase);
     }
 
     @Test
@@ -77,10 +79,9 @@ class SentenceExtractorTest {
     }
     @Test
     void testApostrophe() {
-        var dld = sentenceExtractor.extractSentence("duke nuke 'em's big ol' big gun");
-        assertEquals(7, dld.words.length);
+        var dld = sentenceExtractor.extractSentence("duke nuke 'em's big ol' big gun", EnumSet.noneOf(HtmlTag.class));
+        assertEquals(7, dld.wordsLowerCase.length);
 
-        assertArrayEquals(new String[] { "duke", "nuke", "em's", "big", "ol", "big", "gun"}, dld.words);
         assertArrayEquals(new String[] { "duke", "nuke", "em", "big", "ol", "big", "gun"}, dld.wordsLowerCase);
     }
 }

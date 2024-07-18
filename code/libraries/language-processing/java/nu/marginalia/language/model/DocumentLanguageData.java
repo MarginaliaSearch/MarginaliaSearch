@@ -1,47 +1,39 @@
 package nu.marginalia.language.model;
 
-import gnu.trove.map.hash.TObjectIntHashMap;
-import lombok.AllArgsConstructor;
 import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.lsh.EasyLSH;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
+import java.util.List;
 
-/**
+/** Holds the sentences and text of a document, decorated with
+ * HTML tags, POS tags, and other information.
+ *
  * @see SentenceExtractor
  */
-@AllArgsConstructor
 public class DocumentLanguageData {
     public final DocumentSentence[] sentences;
-    public final DocumentSentence[] titleSentences;
-    public final TObjectIntHashMap<String> wordCount;
     public final String text;
 
-    /** for test convenience */
-    public static DocumentLanguageData empty() {
-        return new DocumentLanguageData(
-                new DocumentSentence[0],
-                new DocumentSentence[0],
-                new TObjectIntHashMap<>(),
-                ""
-        );
+    public DocumentLanguageData(List<DocumentSentence> sentences,
+                                String text) {
+        this.sentences = sentences.toArray(DocumentSentence[]::new);
+        this.text = text;
+    }
+
+    public List<DocumentSentence> findSentencesForTag(HtmlTag tag) {
+        return Arrays.stream(sentences).filter(s -> s.htmlTags.contains(tag)).toList();
     }
 
     public int totalNumWords() {
         int ret = 0;
+
         for (int i = 0; i < sentences.length; i++) {
             ret += sentences[i].length();
         }
+
         return ret;
-    }
-
-    public Stream<String> streamLowerCase() {
-        return Arrays.stream(sentences).map(sent -> sent.wordsLowerCase).flatMap(Arrays::stream);
-    }
-
-    public Stream<String> stream() {
-        return Arrays.stream(sentences).map(sent -> sent.words).flatMap(Arrays::stream);
     }
 
     public long localitySensitiveHashCode() {

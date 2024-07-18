@@ -134,15 +134,6 @@ public class DocumentKeywordExtractor {
                 wordsBuilder.addMeta(rep.word, meta);
             }
 
-            for (int i = 0; i < sent.ngrams.length; i++) {
-                var ngram = sent.ngrams[i];
-                var ngramStemmed = sent.ngramStemmed[i];
-
-                long meta = metadata.getMetadataForWord(ngramStemmed);
-
-                wordsBuilder.addMeta(ngram, meta);
-            }
-
         }
     }
 

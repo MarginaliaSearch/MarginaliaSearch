@@ -39,10 +39,6 @@ public class TitleExtractor {
         title = getFirstTagText(doc, "h5");
         if (title != null) return title;
 
-        if (dld.sentences.length > 0) {
-            return dld.sentences[0].originalSentence;
-        }
-
         return url;
     }
 

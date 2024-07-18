@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.EdgeUrl;
 
 import java.io.BufferedReader;
@@ -55,7 +56,7 @@ public class AnchorTextKeywords {
             if (stopList.contains(keyword.text().toLowerCase()))
                 continue;
 
-            var sentence = sentenceExtractor.extractSentence(keyword.text());
+            var sentence = sentenceExtractor.extractSentence(keyword.text(), EnumSet.noneOf(HtmlTag.class));
             for (var wordSpan : keywordExtractor.getKeywordsFromSentence(sentence)) {
                 wordsWithCount.merge(sentence.constructWordFromSpan(wordSpan), 1, Integer::sum);
             }

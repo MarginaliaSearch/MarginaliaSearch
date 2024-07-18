@@ -2,11 +2,11 @@ package nu.marginalia.keyword;
 
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.segmentation.NgramLexicon;
-import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Tag;
@@ -59,8 +59,8 @@ class SentenceExtractorTest {
 
     @Test
     public void testACDC() {
-        var ret = se.extractSentence("AC/DC is a rock band.");
-        assertEquals("AC/DC", ret.words[0]);
+        var ret = se.extractSentence("AC/DC is a rock band.", EnumSet.noneOf(HtmlTag.class));
+        assertEquals("ac/dc", ret.wordsLowerCase[0]);
     }
 
     final Pattern p = Pattern.compile("([, ]+)");

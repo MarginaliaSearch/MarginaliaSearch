@@ -2,52 +2,55 @@ package nu.marginalia.language.model;
 
 
 import nu.marginalia.language.WordPatterns;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.SoftReference;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.StringJoiner;
 
 public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
-    public final String originalSentence;
-    public final String[] words;
-    public final int[] separators;
+
+    /** A span of words in a sentence */
+
     public final String[] wordsLowerCase;
     public final String[] posTags;
     public final String[] stemmedWords;
-    public final String[] ngrams;
-    public final String[] ngramStemmed;
+
+    public final EnumSet<HtmlTag> htmlTags;
 
     private final BitSet isStopWord;
+    private final BitSet separators;
+    private final BitSet isCapitalized;
+    private final BitSet isAllCaps;
+
 
 
     public SoftReference<WordSpan[]> keywords;
 
-    public DocumentSentence(String originalSentence,
-                            String[] words,
-                            int[] separators,
+    public DocumentSentence(BitSet separators,
                             String[] wordsLowerCase,
                             String[] posTags,
                             String[] stemmedWords,
-                            String[] ngrams,
-                            String[] ngramsStemmed
+                            EnumSet<HtmlTag> htmlTags,
+                            BitSet isCapitalized,
+                            BitSet isAllCaps
                             )
     {
-        this.originalSentence = originalSentence;
-        this.words = words;
         this.separators = separators;
         this.wordsLowerCase = wordsLowerCase;
         this.posTags = posTags;
         this.stemmedWords = stemmedWords;
+        this.htmlTags = htmlTags;
+        this.isCapitalized = isCapitalized;
+        this.isAllCaps = isAllCaps;
 
-        isStopWord = new BitSet(words.length);
+        isStopWord = new BitSet(wordsLowerCase.length);
 
-        this.ngrams = ngrams;
-        this.ngramStemmed = ngramsStemmed;
-
-        for (int i = 0; i < words.length; i++) {
-            if (WordPatterns.isStopWord(words[i]))
+        for (int i = 0; i < wordsLowerCase.length; i++) {
+            if (WordPatterns.isStopWord(wordsLowerCase[i]))
                 isStopWord.set(i);
         }
     }
@@ -55,14 +58,22 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
     public boolean isStopWord(int idx) {
         return isStopWord.get(idx);
     }
-    public void setIsStopWord(int idx, boolean val) {
-        if (val)
-            isStopWord.set(idx);
-        else
-            isStopWord.clear();
-    }
+
     public int length() {
-        return words.length;
+        return wordsLowerCase.length;
+    }
+
+    public boolean isCapitalized(int i) {
+        return isCapitalized.get(i);
+    }
+    public boolean isAllCaps(int i) {
+        return isAllCaps.get(i);
+    }
+    public boolean isSeparatorSpace(int i) {
+        return separators.get(i);
+    }
+    public boolean isSeparatorComma(int i) {
+        return !separators.get(i);
     }
 
     public String constructWordFromSpan(WordSpan span) {
@@ -140,9 +151,9 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < words.length; i++) {
-            sb.append(words[i]).append('[').append(posTags[i]).append(']');
-            if (separators[i] == WordSeparator.COMMA) {
+        for (int i = 0; i < wordsLowerCase.length; i++) {
+            sb.append(wordsLowerCase[i]).append('[').append(posTags[i]).append(']');
+            if (isSeparatorComma(i)) {
                 sb.append(',');
             }
             else {
@@ -176,11 +187,10 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
             this.pos = pos;
         }
 
-        public String word() { return words[pos]; }
+        public String word() { return wordsLowerCase[pos]; }
         public String wordLowerCase() { return wordsLowerCase[pos]; }
         public String posTag() { return posTags[pos]; }
         public String stemmed() { return stemmedWords[pos]; }
-        public int separator() { return separators[pos]; }
         public boolean isStopWord() { return DocumentSentence.this.isStopWord(pos); }
 
         public WordRep rep() {
