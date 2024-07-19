@@ -37,7 +37,7 @@ public class UngaBungaLanguagePredictionModel implements LanguagePredictionModel
         Set<String> seenWords = new HashSet<>();
         int englishCount = 0;
 
-        for (var sent : dld.sentences) {
+        for (var sent : dld) {
             for (var word : sent.wordsLowerCase) {
                 if (seenWords.add(word) && englishWords.contains(word)) {
                     englishCount++;

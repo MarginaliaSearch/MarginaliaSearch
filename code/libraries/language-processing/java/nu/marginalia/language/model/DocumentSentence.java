@@ -11,21 +11,31 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.StringJoiner;
 
-public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
+/** Represents a sentence in a document, with POS tags, HTML tags, and other information
+ *  about the words in the sentence.
+ * */
+public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> {
 
     /** A span of words in a sentence */
-
     public final String[] wordsLowerCase;
-    public final String[] posTags;
     public final String[] stemmedWords;
+    public final String[] posTags;
 
+    /** A set of HTML tags that surround the sentence */
     public final EnumSet<HtmlTag> htmlTags;
 
+    /** A bitset indicating whether the word is a stop word */
     private final BitSet isStopWord;
-    private final BitSet separators;
+
+    /** A bitset indicating whether the word is capitalized */
     private final BitSet isCapitalized;
+
+    /** A bitset indicating whether the word is all caps */
     private final BitSet isAllCaps;
 
+    // Encode whether the words are separated by a comma or a space,
+    // where false = COMMA, true = SPACE
+    private final BitSet separators;
 
 
     public SoftReference<WordSpan[]> keywords;
@@ -69,6 +79,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
     public boolean isAllCaps(int i) {
         return isAllCaps.get(i);
     }
+
     public boolean isSeparatorSpace(int i) {
         return separators.get(i);
     }
@@ -187,7 +198,6 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
             this.pos = pos;
         }
 
-        public String word() { return wordsLowerCase[pos]; }
         public String wordLowerCase() { return wordsLowerCase[pos]; }
         public String posTag() { return posTags[pos]; }
         public String stemmed() { return stemmedWords[pos]; }

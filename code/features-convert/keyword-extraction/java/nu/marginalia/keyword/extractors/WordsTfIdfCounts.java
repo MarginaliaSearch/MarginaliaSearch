@@ -1,14 +1,17 @@
 package nu.marginalia.keyword.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.keyword.WordReps;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.lang.Math.max;
 
@@ -46,7 +49,7 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
         // Collect words with a high TF-IDF so that they can be marked with a bit flag
 
         tfIdfHigh = new HashSet<>(100);
-        for (var sent : dld.sentences) {
+        for (var sent : dld) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
                 if (highTfIdfInstances.contains(sent.constructStemmedWordFromSpan(span))) {
@@ -61,7 +64,7 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
         Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>(10_000, 0.7f);
         counts.defaultReturnValue(0);
 
-        for (var sent : dld.sentences) {
+        for (var sent : dld) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
                 counts.addTo(sent.constructStemmedWordFromSpan(span), 1);

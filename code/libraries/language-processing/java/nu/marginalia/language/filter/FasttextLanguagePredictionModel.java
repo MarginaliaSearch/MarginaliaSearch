@@ -14,7 +14,7 @@ public class FasttextLanguagePredictionModel implements LanguagePredictionModel 
 
     @Override
     public double predictEnglish(DocumentLanguageData dld) {
-        if ("__label__en".equals(jft.predict(dld.text))) {
+        if ("__label__en".equals(jft.predict(dld.text()))) {
             return 1.0;
         }
         return 0.;

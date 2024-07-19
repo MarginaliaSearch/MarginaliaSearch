@@ -2,7 +2,9 @@ package nu.marginalia.keyword.extractors;
 
 import nu.marginalia.language.model.DocumentLanguageData;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class ArtifactKeywords {
@@ -16,9 +18,8 @@ public class ArtifactKeywords {
 
     public ArtifactKeywords(DocumentLanguageData documentLanguageData) {
 
-        for (var sent : documentLanguageData.sentences) {
-            for (var word : sent) {
-                final String lc = word.wordLowerCase();
+        for (var sent : documentLanguageData) {
+            for (String lc : sent.wordsLowerCase) {
                 final int atIdx = lc.indexOf('@');
 
                 if (lc.length() < 6 || atIdx < 0 || !mailLikePattern.matcher(lc).matches()) {

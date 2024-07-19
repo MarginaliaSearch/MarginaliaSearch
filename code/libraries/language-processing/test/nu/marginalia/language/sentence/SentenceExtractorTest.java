@@ -52,7 +52,7 @@ class SentenceExtractorTest {
         {
             var doc = Jsoup.parse(new String(resource.readAllBytes()));
             var dld = sentenceExtractor.extractSentences(doc);
-            for (var sent : dld.sentences) {
+            for (var sent : dld) {
                 System.out.println(sent);
             }
 
@@ -69,7 +69,7 @@ class SentenceExtractorTest {
         {
             var doc = Jsoup.parse(new String(resource.readAllBytes()));
             var dld = sentenceExtractor.extractSentences(doc);
-            for (var sent : dld.sentences) {
+            for (var sent : dld) {
                 System.out.println(sent);
             }
 

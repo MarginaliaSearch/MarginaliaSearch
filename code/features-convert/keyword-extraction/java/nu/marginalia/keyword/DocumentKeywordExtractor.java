@@ -5,6 +5,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -100,13 +101,13 @@ public class DocumentKeywordExtractor {
 
     private void createSimpleWords(DocumentKeywordsBuilder wordsBuilder,
                                   KeywordMetadata metadata,
-                                  DocumentLanguageData documentLanguageData)
+                                  DocumentLanguageData dld)
     {
         // we use 1-based indexing since the data
         // will be gamma encoded, and it can't represent 0
         int pos = 1;
 
-        for (var sent : documentLanguageData.sentences) {
+        for (DocumentSentence sent : dld) {
 
             if (wordsBuilder.size() > 1500)
                 break;
@@ -119,7 +120,7 @@ public class DocumentKeywordExtractor {
                 String w = word.wordLowerCase();
                 if (matchesWordPattern(w)) {
                     /* Add information about term positions */
-                    wordsBuilder.addPos(word.wordLowerCase(), pos++);
+                    wordsBuilder.addPos(w, pos++);
 
                     /* Add metadata for word */
                     wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));

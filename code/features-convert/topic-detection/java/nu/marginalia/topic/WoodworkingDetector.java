@@ -111,12 +111,11 @@ public class WoodworkingDetector {
 
         Map<String, Double> values = new HashMap<>();
         int count = 0;
-        for (var sentence : dld.sentences) {
+        for (var sentence : dld) {
 
-            for (var word : sentence) {
+            for (var stemmed : sentence.stemmedWords) {
                 count++;
 
-                final String stemmed = word.stemmed();
                 final Double value = termValues.get(stemmed);
 
                 if (value != null) {

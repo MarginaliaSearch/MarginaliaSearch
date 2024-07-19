@@ -29,7 +29,7 @@ public class SubjectLikeKeywords implements WordReps {
 
         Map<String, Set<WordRep>> instances = new HashMap<>();
 
-        for (var sentence : dld.sentences) {
+        for (var sentence : dld) {
             for (WordSpan kw : keywordExtractor.getNouns(sentence)) {
 
                 if (kw.end + 2 >= sentence.length()) {

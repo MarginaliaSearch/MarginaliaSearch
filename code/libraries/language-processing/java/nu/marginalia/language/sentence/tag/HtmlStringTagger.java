@@ -8,13 +8,14 @@ import org.jsoup.select.NodeVisitor;
 
 import java.util.*;
 
-/** A class that tags strings in an HTML document with the HTML tags that are active at that point in the document. */
+/** A class that tags strings in an HTML document with the HTML
+ * tags that are active at that point in the document.
+ */
 public class HtmlStringTagger implements NodeVisitor {
     private List<HtmlTag> tagStack = new ArrayList<>(8);
     private Set<Element> stackTags = new HashSet<>(8);
     private StringBuilder currentString = new StringBuilder(256);
-
-    HtmlStringTagger() {}
+    private List<HtmlTaggedString> output = new ArrayList<>();
 
     public static List<HtmlTaggedString> tagDocumentStrings(Document document) {
         var tagger = new HtmlStringTagger();
@@ -22,9 +23,7 @@ public class HtmlStringTagger implements NodeVisitor {
         return tagger.getOutput();
     }
 
-    private List<HtmlTaggedString> output = new ArrayList<>();
-
-    public List<HtmlTaggedString> getOutput() {
+    List<HtmlTaggedString> getOutput() {
         List<HtmlTaggedString> compactedOutput = new ArrayList<>(output.size());
 
         for (var ts : output) {
@@ -44,7 +43,6 @@ public class HtmlStringTagger implements NodeVisitor {
 
         return output;
     }
-
 
     @Override
     public void head(Node node, int i) {

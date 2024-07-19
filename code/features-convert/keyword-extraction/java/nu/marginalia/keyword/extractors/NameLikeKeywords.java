@@ -17,11 +17,10 @@ public class NameLikeKeywords implements WordReps {
     private final Set<String> stemmed;
 
     public NameLikeKeywords(KeywordExtractor keywordExtractor, DocumentLanguageData dld, int minCount) {
-        Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>(1000);
-        HashMap<String, HashSet<WordRep>> instances = new HashMap<>(1000);
+        var counts = new Object2IntOpenHashMap<String>(100);
+        var instances = new HashMap<String, HashSet<WordRep>>(100);
 
-        for (int i = 0; i < dld.sentences.length; i++) {
-            DocumentSentence sent = dld.sentences[i];
+        for (DocumentSentence sent : dld) {
             var keywords = keywordExtractor.getProperNames(sent);
             for (var span : keywords) {
                 if (span.size() <= 1 && sent.isAllCaps(span.start))

@@ -74,12 +74,10 @@ public class SentenceExtractor {
 
     }
 
-
-
     public DocumentLanguageData extractSentences(Document doc) {
-
-        final List<HtmlTaggedString> taggedStrings = HtmlStringTagger.tagDocumentStrings(doc);
         final List<DocumentSentence> textSentences = new ArrayList<>();
+        
+        final List<HtmlTaggedString> taggedStrings = HtmlStringTagger.tagDocumentStrings(doc);
 
         final int totalTextLength = taggedStrings.stream().mapToInt(HtmlTaggedString::length).sum();
         final StringBuilder documentText = new StringBuilder(totalTextLength + taggedStrings.size());
