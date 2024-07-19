@@ -1,5 +1,7 @@
 package nu.marginalia.language.filter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.encoding.UnicodeRanges;
@@ -8,8 +10,6 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.Set;
 
@@ -31,10 +31,10 @@ public class LanguageFilter {
         if(LANGUAGE_DETECTION_MODEL_VERSION < 0) return 1.0;
 
         if (LANGUAGE_DETECTION_MODEL_VERSION == 1) {
-            return languagePredictionModel2.predictEnglish(dld);
+            return languagePredictionModel1.predictEnglish(dld);
         }
         else if (LANGUAGE_DETECTION_MODEL_VERSION == 2) {
-            return languagePredictionModel1.predictEnglish(dld);
+            return languagePredictionModel2.predictEnglish(dld);
         }
         else { // default is to run both models
             if (languagePredictionModel1.predictEnglish(dld) < 0.1)

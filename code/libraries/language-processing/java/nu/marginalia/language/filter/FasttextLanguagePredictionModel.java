@@ -4,6 +4,7 @@ import com.github.jfasttext.JFastText;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.model.DocumentLanguageData;
 
+/** A language prediction model that uses a FastText model to predict the language of a document */
 public class FasttextLanguagePredictionModel implements LanguagePredictionModel {
     private final JFastText jft = new JFastText();
 
