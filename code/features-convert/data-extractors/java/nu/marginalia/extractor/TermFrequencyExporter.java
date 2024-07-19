@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -96,8 +97,13 @@ public class TermFrequencyExporter implements ExporterIf {
 
     }
 
-    private void processFile(Path crawlDataPath, TLongIntHashMap counts, AtomicInteger docCount, SentenceExtractor se) {
-        TLongHashSet words = new TLongHashSet(10_000);
+    private void processFile(Path crawlDataPath,
+                             TLongIntHashMap counts,
+                             AtomicInteger docCount,
+                             SentenceExtractor se)
+    {
+        TLongHashSet words = new TLongHashSet(1000);
+
         try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
             while (stream.hasNext()) {
                 if (Thread.interrupted())
@@ -119,15 +125,33 @@ public class TermFrequencyExporter implements ExporterIf {
                     return;
                 }
 
-                for (var sent : dld.sentences) {
+                for (var sent : dld) {
+                    // Skip sentences with non-language tags, e.g. program code
+                    if (sent.htmlTags.stream().anyMatch(t -> t.nonLanguage))
+                        continue;
+
                     for (var word : sent) {
                         words.add(longHash(word.stemmed().getBytes(StandardCharsets.UTF_8)));
                     }
                 }
 
+                var random = ThreadLocalRandom.current();
                 synchronized (counts) {
                     words.forEach(w -> {
-                        counts.adjustOrPutValue(w, 1, 1);
+                        // Mathematicians hate him for this one weird trick:
+                        //
+                        // We generally aren't interested in low-frequency entries,
+                        // but due to zipf's law, there are a lot of them, in fact
+                        // almost the entire term frequency dictionary is full of them.
+                        //
+                        // So we use a simple statistical trick to reduce the number
+                        // of nearly unique entries in the dictionary, while still keeping the
+                        // distribution of higher-frequency entries relatively intact
+
+                        if (random.nextDouble() < 0.2) {
+                            counts.adjustOrPutValue(w, 5, 5);
+                        }
+
                         return true;
                     });
                 }
