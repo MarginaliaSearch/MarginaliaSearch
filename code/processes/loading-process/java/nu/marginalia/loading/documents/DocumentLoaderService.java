@@ -50,6 +50,9 @@ public class DocumentLoaderService {
                 loadDocumentsFromFile(domainIdRegistry, file);
             }
             taskHeartbeat.progress("LOAD", processed, documentFiles.size());
+        } catch (IOException e) {
+            logger.error("Failed to load documents", e);
+            throw e;
         }
 
         logger.info("Finished");

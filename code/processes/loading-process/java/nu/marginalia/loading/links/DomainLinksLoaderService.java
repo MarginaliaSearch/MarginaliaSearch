@@ -44,6 +44,10 @@ public class DomainLinksLoaderService {
 
             task.progress("LOAD", processed, linkFiles.size());
         }
+        catch (IOException e) {
+            logger.error("Failed to load links", e);
+            throw e;
+        }
 
         logger.info("Finished");
         return true;
