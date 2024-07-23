@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @Singleton
 public class DomainLoaderService {
@@ -36,21 +38,29 @@ public class DomainLoaderService {
         this.nodeId = processConfiguration.node();
     }
 
+    enum Steps {
+        PREP_DATA,
+        INSERT_NEW,
+        FETCH_ALL,
+        DONE
+    }
     /** Read the domain names from each parquet file
      *  compare with SQL domain database, fetch those
      *  that exist, insert those that don't.
      */
-    public DomainIdRegistry getOrCreateDomainIds(LoaderInputData inputData)
+    public DomainIdRegistry getOrCreateDomainIds(ProcessHeartbeatImpl heartbeat, LoaderInputData inputData)
             throws IOException, SQLException
     {
         Set<String> domainNamesAll = new HashSet<>(100_000);
         DomainIdRegistry ret = new DomainIdRegistry();
 
         try (var conn = dataSource.getConnection();
+             var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS");
              var selectStmt = conn.prepareStatement("""
                      SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?
                      """)
         ) {
+            taskHeartbeat.progress(Steps.PREP_DATA);
 
             try (var inserter = new DomainInserter(conn, nodeId)) {
                 for (var domainWithIp : readBasicDomainInformation(inputData)) {
@@ -65,11 +75,15 @@ public class DomainLoaderService {
                 }
             }
 
+            taskHeartbeat.progress(Steps.INSERT_NEW);
+
             try (var updater = new DomainAffinityAndIpUpdater(conn, nodeId)) {
                 for (var domainWithIp : readBasicDomainInformation(inputData)) {
                     updater.accept(new EdgeDomain(domainWithIp.domain), domainWithIp.ip);
                 }
             }
+
+            taskHeartbeat.progress(Steps.FETCH_ALL);
 
             selectStmt.setFetchSize(1000);
             for (var domain : domainNamesAll) {
@@ -82,6 +96,8 @@ public class DomainLoaderService {
                     logger.error("Unknown domain {}", domain);
                 }
             }
+
+            taskHeartbeat.progress(Steps.DONE);
         }
 
         return ret;

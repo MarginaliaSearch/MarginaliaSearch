@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
-import nu.marginalia.service.ProcessMainClass;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
@@ -22,7 +20,9 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ public class LoaderMain extends ProcessMainClass {
     void run(LoadRequest instructions) {
         LoaderInputData inputData = instructions.getInputData();
 
-        DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(inputData);
+        DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(heartbeat, inputData);
 
         try {
             var results = ForkJoinPool.commonPool()
