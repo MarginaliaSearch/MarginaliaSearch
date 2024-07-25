@@ -44,6 +44,10 @@ public class StringColumn {
         }
 
         public void put(String value) throws IOException {
+            if (null == value) {
+                value = "";
+            }
+
             backingColumn.put(value.getBytes());
         }
 
@@ -93,6 +97,10 @@ public class StringColumn {
         }
 
         public void put(String value) throws IOException {
+            if (null == value) {
+                value = "";
+            }
+
             assert value.indexOf('\0') == -1 : "Null byte not allowed in cstring";
             storageWriter.putBytes(value.getBytes());
             storageWriter.putByte((byte) 0);
@@ -155,6 +163,10 @@ public class StringColumn {
         }
 
         public void put(String value) throws IOException {
+            if (null == value) {
+                value = "";
+            }
+
             assert value.indexOf('\n') == -1 : "Newline not allowed in txtstring";
 
             storageWriter.putBytes(value.getBytes());
@@ -176,8 +188,14 @@ public class StringColumn {
         public String get() throws IOException {
             StringBuilder sb = new StringBuilder();
             byte b;
-            while (storageReader.hasRemaining() && (b = storageReader.getByte()) != '\n') {
-                sb.append((char) b);
+            while (storageReader.hasRemaining()) {
+                b = storageReader.getByte();
+                if (b == '\n') {
+                    break;
+                }
+                else {
+                    sb.append((char) b);
+                }
             }
             return sb.toString();
         }
