@@ -33,6 +33,10 @@ public class CompressingStorageReader implements StorageReader {
 
         buffer.position(0);
         buffer.limit(0);
+
+        // read the first chunk, this is needed for InputStream otherwise we don't handle empty files
+        // correctly
+        refill();
     }
 
     @Override
