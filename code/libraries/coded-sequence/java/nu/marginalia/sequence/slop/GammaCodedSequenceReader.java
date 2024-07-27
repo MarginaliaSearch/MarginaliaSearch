@@ -1,4 +1,4 @@
-package nu.marginalia.slop.column.dynamic;
+package nu.marginalia.sequence.slop;
 
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.slop.column.ColumnReader;

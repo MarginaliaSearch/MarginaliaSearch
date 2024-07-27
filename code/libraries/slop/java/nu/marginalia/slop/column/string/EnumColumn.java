@@ -100,7 +100,7 @@ public class EnumColumn {
 
         @Override
         public void skip(long positions) throws IOException {
-            dataColumn.seek(positions);
+            dataColumn.skip(positions);
         }
 
         @Override

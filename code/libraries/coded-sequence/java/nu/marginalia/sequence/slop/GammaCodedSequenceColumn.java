@@ -1,6 +1,9 @@
-package nu.marginalia.slop.column.dynamic;
+package nu.marginalia.sequence.slop;
 
 import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.slop.column.dynamic.VarintColumn;
+import nu.marginalia.slop.column.dynamic.VarintColumnReader;
+import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnFunction;
 import nu.marginalia.slop.desc.ColumnType;
@@ -11,9 +14,13 @@ import nu.marginalia.slop.storage.StorageWriter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Path;
 
+/** Slop column extension for storing GammaCodedSequence objects. */
 public class GammaCodedSequenceColumn {
+
+    public static ColumnType<GammaCodedSequenceReader, GammaCodedSequenceWriter> TYPE = ColumnType.register("s8[]+gcs", ByteOrder.nativeOrder(), GammaCodedSequenceColumn::open, GammaCodedSequenceColumn::create);
 
     public static GammaCodedSequenceReader open(Path path, ColumnDesc name) throws IOException {
         return new Reader(

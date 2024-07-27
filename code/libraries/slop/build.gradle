@@ -15,8 +15,6 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation libs.bundles.slf4j
 
-    implementation project(':code:libraries:coded-sequence')
-
     implementation libs.notnull
     implementation libs.commons.lang3
     implementation libs.fastutil

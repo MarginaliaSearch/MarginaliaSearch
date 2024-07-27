@@ -47,7 +47,6 @@ public abstract class ColumnType<
     public static ColumnType<VarintColumnReader, VarintColumnWriter> VARINT_LE = register("varintle", ByteOrder.LITTLE_ENDIAN, VarintColumn::open, VarintColumn::create);
     public static ColumnType<VarintColumnReader, VarintColumnWriter> VARINT_BE = register("varintbe", ByteOrder.BIG_ENDIAN, VarintColumn::open, VarintColumn::create);
     public static ColumnType<CustomBinaryColumnReader, CustomBinaryColumnWriter> BYTE_ARRAY_CUSTOM = register("s8[]+custom", ByteOrder.nativeOrder(), CustomBinaryColumn::open, CustomBinaryColumn::create);
-    public static ColumnType<GammaCodedSequenceReader, GammaCodedSequenceWriter> BYTE_ARRAY_GCS = register("s8[]+gcs", ByteOrder.nativeOrder(), GammaCodedSequenceColumn::open, GammaCodedSequenceColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> STRING = register("s8[]+str", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> CSTRING = register("s8+cstr", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> TXTSTRING = register("s8+txt", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
@@ -59,14 +58,14 @@ public abstract class ColumnType<
     public static ColumnType<LongArrayColumnReader, LongArrayColumnWriter> LONG_ARRAY_LE = register("s64le[]", ByteOrder.LITTLE_ENDIAN, LongArrayColumn::open, LongArrayColumn::create);
     public static ColumnType<LongArrayColumnReader, LongArrayColumnWriter> LONG_ARRAY_BE = register("s64be[]", ByteOrder.BIG_ENDIAN, LongArrayColumn::open, LongArrayColumn::create);
 
-    interface ColumnOpener<T extends ColumnReader> {
+    public interface ColumnOpener<T extends ColumnReader> {
         T open(Path path, ColumnDesc desc) throws IOException;
     }
-    interface ColumnCreator<T extends ColumnWriter> {
+    public interface ColumnCreator<T extends ColumnWriter> {
         T create(Path path, ColumnDesc desc) throws IOException;
     }
 
-    private static <R extends ColumnReader,
+    public static <R extends ColumnReader,
         W extends ColumnWriter,
         T extends ColumnType<R,W>> ColumnType<R, W> register(
                 String mnemonic,

@@ -126,32 +126,6 @@ class IntColumnTest {
     }
 
     @Test
-    void testSeek() throws IOException {
-        var name = new ColumnDesc("test",
-                0,
-                ColumnFunction.DATA,
-                ColumnType.INT_LE,
-                StorageType.PLAIN
-        );
-
-
-        int[] values = new int[24];
-        for (int i = 0; i < values.length; i++) {
-            values[i] = i;
-        }
-        try (var column = IntColumn.create(tempDir, name)) {
-            column.put(values);
-            column.put(values);
-        }
-        try (var column = IntColumn.open(tempDir, name)) {
-            column.get();
-            column.seek(34);
-            assertEquals(10, column.get());
-
-            assertTrue(column.hasRemaining());
-        }
-    }
-    @Test
     void testSkip() throws IOException {
         var name = new ColumnDesc("test",
                 0,

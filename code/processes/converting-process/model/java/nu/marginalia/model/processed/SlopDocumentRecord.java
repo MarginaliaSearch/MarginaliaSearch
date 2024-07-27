@@ -3,10 +3,11 @@ package nu.marginalia.model.processed;
 import lombok.Builder;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.slop.GammaCodedSequenceColumn;
+import nu.marginalia.sequence.slop.GammaCodedSequenceReader;
+import nu.marginalia.sequence.slop.GammaCodedSequenceWriter;
 import nu.marginalia.slop.column.array.ByteArrayColumnReader;
 import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
-import nu.marginalia.slop.column.dynamic.GammaCodedSequenceReader;
-import nu.marginalia.slop.column.dynamic.GammaCodedSequenceWriter;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.column.primitive.*;
@@ -114,11 +115,11 @@ public record SlopDocumentRecord(
     private static final ColumnDesc<VarintColumnReader, VarintColumnWriter> termCountsColumn = new ColumnDesc<>("termCounts", ColumnType.VARINT_LE, StorageType.PLAIN);
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> keywordsColumn = new ColumnDesc<>("keywords", ColumnType.STRING, StorageType.ZSTD);
     private static final ColumnDesc<ByteColumnReader, ByteColumnWriter> termMetaColumn = new ColumnDesc<>("termMetadata", ColumnType.BYTE, StorageType.ZSTD);
-    private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> termPositionsColumn = new ColumnDesc<>("termPositions", ColumnType.BYTE_ARRAY_GCS, StorageType.ZSTD);
+    private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> termPositionsColumn = new ColumnDesc<>("termPositions", GammaCodedSequenceColumn.TYPE, StorageType.ZSTD);
 
     // Spans columns
     private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodesColumn = new ColumnDesc<>("spanCodes", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
-    private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> spansColumn = new ColumnDesc<>("spans", ColumnType.BYTE_ARRAY_GCS, StorageType.ZSTD);
+    private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> spansColumn = new ColumnDesc<>("spans", GammaCodedSequenceColumn.TYPE, StorageType.ZSTD);
 
     public static class KeywordsProjectionReader extends SlopTable {
         private final StringColumnReader domainsReader;

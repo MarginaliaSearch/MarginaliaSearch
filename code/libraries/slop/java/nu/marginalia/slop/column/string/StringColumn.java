@@ -78,7 +78,7 @@ public class StringColumn {
 
         @Override
         public void skip(long positions) throws IOException {
-            backingColumn.seek(positions);
+            backingColumn.skip(positions);
         }
 
         @Override

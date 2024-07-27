@@ -1,9 +1,10 @@
 package nu.marginalia.index.journal;
 
+import nu.marginalia.sequence.slop.GammaCodedSequenceColumn;
+import nu.marginalia.sequence.slop.GammaCodedSequenceReader;
+import nu.marginalia.sequence.slop.GammaCodedSequenceWriter;
 import nu.marginalia.slop.column.array.ByteArrayColumnReader;
 import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
-import nu.marginalia.slop.column.dynamic.GammaCodedSequenceReader;
-import nu.marginalia.slop.column.dynamic.GammaCodedSequenceWriter;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.column.primitive.*;
@@ -24,10 +25,10 @@ public record IndexJournalPage(Path baseDir, int page) {
     public static final ColumnDesc<VarintColumnReader, VarintColumnWriter> termCounts = new ColumnDesc<>("termCounts", ColumnType.VARINT_LE, StorageType.PLAIN);
     public static final ColumnDesc<LongColumnReader, LongColumnWriter> termIds = new ColumnDesc<>("termIds", ColumnType.LONG_LE, StorageType.ZSTD);
     public static final ColumnDesc<ByteColumnReader, ByteColumnWriter> termMeta = new ColumnDesc<>("termMetadata", ColumnType.BYTE, StorageType.ZSTD);
-    public static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> positions = new ColumnDesc<>("termPositions", ColumnType.BYTE_ARRAY_GCS, StorageType.ZSTD);
+    public static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> positions = new ColumnDesc<>("termPositions", GammaCodedSequenceColumn.TYPE, StorageType.ZSTD);
 
     public static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodes = new ColumnDesc<>("spanCodes", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
-    public static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> spans = new ColumnDesc<>("spans", ColumnType.BYTE_ARRAY_GCS, StorageType.ZSTD);
+    public static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> spans = new ColumnDesc<>("spans", GammaCodedSequenceColumn.TYPE, StorageType.ZSTD);
 
     public IndexJournalPage {
         if (!baseDir.toFile().isDirectory()) {

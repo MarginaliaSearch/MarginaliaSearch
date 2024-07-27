@@ -61,10 +61,6 @@ public class LongColumn {
             storage.skip(positions, Long.BYTES);
         }
 
-        public void seek(long position) throws IOException {
-            storage.seek(position, Long.BYTES);
-        }
-
         @Override
         public boolean hasRemaining() throws IOException {
             return storage.hasRemaining();
@@ -76,40 +72,4 @@ public class LongColumn {
         }
     }
 
-    private static class VirtualColumnReader implements LongColumnReader  {
-        private long position = 0;
-        private final long size;
-
-        private VirtualColumnReader(long size) {
-            this.size = size;
-        }
-
-        @Override
-        public long get() {
-            return position++;
-        }
-
-        @Override
-        public void close() {}
-
-        @Override
-        public long position() {
-            return position;
-        }
-
-        @Override
-        public void skip(long positions) throws IOException {
-            position += positions;
-        }
-
-        @Override
-        public void seek(long position) throws IOException {
-            this.position = position;
-        }
-
-        @Override
-        public boolean hasRemaining() throws IOException {
-            return position < size;
-        }
-    }
 }
