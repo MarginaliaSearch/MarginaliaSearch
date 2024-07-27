@@ -61,7 +61,9 @@ public class ForwardIndexConverter {
 
         logger.info("Domain Rankings size = {}", domainRankings.size());
 
-        try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
+        try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "forwardIndexConverter");
+             var spansWriter = new ForwardIndexSpansWriter(outputFileSpansData)
+        ) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 
             LongArray docsFileId = getDocIds(outputFileDocsId, journal);
@@ -81,7 +83,7 @@ public class ForwardIndexConverter {
 
             ByteBuffer workArea = ByteBuffer.allocate(65536);
             for (var instance : journal.pages()) {
-                try (var slopTable = new SlopTable(); var spansWriter = new ForwardIndexSpansWriter(outputFileSpansData))
+                try (var slopTable = new SlopTable())
                 {
                     var docIdReader = instance.openCombinedId(slopTable);
                     var metaReader = instance.openDocumentMeta(slopTable);
