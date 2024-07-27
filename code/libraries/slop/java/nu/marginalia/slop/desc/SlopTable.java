@@ -51,14 +51,14 @@ public class SlopTable implements AutoCloseable {
 
     public void close() throws IOException {
 
-        Set<Long> positions = new HashSet<>();
+        Map<Long, List<ColumnDesc>> positions = new HashMap<>();
 
         for (ColumnReader reader : readerList) {
-            positions.add(reader.position());
+            positions.computeIfAbsent(reader.position(), k -> new ArrayList<>()).add(reader.columnDesc());
             reader.close();
         }
         for (ColumnWriter writer : writerList) {
-            positions.add(writer.position());
+            positions.computeIfAbsent(writer.position(), k -> new ArrayList<>()).add(writer.columnDesc());
             writer.close();
         }
 
@@ -68,14 +68,15 @@ public class SlopTable implements AutoCloseable {
         // read or written to one of the columns.  This is likely a bug,
         // but not necessarily a severe one, so we just log a warning.
 
-        if (positions.remove(0L) && !positions.isEmpty()) {
-            logger.warn("Zero position found in one of the tables, this is likely development debris");
+        var zeroPositions = Objects.requireNonNullElseGet(positions.remove(0L), List::of);
+        if (!zeroPositions.isEmpty() && !positions.isEmpty()) {
+            logger.warn("Zero position found in {}, this is likely development debris", zeroPositions);
         }
 
         // If there are more than one position and several are non-zero, then we haven't maintained the
         // position correctly between the columns.  This is a disaster, so we throw an exception.
         if (positions.size() > 1) {
-            throw new IllegalStateException("Expected only one reader position, was " + positions);
+            throw new IllegalStateException("Expected only one reader position, found " + positions);
         }
 
         for (var table : columnGroups.values()) {

@@ -15,22 +15,24 @@ import java.nio.file.Path;
 
 public class ByteArrayColumn {
 
-    public static ByteArrayColumnReader open(Path path, ColumnDesc name) throws IOException {
+    public static ByteArrayColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
         return new Reader(
-                Storage.reader(path, name, true),
+                columnDesc,
+                Storage.reader(path, columnDesc, true),
                 VarintColumn.open(path,
-                        name.createSupplementaryColumn(name.function().lengthsTable(),
+                        columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
                                 ColumnType.VARINT_LE,
                                 StorageType.PLAIN)
                 )
         );
     }
 
-    public static ByteArrayColumnWriter create(Path path, ColumnDesc name) throws IOException {
+    public static ByteArrayColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
         return new Writer(
-                Storage.writer(path, name),
+                columnDesc,
+                Storage.writer(path, columnDesc),
                 VarintColumn.create(path,
-                        name.createSupplementaryColumn(name.function().lengthsTable(),
+                        columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
                                 ColumnType.VARINT_LE,
                                 StorageType.PLAIN)
                 )
@@ -38,14 +40,21 @@ public class ByteArrayColumn {
     }
 
     private static class Writer implements ByteArrayColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
         private final VarintColumnWriter lengthsWriter;
 
         private long position = 0;
 
-        public Writer(StorageWriter storage, VarintColumnWriter lengthsWriter) throws IOException {
+        public Writer(ColumnDesc<?, ?> columnDesc, StorageWriter storage, VarintColumnWriter lengthsWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
             this.lengthsWriter = lengthsWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(byte[] value) throws IOException {
@@ -65,12 +74,19 @@ public class ByteArrayColumn {
     }
 
     private static class Reader implements ByteArrayColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
         private final VarintColumnReader lengthsReader;
 
-        public Reader(StorageReader storage, VarintColumnReader lengthsReader) throws IOException {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader storage, VarintColumnReader lengthsReader) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
             this.lengthsReader = lengthsReader;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public byte[] get() throws IOException {

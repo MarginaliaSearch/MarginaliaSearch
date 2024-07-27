@@ -11,19 +11,26 @@ import java.nio.file.Path;
 public class LongColumn {
 
     public static LongColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(Storage.reader(path, columnDesc, true));
+        return new Reader(columnDesc, Storage.reader(path, columnDesc, true));
     }
 
     public static LongColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(Storage.writer(path, columnDesc));
+        return new Writer(columnDesc, Storage.writer(path, columnDesc));
     }
 
     private static class Writer implements LongColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
         private long position = 0;
 
-        public Writer(StorageWriter storageWriter) {
+        public Writer(ColumnDesc<?, ?> columnDesc, StorageWriter storageWriter) {
+            this.columnDesc = columnDesc;
             this.storage = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(long value) throws IOException {
@@ -41,10 +48,17 @@ public class LongColumn {
     }
 
     private static class Reader implements LongColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
 
-        public Reader(StorageReader storage) throws IOException {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader storage) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public long get() throws IOException {

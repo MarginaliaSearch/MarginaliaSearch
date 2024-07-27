@@ -11,19 +11,26 @@ import java.nio.file.Path;
 public class CharColumn {
 
     public static CharColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(Storage.reader(path, columnDesc, true));
+        return new Reader(columnDesc, Storage.reader(path, columnDesc, true));
     }
 
     public static CharColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(Storage.writer(path, columnDesc));
+        return new Writer(columnDesc, Storage.writer(path, columnDesc));
     }
 
     private static class Writer implements CharColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
         private long position = 0;
 
-        public Writer(StorageWriter storageWriter) throws IOException {
+        public Writer(ColumnDesc<?, ?> columnDesc, StorageWriter storageWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(char value) throws IOException {
@@ -32,7 +39,7 @@ public class CharColumn {
         }
 
         public long position() {
-            return position / Character.BYTES;
+            return position;
         }
 
         public void close() throws IOException {
@@ -41,9 +48,11 @@ public class CharColumn {
     }
 
     private static class Reader implements CharColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
 
-        public Reader(StorageReader storage) throws IOException {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader storage) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
         }
 
@@ -52,8 +61,13 @@ public class CharColumn {
         }
 
         @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
+        }
+
+        @Override
         public long position() throws IOException {
-            return storage.position();
+            return storage.position() / Character.BYTES;
         }
 
         @Override

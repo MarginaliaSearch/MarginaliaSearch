@@ -11,19 +11,26 @@ import java.nio.file.Path;
 public class IntColumn {
 
     public static IntColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(Storage.reader(path, columnDesc, true));
+        return new Reader(columnDesc, Storage.reader(path, columnDesc, true));
     }
 
     public static IntColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(Storage.writer(path, columnDesc));
+        return new Writer(columnDesc, Storage.writer(path, columnDesc));
     }
 
     private static class Writer implements IntColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
         private long position = 0;
 
-        public Writer(StorageWriter storageWriter) throws IOException {
+        public Writer(ColumnDesc<?, ?> columnDesc, StorageWriter storageWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(int[] values) throws IOException {
@@ -39,7 +46,7 @@ public class IntColumn {
         }
 
         public long position() {
-            return position / Integer.BYTES;
+            return position;
         }
 
         public void close() throws IOException {
@@ -48,10 +55,17 @@ public class IntColumn {
     }
 
     private static class Reader implements IntColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
 
-        public Reader(StorageReader storage) throws IOException {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader storage) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public int get() throws IOException {

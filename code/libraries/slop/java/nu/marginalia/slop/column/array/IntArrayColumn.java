@@ -15,18 +15,20 @@ import java.nio.file.Path;
 
 public class IntArrayColumn {
 
-    public static IntArrayColumnReader open(Path path, ColumnDesc name) throws IOException {
-        return new Reader(Storage.reader(path, name, true),
-                VarintColumn.open(path, name.createSupplementaryColumn(name.function().lengthsTable(),
+    public static IntArrayColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
+        return new Reader(columnDesc,
+                Storage.reader(path, columnDesc, true),
+                VarintColumn.open(path, columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
         );
     }
 
-    public static IntArrayColumnWriter create(Path path, ColumnDesc name) throws IOException {
-        return new Writer(Storage.writer(path, name),
-                VarintColumn.create(path, name.createSupplementaryColumn(name.function().lengthsTable(),
+    public static IntArrayColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
+        return new Writer(columnDesc,
+                Storage.writer(path, columnDesc),
+                VarintColumn.create(path, columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -34,12 +36,19 @@ public class IntArrayColumn {
     }
 
     private static class Writer implements IntArrayColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
         private final VarintColumnWriter lengthsWriter;
 
-        public Writer(StorageWriter storage, VarintColumnWriter lengthsWriter) throws IOException {
+        public Writer(ColumnDesc<?, ?> columnDesc, StorageWriter storage, VarintColumnWriter lengthsWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
             this.lengthsWriter = lengthsWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(int[] value) throws IOException {
@@ -58,12 +67,19 @@ public class IntArrayColumn {
     }
 
     private static class Reader implements IntArrayColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
         private final VarintColumnReader lengthsReader;
 
-        public Reader(StorageReader storage, VarintColumnReader lengthsReader) {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader storage, VarintColumnReader lengthsReader) {
+            this.columnDesc = columnDesc;
             this.storage = storage;
             this.lengthsReader = lengthsReader;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public int[] get() throws IOException {

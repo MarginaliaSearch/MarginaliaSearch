@@ -11,19 +11,26 @@ import java.nio.file.Path;
 public class ByteColumn {
 
     public static ByteColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(Storage.reader(path, columnDesc, true));
+        return new Reader(columnDesc, Storage.reader(path, columnDesc, true));
     }
 
     public static ByteColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(Storage.writer(path, columnDesc));
+        return new Writer(columnDesc, Storage.writer(path, columnDesc));
     }
 
     private static class Writer implements ByteColumnWriter {
+        private final ColumnDesc columnDesc;
         private final StorageWriter storage;
         private long position = 0;
 
-        public Writer(StorageWriter storageWriter) throws IOException {
+        public Writer(ColumnDesc columnDesc, StorageWriter storageWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(byte value) throws IOException {
@@ -41,14 +48,21 @@ public class ByteColumn {
     }
 
     private static class Reader implements ByteColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
 
-        public Reader(StorageReader storage) throws IOException {
+        public Reader(ColumnDesc<?,?> columnDesc, StorageReader storage) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
         }
 
         public byte get() throws IOException {
             return storage.getByte();
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         @Override

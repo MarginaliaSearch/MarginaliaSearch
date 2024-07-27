@@ -14,33 +14,40 @@ import java.nio.file.Path;
 
 public class StringColumn {
 
-    public static StringColumnReader open(Path path, ColumnDesc name) throws IOException {
-        if (name.type().equals(ColumnType.STRING)) {
-            return new ArrayReader(ByteArrayColumn.open(path, name));
-        } else if (name.type().equals(ColumnType.CSTRING)) {
-            return new CStringReader(Storage.reader(path, name, true));
-        } else if (name.type().equals(ColumnType.TXTSTRING)) {
-            return new TxtStringReader(Storage.reader(path, name, true));
+    public static StringColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
+        if (columnDesc.type().equals(ColumnType.STRING)) {
+            return new ArrayReader(columnDesc, ByteArrayColumn.open(path, columnDesc));
+        } else if (columnDesc.type().equals(ColumnType.CSTRING)) {
+            return new CStringReader(columnDesc, Storage.reader(path, columnDesc, true));
+        } else if (columnDesc.type().equals(ColumnType.TXTSTRING)) {
+            return new TxtStringReader(columnDesc, Storage.reader(path, columnDesc, true));
         }
-        throw new IllegalArgumentException("Unsupported column type: " + name.type());
+        throw new IllegalArgumentException("Unsupported column type: " + columnDesc.type());
     }
 
-    public static StringColumnWriter create(Path path, ColumnDesc name) throws IOException {
-        if (name.type().equals(ColumnType.STRING)) {
-            return new ArrayWriter(ByteArrayColumn.create(path, name));
-        } else if (name.type().equals(ColumnType.CSTRING)) {
-            return new CStringWriter(Storage.writer(path, name));
-        } else if (name.type().equals(ColumnType.TXTSTRING)) {
-            return new TxtStringWriter(Storage.writer(path, name));
+    public static StringColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
+        if (columnDesc.type().equals(ColumnType.STRING)) {
+            return new ArrayWriter(columnDesc, ByteArrayColumn.create(path, columnDesc));
+        } else if (columnDesc.type().equals(ColumnType.CSTRING)) {
+            return new CStringWriter(columnDesc, Storage.writer(path, columnDesc));
+        } else if (columnDesc.type().equals(ColumnType.TXTSTRING)) {
+            return new TxtStringWriter(columnDesc, Storage.writer(path, columnDesc));
         }
-        throw new IllegalArgumentException("Unsupported column type: " + name.type());
+        throw new IllegalArgumentException("Unsupported column type: " + columnDesc.type());
     }
 
     private static class ArrayWriter implements StringColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final ByteArrayColumnWriter backingColumn;
 
-        public ArrayWriter(ByteArrayColumnWriter backingColumn) throws IOException {
+        public ArrayWriter(ColumnDesc<?, ?> columnDesc, ByteArrayColumnWriter backingColumn) throws IOException {
+            this.columnDesc = columnDesc;
             this.backingColumn = backingColumn;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(String value) throws IOException {
@@ -61,10 +68,17 @@ public class StringColumn {
     }
 
     private static class ArrayReader implements StringColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final ByteArrayColumnReader backingColumn;
 
-        public ArrayReader(ByteArrayColumnReader backingColumn) throws IOException {
+        public ArrayReader(ColumnDesc<?, ?> columnDesc, ByteArrayColumnReader backingColumn) throws IOException {
+            this.columnDesc = columnDesc;
             this.backingColumn = backingColumn;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public String get() throws IOException {
@@ -94,12 +108,19 @@ public class StringColumn {
 
 
     private static class CStringWriter implements StringColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storageWriter;
 
         private long position = 0;
 
-        public CStringWriter(StorageWriter storageWriter) throws IOException {
+        public CStringWriter(ColumnDesc<?,?> columnDesc, StorageWriter storageWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storageWriter = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(String value) throws IOException {
@@ -122,11 +143,18 @@ public class StringColumn {
     }
 
     private static class CStringReader implements StringColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storageReader;
         private long position = 0;
 
-        public CStringReader(StorageReader storageReader) throws IOException {
+        public CStringReader(ColumnDesc<?, ?> columnDesc, StorageReader storageReader) throws IOException {
+            this.columnDesc = columnDesc;
             this.storageReader = storageReader;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public String get() throws IOException {
@@ -169,11 +197,18 @@ public class StringColumn {
 
 
     private static class TxtStringWriter implements StringColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storageWriter;
         private long position = 0;
 
-        public TxtStringWriter(StorageWriter storageWriter) throws IOException {
+        public TxtStringWriter(ColumnDesc<?, ?> columnDesc, StorageWriter storageWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storageWriter = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(String value) throws IOException {
@@ -198,11 +233,18 @@ public class StringColumn {
     }
 
     private static class TxtStringReader implements StringColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storageReader;
         private long position = 0;
 
-        public TxtStringReader(StorageReader storageReader) throws IOException {
+        public TxtStringReader(ColumnDesc<?, ?> columnDesc, StorageReader storageReader) throws IOException {
+            this.columnDesc = columnDesc;
             this.storageReader = storageReader;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public String get() throws IOException {

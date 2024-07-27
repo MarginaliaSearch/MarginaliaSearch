@@ -16,16 +16,17 @@ import java.util.List;
 
 public class EnumColumn {
 
-    public static StringColumnReader open(Path path, ColumnDesc name) throws IOException {
+    public static StringColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
         return new Reader(
+                columnDesc,
                 StringColumn.open(path,
-                        name.createSupplementaryColumn(
+                        columnDesc.createSupplementaryColumn(
                                 ColumnFunction.DICT,
                                 ColumnType.TXTSTRING,
                                 StorageType.PLAIN)
                 ),
                 VarintColumn.open(path,
-                        name.createSupplementaryColumn(
+                        columnDesc.createSupplementaryColumn(
                                 ColumnFunction.DATA,
                                 ColumnType.ENUM_LE,
                                 StorageType.PLAIN
@@ -34,24 +35,32 @@ public class EnumColumn {
         );
     }
 
-    public static StringColumnWriter create(Path path, ColumnDesc name) throws IOException {
-        return new Writer(
-                StringColumn.create(path, name.createSupplementaryColumn(ColumnFunction.DICT, ColumnType.TXTSTRING, StorageType.PLAIN)),
-                VarintColumn.create(path, name.createSupplementaryColumn(ColumnFunction.DATA, ColumnType.ENUM_LE, StorageType.PLAIN))
+    public static StringColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
+        return new Writer(columnDesc,
+                StringColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.DICT, ColumnType.TXTSTRING, StorageType.PLAIN)),
+                VarintColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA, ColumnType.ENUM_LE, StorageType.PLAIN))
         );
     }
 
 
     private static class Writer implements StringColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StringColumnWriter dicionaryColumn;
         private final LongColumnWriter dataColumn;
         private final HashMap<String, Integer> dictionary = new HashMap<>();
 
-        public Writer(StringColumnWriter dicionaryColumn,
+        public Writer(ColumnDesc<?, ?> columnDesc,
+                      StringColumnWriter dicionaryColumn,
                       LongColumnWriter dataColumn) throws IOException
         {
+            this.columnDesc = columnDesc;
             this.dicionaryColumn = dicionaryColumn;
             this.dataColumn = dataColumn;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(String value) throws IOException {
@@ -75,17 +84,25 @@ public class EnumColumn {
     }
 
     private static class Reader implements StringColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final LongColumnReader dataColumn;
         private final List<String> dictionary = new ArrayList<>();
 
-        public Reader(StringColumnReader dicionaryColumn,
+        public Reader(ColumnDesc<?, ?> columnDesc,
+                      StringColumnReader dicionaryColumn,
                       LongColumnReader dataColumn) throws IOException
         {
+            this.columnDesc = columnDesc;
             this.dataColumn = dataColumn;
             for (int i = 0; dicionaryColumn.hasRemaining(); i++) {
                 dictionary.add(dicionaryColumn.get());
             }
             dicionaryColumn.close();
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public String get() throws IOException {

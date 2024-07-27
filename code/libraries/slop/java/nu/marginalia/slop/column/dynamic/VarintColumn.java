@@ -11,20 +11,27 @@ import java.nio.file.Path;
 public class VarintColumn {
 
     public static VarintColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(Storage.reader(path, columnDesc, true));
+        return new Reader(columnDesc, Storage.reader(path, columnDesc, true));
     }
 
     public static VarintColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(Storage.writer(path, columnDesc));
+        return new Writer(columnDesc, Storage.writer(path, columnDesc));
     }
 
 
     private static class Writer implements VarintColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter writer;
         private long position = 0;
 
-        public Writer(StorageWriter writer) throws IOException {
+        public Writer(ColumnDesc<?,?> columnDesc, StorageWriter writer) throws IOException {
+            this.columnDesc = columnDesc;
             this.writer = writer;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(long value) throws IOException {
@@ -53,12 +60,19 @@ public class VarintColumn {
     }
 
     private static class Reader implements VarintColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader reader;
 
         private long position = 0;
 
-        public Reader(StorageReader reader) throws IOException {
+        public Reader(ColumnDesc<?,?> columnDesc, StorageReader reader) throws IOException {
+            this.columnDesc = columnDesc;
             this.reader = reader;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public long get() throws IOException {

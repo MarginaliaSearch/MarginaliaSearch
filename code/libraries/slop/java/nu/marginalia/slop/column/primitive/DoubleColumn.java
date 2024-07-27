@@ -11,19 +11,26 @@ import java.nio.file.Path;
 public class DoubleColumn {
 
     public static DoubleColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(Storage.reader(path, columnDesc, true));
+        return new Reader(columnDesc, Storage.reader(path, columnDesc, true));
     }
 
     public static DoubleColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(Storage.writer(path, columnDesc));
+        return new Writer(columnDesc, Storage.writer(path, columnDesc));
     }
 
     private static class Writer implements DoubleColumnWriter {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
         private long position = 0;
 
-        public Writer(StorageWriter storageWriter) throws IOException {
+        public Writer(ColumnDesc<?, ?> columnDesc, StorageWriter storageWriter) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storageWriter;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public void put(double value) throws IOException {
@@ -32,7 +39,7 @@ public class DoubleColumn {
         }
 
         public long position() {
-            return position / Double.BYTES;
+            return position;
         }
 
         public void close() throws IOException {
@@ -41,10 +48,17 @@ public class DoubleColumn {
     }
 
     private static class Reader implements DoubleColumnReader {
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
 
-        public Reader(StorageReader storage) throws IOException {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader storage) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = storage;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         public double get() throws IOException {
@@ -53,7 +67,7 @@ public class DoubleColumn {
 
         @Override
         public long position() throws IOException {
-            return storage.position();
+            return storage.position() / Double.BYTES;
         }
 
         @Override

@@ -13,20 +13,22 @@ import java.nio.file.Path;
 
 public class CustomBinaryColumn {
 
-    public static CustomBinaryColumnReader open(Path path, ColumnDesc name) throws IOException {
+    public static CustomBinaryColumnReader open(Path path, ColumnDesc columnDesc) throws IOException {
         return new Reader(
-                Storage.reader(path, name, false), // note we must never pass aligned=true here, as the data is not guaranteed alignment
-                VarintColumn.open(path, name.createSupplementaryColumn(ColumnFunction.DATA_LEN,
+                columnDesc,
+                Storage.reader(path, columnDesc, false), // note we must never pass aligned=true here, as the data is not guaranteed alignment
+                VarintColumn.open(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN,
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
         );
     }
 
-    public static CustomBinaryColumnWriter create(Path path, ColumnDesc name) throws IOException {
+    public static CustomBinaryColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
         return new Writer(
-                Storage.writer(path, name),
-                VarintColumn.create(path, name.createSupplementaryColumn(ColumnFunction.DATA_LEN,
+                columnDesc,
+                Storage.writer(path, columnDesc),
+                VarintColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN,
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -35,14 +37,22 @@ public class CustomBinaryColumn {
 
     private static class Writer implements CustomBinaryColumnWriter {
         private final VarintColumnWriter indexWriter;
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageWriter storage;
 
-        public Writer(StorageWriter storage,
+        public Writer(ColumnDesc<?, ?> columnDesc,
+                      StorageWriter storage,
                       VarintColumnWriter indexWriter)
         {
+            this.columnDesc = columnDesc;
             this.storage = storage;
-
             this.indexWriter = indexWriter;
+        }
+
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         @Override
@@ -74,11 +84,18 @@ public class CustomBinaryColumn {
 
     private static class Reader implements CustomBinaryColumnReader {
         private final VarintColumnReader indexReader;
+        private final ColumnDesc<?, ?> columnDesc;
         private final StorageReader storage;
 
-        public Reader(StorageReader reader, VarintColumnReader indexReader) throws IOException {
+        public Reader(ColumnDesc<?, ?> columnDesc, StorageReader reader, VarintColumnReader indexReader) throws IOException {
+            this.columnDesc = columnDesc;
             this.storage = reader;
             this.indexReader = indexReader;
+        }
+
+        @Override
+        public ColumnDesc<?, ?> columnDesc() {
+            return columnDesc;
         }
 
         @Override
