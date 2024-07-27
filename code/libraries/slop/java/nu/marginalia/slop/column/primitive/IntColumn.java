@@ -68,10 +68,6 @@ public class IntColumn {
             storage.skip(positions, Integer.BYTES);
         }
 
-        public void seek(long position) throws IOException {
-            storage.seek(position, Integer.BYTES);
-        }
-
         @Override
         public boolean hasRemaining() throws IOException {
             return storage.hasRemaining();

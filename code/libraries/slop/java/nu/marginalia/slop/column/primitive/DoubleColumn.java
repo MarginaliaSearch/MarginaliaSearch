@@ -61,10 +61,6 @@ public class DoubleColumn {
             storage.skip(positions, Double.BYTES);
         }
 
-        public void seek(long position) throws IOException {
-            storage.seek(position, Double.BYTES);
-        }
-
         @Override
         public boolean hasRemaining() throws IOException {
             return storage.hasRemaining();

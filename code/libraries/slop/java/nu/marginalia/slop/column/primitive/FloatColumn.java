@@ -62,10 +62,6 @@ public class FloatColumn {
             storage.skip(positions, Float.BYTES);
         }
 
-        public void seek(long position) throws IOException {
-            storage.seek(position, Float.BYTES);
-        }
-
         @Override
         public boolean hasRemaining() throws IOException {
             return storage.hasRemaining();

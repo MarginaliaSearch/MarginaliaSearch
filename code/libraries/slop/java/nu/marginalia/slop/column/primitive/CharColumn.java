@@ -61,9 +61,6 @@ public class CharColumn {
             storage.skip(positions, Character.BYTES);
         }
 
-        public void seek(long position) throws IOException {
-            storage.seek(position, Character.BYTES);
-        }
 
         @Override
         public boolean hasRemaining() throws IOException {
