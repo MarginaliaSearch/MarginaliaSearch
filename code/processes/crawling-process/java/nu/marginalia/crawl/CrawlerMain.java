@@ -11,6 +11,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
+import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainLocks;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
@@ -25,8 +26,6 @@ import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.service.ProcessMainClass;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -34,8 +33,9 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
-import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
@@ -48,8 +48,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
@@ -271,7 +275,7 @@ public class CrawlerMain extends ProcessMainClass {
                 Files.deleteIfExists(tempFile);
             }
 
-            var domainLock = domainLocks.getLock(new EdgeDomain(specification.domain));
+            var domainLock = domainLocks.getSemaphore(new EdgeDomain(specification.domain));
 
             try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
                  var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
@@ -280,7 +284,7 @@ public class CrawlerMain extends ProcessMainClass {
                 // acquire the domain lock to prevent other threads from crawling the same domain,
                 // we release it at the end of the task to let them go ahead
                 Thread.currentThread().setName("crawling:" + domain + " [await domain lock]");
-                domainLock.lock();
+                domainLock.acquire();
                 Thread.currentThread().setName("crawling:" + domain);
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
@@ -312,7 +316,7 @@ public class CrawlerMain extends ProcessMainClass {
             }
             finally {
                 // release the domain lock to permit other threads to crawl subdomains of this domain
-                domainLock.unlock();
+                domainLock.release();
 
                 // We don't need to double-count these; it's also kept int he workLog
                 processingIds.remove(domain);
