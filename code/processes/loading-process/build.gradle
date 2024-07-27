@@ -32,6 +32,7 @@ dependencies {
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:coded-sequence')
+    implementation project(':code:libraries:slop')
     implementation project(':third-party:commons-codec')
     implementation project(':third-party:parquet-floor')
     testImplementation project(':code:services-application:search-service')

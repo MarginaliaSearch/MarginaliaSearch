@@ -17,7 +17,7 @@ public class LongArrayColumn {
 
     public static LongArrayColumnReader open(Path path, ColumnDesc name) throws IOException {
         return new LongArrayColumn.Reader(Storage.reader(path, name, true),
-                VarintColumn.open(path, name.createDerivative(name.function().lengthsTable(),
+                VarintColumn.open(path, name.createSupplementaryColumn(name.function().lengthsTable(),
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -26,7 +26,7 @@ public class LongArrayColumn {
 
     public static LongArrayColumnWriter create(Path path, ColumnDesc name) throws IOException {
         return new LongArrayColumn.Writer(Storage.writer(path, name),
-                VarintColumn.create(path, name.createDerivative(name.function().lengthsTable(),
+                VarintColumn.create(path, name.createSupplementaryColumn(name.function().lengthsTable(),
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -45,6 +45,10 @@ public class LongArrayColumn {
         public void put(long[] value) throws IOException {
             storage.putLongs(value);
             lengthsWriter.put(value.length);
+        }
+
+        public long position() {
+            return lengthsWriter.position();
         }
 
         public void close() throws IOException {

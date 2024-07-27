@@ -6,6 +6,7 @@ import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnType;
+import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ public record SlopDomainRecord(
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> rssFeedsColumn = new ColumnDesc<>("rssFeeds", ColumnType.TXTSTRING, StorageType.GZIP);
 
 
-    public static class DomainNameReader implements AutoCloseable {
+    public static class DomainNameReader extends SlopTable {
         private final StringColumnReader domainsReader;
 
         public DomainNameReader(SlopPageRef<SlopDomainRecord> page) throws IOException {
@@ -51,13 +52,7 @@ public record SlopDomainRecord(
         }
 
         public DomainNameReader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(baseDir);
-        }
-
-
-        @Override
-        public void close() throws IOException {
-            domainsReader.close();
+            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -69,7 +64,7 @@ public record SlopDomainRecord(
         }
     }
 
-    public static class DomainWithIpReader implements AutoCloseable {
+    public static class DomainWithIpReader extends SlopTable {
         private final StringColumnReader domainsReader;
         private final StringColumnReader ipReader;
 
@@ -78,15 +73,8 @@ public record SlopDomainRecord(
         }
 
         public DomainWithIpReader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(baseDir);
-            ipReader = ipColumn.forPage(page).open(baseDir);
-        }
-
-
-        @Override
-        public void close() throws IOException {
-            domainsReader.close();
-            ipReader.close();
+            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
+            ipReader = ipColumn.forPage(page).open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -102,7 +90,7 @@ public record SlopDomainRecord(
         }
     }
 
-    public static class Reader implements AutoCloseable {
+    public static class Reader extends SlopTable {
         private final StringColumnReader domainsReader;
         private final StringColumnReader statesReader;
         private final StringColumnReader redirectReader;
@@ -120,33 +108,17 @@ public record SlopDomainRecord(
         }
 
         public Reader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(baseDir);
-            statesReader = statesColumn.forPage(page).open(baseDir);
-            redirectReader = redirectDomainsColumn.forPage(page).open(baseDir);
-            ipReader = ipColumn.forPage(page).open(baseDir);
+            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
+            statesReader = statesColumn.forPage(page).open(this, baseDir);
+            redirectReader = redirectDomainsColumn.forPage(page).open(this, baseDir);
+            ipReader = ipColumn.forPage(page).open(this, baseDir);
 
-            knownUrlsReader = knownUrlsColumn.forPage(page).open(baseDir);
-            goodUrlsReader = goodUrlsColumn.forPage(page).open(baseDir);
-            visitedUrlsReader = visitedUrlsColumn.forPage(page).open(baseDir);
+            knownUrlsReader = knownUrlsColumn.forPage(page).open(this, baseDir);
+            goodUrlsReader = goodUrlsColumn.forPage(page).open(this, baseDir);
+            visitedUrlsReader = visitedUrlsColumn.forPage(page).open(this, baseDir);
 
-            rssFeedsCountReader = rssFeedsCountColumn.forPage(page).open(baseDir);
-            rssFeedsReader = rssFeedsColumn.forPage(page).open(baseDir);
-        }
-
-
-        @Override
-        public void close() throws IOException {
-            domainsReader.close();
-            statesReader.close();
-            redirectReader.close();
-            ipReader.close();
-
-            knownUrlsReader.close();
-            goodUrlsReader.close();
-            visitedUrlsReader.close();
-
-            rssFeedsCountReader.close();
-            rssFeedsReader.close();
+            rssFeedsCountReader = rssFeedsCountColumn.forPage(page).open(this, baseDir);
+            rssFeedsReader = rssFeedsColumn.forPage(page).open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -179,7 +151,7 @@ public record SlopDomainRecord(
         }
     }
 
-    public static class Writer implements AutoCloseable {
+    public static class Writer extends SlopTable {
         private final StringColumnWriter domainsWriter;
         private final StringColumnWriter statesWriter;
         private final StringColumnWriter redirectWriter;
@@ -193,17 +165,17 @@ public record SlopDomainRecord(
         private final StringColumnWriter rssFeedsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            domainsWriter = domainsColumn.forPage(page).create(baseDir);
-            statesWriter = statesColumn.forPage(page).create(baseDir);
-            redirectWriter = redirectDomainsColumn.forPage(page).create(baseDir);
-            ipWriter = ipColumn.forPage(page).create(baseDir);
+            domainsWriter = domainsColumn.forPage(page).create(this, baseDir);
+            statesWriter = statesColumn.forPage(page).create(this, baseDir);
+            redirectWriter = redirectDomainsColumn.forPage(page).create(this, baseDir);
+            ipWriter = ipColumn.forPage(page).create(this, baseDir);
 
-            knownUrlsWriter = knownUrlsColumn.forPage(page).create(baseDir);
-            goodUrlsWriter = goodUrlsColumn.forPage(page).create(baseDir);
-            visitedUrlsWriter = visitedUrlsColumn.forPage(page).create(baseDir);
+            knownUrlsWriter = knownUrlsColumn.forPage(page).create(this, baseDir);
+            goodUrlsWriter = goodUrlsColumn.forPage(page).create(this, baseDir);
+            visitedUrlsWriter = visitedUrlsColumn.forPage(page).create(this, baseDir);
 
-            rssFeedsCountWriter = rssFeedsCountColumn.forPage(page).create(baseDir);
-            rssFeedsWriter = rssFeedsColumn.forPage(page).create(baseDir);
+            rssFeedsCountWriter = rssFeedsCountColumn.forPage(page).create(this, baseDir);
+            rssFeedsWriter = rssFeedsColumn.forPage(page).create(this.columnGroup("rss-feeds"), baseDir);
         }
 
         public void write(SlopDomainRecord record) throws IOException {
@@ -220,21 +192,6 @@ public record SlopDomainRecord(
             for (String rssFeed : record.rssFeeds()) {
                 rssFeedsWriter.put(rssFeed);
             }
-        }
-        
-        @Override
-        public void close() throws IOException {
-            domainsWriter.close();
-            statesWriter.close();
-            redirectWriter.close();
-            ipWriter.close();
-
-            knownUrlsWriter.close();
-            goodUrlsWriter.close();
-            visitedUrlsWriter.close();
-
-            rssFeedsCountWriter.close();
-            rssFeedsWriter.close();
         }
     }
 }

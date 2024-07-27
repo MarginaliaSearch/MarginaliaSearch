@@ -19,13 +19,13 @@ public class EnumColumn {
     public static StringColumnReader open(Path path, ColumnDesc name) throws IOException {
         return new Reader(
                 StringColumn.open(path,
-                        name.createDerivative(
+                        name.createSupplementaryColumn(
                                 ColumnFunction.DICT,
                                 ColumnType.TXTSTRING,
                                 StorageType.PLAIN)
                 ),
                 VarintColumn.open(path,
-                        name.createDerivative(
+                        name.createSupplementaryColumn(
                                 ColumnFunction.DATA,
                                 ColumnType.ENUM_LE,
                                 StorageType.PLAIN
@@ -36,8 +36,8 @@ public class EnumColumn {
 
     public static StringColumnWriter create(Path path, ColumnDesc name) throws IOException {
         return new Writer(
-                StringColumn.create(path, name.createDerivative(ColumnFunction.DICT, ColumnType.TXTSTRING, StorageType.PLAIN)),
-                VarintColumn.create(path, name.createDerivative(ColumnFunction.DATA, ColumnType.ENUM_LE, StorageType.PLAIN))
+                StringColumn.create(path, name.createSupplementaryColumn(ColumnFunction.DICT, ColumnType.TXTSTRING, StorageType.PLAIN)),
+                VarintColumn.create(path, name.createSupplementaryColumn(ColumnFunction.DATA, ColumnType.ENUM_LE, StorageType.PLAIN))
         );
     }
 
@@ -62,6 +62,10 @@ public class EnumColumn {
                 dicionaryColumn.put(value);
             }
             dataColumn.put(index);
+        }
+
+        public long position() {
+            return dataColumn.position();
         }
 
         public void close() throws IOException {

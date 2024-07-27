@@ -21,12 +21,15 @@ public class VarintColumn {
 
     private static class Writer implements VarintColumnWriter {
         private final StorageWriter writer;
+        private long position = 0;
 
         public Writer(StorageWriter writer) throws IOException {
             this.writer = writer;
         }
 
         public void put(long value) throws IOException {
+            position++;
+
             while ((value & ~0x7F) != 0) {
                 writer.putByte((byte) (0x80 | (value & 0x7F)));
                 value >>>= 7;
@@ -38,6 +41,10 @@ public class VarintColumn {
             for (long val : values) {
                 put(val);
             }
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {

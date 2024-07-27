@@ -20,6 +20,7 @@ public class DoubleColumn {
 
     private static class Writer implements DoubleColumnWriter {
         private final StorageWriter storage;
+        private long position = 0;
 
         public Writer(StorageWriter storageWriter) throws IOException {
             this.storage = storageWriter;
@@ -27,6 +28,11 @@ public class DoubleColumn {
 
         public void put(double value) throws IOException {
             storage.putDouble(value);
+            position++;
+        }
+
+        public long position() {
+            return position / Double.BYTES;
         }
 
         public void close() throws IOException {

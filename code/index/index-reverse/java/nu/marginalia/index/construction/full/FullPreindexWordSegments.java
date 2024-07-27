@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.IndexJournalPage;
+import nu.marginalia.slop.desc.SlopTable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -59,7 +60,8 @@ public class FullPreindexWordSegments {
         Long2IntOpenHashMap countsMap = new Long2IntOpenHashMap(100_000, 0.75f);
         countsMap.defaultReturnValue(0);
 
-        try (var termIds = journalInstance.openTermIds()) {
+        try (var slopTable = new SlopTable()) {
+            var termIds = journalInstance.openTermIds(slopTable);
             while (termIds.hasRemaining()) {
                 countsMap.addTo(termIds.get(), 1);
             }

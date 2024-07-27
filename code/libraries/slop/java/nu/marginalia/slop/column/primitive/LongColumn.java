@@ -20,6 +20,7 @@ public class LongColumn {
 
     private static class Writer implements LongColumnWriter {
         private final StorageWriter storage;
+        private long position = 0;
 
         public Writer(StorageWriter storageWriter) {
             this.storage = storageWriter;
@@ -27,6 +28,11 @@ public class LongColumn {
 
         public void put(long value) throws IOException {
             storage.putLong(value);
+            position++;
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {
@@ -47,7 +53,7 @@ public class LongColumn {
 
         @Override
         public long position() throws IOException {
-            return storage.position();
+            return storage.position() / Long.BYTES;
         }
 
         @Override

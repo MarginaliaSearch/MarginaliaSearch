@@ -14,6 +14,7 @@ import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnType;
+import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -119,7 +120,7 @@ public record SlopDocumentRecord(
     private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodesColumn = new ColumnDesc<>("spanCodes", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
     private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> spansColumn = new ColumnDesc<>("spans", ColumnType.BYTE_ARRAY_GCS, StorageType.ZSTD);
 
-    public static class KeywordsProjectionReader implements AutoCloseable {
+    public static class KeywordsProjectionReader extends SlopTable {
         private final StringColumnReader domainsReader;
         private final VarintColumnReader ordinalsReader;
         private final IntColumnReader htmlFeaturesReader;
@@ -140,17 +141,19 @@ public record SlopDocumentRecord(
         }
 
         public KeywordsProjectionReader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(baseDir);
-            ordinalsReader = ordinalsColumn.forPage(page).open(baseDir);
-            htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(baseDir);
-            domainMetadataReader = domainMetadata.forPage(page).open(baseDir);
-            lengthsReader = lengthsColumn.forPage(page).open(baseDir);
-            keywordsReader = keywordsColumn.forPage(page).open(baseDir);
-            termCountsReader = termCountsColumn.forPage(page).open(baseDir);
-            termMetaReader = termMetaColumn.forPage(page).open(baseDir);
-            termPositionsReader = termPositionsColumn.forPage(page).open(baseDir);
-            spanCodesReader = spanCodesColumn.forPage(page).open(baseDir);
-            spansReader = spansColumn.forPage(page).open(baseDir);
+            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
+            ordinalsReader = ordinalsColumn.forPage(page).open(this, baseDir);
+            htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(this, baseDir);
+            domainMetadataReader = domainMetadata.forPage(page).open(this, baseDir);
+            lengthsReader = lengthsColumn.forPage(page).open(this, baseDir);
+            termCountsReader = termCountsColumn.forPage(page).open(this, baseDir);
+
+            keywordsReader = keywordsColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
+            termMetaReader = termMetaColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
+            termPositionsReader = termPositionsColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
+
+            spanCodesReader = spanCodesColumn.forPage(page).open(this.columnGroup("spans"), baseDir);
+            spansReader = spansColumn.forPage(page).open(this.columnGroup("spans"), baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -197,22 +200,9 @@ public record SlopDocumentRecord(
             );
         }
 
-
-        public void close() throws IOException {
-            domainsReader.close();
-            ordinalsReader.close();
-            htmlFeaturesReader.close();
-            domainMetadataReader.close();
-            lengthsReader.close();
-            keywordsReader.close();
-            termMetaReader.close();
-            termPositionsReader.close();
-            spanCodesReader.close();
-            spansReader.close();
-        }
     }
 
-    public static class MetadataReader implements AutoCloseable {
+    public static class MetadataReader extends SlopTable {
         private final StringColumnReader domainsReader;
         private final StringColumnReader urlsReader;
         private final VarintColumnReader ordinalsReader;
@@ -230,17 +220,17 @@ public record SlopDocumentRecord(
         }
 
         public MetadataReader(Path baseDir, int page) throws IOException {
-            this.domainsReader = domainsColumn.forPage(page).open(baseDir);
-            this.urlsReader = urlsColumn.forPage(page).open(baseDir);
-            this.ordinalsReader = ordinalsColumn.forPage(page).open(baseDir);
-            this.titlesReader = titlesColumn.forPage(page).open(baseDir);
-            this.descriptionsReader = descriptionsColumn.forPage(page).open(baseDir);
-            this.htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(baseDir);
-            this.htmlStandardsReader = htmlStandardsColumn.forPage(page).open(baseDir);
-            this.lengthsReader = lengthsColumn.forPage(page).open(baseDir);
-            this.hashesReader = hashesColumn.forPage(page).open(baseDir);
-            this.qualitiesReader = qualitiesColumn.forPage(page).open(baseDir);
-            this.pubYearReader = pubYearColumn.forPage(page).open(baseDir);
+            this.domainsReader = domainsColumn.forPage(page).open(this, baseDir);
+            this.urlsReader = urlsColumn.forPage(page).open(this, baseDir);
+            this.ordinalsReader = ordinalsColumn.forPage(page).open(this, baseDir);
+            this.titlesReader = titlesColumn.forPage(page).open(this, baseDir);
+            this.descriptionsReader = descriptionsColumn.forPage(page).open(this, baseDir);
+            this.htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(this, baseDir);
+            this.htmlStandardsReader = htmlStandardsColumn.forPage(page).open(this, baseDir);
+            this.lengthsReader = lengthsColumn.forPage(page).open(this, baseDir);
+            this.hashesReader = hashesColumn.forPage(page).open(this, baseDir);
+            this.qualitiesReader = qualitiesColumn.forPage(page).open(this, baseDir);
+            this.pubYearReader = pubYearColumn.forPage(page).open(this, baseDir);
         }
 
         public MetadataProjection next() throws IOException {
@@ -264,22 +254,9 @@ public record SlopDocumentRecord(
             return domainsReader.hasRemaining();
         }
 
-        public void close() throws IOException {
-            domainsReader.close();
-            urlsReader.close();
-            ordinalsReader.close();
-            titlesReader.close();
-            descriptionsReader.close();
-            htmlFeaturesReader.close();
-            htmlStandardsReader.close();
-            lengthsReader.close();
-            hashesReader.close();
-            qualitiesReader.close();
-            pubYearReader.close();
-        }
     }
 
-    public static class Writer implements AutoCloseable {
+    public static class Writer extends SlopTable {
         private final StringColumnWriter domainsWriter;
         private final StringColumnWriter urlsWriter;
         private final VarintColumnWriter ordinalsWriter;
@@ -302,27 +279,28 @@ public record SlopDocumentRecord(
         private final GammaCodedSequenceWriter spansWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            domainsWriter = domainsColumn.forPage(page).create(baseDir);
-            urlsWriter = urlsColumn.forPage(page).create(baseDir);
-            ordinalsWriter = ordinalsColumn.forPage(page).create(baseDir);
-            statesWriter = statesColumn.forPage(page).create(baseDir);
-            stateReasonsWriter = stateReasonsColumn.forPage(page).create(baseDir);
-            titlesWriter = titlesColumn.forPage(page).create(baseDir);
-            descriptionsWriter = descriptionsColumn.forPage(page).create(baseDir);
-            htmlFeaturesWriter = htmlFeaturesColumn.forPage(page).create(baseDir);
-            htmlStandardsWriter = htmlStandardsColumn.forPage(page).create(baseDir);
-            lengthsWriter = lengthsColumn.forPage(page).create(baseDir);
-            hashesWriter = hashesColumn.forPage(page).create(baseDir);
-            qualitiesWriter = qualitiesColumn.forPage(page).create(baseDir);
-            domainMetadataWriter = domainMetadata.forPage(page).create(baseDir);
-            pubYearWriter = pubYearColumn.forPage(page).create(baseDir);
-            termCountsWriter = termCountsColumn.forPage(page).create(baseDir);
-            keywordsWriter = keywordsColumn.forPage(page).create(baseDir);
-            termMetaWriter = termMetaColumn.forPage(page).create(baseDir);
-            termPositionsWriter = termPositionsColumn.forPage(page).create(baseDir);
+            domainsWriter = domainsColumn.forPage(page).create(this, baseDir);
+            urlsWriter = urlsColumn.forPage(page).create(this, baseDir);
+            ordinalsWriter = ordinalsColumn.forPage(page).create(this, baseDir);
+            statesWriter = statesColumn.forPage(page).create(this, baseDir);
+            stateReasonsWriter = stateReasonsColumn.forPage(page).create(this, baseDir);
+            titlesWriter = titlesColumn.forPage(page).create(this, baseDir);
+            descriptionsWriter = descriptionsColumn.forPage(page).create(this, baseDir);
+            htmlFeaturesWriter = htmlFeaturesColumn.forPage(page).create(this, baseDir);
+            htmlStandardsWriter = htmlStandardsColumn.forPage(page).create(this, baseDir);
+            lengthsWriter = lengthsColumn.forPage(page).create(this, baseDir);
+            hashesWriter = hashesColumn.forPage(page).create(this, baseDir);
+            qualitiesWriter = qualitiesColumn.forPage(page).create(this, baseDir);
+            domainMetadataWriter = domainMetadata.forPage(page).create(this, baseDir);
+            pubYearWriter = pubYearColumn.forPage(page).create(this, baseDir);
+            termCountsWriter = termCountsColumn.forPage(page).create(this, baseDir);
 
-            spansWriter = spansColumn.forPage(page).create(baseDir);
-            spansCodesWriter = spanCodesColumn.forPage(page).create(baseDir);
+            keywordsWriter = keywordsColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
+            termMetaWriter = termMetaColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
+            termPositionsWriter = termPositionsColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
+
+            spansWriter = spansColumn.forPage(page).create(this.columnGroup("spans"), baseDir);
+            spansCodesWriter = spanCodesColumn.forPage(page).create(this.columnGroup("spans"), baseDir);
         }
 
         public void write(SlopDocumentRecord record) throws IOException {
@@ -366,30 +344,6 @@ public record SlopDocumentRecord(
                 spansWriter.put((GammaCodedSequence) span);
             }
 
-        }
-
-        public void close() throws IOException {
-            domainsWriter.close();
-            urlsWriter.close();
-            ordinalsWriter.close();
-            statesWriter.close();
-            stateReasonsWriter.close();
-            titlesWriter.close();
-            descriptionsWriter.close();
-            htmlFeaturesWriter.close();
-            htmlStandardsWriter.close();
-            lengthsWriter.close();
-            hashesWriter.close();
-            qualitiesWriter.close();
-            domainMetadataWriter.close();
-            pubYearWriter.close();
-            termCountsWriter.close();
-            keywordsWriter.close();
-            termMetaWriter.close();
-            termPositionsWriter.close();
-
-            spansCodesWriter.close();
-            spansWriter.close();
         }
     }
 }

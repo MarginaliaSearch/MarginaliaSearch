@@ -22,6 +22,7 @@ dependencies {
 
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:slop')
     implementation project(':code:libraries:coded-sequence')
 
     implementation project(':code:common:db')

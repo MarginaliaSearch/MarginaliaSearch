@@ -51,6 +51,10 @@ public class StringColumn {
             backingColumn.put(value.getBytes());
         }
 
+        public long position() {
+            return backingColumn.position();
+        }
+
         public void close() throws IOException {
             backingColumn.close();
         }
@@ -92,6 +96,8 @@ public class StringColumn {
     private static class CStringWriter implements StringColumnWriter {
         private final StorageWriter storageWriter;
 
+        private long position = 0;
+
         public CStringWriter(StorageWriter storageWriter) throws IOException {
             this.storageWriter = storageWriter;
         }
@@ -100,10 +106,14 @@ public class StringColumn {
             if (null == value) {
                 value = "";
             }
-
             assert value.indexOf('\0') == -1 : "Null byte not allowed in cstring";
             storageWriter.putBytes(value.getBytes());
             storageWriter.putByte((byte) 0);
+            position++;
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {
@@ -113,6 +123,7 @@ public class StringColumn {
 
     private static class CStringReader implements StringColumnReader {
         private final StorageReader storageReader;
+        private long position = 0;
 
         public CStringReader(StorageReader storageReader) throws IOException {
             this.storageReader = storageReader;
@@ -124,12 +135,13 @@ public class StringColumn {
             while (storageReader.hasRemaining() && (b = storageReader.getByte()) != 0) {
                 sb.append((char) b);
             }
+            position++;
             return sb.toString();
         }
 
         @Override
         public long position() throws IOException {
-            return storageReader.position();
+            return position;
         }
 
         @Override
@@ -141,6 +153,7 @@ public class StringColumn {
                     i++;
                 }
             }
+            position += positions;
         }
 
         @Override
@@ -157,6 +170,7 @@ public class StringColumn {
 
     private static class TxtStringWriter implements StringColumnWriter {
         private final StorageWriter storageWriter;
+        private long position = 0;
 
         public TxtStringWriter(StorageWriter storageWriter) throws IOException {
             this.storageWriter = storageWriter;
@@ -171,6 +185,11 @@ public class StringColumn {
 
             storageWriter.putBytes(value.getBytes());
             storageWriter.putByte((byte) '\n');
+            position++;
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {
@@ -180,6 +199,7 @@ public class StringColumn {
 
     private static class TxtStringReader implements StringColumnReader {
         private final StorageReader storageReader;
+        private long position = 0;
 
         public TxtStringReader(StorageReader storageReader) throws IOException {
             this.storageReader = storageReader;
@@ -197,17 +217,20 @@ public class StringColumn {
                     sb.append((char) b);
                 }
             }
+            position++;
             return sb.toString();
         }
 
         @Override
         public long position() throws IOException {
-            return storageReader.position();
+            return position;
         }
 
         @Override
         public void skip(long positions) throws IOException {
             int i = 0;
+
+            position+=positions;
 
             while (i < positions && storageReader.hasRemaining()) {
                 if (storageReader.getByte() == '\n') {

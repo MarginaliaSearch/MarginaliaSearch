@@ -7,6 +7,7 @@ import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.rwf.RandomFileAssembler;
+import nu.marginalia.slop.desc.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,12 +79,13 @@ public class FullPreindexDocuments {
         final ByteBuffer tempBuffer = ByteBuffer.allocate(65536);
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var docIds = journalInstance.openCombinedId();
-             var termCounts = journalInstance.openTermCounts();
-             var termIds = journalInstance.openTermIds();
-             var termMeta = journalInstance.openTermMetadata();
-             var positions = journalInstance.openTermPositions())
+             var slopTable = new SlopTable())
         {
+            var docIds = journalInstance.openCombinedId(slopTable);
+            var termCounts = journalInstance.openTermCounts(slopTable);
+            var termIds = journalInstance.openTermIds(slopTable);
+            var termMeta = journalInstance.openTermMetadata(slopTable);
+            var positions = journalInstance.openTermPositions(slopTable);
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);

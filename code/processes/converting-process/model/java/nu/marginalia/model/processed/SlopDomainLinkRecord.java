@@ -4,6 +4,7 @@ import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnType;
+import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ public record SlopDomainLinkRecord(
         return new Reader(baseDir, page);
     }
 
-    public static class Reader implements AutoCloseable {
+    public static class Reader extends SlopTable {
         private final StringColumnReader sourcesReader;
         private final StringColumnReader destsReader;
 
@@ -30,15 +31,8 @@ public record SlopDomainLinkRecord(
         }
 
         public Reader(Path baseDir, int page) throws IOException {
-            sourcesReader = sourcesColumn.forPage(page).open(baseDir);
-            destsReader = destsColumn.forPage(page).open(baseDir);
-        }
-
-
-        @Override
-        public void close() throws IOException {
-            sourcesReader.close();
-            destsReader.close();
+            sourcesReader = sourcesColumn.forPage(page).open(this, baseDir);
+            destsReader = destsColumn.forPage(page).open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -60,13 +54,13 @@ public record SlopDomainLinkRecord(
         }
     }
 
-    public static class Writer implements AutoCloseable {
+    public static class Writer extends SlopTable {
         private final StringColumnWriter sourcesWriter;
         private final StringColumnWriter destsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            sourcesWriter = sourcesColumn.forPage(page).create(baseDir);
-            destsWriter = destsColumn.forPage(page).create(baseDir);
+            sourcesWriter = sourcesColumn.forPage(page).create(this, baseDir);
+            destsWriter = destsColumn.forPage(page).create(this, baseDir);
         }
 
         public void write(SlopDomainLinkRecord record) throws IOException {

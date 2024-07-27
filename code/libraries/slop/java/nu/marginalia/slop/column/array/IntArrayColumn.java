@@ -17,7 +17,7 @@ public class IntArrayColumn {
 
     public static IntArrayColumnReader open(Path path, ColumnDesc name) throws IOException {
         return new Reader(Storage.reader(path, name, true),
-                VarintColumn.open(path, name.createDerivative(name.function().lengthsTable(),
+                VarintColumn.open(path, name.createSupplementaryColumn(name.function().lengthsTable(),
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -26,7 +26,7 @@ public class IntArrayColumn {
 
     public static IntArrayColumnWriter create(Path path, ColumnDesc name) throws IOException {
         return new Writer(Storage.writer(path, name),
-                VarintColumn.create(path, name.createDerivative(name.function().lengthsTable(),
+                VarintColumn.create(path, name.createSupplementaryColumn(name.function().lengthsTable(),
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -45,6 +45,10 @@ public class IntArrayColumn {
         public void put(int[] value) throws IOException {
             storage.putInts(value);
             lengthsWriter.put(value.length);
+        }
+
+        public long position() {
+            return lengthsWriter.position();
         }
 
         public void close() throws IOException {

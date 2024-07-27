@@ -1,9 +1,6 @@
 package nu.marginalia.slop.column;
 
-import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.ColumnFunction;
-import nu.marginalia.slop.desc.ColumnType;
-import nu.marginalia.slop.desc.StorageType;
+import nu.marginalia.slop.desc.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,11 +58,15 @@ class StringColumnTest {
                 ColumnType.STRING,
                 StorageType.GZIP);
 
-        try (var column = name.create(tempDir)) {
+        try (var table = new SlopTable()) {
+            var column = name.create(table, tempDir);
+
             column.put("Lorem");
             column.put("Ipsum");
         }
-        try (var column = name.open(tempDir)) {
+        try (var table = new SlopTable()) {
+            var column = name.open(table, tempDir);
+
             assertEquals("Lorem", column.get());
             assertEquals("Ipsum", column.get());
             assertFalse(column.hasRemaining());
@@ -80,11 +81,13 @@ class StringColumnTest {
                 ColumnType.CSTRING,
                 StorageType.GZIP);
 
-        try (var column = name.create(tempDir)) {
+        try (var table = new SlopTable()) {
+            var column = name.create(table, tempDir);
             column.put("Lorem");
             column.put("Ipsum");
         }
-        try (var column = name.open(tempDir)) {
+        try (var table = new SlopTable()) {
+            var column = name.open(table, tempDir);
             assertEquals("Lorem", column.get());
             assertEquals("Ipsum", column.get());
             assertFalse(column.hasRemaining());
@@ -99,11 +102,13 @@ class StringColumnTest {
                 ColumnType.TXTSTRING,
                 StorageType.GZIP);
 
-        try (var column = name.create(tempDir)) {
+        try (var table = new SlopTable()) {
+            var column = name.create(table, tempDir);
             column.put("Lorem");
             column.put("Ipsum");
         }
-        try (var column = name.open(tempDir)) {
+        try (var table = new SlopTable()) {
+            var column = name.open(table, tempDir);
             assertEquals("Lorem", column.get());
             assertEquals("Ipsum", column.get());
             assertFalse(column.hasRemaining());

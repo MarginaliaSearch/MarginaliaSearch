@@ -9,6 +9,7 @@ import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.column.primitive.*;
 import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnType;
+import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -34,43 +35,43 @@ public record IndexJournalPage(Path baseDir, int page) {
         }
     }
 
-    public LongColumnReader openCombinedId() throws IOException {
-        return combinedId.forPage(page).open(baseDir);
+    public LongColumnReader openCombinedId(SlopTable table) throws IOException {
+        return combinedId.forPage(page).open(table, baseDir);
     }
 
-    public LongColumnReader openDocumentMeta() throws IOException {
-        return documentMeta.forPage(page).open(baseDir);
+    public LongColumnReader openDocumentMeta(SlopTable table) throws IOException {
+        return documentMeta.forPage(page).open(table, baseDir);
     }
 
-    public IntColumnReader openFeatures() throws IOException {
-        return features.forPage(page).open(baseDir);
+    public IntColumnReader openFeatures(SlopTable table) throws IOException {
+        return features.forPage(page).open(table, baseDir);
     }
 
-    public IntColumnReader openSize() throws IOException {
-        return size.forPage(page).open(baseDir);
+    public IntColumnReader openSize(SlopTable table) throws IOException {
+        return size.forPage(page).open(table, baseDir);
     }
 
-    public LongColumnReader openTermCounts() throws IOException {
-        return termCounts.forPage(page).open(baseDir);
+    public LongColumnReader openTermCounts(SlopTable table) throws IOException {
+        return termCounts.forPage(page).open(table, baseDir);
     }
 
-    public LongColumnReader openTermIds() throws IOException {
-        return termIds.forPage(page).open(baseDir);
+    public LongColumnReader openTermIds(SlopTable table) throws IOException {
+        return termIds.forPage(page).open(table.columnGroup("keywords"), baseDir);
     }
 
-    public ByteColumnReader openTermMetadata() throws IOException {
-        return termMeta.forPage(page).open(baseDir);
+    public ByteColumnReader openTermMetadata(SlopTable table) throws IOException {
+        return termMeta.forPage(page).open(table.columnGroup("keywords"), baseDir);
     }
 
-    public GammaCodedSequenceReader openTermPositions() throws IOException {
-        return positions.forPage(page).open(baseDir);
+    public GammaCodedSequenceReader openTermPositions(SlopTable table) throws IOException {
+        return positions.forPage(page).open(table.columnGroup("keywords"), baseDir);
     }
 
-    public GammaCodedSequenceReader openSpans() throws IOException {
-        return spans.forPage(page).open(baseDir);
+    public GammaCodedSequenceReader openSpans(SlopTable table) throws IOException {
+        return spans.forPage(page).open(table.columnGroup("spans"), baseDir);
     }
 
-    public ByteArrayColumnReader openSpanCodes() throws IOException {
-        return spanCodes.forPage(page).open(baseDir);
+    public ByteArrayColumnReader openSpanCodes(SlopTable table) throws IOException {
+        return spanCodes.forPage(page).open(table.columnGroup("spans"), baseDir);
     }
 }

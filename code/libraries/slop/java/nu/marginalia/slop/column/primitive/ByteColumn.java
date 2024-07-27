@@ -20,6 +20,7 @@ public class ByteColumn {
 
     private static class Writer implements ByteColumnWriter {
         private final StorageWriter storage;
+        private long position = 0;
 
         public Writer(StorageWriter storageWriter) throws IOException {
             this.storage = storageWriter;
@@ -27,6 +28,11 @@ public class ByteColumn {
 
         public void put(byte value) throws IOException {
             storage.putByte(value);
+            position++;
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {

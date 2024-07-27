@@ -36,20 +36,35 @@ public record ColumnDesc<R extends ColumnReader,
         this(name, 0, ColumnFunction.DATA, type, storageType);
     }
 
-    public R open(Path path) throws IOException {
-        return type.open(path, this);
+    /** Open a column reader for this column.
+     *
+     * @param table the table to register the reader with
+     * @param path the path to the file to read from
+     * */
+    public R open(SlopTable table, Path path) throws IOException {
+        var reader = type.open(path, this);
+        table.register(reader);
+        return reader;
     }
 
-    public W create(Path path) throws IOException {
-        return type.register(path, this);
+    /** Create a new column writer for this column.
+     *
+     * @param table the table to register the writer with
+     * @param path the path to the file to write to
+     * */
+    public W create(SlopTable table, Path path) throws IOException {
+        var writer = type.register(path, this);
+        table.register(writer);
+        return writer;
     }
 
-    public ColumnDesc createDerivative(
+    public <R2 extends ColumnReader, W2 extends ColumnWriter >
+    ColumnDesc<R2, W2> createSupplementaryColumn(
             ColumnFunction function,
-            ColumnType type,
+            ColumnType<R2, W2> type,
             StorageType storageType)
     {
-        return new ColumnDesc(name, page, function, type, storageType);
+        return new ColumnDesc<>(name, page, function, type, storageType);
     }
 
     public ByteOrder byteOrder() {
@@ -57,7 +72,7 @@ public record ColumnDesc<R extends ColumnReader,
     }
 
     public ColumnDesc<R, W> forPage(int page) {
-        return new ColumnDesc(name, page, function, type, storageType);
+        return new ColumnDesc<>(name, page, function, type, storageType);
     }
 
     public boolean exists(Path base) {

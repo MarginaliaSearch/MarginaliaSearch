@@ -19,7 +19,7 @@ public class ByteArrayColumn {
         return new Reader(
                 Storage.reader(path, name, true),
                 VarintColumn.open(path,
-                        name.createDerivative(name.function().lengthsTable(),
+                        name.createSupplementaryColumn(name.function().lengthsTable(),
                                 ColumnType.VARINT_LE,
                                 StorageType.PLAIN)
                 )
@@ -30,7 +30,7 @@ public class ByteArrayColumn {
         return new Writer(
                 Storage.writer(path, name),
                 VarintColumn.create(path,
-                        name.createDerivative(name.function().lengthsTable(),
+                        name.createSupplementaryColumn(name.function().lengthsTable(),
                                 ColumnType.VARINT_LE,
                                 StorageType.PLAIN)
                 )
@@ -41,14 +41,21 @@ public class ByteArrayColumn {
         private final StorageWriter storage;
         private final VarintColumnWriter lengthsWriter;
 
+        private long position = 0;
+
         public Writer(StorageWriter storage, VarintColumnWriter lengthsWriter) throws IOException {
             this.storage = storage;
             this.lengthsWriter = lengthsWriter;
         }
 
         public void put(byte[] value) throws IOException {
+            position ++;
             storage.putBytes(value);
             lengthsWriter.put(value.length);
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {

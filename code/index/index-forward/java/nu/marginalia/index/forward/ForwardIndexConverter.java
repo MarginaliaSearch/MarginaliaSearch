@@ -9,6 +9,7 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.slop.column.primitive.LongColumnReader;
+import nu.marginalia.slop.desc.SlopTable;
 import org.roaringbitmap.longlong.LongConsumer;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
@@ -80,16 +81,15 @@ public class ForwardIndexConverter {
 
             ByteBuffer workArea = ByteBuffer.allocate(65536);
             for (var instance : journal.pages()) {
-                try (var docIdReader = instance.openCombinedId();
-                     var metaReader = instance.openDocumentMeta();
-                     var featuresReader = instance.openFeatures();
-                     var sizeReader = instance.openSize();
-
-                     var spansCodesReader = instance.openSpanCodes();
-                     var spansSeqReader = instance.openSpans();
-                     var spansWriter = new ForwardIndexSpansWriter(outputFileSpansData)
-                     )
+                try (var slopTable = new SlopTable(); var spansWriter = new ForwardIndexSpansWriter(outputFileSpansData))
                 {
+                    var docIdReader = instance.openCombinedId(slopTable);
+                    var metaReader = instance.openDocumentMeta(slopTable);
+                    var featuresReader = instance.openFeatures(slopTable);
+                    var sizeReader = instance.openSize(slopTable);
+                    var spansCodesReader = instance.openSpanCodes(slopTable);
+                    var spansSeqReader = instance.openSpans(slopTable);
+
                     while (docIdReader.hasRemaining()) {
                         long docId = docIdReader.get();
                         int domainId = UrlIdCodec.getDomainId(docId);
@@ -148,7 +148,9 @@ public class ForwardIndexConverter {
         Roaring64Bitmap rbm = new Roaring64Bitmap();
 
         for (var instance : journalReader.pages()) {
-            try (LongColumnReader idReader = instance.openCombinedId()) {
+            try (var slopTable = new SlopTable()) {
+                LongColumnReader idReader = instance.openCombinedId(slopTable);
+
                 while (idReader.hasRemaining()) {
                     rbm.add(idReader.get());
                 }

@@ -21,6 +21,7 @@ public class FloatColumn {
 
     private static class Writer implements FloatColumnWriter {
         private final StorageWriter storage;
+        private long position = 0;
 
         public Writer(StorageWriter storageWriter) throws IOException {
             this.storage = storageWriter;
@@ -28,6 +29,11 @@ public class FloatColumn {
 
         public void put(float value) throws IOException {
             storage.putFloat(value);
+            position++;
+        }
+
+        public long position() {
+            return position;
         }
 
         public void close() throws IOException {
@@ -48,7 +54,7 @@ public class FloatColumn {
 
         @Override
         public long position() throws IOException {
-            return storage.position();
+            return storage.position() / Float.BYTES;
         }
 
         @Override

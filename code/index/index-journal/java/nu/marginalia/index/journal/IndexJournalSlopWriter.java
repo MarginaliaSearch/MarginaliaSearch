@@ -10,13 +10,14 @@ import nu.marginalia.slop.column.dynamic.GammaCodedSequenceWriter;
 import nu.marginalia.slop.column.primitive.ByteColumnWriter;
 import nu.marginalia.slop.column.primitive.IntColumnWriter;
 import nu.marginalia.slop.column.primitive.LongColumnWriter;
+import nu.marginalia.slop.desc.SlopTable;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class IndexJournalSlopWriter implements AutoCloseable {
+public class IndexJournalSlopWriter extends SlopTable {
 
     private final IntColumnWriter featuresWriter;
     private final IntColumnWriter sizeWriter;
@@ -39,19 +40,20 @@ public class IndexJournalSlopWriter implements AutoCloseable {
         }
 
 
-        featuresWriter = IndexJournalPage.features.forPage(page).create(dir);
-        sizeWriter = IndexJournalPage.size.forPage(page).create(dir);
+        featuresWriter = IndexJournalPage.features.forPage(page).create(this, dir);
+        sizeWriter = IndexJournalPage.size.forPage(page).create(this, dir);
 
-        combinedIdWriter = IndexJournalPage.combinedId.forPage(page).create(dir);
-        documentMetaWriter = IndexJournalPage.documentMeta.forPage(page).create(dir);
+        combinedIdWriter = IndexJournalPage.combinedId.forPage(page).create(this, dir);
+        documentMetaWriter = IndexJournalPage.documentMeta.forPage(page).create(this, dir);
 
-        termCountsWriter = IndexJournalPage.termCounts.forPage(page).create(dir);
-        termIdsWriter = IndexJournalPage.termIds.forPage(page).create(dir);
-        termMetadataWriter = IndexJournalPage.termMeta.forPage(page).create(dir);
-        termPositionsWriter = IndexJournalPage.positions.forPage(page).create(dir);
+        termCountsWriter = IndexJournalPage.termCounts.forPage(page).create(this, dir);
 
-        spansWriter = IndexJournalPage.spans.forPage(page).create(dir);
-        spanCodesWriter = IndexJournalPage.spanCodes.forPage(page).create(dir);
+        termIdsWriter = IndexJournalPage.termIds.forPage(page).create(this.columnGroup("keywords"), dir);
+        termMetadataWriter = IndexJournalPage.termMeta.forPage(page).create(this.columnGroup("keywords"), dir);
+        termPositionsWriter = IndexJournalPage.positions.forPage(page).create(this.columnGroup("keywords"), dir);
+
+        spansWriter = IndexJournalPage.spans.forPage(page).create(this.columnGroup("spans"), dir);
+        spanCodesWriter = IndexJournalPage.spanCodes.forPage(page).create(this.columnGroup("spans"), dir);
     }
 
     @SneakyThrows

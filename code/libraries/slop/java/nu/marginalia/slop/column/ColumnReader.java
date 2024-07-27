@@ -11,4 +11,6 @@ public interface ColumnReader {
     }
 
     boolean hasRemaining() throws IOException;
+
+    void close() throws IOException;
 }

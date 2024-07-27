@@ -20,6 +20,7 @@ public class CharColumn {
 
     private static class Writer implements CharColumnWriter {
         private final StorageWriter storage;
+        private long position = 0;
 
         public Writer(StorageWriter storageWriter) throws IOException {
             this.storage = storageWriter;
@@ -27,6 +28,11 @@ public class CharColumn {
 
         public void put(char value) throws IOException {
             storage.putChar(value);
+            position++;
+        }
+
+        public long position() {
+            return position / Character.BYTES;
         }
 
         public void close() throws IOException {

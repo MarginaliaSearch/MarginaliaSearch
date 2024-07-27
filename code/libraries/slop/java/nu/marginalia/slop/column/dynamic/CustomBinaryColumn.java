@@ -16,7 +16,7 @@ public class CustomBinaryColumn {
     public static CustomBinaryColumnReader open(Path path, ColumnDesc name) throws IOException {
         return new Reader(
                 Storage.reader(path, name, false), // note we must never pass aligned=true here, as the data is not guaranteed alignment
-                VarintColumn.open(path, name.createDerivative(ColumnFunction.DATA_LEN,
+                VarintColumn.open(path, name.createSupplementaryColumn(ColumnFunction.DATA_LEN,
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -26,7 +26,7 @@ public class CustomBinaryColumn {
     public static CustomBinaryColumnWriter create(Path path, ColumnDesc name) throws IOException {
         return new Writer(
                 Storage.writer(path, name),
-                VarintColumn.create(path, name.createDerivative(ColumnFunction.DATA_LEN,
+                VarintColumn.create(path, name.createSupplementaryColumn(ColumnFunction.DATA_LEN,
                         ColumnType.VARINT_LE,
                         StorageType.PLAIN)
                 )
@@ -60,6 +60,10 @@ public class CustomBinaryColumn {
                     indexWriter.put((int) (storage.position() - pos));
                 }
             };
+        }
+
+        public long position() {
+            return indexWriter.position();
         }
 
         public void close() throws IOException {

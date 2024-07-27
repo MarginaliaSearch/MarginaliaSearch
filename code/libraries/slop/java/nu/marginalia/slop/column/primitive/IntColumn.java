@@ -20,6 +20,7 @@ public class IntColumn {
 
     private static class Writer implements IntColumnWriter {
         private final StorageWriter storage;
+        private long position = 0;
 
         public Writer(StorageWriter storageWriter) throws IOException {
             this.storage = storageWriter;
@@ -29,10 +30,16 @@ public class IntColumn {
             for (int value : values) {
                 storage.putInt(value);
             }
+            position+=values.length;
         }
 
         public void put(int value) throws IOException {
             storage.putInt(value);
+            position++;
+        }
+
+        public long position() {
+            return position / Integer.BYTES;
         }
 
         public void close() throws IOException {
@@ -53,7 +60,7 @@ public class IntColumn {
 
         @Override
         public long position() throws IOException {
-            return storage.position();
+            return storage.position() / Integer.BYTES;
         }
 
         @Override

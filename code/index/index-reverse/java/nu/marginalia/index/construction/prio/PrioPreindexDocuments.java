@@ -6,6 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.rwf.RandomFileAssembler;
+import nu.marginalia.slop.desc.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,11 +68,12 @@ public class PrioPreindexDocuments {
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var docIds = journalInstance.openCombinedId();
-             var termIdsCounts = journalInstance.openTermCounts();
-             var termIds = journalInstance.openTermIds();
-             var termMeta = journalInstance.openTermMetadata())
+             var slopTable = new SlopTable())
         {
+            var docIds = journalInstance.openCombinedId(slopTable);
+            var termIdsCounts = journalInstance.openTermCounts(slopTable);
+            var termIds = journalInstance.openTermIds(slopTable);
+            var termMeta = journalInstance.openTermMetadata(slopTable);
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
