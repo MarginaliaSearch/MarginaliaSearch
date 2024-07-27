@@ -4,65 +4,59 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.keyword.model.DocumentKeywords;
-import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 @Singleton
 public class LoaderIndexJournalWriter {
 
-    private final IndexJournalWriter indexWriter;
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
+    private final Path journalPath;
 
-    private final long[] buffer = new long[65536];
-
+    private IndexJournalSlopWriter currentWriter = null;
+    private long recordsWritten = 0;
+    private int page;
 
     @Inject
     public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException {
         var indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
 
-        var existingIndexFiles = IndexJournalFileNames.findJournalFiles(indexArea);
-        for (var existingFile : existingIndexFiles) {
-            Files.delete(existingFile);
+        journalPath = IndexJournal.allocateName(indexArea);
+        page = IndexJournal.numPages(journalPath);
+
+        switchToNextVersion();
+
+        logger.info("Creating Journal Writer {}", indexArea);
+    }
+
+    private void switchToNextVersion() throws IOException {
+        if (currentWriter != null) {
+            currentWriter.close();
         }
 
-        indexWriter = new IndexJournalWriterPagingImpl(indexArea);
+        currentWriter = new IndexJournalSlopWriter(journalPath, page++);
     }
 
     @SneakyThrows
-    public void putWords(long combinedId,
-                         int features,
-                         long metadata,
-                         int length,
-                         DocumentKeywords wordSet) {
-
-        if (wordSet.isEmpty()) {
-            logger.info("Skipping zero-length word set for {}", combinedId);
-            return;
+    public void putWords(long header, SlopDocumentRecord.KeywordsProjection data)
+    {
+        if (++recordsWritten > 200_000) {
+            recordsWritten = 0;
+            switchToNextVersion();
         }
 
-        if (combinedId <= 0) {
-            logger.warn("Bad ID: {}", combinedId);
-            return;
-        }
-
-        var header = new IndexJournalEntryHeader(combinedId, features, length, metadata);
-        var data = new IndexJournalEntryData(wordSet.keywords, wordSet.metadata, wordSet.positions);
-
-        indexWriter.put(header, data);
+        currentWriter.put(header, data);
     }
 
-    public void close() throws Exception {
-        indexWriter.close();
+    public void close() throws IOException {
+        currentWriter.close();
     }
 }

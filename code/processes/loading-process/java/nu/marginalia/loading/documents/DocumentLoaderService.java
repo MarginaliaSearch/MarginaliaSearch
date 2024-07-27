@@ -3,22 +3,22 @@ package nu.marginalia.loading.documents;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
-import nu.marginalia.io.processed.DocumentRecordParquetFileReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.model.processed.DocumentRecordMetadataProjection;
+import nu.marginalia.model.processed.SlopDocumentRecord;
+import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Singleton
@@ -38,18 +38,24 @@ public class DocumentLoaderService {
                              LoaderInputData inputData)
             throws IOException, SQLException
     {
-        var documentFiles = inputData.listDocumentFiles();
+        Collection<SlopPageRef<SlopDocumentRecord>> pageRefs = inputData.listDocumentFiles();
 
         try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS")) {
 
             int processed = 0;
 
-            for (var file : documentFiles) {
-                taskHeartbeat.progress("LOAD", processed++, documentFiles.size());
+            for (var pageRef : pageRefs) {
+                taskHeartbeat.progress("LOAD", processed++, pageRefs.size());
 
-                loadDocumentsFromFile(domainIdRegistry, file);
+                try (var reader = new SlopDocumentRecord.MetadataReader(pageRef);
+                     LinkdbLoader loader = new LinkdbLoader(domainIdRegistry))
+                {
+                    while (reader.hasNext()) {
+                        loader.accept(reader.next());
+                    }
+                }
             }
-            taskHeartbeat.progress("LOAD", processed, documentFiles.size());
+            taskHeartbeat.progress("LOAD", processed, pageRefs.size());
         } catch (IOException e) {
             logger.error("Failed to load documents", e);
             throw e;
@@ -58,19 +64,6 @@ public class DocumentLoaderService {
         logger.info("Finished");
 
         return true;
-    }
-
-    private void loadDocumentsFromFile(DomainIdRegistry domainIdRegistry, Path file)
-            throws SQLException, IOException
-    {
-        try (var stream = DocumentRecordParquetFileReader.streamMetadataProjection(file);
-             LinkdbLoader loader = new LinkdbLoader(domainIdRegistry)
-        )
-        {
-            logger.info("Loading document meta from {}", file);
-
-            stream.forEach(loader::accept);
-        }
     }
 
     class LinkdbLoader implements AutoCloseable {
@@ -82,25 +75,25 @@ public class DocumentLoaderService {
         }
 
         @SneakyThrows
-        public void accept(DocumentRecordMetadataProjection projection)
+        public void accept(SlopDocumentRecord.MetadataProjection projection)
         {
 
             long urlId = UrlIdCodec.encodeId(
-                    domainIdRegistry.getDomainId(projection.domain),
-                    projection.ordinal
+                    domainIdRegistry.getDomainId(projection.domain()),
+                    projection.ordinal()
             );
 
-            details.add(new DocdbUrlDetail(
+            documentDbWriter.add(new DocdbUrlDetail(
                     urlId,
-                    new EdgeUrl(projection.url),
-                    projection.title,
-                    projection.description,
-                    projection.quality,
-                    projection.htmlStandard,
-                    projection.htmlFeatures,
-                    projection.pubYear,
-                    projection.hash,
-                    projection.getLength()
+                    new EdgeUrl(projection.url()),
+                    projection.title(),
+                    projection.description(),
+                    projection.quality(),
+                    projection.htmlStandard(),
+                    projection.htmlFeatures(),
+                    projection.pubYear(),
+                    projection.hash(),
+                    projection.length()
             ));
 
             if (details.size() > 100) {

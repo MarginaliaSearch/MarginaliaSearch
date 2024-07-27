@@ -12,8 +12,7 @@ import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.domainrankings.DomainRankings;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -100,8 +99,9 @@ public class IntegrationTestModule extends AbstractModule {
 
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
 
-            bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterPagingImpl(
-                    IndexLocations.getIndexConstructionArea(fileStorageServiceMock)
+            bind(IndexJournalSlopWriter.class).toInstance(new IndexJournalSlopWriter(
+                    IndexLocations.getIndexConstructionArea(fileStorageServiceMock),
+                    0
             ));
 
             bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(

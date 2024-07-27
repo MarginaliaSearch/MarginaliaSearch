@@ -2,8 +2,8 @@ package nu.marginalia.index.construction.prio;
 
 import lombok.SneakyThrows;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.JournalReaderSource;
-import nu.marginalia.index.journal.IndexJournalFileNames;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,18 +24,15 @@ public class PrioIndexConstructor {
 
     private final Path outputFileDocs;
     private final Path outputFileWords;
-    private final JournalReaderSource readerSource;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
     public PrioIndexConstructor(Path outputFileDocs,
                                 Path outputFileWords,
-                                JournalReaderSource readerSource,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
-        this.readerSource = readerSource;
         this.docIdRewriter = docIdRewriter;
         this.tmpDir = tmpDir;
     }
@@ -44,8 +41,8 @@ public class PrioIndexConstructor {
                                    String processName,
                                    Path sourceBaseDir) throws IOException
     {
-        var inputs = IndexJournalFileNames.findJournalFiles(sourceBaseDir);
-        if (inputs.isEmpty()) {
+        var journal = IndexJournal.findJournal(sourceBaseDir);
+        if (journal.isEmpty()) {
             logger.error("No journal files in base dir {}", sourceBaseDir);
             return;
         }
@@ -57,10 +54,12 @@ public class PrioIndexConstructor {
 
             AtomicInteger progress = new AtomicInteger(0);
 
-            inputs
-                .parallelStream()
+            var journalVersions = journal.get().pages();
+
+            journalVersions
+                .stream()
                 .map(in -> {
-                    preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
+                    preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), journalVersions.size());
                     return construct(in);
                 })
                 .reduce(this::merge)
@@ -75,9 +74,9 @@ public class PrioIndexConstructor {
     }
 
     @SneakyThrows
-    private PrioPreindexReference construct(Path input) {
+    private PrioPreindexReference construct(IndexJournalPage journalInstance) {
         return PrioPreindex
-                .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
+                .constructPreindex(journalInstance, docIdRewriter, tmpDir)
                 .closeToReference();
     }
 

@@ -1,17 +1,15 @@
 package nu.marginalia.index.construction.full;
 
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
-import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
+import nu.marginalia.index.journal.IndexJournalPage;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.test.TestUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -22,17 +20,13 @@ public class TestJournalFactory {
     public TestJournalFactory() throws IOException {}
 
     public void clear() throws IOException {
-        List<Path> toDelete = new ArrayList<>();
-        try (var dirStream = Files.list(tempDir)) {
-            dirStream.forEach(toDelete::add);
-        }
-        for (var tempFile : toDelete) {
-            Files.delete(tempFile);
-        }
-        Files.delete(tempDir);
+        TestUtil.clearTempDir(tempDir);
     }
 
-    public record EntryData(long docId, long docMeta, long... wordIds) {
+    public record EntryData(long docId, long docMeta, String... wordIds) {
+        public EntryData(long docId, long docMeta, long... wordIds) {
+            this(docId, docMeta, Arrays.stream(wordIds).mapToObj(String::valueOf).toArray(String[]::new));
+        }
         @Override
         public String toString() {
             return "EntryData{" +
@@ -52,19 +46,23 @@ public class TestJournalFactory {
                     '}';
         }
     }
-    public record WordWithMeta(long wordId, long meta, GammaCodedSequence gcs) {}
-
-    public static WordWithMeta wm(long wordId, long meta, int... positions) {
-        return new WordWithMeta(wordId, meta, GammaCodedSequence.generate(ByteBuffer.allocate(128), positions));
+    public record WordWithMeta(String wordId, byte meta, GammaCodedSequence gcs) {
+        public WordWithMeta(long wordId, byte meta, GammaCodedSequence gcs) {
+            this(String.valueOf(wordId), meta, gcs);
+        }
     }
 
-    public IndexJournalReader createReader(EntryData... entries) throws IOException {
-        Path jf = Files.createTempFile(tempDir, "journal", ".dat");
+    public static WordWithMeta wm(long wordId, int meta, int... positions) {
+        return new WordWithMeta(wordId, (byte) meta, GammaCodedSequence.generate(ByteBuffer.allocate(128), positions));
+    }
 
-        var writer = new IndexJournalWriterSingleFileImpl(jf);
+    public IndexJournalPage createReader(EntryData... entries) throws IOException {
+        Path ji = Files.createTempDirectory(tempDir, "journal");
+
+        var writer = new IndexJournalSlopWriter(ji, 0);
         for (var entry : entries) {
-            long[] termIds = new long[entry.wordIds.length];
-            long[] meta = new long[entry.wordIds.length];
+            String[] termIds = new String[entry.wordIds.length];
+            byte[] meta = new byte[entry.wordIds.length];
 
             GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
@@ -73,22 +71,35 @@ public class TestJournalFactory {
                 positions[i] = new GammaCodedSequence(new byte[1]);
             }
 
-            writer.put(new IndexJournalEntryHeader(entries.length, 0, 15, entry.docId, entry.docMeta),
-                    new IndexJournalEntryData(termIds, meta, positions));
+            writer.put(
+                    entry.docId,
+                    new SlopDocumentRecord.KeywordsProjection(
+                            "test",
+                            -1,
+                            0,
+                            entry.docMeta,
+                            15,
+                            Arrays.asList(termIds),
+                            meta,
+                            Arrays.asList(positions),
+                            new byte[0],
+                            List.of()
+                    )
+            );
         }
         writer.close();
-        var ret = new IndexJournalReaderSingleFile(jf);
-        return ret;
+
+        return new IndexJournalPage(ji, 0);
     }
 
-    public IndexJournalReader createReader(EntryDataWithWordMeta... entries) throws IOException {
-        Path jf = Files.createTempFile(tempDir, "journal", ".dat");
+    public IndexJournalPage createReader(EntryDataWithWordMeta... entries) throws IOException {
+        Path ji = Files.createTempDirectory(tempDir, "journal");
 
-        var writer = new IndexJournalWriterSingleFileImpl(jf);
+        var writer = new IndexJournalSlopWriter(ji, 0);
         for (var entry : entries) {
 
-            long[] termIds = new long[entry.wordIds.length];
-            long[] meta = new long[entry.wordIds.length];
+            String[] termIds = new String[entry.wordIds.length];
+            byte[] meta = new byte[entry.wordIds.length];
             GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
                 termIds[i] = entry.wordIds[i].wordId;
@@ -96,11 +107,25 @@ public class TestJournalFactory {
                 positions[i] = Objects.requireNonNullElseGet(entry.wordIds[i].gcs, () -> new GammaCodedSequence(new byte[1]));
             }
 
-            writer.put(new IndexJournalEntryHeader(entries.length, 0, 15, entry.docId, entry.docMeta),
-                    new IndexJournalEntryData(termIds, meta, positions));
+            writer.put(
+                    entry.docId,
+                    new SlopDocumentRecord.KeywordsProjection(
+                            "test",
+                            -1,
+                            0,
+                            entry.docMeta,
+                            15,
+                            Arrays.asList(termIds),
+                            meta,
+                            Arrays.asList(positions),
+                            new byte[0],
+                            List.of()
+                    )
+            );
+
         }
         writer.close();
-        var ret = new IndexJournalReaderSingleFile(jf);
-        return ret;
+
+        return new IndexJournalPage(ji, 0);
     }
 }

@@ -45,15 +45,15 @@ dependencies {
 
     implementation project(':code:functions:link-graph:api')
 
-    implementation project(':code:process-models:crawl-spec')
-    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:crawling-process:model')
     implementation project(':code:features-crawl:link-parser')
     implementation project(':code:features-convert:data-extractors')
     implementation project(':code:features-convert:stackexchange-xml')
     implementation project(':code:features-convert:reddit-json')
     implementation project(':code:index:index-journal')
     implementation project(':code:index:api')
-    implementation project(':code:process-mqapi')
+    implementation project(':code:processes:process-mq-api')
 
     implementation project(':code:execution')
     implementation project(':code:execution:api')

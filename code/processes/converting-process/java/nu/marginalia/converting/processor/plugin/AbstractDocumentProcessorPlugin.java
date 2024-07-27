@@ -1,20 +1,22 @@
 package nu.marginalia.converting.processor.plugin;
 
-import nu.marginalia.converting.processor.DocumentClass;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.language.filter.LanguageFilter;
-import nu.marginalia.language.model.DocumentLanguageData;
-import nu.marginalia.model.html.HtmlStandard;
-import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
-import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.converting.processor.DocumentClass;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawl.PubDate;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.html.HtmlStandard;
 
 import javax.annotation.Nullable;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class AbstractDocumentProcessorPlugin {
     protected LanguageFilter languageFilter;

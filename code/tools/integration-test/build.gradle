@@ -17,10 +17,12 @@ dependencies {
     implementation project(':code:processes:crawling-process')
     implementation project(':code:processes:converting-process')
     implementation project(':code:processes:loading-process')
-    implementation project(':code:process-models:crawling-model')
-    implementation project(':code:process-models:processed-data')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:converting-process:model')
     implementation project(':code:processes:index-constructor-process')
     implementation project(':code:index')
+    implementation project(':code:libraries:array')
+    implementation project(':code:libraries:btree')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:index:index-reverse')
     implementation project(':code:index:index-forward')
@@ -43,6 +45,8 @@ dependencies {
     implementation libs.guice
     implementation libs.fastutil
     implementation libs.trove
+
     testImplementation libs.bundles.junit
+    testImplementation project(':code:libraries:test-helpers')
 }
 

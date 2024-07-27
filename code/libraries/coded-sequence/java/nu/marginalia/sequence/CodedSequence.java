@@ -1,12 +1,11 @@
 package nu.marginalia.sequence;
 
-import blue.strategic.parquet.BinarySerializable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 import java.nio.ByteBuffer;
 
-public interface CodedSequence extends BinarySerializable  {
+public interface CodedSequence  {
     byte[] bytes();
 
     IntIterator iterator();

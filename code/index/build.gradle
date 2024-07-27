@@ -30,8 +30,9 @@ dependencies {
     implementation project(':code:common:linkdb')
     implementation project(':code:common:service')
 
-    implementation project(':code:functions:search-query:api')
+    implementation project(':code:processes:converting-process:model')
 
+    implementation project(':code:functions:search-query:api')
     implementation project(':code:index:index-forward')
     implementation project(':code:index:index-reverse')
     implementation project(':code:index:query')
@@ -73,4 +74,5 @@ dependencies {
     testImplementation project(':code:libraries:test-helpers')
     testImplementation project(':code:libraries:term-frequency-dict')
     testImplementation project(':code:libraries:braille-block-punch-cards')
+    testImplementation project(':code:libraries:test-helpers')
 }

@@ -2,13 +2,13 @@ package nu.marginalia.extractor;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.crawling.io.CrawledDomainReader;
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.io.crawldata.CrawledDomainReader;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;

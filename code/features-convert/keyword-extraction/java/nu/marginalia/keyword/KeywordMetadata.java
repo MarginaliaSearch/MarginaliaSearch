@@ -27,9 +27,9 @@ class KeywordMetadata {
         this.urlKeywords = urlKeywords;
     }
 
-    public long getMetadataForWord(String stemmed) {
+    public byte getMetadataForWord(String stemmed) {
 
-        long flags = 0;
+        byte flags = 0;
 
         if (subjectLikeKeywords.contains(stemmed)) {
             flags |= WordFlags.Subjects.asBit();

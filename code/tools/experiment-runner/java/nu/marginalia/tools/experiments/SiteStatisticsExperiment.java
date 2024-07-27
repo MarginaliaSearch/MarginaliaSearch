@@ -3,7 +3,7 @@ package nu.marginalia.tools.experiments;
 import com.google.inject.Inject;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.tools.Experiment;
 

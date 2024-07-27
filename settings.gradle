@@ -70,7 +70,7 @@ include 'code:features-crawl:crawl-blocklist'
 include 'code:features-crawl:link-parser'
 include 'code:features-crawl:content-type'
 
-include 'code:process-mqapi'
+include 'code:processes:process-mq-api'
 
 include 'code:common:db'
 include 'code:common:linkdb'
@@ -81,16 +81,15 @@ include 'code:common:renderer'
 include 'code:common:process'
 
 include 'code:processes:converting-process'
+include 'code:processes:converting-process:model'
+
 include 'code:processes:crawling-process'
+include 'code:processes:crawling-process:model'
+
 include 'code:processes:loading-process'
 include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
 include 'code:processes:website-adjacencies-calculator'
-
-include 'code:process-models:crawling-model'
-include 'code:process-models:work-log'
-include 'code:process-models:crawl-spec'
-include 'code:process-models:processed-data'
 
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'

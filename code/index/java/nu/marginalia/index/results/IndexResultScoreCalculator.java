@@ -1,13 +1,16 @@
 package nu.marginalia.index.results;
 
-import nu.marginalia.api.searchquery.model.compiled.*;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.QueryParams;
+import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.results.model.QuerySearchTerms;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
@@ -15,13 +18,13 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
 import javax.annotation.Nullable;
 
-import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.*;
+import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
+import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
 
 /** This class is responsible for calculating the score of a search result.
  * It holds the data required to perform the scoring, as there is strong
@@ -102,7 +105,7 @@ public class IndexResultScoreCalculator {
     }
 
     private boolean testRelevance(CompiledQueryLong wordFlagsQuery, CompiledQueryInt countsQuery) {
-        boolean allSynthetic = booleanAggregate(wordFlagsQuery, WordFlags.Synthetic::isPresent);
+        boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
         int flagsCount = intMaxMinAggregate(wordFlagsQuery, flags ->  Long.bitCount(flags & flagsFilterMask));
         int positionsCount = intMaxMinAggregate(countsQuery, p -> p);
 
@@ -139,27 +142,27 @@ public class IndexResultScoreCalculator {
         }
 
         return booleanAggregate(queryGraphScores,
-                docs -> meetsQueryStrategyRequirements(docs, queryParams.queryStrategy()));
+                flags -> meetsQueryStrategyRequirements((byte) flags, queryParams.queryStrategy()));
     }
 
-    private boolean meetsQueryStrategyRequirements(long wordMeta, QueryStrategy queryStrategy) {
+    private boolean meetsQueryStrategyRequirements(byte flags, QueryStrategy queryStrategy) {
         if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
-            return WordFlags.Site.isPresent(wordMeta);
+            return WordFlags.Site.isPresent(flags);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
-            return WordFlags.Subjects.isPresent(wordMeta);
+            return WordFlags.Subjects.isPresent(flags);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
-            return WordFlags.Title.isPresent(wordMeta);
+            return WordFlags.Title.isPresent(flags);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_URL) {
-            return WordFlags.UrlPath.isPresent(wordMeta);
+            return WordFlags.UrlPath.isPresent(flags);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
-            return WordFlags.UrlDomain.isPresent(wordMeta);
+            return WordFlags.UrlDomain.isPresent(flags);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_LINK) {
-            return WordFlags.ExternalLink.isPresent(wordMeta);
+            return WordFlags.ExternalLink.isPresent(flags);
         }
         return true;
     }

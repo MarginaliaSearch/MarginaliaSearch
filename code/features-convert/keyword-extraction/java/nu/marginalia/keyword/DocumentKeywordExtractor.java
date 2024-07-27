@@ -7,13 +7,15 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
-
 
 public class DocumentKeywordExtractor {
 
@@ -93,7 +95,7 @@ public class DocumentKeywordExtractor {
             var word = rep.word;
 
             if (!word.isBlank()) {
-                long meta = metadata.getMetadataForWord(rep.stemmed);
+                byte meta = metadata.getMetadataForWord(rep.stemmed);
                 wordsBuilder.addMeta(word, meta);
             }
         }
@@ -105,7 +107,13 @@ public class DocumentKeywordExtractor {
     {
         // we use 1-based indexing since the data
         // will be gamma encoded, and it can't represent 0
-        int pos = 1;
+        int pos = 0;
+
+        List<SpanRecorder> spanRecorders = List.of(
+                new SpanRecorder(HtmlTag.TITLE),
+                new SpanRecorder(HtmlTag.HEADING),
+                new SpanRecorder(HtmlTag.CODE)
+        );
 
         for (DocumentSentence sent : dld) {
 
@@ -113,6 +121,12 @@ public class DocumentKeywordExtractor {
                 break;
 
             for (var word : sent) {
+                pos++;
+
+                for (var recorder : spanRecorders) {
+                    recorder.update(sent, pos);
+                }
+
                 if (word.isStopWord()) {
                     continue;
                 }
@@ -120,7 +134,7 @@ public class DocumentKeywordExtractor {
                 String w = word.wordLowerCase();
                 if (matchesWordPattern(w)) {
                     /* Add information about term positions */
-                    wordsBuilder.addPos(w, pos++);
+                    wordsBuilder.addPos(w, pos);
 
                     /* Add metadata for word */
                     wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));
@@ -130,11 +144,16 @@ public class DocumentKeywordExtractor {
             for (var names : keywordExtractor.getProperNames(sent)) {
                 var rep = new WordRep(sent, names);
 
-                long meta = metadata.getMetadataForWord(rep.stemmed);
+                byte meta = metadata.getMetadataForWord(rep.stemmed);
 
                 wordsBuilder.addMeta(rep.word, meta);
             }
+        }
 
+        pos++; // we need to add one more position to account for the last word in the document
+
+        for (var recorder : spanRecorders) {
+            wordsBuilder.addSpans(recorder.finish(pos));
         }
     }
 
@@ -175,5 +194,37 @@ public class DocumentKeywordExtractor {
         }
 
         return false;
+    }
+
+    /** Helper class to record spans of words */
+    private static class SpanRecorder {
+        private List<DocumentKeywordsBuilder.DocumentWordSpan> spans = new ArrayList<>();
+        private final HtmlTag htmlTag;
+        private int start = 0;
+
+        public SpanRecorder(HtmlTag htmlTag) {
+            this.htmlTag = htmlTag;
+        }
+
+        public void update(DocumentSentence sentence, int pos) {
+            assert pos > 0;
+
+            if (sentence.htmlTags.contains(htmlTag)) {
+                if (start <= 0) start = pos;
+            }
+            else {
+                if (start > 0) {
+                    spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, pos));
+                    start = -1;
+                }
+            }
+        }
+
+        public List<DocumentKeywordsBuilder.DocumentWordSpan> finish(int length) {
+            if (start > 0) {
+                spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, length));
+            }
+            return spans;
+        }
     }
 }

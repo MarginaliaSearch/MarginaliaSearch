@@ -11,7 +11,7 @@ import nu.marginalia.index.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -119,7 +119,6 @@ public class IndexConstructorMain extends ProcessMainClass {
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,
-                IndexJournalReader::singleFile,
                 this::addRankToIdEncoding,
                 tmpDir);
 
@@ -138,7 +137,6 @@ public class IndexConstructorMain extends ProcessMainClass {
         var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
-                (path) -> IndexJournalReader.singleFile(path).filtering(r -> r != 0),
                 this::addRankToIdEncoding,
                 tmpDir);
 
@@ -148,13 +146,16 @@ public class IndexConstructorMain extends ProcessMainClass {
     private void createForwardIndex() throws IOException {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+
         Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(heartbeat,
-                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
+                outputFileSpansData,
+                IndexJournal.findJournal(workDir).orElseThrow(),
                 domainRankings
         );
 

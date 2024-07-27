@@ -1,6 +1,7 @@
 package nu.marginalia.index.construction.prio;
 
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.full.TestJournalFactory;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static nu.marginalia.index.construction.full.TestJournalFactory.*;
+import static nu.marginalia.index.construction.full.TestJournalFactory.EntryDataWithWordMeta;
 import static nu.marginalia.index.construction.full.TestJournalFactory.wm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,6 +60,11 @@ class PrioPreindexTest {
         Files.delete(tempDir);
     }
 
+    MurmurHash3_128 hash = new MurmurHash3_128();
+    long termId(String keyword) {
+        return hash.hashKeyword(keyword);
+    }
+
     @Test
     public void testFinalizeSimple() throws IOException {
         var journalReader = journalFactory.createReader(
@@ -79,7 +85,7 @@ class PrioPreindexTest {
 
         var indexReader = new PrioReverseIndexReader("test", wordsFile, docsFile);
 
-        var entrySource = indexReader.documents(50);
+        var entrySource = indexReader.documents(termId("50"));
         var lqb = new LongQueryBuffer(32);
         entrySource.read(lqb);
 
@@ -139,10 +145,10 @@ class PrioPreindexTest {
 
         var indexReader = new PrioReverseIndexReader("test", wordsFile, docsFile);
 
-        int items = indexReader.numDocuments(50);
+        int items = indexReader.numDocuments(termId("50"));
         assertEquals(documentIds.length, items);
 
-        var entrySource = indexReader.documents(50);
+        var entrySource = indexReader.documents(termId("50"));
         var lqb = new LongQueryBuffer(32);
 
         for (int pos = 0; pos < documentIds.length;) {

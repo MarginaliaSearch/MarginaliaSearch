@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournalPage;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,14 +51,20 @@ public class FullPreindexWordSegments {
         return ret;
     }
 
-    public static FullPreindexWordSegments construct(IndexJournalReader reader,
+    public static FullPreindexWordSegments construct(IndexJournalPage journalInstance,
                                                      Path wordIdsFile,
                                                      Path countsFile)
     throws IOException
     {
         Long2IntOpenHashMap countsMap = new Long2IntOpenHashMap(100_000, 0.75f);
         countsMap.defaultReturnValue(0);
-        reader.forEachWordId(wordId -> countsMap.addTo(wordId, 1));
+
+        try (var termIds = journalInstance.openTermIds()) {
+            while (termIds.hasRemaining()) {
+                countsMap.addTo(termIds.get(), 1);
+            }
+        }
+
 
         LongArray words = LongArrayFactory.mmapForWritingConfined(wordIdsFile, countsMap.size());
         LongArray counts = LongArrayFactory.mmapForWritingConfined(countsFile, countsMap.size());

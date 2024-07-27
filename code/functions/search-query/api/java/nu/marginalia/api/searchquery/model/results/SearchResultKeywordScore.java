@@ -1,38 +1,30 @@
 package nu.marginalia.api.searchquery.model.results;
 
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.model.idx.WordMetadata;
 
 import java.util.Objects;
 
 public final class SearchResultKeywordScore {
     public final long termId;
     public final String keyword;
-    private final long encodedWordMetadata;
+    public byte flags;
+    public int positionCount;
 
     public SearchResultKeywordScore(String keyword,
                                     long termId,
-                                    long encodedWordMetadata) {
+                                    byte flags,
+                                    int positionCount) {
         this.termId = termId;
         this.keyword = keyword;
-        this.encodedWordMetadata = encodedWordMetadata;
     }
 
     public boolean hasTermFlag(WordFlags flag) {
-        return WordMetadata.hasFlags(encodedWordMetadata, flag.asBit());
+        return (flags & flag.asBit()) != 0;
     }
 
-
-    public long positions() {
-        return WordMetadata.decodePositions(encodedWordMetadata);
-    }
 
     public boolean isKeywordSpecial() {
         return keyword.contains(":") || hasTermFlag(WordFlags.Synthetic);
-    }
-
-    public long encodedWordMetadata() {
-        return encodedWordMetadata;
     }
 
     @Override
@@ -51,8 +43,7 @@ public final class SearchResultKeywordScore {
     @Override
     public String toString() {
         return "SearchResultKeywordScore[" +
-                "keyword=" + keyword + ", " +
-                "encodedWordMetadata=" + new WordMetadata(encodedWordMetadata) + ']';
+                "keyword=" + keyword + ']';
     }
 
 }

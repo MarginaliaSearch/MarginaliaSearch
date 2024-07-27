@@ -11,8 +11,6 @@ import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawling.io.CrawledDomainReader;
-import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.index.IndexGrpcService;
 import nu.marginalia.index.ReverseIndexFullFileNames;
@@ -23,9 +21,10 @@ import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.io.crawldata.CrawledDomainReader;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
@@ -37,9 +36,9 @@ import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.test.IntegrationTestModule;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -53,9 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import static nu.marginalia.index.journal.reader.IndexJournalReader.FILE_HEADER_SIZE_BYTES;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -179,14 +176,6 @@ public class IntegrationTest {
         documentDbWriter.close();
         keywordLoaderService.close();
 
-        Path journalFile = fileStorageService
-                .getStorageBase(FileStorageBaseType.CURRENT)
-                .asPath()
-                .resolve("iw/page-index-0000.dat");
-
-        assertTrue(Files.exists(journalFile), "Journal file not found: " + journalFile);
-        assertTrue(Files.size(journalFile) > FILE_HEADER_SIZE_BYTES, "Journal file does not contain data");
-
         /** CONSTRUCT INDEX */
 
         createForwardIndex();
@@ -248,7 +237,6 @@ public class IntegrationTest {
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,
-                IndexJournalReader::singleFile,
                 this::addRankToIdEncoding,
                 tmpDir);
 
@@ -267,7 +255,6 @@ public class IntegrationTest {
         var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
-                (path) -> IndexJournalReader.singleFile(path).filtering(r -> r != 0),
                 this::addRankToIdEncoding,
                 tmpDir);
 
@@ -278,12 +265,14 @@ public class IntegrationTest {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(new FakeProcessHeartbeat(),
-                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
+                outputFileSpansData,
+                IndexJournal.findJournal(workDir).orElseThrow(),
                 domainRankings
         );
 

@@ -2,7 +2,7 @@ package nu.marginalia.crawl.retreival.revisit;
 
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawledDocument;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

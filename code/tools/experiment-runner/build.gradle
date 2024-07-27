@@ -32,7 +32,7 @@ dependencies {
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
     implementation project(':code:processes:converting-process')
-    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:processes:crawling-process:model')
 
     implementation project(':third-party:commons-codec')
     implementation project(':code:features-crawl:link-parser')

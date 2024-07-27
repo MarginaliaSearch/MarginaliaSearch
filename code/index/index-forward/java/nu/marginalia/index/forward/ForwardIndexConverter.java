@@ -1,19 +1,21 @@
 package nu.marginalia.index.forward;
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.domainrankings.DomainRankings;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.array.LongArray;
+import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.slop.column.primitive.LongColumnReader;
 import org.roaringbitmap.longlong.LongConsumer;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,22 +25,25 @@ public class ForwardIndexConverter {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final IndexJournalReader journalReader;
     private final Path outputFileDocsId;
     private final Path outputFileDocsData;
     private final DomainRankings domainRankings;
 
+    private final Path outputFileSpansData;
+    private final IndexJournal journal;
 
     public ForwardIndexConverter(ProcessHeartbeat heartbeat,
-                                 IndexJournalReader journalReader,
                                  Path outputFileDocsId,
                                  Path outputFileDocsData,
+                                 Path outputFileSpansData,
+                                 IndexJournal journal,
                                  DomainRankings domainRankings
                                  ) {
         this.heartbeat = heartbeat;
-        this.journalReader = journalReader;
         this.outputFileDocsId = outputFileDocsId;
         this.outputFileDocsData = outputFileDocsData;
+        this.outputFileSpansData = outputFileSpansData;
+        this.journal = journal;
         this.domainRankings = domainRankings;
     }
 
@@ -58,7 +63,7 @@ public class ForwardIndexConverter {
         try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 
-            LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);
+            LongArray docsFileId = getDocIds(outputFileDocsId, journal);
 
             progress.progress(TaskSteps.GATHER_OFFSETS);
 
@@ -73,20 +78,55 @@ public class ForwardIndexConverter {
 
             LongArray docFileData = LongArrayFactory.mmapForWritingConfined(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
-            var pointer = journalReader.newPointer();
-            while (pointer.nextDocument()) {
-                long docId = pointer.documentId();
-                int domainId = UrlIdCodec.getDomainId(docId);
+            ByteBuffer workArea = ByteBuffer.allocate(65536);
+            for (var instance : journal.pages()) {
+                try (var docIdReader = instance.openCombinedId();
+                     var metaReader = instance.openDocumentMeta();
+                     var featuresReader = instance.openFeatures();
+                     var sizeReader = instance.openSize();
 
-                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(docId);
+                     var spansCodesReader = instance.openSpanCodes();
+                     var spansSeqReader = instance.openSpans();
+                     var spansWriter = new ForwardIndexSpansWriter(outputFileSpansData)
+                     )
+                {
+                    while (docIdReader.hasRemaining()) {
+                        long docId = docIdReader.get();
+                        int domainId = UrlIdCodec.getDomainId(docId);
 
-                int ranking = domainRankings.getRanking(domainId);
-                long meta = DocumentMetadata.encodeRank(pointer.documentMeta(), ranking);
+                        long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(docId);
 
-                long features = pointer.documentFeatures() | ((long) pointer.documentSize() << 32L);
+                        int ranking = domainRankings.getRanking(domainId);
+                        long meta = DocumentMetadata.encodeRank(metaReader.get(), ranking);
 
-                docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
-                docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, features);
+                        final int docFeatures = featuresReader.get();
+                        final int docSize = sizeReader.get();
+
+                        long features = docFeatures | ((long) docSize << 32L);
+
+                        // Write spans data
+                        byte[] spansCodes = spansCodesReader.get();
+
+                        spansWriter.beginRecord(spansCodes.length);
+
+                        for (int i = 0; i < spansCodes.length; i++) {
+                            workArea.clear();
+                            spansSeqReader.getData(workArea);
+                            workArea.flip();
+
+                            spansWriter.writeSpan(spansCodes[i], workArea);
+                        }
+
+                        long encodedSpansOffset = spansWriter.endRecord();
+
+
+                        // Write the principal forward documents file
+                        docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
+                        docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, features);
+                        docFileData.set(entryOffset + ForwardIndexParameters.SPANS_OFFSET, encodedSpansOffset);
+
+                    }
+                }
             }
 
             progress.progress(TaskSteps.FORCE);
@@ -104,9 +144,16 @@ public class ForwardIndexConverter {
         }
     }
 
-    private LongArray getDocIds(Path outputFileDocs, IndexJournalReader journalReader) throws IOException {
+    private LongArray getDocIds(Path outputFileDocs, IndexJournal journalReader) throws IOException {
         Roaring64Bitmap rbm = new Roaring64Bitmap();
-        journalReader.forEachDocId(rbm::add);
+
+        for (var instance : journalReader.pages()) {
+            try (LongColumnReader idReader = instance.openCombinedId()) {
+                while (idReader.hasRemaining()) {
+                    rbm.add(idReader.get());
+                }
+            }
+        }
 
         LongArray ret = LongArrayFactory.mmapForWritingConfined(outputFileDocs, rbm.getIntCardinality());
         rbm.forEach(new LongConsumer() {

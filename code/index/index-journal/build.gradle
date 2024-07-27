@@ -15,7 +15,9 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:array')
+    implementation project(':code:libraries:slop')
     implementation project(':code:common:model')
+    implementation project(':code:processes:converting-process:model')
     implementation project(':third-party:parquet-floor')
     implementation project(':third-party:commons-codec')
 

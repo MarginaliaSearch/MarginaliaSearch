@@ -3,10 +3,10 @@ package nu.marginalia.crawl.retreival.fetcher;
 import com.google.inject.ImplementedBy;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.retreival.RateLimitException;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.HttpFetchResult;
 
 import java.util.List;
 

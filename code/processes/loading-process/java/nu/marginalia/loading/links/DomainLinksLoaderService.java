@@ -3,17 +3,17 @@ package nu.marginalia.loading.links;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
-import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
 import nu.marginalia.linkgraph.io.DomainLinksWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
-import nu.marginalia.model.processed.DomainLinkRecord;
+import nu.marginalia.model.processed.SlopDomainLinkRecord;
+import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.Collection;
 
 @Singleton
 public class DomainLinksLoaderService {
@@ -32,17 +32,17 @@ public class DomainLinksLoaderService {
                              LoaderInputData inputData) throws IOException {
 
         try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS")) {
-            var linkFiles = inputData.listDomainLinkFiles();
+            Collection<SlopPageRef<SlopDomainLinkRecord>> pageRefs = inputData.listDomainLinkPages();
 
             int processed = 0;
 
-            for (var file : linkFiles) {
-                task.progress("LOAD", processed++, linkFiles.size());
+            for (var pageRef : pageRefs) {
+                task.progress("LOAD", processed++, pageRefs.size());
 
-                loadLinksFromFile(domainIdRegistry, file);
+                loadLinksFromFile(domainIdRegistry, pageRef);
             }
 
-            task.progress("LOAD", processed, linkFiles.size());
+            task.progress("LOAD", processed, pageRefs.size());
         }
         catch (IOException e) {
             logger.error("Failed to load links", e);
@@ -53,12 +53,13 @@ public class DomainLinksLoaderService {
         return true;
     }
 
-    private void loadLinksFromFile(DomainIdRegistry domainIdRegistry, Path file) throws IOException {
-        try (var domainStream = DomainLinkRecordParquetFileReader.stream(file);
+    private void loadLinksFromFile(DomainIdRegistry domainIdRegistry, SlopPageRef pageRef) throws IOException {
+        try (var domainLinkReader = new SlopDomainLinkRecord.Reader(pageRef);
              var linkLoader = new LinkLoader(domainIdRegistry))
         {
-            logger.info("Loading links from {}", file);
-            domainStream.forEach(linkLoader::accept);
+            logger.info("Loading links from {}:{}", pageRef.baseDir(), pageRef.page());
+
+            domainLinkReader.forEach(linkLoader::accept);
         }
     }
 
@@ -70,10 +71,10 @@ public class DomainLinksLoaderService {
         }
 
         @SneakyThrows
-        void accept(DomainLinkRecord record) {
+        void accept(SlopDomainLinkRecord record) {
             domainLinkDbWriter.write(
-                    domainIdRegistry.getDomainId(record.source),
-                    domainIdRegistry.getDomainId(record.dest)
+                    domainIdRegistry.getDomainId(record.source()),
+                    domainIdRegistry.getDomainId(record.dest())
             );
         }
 

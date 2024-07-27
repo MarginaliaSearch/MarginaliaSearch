@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.rwf.RandomFileAssembler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +37,11 @@ public class PrioPreindexDocuments {
     public static PrioPreindexDocuments construct(
             Path docsFile,
             Path workDir,
-            IndexJournalReader reader,
+            IndexJournalPage journalInstance,
             DocIdRewriter docIdRewriter,
             PrioPreindexWordSegments segments) throws IOException {
 
-        createUnsortedDocsFile(docsFile, workDir, reader, segments, docIdRewriter);
+        createUnsortedDocsFile(docsFile, workDir, journalInstance, segments, docIdRewriter);
 
         LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
         sortDocsFile(docsFileMap, segments);
@@ -54,37 +54,41 @@ public class PrioPreindexDocuments {
     }
 
 
-    public LongArray slice(long start, long end) {
-        return documents.range(start, end);
-    }
-
     public long size() {
         return documents.size();
     }
 
     private static void createUnsortedDocsFile(Path docsFile,
                                                Path workDir,
-                                               IndexJournalReader reader,
+                                               IndexJournalPage journalInstance,
                                                PrioPreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var pointer = reader.newPointer())
+             var docIds = journalInstance.openCombinedId();
+             var termIdsCounts = journalInstance.openTermCounts();
+             var termIds = journalInstance.openTermIds();
+             var termMeta = journalInstance.openTermMetadata())
         {
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
-            while (pointer.nextDocument()) {
-                long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
-                for (var termData : pointer) {
-                    long termId = termData.termId();
+            while (docIds.hasRemaining()) {
+                long docId = docIds.get();
+                long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
-                    long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
+                long termCount = termIdsCounts.get();
+                for (int termIdx = 0; termIdx < termCount; termIdx++) {
+                    long termId = termIds.get();
+                    byte meta = termMeta.get();
 
-                    assembly.put(offset, rankEncodedId);
+                    if (meta != 0) {
+                        long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
+                        assembly.put(offset, rankEncodedId);
+                    }
                 }
             }
 

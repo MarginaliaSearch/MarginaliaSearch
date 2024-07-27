@@ -2,10 +2,10 @@ package nu.marginalia.index.construction.full;
 
 import lombok.SneakyThrows;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.JournalReaderSource;
 import nu.marginalia.index.construction.PositionsFileConstructor;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,20 +26,17 @@ public class FullIndexConstructor {
     private final Path outputFileDocs;
     private final Path outputFileWords;
     private final Path outputFilePositions;
-    private final JournalReaderSource readerSource;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
     public FullIndexConstructor(Path outputFileDocs,
                                 Path outputFileWords,
                                 Path outputFilePositions,
-                                JournalReaderSource readerSource,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
         this.outputFilePositions = outputFilePositions;
-        this.readerSource = readerSource;
         this.docIdRewriter = docIdRewriter;
         this.tmpDir = tmpDir;
     }
@@ -48,8 +45,8 @@ public class FullIndexConstructor {
                                    String processName,
                                    Path sourceBaseDir) throws IOException
     {
-        var inputs = IndexJournalFileNames.findJournalFiles(sourceBaseDir);
-        if (inputs.isEmpty()) {
+        var journal = IndexJournal.findJournal(sourceBaseDir);
+        if (journal.isEmpty()) {
             logger.error("No journal files in base dir {}", sourceBaseDir);
             return;
         }
@@ -62,10 +59,12 @@ public class FullIndexConstructor {
 
             AtomicInteger progress = new AtomicInteger(0);
 
-            inputs
-                .parallelStream()
+            var journalVersions = journal.get().pages();
+
+            journalVersions
+                .stream()
                 .map(in -> {
-                    preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
+                    preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), journalVersions.size());
                     return construct(in, posConstructor);
                 })
                 .reduce(this::merge)
@@ -80,9 +79,9 @@ public class FullIndexConstructor {
     }
 
     @SneakyThrows
-    private FullPreindexReference construct(Path input, PositionsFileConstructor positionsFileConstructor) {
+    private FullPreindexReference construct(IndexJournalPage journalInstance, PositionsFileConstructor positionsFileConstructor) {
         return FullPreindex
-                .constructPreindex(readerSource.construct(input), positionsFileConstructor, docIdRewriter, tmpDir)
+                .constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, tmpDir)
                 .closeToReference();
     }
 

@@ -2,22 +2,25 @@ package nu.marginalia.svc;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
+import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.linkdb.LinkdbFileNames;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
-import nu.marginalia.index.journal.IndexJournalFileNames;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import com.google.inject.Inject;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class BackupService {
 
@@ -97,35 +100,20 @@ public class BackupService {
 
     private void backupJournal(Path inputStorage, Path backupStorage) throws IOException
     {
-        for (var source : IndexJournalFileNames.findJournalFiles(inputStorage)) {
-            var dest = backupStorage.resolve(source.toFile().getName());
-
-            try (var is = Files.newInputStream(source);
-                 var os = Files.newOutputStream(dest)
-            ) {
-                IOUtils.copyLarge(is, os);
-            }
+        Optional<IndexJournal> journal = IndexJournal.findJournal(inputStorage);
+        if (journal.isEmpty()) {
+            throw new FileNotFoundException("No journal found in input storage");
         }
 
+        FileUtils.copyDirectory(journal.get().journalDir().toFile(), backupStorage.resolve(journal.get().journalDir().getFileName()).toFile());
     }
 
     private void restoreJournal(Path destStorage, Path backupStorage) throws IOException {
-
-        // Remove any old journal files first to avoid them getting loaded
-        for (var garbage : IndexJournalFileNames.findJournalFiles(destStorage)) {
-            Files.delete(garbage);
+        Optional<IndexJournal> journal = IndexJournal.findJournal(backupStorage);
+        if (journal.isEmpty()) {
+            throw new FileNotFoundException("No journal found in backup");
         }
-
-        for (var source : IndexJournalFileNames.findJournalFiles(backupStorage)) {
-            var dest = destStorage.resolve(source.toFile().getName());
-
-            try (var is = Files.newInputStream(source);
-                 var os = Files.newOutputStream(dest)
-            ) {
-                IOUtils.copyLarge(is, os);
-            }
-        }
-
+        FileUtils.copyDirectory(backupStorage.resolve(journal.get().journalDir().getFileName()).toFile(), destStorage.toFile());
     }
 
     private void backupFileCompressed(String fileName, Path inputStorage, Path backupStorage) throws IOException

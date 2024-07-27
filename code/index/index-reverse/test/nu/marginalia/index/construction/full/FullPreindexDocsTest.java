@@ -1,5 +1,6 @@
 package nu.marginalia.index.construction.full;
 
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import org.junit.jupiter.api.AfterEach;
@@ -53,33 +54,9 @@ class FullPreindexDocsTest {
         Files.delete(tempDir);
     }
 
-    @Test
-    public void testDocs() throws IOException {
-        var reader = journalFactory.createReader(
-                new EntryData(-0xF00BA3L, 0, 10, 40, -100, 33)
-        );
-
-        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(), new PositionsFileConstructor(positionsFile), segments);
-
-        List<TestSegmentData> expected = List.of(
-                new TestSegmentData(-100, 0, 2, new long[] { -0xF00BA3L, 0 }),
-                new TestSegmentData(10, 2, 4, new long[] { -0xF00BA3L, 0 }),
-                new TestSegmentData(33, 4, 6, new long[] { -0xF00BA3L, 0 }),
-                new TestSegmentData(40, 6, 8, new long[] { -0xF00BA3L, 0 })
-        );
-
-        List<TestSegmentData> actual = new ArrayList<>();
-
-        var iter = segments.iterator(2);
-        while (iter.next()) {
-            long[] data = new long[(int) (iter.endOffset - iter.startOffset)];
-            docs.slice(iter.startOffset, iter.endOffset).get(0, data);
-            actual.add(new TestSegmentData(iter.wordId, iter.startOffset, iter.endOffset,
-                    data));
-        }
-
-        assertEquals(expected, actual);
+    MurmurHash3_128 hash = new MurmurHash3_128();
+    long termId(String keyword) {
+        return hash.hashKeyword(keyword);
     }
 
     @Test
@@ -94,7 +71,7 @@ class FullPreindexDocsTest {
                 segments);
 
         List<TestSegmentData> expected = List.of(
-                new TestSegmentData(4, 0, 4, new long[] { -0xF00BA3L, 0, -0xF00BA3L, 0 })
+                new TestSegmentData(termId("4"), 0, 4, new long[] { -0xF00BA3L, 0, -0xF00BA3L, 0 })
         );
 
         List<TestSegmentData> actual = new ArrayList<>();

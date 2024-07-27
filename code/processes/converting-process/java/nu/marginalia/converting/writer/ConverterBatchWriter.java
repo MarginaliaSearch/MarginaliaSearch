@@ -1,27 +1,24 @@
 package nu.marginalia.converting.writer;
 
-import gnu.trove.list.array.TLongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
-import nu.marginalia.io.processed.DocumentRecordParquetFileWriter;
-import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
-import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.model.processed.DocumentRecord;
-import nu.marginalia.model.processed.DomainLinkRecord;
-import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.model.processed.SlopDocumentRecord;
+import nu.marginalia.model.processed.SlopDomainLinkRecord;
+import nu.marginalia.model.processed.SlopDomainRecord;
 import nu.marginalia.sequence.CodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -30,22 +27,27 @@ import java.util.concurrent.Future;
 
 /** Writer for a single batch of converter parquet files */
 public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriterIf {
-    private final DomainRecordParquetFileWriter domainWriter;
-    private final DomainLinkRecordParquetFileWriter domainLinkWriter;
-    private final DocumentRecordParquetFileWriter documentWriter;
+    private final SlopDomainRecord.Writer domainWriter;
+    private final SlopDomainLinkRecord.Writer domainLinkWriter;
+    private final SlopDocumentRecord.Writer documentWriter;
 
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
     public ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
-        domainWriter = new DomainRecordParquetFileWriter(
-                ProcessedDataFileNames.domainFileName(basePath, batchNumber)
-        );
-        domainLinkWriter = new DomainLinkRecordParquetFileWriter(
-                ProcessedDataFileNames.domainLinkFileName(basePath, batchNumber)
-        );
-        documentWriter = new DocumentRecordParquetFileWriter(
-                ProcessedDataFileNames.documentFileName(basePath, batchNumber)
-        );
+        if (!Files.exists(ProcessedDataFileNames.domainFileName(basePath))) {
+            Files.createDirectory(ProcessedDataFileNames.domainFileName(basePath));
+        }
+        domainWriter = new SlopDomainRecord.Writer(ProcessedDataFileNames.domainFileName(basePath), batchNumber);
+
+        if (!Files.exists(ProcessedDataFileNames.domainLinkFileName(basePath))) {
+            Files.createDirectory(ProcessedDataFileNames.domainLinkFileName(basePath));
+        }
+        domainLinkWriter = new SlopDomainLinkRecord.Writer(ProcessedDataFileNames.domainLinkFileName(basePath), batchNumber);
+
+        if (!Files.exists(ProcessedDataFileNames.documentFileName(basePath))) {
+            Files.createDirectory(ProcessedDataFileNames.documentFileName(basePath));
+        }
+        documentWriter = new SlopDocumentRecord.Writer(ProcessedDataFileNames.documentFileName(basePath), batchNumber);
     }
 
     @Override
@@ -107,32 +109,31 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
             if (document.details == null) {
-                new DocumentRecord(
+                new SlopDocumentRecord(
                         domainName,
                         document.url.toString(),
                         ordinal,
                         document.state.toString(),
-                        document.stateReason,
-                        null,
-                        null,
-                        0,
-                        null,
-                        0,
-                        0L,
-                        -15,
-                        0L,
-                        null,
-                        null,
-                        null,
-                        null);
+                        document.stateReason);
             }
             else {
                 var wb = document.words.build(workArea);
-                List<String> words = Arrays.asList(wb.keywords);
-                TLongArrayList metas = new TLongArrayList(wb.metadata);
-                List<CodedSequence> positions = Arrays.asList(wb.positions);
+                List<String> words = wb.keywords;
+                byte[] metas = wb.metadata;
+                List<CodedSequence> positions = wb.positions;
 
-                documentWriter.write(new DocumentRecord(
+
+                List<CodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
+                byte[] spanCodes = new byte[wb.spans.size()];
+
+                for (int i = 0; i < wb.spans.size(); i++) {
+                    var span = wb.spans.get(i);
+
+                    spanCodes[i] = span.code();
+                    spanSequences.add(span.spans());
+                }
+
+                documentWriter.write(new SlopDocumentRecord(
                         domainName,
                         document.url.toString(),
                         ordinal,
@@ -149,7 +150,9 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         document.details.pubYear,
                         words,
                         metas,
-                        positions
+                        positions,
+                        spanCodes,
+                        spanSequences
                 ));
 
             }
@@ -178,7 +181,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     continue;
                 }
 
-                domainLinkWriter.write(new DomainLinkRecord(
+                domainLinkWriter.write(new SlopDomainLinkRecord(
                         from,
                         dest.toString()
                 ));
@@ -186,7 +189,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         }
 
         if (domain.redirect != null) {
-            domainLinkWriter.write(new DomainLinkRecord(
+            domainLinkWriter.write(new SlopDomainLinkRecord(
                     from,
                     domain.redirect.toString()
             ));
@@ -201,13 +204,13 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         List<String> feeds = getFeedUrls(domain);
 
         domainWriter.write(
-                new DomainRecord(
+                new SlopDomainRecord(
                         domain.domain.toString(),
                         metadata.known(),
                         metadata.good(),
                         metadata.visited(),
-                        Optional.ofNullable(domain.state).map(DomainIndexingState::toString).orElse(null),
-                        Optional.ofNullable(domain.redirect).map(EdgeDomain::toString).orElse(null),
+                        Optional.ofNullable(domain.state).map(DomainIndexingState::toString).orElse(""),
+                        Optional.ofNullable(domain.redirect).map(EdgeDomain::toString).orElse(""),
                         domain.ip,
                         feeds
                 )

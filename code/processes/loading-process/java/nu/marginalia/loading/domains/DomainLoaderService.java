@@ -4,12 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
-import nu.marginalia.io.processed.DomainRecordParquetFileReader;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.processed.DomainRecord;
-import nu.marginalia.model.processed.DomainWithIp;
+import nu.marginalia.model.processed.SlopDomainLinkRecord;
+import nu.marginalia.model.processed.SlopDomainRecord;
+import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import org.slf4j.Logger;
@@ -57,43 +56,60 @@ public class DomainLoaderService {
         try (var conn = dataSource.getConnection();
              var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS");
              var selectStmt = conn.prepareStatement("""
-                     SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?
+                     SELECT ID, LOWER(DOMAIN_NAME) FROM EC_DOMAIN
                      """)
         ) {
             taskHeartbeat.progress(Steps.PREP_DATA);
 
-            try (var inserter = new DomainInserter(conn, nodeId)) {
-                for (var domainWithIp : readBasicDomainInformation(inputData)) {
-                    inserter.accept(new EdgeDomain(domainWithIp.domain));
-                    domainNamesAll.add(domainWithIp.domain);
+            // Add domain names from this data set with the current node affinity
+            for (SlopPageRef<SlopDomainRecord> page : inputData.listDomainPages()) {
+
+                try (var inserter = new DomainInserter(conn, nodeId);
+                     var reader = new SlopDomainRecord.DomainNameReader(page)
+                ) {
+                    while (reader.hasMore()) {
+                        String domainName = reader.next();
+                        inserter.accept(new EdgeDomain(domainName));
+                        domainNamesAll.add(domainName);
+                    }
                 }
             }
-            try (var inserter = new DomainInserter(conn, -1)) {
-                for (var domain : readReferencedDomainNames(inputData)) {
-                    inserter.accept(new EdgeDomain(domain));
-                    domainNamesAll.add(domain);
+
+            // Add linked domains, but with -1 affinity meaning they can be grabbed by any index node
+            for (SlopPageRef<SlopDomainLinkRecord> page : inputData.listDomainLinkPages()) {
+                try (var inserter = new DomainInserter(conn, -1);
+                     var reader = new SlopDomainLinkRecord.Reader(page)) {
+                    while (reader.hasMore()) {
+                        SlopDomainLinkRecord record = reader.next();
+                        inserter.accept(new EdgeDomain(record.dest()));
+                        domainNamesAll.add(record.dest());
+                    }
                 }
             }
 
             taskHeartbeat.progress(Steps.INSERT_NEW);
 
-            try (var updater = new DomainAffinityAndIpUpdater(conn, nodeId)) {
-                for (var domainWithIp : readBasicDomainInformation(inputData)) {
-                    updater.accept(new EdgeDomain(domainWithIp.domain), domainWithIp.ip);
+            // Update the node affinity and IP address for each domain
+            for (SlopPageRef<SlopDomainRecord> page : inputData.listDomainPages()) {
+                try (var updater = new DomainAffinityAndIpUpdater(conn, nodeId);
+                     var reader = new SlopDomainRecord.DomainWithIpReader(page)
+                ) {
+                    while (reader.hasMore()) {
+                        var domainWithIp = reader.next();
+                        updater.accept(new EdgeDomain(domainWithIp.domain()), domainWithIp.ip());
+                    }
                 }
             }
 
             taskHeartbeat.progress(Steps.FETCH_ALL);
-
             selectStmt.setFetchSize(1000);
-            for (var domain : domainNamesAll) {
-                selectStmt.setString(1, domain);
-                var rs = selectStmt.executeQuery();
-                if (rs.next()) {
+
+            var rs = selectStmt.executeQuery();
+            while (rs.next()) {
+                String domain = rs.getString(2);
+
+                if (domainNamesAll.contains(domain)) {
                     ret.add(domain, rs.getInt(1));
-                }
-                else {
-                    logger.error("Unknown domain {}", domain);
                 }
             }
 
@@ -103,46 +119,23 @@ public class DomainLoaderService {
         return ret;
     }
 
-    Collection<DomainWithIp> readBasicDomainInformation(LoaderInputData inputData) throws IOException {
-        final Set<DomainWithIp> domainsAll = new HashSet<>(100_000);
-
-        var domainFiles = inputData.listDomainFiles();
-        for (var file : domainFiles) {
-            domainsAll.addAll(DomainRecordParquetFileReader.getBasicDomainInformation(file));
-        }
-
-        return domainsAll;
-    }
-
-    Collection<String> readReferencedDomainNames(LoaderInputData inputData) throws IOException {
-        final Set<String> domainNamesAll = new HashSet<>(100_000);
-
-        var linkFiles = inputData.listDomainLinkFiles();
-        for (var file : linkFiles) {
-            domainNamesAll.addAll(DomainLinkRecordParquetFileReader.getDestDomainNames(file));
-        }
-
-        return domainNamesAll;
-    }
-
     public boolean loadDomainMetadata(DomainIdRegistry domainIdRegistry, ProcessHeartbeat heartbeat, LoaderInputData inputData) {
-
-        var files = inputData.listDomainFiles();
 
         try (var taskHeartbeat = heartbeat.createAdHocTaskHeartbeat("UPDATE-META")) {
 
             int processed = 0;
 
-            for (var file : files) {
-                taskHeartbeat.progress("UPDATE-META", processed++, files.size());
+            Collection<SlopPageRef<SlopDomainRecord>> pages = inputData.listDomainPages();
+            for (var page : pages) {
+                taskHeartbeat.progress("UPDATE-META", processed++, pages.size());
 
-                try (var stream = DomainRecordParquetFileReader.stream(file);
-                     var updater = new DomainMetadataUpdater(dataSource, domainIdRegistry)
-                ) {
-                    stream.forEach(updater::accept);
+                try (var reader = new SlopDomainRecord.Reader(page);
+                     var updater = new DomainMetadataUpdater(dataSource, domainIdRegistry))
+                {
+                    reader.forEach(updater::accept);
                 }
             }
-            taskHeartbeat.progress("UPDATE-META", processed, files.size());
+            taskHeartbeat.progress("UPDATE-META", processed, pages.size());
         }
         catch (Exception ex) {
             logger.error("Failed inserting metadata!", ex);
@@ -239,12 +232,12 @@ public class DomainLoaderService {
                     """);
         }
 
-        public void accept(DomainRecord domainRecord) {
+        public void accept(SlopDomainRecord domainRecord) {
             try {
-                updateStatement.setInt(1, idRegistry.getDomainId(domainRecord.domain));
-                updateStatement.setInt(2, domainRecord.visitedUrls);
-                updateStatement.setInt(3, domainRecord.goodUrls);
-                updateStatement.setInt(4, domainRecord.knownUrls);
+                updateStatement.setInt(1, idRegistry.getDomainId(domainRecord.domain()));
+                updateStatement.setInt(2, domainRecord.visitedUrls());
+                updateStatement.setInt(3, domainRecord.goodUrls());
+                updateStatement.setInt(4, domainRecord.knownUrls());
                 updateStatement.addBatch();
 
                 if (++i > 1000) {

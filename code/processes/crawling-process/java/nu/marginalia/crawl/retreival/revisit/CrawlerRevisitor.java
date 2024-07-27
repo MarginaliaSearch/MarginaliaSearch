@@ -8,9 +8,9 @@ import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawling.body.HttpFetchResult;
-import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.HttpFetchResult;
+import nu.marginalia.model.crawldata.CrawledDocument;
 import org.jsoup.Jsoup;
 
 /** This class encapsulates the logic for re-visiting a domain that has already been crawled.

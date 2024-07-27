@@ -5,7 +5,7 @@ import nu.marginalia.array.LongArrayFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** This is a dehydrated version of a FullPreIndex, that only
+/** This is a dehydrated page of a FullPreIndex, that only
  * keeps references to its location on disk but does not hold associated
  * memory maps.
  */

@@ -4,23 +4,18 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
+import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.construction.prio.PrioIndexConstructor;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.process.control.FakeProcessHeartbeat;
-import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.GammaCodedSequence;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
+import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
@@ -29,12 +24,16 @@ import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.model.idx.WordFlags;
+import nu.marginalia.model.processed.SlopDocumentRecord;
+import nu.marginalia.process.control.FakeProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
+import nu.marginalia.storage.FileStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +69,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     ServiceHeartbeat heartbeat;
 
     @Inject
-    IndexJournalWriter indexJournalWriter;
+    IndexJournalSlopWriter indexJournalWriter;
 
     @Inject
     FileStorageService fileStorageService;
@@ -296,7 +295,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
-                    IndexJournalReader::singleFile,
                     DocIdRewriter.identity(),
                     tmpDir);
 
@@ -316,7 +314,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
         var constructor = new PrioIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
-                    IndexJournalReader::singleFile,
                     DocIdRewriter.identity(),
                     tmpDir);
 
@@ -327,12 +324,14 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(processHeartbeat,
-                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
+                outputFileSpansData,
+                IndexJournal.findJournal(workDir).orElseThrow(),
                 domainRankings
         );
 
@@ -354,32 +353,44 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         long fullId = fullId(id);
 
-        var header = new IndexJournalEntryHeader(factors.length, 0, 100, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
-
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
                 "test", "test", 0., "HTML5", 0, null, 0, 10
         ));
 
-        String[] keywords = IntStream.of(factors).mapToObj(Integer::toString).toArray(String[]::new);
-        long[] metadata = new long[factors.length];
+        List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
+        byte[] metadata = new byte[factors.length];
         for (int i = 0; i < factors.length; i++) {
-            metadata[i] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
-        }
-        GammaCodedSequence[] positions = new GammaCodedSequence[factors.length];
-        ByteBuffer wa = ByteBuffer.allocate(32);
-        for (int i = 0; i < factors.length; i++) {
-            positions[i] = GammaCodedSequence.generate(wa, factors);
+            metadata[i] = WordFlags.Title.asBit();
         }
 
-        indexJournalWriter.put(header, new IndexJournalEntryData(keywords, metadata, positions));
+        List<CodedSequence> positions = new ArrayList<>();
+
+        ByteBuffer wa = ByteBuffer.allocate(32);
+        for (int i = 0; i < factors.length; i++) {
+            positions.add(GammaCodedSequence.generate(wa, factors));
+        }
+
+        indexJournalWriter.put(fullId,
+                new SlopDocumentRecord.KeywordsProjection(
+                        "",
+                        -1,
+                        0,
+                        new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode(),
+                        100,
+                        keywords,
+                        metadata,
+                        positions,
+                        new byte[0],
+                        List.of()
+                ));
+
     }
 
     @SneakyThrows
     public void loadDataWithDomain(DocumentDbWriter ldbw, int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
         long fullId = UrlIdCodec.encodeId(domain, id);
-        var header = new IndexJournalEntryHeader(factors.length, 0, 100, fullId, DocumentMetadata.defaultValue());
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
@@ -387,18 +398,33 @@ public class IndexQueryServiceIntegrationSmokeTest {
         ));
 
 
-        String[] keywords = IntStream.of(factors).mapToObj(Integer::toString).toArray(String[]::new);
-        long[] metadata = new long[factors.length];
+        List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
+        byte[] metadata = new byte[factors.length];
         for (int i = 0; i < factors.length; i++) {
-            metadata[i] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
-        }
-        GammaCodedSequence[] positions = new GammaCodedSequence[factors.length];
-        ByteBuffer wa = ByteBuffer.allocate(16);
-        for (int i = 0; i < factors.length; i++) {
-            positions[i] = GammaCodedSequence.generate(wa, i + 1);
+            metadata[i] = WordFlags.Title.asBit();
         }
 
-        indexJournalWriter.put(header, new IndexJournalEntryData(keywords, metadata, positions));
+        List<CodedSequence> positions = new ArrayList<>();
+
+        ByteBuffer wa = ByteBuffer.allocate(32);
+        for (int i = 0; i < factors.length; i++) {
+            positions.add(GammaCodedSequence.generate(wa, i + 1));
+        }
+
+        indexJournalWriter.put(fullId,
+                new SlopDocumentRecord.KeywordsProjection(
+                        "",
+                        -1,
+                        0,
+                        new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode(),
+                        100,
+                        keywords,
+                        metadata,
+                        positions,
+                        new byte[0],
+                        List.of()
+                ));
+
     }
 
 }

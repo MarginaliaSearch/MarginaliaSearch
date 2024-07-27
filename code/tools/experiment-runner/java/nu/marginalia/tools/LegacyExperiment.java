@@ -1,8 +1,8 @@
 package nu.marginalia.tools;
 
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawledDomain;
 
 import java.io.IOException;
 import java.util.ArrayList;

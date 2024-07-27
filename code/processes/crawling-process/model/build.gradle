@@ -1,0 +1,48 @@
+plugins {
+    id 'java'
+
+
+    id 'jvm-test-suite'
+}
+
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+jar.archiveBaseName = 'crawling-process-model'
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:common:config')
+    implementation project(':code:common:process')
+    implementation project(':code:index:api')
+    implementation project(':code:features-crawl:content-type')
+    implementation project(':code:libraries:language-processing')
+    implementation project(':third-party:parquet-floor')
+    implementation project(':third-party:commons-codec')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.notnull
+    implementation libs.bundles.parquet
+
+    implementation libs.trove
+    implementation libs.jwarc
+    implementation libs.gson
+    implementation libs.commons.io
+    implementation libs.commons.lang3
+    implementation libs.okhttp3
+    implementation libs.jsoup
+    implementation libs.snakeyaml
+    implementation libs.zstd
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}

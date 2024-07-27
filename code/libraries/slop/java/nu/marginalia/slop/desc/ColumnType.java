@@ -47,6 +47,7 @@ public abstract class ColumnType<
     public static ColumnType<VarintColumnReader, VarintColumnWriter> VARINT_LE = register("varintle", ByteOrder.LITTLE_ENDIAN, VarintColumn::open, VarintColumn::create);
     public static ColumnType<VarintColumnReader, VarintColumnWriter> VARINT_BE = register("varintbe", ByteOrder.BIG_ENDIAN, VarintColumn::open, VarintColumn::create);
     public static ColumnType<CustomBinaryColumnReader, CustomBinaryColumnWriter> BYTE_ARRAY_CUSTOM = register("s8[]+custom", ByteOrder.nativeOrder(), CustomBinaryColumn::open, CustomBinaryColumn::create);
+    public static ColumnType<GammaCodedSequenceReader, GammaCodedSequenceWriter> BYTE_ARRAY_GCS = register("s8[]+gcs", ByteOrder.nativeOrder(), GammaCodedSequenceColumn::open, GammaCodedSequenceColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> STRING = register("s8[]+str", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> CSTRING = register("s8+cstr", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> TXTSTRING = register("s8+txt", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);

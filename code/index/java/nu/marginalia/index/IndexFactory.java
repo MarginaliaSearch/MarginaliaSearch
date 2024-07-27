@@ -3,11 +3,11 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.index.forward.ForwardIndexFileNames;
+import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.forward.ForwardIndexReader;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +56,8 @@ public class IndexFactory {
     public ForwardIndexReader getForwardIndexReader() throws IOException {
         return new ForwardIndexReader(
                 ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.CURRENT),
-                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.CURRENT)
+                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.CURRENT),
+                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.CURRENT)
         );
     }
 

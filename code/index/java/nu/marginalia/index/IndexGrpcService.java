@@ -13,7 +13,9 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.results.*;
+import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.SearchResultSet;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
@@ -22,9 +24,9 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
-import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,8 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.BitSet;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -142,7 +145,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 for (var score : rawResult.keywordScores) {
                     rawItem.addKeywordScores(
                             RpcResultKeywordScore.newBuilder()
-                                    .setEncodedWordMetadata(score.encodedWordMetadata())
+                                    .setFlags(score.flags)
+                                    .setPositions(score.positionCount)
                                     .setKeyword(score.keyword)
                     );
                 }

@@ -2,33 +2,33 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.GeneratorType;
+import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
+import nu.marginalia.converting.processor.logic.*;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
-import nu.marginalia.converting.processor.plugin.specialization.*;
+import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecializations;
+import nu.marginalia.gregex.GuardedRegex;
+import nu.marginalia.gregex.GuardedRegexFactory;
+import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.link_parser.FeedExtractor;
-import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.link_parser.LinkParser;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.keyword.DocumentKeywordExtractor;
-import nu.marginalia.model.html.HtmlStandard;
-import nu.marginalia.model.idx.DocumentFlags;
-import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.converting.processor.logic.*;
-import nu.marginalia.model.crawl.PubDate;
-import nu.marginalia.gregex.GuardedRegex;
-import nu.marginalia.gregex.GuardedRegexFactory;
-import nu.marginalia.converting.model.DisqualifiedException;
-import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawl.PubDate;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.html.HtmlStandard;
+import nu.marginalia.model.idx.DocumentFlags;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.pubdate.PubDateSniffer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -36,9 +36,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
-import static nu.marginalia.converting.model.DisqualifiedException.*;
+import static nu.marginalia.converting.model.DisqualifiedException.DisqualificationReason;
 
 
 public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {

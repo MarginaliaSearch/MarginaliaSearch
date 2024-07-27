@@ -24,7 +24,7 @@ dependencies {
     implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:features-crawl:link-parser')
     implementation project(':code:features-convert:anchor-keywords')
-    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:converting-process')
     implementation project(':third-party:commons-codec')
 

@@ -15,12 +15,15 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation libs.bundles.slf4j
 
+    implementation project(':code:libraries:coded-sequence')
+
     implementation libs.notnull
     implementation libs.commons.lang3
     implementation libs.fastutil
     implementation libs.lz4
     implementation libs.guava
     implementation libs.commons.compress
+
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

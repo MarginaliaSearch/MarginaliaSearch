@@ -16,11 +16,13 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:slop')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:random-write-funnel')
     implementation project(':code:index:query')
     implementation project(':code:index:index-journal')
     implementation project(':code:common:model')
+    implementation project(':code:processes:converting-process:model')
     implementation project(':code:common:process')
 
     implementation project(':third-party:parquet-floor')
@@ -34,5 +36,6 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation project(':code:libraries:test-helpers')
 }
 

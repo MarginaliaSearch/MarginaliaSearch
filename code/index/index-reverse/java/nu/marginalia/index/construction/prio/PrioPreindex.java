@@ -6,7 +6,7 @@ import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.ReverseIndexParameters;
 import nu.marginalia.index.construction.CountToOffsetTransformer;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournalPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import static nu.marginalia.array.algo.TwoArrayOperations.*;
+import static nu.marginalia.array.algo.TwoArrayOperations.countDistinctElements;
+import static nu.marginalia.array.algo.TwoArrayOperations.mergeArrays;
 
 /** Contains the data that would go into a reverse index,
  * that is, a mapping from words to documents, minus the actual
@@ -41,7 +42,7 @@ public class PrioPreindex {
     /** Constructs a new preindex with the data associated with reader.  The backing files
      * will have randomly assigned names.
      */
-    public static PrioPreindex constructPreindex(IndexJournalReader reader,
+    public static PrioPreindex constructPreindex(IndexJournalPage indexJournalPage,
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
     {
@@ -49,13 +50,13 @@ public class PrioPreindex {
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
-        var segments = PrioPreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        var docs = PrioPreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, segments);
+        var segments = PrioPreindexWordSegments.construct(indexJournalPage, segmentWordsFile, segmentCountsFile);
+        var docs = PrioPreindexDocuments.construct(docsFile, workDir, indexJournalPage, docIdRewriter, segments);
         return new PrioPreindex(segments, docs);
     }
 
     /**  Close the associated memory mapped areas and return
-     * a dehydrated version of this object that can be re-opened
+     * a dehydrated page of this object that can be re-opened
      * later.
      */
     public PrioPreindexReference closeToReference() {

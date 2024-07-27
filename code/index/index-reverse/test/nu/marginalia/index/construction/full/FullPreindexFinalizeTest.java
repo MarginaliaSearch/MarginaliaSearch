@@ -3,6 +3,7 @@ package nu.marginalia.index.construction.full;
 
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.model.BTreeHeader;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import org.junit.jupiter.api.AfterEach;
@@ -12,9 +13,11 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import static nu.marginalia.index.construction.full.TestJournalFactory.*;
+import static nu.marginalia.index.construction.full.TestJournalFactory.EntryDataWithWordMeta;
+import static nu.marginalia.index.construction.full.TestJournalFactory.wm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,6 +54,11 @@ class FullPreindexFinalizeTest {
         Files.delete(tempDir);
     }
 
+    MurmurHash3_128 hash = new MurmurHash3_128();
+    long termId(String keyword) {
+        return hash.hashKeyword(keyword);
+    }
+
     @Test
     public void testFinalizeSimple() throws IOException {
         var reader = journalFactory.createReader(new EntryDataWithWordMeta(100, 101, wm(50, 51)));
@@ -81,7 +89,7 @@ class FullPreindexFinalizeTest {
         assertEquals(1, wordsHeader.numEntries());
 
         assertEquals(100, docsArray.get(docsHeader.dataOffsetLongs() + 0));
-        assertEquals(50, wordsArray.get(wordsHeader.dataOffsetLongs()));
+        assertEquals(termId("50"), wordsArray.get(wordsHeader.dataOffsetLongs()));
     }
 
 
@@ -121,8 +129,8 @@ class FullPreindexFinalizeTest {
         long offset1 = wordsArray.get(wordsHeader.dataOffsetLongs() + 1);
         long offset2 = wordsArray.get(wordsHeader.dataOffsetLongs() + 3);
 
-        assertEquals(50, wordsArray.get(wordsHeader.dataOffsetLongs()));
-        assertEquals(50, wordsArray.get(wordsHeader.dataOffsetLongs()));
+        assertEquals(termId("50"), wordsArray.get(wordsHeader.dataOffsetLongs()));
+        assertEquals(termId("50"), wordsArray.get(wordsHeader.dataOffsetLongs()));
 
         BTreeHeader docsHeader;
 

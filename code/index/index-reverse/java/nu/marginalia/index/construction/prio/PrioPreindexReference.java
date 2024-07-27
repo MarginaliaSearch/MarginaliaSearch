@@ -5,7 +5,7 @@ import nu.marginalia.array.LongArrayFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** This is a dehydrated version of a PrioPreIndex, that only
+/** This is a dehydrated page of a PrioPreIndex, that only
  * keeps references to its location on disk but does not hold associated
  * memory maps.
  */

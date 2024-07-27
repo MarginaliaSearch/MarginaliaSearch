@@ -6,19 +6,11 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import nu.marginalia.IndexLocations;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
-import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
-import nu.marginalia.service.module.ServiceConfiguration;
-import nu.marginalia.storage.model.FileStorageState;
-import nu.marginalia.svc.BackupService;
-import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageId;
-import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.index.api.IndexMqClient;
 import nu.marginalia.index.api.IndexMqEndpoints;
 import nu.marginalia.mq.MqMessageState;
@@ -27,9 +19,20 @@ import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
 import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.mqapi.loading.LoadRequest;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.process.ProcessOutboxes;
+import nu.marginalia.process.ProcessService;
+import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageState;
+import nu.marginalia.storage.model.FileStorageType;
+import nu.marginalia.svc.BackupService;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -113,6 +116,21 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 yield new Load(List.of(processedId));
             }
             case Load(List<FileStorageId> processedIds, long msgId) when msgId < 0 -> {
+                // clear the output directory of the loader from any debris from partial jobs that have been aborted
+                Files.list(IndexLocations.getIndexConstructionArea(storageService)).forEach(path -> {
+                    try {
+                        if (Files.isDirectory(path)) {
+                            FileUtils.deleteDirectory(path.toFile());
+                        }
+                        else if (Files.isRegularFile(path)) {
+                            Files.delete(path);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error clearing staging area", e);
+                    }
+                });
+
+
                 long id = mqLoaderOutbox.sendAsync(new LoadRequest(processedIds));
 
                 yield new Load(processedIds, id);

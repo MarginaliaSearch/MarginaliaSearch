@@ -29,19 +29,31 @@ public class ForwardIndexReader {
     private final TLongIntHashMap idToOffset;
     private final LongArray data;
 
+    private final ForwardIndexSpansReader spansReader;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ForwardIndexReader(Path idsFile, Path dataFile) throws IOException {
+    public ForwardIndexReader(Path idsFile,
+                              Path dataFile,
+                              Path spansFile) throws IOException {
         if (!Files.exists(dataFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", dataFile);
             idToOffset = null;
             data = null;
+            spansReader = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", idsFile);
             idToOffset = null;
             data = null;
+            spansReader = null;
+            return;
+        }
+        else if (!Files.exists(spansFile)) {
+            logger.warn("Failed to create ForwardIndexReader, {} is absent", spansFile);
+            idToOffset = null;
+            data = null;
+            spansReader = null;
             return;
         }
 
@@ -49,6 +61,7 @@ public class ForwardIndexReader {
 
         idToOffset = loadIds(idsFile);
         data = loadData(dataFile);
+        spansReader = new ForwardIndexSpansReader(spansFile);
     }
 
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {

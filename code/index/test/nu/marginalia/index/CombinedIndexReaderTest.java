@@ -13,10 +13,8 @@ import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -27,9 +25,10 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
@@ -63,7 +62,7 @@ public class CombinedIndexReaderTest {
     StatefulIndex statefulIndex;
 
     @Inject
-    IndexJournalWriter indexJournalWriter;
+    IndexJournalSlopWriter indexJournalWriter;
 
     @Inject
     FileStorageService fileStorageService;
@@ -248,7 +247,6 @@ public class CombinedIndexReaderTest {
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
-                    IndexJournalReader::singleFile,
                     DocIdRewriter.identity(),
                     tmpDir);
         constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
@@ -268,7 +266,6 @@ public class CombinedIndexReaderTest {
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,
-                IndexJournalReader::singleFile,
                 DocIdRewriter.identity(),
                 tmpDir);
 
@@ -279,12 +276,14 @@ public class CombinedIndexReaderTest {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(processHeartbeat,
-                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
+                outputFileSpansData,
+                IndexJournal.findJournal(workDir).orElseThrow(),
                 domainRankings
         );
 
@@ -318,19 +317,26 @@ public class CombinedIndexReaderTest {
 
                 var meta = metaByDoc.get(doc);
 
-                var header = new IndexJournalEntryHeader(
-                        doc,
-                        meta.features,
-                        100,
-                        meta.documentMetadata.encode()
-                );
+                List<String> keywords = words.stream().map(w -> w.keyword).toList();
+                byte[] metadata = new byte[words.size()];
+                for (int i = 0; i < words.size(); i++) {
+                    metadata[i] = words.get(i).termMetadata;
+                }
+                var positions = words.stream().map(w -> w.positions).map(pos -> (CodedSequence) GammaCodedSequence.generate(ByteBuffer.allocate(1024), pos.toIntArray())).toList();
 
-                String[] keywords = words.stream().map(w -> w.keyword).toArray(String[]::new);
-                long[] metadata = words.stream().map(w -> w.termMetadata).mapToLong(Long::longValue).toArray();
-                var positions = words.stream().map(w -> w.positions).map(pos -> GammaCodedSequence.generate(ByteBuffer.allocate(1024), pos.toIntArray())).toArray(GammaCodedSequence[]::new);
-
-                indexJournalWriter.put(header,
-                        new IndexJournalEntryData(keywords, metadata, positions));
+                indexJournalWriter.put(doc,
+                        new SlopDocumentRecord.KeywordsProjection(
+                                "",
+                                -1,
+                                meta.features,
+                                meta.documentMetadata.encode(),
+                                100,
+                                keywords,
+                                metadata,
+                                positions,
+                                new byte[0],
+                                List.of()
+                        ));
             });
 
             var linkdbWriter = new DocumentDbWriter(
@@ -370,10 +376,10 @@ public class CombinedIndexReaderTest {
 
     }
     record MockDocumentMeta(int features, DocumentMetadata documentMetadata) {}
-    record MockDataKeyword(String keyword, long termMetadata, IntList positions) {}
+    record MockDataKeyword(String keyword, byte termMetadata, IntList positions) {}
 
     MockDataKeyword w(String keyword, WordFlags flags, int... positions) {
-        return new MockDataKeyword(keyword, new WordMetadata(0L, EnumSet.of(flags)).encode(), IntList.of(positions));
+        return new MockDataKeyword(keyword, flags.asBit(), IntList.of(positions));
 
     }
 }

@@ -90,7 +90,7 @@ public class StatefulIndex {
         return combinedIndexReader != null;
     }
 
-    /** Stronger version of isAvailable() that also checks that the index is loaded */
+    /** Stronger page of isAvailable() that also checks that the index is loaded */
     public boolean isLoaded() {
         return combinedIndexReader != null && combinedIndexReader.isLoaded();
     }

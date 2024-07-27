@@ -1,6 +1,9 @@
 package nu.marginalia.api.searchquery;
 
 import lombok.SneakyThrows;
+import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -11,9 +14,6 @@ import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.QueryResponse;
 
 import java.util.ArrayList;
 
@@ -197,7 +197,8 @@ public class QueryProtobufCodec {
         return new SearchResultKeywordScore(
                 keywordScores.getKeyword(),
                 -1, // termId is internal to index service
-                keywordScores.getEncodedWordMetadata()
+                (byte) keywordScores.getFlags(),
+                keywordScores.getPositions()
         );
     }
 

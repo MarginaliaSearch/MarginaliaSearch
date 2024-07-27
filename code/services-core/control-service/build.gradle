@@ -35,12 +35,12 @@ dependencies {
     implementation project(':code:functions:search-query:api')
     implementation project(':code:execution:api')
     implementation project(':code:index:api')
-    implementation project(':code:process-mqapi')
+    implementation project(':code:processes:process-mq-api')
     implementation project(':code:features-search:screenshots')
     implementation project(':code:index:index-journal')
     implementation project(':code:index:query')
 
-    implementation project(':code:process-models:crawl-spec')
+    implementation project(':code:processes:crawling-process:model')
 
     implementation libs.bundles.slf4j
 

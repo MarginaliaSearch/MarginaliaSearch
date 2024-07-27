@@ -1,36 +1,36 @@
 package nu.marginalia.keyword.model;
 
+import nu.marginalia.model.idx.CodedWordSpan;
 import nu.marginalia.sequence.CodedSequence;
 
-import java.io.Serial;
-import java.io.Serializable;
+import java.util.List;
 
-public final class DocumentKeywords implements Serializable {
+public final class DocumentKeywords {
 
-    @Serial
-    private static final long serialVersionUID = 1387282293082091432L;
+    public final List<String> keywords;
+    public final byte[] metadata;
+    public final List<CodedSequence> positions;
+    public final List<CodedWordSpan> spans;
 
-    public final String[] keywords;
-    public final long[] metadata;
-    public final CodedSequence[] positions;
-
-    public DocumentKeywords(String[] keywords,
-                            long[] metadata,
-                            CodedSequence[] positions)
+    public DocumentKeywords(List<String> keywords,
+                            byte[] metadata,
+                            List<CodedSequence> positions,
+                            List<CodedWordSpan> spans)
     {
         this.keywords = keywords;
         this.metadata = metadata;
         this.positions = positions;
+        this.spans = spans;
 
-        assert keywords.length == metadata.length;
+        assert keywords.size() == metadata.length;
     }
 
     public boolean isEmpty() {
-        return keywords.length == 0;
+        return keywords.isEmpty();
     }
 
     public int size() {
-        return keywords.length;
+        return keywords.size();
     }
 
 }

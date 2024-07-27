@@ -4,11 +4,11 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawling.body.ContentTypeLogic;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.ContentTypeLogic;
+import nu.marginalia.model.body.DocumentBodyExtractor;
+import nu.marginalia.model.body.DocumentBodyResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

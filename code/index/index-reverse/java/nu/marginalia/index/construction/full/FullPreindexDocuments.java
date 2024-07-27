@@ -5,12 +5,13 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.rwf.RandomFileAssembler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,13 +40,13 @@ public class FullPreindexDocuments {
     public static FullPreindexDocuments construct(
             Path docsFile,
             Path workDir,
-            IndexJournalReader reader,
+            IndexJournalPage journalInstance,
             DocIdRewriter docIdRewriter,
             PositionsFileConstructor positionsFileConstructor,
             FullPreindexWordSegments segments) throws IOException {
         FullPreindexDocuments.positionsFileConstructor = positionsFileConstructor;
 
-        createUnsortedDocsFile(docsFile, workDir, reader, segments, docIdRewriter);
+        createUnsortedDocsFile(docsFile, workDir, journalInstance, segments, docIdRewriter);
 
         LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
         sortDocsFile(docsFileMap, segments);
@@ -68,28 +69,42 @@ public class FullPreindexDocuments {
 
     private static void createUnsortedDocsFile(Path docsFile,
                                                Path workDir,
-                                               IndexJournalReader reader,
+                                               IndexJournalPage journalInstance,
                                                FullPreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
+        final ByteBuffer tempBuffer = ByteBuffer.allocate(65536);
+
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var pointer = reader.newPointer())
+             var docIds = journalInstance.openCombinedId();
+             var termCounts = journalInstance.openTermCounts();
+             var termIds = journalInstance.openTermIds();
+             var termMeta = journalInstance.openTermMetadata();
+             var positions = journalInstance.openTermPositions())
         {
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
-            while (pointer.nextDocument()) {
-                long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
-                for (var termData : pointer) {
-                    long termId = termData.termId();
+            while (termCounts.hasRemaining()) {
+                long docId = docIds.get();
+                long rankEncodedId = docIdRewriter.rewriteDocId(docId);
+
+                long termCount = termCounts.get();
+
+                for (int termIdx = 0; termIdx < termCount; termIdx++) {
+                    long termId = termIds.get();
+                    byte meta = termMeta.get();
+
+                    // Read positions
+                    tempBuffer.clear();
+                    positions.getData(tempBuffer);
+                    tempBuffer.flip();
 
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
-
-                    // write position data to the positions file and get the offset
-                    long encodedPosOffset = positionsFileConstructor.add((byte) termData.metadata(), termData.positionsBuffer());
+                    long encodedPosOffset = positionsFileConstructor.add(meta, tempBuffer);
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);

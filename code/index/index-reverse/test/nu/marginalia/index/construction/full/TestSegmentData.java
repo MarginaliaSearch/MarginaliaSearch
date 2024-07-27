@@ -2,8 +2,8 @@ package nu.marginalia.index.construction.full;
 
 import java.util.Arrays;
 
-record TestSegmentData(long wordId, long start, long end, long[] data) {
-    public TestSegmentData(long wordId, long start, long end) {
+record TestSegmentData(String wordId, long start, long end, long[] data) {
+    public TestSegmentData(String wordId, long start, long end) {
         this(wordId, start, end, null);
     }
 
@@ -22,7 +22,7 @@ record TestSegmentData(long wordId, long start, long end, long[] data) {
 
     @Override
     public int hashCode() {
-        int result = (int) (wordId ^ (wordId >>> 32));
+        int result = wordId.hashCode();
         result = 31 * result + (int) (start ^ (start >>> 32));
         result = 31 * result + (int) (end ^ (end >>> 32));
         result = 31 * result + Arrays.hashCode(data);

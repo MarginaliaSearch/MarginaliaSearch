@@ -8,7 +8,7 @@ import nu.marginalia.index.construction.CountToOffsetTransformer;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.IndexSizeEstimator;
 import nu.marginalia.index.construction.PositionsFileConstructor;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.index.journal.IndexJournalPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class FullPreindex {
     /** Constructs a new preindex with the data associated with reader.  The backing files
      * will have randomly assigned names.
      */
-    public static FullPreindex constructPreindex(IndexJournalReader reader,
+    public static FullPreindex constructPreindex(IndexJournalPage journalInstance,
                                                  PositionsFileConstructor positionsFileConstructor,
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
@@ -52,13 +52,13 @@ public class FullPreindex {
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
-        var segments = FullPreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        var docs = FullPreindexDocuments.construct(docsFile, workDir, reader, docIdRewriter, positionsFileConstructor, segments);
+        var segments = FullPreindexWordSegments.construct(journalInstance, segmentWordsFile, segmentCountsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, workDir, journalInstance, docIdRewriter, positionsFileConstructor, segments);
         return new FullPreindex(segments, docs);
     }
 
     /**  Close the associated memory mapped areas and return
-     * a dehydrated version of this object that can be re-opened
+     * a dehydrated page of this object that can be re-opened
      * later.
      */
     public FullPreindexReference closeToReference() {

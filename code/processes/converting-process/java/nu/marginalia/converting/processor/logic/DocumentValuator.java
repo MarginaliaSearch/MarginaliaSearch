@@ -1,10 +1,10 @@
 package nu.marginalia.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.html.HtmlStandard;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

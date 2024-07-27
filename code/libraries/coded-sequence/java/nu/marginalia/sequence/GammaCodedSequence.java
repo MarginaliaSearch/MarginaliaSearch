@@ -158,7 +158,7 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
             last = i;
 
             // can't encode zeroes
-            assert delta > 0 : "Sequence must be strictly increasing and may not contain zeroes or negative values";
+            assert delta > 0 : "Sequence must be strictly increasing and may not contain zeroes or negative values; was " + sequence;
 
             writer.putGamma(delta);
         }

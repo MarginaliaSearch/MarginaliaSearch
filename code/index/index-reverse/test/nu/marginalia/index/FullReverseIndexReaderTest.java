@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.construction.full.FullPreindex;
@@ -45,6 +46,11 @@ class FullReverseIndexReaderTest {
         Files.delete(tempDir);
     }
 
+    MurmurHash3_128 hash = new MurmurHash3_128();
+    long termId(String keyword) {
+        return hash.hashKeyword(keyword);
+    }
+
     @Test
     public void testSimple() throws IOException {
 
@@ -52,17 +58,18 @@ class FullReverseIndexReaderTest {
                 new EntryDataWithWordMeta(100, 101, wm(50, 51, 1, 3, 5))
         );
 
-        assertEquals(1, indexReader.numDocuments(50));
+        assertEquals(1, indexReader.numDocuments(termId("50")));
 
-        var positions = indexReader.getTermData(Arena.global(), 50, new long[] { 100 });
+        var positions = indexReader.getTermData(Arena.global(), termId("50"), new long[] { 100 });
 
         assertEquals(1, positions.length);
         assertNotNull(positions[0]);
         assertEquals((byte) 51, positions[0].flags());
         assertEquals(IntList.of(1, 3, 5), positions[0].positions().values());
 
-        assertArrayEquals(new long[] { 100 }, readEntries(indexReader, 50));
+        assertArrayEquals(new long[] { 100 }, readEntries(indexReader, termId("50")));
     }
+
 
     @Test
     public void test2x2() throws IOException {
@@ -72,13 +79,13 @@ class FullReverseIndexReaderTest {
                 new EntryDataWithWordMeta(101, 101, wm(51, 53), wm(52, 54))
         );
 
-        assertEquals(1, indexReader.numDocuments(50));
-        assertEquals(2, indexReader.numDocuments(51));
-        assertEquals(1, indexReader.numDocuments(52));
+        assertEquals(1, indexReader.numDocuments(termId("50")));
+        assertEquals(2, indexReader.numDocuments(termId("51")));
+        assertEquals(1, indexReader.numDocuments(termId("52")));
 
-        assertArrayEquals(new long[] { 100 }, readEntries(indexReader, 50));
-        assertArrayEquals(new long[] { 100, 101 }, readEntries(indexReader, 51));
-        assertArrayEquals(new long[] { 101 }, readEntries(indexReader, 52));
+        assertArrayEquals(new long[] { 100 }, readEntries(indexReader, termId("50")));
+        assertArrayEquals(new long[] { 100, 101 }, readEntries(indexReader, termId("51")));
+        assertArrayEquals(new long[] { 101 }, readEntries(indexReader, termId("52")));
 
     }
 

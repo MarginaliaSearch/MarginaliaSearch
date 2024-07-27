@@ -108,7 +108,8 @@ message RpcRawResultItem {
 /* Information about how well a keyword matches a query */
 message RpcResultKeywordScore {
   string keyword = 1; // the keyword
-  int64 encodedWordMetadata = 2; // bit encoded word metadata
+  int32 flags = 2;
+  int32 positions = 3;
 }
 
 /* Query execution parameters */
