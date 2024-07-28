@@ -33,6 +33,8 @@ public abstract class ColumnType<
     public static ColumnType<ByteColumnReader, ByteColumnWriter> BYTE = register("s8", ByteOrder.nativeOrder(), ByteColumn::open, ByteColumn::create);
     public static ColumnType<CharColumnReader, CharColumnWriter> CHAR_LE = register("u16le", ByteOrder.LITTLE_ENDIAN, CharColumn::open, CharColumn::create);
     public static ColumnType<CharColumnReader, CharColumnWriter> CHAR_BE = register("u16be", ByteOrder.BIG_ENDIAN, CharColumn::open, CharColumn::create);
+    public static ColumnType<ShortColumnReader, ShortColumnWriter> SHORT_LE = register("s16le", ByteOrder.LITTLE_ENDIAN, ShortColumn::open, ShortColumn::create);
+    public static ColumnType<ShortColumnReader, ShortColumnWriter> SHORT_BE = register("s16be", ByteOrder.BIG_ENDIAN, ShortColumn::open, ShortColumn::create);
     public static ColumnType<IntColumnReader, IntColumnWriter> INT_LE = register("s32le", ByteOrder.LITTLE_ENDIAN, IntColumn::open, IntColumn::create);
     public static ColumnType<IntColumnReader, IntColumnWriter> INT_BE = register("s32be", ByteOrder.BIG_ENDIAN, IntColumn::open, IntColumn::create);
     public static ColumnType<LongColumnReader, LongColumnWriter> LONG_LE = register("s64le", ByteOrder.LITTLE_ENDIAN, LongColumn::open, LongColumn::create);
