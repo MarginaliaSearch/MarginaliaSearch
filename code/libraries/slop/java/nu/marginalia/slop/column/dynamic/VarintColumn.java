@@ -75,18 +75,32 @@ public class VarintColumn {
             return columnDesc;
         }
 
-        public long get() throws IOException {
-            long value = 0;
+        public int get() throws IOException {
+            int value = 0;
             int shift = 0;
+            byte b;
 
-            while (true) {
-                long b = reader.getByte();
+            do {
+                b = reader.getByte();
                 value |= (b & 0x7F) << shift;
                 shift += 7;
-                if ((b & 0x80) == 0) {
-                    break;
-                }
-            }
+            } while ((b & 0x80) != 0);
+
+            position++;
+
+            return value;
+        }
+
+        public long getLong() throws IOException {
+            long value = 0;
+            int shift = 0;
+            byte b;
+
+            do {
+                b = reader.getByte();
+                value |= (long) (b & 0x7F) << shift;
+                shift += 7;
+            } while ((b & 0x80) != 0);
 
             position++;
 

@@ -52,7 +52,7 @@ public record IndexJournalPage(Path baseDir, int page) {
         return size.forPage(page).open(table, baseDir);
     }
 
-    public LongColumnReader openTermCounts(SlopTable table) throws IOException {
+    public VarintColumnReader openTermCounts(SlopTable table) throws IOException {
         return termCounts.forPage(page).open(table, baseDir);
     }
 
