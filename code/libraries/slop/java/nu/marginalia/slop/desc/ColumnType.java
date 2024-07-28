@@ -5,10 +5,7 @@ import nu.marginalia.slop.column.ColumnWriter;
 import nu.marginalia.slop.column.array.*;
 import nu.marginalia.slop.column.dynamic.*;
 import nu.marginalia.slop.column.primitive.*;
-import nu.marginalia.slop.column.string.EnumColumn;
-import nu.marginalia.slop.column.string.StringColumn;
-import nu.marginalia.slop.column.string.StringColumnReader;
-import nu.marginalia.slop.column.string.StringColumnWriter;
+import nu.marginalia.slop.column.string.*;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -50,8 +47,11 @@ public abstract class ColumnType<
     public static ColumnType<StringColumnReader, StringColumnWriter> STRING = register("s8[]+str", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> CSTRING = register("s8+cstr", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> TXTSTRING = register("s8+txt", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
-    public static ColumnType<StringColumnReader, StringColumnWriter> ENUM_LE = register("varintle+enum", ByteOrder.LITTLE_ENDIAN, EnumColumn::open, EnumColumn::create);
-    public static ColumnType<StringColumnReader, StringColumnWriter> ENUM_BE = register("varintbe+enum", ByteOrder.BIG_ENDIAN, EnumColumn::open, EnumColumn::create);
+
+    public static ColumnType<EnumColumnReader, StringColumnWriter> ENUM_8 = register("u8+enum", ByteOrder.LITTLE_ENDIAN, EnumColumn::open8, EnumColumn::create8);
+    public static ColumnType<EnumColumnReader, StringColumnWriter> ENUM_LE = register("varintle+enum", ByteOrder.LITTLE_ENDIAN, EnumColumn::open, EnumColumn::create);
+    public static ColumnType<EnumColumnReader, StringColumnWriter> ENUM_BE = register("varintbe+enum", ByteOrder.BIG_ENDIAN, EnumColumn::open, EnumColumn::create);
+
     public static ColumnType<ByteArrayColumnReader, ByteArrayColumnWriter> BYTE_ARRAY = register("s8[]", ByteOrder.nativeOrder(), ByteArrayColumn::open, ByteArrayColumn::create);
     public static ColumnType<IntArrayColumnReader, IntArrayColumnWriter> INT_ARRAY_LE = register("s32le[]", ByteOrder.LITTLE_ENDIAN, IntArrayColumn::open, IntArrayColumn::create);
     public static ColumnType<IntArrayColumnReader, IntArrayColumnWriter> INT_ARRAY_BE = register("s32be[]", ByteOrder.BIG_ENDIAN, IntArrayColumn::open, IntArrayColumn::create);
