@@ -119,7 +119,7 @@ public record SlopDomainRecord(
             visitedUrlsReader = visitedUrlsColumn.forPage(page).open(this, baseDir);
 
             rssFeedsCountReader = rssFeedsCountColumn.forPage(page).open(this, baseDir);
-            rssFeedsReader = rssFeedsColumn.forPage(page).open(this, baseDir);
+            rssFeedsReader = rssFeedsColumn.forPage(page).open(this.columnGroup("rssFeeds"), baseDir);
         }
 
         public boolean hasMore() throws IOException {
