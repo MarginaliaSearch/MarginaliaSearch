@@ -76,7 +76,7 @@ class VarintColumnTest {
             assertEquals(65534, column.get());
             assertEquals(1, column.get());
             assertEquals(0, column.get());
-            assertEquals(6000000000L, column.get());
+            assertEquals(6000000000L, column.getLong());
             assertEquals(1, column.get());
         }
     }
