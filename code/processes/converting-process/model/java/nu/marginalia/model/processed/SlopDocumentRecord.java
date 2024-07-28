@@ -11,6 +11,7 @@ import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.column.primitive.*;
+import nu.marginalia.slop.column.string.EnumColumnReader;
 import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
@@ -97,13 +98,13 @@ public record SlopDocumentRecord(
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnType.TXTSTRING, StorageType.GZIP);
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> urlsColumn = new ColumnDesc<>("url", ColumnType.TXTSTRING, StorageType.GZIP);
     private static final ColumnDesc<VarintColumnReader, VarintColumnWriter> ordinalsColumn = new ColumnDesc<>("ordinal", ColumnType.VARINT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnType.ENUM_LE, StorageType.PLAIN);
+    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnType.ENUM_LE, StorageType.PLAIN);
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> stateReasonsColumn = new ColumnDesc<>("stateReason", ColumnType.TXTSTRING, StorageType.GZIP);
 
     // Document metadata
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> titlesColumn = new ColumnDesc<>("title", ColumnType.STRING, StorageType.GZIP);
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> descriptionsColumn = new ColumnDesc<>("description", ColumnType.STRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> htmlStandardsColumn = new ColumnDesc<>("htmlStandard", ColumnType.ENUM_LE, StorageType.GZIP);
+    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> htmlStandardsColumn = new ColumnDesc<>("htmlStandard", ColumnType.ENUM_LE, StorageType.GZIP);
     private static final ColumnDesc<IntColumnReader, IntColumnWriter> htmlFeaturesColumn = new ColumnDesc<>("htmlFeatures", ColumnType.INT_LE, StorageType.PLAIN);
     private static final ColumnDesc<IntColumnReader, IntColumnWriter> lengthsColumn = new ColumnDesc<>("length", ColumnType.INT_LE, StorageType.PLAIN);
     private static final ColumnDesc<IntColumnReader, IntColumnWriter> pubYearColumn = new ColumnDesc<>("pubYear", ColumnType.INT_LE, StorageType.PLAIN);

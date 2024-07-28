@@ -2,6 +2,7 @@ package nu.marginalia.model.processed;
 
 import nu.marginalia.slop.column.primitive.IntColumnReader;
 import nu.marginalia.slop.column.primitive.IntColumnWriter;
+import nu.marginalia.slop.column.string.EnumColumnReader;
 import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
@@ -32,7 +33,7 @@ public record SlopDomainRecord(
     {}
 
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnType.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnType.ENUM_LE, StorageType.PLAIN);
+    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnType.ENUM_LE, StorageType.PLAIN);
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> redirectDomainsColumn = new ColumnDesc<>("redirectDomain", ColumnType.TXTSTRING, StorageType.GZIP);
     private static final ColumnDesc<StringColumnReader, StringColumnWriter> ipColumn = new ColumnDesc<>("ip", ColumnType.TXTSTRING, StorageType.GZIP);
 
