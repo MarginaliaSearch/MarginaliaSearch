@@ -43,7 +43,8 @@ public class DomainLoaderService {
         FETCH_ALL,
         DONE
     }
-    /** Read the domain names from each parquet file
+
+    /** Read the domain names from each input file
      *  compare with SQL domain database, fetch those
      *  that exist, insert those that don't.
      */
@@ -54,11 +55,8 @@ public class DomainLoaderService {
         DomainIdRegistry ret = new DomainIdRegistry();
 
         try (var conn = dataSource.getConnection();
-             var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS");
-             var selectStmt = conn.prepareStatement("""
-                     SELECT ID, LOWER(DOMAIN_NAME) FROM EC_DOMAIN
-                     """)
-        ) {
+             var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS"))
+        {
             taskHeartbeat.progress(Steps.PREP_DATA);
 
             Collection<SlopPageRef<SlopDomainRecord>> domainPageRefs = inputData.listDomainPages();
@@ -128,14 +126,19 @@ public class DomainLoaderService {
             }
 
             taskHeartbeat.progress(Steps.FETCH_ALL);
-            selectStmt.setFetchSize(1000);
 
-            var rs = selectStmt.executeQuery();
-            while (rs.next()) {
-                String domain = rs.getString(2);
+            // Fetch the ID for all domains that we have information about
+            try (var selectStmt = conn.prepareStatement("SELECT ID, LOWER(DOMAIN_NAME) FROM EC_DOMAIN")) {
 
-                if (domainNamesAll.contains(domain)) {
-                    ret.add(domain, rs.getInt(1));
+                selectStmt.setFetchSize(1000);
+
+                var rs = selectStmt.executeQuery();
+                while (rs.next()) {
+                    String domain = rs.getString(2);
+
+                    if (domainNamesAll.contains(domain)) {
+                        ret.add(domain, rs.getInt(1));
+                    }
                 }
             }
 
