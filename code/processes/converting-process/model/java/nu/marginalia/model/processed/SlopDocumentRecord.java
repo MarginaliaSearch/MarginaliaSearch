@@ -154,7 +154,7 @@ public record SlopDocumentRecord(
             termMetaReader = termMetaColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
             termPositionsReader = termPositionsColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
 
-            spanCodesReader = spanCodesColumn.forPage(page).open(this.columnGroup("spans"), baseDir);
+            spanCodesReader = spanCodesColumn.forPage(page).open(this, baseDir);
             spansReader = spansColumn.forPage(page).open(this.columnGroup("spans"), baseDir);
         }
 
@@ -240,7 +240,7 @@ public record SlopDocumentRecord(
             return new MetadataProjection(
                     domainsReader.get(),
                     urlsReader.get(),
-                    (int) ordinalsReader.get(),
+                    ordinalsReader.get(),
                     titlesReader.get(),
                     descriptionsReader.get(),
                     htmlFeaturesReader.get(),
