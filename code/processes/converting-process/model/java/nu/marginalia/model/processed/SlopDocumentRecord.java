@@ -1,13 +1,14 @@
 package nu.marginalia.model.processed;
 
 import lombok.Builder;
-import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
-import nu.marginalia.sequence.slop.GammaCodedSequenceColumn;
-import nu.marginalia.sequence.slop.GammaCodedSequenceReader;
-import nu.marginalia.sequence.slop.GammaCodedSequenceWriter;
+import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
+import nu.marginalia.sequence.slop.GammaCodedSequenceArrayReader;
+import nu.marginalia.sequence.slop.GammaCodedSequenceArrayWriter;
 import nu.marginalia.slop.column.array.ByteArrayColumnReader;
 import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
+import nu.marginalia.slop.column.array.ObjectArrayColumnReader;
+import nu.marginalia.slop.column.array.ObjectArrayColumnWriter;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.column.primitive.*;
@@ -18,12 +19,13 @@ import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public record SlopDocumentRecord(
         String domain,
@@ -42,9 +44,9 @@ public record SlopDocumentRecord(
         Integer pubYear,
         List<String> words,
         byte[] metas,
-        List<CodedSequence> positions,
+        List<GammaCodedSequence> positions,
         byte[] spanCodes,
-        List<CodedSequence> spans
+        List<GammaCodedSequence> spans
 ) {
 
     /** Constructor for partial records */
@@ -73,10 +75,34 @@ public record SlopDocumentRecord(
             int length,
             List<String> words,
             byte[] metas,
-            List<CodedSequence> positions,
+            List<GammaCodedSequence> positions,
             byte[] spanCodes,
-            List<CodedSequence> spans)
-    { }
+            List<GammaCodedSequence> spans)
+    {
+        // Override the equals method since records don't generate default equals that deal with array fields properly
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof KeywordsProjection that)) return false;
+
+            return length == that.length && ordinal == that.ordinal && htmlFeatures == that.htmlFeatures && documentMetadata == that.documentMetadata && Arrays.equals(metas, that.metas) && Objects.equals(domain, that.domain) && Arrays.equals(spanCodes, that.spanCodes) && Objects.equals(words, that.words) && Objects.equals(spans, that.spans) && Objects.equals(positions, that.positions);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hashCode(domain);
+            result = 31 * result + ordinal;
+            result = 31 * result + htmlFeatures;
+            result = 31 * result + Long.hashCode(documentMetadata);
+            result = 31 * result + length;
+            result = 31 * result + Objects.hashCode(words);
+            result = 31 * result + Arrays.hashCode(metas);
+            result = 31 * result + Objects.hashCode(positions);
+            result = 31 * result + Arrays.hashCode(spanCodes);
+            result = 31 * result + Objects.hashCode(spans);
+            return result;
+        }
+    }
 
     public record MetadataProjection(
             String domain,
@@ -113,14 +139,13 @@ public record SlopDocumentRecord(
     private static final ColumnDesc<LongColumnReader, LongColumnWriter> domainMetadata = new ColumnDesc<>("domainMetadata", ColumnType.LONG_LE, StorageType.PLAIN);
 
     // Keyword-level columns, these are enumerated by the counts column
-    private static final ColumnDesc<VarintColumnReader, VarintColumnWriter> termCountsColumn = new ColumnDesc<>("termCounts", ColumnType.VARINT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> keywordsColumn = new ColumnDesc<>("keywords", ColumnType.STRING, StorageType.ZSTD);
-    private static final ColumnDesc<ByteColumnReader, ByteColumnWriter> termMetaColumn = new ColumnDesc<>("termMetadata", ColumnType.BYTE, StorageType.ZSTD);
-    private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> termPositionsColumn = new ColumnDesc<>("termPositions", GammaCodedSequenceColumn.TYPE, StorageType.ZSTD);
+    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> keywordsColumn = new ColumnDesc<>("keywords", ColumnType.STRING_ARRAY, StorageType.ZSTD);
+    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> termMetaColumn = new ColumnDesc<>("termMetadata", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
+    private static final ColumnDesc<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> termPositionsColumn = new ColumnDesc<>("termPositions", GammaCodedSequenceArrayColumn.TYPE, StorageType.ZSTD);
 
     // Spans columns
     private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodesColumn = new ColumnDesc<>("spanCodes", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
-    private static final ColumnDesc<GammaCodedSequenceReader, GammaCodedSequenceWriter> spansColumn = new ColumnDesc<>("spans", GammaCodedSequenceColumn.TYPE, StorageType.ZSTD);
+    private static final ColumnDesc<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> spansColumn = new ColumnDesc<>("spans", GammaCodedSequenceArrayColumn.TYPE, StorageType.ZSTD);
 
     public static class KeywordsProjectionReader extends SlopTable {
         private final StringColumnReader domainsReader;
@@ -128,15 +153,15 @@ public record SlopDocumentRecord(
         private final IntColumnReader htmlFeaturesReader;
         private final LongColumnReader domainMetadataReader;
         private final IntColumnReader lengthsReader;
-        private final StringColumnReader keywordsReader;
-        private final VarintColumnReader termCountsReader;
-        private final ByteColumnReader termMetaReader;
-        private final GammaCodedSequenceReader termPositionsReader;
+
+        private final StringColumnReader statesColumnReader;
+
+        private final ObjectArrayColumnReader<String> keywordsReader;
+        private final ByteArrayColumnReader termMetaReader;
+        private final GammaCodedSequenceArrayReader termPositionsReader;
 
         private final ByteArrayColumnReader spanCodesReader;
-        private final GammaCodedSequenceReader spansReader;
-
-        private final ByteBuffer workBuffer = ByteBuffer.allocate(65536);
+        private final GammaCodedSequenceArrayReader spansReader;
 
         public KeywordsProjectionReader(SlopPageRef<SlopDocumentRecord> pageRef) throws IOException {
             this(pageRef.baseDir(), pageRef.page());
@@ -148,45 +173,51 @@ public record SlopDocumentRecord(
             htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(this, baseDir);
             domainMetadataReader = domainMetadata.forPage(page).open(this, baseDir);
             lengthsReader = lengthsColumn.forPage(page).open(this, baseDir);
-            termCountsReader = termCountsColumn.forPage(page).open(this, baseDir);
 
-            keywordsReader = keywordsColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
-            termMetaReader = termMetaColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
-            termPositionsReader = termPositionsColumn.forPage(page).open(this.columnGroup("keywords"), baseDir);
+            statesColumnReader = statesColumn.forPage(page).open(this, baseDir);
+
+            keywordsReader = keywordsColumn.forPage(page).open(this, baseDir);
+            termMetaReader = termMetaColumn.forPage(page).open(this, baseDir);
+            termPositionsReader = termPositionsColumn.forPage(page).open(this, baseDir);
 
             spanCodesReader = spanCodesColumn.forPage(page).open(this, baseDir);
-            spansReader = spansColumn.forPage(page).open(this.columnGroup("spans"), baseDir);
+            spansReader = spansColumn.forPage(page).open(this, baseDir);
         }
 
+        KeywordsProjection next = null;
+
         public boolean hasMore() throws IOException {
-            return domainsReader.hasRemaining();
+            if (next != null)
+                return true;
+            next = getNext();
+            return next != null;
         }
 
         public KeywordsProjection next() throws IOException {
+            if (hasMore()) {
+                var ret = next;
+                next = null;
+                return ret;
+            }
+            throw new IllegalStateException("No more records");
+        }
+
+        @Nullable
+        private KeywordsProjection getNext() throws IOException {
+            if (!find(statesColumnReader, "OK"))
+                return null;
+
             String domain = domainsReader.get();
-            int ordinal = (int) ordinalsReader.get();
+            int ordinal = ordinalsReader.get();
             int htmlFeatures = htmlFeaturesReader.get();
             long documentMetadata = domainMetadataReader.get();
             int length = lengthsReader.get();
-            List<String> words = new ArrayList<>();
 
-            List<CodedSequence> positions = new ArrayList<>();
-
-            int termCounts = (int) termCountsReader.get();
-            byte[] metas = new byte[termCounts];
-
-            for (int i = 0; i < termCounts; i++) {
-                metas[i] = termMetaReader.get();
-                words.add(keywordsReader.get());
-                positions.add(termPositionsReader.get(workBuffer));
-            }
-
+            List<String> words = keywordsReader.get();
+            List<GammaCodedSequence> positions = termPositionsReader.get();
+            byte[] metas = termMetaReader.get();
             byte[] spanCodes = spanCodesReader.get();
-
-            List<CodedSequence> spans = new ArrayList<>(spanCodes.length);
-            for (int i = 0; i < spanCodes.length; i++) {
-                spans.add(spansReader.get(workBuffer));
-            }
+            List<GammaCodedSequence> spans = spansReader.get();
 
             return new KeywordsProjection(
                     domain,
@@ -210,6 +241,9 @@ public record SlopDocumentRecord(
         private final VarintColumnReader ordinalsReader;
         private final StringColumnReader titlesReader;
         private final StringColumnReader descriptionsReader;
+
+        private final StringColumnReader statesColumnReader;
+
         private final IntColumnReader htmlFeaturesReader;
         private final StringColumnReader htmlStandardsReader;
         private final IntColumnReader lengthsReader;
@@ -222,6 +256,7 @@ public record SlopDocumentRecord(
         }
 
         public MetadataReader(Path baseDir, int page) throws IOException {
+            this.statesColumnReader = statesColumn.forPage(page).open(this, baseDir);
             this.domainsReader = domainsColumn.forPage(page).open(this, baseDir);
             this.urlsReader = urlsColumn.forPage(page).open(this, baseDir);
             this.ordinalsReader = ordinalsColumn.forPage(page).open(this, baseDir);
@@ -235,7 +270,29 @@ public record SlopDocumentRecord(
             this.pubYearReader = pubYearColumn.forPage(page).open(this, baseDir);
         }
 
+        MetadataProjection next = null;
+
+        public boolean hasMore() throws IOException {
+            if (next != null)
+                return true;
+
+            return (next = getNext()) != null;
+        }
+
         public MetadataProjection next() throws IOException {
+            if (hasMore()) {
+                var ret = next;
+                next = null;
+                return ret;
+            }
+            throw new IllegalStateException("No more records");
+        }
+
+
+        private MetadataProjection getNext() throws IOException {
+            if (!find(statesColumnReader, "OK"))
+                return null;
+
             int pubYear = pubYearReader.get();
             return new MetadataProjection(
                     domainsReader.get(),
@@ -250,10 +307,6 @@ public record SlopDocumentRecord(
                     qualitiesReader.get(),
                     pubYear < 0 ? null : pubYear
             );
-        }
-
-        public boolean hasNext() throws IOException {
-            return domainsReader.hasRemaining();
         }
 
     }
@@ -273,12 +326,11 @@ public record SlopDocumentRecord(
         private final FloatColumnWriter qualitiesWriter;
         private final LongColumnWriter domainMetadataWriter;
         private final IntColumnWriter pubYearWriter;
-        private final VarintColumnWriter termCountsWriter;
-        private final StringColumnWriter keywordsWriter;
-        private final ByteColumnWriter termMetaWriter;
-        private final GammaCodedSequenceWriter termPositionsWriter;
+        private final ObjectArrayColumnWriter<String> keywordsWriter;
+        private final ByteArrayColumnWriter termMetaWriter;
+        private final GammaCodedSequenceArrayWriter termPositionsWriter;
         private final ByteArrayColumnWriter spansCodesWriter;
-        private final GammaCodedSequenceWriter spansWriter;
+        private final GammaCodedSequenceArrayWriter spansWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
             domainsWriter = domainsColumn.forPage(page).create(this, baseDir);
@@ -295,14 +347,13 @@ public record SlopDocumentRecord(
             qualitiesWriter = qualitiesColumn.forPage(page).create(this, baseDir);
             domainMetadataWriter = domainMetadata.forPage(page).create(this, baseDir);
             pubYearWriter = pubYearColumn.forPage(page).create(this, baseDir);
-            termCountsWriter = termCountsColumn.forPage(page).create(this, baseDir);
 
-            keywordsWriter = keywordsColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
-            termMetaWriter = termMetaColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
-            termPositionsWriter = termPositionsColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
+            keywordsWriter = keywordsColumn.forPage(page).create(this, baseDir);
+            termMetaWriter = termMetaColumn.forPage(page).create(this, baseDir);
+            termPositionsWriter = termPositionsColumn.forPage(page).create(this, baseDir);
 
             spansCodesWriter = spanCodesColumn.forPage(page).create(this, baseDir);
-            spansWriter = spansColumn.forPage(page).create(this.columnGroup("spans"), baseDir);
+            spansWriter = spansColumn.forPage(page).create(this, baseDir);
         }
 
         public void write(SlopDocumentRecord record) throws IOException {
@@ -326,26 +377,11 @@ public record SlopDocumentRecord(
                 pubYearWriter.put(record.pubYear());
             }
 
-            byte[] termMetadata = record.metas();
-            List<String> keywords = record.words();
-            List<CodedSequence> termPositions = record.positions();
-
-            termCountsWriter.put(termMetadata.length);
-
-            for (int i = 0; i < termMetadata.length; i++) {
-                termMetaWriter.put(termMetadata[i]);
-                keywordsWriter.put(keywords.get(i));
-
-                termPositionsWriter.put((GammaCodedSequence) termPositions.get(i));
-            }
-
-            assert record.spanCodes().length == record.spans.size() : "Span codes and spans must have the same length";
-
+            keywordsWriter.put(record.words());
+            termMetaWriter.put(record.metas());
+            termPositionsWriter.put(record.positions());
             spansCodesWriter.put(record.spanCodes());
-            for (var span : record.spans) {
-                spansWriter.put((GammaCodedSequence) span);
-            }
-
+            spansWriter.put(record.spans());
         }
     }
 }

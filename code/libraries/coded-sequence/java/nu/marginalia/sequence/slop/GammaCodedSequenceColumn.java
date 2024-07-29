@@ -100,7 +100,7 @@ public class GammaCodedSequenceColumn {
         @Override
         public void skip(long positions) throws IOException {
             for (int i = 0; i < positions; i++) {
-                int size = (int) indexReader.get();
+                int size = indexReader.get();
                 storage.skip(size, 1);
             }
         }
@@ -115,20 +115,19 @@ public class GammaCodedSequenceColumn {
         }
 
         @Override
-        public GammaCodedSequence get(ByteBuffer workArea) throws IOException {
-            int size = (int) indexReader.get();
+        public GammaCodedSequence get() throws IOException {
+            int size = indexReader.get();
 
-            workArea.clear();
-            workArea.limit(size);
-            storage.getBytes(workArea);
-            workArea.flip();
+            ByteBuffer dest = ByteBuffer.allocate(size);
+            storage.getBytes(dest);
+            dest.flip();
 
-            return new GammaCodedSequence(workArea);
+            return new GammaCodedSequence(dest);
         }
 
         @Override
         public void getData(ByteBuffer workArea) throws IOException {
-            int size = (int) indexReader.get();
+            int size = indexReader.get();
 
             int oldLimit = workArea.limit();
             workArea.limit(workArea.position() + size);

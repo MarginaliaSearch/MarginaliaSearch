@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class ForwardIndexConverter {
 
@@ -91,7 +92,7 @@ public class ForwardIndexConverter {
                     var sizeReader = instance.openSize(slopTable);
 
                     var spansCodesReader = instance.openSpanCodes(slopTable);
-                    var spansSeqReader = instance.openSpans(slopTable.columnGroup("spans"));
+                    var spansSeqReader = instance.openSpans(slopTable);
 
                     while (docIdReader.hasRemaining()) {
                         long docId = docIdReader.get();
@@ -111,13 +112,11 @@ public class ForwardIndexConverter {
                         byte[] spansCodes = spansCodesReader.get();
 
                         spansWriter.beginRecord(spansCodes.length);
+                        workArea.clear();
+                        List<ByteBuffer> spans = spansSeqReader.getData(workArea);
 
                         for (int i = 0; i < spansCodes.length; i++) {
-                            workArea.clear();
-                            spansSeqReader.getData(workArea);
-                            workArea.flip();
-
-                            spansWriter.writeSpan(spansCodes[i], workArea);
+                            spansWriter.writeSpan(spansCodes[i], spans.get(i));
                         }
 
                         long encodedSpansOffset = spansWriter.endRecord();

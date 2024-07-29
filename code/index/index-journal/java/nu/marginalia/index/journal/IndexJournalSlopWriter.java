@@ -3,11 +3,9 @@ package nu.marginalia.index.journal;
 import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.processed.SlopDocumentRecord;
-import nu.marginalia.sequence.CodedSequence;
-import nu.marginalia.sequence.GammaCodedSequence;
-import nu.marginalia.sequence.slop.GammaCodedSequenceWriter;
+import nu.marginalia.sequence.slop.GammaCodedSequenceArrayWriter;
 import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
-import nu.marginalia.slop.column.primitive.ByteColumnWriter;
+import nu.marginalia.slop.column.array.LongArrayColumnWriter;
 import nu.marginalia.slop.column.primitive.IntColumnWriter;
 import nu.marginalia.slop.column.primitive.LongColumnWriter;
 import nu.marginalia.slop.desc.SlopTable;
@@ -24,12 +22,11 @@ public class IndexJournalSlopWriter extends SlopTable {
     private final LongColumnWriter combinedIdWriter;
     private final LongColumnWriter documentMetaWriter;
 
-    private final LongColumnWriter termCountsWriter;
-    private final LongColumnWriter termIdsWriter;
-    private final ByteColumnWriter termMetadataWriter;
-    private final GammaCodedSequenceWriter termPositionsWriter;
+    private final LongArrayColumnWriter termIdsWriter;
+    private final ByteArrayColumnWriter termMetadataWriter;
+    private final GammaCodedSequenceArrayWriter termPositionsWriter;
 
-    private final GammaCodedSequenceWriter spansWriter;
+    private final GammaCodedSequenceArrayWriter spansWriter;
     private final ByteArrayColumnWriter spanCodesWriter;
 
     private static final MurmurHash3_128 hash = new MurmurHash3_128();
@@ -46,14 +43,12 @@ public class IndexJournalSlopWriter extends SlopTable {
         combinedIdWriter = IndexJournalPage.combinedId.forPage(page).create(this, dir);
         documentMetaWriter = IndexJournalPage.documentMeta.forPage(page).create(this, dir);
 
-        termCountsWriter = IndexJournalPage.termCounts.forPage(page).create(this, dir);
-
-        termIdsWriter = IndexJournalPage.termIds.forPage(page).create(this.columnGroup("keywords"), dir);
-        termMetadataWriter = IndexJournalPage.termMeta.forPage(page).create(this.columnGroup("keywords"), dir);
-        termPositionsWriter = IndexJournalPage.positions.forPage(page).create(this.columnGroup("keywords"), dir);
+        termIdsWriter = IndexJournalPage.termIds.forPage(page).create(this, dir);
+        termMetadataWriter = IndexJournalPage.termMeta.forPage(page).create(this, dir);
+        termPositionsWriter = IndexJournalPage.positions.forPage(page).create(this, dir);
 
         spanCodesWriter = IndexJournalPage.spanCodes.forPage(page).create(this, dir);
-        spansWriter = IndexJournalPage.spans.forPage(page).create(this.columnGroup("spans"), dir);
+        spansWriter = IndexJournalPage.spans.forPage(page).create(this, dir);
     }
 
     @SneakyThrows
@@ -67,9 +62,6 @@ public class IndexJournalSlopWriter extends SlopTable {
         // -- write keyword data --
 
         final List<String> keywords = keywordsProjection.words();
-        byte[] termMetadata = keywordsProjection.metas();
-
-        termCountsWriter.put(keywords.size());
 
         // termIds are the special hashes of the keywords
         long[] termIds = new long[keywordsProjection.words().size()];
@@ -77,19 +69,14 @@ public class IndexJournalSlopWriter extends SlopTable {
             termIds[i] = hash.hashKeyword(keywords.get(i));
         }
 
-        List<CodedSequence> termPositions = keywordsProjection.positions();
-        for (int i = 0; i < termMetadata.length; i++) {
-            termMetadataWriter.put(termMetadata[i]);
-            termIdsWriter.put(termIds[i]);
-            termPositionsWriter.put((GammaCodedSequence) termPositions.get(i));
-        }
+        termIdsWriter.put(termIds);
+        termPositionsWriter.put(keywordsProjection.positions());
+        termMetadataWriter.put(keywordsProjection.metas());
 
         // -- write spans --
 
         spanCodesWriter.put(keywordsProjection.spanCodes());
-        for (var span : keywordsProjection.spans()) {
-            spansWriter.put((GammaCodedSequence) span);
-        }
+        spansWriter.put(keywordsProjection.spans());
     }
 
     public void close() throws IOException {
@@ -97,7 +84,6 @@ public class IndexJournalSlopWriter extends SlopTable {
         sizeWriter.close();
         combinedIdWriter.close();
         documentMetaWriter.close();
-        termCountsWriter.close();
         termIdsWriter.close();
         termMetadataWriter.close();
         termPositionsWriter.close();

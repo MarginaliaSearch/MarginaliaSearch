@@ -1,10 +1,10 @@
 package nu.marginalia.slop.column.string;
 
-import nu.marginalia.slop.column.ColumnWriter;
+import nu.marginalia.slop.column.ObjectColumnWriter;
 
 import java.io.IOException;
 
-public interface StringColumnWriter extends ColumnWriter, AutoCloseable {
+public interface StringColumnWriter extends ObjectColumnWriter<String>, AutoCloseable {
     void put(String value) throws IOException;
 
     @Override

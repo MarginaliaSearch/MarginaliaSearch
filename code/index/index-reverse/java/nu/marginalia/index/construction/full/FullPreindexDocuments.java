@@ -17,6 +17,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -76,13 +77,12 @@ public class FullPreindexDocuments {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
-        final ByteBuffer tempBuffer = ByteBuffer.allocate(65536);
+        final ByteBuffer tempBuffer = ByteBuffer.allocate(1024*1024*100);
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
              var slopTable = new SlopTable())
         {
             var docIds = journalInstance.openCombinedId(slopTable);
-            var termCounts = journalInstance.openTermCounts(slopTable);
             var termIds = journalInstance.openTermIds(slopTable);
             var termMeta = journalInstance.openTermMetadata(slopTable);
             var positions = journalInstance.openTermPositions(slopTable);
@@ -90,23 +90,22 @@ public class FullPreindexDocuments {
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
-            while (termCounts.hasRemaining()) {
+            while (docIds.hasRemaining()) {
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
-                long termCount = termCounts.get();
+                long[] tIds = termIds.get();
+                byte[] tMeta = termMeta.get();
+                tempBuffer.clear();
+                List<ByteBuffer> tPos = positions.getData(tempBuffer);
 
-                for (int termIdx = 0; termIdx < termCount; termIdx++) {
-                    long termId = termIds.get();
-                    byte meta = termMeta.get();
-
-                    // Read positions
-                    tempBuffer.clear();
-                    positions.getData(tempBuffer);
-                    tempBuffer.flip();
+                for (int i = 0; i < tIds.length; i++) {
+                    long termId = tIds[i];
+                    byte meta = tMeta[i];
+                    ByteBuffer pos = tPos.get(i);
 
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
-                    long encodedPosOffset = positionsFileConstructor.add(meta, tempBuffer);
+                    long encodedPosOffset = positionsFileConstructor.add(meta, pos);
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);

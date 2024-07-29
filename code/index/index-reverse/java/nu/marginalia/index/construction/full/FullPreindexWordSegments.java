@@ -63,7 +63,10 @@ public class FullPreindexWordSegments {
         try (var slopTable = new SlopTable()) {
             var termIds = journalInstance.openTermIds(slopTable);
             while (termIds.hasRemaining()) {
-                countsMap.addTo(termIds.get(), 1);
+                long[] tids = termIds.get();
+                for (long termId : tids) {
+                    countsMap.addTo(termId, 1);
+                }
             }
         }
 

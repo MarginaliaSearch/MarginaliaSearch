@@ -8,7 +8,6 @@ import lombok.Getter;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.idx.CodedWordSpan;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,7 @@ public class DocumentKeywordsBuilder {
     public DocumentKeywords build(ByteBuffer workArea) {
         final List<String> wordArray = new ArrayList<>(wordToMeta.size());
         final TByteArrayList meta = new TByteArrayList(wordToMeta.size());
-        final List<CodedSequence> positions = new ArrayList<>(wordToMeta.size());
+        final List<GammaCodedSequence> positions = new ArrayList<>(wordToMeta.size());
 
         var iter = wordToMeta.object2ByteEntrySet().fastIterator();
 

@@ -50,7 +50,7 @@ public class DocumentLoaderService {
                 try (var reader = new SlopDocumentRecord.MetadataReader(pageRef);
                      LinkdbLoader loader = new LinkdbLoader(domainIdRegistry))
                 {
-                    while (reader.hasNext()) {
+                    while (reader.hasMore()) {
                         loader.accept(reader.next());
                     }
                 }

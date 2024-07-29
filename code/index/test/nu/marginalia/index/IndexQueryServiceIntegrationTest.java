@@ -33,7 +33,6 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
@@ -545,7 +544,7 @@ public class IndexQueryServiceIntegrationTest {
                     metadata[i] = (byte) words.get(i).termMetadata;
                 }
 
-                List<CodedSequence> positions = new ArrayList<>();
+                List<GammaCodedSequence> positions = new ArrayList<>();
                 ByteBuffer workBuffer = ByteBuffer.allocate(8192);
                 for (int i = 0; i < words.size(); i++) {
                     positions.add(GammaCodedSequence.generate(workBuffer, words.get(i).positions));

@@ -1,10 +1,10 @@
 package nu.marginalia.slop.column.string;
 
-import nu.marginalia.slop.column.ColumnReader;
+import nu.marginalia.slop.column.ObjectColumnReader;
 
 import java.io.IOException;
 
-public interface StringColumnReader extends ColumnReader, AutoCloseable {
+public interface StringColumnReader extends ObjectColumnReader<String>, AutoCloseable {
 
     String get() throws IOException;
 

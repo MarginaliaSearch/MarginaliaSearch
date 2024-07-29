@@ -29,7 +29,6 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
@@ -364,7 +363,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
             metadata[i] = WordFlags.Title.asBit();
         }
 
-        List<CodedSequence> positions = new ArrayList<>();
+        List<GammaCodedSequence> positions = new ArrayList<>();
 
         ByteBuffer wa = ByteBuffer.allocate(32);
         for (int i = 0; i < factors.length; i++) {
@@ -404,7 +403,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
             metadata[i] = WordFlags.Title.asBit();
         }
 
-        List<CodedSequence> positions = new ArrayList<>();
+        List<GammaCodedSequence> positions = new ArrayList<>();
 
         ByteBuffer wa = ByteBuffer.allocate(32);
         for (int i = 0; i < factors.length; i++) {

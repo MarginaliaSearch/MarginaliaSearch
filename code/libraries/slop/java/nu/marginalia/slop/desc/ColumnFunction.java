@@ -9,6 +9,8 @@ public enum ColumnFunction {
     DATA("dat"),
     /** The length column for the DATA column, in the case of variable-length records. */
     DATA_LEN("dat-len"),
+    /** The length column for the group of items in the DATA column, in the case of variable-length array-style records. */
+    GROUP_LENGTH("grp-len"),
     /** The dictionary column, in the case of a dictionary-encoded column. */
     DICT("dic"),
     /** The length column for the DICT column, in the case of variable-length dictionaries. */

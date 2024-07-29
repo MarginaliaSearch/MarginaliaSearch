@@ -2,8 +2,7 @@ package nu.marginalia.slop.desc;
 
 import nu.marginalia.slop.column.ColumnReader;
 import nu.marginalia.slop.column.ColumnWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import nu.marginalia.slop.column.ObjectColumnReader;
 
 import java.io.IOException;
 import java.util.*;
@@ -24,29 +23,33 @@ import java.util.*;
  */
 
 public class SlopTable implements AutoCloseable {
-    private final List<ColumnReader> readerList = new ArrayList<>();
-    private final List<ColumnWriter> writerList = new ArrayList<>();
-
-    private final Map<String, SlopTable> columnGroups = new HashMap<>();
-
-    private static final Logger logger = LoggerFactory.getLogger(SlopTable.class);
-
-    /** Create a SlopTable corresponding to a grouping of  columns that have their own
-     * internal consistency check.  This is needed e.g. for grouped values.  The table is
-     * closed automatically by the current instance.
-     */
-    public SlopTable columnGroup(String name) {
-        return columnGroups.computeIfAbsent(name, k -> new SlopTable());
-    }
+    private final Set<ColumnReader> readerList = new HashSet<>();
+    private final Set<ColumnWriter> writerList = new HashSet<>();
 
     /** Register a column reader with this table.  This is called from ColumnDesc. */
     void register(ColumnReader reader) {
-        readerList.add(reader);
+        if (!readerList.add(reader))
+            System.err.println("Double registration of " + reader);
     }
 
     /** Register a column reader with this table.  This is called from ColumnDesc. */
     void register(ColumnWriter writer) {
-        writerList.add(writer);
+        if (!writerList.add(writer))
+            System.err.println("Double registration of " + writer);
+    }
+
+    protected <T> boolean find(ObjectColumnReader<T> column, T value) throws IOException {
+        boolean ret = column.search(value);
+
+        long desiredPos = column.position() - 1;
+
+        for (var otherReader : readerList) {
+            if (otherReader.position() < desiredPos) {
+                otherReader.skip(desiredPos - otherReader.position());
+            }
+        }
+
+        return ret;
     }
 
     public void close() throws IOException {
@@ -70,7 +73,7 @@ public class SlopTable implements AutoCloseable {
 
         var zeroPositions = Objects.requireNonNullElseGet(positions.remove(0L), List::of);
         if (!zeroPositions.isEmpty() && !positions.isEmpty()) {
-            logger.warn("Zero position found in {}, this is likely development debris", zeroPositions);
+            System.err.println("Zero position found in {}, this is likely development debris" + zeroPositions);
         }
 
         // If there are more than one position and several are non-zero, then we haven't maintained the
@@ -78,11 +81,6 @@ public class SlopTable implements AutoCloseable {
         if (positions.size() > 1) {
             throw new IllegalStateException("Expected only one reader position, found " + positions);
         }
-
-        for (var table : columnGroups.values()) {
-            table.close();
-        }
-
     }
 
 }

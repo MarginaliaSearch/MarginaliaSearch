@@ -4,6 +4,7 @@ import nu.marginalia.slop.column.dynamic.VarintColumn;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
+import nu.marginalia.slop.desc.ColumnFunction;
 import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.StorageType;
 import nu.marginalia.slop.storage.Storage;
@@ -19,10 +20,7 @@ public class LongArrayColumn {
         return new LongArrayColumn.Reader(
                 columnDesc,
                 Storage.reader(path, columnDesc, true),
-                VarintColumn.open(path, columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
-                        ColumnType.VARINT_LE,
-                        StorageType.PLAIN)
-                )
+                VarintColumn.open(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN, ColumnType.VARINT_LE, StorageType.PLAIN))
         );
     }
 
@@ -30,11 +28,16 @@ public class LongArrayColumn {
         return new LongArrayColumn.Writer(
                 columnDesc,
                 Storage.writer(path, columnDesc),
-                VarintColumn.create(path, columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
-                        ColumnType.VARINT_LE,
-                        StorageType.PLAIN)
-                )
+                VarintColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN, ColumnType.VARINT_LE, StorageType.PLAIN))
         );
+    }
+
+    public static ObjectArrayColumnReader<long[]> openNested(Path path, ColumnDesc desc) throws IOException {
+        return ObjectArrayColumn.open(path, desc, open(path, desc));
+    }
+
+    public static ObjectArrayColumnWriter<long[]> createNested(Path path, ColumnDesc desc) throws IOException {
+        return ObjectArrayColumn.create(path, desc, create(path, desc));
     }
 
     private static class Writer implements LongArrayColumnWriter {

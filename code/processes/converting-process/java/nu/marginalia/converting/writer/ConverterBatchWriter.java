@@ -12,7 +12,7 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
 import nu.marginalia.model.processed.SlopDomainRecord;
-import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.sequence.GammaCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,10 +120,10 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                 var wb = document.words.build(workArea);
                 List<String> words = wb.keywords;
                 byte[] metas = wb.metadata;
-                List<CodedSequence> positions = wb.positions;
+                List<GammaCodedSequence> positions = wb.positions;
 
 
-                List<CodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
+                List<GammaCodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
                 byte[] spanCodes = new byte[wb.spans.size()];
 
                 for (int i = 0; i < wb.spans.size(); i++) {

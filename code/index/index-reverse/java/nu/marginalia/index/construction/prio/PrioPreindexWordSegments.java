@@ -65,11 +65,13 @@ public class PrioPreindexWordSegments {
             var termMetas = journalInstance.openTermMetadata(slopTable);
 
             while (termIds.hasRemaining()) {
-                long data = termIds.get();
-                byte meta = termMetas.get();
+                long[] data = termIds.get();
+                byte[] meta = termMetas.get();
 
-                if (meta != 0) {
-                    countsMap.addTo(data, 1);
+                for (int i = 0; i < data.length; i++) {
+                    if (meta[i] != 0) {
+                        countsMap.addTo(data[i], 1);
+                    }
                 }
             }
         }

@@ -27,7 +27,7 @@ public interface Storage {
         } else {
             final int bufferSize = switch(columnDesc.function()) {
                 case DATA -> 4096;
-                case DATA_LEN, DICT, DICT_LEN -> 1024;
+                default -> 1024;
             };
 
             return switch (storageType) {
@@ -50,7 +50,7 @@ public interface Storage {
 
         final int bufferSize = switch(columnDesc.function()) {
             case DATA -> 4096;
-            case DATA_LEN, DICT, DICT_LEN -> 1024;
+            default -> 1024;
         };
 
         return switch (storageType) {

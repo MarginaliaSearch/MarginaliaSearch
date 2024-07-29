@@ -71,21 +71,23 @@ public class PrioPreindexDocuments {
              var slopTable = new SlopTable())
         {
             var docIds = journalInstance.openCombinedId(slopTable);
-            var termIdsCounts = journalInstance.openTermCounts(slopTable);
             var termIds = journalInstance.openTermIds(slopTable);
             var termMeta = journalInstance.openTermMetadata(slopTable);
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
+
             while (docIds.hasRemaining()) {
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
-                long termCount = termIdsCounts.get();
-                for (int termIdx = 0; termIdx < termCount; termIdx++) {
-                    long termId = termIds.get();
-                    byte meta = termMeta.get();
+                long[] tIds = termIds.get();
+                byte[] tMeta = termMeta.get();
+
+                for (int i = 0; i < tIds.length; i++) {
+                    long termId = tIds[i];
+                    byte meta = tMeta[i];
 
                     if (meta != 0) {
                         long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);

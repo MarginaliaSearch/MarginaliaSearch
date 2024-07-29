@@ -24,7 +24,7 @@ public abstract class ColumnType<
     public abstract ByteOrder byteOrder();
 
     abstract R open(Path path, ColumnDesc<R, W> desc) throws IOException;
-    abstract W register(Path path, ColumnDesc<R, W> desc) throws IOException;
+    abstract W create(Path path, ColumnDesc<R, W> desc) throws IOException;
 
     public static ColumnType<? extends ColumnReader,? extends ColumnWriter> byMnemonic(String mnemonic) {
         return byMnemonic.get(mnemonic);
@@ -46,19 +46,31 @@ public abstract class ColumnType<
     public static ColumnType<VarintColumnReader, VarintColumnWriter> VARINT_LE = register("varintle", ByteOrder.LITTLE_ENDIAN, VarintColumn::open, VarintColumn::create);
     public static ColumnType<VarintColumnReader, VarintColumnWriter> VARINT_BE = register("varintbe", ByteOrder.BIG_ENDIAN, VarintColumn::open, VarintColumn::create);
     public static ColumnType<CustomBinaryColumnReader, CustomBinaryColumnWriter> BYTE_ARRAY_CUSTOM = register("s8[]+custom", ByteOrder.nativeOrder(), CustomBinaryColumn::open, CustomBinaryColumn::create);
+
     public static ColumnType<StringColumnReader, StringColumnWriter> STRING = register("s8[]+str", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> CSTRING = register("s8+cstr", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
     public static ColumnType<StringColumnReader, StringColumnWriter> TXTSTRING = register("s8+txt", ByteOrder.nativeOrder(), StringColumn::open, StringColumn::create);
+
 
     public static ColumnType<EnumColumnReader, StringColumnWriter> ENUM_8 = register("u8+enum", ByteOrder.LITTLE_ENDIAN, EnumColumn::open8, EnumColumn::create8);
     public static ColumnType<EnumColumnReader, StringColumnWriter> ENUM_LE = register("varintle+enum", ByteOrder.LITTLE_ENDIAN, EnumColumn::open, EnumColumn::create);
     public static ColumnType<EnumColumnReader, StringColumnWriter> ENUM_BE = register("varintbe+enum", ByteOrder.BIG_ENDIAN, EnumColumn::open, EnumColumn::create);
 
     public static ColumnType<ByteArrayColumnReader, ByteArrayColumnWriter> BYTE_ARRAY = register("s8[]", ByteOrder.nativeOrder(), ByteArrayColumn::open, ByteArrayColumn::create);
-    public static ColumnType<IntArrayColumnReader, IntArrayColumnWriter> INT_ARRAY_LE = register("s32le[]", ByteOrder.LITTLE_ENDIAN, IntArrayColumn::open, IntArrayColumn::create);
-    public static ColumnType<IntArrayColumnReader, IntArrayColumnWriter> INT_ARRAY_BE = register("s32be[]", ByteOrder.BIG_ENDIAN, IntArrayColumn::open, IntArrayColumn::create);
+    public static ColumnType<ObjectArrayColumnReader<byte[]>, ObjectArrayColumnWriter<byte[]>> BYTE_ARRAY_ARRAY = register("s8[][]", ByteOrder.nativeOrder(), ByteArrayColumn::openNested, ByteArrayColumn::createNested);
     public static ColumnType<LongArrayColumnReader, LongArrayColumnWriter> LONG_ARRAY_LE = register("s64le[]", ByteOrder.LITTLE_ENDIAN, LongArrayColumn::open, LongArrayColumn::create);
     public static ColumnType<LongArrayColumnReader, LongArrayColumnWriter> LONG_ARRAY_BE = register("s64be[]", ByteOrder.BIG_ENDIAN, LongArrayColumn::open, LongArrayColumn::create);
+
+    public static ColumnType<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> STRING_ARRAY = register("s8[]+str[]", ByteOrder.nativeOrder(), StringColumn::openArray, StringColumn::createArray);
+    public static ColumnType<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> CSTRING_ARRAY = register("s8+cstr[]", ByteOrder.nativeOrder(), StringColumn::openArray, StringColumn::createArray);
+    public static ColumnType<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> TXTSTRING_ARRAY = register("s8+txt", ByteOrder.nativeOrder(), StringColumn::openArray, StringColumn::createArray);
+
+    public static ColumnType<IntArrayColumnReader, IntArrayColumnWriter> INT_ARRAY_LE = register("s32le[]", ByteOrder.LITTLE_ENDIAN, IntArrayColumn::open, IntArrayColumn::create);
+    public static ColumnType<IntArrayColumnReader, IntArrayColumnWriter> INT_ARRAY_BE = register("s32be[]", ByteOrder.BIG_ENDIAN, IntArrayColumn::open, IntArrayColumn::create);
+    public static ColumnType<ObjectArrayColumnReader<int[]>, ObjectArrayColumnWriter<int[]>> INT_ARRAY_ARRAY_LE = register("s32le[][]", ByteOrder.LITTLE_ENDIAN, IntArrayColumn::openNested, IntArrayColumn::createNested);
+    public static ColumnType<ObjectArrayColumnReader<int[]>, ObjectArrayColumnWriter<int[]>> INT_ARRAY_ARRAY_BE = register("s32be[][]", ByteOrder.BIG_ENDIAN, IntArrayColumn::openNested, IntArrayColumn::createNested);
+    public static ColumnType<ObjectArrayColumnReader<long[]>, ObjectArrayColumnWriter<long[]>> LONG_ARRAY_ARRAY_LE = register("s64le[][]", ByteOrder.LITTLE_ENDIAN, LongArrayColumn::openNested, LongArrayColumn::createNested);
+    public static ColumnType<ObjectArrayColumnReader<long[]>, ObjectArrayColumnWriter<long[]>> LONG_ARRAY_ARRAY_BE = register("s64be[][]", ByteOrder.BIG_ENDIAN, LongArrayColumn::openNested, LongArrayColumn::createNested);
 
     public interface ColumnOpener<T extends ColumnReader> {
         T open(Path path, ColumnDesc desc) throws IOException;
@@ -91,7 +103,7 @@ public abstract class ColumnType<
             }
 
             @Override
-            public W register(Path path, ColumnDesc<R, W> desc) throws IOException {
+            public W create(Path path, ColumnDesc<R, W> desc) throws IOException {
                 return writerCons.create(path, desc);
             }
         };

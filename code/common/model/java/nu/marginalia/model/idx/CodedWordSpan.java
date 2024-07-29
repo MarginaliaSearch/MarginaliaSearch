@@ -1,11 +1,11 @@
 package nu.marginalia.model.idx;
 
-import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.util.List;
 
-public record CodedWordSpan(byte code, CodedSequence spans) {
-    public static SplitSpansList fromSplit(String codes, List<CodedSequence> spans) {
+public record CodedWordSpan(byte code, GammaCodedSequence spans) {
+    public static SplitSpansList fromSplit(String codes, List<GammaCodedSequence> spans) {
         return new SplitSpansList(codes, spans);
     }
     public static SplitSpansList split(List<CodedWordSpan> spanList) {
@@ -19,7 +19,7 @@ public record CodedWordSpan(byte code, CodedSequence spans) {
             );
     }
 
-    public record SplitSpansList(String codes, List<CodedSequence> spans) {
+    public record SplitSpansList(String codes, List<GammaCodedSequence> spans) {
         public List<CodedWordSpan> unite() {
             if (null == codes) {
                 return List.of();

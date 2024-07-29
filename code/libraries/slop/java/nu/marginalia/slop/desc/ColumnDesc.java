@@ -53,9 +53,17 @@ public record ColumnDesc<R extends ColumnReader,
      * @param path the path to the file to write to
      * */
     public W create(SlopTable table, Path path) throws IOException {
-        var writer = type.register(path, this);
+        var writer = type.create(path, this);
         table.register(writer);
         return writer;
+    }
+
+    public W createUnregistered(Path path) throws IOException {
+        return type.create(path, this);
+    }
+
+    public R openUnregistered(Path path) throws IOException {
+        return type.open(path, this);
     }
 
     public <R2 extends ColumnReader, W2 extends ColumnWriter >

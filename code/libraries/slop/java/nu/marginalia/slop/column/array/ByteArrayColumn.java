@@ -4,6 +4,7 @@ import nu.marginalia.slop.column.dynamic.VarintColumn;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
+import nu.marginalia.slop.desc.ColumnFunction;
 import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.StorageType;
 import nu.marginalia.slop.storage.Storage;
@@ -19,11 +20,7 @@ public class ByteArrayColumn {
         return new Reader(
                 columnDesc,
                 Storage.reader(path, columnDesc, true),
-                VarintColumn.open(path,
-                        columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
-                                ColumnType.VARINT_LE,
-                                StorageType.PLAIN)
-                )
+                VarintColumn.open(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN, ColumnType.VARINT_LE, StorageType.PLAIN))
         );
     }
 
@@ -31,12 +28,16 @@ public class ByteArrayColumn {
         return new Writer(
                 columnDesc,
                 Storage.writer(path, columnDesc),
-                VarintColumn.create(path,
-                        columnDesc.createSupplementaryColumn(columnDesc.function().lengthsTable(),
-                                ColumnType.VARINT_LE,
-                                StorageType.PLAIN)
-                )
+                VarintColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN, ColumnType.VARINT_LE, StorageType.PLAIN))
         );
+    }
+
+    public static ObjectArrayColumnReader<byte[]> openNested(Path path, ColumnDesc desc) throws IOException {
+        return ObjectArrayColumn.open(path, desc, open(path, desc));
+    }
+
+    public static ObjectArrayColumnWriter<byte[]> createNested(Path path, ColumnDesc desc) throws IOException {
+        return ObjectArrayColumn.create(path, desc, create(path, desc));
     }
 
     private static class Writer implements ByteArrayColumnWriter {
@@ -90,7 +91,7 @@ public class ByteArrayColumn {
         }
 
         public byte[] get() throws IOException {
-            int length = (int) lengthsReader.get();
+            int length = lengthsReader.get();
             byte[] ret = new byte[length];
             storage.getBytes(ret);
             return ret;
@@ -104,7 +105,7 @@ public class ByteArrayColumn {
         @Override
         public void skip(long positions) throws IOException {
             for (int i = 0; i < positions; i++) {
-                int size = (int) lengthsReader.get();
+                int size = lengthsReader.get();
                 storage.skip(size, 1);
             }
         }

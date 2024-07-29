@@ -1,8 +1,6 @@
 package nu.marginalia.slop.column.string;
 
-import nu.marginalia.slop.column.array.ByteArrayColumn;
-import nu.marginalia.slop.column.array.ByteArrayColumnReader;
-import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
+import nu.marginalia.slop.column.array.*;
 import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.storage.Storage;
@@ -25,6 +23,7 @@ public class StringColumn {
         throw new IllegalArgumentException("Unsupported column type: " + columnDesc.type());
     }
 
+
     public static StringColumnWriter create(Path path, ColumnDesc columnDesc) throws IOException {
         if (columnDesc.type().equals(ColumnType.STRING)) {
             return new ArrayWriter(columnDesc, ByteArrayColumn.create(path, columnDesc));
@@ -32,6 +31,28 @@ public class StringColumn {
             return new CStringWriter(columnDesc, Storage.writer(path, columnDesc));
         } else if (columnDesc.type().equals(ColumnType.TXTSTRING)) {
             return new TxtStringWriter(columnDesc, Storage.writer(path, columnDesc));
+        }
+        throw new IllegalArgumentException("Unsupported column type: " + columnDesc.type());
+    }
+
+    public static ObjectArrayColumnReader<String> openArray(Path path, ColumnDesc columnDesc) throws IOException {
+        if (columnDesc.type().equals(ColumnType.STRING_ARRAY)) {
+            return ObjectArrayColumn.open(path, columnDesc, new ArrayReader(columnDesc, ByteArrayColumn.open(path, columnDesc)));
+        } else if (columnDesc.type().equals(ColumnType.CSTRING_ARRAY)) {
+            return ObjectArrayColumn.open(path, columnDesc, new CStringReader(columnDesc, Storage.reader(path, columnDesc, true)));
+        } else if (columnDesc.type().equals(ColumnType.TXTSTRING_ARRAY)) {
+            return ObjectArrayColumn.open(path, columnDesc, new TxtStringReader(columnDesc, Storage.reader(path, columnDesc, true)));
+        }
+        throw new IllegalArgumentException("Unsupported column type: " + columnDesc.type());
+    }
+
+    public static ObjectArrayColumnWriter<String> createArray(Path path, ColumnDesc columnDesc) throws IOException {
+        if (columnDesc.type().equals(ColumnType.STRING_ARRAY)) {
+            return ObjectArrayColumn.create(path, columnDesc, new ArrayWriter(columnDesc, ByteArrayColumn.create(path, columnDesc)));
+        } else if (columnDesc.type().equals(ColumnType.CSTRING_ARRAY)) {
+            return ObjectArrayColumn.create(path, columnDesc, new CStringWriter(columnDesc, Storage.writer(path, columnDesc)));
+        } else if (columnDesc.type().equals(ColumnType.TXTSTRING_ARRAY)) {
+            return ObjectArrayColumn.create(path, columnDesc, new TxtStringWriter(columnDesc, Storage.writer(path, columnDesc)));
         }
         throw new IllegalArgumentException("Unsupported column type: " + columnDesc.type());
     }

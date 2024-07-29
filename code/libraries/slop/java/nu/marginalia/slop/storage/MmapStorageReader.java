@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-@SuppressWarnings("preview") // for MemorySegment
+@SuppressWarnings("preview") // for MemorySegment in jdk-21
 public class MmapStorageReader implements StorageReader {
     private final MemorySegment segment;
     private final Arena arena;

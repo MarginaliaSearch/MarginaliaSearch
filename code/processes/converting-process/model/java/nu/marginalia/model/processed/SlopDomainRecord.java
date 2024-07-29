@@ -1,5 +1,7 @@
 package nu.marginalia.model.processed;
 
+import nu.marginalia.slop.column.array.ObjectArrayColumnReader;
+import nu.marginalia.slop.column.array.ObjectArrayColumnWriter;
 import nu.marginalia.slop.column.primitive.IntColumnReader;
 import nu.marginalia.slop.column.primitive.IntColumnWriter;
 import nu.marginalia.slop.column.string.EnumColumnReader;
@@ -12,7 +14,6 @@ import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -41,8 +42,7 @@ public record SlopDomainRecord(
     private static final ColumnDesc<IntColumnReader, IntColumnWriter> goodUrlsColumn = new ColumnDesc<>("goodUrls", ColumnType.INT_LE, StorageType.PLAIN);
     private static final ColumnDesc<IntColumnReader, IntColumnWriter> visitedUrlsColumn = new ColumnDesc<>("visitedUrls", ColumnType.INT_LE, StorageType.PLAIN);
 
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> rssFeedsCountColumn = new ColumnDesc<>("rssFeeds", ColumnType.INT_LE, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> rssFeedsColumn = new ColumnDesc<>("rssFeeds", ColumnType.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> rssFeedsColumn = new ColumnDesc<>("rssFeeds", ColumnType.TXTSTRING_ARRAY, StorageType.GZIP);
 
 
     public static class DomainNameReader extends SlopTable {
@@ -101,8 +101,7 @@ public record SlopDomainRecord(
         private final IntColumnReader goodUrlsReader;
         private final IntColumnReader visitedUrlsReader;
 
-        private final IntColumnReader rssFeedsCountReader;
-        private final StringColumnReader rssFeedsReader;
+        private final ObjectArrayColumnReader<String> rssFeedsReader;
 
         public Reader(SlopPageRef<SlopDomainRecord> page) throws IOException {
             this(page.baseDir(), page.page());
@@ -118,8 +117,7 @@ public record SlopDomainRecord(
             goodUrlsReader = goodUrlsColumn.forPage(page).open(this, baseDir);
             visitedUrlsReader = visitedUrlsColumn.forPage(page).open(this, baseDir);
 
-            rssFeedsCountReader = rssFeedsCountColumn.forPage(page).open(this, baseDir);
-            rssFeedsReader = rssFeedsColumn.forPage(page).open(this.columnGroup("rssFeeds"), baseDir);
+            rssFeedsReader = rssFeedsColumn.forPage(page).open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -133,12 +131,6 @@ public record SlopDomainRecord(
         }
 
         public SlopDomainRecord next() throws IOException {
-            List<String> rssFeeds = new ArrayList<>();
-            int rssFeedsCount = rssFeedsCountReader.get();
-            for (int i = 0; i < rssFeedsCount; i++) {
-                rssFeeds.add(rssFeedsReader.get());
-            }
-
             return new SlopDomainRecord(
                     domainsReader.get(),
                     knownUrlsReader.get(),
@@ -147,7 +139,7 @@ public record SlopDomainRecord(
                     statesReader.get(),
                     redirectReader.get(),
                     ipReader.get(),
-                    rssFeeds
+                    rssFeedsReader.get()
             );
         }
     }
@@ -162,8 +154,7 @@ public record SlopDomainRecord(
         private final IntColumnWriter goodUrlsWriter;
         private final IntColumnWriter visitedUrlsWriter;
 
-        private final IntColumnWriter rssFeedsCountWriter;
-        private final StringColumnWriter rssFeedsWriter;
+        private final ObjectArrayColumnWriter<String> rssFeedsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
             domainsWriter = domainsColumn.forPage(page).create(this, baseDir);
@@ -175,8 +166,7 @@ public record SlopDomainRecord(
             goodUrlsWriter = goodUrlsColumn.forPage(page).create(this, baseDir);
             visitedUrlsWriter = visitedUrlsColumn.forPage(page).create(this, baseDir);
 
-            rssFeedsCountWriter = rssFeedsCountColumn.forPage(page).create(this, baseDir);
-            rssFeedsWriter = rssFeedsColumn.forPage(page).create(this.columnGroup("rssFeeds"), baseDir);
+            rssFeedsWriter = rssFeedsColumn.forPage(page).create(this, baseDir);
         }
 
         public void write(SlopDomainRecord record) throws IOException {
@@ -189,10 +179,7 @@ public record SlopDomainRecord(
             goodUrlsWriter.put(record.goodUrls());
             visitedUrlsWriter.put(record.visitedUrls());
 
-            rssFeedsCountWriter.put(record.rssFeeds().size());
-            for (String rssFeed : record.rssFeeds()) {
-                rssFeedsWriter.put(rssFeed);
-            }
+            rssFeedsWriter.put(record.rssFeeds());
         }
     }
 }

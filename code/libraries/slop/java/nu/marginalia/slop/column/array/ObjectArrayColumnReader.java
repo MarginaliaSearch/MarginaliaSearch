@@ -3,9 +3,10 @@ package nu.marginalia.slop.column.array;
 import nu.marginalia.slop.column.ObjectColumnReader;
 
 import java.io.IOException;
+import java.util.List;
 
-public interface IntArrayColumnReader extends ObjectColumnReader<int[]>, AutoCloseable {
-    int[] get() throws IOException;
+public interface ObjectArrayColumnReader<T> extends ObjectColumnReader<List<T>>, AutoCloseable {
+    List<T> get() throws IOException;
     void close() throws IOException;
 
 
