@@ -49,16 +49,6 @@ public record SlopDocumentRecord(
         List<GammaCodedSequence> spans
 ) {
 
-    /** Constructor for partial records */
-    public SlopDocumentRecord(String domain,
-                              String url,
-                              int ordinal,
-                              String state,
-                              String stateReason)
-    {
-        this(domain, url, ordinal, state, stateReason, "", "", 0, "", 0, 0L, 0.0f, 0L, null, List.of(), new byte[0], List.of(), new byte[0], List.of());
-    }
-
     public SlopDocumentRecord {
         if (spanCodes.length != spans.size())
             throw new IllegalArgumentException("Span codes and spans must have the same length");
@@ -154,8 +144,6 @@ public record SlopDocumentRecord(
         private final LongColumnReader domainMetadataReader;
         private final IntColumnReader lengthsReader;
 
-        private final StringColumnReader statesColumnReader;
-
         private final ObjectArrayColumnReader<String> keywordsReader;
         private final ByteArrayColumnReader termMetaReader;
         private final GammaCodedSequenceArrayReader termPositionsReader;
@@ -174,8 +162,6 @@ public record SlopDocumentRecord(
             domainMetadataReader = domainMetadata.forPage(page).open(this, baseDir);
             lengthsReader = lengthsColumn.forPage(page).open(this, baseDir);
 
-            statesColumnReader = statesColumn.forPage(page).open(this, baseDir);
-
             keywordsReader = keywordsColumn.forPage(page).open(this, baseDir);
             termMetaReader = termMetaColumn.forPage(page).open(this, baseDir);
             termPositionsReader = termPositionsColumn.forPage(page).open(this, baseDir);
@@ -184,29 +170,12 @@ public record SlopDocumentRecord(
             spansReader = spansColumn.forPage(page).open(this, baseDir);
         }
 
-        KeywordsProjection next = null;
-
         public boolean hasMore() throws IOException {
-            if (next != null)
-                return true;
-            next = getNext();
-            return next != null;
-        }
-
-        public KeywordsProjection next() throws IOException {
-            if (hasMore()) {
-                var ret = next;
-                next = null;
-                return ret;
-            }
-            throw new IllegalStateException("No more records");
+            return domainsReader.hasRemaining();
         }
 
         @Nullable
-        private KeywordsProjection getNext() throws IOException {
-            if (!find(statesColumnReader, "OK"))
-                return null;
-
+        public KeywordsProjection next() throws IOException {
             String domain = domainsReader.get();
             int ordinal = ordinalsReader.get();
             int htmlFeatures = htmlFeaturesReader.get();
@@ -242,8 +211,6 @@ public record SlopDocumentRecord(
         private final StringColumnReader titlesReader;
         private final StringColumnReader descriptionsReader;
 
-        private final StringColumnReader statesColumnReader;
-
         private final IntColumnReader htmlFeaturesReader;
         private final StringColumnReader htmlStandardsReader;
         private final IntColumnReader lengthsReader;
@@ -256,7 +223,6 @@ public record SlopDocumentRecord(
         }
 
         public MetadataReader(Path baseDir, int page) throws IOException {
-            this.statesColumnReader = statesColumn.forPage(page).open(this, baseDir);
             this.domainsReader = domainsColumn.forPage(page).open(this, baseDir);
             this.urlsReader = urlsColumn.forPage(page).open(this, baseDir);
             this.ordinalsReader = ordinalsColumn.forPage(page).open(this, baseDir);
@@ -270,29 +236,11 @@ public record SlopDocumentRecord(
             this.pubYearReader = pubYearColumn.forPage(page).open(this, baseDir);
         }
 
-        MetadataProjection next = null;
-
         public boolean hasMore() throws IOException {
-            if (next != null)
-                return true;
-
-            return (next = getNext()) != null;
+            return domainsReader.hasRemaining();
         }
 
         public MetadataProjection next() throws IOException {
-            if (hasMore()) {
-                var ret = next;
-                next = null;
-                return ret;
-            }
-            throw new IllegalStateException("No more records");
-        }
-
-
-        private MetadataProjection getNext() throws IOException {
-            if (!find(statesColumnReader, "OK"))
-                return null;
-
             int pubYear = pubYearReader.get();
             return new MetadataProjection(
                     domainsReader.get(),

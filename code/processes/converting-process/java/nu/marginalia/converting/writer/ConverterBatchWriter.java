@@ -21,9 +21,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 
 /** Writer for a single batch of converter parquet files */
 public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriterIf {
@@ -60,39 +57,23 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         var domain = sideloadSource.getDomain();
 
         writeDomainData(domain);
-
         writeDocumentData(domain.domain, sideloadSource.getDocumentsStream());
     }
 
     @Override
     @SneakyThrows
     public void writeProcessedDomain(ProcessedDomain domain) {
-        var results = ForkJoinPool.commonPool().invokeAll(
-                writeTasks(domain)
-        );
-
-        for (var result : results) {
-            if (result.state() == Future.State.FAILED) {
-                logger.warn("Parquet writing job failed", result.exceptionNow());
+        try {
+            if (domain.documents != null) {
+                writeDocumentData(domain.domain, domain.documents.iterator());
             }
+            writeLinkData(domain);
+            writeDomainData(domain);
         }
-    }
+        catch (IOException e) {
+            logger.error("Data writing job failed", e);
+        }
 
-    private List<Callable<Object>> writeTasks(ProcessedDomain domain) {
-        return List.of(
-                () -> writeDocumentData(domain),
-                () -> writeLinkData(domain),
-                () -> writeDomainData(domain)
-        );
-    }
-
-    private Object writeDocumentData(ProcessedDomain domain) throws IOException {
-        if (domain.documents == null)
-            return this;
-
-        writeDocumentData(domain.domain, domain.documents.iterator());
-
-        return this;
     }
 
     private void writeDocumentData(EdgeDomain domain,
@@ -108,54 +89,39 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
 
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
-            if (document.details == null) {
-                new SlopDocumentRecord(
-                        domainName,
-                        document.url.toString(),
-                        ordinal,
-                        document.state.toString(),
-                        document.stateReason);
+            var wb = document.words.build(workArea);
+
+            List<GammaCodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
+            byte[] spanCodes = new byte[wb.spans.size()];
+
+            for (int i = 0; i < wb.spans.size(); i++) {
+                var span = wb.spans.get(i);
+
+                spanCodes[i] = span.code();
+                spanSequences.add(span.spans());
             }
-            else {
-                var wb = document.words.build(workArea);
-                List<String> words = wb.keywords;
-                byte[] metas = wb.metadata;
-                List<GammaCodedSequence> positions = wb.positions;
 
-
-                List<GammaCodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
-                byte[] spanCodes = new byte[wb.spans.size()];
-
-                for (int i = 0; i < wb.spans.size(); i++) {
-                    var span = wb.spans.get(i);
-
-                    spanCodes[i] = span.code();
-                    spanSequences.add(span.spans());
-                }
-
-                documentWriter.write(new SlopDocumentRecord(
-                        domainName,
-                        document.url.toString(),
-                        ordinal,
-                        document.state.toString(),
-                        document.stateReason,
-                        document.details.title,
-                        document.details.description,
-                        HtmlFeature.encode(document.details.features),
-                        document.details.standard.name(),
-                        document.details.length,
-                        document.details.hashCode,
-                        (float) document.details.quality,
-                        document.details.metadata.encode(),
-                        document.details.pubYear,
-                        words,
-                        metas,
-                        positions,
-                        spanCodes,
-                        spanSequences
-                ));
-
-            }
+            documentWriter.write(new SlopDocumentRecord(
+                    domainName,
+                    document.url.toString(),
+                    ordinal,
+                    document.state.toString(),
+                    document.stateReason,
+                    document.details.title,
+                    document.details.description,
+                    HtmlFeature.encode(document.details.features),
+                    document.details.standard.name(),
+                    document.details.length,
+                    document.details.hashCode,
+                    (float) document.details.quality,
+                    document.details.metadata.encode(),
+                    document.details.pubYear,
+                    wb.keywords,
+                    wb.metadata,
+                    wb.positions,
+                    spanCodes,
+                    spanSequences
+            ));
 
             ordinal++;
         }

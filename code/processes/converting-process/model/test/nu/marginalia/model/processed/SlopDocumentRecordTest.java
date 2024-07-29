@@ -33,8 +33,7 @@ public class SlopDocumentRecordTest {
     @Test
     public void test() throws IOException {
         ByteBuffer workArea = ByteBuffer.allocate(1024);
-        var recordShort = new SlopDocumentRecord("test", "https://test/foo", 0, "ERROR", "Cosmic Ray");
-        var recordLong = new SlopDocumentRecord("example.com", "https://example.com/foo", 1, "OK", "",
+        var record = new SlopDocumentRecord("example.com", "https://example.com/foo", 1, "OK", "",
                 "test",
                 "testtest",
                 1,
@@ -52,8 +51,7 @@ public class SlopDocumentRecordTest {
         );
 
         try (var writer = new SlopDocumentRecord.Writer(testDir, 0)) {
-            writer.write(recordShort);
-            writer.write(recordLong);
+            writer.write(record);
         }
 
         try (var keywordReader = new SlopDocumentRecord.KeywordsProjectionReader(testDir, 0)) {
@@ -62,16 +60,16 @@ public class SlopDocumentRecordTest {
             assertFalse(keywordReader.hasMore());
 
             var expected = new SlopDocumentRecord.KeywordsProjection(
-                    recordLong.domain(),
-                    recordLong.ordinal(),
-                    recordLong.htmlFeatures(),
-                    recordLong.documentMetadata(),
-                    recordLong.length(),
-                    recordLong.words(),
-                    recordLong.metas(),
-                    recordLong.positions(),
-                    recordLong.spanCodes(),
-                    recordLong.spans()
+                    record.domain(),
+                    record.ordinal(),
+                    record.htmlFeatures(),
+                    record.documentMetadata(),
+                    record.length(),
+                    record.words(),
+                    record.metas(),
+                    record.positions(),
+                    record.spanCodes(),
+                    record.spans()
             );
 
             Assertions.assertEquals(expected, readRecord);
@@ -83,17 +81,17 @@ public class SlopDocumentRecordTest {
             assertFalse(docDataReader.hasMore());
 
             var expected2 = new SlopDocumentRecord.MetadataProjection(
-                    recordLong.domain(),
-                    recordLong.url(),
-                    recordLong.ordinal(),
-                    recordLong.title(),
-                    recordLong.description(),
-                    recordLong.htmlFeatures(),
-                    recordLong.htmlStandard(),
-                    recordLong.length(),
-                    recordLong.hash(),
-                    recordLong.quality(),
-                    recordLong.pubYear()
+                    record.domain(),
+                    record.url(),
+                    record.ordinal(),
+                    record.title(),
+                    record.description(),
+                    record.htmlFeatures(),
+                    record.htmlStandard(),
+                    record.length(),
+                    record.hash(),
+                    record.quality(),
+                    record.pubYear()
             );
 
             Assertions.assertEquals(expected2, readRecord);
