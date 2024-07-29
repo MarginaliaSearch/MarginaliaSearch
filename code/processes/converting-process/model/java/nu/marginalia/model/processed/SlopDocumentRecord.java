@@ -301,8 +301,8 @@ public record SlopDocumentRecord(
             termMetaWriter = termMetaColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
             termPositionsWriter = termPositionsColumn.forPage(page).create(this.columnGroup("keywords"), baseDir);
 
-            spansWriter = spansColumn.forPage(page).create(this, baseDir);
-            spansCodesWriter = spanCodesColumn.forPage(page).create(this.columnGroup("spans"), baseDir);
+            spansCodesWriter = spanCodesColumn.forPage(page).create(this, baseDir);
+            spansWriter = spansColumn.forPage(page).create(this.columnGroup("spans"), baseDir);
         }
 
         public void write(SlopDocumentRecord record) throws IOException {
