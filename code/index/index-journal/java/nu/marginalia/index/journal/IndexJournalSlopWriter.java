@@ -52,7 +52,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         termMetadataWriter = IndexJournalPage.termMeta.forPage(page).create(this.columnGroup("keywords"), dir);
         termPositionsWriter = IndexJournalPage.positions.forPage(page).create(this.columnGroup("keywords"), dir);
 
-        spansWriter = IndexJournalPage.spans.forPage(page).create(this.columnGroup("spans"), dir);
+        spansWriter = IndexJournalPage.spans.forPage(page).create(this, dir);
         spanCodesWriter = IndexJournalPage.spanCodes.forPage(page).create(this.columnGroup("spans"), dir);
     }
 

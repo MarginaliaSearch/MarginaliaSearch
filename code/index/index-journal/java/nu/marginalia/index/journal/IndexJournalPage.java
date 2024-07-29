@@ -69,7 +69,7 @@ public record IndexJournalPage(Path baseDir, int page) {
     }
 
     public GammaCodedSequenceReader openSpans(SlopTable table) throws IOException {
-        return spans.forPage(page).open(table.columnGroup("spans"), baseDir);
+        return spans.forPage(page).open(table, baseDir);
     }
 
     public ByteArrayColumnReader openSpanCodes(SlopTable table) throws IOException {

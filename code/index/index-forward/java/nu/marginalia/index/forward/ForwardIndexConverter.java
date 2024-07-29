@@ -89,8 +89,9 @@ public class ForwardIndexConverter {
                     var metaReader = instance.openDocumentMeta(slopTable);
                     var featuresReader = instance.openFeatures(slopTable);
                     var sizeReader = instance.openSize(slopTable);
+
                     var spansCodesReader = instance.openSpanCodes(slopTable);
-                    var spansSeqReader = instance.openSpans(slopTable);
+                    var spansSeqReader = instance.openSpans(slopTable.columnGroup("spans"));
 
                     while (docIdReader.hasRemaining()) {
                         long docId = docIdReader.get();

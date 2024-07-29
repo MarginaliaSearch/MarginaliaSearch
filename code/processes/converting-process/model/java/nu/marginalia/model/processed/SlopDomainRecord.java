@@ -176,7 +176,7 @@ public record SlopDomainRecord(
             visitedUrlsWriter = visitedUrlsColumn.forPage(page).create(this, baseDir);
 
             rssFeedsCountWriter = rssFeedsCountColumn.forPage(page).create(this, baseDir);
-            rssFeedsWriter = rssFeedsColumn.forPage(page).create(this.columnGroup("rss-feeds"), baseDir);
+            rssFeedsWriter = rssFeedsColumn.forPage(page).create(this.columnGroup("rssFeeds"), baseDir);
         }
 
         public void write(SlopDomainRecord record) throws IOException {
