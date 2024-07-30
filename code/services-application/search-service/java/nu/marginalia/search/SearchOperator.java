@@ -6,11 +6,14 @@ import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
-import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
+import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.search.model.*;
+import nu.marginalia.search.model.ClusteredUrlDetails;
+import nu.marginalia.search.model.DecoratedSearchResults;
+import nu.marginalia.search.model.SearchFilters;
+import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 import org.apache.logging.log4j.util.Strings;
@@ -65,9 +68,10 @@ public class SearchOperator {
     }
 
     public List<UrlDetails> doSiteSearch(String domain,
+                                        int domainId,
                                         int count) {
 
-        var queryParams = paramFactory.forSiteSearch(domain, count);
+        var queryParams = paramFactory.forSiteSearch(domain, domainId, count);
         var queryResponse = queryClient.search(queryParams);
 
         return searchQueryService.getResultsFromQuery(queryResponse);
