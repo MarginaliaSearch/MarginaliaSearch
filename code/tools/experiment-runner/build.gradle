@@ -35,11 +35,9 @@ dependencies {
     implementation project(':code:processes:crawling-process:model')
 
     implementation project(':third-party:commons-codec')
-    implementation project(':code:features-crawl:link-parser')
-    implementation project(':code:features-convert:adblock')
-    implementation project(':code:features-convert:anchor-keywords')
-    implementation project(':code:features-convert:topic-detection')
-    implementation project(':code:features-convert:keyword-extraction')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+    implementation project(':code:processes:converting-process:ft-anchor-keywords')
+    implementation project(':code:processes:converting-process:ft-keyword-extraction')
 
     implementation libs.bundles.slf4j
     implementation libs.notnull

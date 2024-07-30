@@ -37,10 +37,10 @@ dependencies {
     implementation project(':code:processes:crawling-process:model')
 
 
-    implementation project(':code:features-convert:anchor-keywords')
-    implementation project(':code:features-crawl:crawl-blocklist')
-    implementation project(':code:features-crawl:link-parser')
-    implementation project(':code:features-crawl:content-type')
+    implementation project(':code:processes:converting-process:ft-anchor-keywords')
+    implementation project(':code:processes:crawling-process:ft-crawl-blocklist')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+    implementation project(':code:processes:crawling-process:ft-content-type')
     implementation project(':third-party:commons-codec')
 
     implementation libs.bundles.slf4j

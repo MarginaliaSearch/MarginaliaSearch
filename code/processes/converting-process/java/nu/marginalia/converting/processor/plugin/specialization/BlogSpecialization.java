@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.summary.SummaryExtractor;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.apache.logging.log4j.util.Strings;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

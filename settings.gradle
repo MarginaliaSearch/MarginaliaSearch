@@ -56,19 +56,12 @@ include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
 include 'code:features-search:feedlot-client'
 
-include 'code:features-convert:adblock'
-include 'code:features-convert:anchor-keywords'
-include 'code:features-convert:data-extractors'
-include 'code:features-convert:stackexchange-xml'
-include 'code:features-convert:reddit-json'
-include 'code:features-convert:pubdate'
-include 'code:features-convert:summary-extraction'
-include 'code:features-convert:keyword-extraction'
-include 'code:features-convert:topic-detection'
+include 'code:processes:converting-process:ft-anchor-keywords'
+include 'code:execution:data-extractors'
 
-include 'code:features-crawl:crawl-blocklist'
-include 'code:features-crawl:link-parser'
-include 'code:features-crawl:content-type'
+include 'code:processes:crawling-process:ft-crawl-blocklist'
+include 'code:processes:crawling-process:ft-link-parser'
+include 'code:processes:crawling-process:ft-content-type'
 
 include 'code:processes:process-mq-api'
 
@@ -82,6 +75,7 @@ include 'code:common:process'
 
 include 'code:processes:converting-process'
 include 'code:processes:converting-process:model'
+include 'code:processes:converting-process:ft-keyword-extraction'
 
 include 'code:processes:crawling-process'
 include 'code:processes:crawling-process:model'

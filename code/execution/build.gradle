@@ -40,10 +40,8 @@ dependencies {
 
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:model')
-    implementation project(':code:features-crawl:link-parser')
-    implementation project(':code:features-convert:data-extractors')
-    implementation project(':code:features-convert:stackexchange-xml')
-    implementation project(':code:features-convert:reddit-json')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+    implementation project(':code:execution:data-extractors')
     implementation project(':code:index:index-journal')
     implementation project(':code:index:api')
     implementation project(':code:processes:process-mq-api')

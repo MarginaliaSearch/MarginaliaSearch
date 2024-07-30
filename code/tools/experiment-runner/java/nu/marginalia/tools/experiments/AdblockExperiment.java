@@ -1,8 +1,8 @@
 package nu.marginalia.tools.experiments;
 
 import com.google.inject.Inject;
-import nu.marginalia.adblock.AdblockSimulator;
 import nu.marginalia.converting.processor.DocumentProcessor;
+import nu.marginalia.converting.processor.classifier.adblock.AdblockSimulator;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.tools.LegacyExperiment;

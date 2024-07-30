@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'application'
+    id 'org.graalvm.buildtools.native' version '0.10.2'
 }
 
 java {
@@ -9,7 +11,51 @@ java {
 }
 
 
-apply from: "$rootProject.projectDir/srcsets.gradle"
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                    'java',
+                    'build/generated/source/proto/main/grpc',
+                    'build/generated/source/proto/main/java'
+            ]
+        }
+        resources {
+            srcDirs = [ 'resources' ]
+        }
+    }
+    test {
+        java {
+            srcDirs = [ 'test' ]
+        }
+        resources {
+            srcDirs = [ 'test-resources' ]
+        }
+    }
+    demo {
+        java {
+            srcDirs = [ 'demo' ]
+        }
+        resources {
+            srcDirs = [ 'demo-resources' ]
+        }
+
+    }
+}
+
+application {
+    mainClass = 'demo.OneBillionRowsDemo'
+}
+
+graalvmNative {
+    binaries.all {
+        resources.autodetect()
+        buildArgs=['-H:+ForeignAPISupport', '-H:+UnlockExperimentalVMOptions']
+
+    }
+
+    toolchainDetection = false
+}
 
 dependencies {
     implementation libs.bundles.slf4j
@@ -24,7 +70,14 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 
-    testImplementation libs.sqlite
+    demoImplementation sourceSets.main.output
+    demoImplementation libs.bundles.slf4j
+    demoImplementation libs.notnull
+    demoImplementation libs.commons.lang3
+    demoImplementation libs.lz4
+    demoImplementation libs.commons.compress
+    demoImplementation libs.zstd
+    demoImplementation libs.duckdb
 }
 
 test {
