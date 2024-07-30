@@ -1,6 +1,7 @@
 package nu.marginalia.index.forward;
 
-import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
+import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
 import nu.marginalia.sequence.GammaCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ForwardIndexSpansReaderTest {
     Path testFile = Files.createTempFile("test", ".idx");
@@ -32,12 +33,12 @@ class ForwardIndexSpansReaderTest {
         long offset2;
         try (var writer = new ForwardIndexSpansWriter(testFile)) {
             writer.beginRecord(1);
-            writer.writeSpan((byte) 'a', GammaCodedSequence.generate(wa, 1, 3, 5).buffer());
+            writer.writeSpan((byte) 'h', GammaCodedSequence.generate(wa, 1, 3, 5, 8).buffer());
             offset1 = writer.endRecord();
 
             writer.beginRecord(2);
-            writer.writeSpan((byte) 'b', GammaCodedSequence.generate(wa, 2, 4, 6).buffer());
-            writer.writeSpan((byte) 'c', GammaCodedSequence.generate(wa, 3, 5, 7).buffer());
+            writer.writeSpan((byte) 'c', GammaCodedSequence.generate(wa, 2, 4, 6, 7).buffer());
+            writer.writeSpan((byte) 'p', GammaCodedSequence.generate(wa, 3, 5).buffer());
             offset2 = writer.endRecord();
         }
 
@@ -47,17 +48,21 @@ class ForwardIndexSpansReaderTest {
             var spans1 = reader.readSpans(arena, offset1);
             var spans2 = reader.readSpans(arena, offset2);
 
-            assertEquals(1, spans1.size());
+            assertEquals(2, spans1.heading.size());
 
-            assertEquals('a', spans1.get(0).code());
-            assertEquals(IntList.of(1, 3, 5), spans1.get(0).data());
+            assertEquals(2, spans2.code.size());
 
-            assertEquals(2, spans2.size());
+            assertFalse(spans2.code.containsPosition(1));
+            assertTrue(spans2.code.containsPosition(3));
+            assertFalse(spans2.code.containsPosition(5));
+            assertTrue(spans2.code.containsPosition(6));
+            assertFalse(spans2.code.containsPosition(7));
+            assertFalse(spans2.code.containsPosition(8));
 
-            assertEquals('b', spans2.get(0).code());
-            assertEquals(IntList.of(2, 4, 6), spans2.get(0).data());
-            assertEquals('c', spans2.get(1).code());
-            assertEquals(IntList.of(3, 5, 7), spans2.get(1).data());
+            assertEquals(1, spans2.pre.size());
+
+            assertEquals(0, spans2.pageFooter.size());
+            assertFalse(spans2.pageFooter.containsPosition(8));
         }
     }
 }

@@ -162,7 +162,15 @@ public class BitReader {
         }
         else { // There's no more data to read!
             refillCallback.run();
-            readNext();
+            if (underlying.hasRemaining()) {
+                readNext();
+            }
+            else {
+                // We've attempted to re-fill the buffer, but there's still no data to read, so we fail to avoid
+                // blowing up the stack with recursion
+                throw new IllegalStateException("No more data to read after attempted re-fill of underlying buffer");
+            }
+
         }
     }
 }

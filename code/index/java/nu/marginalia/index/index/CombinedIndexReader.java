@@ -8,6 +8,7 @@ import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggre
 import nu.marginalia.index.FullReverseIndexReader;
 import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
+import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
@@ -186,11 +187,17 @@ public class CombinedIndexReader {
     /** Retrieves the HTML features for the specified document */
     public int getHtmlFeatures(long docId) {
         return forwardIndexReader.getHtmlFeatures(docId);
-    }    /** Retrieves the HTML features for the specified document */
+    }
+
+    /** Retrieves the HTML features for the specified document */
     public int getDocumentSize(long docId) {
         return forwardIndexReader.getDocumentSize(docId);
     }
 
+    /** Retrieves the document spans for the specified document */
+    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
+        return forwardIndexReader.getDocumentSpans(arena, docId);
+    }
 
     /** Close the indexes (this is not done immediately)
      * */

@@ -17,6 +17,7 @@ dependencies {
     implementation project(':code:libraries:btree')
     implementation project(':code:libraries:slop')
     implementation project(':code:libraries:coded-sequence')
+    implementation project(':code:libraries:language-processing')
     implementation project(':code:index:query')
     implementation project(':code:index:index-journal')
     implementation project(':code:common:model')

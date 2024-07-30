@@ -54,8 +54,8 @@ public class HtmlStringTagger implements NodeVisitor {
                 case "code" -> pushTag(HtmlTag.CODE, el);
                 case "title" -> pushTag(HtmlTag.TITLE, el);
                 case "nav" -> pushTag(HtmlTag.NAV, el);
-                case "header" -> pushTag(HtmlTag.HEADER, el);
-                case "footer" -> pushTag(HtmlTag.FOOTER, el);
+                case "header" -> pushTag(HtmlTag.PAGE_HEADER, el);
+                case "footer" -> pushTag(HtmlTag.PAGE_FOOTER, el);
                 case "h1", "h2", "h3", "h4", "h5", "h6" -> pushTag(HtmlTag.HEADING, el);
             }
         }

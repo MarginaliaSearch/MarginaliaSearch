@@ -3,15 +3,18 @@ package nu.marginalia.index.results;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CqDoubleSumOperator;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.results.model.QuerySearchTerms;
+import nu.marginalia.index.results.model.TermCoherenceGroupList;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -22,6 +25,7 @@ import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
 import javax.annotation.Nullable;
+import java.lang.foreign.Arena;
 
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
@@ -50,7 +54,8 @@ public class IndexResultScoreCalculator {
     private final long flagsFilterMask = WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit() | WordFlags.ExternalLink.asBit();
 
     @Nullable
-    public SearchResultItem calculateScore(long combinedId,
+    public SearchResultItem calculateScore(Arena arena,
+                                           long combinedId,
                                            QuerySearchTerms searchTerms,
                                            long[] wordFlags,
                                            CodedSequence[] positions)
@@ -78,8 +83,7 @@ public class IndexResultScoreCalculator {
         long docMetadata = index.getDocumentMetadata(docId);
         int htmlFeatures = index.getHtmlFeatures(docId);
         int docSize = index.getDocumentSize(docId);
-
-        int bestCoherence = searchTerms.coherences.testOptional(positions);
+        DocumentSpans spans = index.getDocumentSpans(arena, docId);
 
         double score = calculateSearchResultValue(
                 wordFlagsQuery,
@@ -88,7 +92,9 @@ public class IndexResultScoreCalculator {
                 docMetadata,
                 htmlFeatures,
                 docSize,
-                bestCoherence,
+                spans,
+                positions,
+                searchTerms.coherences,
                 rankingContext);
 
         SearchResultItem searchResult = new SearchResultItem(docId,
@@ -169,10 +175,13 @@ public class IndexResultScoreCalculator {
 
     public double calculateSearchResultValue(CompiledQueryLong wordFlagsQuery,
                                              CompiledQueryInt positionsCountQuery,
-                                             CompiledQuery<CodedSequence> positionsQuery, long documentMetadata,
+                                             CompiledQuery<CodedSequence> positionsQuery,
+                                             long documentMetadata,
                                              int features,
                                              int length,
-                                             int bestCoherence,
+                                             DocumentSpans spans,
+                                             CodedSequence[] positions,
+                                             TermCoherenceGroupList coherences,
                                              ResultRankingContext ctx)
     {
         if (length < 0) {
@@ -205,6 +214,33 @@ public class IndexResultScoreCalculator {
             temporalBias = 0;
         }
 
+
+        int numCoherenceAll = coherences.countOptional(positions);
+        int bestCoherenceAll = coherences.testOptional(positions);
+        int bestCoherenceTitle = coherences.testOptional(positions, spans.title);
+        int bestCoherenceHeading = coherences.testOptional(positions, spans.heading);
+
+        double spanWeightedScore = positionsQuery.root.visit(new CqDoubleSumOperator(positionsQuery, termPos -> {
+            if (termPos == null)
+                return 0;
+
+            if (spans.title.overlapsRange(termPos))
+                return 5.0;
+            if (spans.heading.overlapsRange(termPos))
+                return 2.5;
+            if (spans.code.overlapsRange(termPos))
+                return 0.25;
+            if (spans.pre.overlapsRange(termPos))
+                return 0.25;
+            if (spans.nav.overlapsRange(termPos))
+                return 0.25;
+            if (spans.pageHeader.overlapsRange(termPos))
+                return 0.25;
+            if (spans.pageFooter.overlapsRange(termPos))
+                return 0.25;
+            return 1.0;
+        }));
+
         double overallPart = averageSentenceLengthPenalty
                 + documentLengthPenalty
                 + qualityPenalty
@@ -212,7 +248,11 @@ public class IndexResultScoreCalculator {
                 + topologyBonus
                 + temporalBias
                 + flagsPenalty
-                + bestCoherence;
+                + bestCoherenceAll
+                + bestCoherenceTitle
+                + bestCoherenceHeading
+                + numCoherenceAll / 4.
+                + spanWeightedScore;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
         double tcfFirstPosition = 0.;

@@ -2,6 +2,7 @@ package nu.marginalia.index.forward;
 
 import lombok.SneakyThrows;
 import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.model.id.UrlIdCodec;

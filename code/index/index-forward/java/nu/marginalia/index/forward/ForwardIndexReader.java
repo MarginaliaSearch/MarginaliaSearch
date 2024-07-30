@@ -3,11 +3,14 @@ package nu.marginalia.index.forward;
 import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -30,6 +33,7 @@ public class ForwardIndexReader {
     private final LongArray data;
 
     private final ForwardIndexSpansReader spansReader;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public ForwardIndexReader(Path idsFile,
@@ -119,6 +123,21 @@ public class ForwardIndexReader {
         }
 
         return idToOffset.get(docId);
+    }
+
+    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
+        long offset = idxForDoc(docId);
+        if (offset < 0) return new DocumentSpans();
+
+        long encodedOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
+
+        try {
+            return spansReader.readSpans(arena, encodedOffset);
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read spans for doc " + docId, ex);
+            return new DocumentSpans();
+        }
     }
 
 

@@ -144,7 +144,7 @@ public class DocumentKeywordsBuilder {
 
     public void addSpans(List<DocumentWordSpan> newSpans) {
         for (var span : newSpans) {
-            wordSpans.computeIfAbsent(span.tag().code, k -> new ArrayList<>()).add(span);
+            wordSpans.computeIfAbsent((char) span.tag().code, k -> new ArrayList<>()).add(span);
         }
     }
 

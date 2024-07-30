@@ -1,4 +1,4 @@
-package nu.marginalia.index.forward;
+package nu.marginalia.index.forward.spans;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -42,8 +42,7 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
     }
 
     public long endRecord() {
-        return stateStartOffset << 28 | stateLength;
-
+        return SpansCodec.encode(stateStartOffset, stateLength);
     }
 
     @Override

@@ -1,9 +1,11 @@
-package nu.marginalia.index.forward;
+package nu.marginalia.index.forward.construction;
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.index.forward.ForwardIndexParameters;
+import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;

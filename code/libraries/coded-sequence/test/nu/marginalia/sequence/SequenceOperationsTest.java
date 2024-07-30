@@ -1,6 +1,6 @@
 package nu.marginalia.sequence;
 
-import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -62,6 +62,17 @@ class SequenceOperationsTest {
 
         assertTrue(SequenceOperations.intersectSequences(seq1.iterator(), seq2.iterator(), seq3.iterator()));
     }
+
+    @Test
+    void intersectSequencesDeepMatch3findIntersections() {
+        ByteBuffer wa = ByteBuffer.allocate(1024);
+        GammaCodedSequence seq1 = GammaCodedSequence.generate(wa, 1, 3, 4, 7, 8, 9, 10, 11);
+        GammaCodedSequence seq2 = GammaCodedSequence.generate(wa, 2, 5, 8, 10, 14);
+        GammaCodedSequence seq3 = GammaCodedSequence.generate(wa, 1, 5, 8, 9, 10);
+
+        assertEquals(IntList.of(8, 10), SequenceOperations.findIntersections(seq1.iterator(), seq2.iterator(), seq3.iterator()));
+    }
+
 
     @Test
     void intersectSequencesDeepMismatch() {

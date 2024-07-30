@@ -98,7 +98,7 @@ public class IndexResultRankingService {
                 }
 
                 // Calculate the preliminary score
-                var score = resultRanker.calculateScore(resultIds.at(i), searchTerms, flags, positions);
+                var score = resultRanker.calculateScore(arena, resultIds.at(i), searchTerms, flags, positions);
                 if (score != null) {
                     results.add(score);
                 }

@@ -1,6 +1,8 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 public class SequenceOperations {
 
@@ -30,7 +32,7 @@ public class SequenceOperations {
             if (values[i] == max) {
                 successes++;
             } else {
-                successes = 0;
+                successes = 1;
 
                 // Discard values until we reach the maximum value seen so far,
                 // or until the end of the sequence is reached
@@ -47,6 +49,63 @@ public class SequenceOperations {
         }
 
         return true;
+    }
+
+    public static IntList findIntersections(IntIterator... sequences) {
+
+        if (sequences.length <= 1)
+            return IntList.of();
+
+        // Initialize values and find the maximum value
+        int[] values = new int[sequences.length];
+
+        for (int i = 0; i < sequences.length; i++) {
+            if (sequences[i].hasNext())
+                values[i] = sequences[i].nextInt();
+            else
+                return IntList.of();
+        }
+
+        // Intersect the sequences by advancing all values smaller than the maximum seen so far
+        // until they are equal to the maximum value, or until the end of the sequence is reached
+        int max = Integer.MIN_VALUE;
+        int successes = 0;
+
+        IntList ret = new IntArrayList();
+
+        outer:
+        for (int i = 0;; i = (i + 1) % sequences.length)
+        {
+            if (successes == sequences.length) {
+                ret.add(max);
+                successes = 1;
+
+                if (sequences[i].hasNext()) {
+                    max = sequences[i].nextInt();
+                } else {
+                    break;
+                }
+            } else if (values[i] == max) {
+                successes++;
+            } else {
+                successes = 1;
+
+                // Discard values until we reach the maximum value seen so far,
+                // or until the end of the sequence is reached
+                while (values[i] < max) {
+                    if (sequences[i].hasNext()) {
+                        values[i] = sequences[i].nextInt();
+                    } else {
+                        break outer;
+                    }
+                }
+
+                // Update the maximum value, if necessary
+                max = Math.max(max, values[i]);
+            }
+        }
+
+        return ret;
     }
 
     /** Return the minimum word distance between two sequences, or a negative value if either sequence is empty.

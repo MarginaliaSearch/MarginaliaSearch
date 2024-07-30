@@ -1,6 +1,5 @@
-package nu.marginalia.index.forward;
+package nu.marginalia.index.forward.spans;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.GammaCodedSequence;
 
 import java.io.IOException;
@@ -9,8 +8,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("preview")
 public class ForwardIndexSpansReader implements AutoCloseable {
@@ -20,9 +17,9 @@ public class ForwardIndexSpansReader implements AutoCloseable {
         this.spansFileChannel = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
     }
 
-    public List<SpanData> readSpans(Arena arena, long encodedOffset) throws IOException {
-        long size = encodedOffset & 0xFFF_FFFF;
-        long offset = encodedOffset >>> 28;
+    public DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException {
+        long size = SpansCodec.decodeSize(encodedOffset);
+        long offset = SpansCodec.decodeStartOffset(encodedOffset);
 
         var buffer = arena.allocate(size).asByteBuffer();
         buffer.clear();
@@ -33,22 +30,16 @@ public class ForwardIndexSpansReader implements AutoCloseable {
 
         int count = buffer.get();
 
-        List<SpanData> ret = new ArrayList<>();
+        DocumentSpans ret = new DocumentSpans();
+
         while (count-- > 0) {
             byte code = buffer.get();
             short len = buffer.getShort();
 
-            final int pos = buffer.position();
-
-            // Decode the gamma-coded sequence; this will advance the buffer position
-            // in a not entirely predictable way, so we need to save the position
-            buffer.limit(buffer.position() + len);
-            var sequence = new GammaCodedSequence(buffer).values();
-            ret.add(new SpanData(code, sequence));
+            ret.accept(code, new GammaCodedSequence(buffer.slice(buffer.position(), len)));
 
             // Reset the buffer position to the end of the span
-            buffer.position(pos + len);
-            buffer.limit(buffer.capacity());
+            buffer.position(buffer.position() + len);
         }
 
         return ret;
@@ -59,5 +50,4 @@ public class ForwardIndexSpansReader implements AutoCloseable {
         spansFileChannel.close();
     }
 
-    public record SpanData(byte code, IntList data) {}
 }

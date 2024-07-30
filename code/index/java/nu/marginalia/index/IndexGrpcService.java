@@ -317,6 +317,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 try {
                     executeSearch();
                 }
+                catch (Exception ex) {
+                    logger.error("Error in index lookup", ex);
+                }
                 finally {
                     synchronized (remainingIndexTasks) {
                         if (remainingIndexTasks.decrementAndGet() == 0) {
