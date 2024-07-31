@@ -54,8 +54,14 @@ public class DomainCrawlFrontier {
      * than the number of already visited documents, the base depth will be adjusted
      * to the visited count first.
      */
-    public void increaseDepth(double depthIncreaseFactor) {
-        depth = (int)(Math.max(visited.size(), depth) * depthIncreaseFactor);
+    public void increaseDepth(double depthIncreaseFactor,
+                              int maxDepthIncreaseAbsolute
+                              ) {
+        int base = Math.max(visited.size(), depth);
+
+        int scaledUp = (int)(base * depthIncreaseFactor);
+
+        depth = Math.min(base + maxDepthIncreaseAbsolute, scaledUp);
     }
 
     public void setLinkFilter(Predicate<EdgeUrl> linkFilter) {

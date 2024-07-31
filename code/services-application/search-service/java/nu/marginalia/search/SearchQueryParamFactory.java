@@ -1,12 +1,12 @@
 package nu.marginalia.search;
 
-import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
+import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public class SearchQueryParamFactory {
 
     }
 
-    public QueryParams forSiteSearch(String domain, int count) {
+    public QueryParams forSiteSearch(String domain, int domainId, int count) {
         return new QueryParams("site:"+domain,
                 null,
                 List.of(),
@@ -53,7 +53,7 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
-                List.of(),
+                List.of(domainId),
                 new QueryLimits(count, count, 100, 512),
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,

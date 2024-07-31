@@ -12,6 +12,7 @@ import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainLocks;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
@@ -71,6 +72,8 @@ public class CrawlerMain extends ProcessMainClass {
     private final Gson gson;
     private final int node;
     private final SimpleBlockingThreadPool pool;
+
+    private final DomainLocks domainLocks = new DomainLocks();
 
     private final Map<String, String> processingIds = new ConcurrentHashMap<>();
 
@@ -272,10 +275,16 @@ public class CrawlerMain extends ProcessMainClass {
                 Files.deleteIfExists(tempFile);
             }
 
+            var domainLock = domainLocks.getSemaphore(new EdgeDomain(specification.domain));
+
             try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
                  var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
                  CrawlDataReference reference = getReference())
             {
+                // acquire the domain lock to prevent other threads from crawling the same domain,
+                // we release it at the end of the task to let them go ahead
+                Thread.currentThread().setName("crawling:" + domain + " [await domain lock]");
+                domainLock.acquire();
                 Thread.currentThread().setName("crawling:" + domain);
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
@@ -306,6 +315,9 @@ public class CrawlerMain extends ProcessMainClass {
                 logger.error("Error fetching domain " + domain, e);
             }
             finally {
+                // release the domain lock to permit other threads to crawl subdomains of this domain
+                domainLock.release();
+
                 // We don't need to double-count these; it's also kept int he workLog
                 processingIds.remove(domain);
                 Thread.currentThread().setName("[idle]");

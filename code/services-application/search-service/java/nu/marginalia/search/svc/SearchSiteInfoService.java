@@ -5,13 +5,13 @@ import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.feedlot.FeedlotClient;
 import nu.marginalia.feedlot.model.FeedItems;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
-import nu.marginalia.feedlot.FeedlotClient;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import org.slf4j.Logger;
@@ -153,7 +153,7 @@ public class SearchSiteInfoService {
             linkingDomainsFuture = domainInfoClient.linkedDomains(domainId, 25);
         }
 
-        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, 5);
+        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, domainId,5);
         if (!sampleResults.isEmpty()) {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
@@ -195,9 +195,10 @@ public class SearchSiteInfoService {
     }
 
     private Docs listDocs(String domainName) {
+        int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doSiteSearch(domainName, 100));
+                searchOperator.doSiteSearch(domainName, domainId, 100));
     }
 
     public record Docs(Map<String, Boolean> view,

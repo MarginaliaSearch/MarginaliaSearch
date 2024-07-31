@@ -38,6 +38,7 @@ public class CrawlerRevisitor {
         int recrawled = 0;
         int retained = 0;
         int errors = 0;
+        int skipped = 0;
 
         for (;;) {
             if (errors > 20) {
@@ -84,9 +85,32 @@ public class CrawlerRevisitor {
             }
 
 
-            if (recrawled > 5
-                    && retained > 0.9 * recrawled
-                    && Math.random() < 0.9)
+            double skipProb;
+
+            // calculate the probability of skipping this document based on the
+            // fraction of documents that haven't changed
+            if (recrawled > 0) {
+                skipProb = (double) retained / recrawled;
+
+                // If we've crawled a lot of documents, we'll be more conservative
+                // in trying to recrawl documents, to avoid hammering the server too much;
+                // in the case of a large change, we'll eventually catch it anyway
+
+                if (skipped + recrawled > 10_000) {
+                    skipProb = Math.clamp(skipProb, 0.75, 0.99);
+                } else if (skipped + recrawled > 1000) {
+                    skipProb = Math.clamp(skipProb, 0.5, 0.99);
+                } else {
+                    skipProb = Math.clamp(skipProb, 0, 0.95);
+                }
+
+            } else {
+                // If we haven't recrawled anything yet, we'll be more aggressive
+                // in trying to recrawl documents
+                skipProb = 0.25;
+            }
+
+            if (Math.random() < skipProb) //
             {
                 // Since it looks like most of these documents haven't changed,
                 // we'll load the documents directly; but we do this in a random
@@ -103,6 +127,8 @@ public class CrawlerRevisitor {
                         doc.documentBody,
                         new ContentTags(doc.etagMaybe, doc.lastModifiedMaybe)
                 );
+
+                skipped++;
             }
             else {
                 // GET the document with the stored document as a reference
