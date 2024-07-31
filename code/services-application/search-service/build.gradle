@@ -5,7 +5,7 @@ plugins {
     id 'application'
     id 'jvm-test-suite'
 
-    id 'com.google.cloud.tools.jib' version '3.4.2'
+    id 'com.google.cloud.tools.jib' version '3.4.3'
 }
 
 application {
