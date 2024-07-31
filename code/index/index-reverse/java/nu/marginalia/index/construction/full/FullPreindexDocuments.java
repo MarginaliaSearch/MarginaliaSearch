@@ -18,9 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /** A LongArray with document data, segmented according to
  * the associated FullPreindexWordSegments data
@@ -117,29 +114,16 @@ public class FullPreindexDocuments {
     }
 
     @SneakyThrows
-    private static void sortDocsFile(LongArray docsFileMap, FullPreindexWordSegments segments) throws IOException {
+    private static void sortDocsFile(LongArray docsFileMap, FullPreindexWordSegments segments) {
 
         var iter = segments.iterator(RECORD_SIZE_LONGS);
-
-        ExecutorService sortingWorkers = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
 
         while (iter.next()) {
             long iterStart = iter.startOffset;
             long iterEnd = iter.endOffset;
 
-            if (iter.size() < 1024) {
-                docsFileMap.quickSortN(RECORD_SIZE_LONGS, iterStart, iterEnd);
-            }
-            else {
-                sortingWorkers.execute(() ->
-                    docsFileMap.quickSortN(RECORD_SIZE_LONGS, iterStart, iterEnd));
-            }
+            docsFileMap.quickSortN(RECORD_SIZE_LONGS, iterStart, iterEnd);
         }
-
-        sortingWorkers.shutdown();
-        while (!sortingWorkers.awaitTermination(1, TimeUnit.HOURS));
-
-        sortingWorkers.close();
     }
 
     public void delete() throws IOException {

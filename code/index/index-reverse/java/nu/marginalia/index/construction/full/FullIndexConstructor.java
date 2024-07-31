@@ -62,7 +62,7 @@ public class FullIndexConstructor {
             var journalVersions = journal.get().pages();
 
             journalVersions
-                .stream()
+                .parallelStream()
                 .map(in -> {
                     preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), journalVersions.size());
                     return construct(in, posConstructor);
