@@ -35,7 +35,7 @@ public class ScreenshotCaptureToolMain {
 
         System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");
 
-        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 1000);
+        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 10_000);
 
         HttpClient httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
@@ -157,6 +157,7 @@ public class ScreenshotCaptureToolMain {
                 INNER JOIN DATA_DOMAIN_SCREENSHOT ON DATA_DOMAIN_SCREENSHOT.DOMAIN_NAME = DATA_DOMAIN_HISTORY.DOMAIN_NAME
                 WHERE SCREENSHOT_DATE IS NOT NULL
                 ORDER BY SCREENSHOT_DATE ASC
+                LIMIT
                 """ + oldCount);
 
             while (rst.next()) {
