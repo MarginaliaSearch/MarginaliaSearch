@@ -30,6 +30,7 @@ public class TermCoherenceGroupList {
     }
 
     public boolean testMandatory(CodedSequence[] positions) {
+
         for (var coherenceSet : mandatoryGroups) {
             if (!coherenceSet.test(positions)) {
                 return false;
@@ -40,6 +41,7 @@ public class TermCoherenceGroupList {
     }
 
     public int testOptional(CodedSequence[] positions) {
+
         int best = 0;
         for (var coherenceSet : optionalGroups) {
             if (coherenceSet.test(positions)) {
@@ -50,6 +52,7 @@ public class TermCoherenceGroupList {
     }
 
     public int countOptional(CodedSequence[] positions) {
+
         int ct = 0;
         for (var coherenceSet : optionalGroups) {
             if (coherenceSet.test(positions)) {
@@ -60,6 +63,7 @@ public class TermCoherenceGroupList {
     }
 
     public int testOptional(CodedSequence[] positions, DocumentSpan span) {
+
         int best = 0;
         for (var coherenceSet : optionalGroups) {
             if (coherenceSet.test(span, positions)) {
@@ -107,7 +111,11 @@ public class TermCoherenceGroupList {
                 // so that when we intersect them, an overlap means that the terms are
                 // in the correct order.  Note the offset is negative!
 
-                sequences[si++] = positions[offset].offsetIterator(-oi);
+                var posForTerm = positions[offset];
+                if (posForTerm == null) {
+                    return false;
+                }
+                sequences[si++] = posForTerm.offsetIterator(-oi);
             }
 
             return SequenceOperations.intersectSequences(sequences);
@@ -130,7 +138,11 @@ public class TermCoherenceGroupList {
                 // so that when we intersect them, an overlap means that the terms are
                 // in the correct order.  Note the offset is negative!
 
-                sequences[si++] = positions[offset].offsetIterator(-oi);
+                var posForTerm = positions[offset];
+                if (posForTerm == null) {
+                    return false;
+                }
+                sequences[si++] = posForTerm.offsetIterator(-oi);
             }
 
             var intersections = SequenceOperations.findIntersections(sequences);
