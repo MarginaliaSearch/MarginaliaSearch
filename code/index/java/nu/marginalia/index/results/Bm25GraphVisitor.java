@@ -13,7 +13,7 @@ import java.util.List;
 public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
     private static final long AVG_LENGTH = 5000;
 
-    private final CqDataInt counts;
+    private final float[] counts;
     private final CqDataInt frequencies;
 
     private final double k1;
@@ -25,7 +25,7 @@ public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
     private final BitSet mask;
 
     public Bm25GraphVisitor(Bm25Parameters bm25Parameters,
-                            CqDataInt counts,
+                            float[] counts,
                             int length,
                             ResultRankingContext ctx) {
         this.length = length;
@@ -65,7 +65,7 @@ public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
             return 0;
         }
 
-        double count = counts.get(idx);
+        double count = counts[idx];
         int freq = frequencies.get(idx);
 
         return invFreq(docCount, freq) * f(count, length);

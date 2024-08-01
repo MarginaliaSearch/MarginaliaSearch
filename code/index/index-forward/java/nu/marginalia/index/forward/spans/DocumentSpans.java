@@ -10,10 +10,8 @@ public class DocumentSpans {
     public DocumentSpan heading = EMPTY_SPAN;
 
     public DocumentSpan nav = EMPTY_SPAN;
-    public DocumentSpan pageHeader = EMPTY_SPAN;
-    public DocumentSpan pageFooter = EMPTY_SPAN;
     public DocumentSpan code = EMPTY_SPAN;
-    public DocumentSpan pre = EMPTY_SPAN;
+    public DocumentSpan anchor = EMPTY_SPAN;
 
     void accept(byte code, CodedSequence positions) {
         if (code == HtmlTag.HEADING.code)
@@ -22,14 +20,10 @@ public class DocumentSpans {
             this.title = new DocumentSpan(positions);
         else if (code == HtmlTag.NAV.code)
             this.nav = new DocumentSpan(positions);
-        else if (code == HtmlTag.PAGE_HEADER.code)
-            this.pageHeader = new DocumentSpan(positions);
-        else if (code == HtmlTag.PAGE_FOOTER.code)
-            this.pageFooter = new DocumentSpan(positions);
         else if (code == HtmlTag.CODE.code)
             this.code = new DocumentSpan(positions);
-        else if (code == HtmlTag.PRE.code)
-            this.pre = new DocumentSpan(positions);
+        else if (code == HtmlTag.ANCHOR.code)
+            this.anchor = new DocumentSpan(positions);
     }
 
 }

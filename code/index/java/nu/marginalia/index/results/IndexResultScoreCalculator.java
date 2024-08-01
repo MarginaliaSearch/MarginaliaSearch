@@ -3,7 +3,6 @@ package nu.marginalia.index.results;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.compiled.aggregate.CqDoubleSumOperator;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -87,7 +86,6 @@ public class IndexResultScoreCalculator {
 
         double score = calculateSearchResultValue(
                 wordFlagsQuery,
-                positionsCountQuery,
                 positionsQuery,
                 docMetadata,
                 htmlFeatures,
@@ -174,7 +172,6 @@ public class IndexResultScoreCalculator {
     }
 
     public double calculateSearchResultValue(CompiledQueryLong wordFlagsQuery,
-                                             CompiledQueryInt positionsCountQuery,
                                              CompiledQuery<CodedSequence> positionsQuery,
                                              long documentMetadata,
                                              int features,
@@ -214,32 +211,39 @@ public class IndexResultScoreCalculator {
             temporalBias = 0;
         }
 
-
         int numCoherenceAll = coherences.countOptional(positions);
         int bestCoherenceAll = coherences.testOptional(positions);
         int bestCoherenceTitle = coherences.testOptional(positions, spans.title);
         int bestCoherenceHeading = coherences.testOptional(positions, spans.heading);
 
-        double spanWeightedScore = positionsQuery.root.visit(new CqDoubleSumOperator(positionsQuery, termPos -> {
-            if (termPos == null)
-                return 0;
+        float[] weightedCounts = new float[compiledQuery.size()];
+        int firstPosition = Integer.MAX_VALUE;
 
-            if (spans.title.overlapsRange(termPos))
-                return 5.0;
-            if (spans.heading.overlapsRange(termPos))
-                return 2.5;
-            if (spans.code.overlapsRange(termPos))
-                return 0.25;
-            if (spans.pre.overlapsRange(termPos))
-                return 0.25;
-            if (spans.nav.overlapsRange(termPos))
-                return 0.25;
-            if (spans.pageHeader.overlapsRange(termPos))
-                return 0.25;
-            if (spans.pageFooter.overlapsRange(termPos))
-                return 0.25;
-            return 1.0;
-        }));
+        for (int i = 0; i < weightedCounts.length; i++) {
+            if (positions[i] != null) {
+                var iter = positions[i].iterator();
+
+                if (!ctx.regularMask.get(i)) {
+                    continue;
+                }
+
+                while (iter.hasNext()) {
+                    int pos = iter.nextInt();
+
+                    firstPosition = Math.min(firstPosition, pos);
+
+                    if (spans.title.containsPosition(pos) || spans.heading.containsPosition(pos))
+                        weightedCounts[i] += 2.5f;
+                    else if (spans.code.containsPosition(pos))
+                        weightedCounts[i] += 0.25f;
+                    else if (spans.anchor.containsPosition(pos))
+                        weightedCounts[i] += 0.2f;
+                    else if (spans.nav.containsPosition(pos))
+                        weightedCounts[i] += 0.1f;
+                }
+            }
+        }
+
 
         double overallPart = averageSentenceLengthPenalty
                 + documentLengthPenalty
@@ -251,13 +255,12 @@ public class IndexResultScoreCalculator {
                 + bestCoherenceAll
                 + bestCoherenceTitle
                 + bestCoherenceHeading
-                + numCoherenceAll / 4.
-                + spanWeightedScore;
+                + numCoherenceAll / 4.;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
-        double tcfFirstPosition = 0.;
+        double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.max(1, firstPosition));
 
-        double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, positionsCountQuery.data, length, ctx));
+        double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function

@@ -1,15 +1,15 @@
 package nu.marginalia.language.sentence.tag;
 
 public enum HtmlTag {
-    SCRIPT((byte) 's', true, false),
-    STYLE((byte) 'S', true, false),
-    CODE((byte) 'c', false, true),
-    PRE((byte) 'p', false, true),
+    FORM((byte) 0, true, false),
+    SCRIPT((byte) 0, true, false),
+    STYLE((byte) 0, true, false),
+
+    ANCHOR((byte) 'a', false, false),
     TITLE((byte) 't', false, false),
     HEADING((byte) 'h', false, false),
-    NAV((byte) 'n', false, false),
-    PAGE_HEADER((byte) 'H',false, false),
-    PAGE_FOOTER((byte) 'f', false, false);
+    CODE((byte) 'c', false, true),
+    NAV((byte) 'n', false, false);
 
     public byte code;
     public boolean exclude;
