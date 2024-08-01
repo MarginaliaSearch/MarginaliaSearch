@@ -9,6 +9,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
+/** Writes the document database, which is a SQLite database
+ * containing the URLs and metadata of the documents in the
+ * index.
+ * */
 public class DocumentDbWriter {
 
     private final Connection connection;

@@ -3,14 +3,15 @@ package nu.marginalia.tools;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.converting.ConverterModule;
-import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.io.crawldata.CrawledDomainReader;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.tools.experiments.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
 
 public class ExperimentRunnerMain {
 

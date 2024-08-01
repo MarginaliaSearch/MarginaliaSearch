@@ -13,6 +13,10 @@ public class ForwardIndexFileNames {
                 case NEXT -> basePath.resolve("fwd-doc-data.dat.next");
                 case CURRENT -> basePath.resolve("fwd-doc-data.dat");
             };
+            case SPANS_DATA -> switch (version) {
+                case NEXT -> basePath.resolve("fwd-spans.dat.next");
+                case CURRENT -> basePath.resolve("fwd-spans.dat");
+            };
         };
     }
 
@@ -23,6 +27,7 @@ public class ForwardIndexFileNames {
 
     public enum FileIdentifier {
         DOC_DATA,
+        SPANS_DATA,
         DOC_ID
     }
 }

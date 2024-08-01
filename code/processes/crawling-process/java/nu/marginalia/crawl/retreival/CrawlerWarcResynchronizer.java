@@ -1,9 +1,9 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.DocumentBodyExtractor;
+import nu.marginalia.model.body.HttpFetchResult;
 import org.jsoup.Jsoup;
 import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;

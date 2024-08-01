@@ -2,7 +2,7 @@ package nu.marginalia.index.index;
 
 import java.util.List;
 import gnu.trove.set.hash.TLongHashSet;
-import nu.marginalia.index.ReverseIndexReader;
+import nu.marginalia.index.FullReverseIndexReader;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.filter.QueryFilterAnyOf;
@@ -10,8 +10,7 @@ import nu.marginalia.index.query.filter.QueryFilterStepIf;
 
 public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
     private final IndexQuery query;
-    private final ReverseIndexReader reverseIndexFullReader;
-    private final ReverseIndexReader reverseIndexPrioReader;
+    private final FullReverseIndexReader reverseIndexFullReader;
 
     /* Keep track of already added include terms to avoid redundant checks.
      *
@@ -21,13 +20,10 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
      * */
     private final TLongHashSet alreadyConsideredTerms = new TLongHashSet();
 
-    IndexQueryBuilderImpl(ReverseIndexReader reverseIndexFullReader,
-                          ReverseIndexReader reverseIndexPrioReader,
-                          IndexQuery query)
+    IndexQueryBuilderImpl(FullReverseIndexReader reverseIndexFullReader, IndexQuery query)
     {
         this.query = query;
         this.reverseIndexFullReader = reverseIndexFullReader;
-        this.reverseIndexPrioReader = reverseIndexPrioReader;
     }
 
     public IndexQueryBuilder withSourceTerms(long... sourceTerms) {

@@ -23,6 +23,6 @@ public class ReverseIndexPrioFileNames {
 
     public enum FileIdentifier {
         WORDS,
-        DOCS
+        DOCS,
     }
 }

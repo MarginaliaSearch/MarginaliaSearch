@@ -7,12 +7,9 @@ import java.util.regex.Pattern;
 
 public class SentencePreCleaner {
     private static final Pattern splitPattern = Pattern.compile("( -|- |\\|)");
-    private final int maxSentenceCount = 250;
-    private final int maxTotalLength = 20 * maxSentenceCount;
 
     public String[] clean(String[] sentences) {
 
-        int totalLength = 0;
         int sentenceCount = 0;
 
         List<String> sentenceList = new ArrayList<>();
@@ -20,10 +17,9 @@ public class SentencePreCleaner {
 
             if (s.isBlank()) continue;
 
-            totalLength+=s.length();
             sentenceCount++;
 
-            if (totalLength > maxTotalLength && sentenceCount++ > maxSentenceCount) {
+            if (sentenceCount++ > SentenceExtractor.MAX_SENTENCE_COUNT) {
                 break;
             }
 

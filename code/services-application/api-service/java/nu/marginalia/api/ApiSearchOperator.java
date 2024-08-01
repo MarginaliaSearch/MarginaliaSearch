@@ -8,9 +8,9 @@ import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
-import nu.marginalia.api.searchquery.model.results.*;
+import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.query.limit.QueryLimits;
-import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.model.idx.WordFlags;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,14 +77,8 @@ public class ApiSearchOperator {
         if (url.rawIndexResult != null) {
             List<ApiSearchResultQueryDetails> lst = new ArrayList<>();
             for (var entry : url.rawIndexResult.keywordScores) {
-                var metadata = new WordMetadata(entry.encodedWordMetadata());
-
-                // Skip terms that don't appear anywhere
-                if (metadata.isEmpty())
-                    continue;
-
-                Set<String> flags = metadata.flagSet().stream().map(Object::toString).collect(Collectors.toSet());
-                lst.add(new ApiSearchResultQueryDetails(entry.keyword, Long.bitCount(metadata.positions()), flags));
+                Set<String> flags = WordFlags.decode(entry.flags).stream().map(Object::toString).collect(Collectors.toSet());
+                lst.add(new ApiSearchResultQueryDetails(entry.keyword, entry.positionCount, flags));
             }
 
             details.add(lst);

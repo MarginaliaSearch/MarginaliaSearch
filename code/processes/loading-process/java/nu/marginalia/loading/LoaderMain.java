@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
-import nu.marginalia.service.ProcessMainClass;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
@@ -22,7 +20,9 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,6 @@ public class LoaderMain extends ProcessMainClass {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final DocumentDbWriter documentDbWriter;
-    private final LoaderIndexJournalWriter journalWriter;
     private final DomainLoaderService domainService;
     private final DomainLinksLoaderService linksService;
     private final KeywordLoaderService keywordLoaderService;
@@ -79,7 +78,6 @@ public class LoaderMain extends ProcessMainClass {
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
                       DocumentDbWriter documentDbWriter,
-                      LoaderIndexJournalWriter journalWriter,
                       DomainLoaderService domainService,
                       DomainLinksLoaderService linksService,
                       KeywordLoaderService keywordLoaderService,
@@ -92,7 +90,6 @@ public class LoaderMain extends ProcessMainClass {
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.documentDbWriter = documentDbWriter;
-        this.journalWriter = journalWriter;
         this.domainService = domainService;
         this.linksService = linksService;
         this.keywordLoaderService = keywordLoaderService;
@@ -106,7 +103,7 @@ public class LoaderMain extends ProcessMainClass {
     void run(LoadRequest instructions) {
         LoaderInputData inputData = instructions.getInputData();
 
-        DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(inputData);
+        DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(heartbeat, inputData);
 
         try {
             var results = ForkJoinPool.commonPool()
@@ -132,7 +129,7 @@ public class LoaderMain extends ProcessMainClass {
             logger.error("Error", ex);
         }
         finally {
-            journalWriter.close();
+            keywordLoaderService.close();
             documentDbWriter.close();
             heartbeat.shutDown();
         }

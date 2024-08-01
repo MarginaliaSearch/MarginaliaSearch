@@ -2,10 +2,10 @@ package nu.marginalia.crawl.retreival.fetcher.warc;
 
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.HttpFetchResult;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.netpreserve.jwarc.*;

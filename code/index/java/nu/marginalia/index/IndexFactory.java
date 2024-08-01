@@ -3,12 +3,11 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import nu.marginalia.index.index.CombinedIndexReader;
+import nu.marginalia.index.positions.PositionsFileReader;
+import nu.marginalia.storage.FileStorageService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,16 +38,16 @@ public class IndexFactory {
         return IndexLocations.getSearchSetsPath(fileStorageService);
     }
 
-    public ReverseIndexReader getReverseIndexReader() throws IOException {
-
-        return new ReverseIndexReader("full",
+    public FullReverseIndexReader getReverseIndexReader() throws IOException {
+        return new FullReverseIndexReader("full",
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.CURRENT),
-                ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT)
+                ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT),
+                new PositionsFileReader(ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.CURRENT))
         );
     }
 
-    public ReverseIndexReader getReverseIndexPrioReader() throws IOException {
-        return new ReverseIndexReader("prio",
+    public PrioReverseIndexReader getReverseIndexPrioReader() throws IOException {
+        return new PrioReverseIndexReader("prio",
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT)
         );
@@ -57,7 +56,8 @@ public class IndexFactory {
     public ForwardIndexReader getForwardIndexReader() throws IOException {
         return new ForwardIndexReader(
                 ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.CURRENT),
-                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.CURRENT)
+                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.CURRENT),
+                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.CURRENT)
         );
     }
 

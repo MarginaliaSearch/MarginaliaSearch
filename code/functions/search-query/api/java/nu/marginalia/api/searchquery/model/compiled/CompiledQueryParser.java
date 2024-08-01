@@ -61,7 +61,8 @@ public class CompiledQueryParser {
 
         String[] cqData = new String[wordIds.size()];
         wordIds.forEach((w, i) -> cqData[i] = w);
-        return new CompiledQuery<>(root, new CqData<>(cqData));
+
+        return root.newQuery(cqData);
 
     }
 

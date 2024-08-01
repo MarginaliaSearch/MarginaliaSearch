@@ -2,22 +2,25 @@ package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
 import nu.marginalia.atags.model.DomainLinks;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PlainTextDocumentProcessorPlugin;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawl.UrlIndexingState;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 public class DocumentProcessor {
 

@@ -1,6 +1,6 @@
 package nu.marginalia.converting.model;
 
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
+import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 
 public class DisqualifiedException extends Exception {
     public final DisqualificationReason reason;

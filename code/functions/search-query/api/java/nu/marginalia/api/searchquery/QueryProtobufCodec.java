@@ -1,6 +1,9 @@
 package nu.marginalia.api.searchquery;
 
 import lombok.SneakyThrows;
+import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -11,9 +14,6 @@ import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.QueryResponse;
 
 import java.util.ArrayList;
 
@@ -130,6 +130,7 @@ public class QueryProtobufCodec {
                 results.getWordsTotal(),
                 results.getBestPositions(),
                 results.getRankingScore(),
+                results.getResultsFromDomain(),
                 convertRankingDetails(results.getRankingDetails())
         );
     }
@@ -157,11 +158,10 @@ public class QueryProtobufCodec {
                 outputs.getTemporalBias(),
                 outputs.getFlagsPenalty(),
                 outputs.getOverallPart(),
-                outputs.getTcfOverlap(),
-                outputs.getTcfJaccard(),
-                outputs.getBM25F(),
-                outputs.getBM25N(),
-                outputs.getBM25P()
+                outputs.getBm25Part(),
+                outputs.getTcfAvgDist(),
+                outputs.getTcfFirstPosition()
+
         );
     }
 
@@ -188,7 +188,6 @@ public class QueryProtobufCodec {
                 rawItem.getEncodedDocMetadata(),
                 rawItem.getHtmlFeatures(),
                 keywordScores,
-                rawItem.getResultsFromDomain(),
                 rawItem.getHasPriorityTerms(),
                 Double.NaN // Not set
         );
@@ -198,7 +197,8 @@ public class QueryProtobufCodec {
         return new SearchResultKeywordScore(
                 keywordScores.getKeyword(),
                 -1, // termId is internal to index service
-                keywordScores.getEncodedWordMetadata()
+                (byte) keywordScores.getFlags(),
+                keywordScores.getPositions()
         );
     }
 
@@ -257,6 +257,7 @@ public class QueryProtobufCodec {
                 rpcDecoratedResultItem.getWordsTotal(),
                 rpcDecoratedResultItem.getBestPositions(),
                 rpcDecoratedResultItem.getRankingScore(),
+                rpcDecoratedResultItem.getResultsFromDomain(),
                 convertRankingDetails(rpcDecoratedResultItem.getRankingDetails())
         );
     }

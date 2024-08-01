@@ -14,6 +14,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:libraries:braille-block-punch-cards')
+    implementation project(':code:libraries:coded-sequence')
 
     implementation libs.bundles.slf4j
 

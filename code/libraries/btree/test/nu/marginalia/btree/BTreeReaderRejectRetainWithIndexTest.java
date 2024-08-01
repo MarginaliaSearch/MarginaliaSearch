@@ -4,7 +4,6 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeBlockSize;
 import nu.marginalia.btree.model.BTreeContext;
-import nu.marginalia.util.NextPrimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

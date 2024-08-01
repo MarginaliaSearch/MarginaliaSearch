@@ -1,26 +1,38 @@
 package nu.marginalia.index.results.model;
 
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
-import nu.marginalia.index.results.model.ids.DocMetadataList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import nu.marginalia.index.results.model.ids.TermMetadataList;
+import nu.marginalia.sequence.CodedSequence;
+
+import javax.annotation.Nullable;
 
 public class TermMetadataForCombinedDocumentIds {
-    private static final Logger logger = LoggerFactory.getLogger(TermMetadataForCombinedDocumentIds.class);
     private final Long2ObjectArrayMap<DocumentsWithMetadata> termdocToMeta;
 
     public TermMetadataForCombinedDocumentIds(Long2ObjectArrayMap<DocumentsWithMetadata> termdocToMeta) {
         this.termdocToMeta = termdocToMeta;
     }
 
-    public long getTermMetadata(long termId, long combinedId) {
+    public byte getTermMetadata(long termId, long combinedId) {
         var metaByCombinedId = termdocToMeta.get(termId);
         if (metaByCombinedId == null) {
             return 0;
         }
-        return metaByCombinedId.get(combinedId);
+        return metaByCombinedId.get(combinedId).flags();
+    }
+
+    @Nullable
+    public CodedSequence getPositions(long termId, long combinedId) {
+        var metaByCombinedId = termdocToMeta.get(termId);
+
+        if (metaByCombinedId == null) {
+            return null;
+        }
+
+        return metaByCombinedId.get(combinedId).positions();
     }
 
     public boolean hasTermMeta(long termId, long combinedId) {
@@ -30,16 +42,25 @@ public class TermMetadataForCombinedDocumentIds {
             return false;
         }
 
-        return metaByCombinedId.get(combinedId) != 0;
+        return metaByCombinedId.data().containsKey(combinedId);
     }
 
-    public record DocumentsWithMetadata(Long2LongOpenHashMap data) {
-        public DocumentsWithMetadata(CombinedDocIdList combinedDocIdsAll, DocMetadataList metadata) {
-            this(new Long2LongOpenHashMap(combinedDocIdsAll.array(), metadata.array()));
+    public record DocumentsWithMetadata(Long2ObjectOpenHashMap<TermData> data) {
+        public DocumentsWithMetadata(CombinedDocIdList combinedDocIdsAll, TermMetadataList metadata) {
+            this(new Long2ObjectOpenHashMap<>(combinedDocIdsAll.size()));
+
+            long[] ids = combinedDocIdsAll.array();
+            TermData[] data = metadata.array();
+
+            for (int i = 0; i < combinedDocIdsAll.size(); i++) {
+                if (data[i] != null) {
+                    this.data.put(ids[i], data[i]);
+                }
+            }
         }
 
-        public long get(long combinedId) {
-            return data.getOrDefault(combinedId, 0);
+        public TermData get(long combinedId) {
+            return data.get(combinedId);
         }
     }
 }

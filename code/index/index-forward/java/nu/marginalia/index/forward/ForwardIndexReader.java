@@ -3,11 +3,14 @@ package nu.marginalia.index.forward;
 import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -29,19 +32,32 @@ public class ForwardIndexReader {
     private final TLongIntHashMap idToOffset;
     private final LongArray data;
 
+    private final ForwardIndexSpansReader spansReader;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ForwardIndexReader(Path idsFile, Path dataFile) throws IOException {
+    public ForwardIndexReader(Path idsFile,
+                              Path dataFile,
+                              Path spansFile) throws IOException {
         if (!Files.exists(dataFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", dataFile);
             idToOffset = null;
             data = null;
+            spansReader = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", idsFile);
             idToOffset = null;
             data = null;
+            spansReader = null;
+            return;
+        }
+        else if (!Files.exists(spansFile)) {
+            logger.warn("Failed to create ForwardIndexReader, {} is absent", spansFile);
+            idToOffset = null;
+            data = null;
+            spansReader = null;
             return;
         }
 
@@ -49,6 +65,7 @@ public class ForwardIndexReader {
 
         idToOffset = loadIds(idsFile);
         data = loadData(dataFile);
+        spansReader = new ForwardIndexSpansReader(spansFile);
     }
 
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
@@ -82,8 +99,18 @@ public class ForwardIndexReader {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
-        return (int) data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) & 0xFFFF_FFFFL);
     }
+
+    public int getDocumentSize(long docId) {
+        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
+        long offset = idxForDoc(docId);
+        if (offset < 0) return 0;
+
+        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L);
+    }
+
 
     private int idxForDoc(long docId) {
         assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
@@ -96,6 +123,21 @@ public class ForwardIndexReader {
         }
 
         return idToOffset.get(docId);
+    }
+
+    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
+        long offset = idxForDoc(docId);
+        if (offset < 0) return new DocumentSpans();
+
+        long encodedOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
+
+        try {
+            return spansReader.readSpans(arena, encodedOffset);
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read spans for doc " + docId, ex);
+            return new DocumentSpans();
+        }
     }
 
 

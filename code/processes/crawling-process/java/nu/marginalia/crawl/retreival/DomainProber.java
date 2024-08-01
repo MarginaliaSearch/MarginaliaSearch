@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawling.model.CrawlerDomainStatus;
 import nu.marginalia.ip_blocklist.IpBlockList;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

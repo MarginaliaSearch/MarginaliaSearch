@@ -3,21 +3,21 @@ package nu.marginalia.converting;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawl.UrlIndexingState;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawledDomain;
+import nu.marginalia.model.crawldata.SerializableCrawlData;
+import nu.marginalia.model.html.HtmlStandard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.util.*;

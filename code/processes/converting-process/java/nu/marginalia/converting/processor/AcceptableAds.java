@@ -1,6 +1,6 @@
 package nu.marginalia.converting.processor;
 
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawledDocument;
 import org.jsoup.nodes.Document;
 
 

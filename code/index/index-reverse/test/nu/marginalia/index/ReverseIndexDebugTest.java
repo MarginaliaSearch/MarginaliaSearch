@@ -26,7 +26,7 @@ public class ReverseIndexDebugTest {
         long wordOffset = wordsBTreeReader.findEntry(problemWord);
         assertTrue(wordOffset >= 0);
 
-        var docsReader = new BTreeReader(documents, ReverseIndexParameters.docsBTreeContext, wordOffset);
+        var docsReader = new BTreeReader(documents, ReverseIndexParameters.prioDocsBTreeContext, wordOffset);
 
         // We find problemDoc even though it doesn't exist in the document range
         long docOffset = docsReader.findEntry(problemDoc);

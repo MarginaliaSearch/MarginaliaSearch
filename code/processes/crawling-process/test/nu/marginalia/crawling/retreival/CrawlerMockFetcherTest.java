@@ -5,13 +5,13 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.*;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.HttpFetchResult;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
+import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.test.CommonTestData;
 import okhttp3.Headers;
@@ -23,7 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CrawlerMockFetcherTest {
 

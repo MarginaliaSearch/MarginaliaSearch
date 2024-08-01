@@ -1,23 +1,23 @@
 package nu.marginalia.language.sentence;
 
 import com.github.datquocnguyen.RDRPOSTagger;
-import gnu.trove.map.hash.TObjectIntHashMap;
+import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
+import nu.marginalia.language.sentence.tag.HtmlStringTagger;
+import nu.marginalia.language.sentence.tag.HtmlTag;
+import nu.marginalia.language.sentence.tag.HtmlTaggedString;
+import nu.marginalia.segmentation.NgramLexicon;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.stemmer.PorterStemmer;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,14 +38,13 @@ public class SentenceExtractor {
     private final PorterStemmer porterStemmer = new PorterStemmer();
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
 
-    private static final SentenceExtractorHtmlTagCleaner tagCleaner = new SentenceExtractorHtmlTagCleaner();
     private static final SentencePreCleaner sentencePrecleaner = new SentencePreCleaner();
 
     /* Truncate sentences longer than this.  This is mostly a defense measure against malformed data
      * that might otherwise use an undue amount of processing power. 250 words is about 10X longer than
      * this comment. */
-    private static final int MAX_SENTENCE_LENGTH = 250;
-    private static final int MAX_TEXT_LENGTH = 65536;
+    static final int MAX_SENTENCE_LENGTH = 250;
+    static final int MAX_SENTENCE_COUNT = 1000;
 
     @SneakyThrows @Inject
     public SentenceExtractor(LanguageModels models)
@@ -76,218 +75,221 @@ public class SentenceExtractor {
     }
 
     public DocumentLanguageData extractSentences(Document doc) {
-        var clone = doc.clone();
-        tagCleaner.clean(clone);
+        final List<DocumentSentence> textSentences = new ArrayList<>();
+        
+        final List<HtmlTaggedString> taggedStrings = HtmlStringTagger.tagDocumentStrings(doc);
 
-        final String text = asText(clone);
-        final DocumentSentence[] textSentences = extractSentencesFromString(text);
+        final int totalTextLength = taggedStrings.stream().mapToInt(HtmlTaggedString::length).sum();
+        final StringBuilder documentText = new StringBuilder(totalTextLength + taggedStrings.size());
 
-        String title = getTitle(clone, textSentences);
+        for (var taggedString : taggedStrings) {
+            String text = taggedString.string();
 
-        TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
-        var titleSentences = extractSentencesFromString(title.toLowerCase());
-        return new DocumentLanguageData(textSentences, titleSentences, counts, text);
+            textSentences.addAll(
+                    extractSentencesFromString(text, taggedString.tags())
+            );
+
+            if (documentText.isEmpty()) {
+                documentText.append(text);
+            }
+            else {
+                documentText.append(' ').append(text);
+            }
+        }
+
+        return new DocumentLanguageData(textSentences, documentText.toString());
     }
 
     public DocumentLanguageData extractSentences(String text, String title) {
-        final DocumentSentence[] textSentences = extractSentencesFromString(text);
+        var textSentences = extractSentencesFromString(text, EnumSet.noneOf(HtmlTag.class));
+        var titleSentences = extractSentencesFromString(title.toLowerCase(), EnumSet.of(HtmlTag.TITLE));
 
-        TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
-        var titleSentences = extractSentencesFromString(title.toLowerCase());
-        return new DocumentLanguageData(textSentences, titleSentences, counts, text);
+        List<DocumentSentence> combined = new ArrayList<>(textSentences.size() + titleSentences.size());
+        combined.addAll(titleSentences);
+        combined.addAll(textSentences);
+
+        return new DocumentLanguageData(
+                combined,
+                text);
     }
 
-    private String getTitle(Document doc, DocumentSentence[] textSentences) {
-        String title = doc.getElementsByTag("title").text() + " . "  +
-                Optional.ofNullable(doc.getElementsByTag("h1").first()).map(Element::text).orElse("");
+    public DocumentSentence extractSentence(String text, EnumSet<HtmlTag> htmlTags) {
+        var wordsAndSeps = SentenceSegmentSplitter.splitSegment(text, MAX_SENTENCE_LENGTH);
 
-        if (title.trim().length() < 3) {
-            title = doc.getElementsByTag("h2").text();
-        }
+        String[] words = wordsAndSeps.words();
+        BitSet seps = wordsAndSeps.separators();
+        String[] lc = new String[words.length];
+        String[] stemmed = new String[words.length];
 
-        if (title.trim().length() < 3) {
-            for (DocumentSentence textSentence : textSentences) {
-                if (textSentence.length() > 0) {
-                    title = textSentence.originalSentence.toLowerCase();
-                    break;
-                }
+        BitSet isCapitalized = new BitSet(words.length);
+        BitSet isAllCaps = new BitSet(words.length);
+
+        for (int i = 0; i < words.length; i++) {
+            lc[i] = stripPossessive(words[i].toLowerCase());
+
+            if (words[i].length() > 0 && Character.isUpperCase(words[i].charAt(0))) {
+                isCapitalized.set(i);
             }
-        }
-
-        return title;
-    }
-
-
-    @NotNull
-    private TObjectIntHashMap<String> calculateWordCounts(DocumentSentence[] textSentences) {
-        TObjectIntHashMap<String> counts = new TObjectIntHashMap<>(textSentences.length*10, 0.5f, 0);
-
-        for (var sent : textSentences) {
-            for (var word : sent.stemmedWords) {
-                counts.adjustOrPutValue(word, 1, 1);
-            }
-        }
-        return counts;
-    }
-
-    public DocumentSentence extractSentence(String text) {
-        var wordsAndSeps = SentenceSegmentSplitter.splitSegment(text);
-
-        var words = wordsAndSeps.words;
-        var seps = wordsAndSeps.separators;
-        var lc = SentenceExtractorStringUtils.toLowerCaseStripPossessive(wordsAndSeps.words);
-
-        List<String[]> ngrams = ngramLexicon.findSegmentsStrings(2, 12, words);
-
-        String[] ngramsWords = new String[ngrams.size()];
-        String[] ngramsStemmedWords = new String[ngrams.size()];
-        for (int i = 0; i < ngrams.size(); i++) {
-            String[] ngram = ngrams.get(i);
-
-            StringJoiner ngramJoiner = new StringJoiner("_");
-            StringJoiner stemmedJoiner = new StringJoiner("_");
-            for (String s : ngram) {
-                ngramJoiner.add(s);
-                stemmedJoiner.add(porterStemmer.stem(s));
+            if (StringUtils.isAllUpperCase(words[i])) {
+                isAllCaps.set(i);
             }
 
-            ngramsWords[i] = ngramJoiner.toString();
-            ngramsStemmedWords[i] = stemmedJoiner.toString();
-        }
-
-
-        return new DocumentSentence(
-            SentenceExtractorStringUtils.sanitizeString(text),
-                words,
-                seps,
-                lc,
-                rdrposTagger.tagsForEnSentence(words),
-                stemSentence(lc),
-                ngramsWords,
-                ngramsStemmedWords
-        );
-    }
-
-    public DocumentSentence[] extractSentencesFromString(String text) {
-        String[] sentences;
-
-        String textNormalizedSpaces = SentenceExtractorStringUtils.normalizeSpaces(text);
-
-        try {
-            sentences = sentenceDetector.sentDetect(textNormalizedSpaces);
-        }
-        catch (Exception ex) {
-            // shitty fallback logic
-            sentences = StringUtils.split(textNormalizedSpaces, '.');
-        }
-
-        sentences = sentencePrecleaner.clean(sentences);
-
-        final String[][] tokens = new String[sentences.length][];
-        final int[][] separators = new int[sentences.length][];
-        final String[][] posTags = new String[sentences.length][];
-        final String[][] tokensLc = new String[sentences.length][];
-        final String[][] stemmedWords = new String[sentences.length][];
-
-        for (int i = 0; i < tokens.length; i++) {
-
-            var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sentences[i]);
-            tokens[i] = wordsAndSeps.words;
-            separators[i] = wordsAndSeps.separators;
-
-            if (tokens[i].length > MAX_SENTENCE_LENGTH) {
-                tokens[i] = Arrays.copyOf(tokens[i], MAX_SENTENCE_LENGTH);
-                separators[i] = Arrays.copyOf(separators[i], MAX_SENTENCE_LENGTH);
-            }
-
-            for (int j = 0; j < tokens[i].length; j++) {
-                while (tokens[i][j].endsWith(".")) {
-                    tokens[i][j] = StringUtils.removeEnd(tokens[i][j], ".");
-                }
-            }
-        }
-
-        for (int i = 0; i < tokens.length; i++) {
-            posTags[i] = rdrposTagger.tagsForEnSentence(tokens[i]);
-        }
-
-        for (int i = 0; i < tokens.length; i++) {
-            tokensLc[i] = SentenceExtractorStringUtils.toLowerCaseStripPossessive(tokens[i]);
-        }
-
-        for (int i = 0; i < tokens.length; i++) {
-            stemmedWords[i] = stemSentence(tokensLc[i]);
-        }
-
-        DocumentSentence[] ret = new DocumentSentence[sentences.length];
-        for (int i = 0; i < ret.length; i++) {
-            String fullString;
-
-            if (i == 0) {
-                fullString = SentenceExtractorStringUtils.sanitizeString(sentences[i]);
-            }
-            else {
-                fullString = "";
-            }
-
-            List<String[]> ngrams = ngramLexicon.findSegmentsStrings(2, 12, tokens[i]);
-
-            String[] ngramsWords = new String[ngrams.size()];
-            String[] ngramsStemmedWords = new String[ngrams.size()];
-
-            for (int j = 0; j < ngrams.size(); j++) {
-                String[] ngram = ngrams.get(j);
-
-                StringJoiner ngramJoiner = new StringJoiner("_");
-                StringJoiner stemmedJoiner = new StringJoiner("_");
-                for (String s : ngram) {
-                    ngramJoiner.add(s);
-                    stemmedJoiner.add(porterStemmer.stem(s));
-                }
-
-                ngramsWords[j] = ngramJoiner.toString();
-                ngramsStemmedWords[j] = stemmedJoiner.toString();
-            }
-
-
-            ret[i] = new DocumentSentence(fullString,
-                    tokens[i],
-                    separators[i],
-                    tokensLc[i],
-                    posTags[i],
-                    stemmedWords[i],
-                    ngramsWords,
-                    ngramsStemmedWords
-                    );
-        }
-        return ret;
-    }
-
-    private String[] stemSentence(String[] strings) {
-        String[] stemmed = new String[strings.length];
-        for (int i = 0; i < stemmed.length; i++) {
-            var sent = SentenceExtractorStringUtils.stripPossessive(strings[i]);
             try {
-                stemmed[i] = porterStemmer.stem(sent);
+                stemmed[i] = porterStemmer.stem(lc[i]);
             }
             catch (Exception ex) {
                 stemmed[i] = "NN"; // ???
             }
         }
-        return stemmed;
+
+        return new DocumentSentence(
+                seps,
+                lc,
+                rdrposTagger.tagsForEnSentence(words),
+                stemmed,
+                htmlTags,
+                isCapitalized,
+                isAllCaps
+        );
     }
 
-    public String asText(Document dc) {
-        String text = dc.getElementsByTag("body").text();
+    public List<DocumentSentence> extractSentencesFromString(String text, EnumSet<HtmlTag> htmlTags) {
+        String[] sentences;
 
-        if (text.length() > MAX_TEXT_LENGTH) {
-            return text.substring(0, MAX_TEXT_LENGTH);
+        // Normalize spaces
+
+        text = normalizeSpaces(text);
+
+        // Split into sentences
+
+        try {
+            sentences = sentenceDetector.sentDetect(text);
+        }
+        catch (Exception ex) {
+            // shitty fallback logic
+            sentences = StringUtils.split(text, '.');
+        }
+
+        sentences = sentencePrecleaner.clean(sentences);
+
+        // Truncate the number of sentences if it exceeds the maximum, to avoid
+        // excessive processing time on malformed data
+
+        if (sentences.length > MAX_SENTENCE_COUNT) {
+            sentences = Arrays.copyOf(sentences, MAX_SENTENCE_COUNT);
+        }
+
+        final boolean isNaturalLanguage = htmlTags.stream().noneMatch(tag -> tag.nonLanguage);
+
+        List<DocumentSentence> ret = new ArrayList<>(sentences.length);
+
+        if (isNaturalLanguage) {
+            // Natural language text;  do POS tagging and stemming
+
+            for (String sent : sentences) {
+                var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
+                var tokens = wordsAndSeps.words();
+                var separators = wordsAndSeps.separators();
+                var posTags = rdrposTagger.tagsForEnSentence(tokens);
+                var tokensLc = new String[tokens.length];
+                var stemmed = new String[tokens.length];
+
+                BitSet isCapitalized = new BitSet(tokens.length);
+                BitSet isAllCaps = new BitSet(tokens.length);
+
+                for (int i = 0; i < tokens.length; i++) {
+                    if (tokens[i].length() > 0 && Character.isUpperCase(tokens[i].charAt(0))) {
+                        isCapitalized.set(i);
+                    }
+                    if (StringUtils.isAllUpperCase(tokens[i])) {
+                        isAllCaps.set(i);
+                    }
+
+                    var originalVal = tokens[i];
+                    var newVal = stripPossessive(originalVal.toLowerCase());
+
+                    if (Objects.equals(originalVal, newVal)) {
+                        tokensLc[i] = originalVal;
+                    } else {
+                        tokensLc[i] = newVal;
+                    }
+
+                    try {
+                        stemmed[i] = porterStemmer.stem(tokens[i]);
+                    }
+                    catch (Exception ex) {
+                        stemmed[i] = "NN"; // ???
+                    }
+                }
+                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps));
+            }
         }
         else {
-            return text.substring(0, (int) (text.length() * 0.95));
+            // non-language text, e.g. program code;  don't bother with POS tagging or stemming
+            // as this is not likely to be useful
+
+            for (String sent : sentences) {
+                var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
+                var tokens = wordsAndSeps.words();
+                var separators = wordsAndSeps.separators();
+                var posTags = new String[tokens.length];
+                Arrays.fill(posTags, "X"); // Placeholder POS tag
+                var tokensLc = new String[tokens.length];
+                var stemmed = new String[tokens.length];
+
+                BitSet isCapitalized = new BitSet(tokens.length);
+                BitSet isAllCaps = new BitSet(tokens.length);
+
+                for (int i = 0; i < tokensLc.length; i++) {
+                    var originalVal = tokens[i];
+
+                    if (tokens[i].length() > 0 && Character.isUpperCase(tokens[i].charAt(0))) {
+                        isCapitalized.set(i);
+                    }
+                    if (StringUtils.isAllUpperCase(tokens[i])) {
+                        isAllCaps.set(i);
+                    }
+
+                    if (StringUtils.isAllLowerCase(originalVal)) {
+                        tokensLc[i] = originalVal;
+                    } else {
+                        tokensLc[i] = originalVal.toLowerCase();
+                    }
+                    stemmed[i] = tokensLc[i]; // we don't stem non-language words
+                }
+
+                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isAllCaps, isCapitalized));
+            }
+
         }
+
+
+        return ret;
     }
 
 
+    public static String normalizeSpaces(String s) {
+        if (s.indexOf('\t') >= 0) {
+            s = s.replace('\t', ' ');
+        }
+        if (s.indexOf('\n') >= 0) {
+            s = s.replace('\n', ' ');
+        }
+        return s;
+    }
+
+    public static String stripPossessive(String s) {
+        int end = s.length();
+
+        if (s.endsWith("'")) {
+            return s.substring(0, end-1);
+        }
+
+        if (s.endsWith("'s") || s.endsWith("'S")) {
+            return s.substring(0, end-2);
+        }
+
+        return s;
+    }
 
 }

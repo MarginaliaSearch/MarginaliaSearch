@@ -64,6 +64,11 @@ public class GrpcMultiNodeChannelPool<STUB> {
         return nodeConfigurationWatcher.getQueryNodes();
     }
 
+    /** Return the number of nodes that are eligible for broadcast-style requests */
+    public int getNumNodes() {
+        return nodeConfigurationWatcher.getQueryNodes().size();
+    }
+
     /** Create a new call builder for the given method.  This is a fluent-style
      * method, where you can chain calls to specify how to run the method.
      * <p></p>

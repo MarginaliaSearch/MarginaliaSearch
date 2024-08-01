@@ -1,6 +1,10 @@
 package nu.marginalia.loading;
 
 import nu.marginalia.io.processed.ProcessedDataFileNames;
+import nu.marginalia.model.processed.SlopDocumentRecord;
+import nu.marginalia.model.processed.SlopDomainLinkRecord;
+import nu.marginalia.model.processed.SlopDomainRecord;
+import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.worklog.BatchingWorkLogInspector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,26 +43,32 @@ public class LoaderInputData {
         lastGoodBatch.put(singleSource, lastBatch);
     }
 
-    public Collection<Path> listDomainFiles() {
-        List<Path> pathsAll = new ArrayList<>();
+    public Collection<SlopPageRef<SlopDomainRecord>> listDomainPages() {
+        List<SlopPageRef<SlopDomainRecord>> pathsAll = new ArrayList<>();
         for (var source : sourceDirectories) {
-            pathsAll.addAll(ProcessedDataFileNames.listDomainFiles(source, lastGoodBatch.get(source)));
+            for (int i = 0; i < lastGoodBatch.get(source); i++) {
+                pathsAll.add(new SlopPageRef<>(ProcessedDataFileNames.domainFileName(source), i));
+            }
         }
         return pathsAll;
     }
 
-    public Collection<Path> listDomainLinkFiles() {
-        List<Path> pathsAll = new ArrayList<>();
+    public Collection<SlopPageRef<SlopDomainLinkRecord>> listDomainLinkPages() {
+        List<SlopPageRef<SlopDomainLinkRecord>> pathsAll = new ArrayList<>();
         for (var source : sourceDirectories) {
-            pathsAll.addAll(ProcessedDataFileNames.listDomainLinkFiles(source, lastGoodBatch.get(source)));
+            for (int i = 0; i < lastGoodBatch.get(source); i++) {
+                pathsAll.add(new SlopPageRef<>(ProcessedDataFileNames.domainLinkFileName(source), i));
+            }
         }
         return pathsAll;
     }
 
-    public Collection<Path> listDocumentFiles() {
-        List<Path> pathsAll = new ArrayList<>();
+    public Collection<SlopPageRef<SlopDocumentRecord>> listDocumentFiles() {
+        List<SlopPageRef<SlopDocumentRecord>> pathsAll = new ArrayList<>();
         for (var source : sourceDirectories) {
-            pathsAll.addAll(ProcessedDataFileNames.listDocumentFiles(source, lastGoodBatch.get(source)));
+            for (int i = 0; i < lastGoodBatch.get(source); i++) {
+                pathsAll.add(new SlopPageRef<>(ProcessedDataFileNames.documentFileName(source), i));
+            }
         }
         return pathsAll;
     }

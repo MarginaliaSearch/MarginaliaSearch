@@ -6,19 +6,11 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import nu.marginalia.IndexLocations;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
-import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
-import nu.marginalia.service.module.ServiceConfiguration;
-import nu.marginalia.storage.model.FileStorageState;
-import nu.marginalia.svc.BackupService;
-import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageId;
-import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.index.api.IndexMqClient;
 import nu.marginalia.index.api.IndexMqEndpoints;
 import nu.marginalia.mq.MqMessageState;
@@ -27,9 +19,20 @@ import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
 import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.mqapi.loading.LoadRequest;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.process.ProcessOutboxes;
+import nu.marginalia.process.ProcessService;
+import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageState;
+import nu.marginalia.storage.model.FileStorageType;
+import nu.marginalia.svc.BackupService;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -110,9 +113,30 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Converter failed");
 
+                if (!shouldAutoClean()) {
+                    // If we're not auto-cleaning, we need to clean the NEW flag for the processed storage
+                    storageService.setFileStorageState(processedId, FileStorageState.UNSET);
+                    // (if we do auto-clean, we skip this step and purge the items after loading)
+                }
+
                 yield new Load(List.of(processedId));
             }
             case Load(List<FileStorageId> processedIds, long msgId) when msgId < 0 -> {
+                // clear the output directory of the loader from any debris from partial jobs that have been aborted
+                Files.list(IndexLocations.getIndexConstructionArea(storageService)).forEach(path -> {
+                    try {
+                        if (Files.isDirectory(path)) {
+                            FileUtils.deleteDirectory(path.toFile());
+                        }
+                        else if (Files.isRegularFile(path)) {
+                            Files.delete(path);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error clearing staging area", e);
+                    }
+                });
+
+
                 long id = mqLoaderOutbox.sendAsync(new LoadRequest(processedIds));
 
                 yield new Load(processedIds, id);
@@ -122,9 +146,20 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
 
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Loader failed");
-                } else {
-                    cleanProcessedStorage(processedIds);
                 }
+
+                // If we're auto-cleaning, flag the processed files for deletion if they have the NEW flag,
+                // indicating they've recently been created.  We need to check this, so we don't delete archived
+                // stuff that's being loaded manually
+
+                if (shouldAutoClean()) {
+                    for (var id : processedIds) {
+                        if (FileStorageState.NEW.equals(storageService.getStorage(id).state())) {
+                            storageService.flagFileForDeletion(id);
+                        }
+                    }
+                }
+
                 yield new Backup(processedIds);
             }
             case Backup(List<FileStorageId> processedIds) -> {
@@ -146,7 +181,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
-                    yield new Error("Repartition failed");
+                    yield new Error("Forward index construction failed");
                 else
                     yield new ReindexFull();
             }
@@ -155,7 +190,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
-                    yield new Error("Repartition failed");
+                    yield new Error("Full index construction failed");
                 else
                     yield new ReindexPrio();
             }
@@ -164,7 +199,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
-                    yield new Error("Repartition failed");
+                    yield new Error("Prio index construction failed");
                 else
                     yield new SwitchIndex();
             }
@@ -184,6 +219,16 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
 
     private long createIndex(IndexName index) throws Exception {
         return mqIndexConstructorOutbox.sendAsync(new CreateIndexRequest(index));
+    }
+
+    private boolean shouldAutoClean() {
+        try {
+            return nodeConfigurationService.get(nodeId).autoClean();
+        }
+        catch (SQLException ex) {
+            logger.error("Error getting node configuration", ex);
+            return false; // safe dafault
+        }
     }
 
 
@@ -215,24 +260,5 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
         this.nodeId = serviceConfiguration.node();
     }
 
-    private void cleanProcessedStorage(List<FileStorageId> processedStorageId) {
-        try {
-            var config = nodeConfigurationService.get(nodeId);
-
-            for (var id : processedStorageId) {
-                if (FileStorageState.NEW.equals(storageService.getStorage(id).state())) {
-                    if (config.autoClean()) {
-                        storageService.flagFileForDeletion(id);
-                    }
-                    else {
-                        storageService.setFileStorageState(id, FileStorageState.UNSET);
-                    }
-                }
-            }
-        }
-        catch (SQLException ex) {
-            logger.error("Error in clean-up", ex);
-        }
-    }
 
 }

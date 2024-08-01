@@ -21,7 +21,7 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation project(':code:process-mqapi')
+    implementation project(':code:processes:process-mq-api')
     implementation project(':code:common:process')
     implementation project(':code:common:service')
     implementation project(':code:common:db')

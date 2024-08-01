@@ -1,6 +1,6 @@
 package nu.marginalia.tools;
 
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 
 import java.io.IOException;
 import java.util.HashSet;

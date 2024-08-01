@@ -22,6 +22,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Reads the document database, which is a SQLite database
+ * containing the URLs and metadata of the documents in the
+ * index.
+ * <p></p>
+ * The database is created by the DocumentDbWriter class.
+ * */
 @Singleton
 public class DocumentDbReader {
     private final Path dbFile;
@@ -52,6 +58,11 @@ public class DocumentDbReader {
         }
     }
 
+    /** Switches the input database file to a new file.
+     * <p></p>
+     * This is used to switch over to a new database file
+     * when the index is re-indexed.
+     * */
     public void switchInput(Path newDbFile) throws IOException, SQLException {
         if (!Files.isRegularFile(newDbFile)) {
             logger.error("Source is not a file, refusing switch-over {}", newDbFile);
@@ -78,35 +89,11 @@ public class DocumentDbReader {
         connection = createConnection();
     }
 
-    public List<String> getUrlsFromDomain(int domainId) throws SQLException {
-        if (connection == null ||
-                connection.isClosed())
-        {
-            throw new RuntimeException("URL query temporarily unavailable due to database switch");
-        }
-
-        long minId = UrlIdCodec.encodeId(domainId, 0);
-        long maxId = UrlIdCodec.encodeId(domainId+1, 0);
-
-        List<String> ret = new ArrayList<>();
-
-        try (var stmt = connection.prepareStatement("""
-                SELECT URL
-                FROM DOCUMENT
-                WHERE ID >= ? AND ID < ?
-                """))
-        {
-            stmt.setLong(1, minId);
-            stmt.setLong(2, maxId);
-            var rs = stmt.executeQuery();
-            while (rs.next()) {
-                ret.add(rs.getString(1));
-            }
-        }
-
-        return ret;
-    }
-
+    /** Returns the URL details for the given document ids.
+     * <p></p>
+     * This is used to get the URL details for the search
+     * results.
+     * */
     public List<DocdbUrlDetail> getUrlDetails(TLongList ids) throws SQLException {
         List<DocdbUrlDetail> ret = new ArrayList<>(ids.size());
 

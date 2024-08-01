@@ -1,8 +1,8 @@
 package nu.marginalia.converting.processor.logic.links;
 
-import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.idx.WordFlags;
 
 import java.util.*;
 
@@ -13,7 +13,7 @@ public class TopKeywords {
         if (doc.details == null || doc.details.linksInternal == null)
             return;
 
-        List<String> topKeywords = doc.words.getWordsWithAnyFlag(WordFlags.TfIdfHigh.asBit() | WordFlags.Subjects.asBit());
+        List<String> topKeywords = doc.words.getWordsWithAnyFlag(WordFlags.Subjects.asBit());
 
         topKeywordsByUrl.put(doc.url, new HashSet<>(topKeywords));
     }

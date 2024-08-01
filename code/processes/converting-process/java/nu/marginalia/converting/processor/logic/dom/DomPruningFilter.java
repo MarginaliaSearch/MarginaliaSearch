@@ -18,7 +18,7 @@ public class DomPruningFilter implements NodeFilter {
 
     private final double pruneThreshold;
 
-    private final Map<Node, NodeData> data = new HashMap<>();
+    private final Map<Node, NodeData> data = new HashMap<>(256);
     private final NodeData dummy = new NodeData(Integer.MAX_VALUE, 1, 0);
 
     public DomPruningFilter(double pruneThreshold) {

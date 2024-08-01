@@ -10,9 +10,7 @@ import lombok.*;
 public class ResultRankingParameters {
 
     /** Tuning for BM25 when applied to full document matches */
-    public final Bm25Parameters fullParams;
-    /** Tuning for BM25 when applied to priority matches, terms with relevance signal indicators */
-    public final Bm25Parameters prioParams;
+    public final Bm25Parameters bm25Params;
 
     /** Documents below this length are penalized */
     public int shortDocumentThreshold;
@@ -32,11 +30,9 @@ public class ResultRankingParameters {
     /** Magnitude of penalty for documents with low average sentence length */
     public double shortSentencePenalty;
 
-    public double bm25FullWeight;
-    public double bm25NgramWeight;
-    public double bm25PrioWeight;
-    public double tcfJaccardWeight;
-    public double tcfOverlapWeight;
+    public double bm25Weight;
+    public double tcfFirstPosition;
+    public double tcfAvgDist;
 
     public TemporalBias temporalBias;
     public double temporalBiasWeight;
@@ -45,19 +41,16 @@ public class ResultRankingParameters {
 
     public static ResultRankingParameters sensibleDefaults() {
         return builder()
-                .fullParams(new Bm25Parameters(1.2, 0.5))
-                .prioParams(new Bm25Parameters(1.5, 0))
+                .bm25Params(new Bm25Parameters(1.2, 0.5))
                 .shortDocumentThreshold(2000)
                 .shortDocumentPenalty(2.)
                 .domainRankBonus(1/25.)
                 .qualityPenalty(1/15.)
                 .shortSentenceThreshold(2)
                 .shortSentencePenalty(5)
-                .bm25FullWeight(1.)
-                .bm25NgramWeight(.25)
-                .bm25PrioWeight(1.)
-                .tcfOverlapWeight(3.)
-                .tcfJaccardWeight(1)
+                .bm25Weight(1.)
+                .tcfAvgDist(25.)
+                .tcfFirstPosition(1) // FIXME: what's a good default?
                 .temporalBias(TemporalBias.NONE)
                 .temporalBiasWeight(1. / (5.))
                 .exportDebugData(false)

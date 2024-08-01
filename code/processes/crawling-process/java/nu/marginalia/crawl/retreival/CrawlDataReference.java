@@ -2,9 +2,9 @@ package nu.marginalia.crawl.retreival;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 import nu.marginalia.lsh.EasyLSH;
+import nu.marginalia.model.crawldata.CrawledDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

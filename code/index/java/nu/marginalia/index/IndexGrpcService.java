@@ -13,18 +13,20 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.results.*;
+import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.SearchResultSet;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
-import nu.marginalia.index.results.IndexResultValuatorService;
+import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
-import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,8 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.BitSet;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -81,7 +84,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     private final StatefulIndex statefulIndex;
     private final SearchSetsService searchSetsService;
 
-    private final IndexResultValuatorService resultValuator;
+    private final IndexResultRankingService resultValuator;
 
     private final String nodeName;
 
@@ -91,7 +94,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
                             StatefulIndex statefulIndex,
                             SearchSetsService searchSetsService,
-                            IndexResultValuatorService resultValuator)
+                            IndexResultRankingService resultValuator)
     {
         var nodeId = serviceConfiguration.node();
         this.nodeName = Integer.toString(nodeId);
@@ -135,7 +138,6 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
 
                 var rawItem = RpcRawResultItem.newBuilder();
                 rawItem.setCombinedId(rawResult.combinedId);
-                rawItem.setResultsFromDomain(rawResult.resultsFromDomain);
                 rawItem.setHtmlFeatures(rawResult.htmlFeatures);
                 rawItem.setEncodedDocMetadata(rawResult.encodedDocMetadata);
                 rawItem.setHasPriorityTerms(rawResult.hasPrioTerm);
@@ -143,7 +145,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                 for (var score : rawResult.keywordScores) {
                     rawItem.addKeywordScores(
                             RpcResultKeywordScore.newBuilder()
-                                    .setEncodedWordMetadata(score.encodedWordMetadata())
+                                    .setFlags(score.flags)
+                                    .setPositions(score.positionCount)
                                     .setKeyword(score.keyword)
                     );
                 }
@@ -159,6 +162,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         .setUrlQuality(result.urlQuality)
                         .setWordsTotal(result.wordsTotal)
                         .setBestPositions(result.bestPositions)
+                        .setResultsFromDomain(result.resultsFromDomain)
                         .setRawItem(rawItem);
 
                 var rankingDetails = IndexProtobufCodec.convertRankingDetails(result.rankingDetails);
@@ -205,7 +209,8 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
         return searchSetsService.getSearchSetByName(request.getSearchSetIdentifier());
     }
 
-    private SearchResultSet executeSearch(SearchParameters params) throws SQLException, InterruptedException {
+    // accessible for tests
+    public SearchResultSet executeSearch(SearchParameters params) throws SQLException, InterruptedException {
 
         if (!statefulIndex.isLoaded()) {
             // Short-circuit if the index is not loaded, as we trivially know that there can be no results
@@ -281,10 +286,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             awaitCompletion();
 
             // Return the best results
-            return new SearchResultSet(
-                    resultValuator.selectBestResults(parameters,
-                            resultRankingContext,
-                            resultHeap));
+            return new SearchResultSet(resultValuator.selectBestResults(parameters, resultHeap));
         }
 
         /** Wait for all tasks to complete */
@@ -314,6 +316,9 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             public void run() {
                 try {
                     executeSearch();
+                }
+                catch (Exception ex) {
+                    logger.error("Error in index lookup", ex);
                 }
                 finally {
                     synchronized (remainingIndexTasks) {

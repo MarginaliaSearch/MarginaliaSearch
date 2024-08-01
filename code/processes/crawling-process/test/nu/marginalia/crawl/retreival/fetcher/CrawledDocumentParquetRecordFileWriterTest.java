@@ -1,6 +1,6 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
-import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
+import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

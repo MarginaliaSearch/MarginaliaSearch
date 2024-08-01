@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+
+
+    id "de.undercouch.download" version "5.1.0"
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:config')
+    implementation project(':code:common:process')
+    implementation project(':code:common:model')
+    implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:term-frequency-dict')
+    implementation project(':code:libraries:blocking-thread-pool')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+    implementation project(':code:processes:converting-process:ft-anchor-keywords')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:converting-process')
+    implementation project(':third-party:commons-codec')
+
+
+    implementation libs.bundles.slf4j
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation libs.trove
+    implementation libs.commons.lang3
+    implementation libs.commons.compress
+    implementation libs.notnull
+    implementation libs.jsoup
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+

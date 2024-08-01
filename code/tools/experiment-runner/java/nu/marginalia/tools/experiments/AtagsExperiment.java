@@ -7,9 +7,9 @@ import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
-import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.tools.LegacyExperiment;
 
 import java.sql.SQLException;

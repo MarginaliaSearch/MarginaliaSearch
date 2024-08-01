@@ -1,6 +1,8 @@
 package nu.marginalia.functions.searchquery.query_parser.token;
 
 
+import nu.marginalia.index.query.limit.SpecificationLimit;
+
 public sealed interface QueryToken {
     String str();
     String displayStr();
@@ -11,25 +13,18 @@ public sealed interface QueryToken {
     record AdviceTerm(String str, String displayStr) implements QueryToken {}
     record PriorityTerm(String str, String displayStr) implements QueryToken {}
 
-    record QualityTerm(String str) implements QueryToken {
-        public String displayStr() {
-            return "q" + str;
-        }
+    record QualityTerm(SpecificationLimit limit, String displayStr) implements QueryToken {
+        public String str() { return displayStr; }
+
     }
-    record YearTerm(String str) implements QueryToken {
-        public String displayStr() {
-            return "year" + str;
-        }
+    record YearTerm(SpecificationLimit limit, String displayStr) implements QueryToken {
+        public String str() { return displayStr; }
     }
-    record SizeTerm(String str) implements QueryToken {
-        public String displayStr() {
-            return "size" + str;
-        }
+    record SizeTerm(SpecificationLimit limit, String displayStr) implements QueryToken {
+        public String str() { return displayStr; }
     }
-    record RankTerm(String str) implements QueryToken {
-        public String displayStr() {
-            return "rank" + str;
-        }
+    record RankTerm(SpecificationLimit limit, String displayStr) implements QueryToken {
+        public String str() { return displayStr; }
     }
     record NearTerm(String str) implements QueryToken {
         public String displayStr() {

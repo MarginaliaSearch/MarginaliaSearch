@@ -2,10 +2,10 @@ package nu.marginalia.crawl.retreival.revisit;
 
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.DocumentBodyResult;
-import nu.marginalia.crawling.body.HttpFetchResult;
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.model.body.DocumentBodyExtractor;
+import nu.marginalia.model.body.DocumentBodyResult;
+import nu.marginalia.model.body.HttpFetchResult;
+import nu.marginalia.model.crawldata.CrawledDocument;
 
 import javax.annotation.Nullable;
 

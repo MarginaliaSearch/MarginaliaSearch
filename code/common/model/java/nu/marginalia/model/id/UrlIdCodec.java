@@ -37,9 +37,24 @@ public class UrlIdCodec {
         domainId &= 0x7FFF_FFFF;
         documentOrdinal &= 0x03FF_FFFF;
 
+        assert (domainId & 0x7FFF_FFFF) == domainId : "Domain id must be in [0, 2^31-1], was " + domainId;
+        assert (documentOrdinal & 0x03FF_FFFF) == documentOrdinal : "Document ordinal must be in [0, 2^26-1], was " + documentOrdinal;
+
         return ((long) domainId << 26) | documentOrdinal;
     }
 
+    /** Encode a URL id with a ranking element */
+    public static long encodeId(int rank, int domainId, int documentOrdinal) {
+        assert (rank & 0x3F) == rank : "Rank must be in [0, 63], was " + rank;
+        assert (domainId & 0x7FFF_FFFF) == domainId : "Domain id must be in [0, 2^31-1], was " + domainId;
+        assert (documentOrdinal & 0x03FF_FFFF) == documentOrdinal : "Document ordinal must be in [0, 2^26-1], was " + documentOrdinal;
+
+        domainId &= 0x7FFF_FFFF;
+        documentOrdinal &= 0x03FF_FFFF;
+        rank &= 0x3F;
+
+        return  ((long) rank << 57) | ((long) domainId << 26) | documentOrdinal;
+    }
     /** Add a ranking element to an existing combined URL id.
      *
      * @param rank [0,1] the importance of the domain, low is good
@@ -67,7 +82,7 @@ public class UrlIdCodec {
 
     /** Extract the document ordinal component from this URL id */
     public static int getRank(long combinedId) {
-        return (int) (combinedId >>> 57);
+        return (int) (combinedId >>> 57) & 0x3F;
     }
 
     /** Mask out the ranking element from this URL id */

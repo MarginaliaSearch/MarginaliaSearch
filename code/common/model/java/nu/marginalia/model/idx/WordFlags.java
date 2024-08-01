@@ -4,15 +4,11 @@ package nu.marginalia.model.idx;
 import java.util.EnumSet;
 
 public enum WordFlags {
-
     /** Word appears in title */
     Title,
 
     /** Word appears to be the subject in several sentences */
     Subjects,
-
-    /** Word has high tf-idf */
-    TfIdfHigh,
 
     /** Word is a likely named object. This is a weaker version of Subjects. */
     NamesWords,
@@ -42,19 +38,27 @@ public enum WordFlags {
     ExternalLink
     ;
 
-    public int asBit() {
-        return 1 << ordinal();
+    public byte asBit() {
+        return (byte) (1 << ordinal());
     }
 
-    public boolean isPresent(long value) {
+    public boolean isPresent(byte value) {
         return (asBit() & value) > 0;
     }
 
-    public boolean isAbsent(long value) {
+    public boolean isAbsent(byte value) {
         return (asBit() & value) == 0;
     }
 
-    public static EnumSet<WordFlags> decode(long encodedValue) {
+    public static byte encode(EnumSet<WordFlags> flags) {
+        byte ret = 0;
+        for (WordFlags f : flags) {
+            ret |= f.asBit();
+        }
+        return ret;
+    }
+
+    public static EnumSet<WordFlags> decode(byte encodedValue) {
         EnumSet<WordFlags> ret = EnumSet.noneOf(WordFlags.class);
 
         for (WordFlags f : values()) {
