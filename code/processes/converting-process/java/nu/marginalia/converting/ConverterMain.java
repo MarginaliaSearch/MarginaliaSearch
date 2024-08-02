@@ -6,6 +6,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
+import nu.marginalia.converting.model.CrawlPlan;
+import nu.marginalia.converting.model.WorkDir;
+import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
@@ -13,28 +16,24 @@ import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.process.log.WorkLog;
-import nu.marginalia.process.log.WorkLogEntry;
-import nu.marginalia.service.ProcessMainClass;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
+import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.process.log.WorkLogEntry;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import nu.marginalia.worklog.BatchingWorkLog;
 import nu.marginalia.worklog.BatchingWorkLogImpl;
 import org.apache.logging.log4j.util.Strings;
-import nu.marginalia.converting.model.CrawlPlan;
-import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import nu.marginalia.converting.model.WorkDir;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -201,7 +200,7 @@ public class ConverterMain extends ProcessMainClass {
             try {
                 return Optional.of(CrawledDomainReader.createDataStream(path));
             }
-            catch (IOException ex) {
+            catch (Exception ex) {
                 return Optional.empty();
             }
         }
