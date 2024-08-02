@@ -57,8 +57,6 @@ public class DomainLinksLoaderService {
         try (var domainLinkReader = new SlopDomainLinkRecord.Reader(pageRef);
              var linkLoader = new LinkLoader(domainIdRegistry))
         {
-            logger.info("Loading links from {}:{}", pageRef.baseDir(), pageRef.page());
-
             domainLinkReader.forEach(linkLoader::accept);
         }
     }
