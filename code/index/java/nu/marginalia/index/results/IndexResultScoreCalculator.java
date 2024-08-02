@@ -216,6 +216,9 @@ public class IndexResultScoreCalculator {
         int bestCoherenceTitle = coherences.testOptional(positions, spans.title);
         int bestCoherenceHeading = coherences.testOptional(positions, spans.heading);
 
+        boolean allInTitle = coherences.allOptionalInSpan(positions, spans.title);
+        boolean allInHeading = coherences.allOptionalInSpan(positions, spans.heading);
+
         float[] weightedCounts = new float[compiledQuery.size()];
         int firstPosition = Integer.MAX_VALUE;
 
@@ -255,7 +258,9 @@ public class IndexResultScoreCalculator {
                 + bestCoherenceAll
                 + bestCoherenceTitle
                 + bestCoherenceHeading
-                + numCoherenceAll / 4.;
+                + numCoherenceAll / 4.
+                + (allInTitle ? 5.0 : 0)
+                + (allInHeading ? 2.5 : 0);
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
         double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.max(1, firstPosition));

@@ -73,6 +73,16 @@ public class TermCoherenceGroupList {
         return best;
     }
 
+    public boolean allOptionalInSpan(CodedSequence[] positions, DocumentSpan span) {
+        for (var coherenceSet : optionalGroups) {
+            if (!coherenceSet.test(span, positions)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     public static final class TermCoherenceGroup {
         private final int[] offsets;
         private final BitSet present;
