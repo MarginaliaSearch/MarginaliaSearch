@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id "me.champeau.jmh" version "0.6.6"
 }
 
 java {
@@ -23,4 +24,16 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jmh {
+    jvmArgs = [ "--enable-preview" ]
+}
+tasks.withType(me.champeau.jmh.WithJavaToolchain).configureEach {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    })
+}
+tasks.withType(me.champeau.jmh.JmhBytecodeGeneratorTask).configureEach {
+    jvmArgs = ["--enable-preview"]
 }
