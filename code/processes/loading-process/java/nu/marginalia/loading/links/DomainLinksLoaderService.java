@@ -31,7 +31,9 @@ public class DomainLinksLoaderService {
                              ProcessHeartbeat heartbeat,
                              LoaderInputData inputData) throws IOException {
 
-        try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS")) {
+        try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS");
+             var linkLoader = new LinkLoader(domainIdRegistry))
+        {
             Collection<SlopPageRef<SlopDomainLinkRecord>> pageRefs = inputData.listDomainLinkPages();
 
             int processed = 0;
@@ -39,7 +41,10 @@ public class DomainLinksLoaderService {
             for (var pageRef : pageRefs) {
                 task.progress("LOAD", processed++, pageRefs.size());
 
-                loadLinksFromFile(domainIdRegistry, pageRef);
+                try (var domainLinkReader = new SlopDomainLinkRecord.Reader(pageRef))
+                {
+                    domainLinkReader.forEach(linkLoader::accept);
+                }
             }
 
             task.progress("LOAD", processed, pageRefs.size());
@@ -53,15 +58,8 @@ public class DomainLinksLoaderService {
         return true;
     }
 
-    private void loadLinksFromFile(DomainIdRegistry domainIdRegistry, SlopPageRef pageRef) throws IOException {
-        try (var domainLinkReader = new SlopDomainLinkRecord.Reader(pageRef);
-             var linkLoader = new LinkLoader(domainIdRegistry))
-        {
-            domainLinkReader.forEach(linkLoader::accept);
-        }
-    }
 
-    class LinkLoader implements AutoCloseable {
+    private class LinkLoader implements AutoCloseable {
         private final DomainIdRegistry domainIdRegistry;
 
         public LinkLoader(DomainIdRegistry domainIdRegistry) {
@@ -69,10 +67,10 @@ public class DomainLinksLoaderService {
         }
 
         @SneakyThrows
-        void accept(SlopDomainLinkRecord record) {
+        void accept(String source, String dest) {
             domainLinkDbWriter.write(
-                    domainIdRegistry.getDomainId(record.source()),
-                    domainIdRegistry.getDomainId(record.dest())
+                    domainIdRegistry.getDomainId(source),
+                    domainIdRegistry.getDomainId(dest)
             );
         }
 

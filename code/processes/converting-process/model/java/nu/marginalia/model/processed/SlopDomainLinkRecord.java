@@ -9,7 +9,7 @@ import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public record SlopDomainLinkRecord(
         String source,
@@ -39,9 +39,9 @@ public record SlopDomainLinkRecord(
             return sourcesReader.hasRemaining();
         }
 
-        public void forEach(Consumer<SlopDomainLinkRecord> recordConsumer) throws IOException {
+        public void forEach(BiConsumer<String /* source */, String /* dest */> recordConsumer) throws IOException {
             while (hasMore()) {
-                recordConsumer.accept(next());
+                recordConsumer.accept(sourcesReader.get(), destsReader.get());
             }
         }
 
