@@ -50,7 +50,7 @@ public class ResultRankingParameters {
                 .shortSentencePenalty(5)
                 .bm25Weight(1.)
                 .tcfAvgDist(25.)
-                .tcfFirstPosition(1) // FIXME: what's a good default?
+                .tcfFirstPosition(5) // FIXME: what's a good default?
                 .temporalBias(TemporalBias.NONE)
                 .temporalBiasWeight(1. / (5.))
                 .exportDebugData(false)

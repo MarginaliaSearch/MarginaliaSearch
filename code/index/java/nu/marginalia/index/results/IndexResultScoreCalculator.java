@@ -1,5 +1,6 @@
 package nu.marginalia.index.results;
 
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
@@ -25,6 +26,8 @@ import nu.marginalia.sequence.SequenceOperations;
 
 import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
+import java.util.ArrayList;
+import java.util.List;
 
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
@@ -221,18 +224,35 @@ public class IndexResultScoreCalculator {
         float[] weightedCounts = new float[compiledQuery.size()];
         int firstPosition = Integer.MAX_VALUE;
 
-        for (int i = 0; i < weightedCounts.length; i++) {
-            if (positions[i] != null) {
-                var iter = positions[i].iterator();
+        float keywordMinDistFac = 0;
+        if (positions.length > 2) {
+            List<IntIterator> iterators = new ArrayList<>(positions.length);
 
-                if (!ctx.regularMask.get(i)) {
-                    continue;
+            for (int i = 0; i < positions.length; i++) {
+                if (positions[i] != null && ctx.regularMask.get(i)) {
+                    iterators.add(positions[i].iterator());
                 }
+            }
+
+            if (iterators.size() > 2) {
+                int minDist = SequenceOperations.minDistance(iterators);
+
+                if (minDist < 32) {
+                    keywordMinDistFac = 2.0f / (1.f + (float) Math.sqrt(minDist));
+                } else {
+                    keywordMinDistFac = -1.0f * (float) Math.sqrt(minDist);
+                }
+            }
+        }
+
+        for (int i = 0; i < weightedCounts.length; i++) {
+            if (positions[i] != null && ctx.regularMask.get(i)) {
+                var iter = positions[i].iterator();
 
                 while (iter.hasNext()) {
                     int pos = iter.nextInt();
 
-                    firstPosition = Math.min(firstPosition, pos);
+                    firstPosition = Math.max(firstPosition, pos);
 
                     if (spans.title.containsPosition(pos) || spans.heading.containsPosition(pos))
                         weightedCounts[i] += 2.5f;
@@ -254,10 +274,11 @@ public class IndexResultScoreCalculator {
                 + topologyBonus
                 + temporalBias
                 + flagsPenalty
-                + coherenceScore;
+                + coherenceScore
+                + keywordMinDistFac;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
-        double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.max(1, firstPosition));
+        double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(Math.max(1, firstPosition)));
 
         double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
         double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));

@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 
+import java.util.List;
+
 public class SequenceOperations {
 
     /** Return true if the sequences intersect, false otherwise.
@@ -141,5 +143,56 @@ public class SequenceOperations {
         }
 
         return minDistance;
+    }
+
+    public static int minDistance(List<IntIterator> iterators) {
+        if (iterators.size() <= 1)
+            return 0;
+
+        int[] values = new int[iterators.size()];
+
+        for (int i = 0; i < iterators.size(); i++) {
+            if (iterators.get(i).hasNext())
+                values[i] = iterators.get(i).nextInt();
+            else
+                return 0;
+        }
+
+        int minDist = Integer.MAX_VALUE;
+        int successes = 0;
+
+        int minVal = Integer.MAX_VALUE;
+        int maxVal = Integer.MIN_VALUE;
+
+        for (int val : values) {
+            minVal = Math.min(minVal, val);
+            maxVal = Math.max(maxVal, val);
+        }
+
+        minDist = Math.min(minDist, maxVal - minVal);
+
+        for (int i = 0; successes < iterators.size(); i = (i + 1) % iterators.size())
+        {
+            if (values[i] == minVal) {
+                if (!iterators.get(i).hasNext()) {
+                    break;
+                }
+                values[i] = iterators.get(i).nextInt();
+
+                if (values[i] > maxVal) {
+                    maxVal = values[i];
+                }
+                if (values[i] > minVal) {
+                    minVal = Integer.MAX_VALUE;
+                    for (int val : values) {
+                        minVal = Math.min(minVal, val);
+                    }
+                }
+
+                minDist = Math.min(minDist, maxVal - minVal);
+            }
+        }
+
+        return minDist;
     }
 }

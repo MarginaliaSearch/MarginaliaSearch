@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -83,4 +84,15 @@ class SequenceOperationsTest {
         assertFalse(SequenceOperations.intersectSequences(seq1.iterator(), seq2.iterator()));
     }
 
+    @Test
+    void testMinDistance() {
+        ByteBuffer wa = ByteBuffer.allocate(1024);
+        GammaCodedSequence seq1 = GammaCodedSequence.generate(wa, 11, 80, 160);
+        GammaCodedSequence seq2 = GammaCodedSequence.generate(wa, 20, 50, 100);
+        GammaCodedSequence seq3 = GammaCodedSequence.generate(wa, 30, 60, 90);
+
+        assertEquals(19, SequenceOperations.minDistance(List.of(seq1.iterator(), seq2.iterator(), seq3.iterator())));
+
+
+    }
 }
