@@ -82,6 +82,17 @@ public class TermCoherenceGroupList {
         return true;
     }
 
+    public int numOptional() {
+        return optionalGroups.size();
+    }
+    public int largestOptional() {
+        int best = 0;
+        for (var coherenceSet : optionalGroups) {
+            best = Math.max(coherenceSet.size, best);
+        }
+        return best;
+    }
+
 
     public static final class TermCoherenceGroup {
         private final int[] offsets;

@@ -211,13 +211,28 @@ public class IndexResultScoreCalculator {
             temporalBias = 0;
         }
 
-        int numCoherenceAll = coherences.countOptional(positions);
-        int bestCoherenceAll = coherences.testOptional(positions);
-        int bestCoherenceTitle = coherences.testOptional(positions, spans.title);
-        int bestCoherenceHeading = coherences.testOptional(positions, spans.heading);
+        float coherenceScore = 0.f;
 
-        boolean allInTitle = coherences.allOptionalInSpan(positions, spans.title);
-        boolean allInHeading = coherences.allOptionalInSpan(positions, spans.heading);
+        // Calculate a bonus for keyword coherences when large ones exist
+        int largestOptional = coherences.largestOptional();
+        if (largestOptional >= 2) {
+
+            int bestInTitle = coherences.testOptional(positions, spans.title);
+            int bestInHeading = coherences.testOptional(positions, spans.heading);
+            int best = coherences.testOptional(positions);
+
+            if (largestOptional == bestInTitle) {
+                coherenceScore = 2.0f * largestOptional;
+            }
+            else if (largestOptional == bestInHeading) {
+                coherenceScore = 1.5f * largestOptional;
+            }
+            else if (largestOptional == best) {
+                coherenceScore = 0.75f * largestOptional;
+            }
+
+            coherenceScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+        }
 
         float[] weightedCounts = new float[compiledQuery.size()];
         int firstPosition = Integer.MAX_VALUE;
@@ -255,12 +270,7 @@ public class IndexResultScoreCalculator {
                 + topologyBonus
                 + temporalBias
                 + flagsPenalty
-                + bestCoherenceAll
-                + bestCoherenceTitle
-                + bestCoherenceHeading
-                + numCoherenceAll / 4.
-                + (allInTitle ? 5.0 : 0)
-                + (allInHeading ? 2.5 : 0);
+                + coherenceScore;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
         double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.max(1, firstPosition));
