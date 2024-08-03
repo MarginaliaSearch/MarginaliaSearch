@@ -197,13 +197,18 @@ public class IndexResultScoreCalculator {
             temporalBias = 0;
         }
 
+        final int titleLength = spans.title.length();
+
         float coherenceScore = 0.f;
 
         // Calculate a bonus for keyword coherences when large ones exist
         int largestOptional = coherences.largestOptional();
         if (largestOptional >= 2) {
             if (largestOptional == coherences.testOptional(positions, spans.title)) {
-                coherenceScore = 2.0f * largestOptional;
+                // verbatim title match
+                coherenceScore = 4.0f * largestOptional;
+                // additional bonus if the match is most of the title's length
+                coherenceScore += 2.f * largestOptional / titleLength;
             }
             else if (largestOptional == coherences.testOptional(positions, spans.heading)) {
                 coherenceScore = 1.5f * largestOptional;

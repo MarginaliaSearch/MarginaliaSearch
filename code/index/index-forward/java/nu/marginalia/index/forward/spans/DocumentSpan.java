@@ -71,6 +71,22 @@ public class DocumentSpan {
         return startsEnds.iterator();
     }
 
+    public int length() {
+        if (null == startsEnds) {
+            return 0;
+        }
+
+        int len = 0;
+        var iter = startsEnds.iterator();
+
+        while (iter.hasNext()) {
+            len -= iter.nextInt();
+            len += iter.nextInt();
+        }
+
+        return len;
+    }
+
     public int size() {
         return startsEnds.valueCount() / 2;
     }
