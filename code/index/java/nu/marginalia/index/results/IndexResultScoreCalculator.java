@@ -266,12 +266,14 @@ public class IndexResultScoreCalculator {
         double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.max(1, firstPosition));
 
         double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
+        double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
         double ret = normalize(
                 tcfAvgDist + tcfFirstPosition
                         + bM25
+                        + bFlags
                         + Math.max(0, overallPart),
                 -Math.min(0, overallPart));
 
