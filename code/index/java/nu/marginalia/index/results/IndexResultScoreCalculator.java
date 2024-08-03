@@ -99,10 +99,6 @@ public class IndexResultScoreCalculator {
                 docMetadata,
                 htmlFeatures);
 
-        if (hasPrioTerm(searchTerms, positions)) {
-            score = 0.75 * score;
-        }
-
         searchResult.setScore(score);
 
         return searchResult;
@@ -118,19 +114,6 @@ public class IndexResultScoreCalculator {
         }
         if (flagsCount == 0 && !allSynthetic && positionsCount == 0) {
             return true;
-        }
-
-        return false;
-    }
-
-    private boolean hasPrioTerm(QuerySearchTerms searchTerms, CodedSequence[] positions) {
-        var allTerms = searchTerms.termIdsAll;
-        var prioTerms = searchTerms.termIdsPrio;
-
-        for (int i = 0; i < allTerms.size(); i++) {
-            if (positions[i] != null && prioTerms.contains(allTerms.at(i))) {
-                return true;
-            }
         }
 
         return false;
@@ -216,18 +199,19 @@ public class IndexResultScoreCalculator {
         // Calculate a bonus for keyword coherences when large ones exist
         int largestOptional = coherences.largestOptional();
         if (largestOptional >= 2) {
-
-            int bestInTitle = coherences.testOptional(positions, spans.title);
-            int bestInHeading = coherences.testOptional(positions, spans.heading);
-            int best = coherences.testOptional(positions);
-
-            if (largestOptional == bestInTitle) {
+            if (largestOptional == coherences.testOptional(positions, spans.title)) {
                 coherenceScore = 2.0f * largestOptional;
             }
-            else if (largestOptional == bestInHeading) {
+            else if (largestOptional == coherences.testOptional(positions, spans.heading)) {
                 coherenceScore = 1.5f * largestOptional;
             }
-            else if (largestOptional == best) {
+            else if (largestOptional == coherences.testOptional(positions, spans.anchor)) {
+                coherenceScore = 0.2f * largestOptional;
+            }
+            else if (largestOptional == coherences.testOptional(positions, spans.nav)) {
+                coherenceScore = 0.1f * largestOptional;
+            }
+            else if (largestOptional == coherences.testOptional(positions)) {
                 coherenceScore = 0.75f * largestOptional;
             }
 

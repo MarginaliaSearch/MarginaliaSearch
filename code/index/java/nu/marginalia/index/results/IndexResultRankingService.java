@@ -179,7 +179,6 @@ public class IndexResultRankingService {
     public QuerySearchTerms getSearchTerms(CompiledQuery<String> compiledQuery, SearchQuery searchQuery) {
 
         LongArrayList termIdsList = new LongArrayList();
-        LongArrayList termIdsPrio = new LongArrayList();
 
         TObjectLongHashMap<String> termToId = new TObjectLongHashMap<>(10, 0.75f, -1);
 
@@ -189,7 +188,7 @@ public class IndexResultRankingService {
             termToId.put(word, id);
         }
 
-        for (var term : searchQuery.searchTermsAdvice) {
+        for (var term : searchQuery.searchTermsPriority) {
             if (termToId.containsKey(term)) {
                 continue;
             }
@@ -199,21 +198,7 @@ public class IndexResultRankingService {
             termToId.put(term, id);
         }
 
-        for (var term : searchQuery.searchTermsPriority) {
-            if (termToId.containsKey(term)) {
-                long id = SearchTermsUtil.getWordId(term);
-                termIdsPrio.add(id);
-            }
-            else {
-                long id = SearchTermsUtil.getWordId(term);
-                termIdsList.add(id);
-                termIdsPrio.add(id);
-                termToId.put(term, id);
-            }
-        }
-
         var idsAll = new TermIdList(termIdsList);
-        var idsPrio = new TermIdList(termIdsPrio);
 
         var constraints = new ArrayList<TermCoherenceGroupList.TermCoherenceGroup>();
         for (var coherence : searchQuery.searchTermCoherences) {
@@ -222,7 +207,6 @@ public class IndexResultRankingService {
 
         return new QuerySearchTerms(termToId,
                 idsAll,
-                idsPrio,
                 new TermCoherenceGroupList(constraints)
         );
     }
