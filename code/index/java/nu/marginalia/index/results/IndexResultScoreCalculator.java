@@ -197,7 +197,7 @@ public class IndexResultScoreCalculator {
             temporalBias = 0;
         }
 
-        final int titleLength = spans.title.length();
+        final int titleLength = Math.max(1, spans.title.length());
 
         float coherenceScore = 0.f;
 
@@ -246,7 +246,9 @@ public class IndexResultScoreCalculator {
             coherenceScore = 0.75f * largestOptional;
         }
 
-        coherenceScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+        if (coherences.numOptional() > 0) {
+            coherenceScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+        }
 
         float[] weightedCounts = new float[compiledQuery.size()];
         int firstPosition = Integer.MAX_VALUE;
