@@ -280,6 +280,9 @@ public class IndexResultScoreCalculator {
             if (positions[i] != null && ctx.regularMask.get(i)) {
                 searchableKeywordsCount ++;
 
+                boolean titleMatch = false;
+                boolean headingMatch = false;
+
                 var iter = positions[i].iterator();
 
                 while (iter.hasNext()) {
@@ -288,11 +291,11 @@ public class IndexResultScoreCalculator {
                     firstPosition = Math.max(firstPosition, pos);
 
                     if (spans.title.containsPosition(pos)) {
-                        unorderedMatchInTitleCount++;
+                        titleMatch = true;
                         weightedCounts[i] += 2.5f;
                     }
                     else if (spans.heading.containsPosition(pos)) {
-                        unorderedMatchInHeadingCount++;
+                        headingMatch = true;
                         weightedCounts[i] += 2.5f;
                     }
                     else if (spans.code.containsPosition(pos))
@@ -302,10 +305,17 @@ public class IndexResultScoreCalculator {
                     else if (spans.nav.containsPosition(pos))
                         weightedCounts[i] += 0.1f;
                 }
+
+                if (titleMatch) {
+                    unorderedMatchInTitleCount++;
+                }
+                if (headingMatch) {
+                    unorderedMatchInHeadingCount++;
+                }
             }
         }
 
-        if (!verbatimMatchInTitle && unorderedMatchInTitleCount == searchableKeywordsCount) {
+        if (!verbatimMatchInTitle && searchableKeywordsCount > 2 && unorderedMatchInTitleCount == searchableKeywordsCount) {
             coherenceScore += 2.5f * unorderedMatchInTitleCount;
             coherenceScore += 2.f * unorderedMatchInTitleCount / titleLength;
         }
