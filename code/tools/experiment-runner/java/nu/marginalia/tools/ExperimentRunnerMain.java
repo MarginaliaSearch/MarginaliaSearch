@@ -28,7 +28,7 @@ public class ExperimentRunnerMain {
 
     public static void main(String... args) throws IOException {
         if (args.length < 2) {
-            System.err.println("Expected arguments: plan.yaml experiment-name [experiment-args]");
+            System.err.println("Expected arguments: crawl-data-path experiment-name [experiment-args]");
             return;
         }
 
