@@ -201,30 +201,52 @@ public class IndexResultScoreCalculator {
 
         float coherenceScore = 0.f;
 
+        boolean verbatimMatchInTitle;
+        boolean verbatimMatchInHeading;
+        boolean verbatimMatchInAnchor;
+        boolean verbatimMatchInNav;
+        boolean verbatimMatchInCode;
+        boolean verbatimMatchInBody;
+
         // Calculate a bonus for keyword coherences when large ones exist
         int largestOptional = coherences.largestOptional();
         if (largestOptional >= 2) {
-            if (largestOptional == coherences.testOptional(positions, spans.title)) {
-                // verbatim title match
-                coherenceScore = 4.0f * largestOptional;
-                // additional bonus if the match is most of the title's length
-                coherenceScore += 2.f * largestOptional / titleLength;
-            }
-            else if (largestOptional == coherences.testOptional(positions, spans.heading)) {
-                coherenceScore = 1.5f * largestOptional;
-            }
-            else if (largestOptional == coherences.testOptional(positions, spans.anchor)) {
-                coherenceScore = 0.2f * largestOptional;
-            }
-            else if (largestOptional == coherences.testOptional(positions, spans.nav)) {
-                coherenceScore = 0.1f * largestOptional;
-            }
-            else if (largestOptional == coherences.testOptional(positions)) {
-                coherenceScore = 0.75f * largestOptional;
-            }
-
-            coherenceScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+            verbatimMatchInTitle = (largestOptional == coherences.testOptional(positions, spans.title));
+            verbatimMatchInHeading = (largestOptional == coherences.testOptional(positions, spans.heading));
+            verbatimMatchInAnchor = (largestOptional == coherences.testOptional(positions, spans.anchor));
+            verbatimMatchInNav = (largestOptional == coherences.testOptional(positions, spans.nav));
+            verbatimMatchInCode = (largestOptional == coherences.testOptional(positions, spans.code));
+            verbatimMatchInBody = (largestOptional == coherences.testOptional(positions));
         }
+        else {
+            verbatimMatchInTitle = false;
+            verbatimMatchInHeading = false;
+            verbatimMatchInAnchor = false;
+            verbatimMatchInNav = false;
+            verbatimMatchInCode = false;
+            verbatimMatchInBody = false;
+        }
+
+        if (verbatimMatchInTitle) {
+            // verbatim title match
+            coherenceScore = 4.0f * largestOptional;
+            // additional bonus if the match is most of the title's length
+            coherenceScore += 2.f * largestOptional / titleLength;
+        }
+        else if (verbatimMatchInHeading) {
+            coherenceScore = 1.5f * largestOptional;
+        }
+        else if (verbatimMatchInAnchor || verbatimMatchInCode) {
+            coherenceScore = 0.2f * largestOptional;
+        }
+        else if (verbatimMatchInNav) {
+            coherenceScore = 0.1f * largestOptional;
+        }
+        else if (verbatimMatchInBody) {
+            coherenceScore = 0.75f * largestOptional;
+        }
+
+        coherenceScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
 
         float[] weightedCounts = new float[compiledQuery.size()];
         int firstPosition = Integer.MAX_VALUE;
@@ -250,8 +272,14 @@ public class IndexResultScoreCalculator {
             }
         }
 
+        int searchableKeywordsCount = 0;
+        int unorderedMatchInTitleCount = 0;
+        int unorderedMatchInHeadingCount = 0;
+
         for (int i = 0; i < weightedCounts.length; i++) {
             if (positions[i] != null && ctx.regularMask.get(i)) {
+                searchableKeywordsCount ++;
+
                 var iter = positions[i].iterator();
 
                 while (iter.hasNext()) {
@@ -259,8 +287,14 @@ public class IndexResultScoreCalculator {
 
                     firstPosition = Math.max(firstPosition, pos);
 
-                    if (spans.title.containsPosition(pos) || spans.heading.containsPosition(pos))
+                    if (spans.title.containsPosition(pos)) {
+                        unorderedMatchInTitleCount++;
                         weightedCounts[i] += 2.5f;
+                    }
+                    else if (spans.heading.containsPosition(pos)) {
+                        unorderedMatchInHeadingCount++;
+                        weightedCounts[i] += 2.5f;
+                    }
                     else if (spans.code.containsPosition(pos))
                         weightedCounts[i] += 0.25f;
                     else if (spans.anchor.containsPosition(pos))
@@ -271,6 +305,14 @@ public class IndexResultScoreCalculator {
             }
         }
 
+        if (!verbatimMatchInTitle && unorderedMatchInTitleCount == searchableKeywordsCount) {
+            coherenceScore += 2.5f * unorderedMatchInTitleCount;
+            coherenceScore += 2.f * unorderedMatchInTitleCount / titleLength;
+        }
+
+        if (!verbatimMatchInHeading && unorderedMatchInHeadingCount == searchableKeywordsCount) {
+            coherenceScore += 2.0f * unorderedMatchInHeadingCount;
+        }
 
         double overallPart = averageSentenceLengthPenalty
                 + documentLengthPenalty
