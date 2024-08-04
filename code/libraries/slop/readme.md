@@ -25,7 +25,7 @@ average-age.0.dat.f64le.gz
 
 The slop library offers some facilities to aid with data integrity, such as the SlopTable
 class, which is a wrapper that ensures consistent positions for a group of columns, and aids 
-in closing the columns when they are no longer needed.
+in closing the columns when they are no longer needed.  Beyond that, you're on your own.
 
 ## Why though?
 
@@ -44,26 +44,42 @@ than a parquet file containing the equivalent information.
 Slop is simple.
 
 There isn't much magic going on under the hood in Slop.  It's designed with the philosophy that a competent programmer
-should be able to reverse engineer the format of the data by just
-looking at a directory listing of the data files.
+should be able to reverse engineer the format of the data by just looking 
+at a directory listing of the data files.  Despite being a very obscure library, 
+this gives the data a sort of portability.
 
 
 ### Relaxed 1BRC (no CSV ingestion time)
 
-Slop is reasonably competitive with DuckDB in terms of read speed,
-especially when reading from Parquet, and the data on disk tends 
-to be smaller.
+A benchmark against DuckDB, which is another excellent columnar storage library, albeit
+one that is more featureful and safe than Slop is.
 
-This is noteworthy given Slop is a single-threaded JVM application,
-and DuckDB is a multi-threaded C++ application.
+The benchmark is a relaxed 1BRC, aggregate a billion rows of temperature data by city, 
+and then calculate max/min/avg.  This omits the CSV ingestion time from the original
+challenge, which means the numbers are not directly comparable with other 1BRC benchmarks.
 
-| Impl                       | Runtime | Size On Disk |
-|----------------------------|---------|--------------|
-| DuckDB in memory           | 2.6s    | 3.0 GB       |
-| Slop in vanilla Java s16   | 4.2s    | 2.8 GB       |
-| Slop in vanilla Java s32   | 4.5s    | 3.8 GB       |
-| Parquet (Snappy) in DuckDB | 4.5s    | 5.5 GB       |
-| Parquet (Zstd) in DuckDB   | 5.5s    | 3.0 GB       |
+| Impl                                    | Runtime | Size On Disk |
+|-----------------------------------------|---------|--------------|
+| Parallel Slop, s16                      | 0.64s   | 2.8 GB       |
+| Parallel Slop, varint                   | 0.90s   | 2.8 GB       |
+| DuckDB<sup>1</sup>                      | 2.6s    | 3.0 GB       |
+| Slop, s16                               | 4.2s    | 2.8 GB       |
+| Slop, s32                               | 4.5s    | 3.8 GB       |
+| Parquet<sup>2</sup> (Snappy) in DuckDB  | 4.5s    | 5.5 GB       |
+| Parquet<sup>2</sup> (Zstd) in DuckDB    | 5.5s    | 3.0 GB       |
+| JDBC<sup>3</sup>                        | 6500s   | 3.0 GB       |
+
+<sup>[1]</sup> Benchmark loads the data into DuckDB's native table format, 
+performs an aggregation within the database, and then fetches the results via JDBC.
+
+<sup>[2]</sup> Benchmark loads the data from Parquet in DuckDB, performs an 
+aggregation within the database, and then fetches the results via JDBC.
+
+<sup>[3]</sup> Benchmark loads the data into DuckDB's native table format, 
+then streaming it as-is over JDBC to Java for processing, with fetch size = 1000.
+This is a very common usage pattern in Enterprise Java applications, although
+usually you'd have an ORM in between the JDBC and the application code adding even
+more overhead.  The numbers are extrapolated from a 100M benchmark, as I value my time.
 
 ## Example
 
@@ -131,7 +147,9 @@ record Population(String city, int population, double avgAge) {
 
 ## Nested Records
 
-TBW
+Nested records are not supported in slop, although array values are supported.  If you need to store nested records,
+you've got the options of flattening them, representing them as arrays, or serializing them into a byte array and 
+storing that.
 
 ## Column Types
 
