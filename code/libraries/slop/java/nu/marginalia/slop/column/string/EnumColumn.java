@@ -39,7 +39,7 @@ public class EnumColumn {
         );
     }
     public static EnumColumnReader open8(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(
+        return new Reader8(
                 columnDesc,
                 StringColumn.open(path,
                         columnDesc.createSupplementaryColumn(
@@ -47,7 +47,7 @@ public class EnumColumn {
                                 ColumnType.TXTSTRING,
                                 StorageType.PLAIN)
                 ),
-                VarintColumn.open(path,
+                ByteColumn.open(path,
                         columnDesc.createSupplementaryColumn(
                                 ColumnFunction.DATA,
                                 ColumnType.BYTE,

@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -97,6 +100,51 @@ class VarintColumnTest {
             assertEquals(2, column.get());
             assertEquals(2, column.get());
         }
+    }
+
+    @Test
+    void testFuzz() throws IOException {
+        var name1 = new ColumnDesc("test1",
+                0,
+                ColumnFunction.DATA,
+                ColumnType.VARINT_LE,
+                StorageType.PLAIN);
+
+        var name2 = new ColumnDesc("test2",
+                0,
+                ColumnFunction.DATA,
+                ColumnType.VARINT_BE,
+                StorageType.PLAIN);
+
+        List<Long> values = new ArrayList<>();
+        var rand = new Random();
+
+        for (int i = 0; i < 50_000; i++) {
+            values.add(rand.nextLong(0, Short.MAX_VALUE));
+            values.add(rand.nextLong(0, Byte.MAX_VALUE));
+            values.add(rand.nextLong(0, Integer.MAX_VALUE));
+            values.add(rand.nextLong(0, Long.MAX_VALUE));
+        }
+
+        try (var column1 = VarintColumn.create(tempDir, name1);
+             var column2 = VarintColumn.create(tempDir, name2)
+        ) {
+            for (var value : values) {
+                column1.put(value);
+                column2.put(value);
+            }
+        }
+        try (var column1 = VarintColumn.open(tempDir, name1);
+                var column2 = VarintColumn.open(tempDir, name2)
+            ) {
+                int idx = 0;
+                for (var value : values) {
+                    idx++;
+                    assertEquals(value, column1.getLong(), " idx: " + idx);
+                    assertEquals(value, column2.getLong());
+                }
+            }
+
     }
 
 }
