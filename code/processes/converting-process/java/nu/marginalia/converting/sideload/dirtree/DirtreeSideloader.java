@@ -8,6 +8,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 
@@ -86,6 +87,7 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
                 .processDocument(url, body, extraKeywords, new DomainLinks(),
                         GeneratorType.DOCS,
                         DocumentClass.NORMAL,
+                        new LinkTexts(),
                         LocalDate.now().getYear(),
                         10_000);
     }

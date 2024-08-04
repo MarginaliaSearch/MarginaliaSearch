@@ -43,7 +43,7 @@ class SentenceExtractorTest {
                 var doc = Jsoup.parse(Files.readString(file.toPath()));
                 long start = System.currentTimeMillis();
                 var dld = se.extractSentences(doc);
-                documentKeywordExtractor.extractKeywords(dld, url);
+                documentKeywordExtractor.extractKeywords(dld, new LinkTexts(), url);
                 total += (System.currentTimeMillis() - start);
             }
             System.out.println(total);

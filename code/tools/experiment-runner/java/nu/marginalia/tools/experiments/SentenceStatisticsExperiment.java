@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawldata.CrawledDomain;
@@ -54,7 +55,7 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
             parsed.body().filter(new DomPruningFilter(0.5));
 
             var dld = se.extractSentences(parsed);
-            var keywords = documentKeywordExtractor.extractKeywords(dld, new EdgeUrl(doc.url));
+            var keywords = documentKeywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(doc.url));
 
             keywords.build(workArea);
         }

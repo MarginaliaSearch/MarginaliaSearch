@@ -2,7 +2,9 @@ package nu.marginalia.atags;
 
 import com.google.inject.Inject;
 import nu.marginalia.atags.model.DomainLinks;
-import nu.marginalia.keyword.KeywordExtractor;
+import nu.marginalia.atags.model.Link;
+import nu.marginalia.keyword.LinkTexts;
+import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.EdgeUrl;
@@ -13,14 +15,12 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class AnchorTextKeywords {
-    private final KeywordExtractor keywordExtractor;
     private final SentenceExtractor sentenceExtractor;
     private final Set<String> stopList;
+
     @Inject
-    public AnchorTextKeywords(KeywordExtractor keywordExtractor,
-                              SentenceExtractor sentenceExtractor)
+    public AnchorTextKeywords(SentenceExtractor sentenceExtractor)
     {
-        this.keywordExtractor = keywordExtractor;
         this.sentenceExtractor = sentenceExtractor;
 
         stopList = readStoplist();
@@ -30,7 +30,7 @@ public class AnchorTextKeywords {
         Set<String> ret = new HashSet<>();
 
         try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("atags-stop-list"),
-                "Could not load word frequency table");
+                "Could not load anchor tags stop list");
              var br = new BufferedReader(new InputStreamReader(resource))
         ) {
             while (true) {
@@ -47,29 +47,40 @@ public class AnchorTextKeywords {
         return ret;
     }
 
-    public Map<String, Integer> getAnchorTextKeywords(DomainLinks links, EdgeUrl url) {
-        var keywordsRaw = links.forUrl(url);
+    public LinkTexts getAnchorTextKeywords(DomainLinks links, EdgeUrl url) {
+        List<Link> keywordsRaw = links.forUrl(url);
+
+        List<DocumentSentence> ret = new ArrayList<>(keywordsRaw.size());
 
         // Extract and count keywords from anchor text
-        Map<String, Integer> wordsWithCount = new HashMap<>();
-        for (var keyword : keywordsRaw) {
+        for (Link keyword : keywordsRaw) {
             if (stopList.contains(keyword.text().toLowerCase()))
                 continue;
 
-            var sentence = sentenceExtractor.extractSentence(keyword.text(), EnumSet.noneOf(HtmlTag.class));
-            for (var wordSpan : keywordExtractor.getKeywordsFromSentence(sentence)) {
-                wordsWithCount.merge(sentence.constructWordFromSpan(wordSpan), 1, Integer::sum);
-            }
+            var sentence = sentenceExtractor.extractSentence(keyword.text(), EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+            ret.add(sentence);
         }
 
-        // Filter out keywords that appear infrequently
-        final Map<String, Integer> keywords = new HashMap<>(wordsWithCount.size());
-        for (var wordEntry : wordsWithCount.entrySet()) {
-            if (wordEntry.getValue() > 2) {
-                keywords.put(wordEntry.getKey(), wordEntry.getValue());
-            }
+        return new LinkTexts(ret);
+    }
+
+    public LinkTexts getAnchorTextKeywords(DomainLinks links, List<EdgeUrl> urls) {
+        List<Link> keywordsRaw = new ArrayList<>();
+        for (var url : urls) {
+            links.forUrl(url);
         }
 
-        return keywords;
+        List<DocumentSentence> ret = new ArrayList<>(keywordsRaw.size());
+
+        // Extract and count keywords from anchor text
+        for (Link keyword : keywordsRaw) {
+            if (stopList.contains(keyword.text().toLowerCase()))
+                continue;
+
+            var sentence = sentenceExtractor.extractSentence(keyword.text(), EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+            ret.add(sentence);
+        }
+
+        return new LinkTexts(ret);
     }
 }

@@ -142,6 +142,12 @@ public class RedditSideloader implements SideloadSource {
             extraKeywords.add(author);
         }
 
+        List<EdgeUrl> urls = List.of(
+                new EdgeUrl("https://old.reddit.com/r/" + permalink),
+                new EdgeUrl("https://www.reddit.com/r/" + permalink),
+                new EdgeUrl("https://reddit.com/r/" + permalink)
+        );
+
         var doc = sideloaderProcessing
                 .processDocument(fullUrl,
                         fullHtml,
@@ -149,23 +155,13 @@ public class RedditSideloader implements SideloadSource {
                         domainLinks,
                         GeneratorType.WIKI,
                         DocumentClass.SIDELOAD,
+                        anchorTextKeywords.getAnchorTextKeywords(domainLinks, urls),
                         pubYear,
                         10_000_000);
 
 
         if (doc.isProcessedFully()) {
-            for (String url : List.of(
-                    STR."https://old.reddit.com/r/\{permalink}",
-                    STR."https://www.reddit.com/r/\{permalink}",
-                    STR."https://reddit.com/r/\{permalink}"
-            )) {
-                EdgeUrl.parse(url)
-                        .map(parsed -> anchorTextKeywords.getAnchorTextKeywords(domainLinks, parsed))
-                        .filter(parsed -> !parsed.isEmpty())
-                        .ifPresent(doc.words::addAnchorTerms);
-            }
-
-            for (var keyword : extraKeywords) {
+             for (var keyword : extraKeywords) {
                 doc.words.addMeta(keyword, WordFlags.Subjects.asBit());
             }
 

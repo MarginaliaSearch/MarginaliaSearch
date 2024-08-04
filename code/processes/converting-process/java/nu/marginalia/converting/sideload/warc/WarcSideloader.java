@@ -10,6 +10,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -138,6 +139,7 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
                         new DomainLinks(),
                         GeneratorType.DOCS,
                         DocumentClass.SIDELOAD,
+                        new LinkTexts(),
                         LocalDate.now().getYear(), // TODO: This should be the actual year of the document
                         10_000));
     }

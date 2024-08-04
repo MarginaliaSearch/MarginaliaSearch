@@ -28,7 +28,9 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
@@ -135,15 +137,9 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         domainLinks,
                         GeneratorType.WIKI,
                         DocumentClass.SIDELOAD,
+                        anchorTextKeywords.getAnchorTextKeywords(domainLinks, new EdgeUrl(fullUrl)),
                         LocalDate.now().getYear(),
                         10_000_000);
-
-        // Add anchor text keywords
-        if (doc.isProcessedFully()) {
-            doc.words.addAnchorTerms(
-                    anchorTextKeywords.getAnchorTextKeywords(domainLinks, doc.url)
-            );
-        }
 
         return doc;
     }

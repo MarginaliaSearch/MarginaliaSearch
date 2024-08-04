@@ -9,7 +9,12 @@ public enum HtmlTag {
     TITLE((byte) 't', false, false),
     HEADING((byte) 'h', false, false),
     CODE((byte) 'c', false, true),
-    NAV((byte) 'n', false, false);
+    NAV((byte) 'n', false, false),
+
+    // pseudo-tags for internal use
+    EXTERNAL_LINKTEXT((byte) 'x', false, false),
+
+    ;
 
     public byte code;
     public boolean exclude;

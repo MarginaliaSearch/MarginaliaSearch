@@ -48,7 +48,7 @@ class DocumentKeywordExtractorTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0.5));
 
-        var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
+        var keywords = extractor.extractKeywords(se.extractSentences(doc), new LinkTexts(), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
 
         keywords.getWordToMeta().forEach((k, v) -> {
             if (k.contains("_")) {
@@ -68,7 +68,7 @@ class DocumentKeywordExtractorTest {
 
         var keywords = extractor.extractKeywords(
                 se.extractSentences(doc),
-                new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
+                new LinkTexts(), new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
         );
 
         var keywordsBuilt = keywords.build(ByteBuffer.allocate(1024));

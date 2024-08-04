@@ -36,7 +36,7 @@ public class DocumentKeywordExtractor {
     }
 
 
-    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData dld, EdgeUrl url) {
+    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData dld, LinkTexts linkTexts, EdgeUrl url) {
 
         var tfIdfCounts = new WordsTfIdfCounts(dict, keywordExtractor, dld);
 
@@ -55,7 +55,7 @@ public class DocumentKeywordExtractor {
 
         DocumentKeywordsBuilder wordsBuilder = new DocumentKeywordsBuilder();
 
-        createSimpleWords(wordsBuilder, keywordMetadata, dld);
+        createSimpleWords(wordsBuilder, keywordMetadata, dld, linkTexts);
 
         createNGramTermsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
         createNGramTermsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
@@ -103,17 +103,19 @@ public class DocumentKeywordExtractor {
 
     private void createSimpleWords(DocumentKeywordsBuilder wordsBuilder,
                                   KeywordMetadata metadata,
-                                  DocumentLanguageData dld)
+                                  DocumentLanguageData dld,
+                                  LinkTexts linkTexts)
     {
         // we use 1-based indexing since the data
         // will be gamma encoded, and it can't represent 0
         int pos = 0;
 
-        List<SpanRecorder> spanRecorders = List.of(
-                new SpanRecorder(HtmlTag.TITLE),
-                new SpanRecorder(HtmlTag.HEADING),
-                new SpanRecorder(HtmlTag.CODE)
-        );
+        List<SpanRecorder> spanRecorders = new ArrayList<>();
+        for (var htmlTag : HtmlTag.values()) {
+            if (!htmlTag.exclude) {
+                spanRecorders.add(new SpanRecorder(htmlTag));
+            }
+        }
 
         for (DocumentSentence sent : dld) {
 
@@ -151,6 +153,36 @@ public class DocumentKeywordExtractor {
         }
 
         pos++; // we need to add one more position to account for the last word in the document
+
+        for (var recorder : spanRecorders) {
+            wordsBuilder.addSpans(recorder.finish(pos));
+        }
+
+        pos += 2; // add some padding to the end of the document before we start adding a-tag words
+
+        for (var linkText : linkTexts) {
+
+            for (var word : linkText) {
+                pos++;
+
+                if (word.isStopWord()) {
+                    continue;
+                }
+
+                String w = word.wordLowerCase();
+                if (matchesWordPattern(w)) {
+                    /* Add information about term positions */
+                    wordsBuilder.addPos(w, pos);
+
+                    /* Add metadata for word */
+                    wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));
+                }
+            }
+
+            // add some padding between separate link texts so we don't match across their boundaries
+
+            pos+=2;
+        }
 
         for (var recorder : spanRecorders) {
             wordsBuilder.addSpans(recorder.finish(pos));

@@ -38,7 +38,7 @@ class ForwardIndexSpansReaderTest {
 
             writer.beginRecord(2);
             writer.writeSpan((byte) 'c', GammaCodedSequence.generate(wa, 2, 4, 6, 7).buffer());
-            writer.writeSpan((byte) 'p', GammaCodedSequence.generate(wa, 3, 5).buffer());
+            writer.writeSpan((byte) 'a', GammaCodedSequence.generate(wa, 3, 5).buffer());
             offset2 = writer.endRecord();
         }
 
@@ -59,10 +59,10 @@ class ForwardIndexSpansReaderTest {
             assertFalse(spans2.code.containsPosition(7));
             assertFalse(spans2.code.containsPosition(8));
 
-            assertEquals(1, spans2.pre.size());
+            assertEquals(1, spans2.anchor.size());
 
-            assertEquals(0, spans2.pageFooter.size());
-            assertFalse(spans2.pageFooter.containsPosition(8));
+            assertEquals(0, spans2.title.size());
+            assertFalse(spans2.title.containsPosition(8));
         }
     }
 }

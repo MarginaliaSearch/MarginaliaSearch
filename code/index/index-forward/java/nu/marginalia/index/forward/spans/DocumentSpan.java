@@ -88,6 +88,10 @@ public class DocumentSpan {
     }
 
     public int size() {
+        if (null == startsEnds) {
+            return 0;
+        }
+
         return startsEnds.valueCount() / 2;
     }
 }

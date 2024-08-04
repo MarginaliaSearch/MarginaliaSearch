@@ -104,7 +104,7 @@ public class DomainProcessor {
             domain = new ProcessedDomain();
             domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
 
-            documentDecorator = new DocumentDecorator(anchorTextKeywords);
+            documentDecorator = new DocumentDecorator();
 
             processDomain(crawledDomain, domain, documentDecorator);
 
@@ -179,7 +179,7 @@ public class DomainProcessor {
         }
 
         DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
-        DocumentDecorator documentDecorator = new DocumentDecorator(anchorTextKeywords);
+        DocumentDecorator documentDecorator = new DocumentDecorator();
 
         // Process Domain Record
 

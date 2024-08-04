@@ -19,7 +19,6 @@ public class ExperimentRunnerMain {
             "test", TestExperiment.class,
             "adblock", AdblockExperiment.class,
             "topic", TopicExperiment.class,
-            "atags", AtagsExperiment.class,
             "sentence-statistics", SentenceStatisticsExperiment.class,
             "site-statistics", SiteStatisticsExperiment.class,
             "export-atags", ExportExternalLinksExperiment.class,

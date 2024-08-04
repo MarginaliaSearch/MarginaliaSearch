@@ -2,9 +2,9 @@ package nu.marginalia.converting.processor.summary;
 
 import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.converting.processor.summary.heuristic.*;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
@@ -39,7 +39,7 @@ class SummaryExtractorTest {
     @SneakyThrows
     Set<String> getImportantWords(Document doc) {
         var dld = setenceExtractor.extractSentences(doc);
-        var keywords = keywordExtractor.extractKeywords(dld, new EdgeUrl(
+        var keywords = keywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(
                 "https://www.marginalia.nu/"
         ));
         System.out.println(keywords.importantWords);

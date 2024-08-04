@@ -1,11 +1,9 @@
 package nu.marginalia.atags;
 
 import nu.marginalia.atags.source.AnchorTagsImpl;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.util.TestLanguageModels;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +37,6 @@ class DomainAnchorTagsImplTest {
             System.out.println(tags.forUrl(new EdgeUrl("http://www.chiark.greenend.org.uk/~sgtatham/putt")));
 
             var atagsKeywords = new AnchorTextKeywords(
-                    new KeywordExtractor(),
                     new SentenceExtractor(
                             TestLanguageModels.getLanguageModels()
                     )

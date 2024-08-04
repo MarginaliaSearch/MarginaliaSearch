@@ -113,22 +113,6 @@ public class DocumentKeywordsBuilder {
         newWords.forEach(word -> wordToMeta.putIfAbsent(word, meta));
     }
 
-    public void addAnchorTerms(Map<String, Integer> keywords) {
-        byte flagA = WordFlags.ExternalLink.asBit();
-        byte flagB = (byte) (flagA | WordFlags.Site.asBit());
-        byte flagC = (byte) (flagB | WordFlags.SiteAdjacent.asBit());
-
-        keywords.forEach((word, count) -> {
-            if (count > 5) {
-                wordToMeta.mergeByte(word, flagC, (a, b) -> (byte) (a|b));
-            } else if (count > 2) {
-                wordToMeta.mergeByte(word, flagB, (a, b) -> (byte) (a|b));
-            } else {
-                wordToMeta.mergeByte(word, flagA, (a, b) -> (byte) (a|b));
-            }
-        });
-    }
-
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 

@@ -16,6 +16,7 @@ import nu.marginalia.converting.processor.pubdate.PubDateSniffer;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -103,7 +104,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
     @Override
-    public DetailsWithWords createDetails(CrawledDocument crawledDocument, DocumentClass documentClass)
+    public DetailsWithWords createDetails(CrawledDocument crawledDocument,
+                                          LinkTexts linkTexts,
+                                          DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException {
 
         String documentBody = crawledDocument.documentBody;
@@ -169,7 +172,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 (int) -ret.quality, // ret.quality is negative
                 documentFlags);
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
         ret.description = specialization.getSummary(doc, words.importantWords);
         ret.generator = generatorParts.type();
