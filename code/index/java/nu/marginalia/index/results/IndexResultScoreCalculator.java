@@ -345,7 +345,7 @@ public class IndexResultScoreCalculator {
                 + keywordMinDistFac;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
-        double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(Math.max(1, firstPosition)));
+        double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
 
         double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
         double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
@@ -474,7 +474,7 @@ public class IndexResultScoreCalculator {
             }
         }
 
-        if (cnt > 0) {
+        if (cnt > 0 && sum > 0) {
             return sum / cnt;
         } else {
             return 1000.;
