@@ -199,7 +199,7 @@ public class IndexResultScoreCalculator {
 
         final int titleLength = Math.max(1, spans.title.length());
 
-        float coherenceScore = 0.f;
+        float verbatimMatchScore = 0.f;
 
         boolean verbatimMatchInTitle;
         boolean verbatimMatchInHeading;
@@ -207,6 +207,7 @@ public class IndexResultScoreCalculator {
         boolean verbatimMatchInNav;
         boolean verbatimMatchInCode;
         boolean verbatimMatchInBody;
+        boolean verbatimMatchInExtLink;
 
         // Calculate a bonus for keyword coherences when large ones exist
         int largestOptional = coherences.largestOptional();
@@ -216,6 +217,7 @@ public class IndexResultScoreCalculator {
             verbatimMatchInAnchor = (largestOptional == coherences.testOptional(positions, spans.anchor));
             verbatimMatchInNav = (largestOptional == coherences.testOptional(positions, spans.nav));
             verbatimMatchInCode = (largestOptional == coherences.testOptional(positions, spans.code));
+            verbatimMatchInExtLink = (largestOptional == coherences.testOptional(positions, spans.code));
             verbatimMatchInBody = (largestOptional == coherences.testOptional(positions));
         }
         else {
@@ -225,29 +227,34 @@ public class IndexResultScoreCalculator {
             verbatimMatchInNav = false;
             verbatimMatchInCode = false;
             verbatimMatchInBody = false;
+            verbatimMatchInExtLink = false;
         }
 
         if (verbatimMatchInTitle) {
             // verbatim title match
-            coherenceScore = 4.0f * largestOptional;
+            verbatimMatchScore = 4.0f * largestOptional;
             // additional bonus if the match is most of the title's length
-            coherenceScore += 2.f * largestOptional / titleLength;
+            verbatimMatchScore += 2.f * largestOptional / titleLength;
         }
         else if (verbatimMatchInHeading) {
-            coherenceScore = 1.5f * largestOptional;
+            verbatimMatchScore = 1.5f * largestOptional;
         }
         else if (verbatimMatchInAnchor || verbatimMatchInCode) {
-            coherenceScore = 0.2f * largestOptional;
+            verbatimMatchScore = 0.2f * largestOptional;
         }
         else if (verbatimMatchInNav) {
-            coherenceScore = 0.1f * largestOptional;
+            verbatimMatchScore = 0.1f * largestOptional;
         }
         else if (verbatimMatchInBody) {
-            coherenceScore = 0.75f * largestOptional;
+            verbatimMatchScore = 0.75f * largestOptional;
         }
 
         if (coherences.numOptional() > 0) {
-            coherenceScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+            verbatimMatchScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+        }
+
+        if (verbatimMatchInExtLink) { // Nudge the result up if there is a verbatim match in the external link text
+            verbatimMatchScore += 1.0f * largestOptional;
         }
 
         float[] weightedCounts = new float[compiledQuery.size()];
@@ -318,12 +325,12 @@ public class IndexResultScoreCalculator {
         }
 
         if (!verbatimMatchInTitle && searchableKeywordsCount > 2 && unorderedMatchInTitleCount == searchableKeywordsCount) {
-            coherenceScore += 2.5f * unorderedMatchInTitleCount;
-            coherenceScore += 2.f * unorderedMatchInTitleCount / titleLength;
+            verbatimMatchScore += 2.5f * unorderedMatchInTitleCount;
+            verbatimMatchScore += 2.f * unorderedMatchInTitleCount / titleLength;
         }
 
         if (!verbatimMatchInHeading && unorderedMatchInHeadingCount == searchableKeywordsCount) {
-            coherenceScore += 2.0f * unorderedMatchInHeadingCount;
+            verbatimMatchScore += 2.0f * unorderedMatchInHeadingCount;
         }
 
         double overallPart = averageSentenceLengthPenalty
@@ -333,7 +340,7 @@ public class IndexResultScoreCalculator {
                 + topologyBonus
                 + temporalBias
                 + flagsPenalty
-                + coherenceScore
+                + verbatimMatchScore
                 + keywordMinDistFac;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));

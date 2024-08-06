@@ -13,6 +13,8 @@ public class DocumentSpans {
     public DocumentSpan code = EMPTY_SPAN;
     public DocumentSpan anchor = EMPTY_SPAN;
 
+    public DocumentSpan externalLinkText = EMPTY_SPAN;
+
     void accept(byte code, CodedSequence positions) {
         if (code == HtmlTag.HEADING.code)
             this.heading = new DocumentSpan(positions);
@@ -24,6 +26,8 @@ public class DocumentSpans {
             this.code = new DocumentSpan(positions);
         else if (code == HtmlTag.ANCHOR.code)
             this.anchor = new DocumentSpan(positions);
+        else if (code == HtmlTag.EXTERNAL_LINKTEXT.code)
+            this.externalLinkText = new DocumentSpan(positions);
     }
 
 }
