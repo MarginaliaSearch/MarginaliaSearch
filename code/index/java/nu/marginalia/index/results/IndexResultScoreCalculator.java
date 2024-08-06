@@ -270,12 +270,13 @@ public class IndexResultScoreCalculator {
                 }
             }
 
-            if (iterators.size() > 2) {
-                int minDist = SequenceOperations.minDistance(iterators);
-
+            int minDist = SequenceOperations.minDistance(iterators);
+            if (minDist > 0) {
                 if (minDist < 32) {
+                    // If min-dist is sufficiently small, we give a tapering reward to the document
                     keywordMinDistFac = 2.0f / (1.f + (float) Math.sqrt(minDist));
                 } else {
+                    // if it is too large, we add a mounting penalty
                     keywordMinDistFac = -1.0f * (float) Math.sqrt(minDist);
                 }
             }
