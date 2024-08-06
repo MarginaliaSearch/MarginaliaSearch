@@ -118,10 +118,6 @@ public class DocumentKeywordExtractor {
         }
 
         for (DocumentSentence sent : dld) {
-
-            if (wordsBuilder.size() > 1500)
-                break;
-
             for (var word : sent) {
                 pos++;
 
@@ -156,7 +152,12 @@ public class DocumentKeywordExtractor {
 
         for (var recorder : spanRecorders) {
             wordsBuilder.addSpans(recorder.finish(pos));
+
+            // reset the recorder, so we can use it again without adding the same positions twice
+            recorder.reset();
         }
+
+        // Next add synthetic positions to the document for anchor texts
 
         pos += 2; // add some padding to the end of the document before we start adding a-tag words
 
@@ -180,7 +181,6 @@ public class DocumentKeywordExtractor {
             }
 
             // add some padding between separate link texts so we don't match across their boundaries
-
             pos+=2;
         }
 
@@ -247,7 +247,7 @@ public class DocumentKeywordExtractor {
             else {
                 if (start > 0) {
                     spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, pos));
-                    start = -1;
+                    start = 0;
                 }
             }
         }
@@ -255,8 +255,14 @@ public class DocumentKeywordExtractor {
         public List<DocumentKeywordsBuilder.DocumentWordSpan> finish(int length) {
             if (start > 0) {
                 spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, length));
+                start = 0;
             }
             return spans;
+        }
+
+        public void reset() {
+            spans.clear();
+            start = 0;
         }
     }
 }
