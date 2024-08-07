@@ -347,8 +347,8 @@ public class IndexQueryServiceIntegrationTest {
 
         System.out.println(rsp);
 
-        for (var result : rsp.results) {
-            long docId = result.rawIndexResult.getDocumentId();
+        for (var result : rsp) {
+            long docId = result.getRawItem().getCombinedId();
             actual.add(new MockDataDocument(UrlIdCodec.getDomainId(docId), UrlIdCodec.getDocumentOrdinal(docId)));
         }
 
@@ -382,9 +382,9 @@ public class IndexQueryServiceIntegrationTest {
                         includeAndCohere("hello", "world")
                 )));
 
-        assertEquals(1, rsp.results.size());
+        assertEquals(1, rsp.size());
         assertEquals(d(2,2).docId(),
-                rsp.results.get(0).rawIndexResult.getDocumentId());
+                rsp.get(0).getRawItem().getCombinedId());
     }
 
     SearchSpecification basicQuery(Function<SearchSpecification.SearchSpecificationBuilder, SearchSpecification.SearchSpecificationBuilder> mutator)

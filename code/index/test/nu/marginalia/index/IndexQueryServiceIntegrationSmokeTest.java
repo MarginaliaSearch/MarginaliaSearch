@@ -130,9 +130,9 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         int[] idxes = new int[] { 30, 510, 90, 150, 210, 270, 330, 390, 450 };
         long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
-        long[] actual = rsp.results
+        long[] actual = rsp
                 .stream()
-                .mapToLong(i -> i.rawIndexResult.getDocumentId())
+                .mapToLong(i -> i.getRawItem().getCombinedId())
                 .toArray();
 
         System.out.println(Arrays.toString(actual));
@@ -177,9 +177,9 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         int[] idxes = new int[] { 504, 360, 420, 480, 240, 180, 300, 120, 280, 440 };
         long[] ids = IntStream.of(idxes).mapToLong(Long::valueOf).toArray();
-        long[] actual = rsp.results
+        long[] actual = rsp
                 .stream()
-                .mapToLong(i -> i.rawIndexResult.getDocumentId())
+                .mapToLong(i -> i.getRawItem().getCombinedId())
                 .map(UrlIdCodec::getDocumentOrdinal)
                 .toArray();
 
@@ -224,7 +224,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                                 Collections.emptyList())).build());
         int[] idxes = new int[] {  210, 270 };
         long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
-        long[] actual = rsp.results.stream().mapToLong(i -> i.rawIndexResult.getDocumentId()).toArray();
+        long[] actual = rsp.stream().mapToLong(i -> i.getRawItem().getCombinedId()).toArray();
 
         Assertions.assertArrayEquals(ids, actual);
     }
@@ -262,12 +262,12 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         Set<Integer> years = new HashSet<>();
 
-        for (var res : rsp.results) {
-            years.add(DocumentMetadata.decodeYear(res.rawIndexResult.encodedDocMetadata));
+        for (var res : rsp) {
+            years.add(DocumentMetadata.decodeYear(res.getRawItem().getCombinedId()));
         }
 
         assertEquals(Set.of(1998), years);
-        assertEquals(rsp.results.size(), 10);
+        assertEquals(rsp.size(), 10);
 
     }
 

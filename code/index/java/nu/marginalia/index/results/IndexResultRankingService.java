@@ -6,9 +6,11 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TObjectLongHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
+import nu.marginalia.api.searchquery.RpcRawResultItem;
+import nu.marginalia.api.searchquery.RpcResultKeywordScore;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.index.index.CombinedIndexReader;
@@ -109,8 +111,8 @@ public class IndexResultRankingService {
     }
 
 
-    public List<DecoratedSearchResultItem> selectBestResults(SearchParameters params,
-                                                     Collection<SearchResultItem> results) throws SQLException {
+    public List<RpcDecoratedResultItem> selectBestResults(SearchParameters params,
+                                                          Collection<SearchResultItem> results) throws SQLException {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
 
@@ -141,7 +143,7 @@ public class IndexResultRankingService {
             detailsById.put(item.urlId(), item);
         }
 
-        List<DecoratedSearchResultItem> resultItems = new ArrayList<>(resultsList.size());
+        List<RpcDecoratedResultItem> resultItems = new ArrayList<>(resultsList.size());
 
         // Decorate the results with the document details
         for (var result : resultsList) {
@@ -153,23 +155,45 @@ public class IndexResultRankingService {
                 continue;
             }
 
-            // Create a decorated search result item from the result and the document data
-            resultItems.add(new DecoratedSearchResultItem(
-                    result,
-                    docData.url(),
-                    docData.title(),
-                    docData.description(),
-                    docData.urlQuality(),
-                    docData.format(),
-                    docData.features(),
-                    docData.pubYear(),
-                    docData.dataHash(),
-                    docData.wordsTotal(),
-                    0L, //bestPositions(wordMetas),
-                    result.getScore(),
-                    domainCountFilter.getCount(result),
-                    null
-            ));
+            var rawItem = RpcRawResultItem.newBuilder();
+
+            rawItem.setCombinedId(result.combinedId);
+            rawItem.setHtmlFeatures(result.htmlFeatures);
+            rawItem.setEncodedDocMetadata(result.encodedDocMetadata);
+            rawItem.setHasPriorityTerms(result.hasPrioTerm);
+
+            for (var score : result.keywordScores) {
+                rawItem.addKeywordScores(
+                        RpcResultKeywordScore.newBuilder()
+                                .setFlags(score.flags)
+                                .setPositions(score.positionCount)
+                                .setKeyword(score.keyword)
+                );
+            }
+
+            var decoratedBuilder = RpcDecoratedResultItem.newBuilder()
+                    .setDataHash(docData.dataHash())
+                    .setDescription(docData.description())
+                    .setFeatures(docData.features())
+                    .setFormat(docData.format())
+                    .setRankingScore(result.getScore())
+                    .setTitle(docData.title())
+                    .setUrl(docData.url().toString())
+                    .setUrlQuality(docData.urlQuality())
+                    .setWordsTotal(docData.wordsTotal())
+                    .setBestPositions(0 /* FIXME */)
+                    .setResultsFromDomain(domainCountFilter.getCount(result))
+                    .setRawItem(rawItem);
+
+            if (docData.pubYear() != null) {
+                decoratedBuilder.setPubYear(docData.pubYear());
+            }
+
+            /* FIXME
+            var rankingDetails = IndexProtobufCodec.convertRankingDetails(result.rankingDetails);
+            if (rankingDetails != null) {
+                decoratedBuilder.setRankingDetails(rankingDetails);
+            }*/
         }
 
         return resultItems;
