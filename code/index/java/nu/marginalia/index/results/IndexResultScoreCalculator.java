@@ -2,7 +2,6 @@ package nu.marginalia.index.results;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -54,8 +53,6 @@ public class IndexResultScoreCalculator {
         this.compiledQuery = params.compiledQuery;
     }
 
-    private final long flagsFilterMask = WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit() | WordFlags.ExternalLink.asBit();
-
     @Nullable
     public SearchResultItem calculateScore(Arena arena,
                                            @Nullable DebugRankingFactors rankingFactors,
@@ -67,19 +64,19 @@ public class IndexResultScoreCalculator {
 
         CompiledQuery<CodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
 
-        int[] counts = new int[compiledQuery.size()];
-
-        for (int i = 0; i < counts.length; i++) {
-            if (positions[i] != null) {
-                counts[i] = positions[i].valueCount();
-            }
-        }
-        CompiledQueryInt positionsCountQuery = compiledQuery.root.newQuery(counts);
-        CompiledQueryLong wordFlagsQuery = compiledQuery.root.newQuery(wordFlags);
-
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
-        if (testRelevance(wordFlagsQuery, positionsCountQuery)) {
+
+        CompiledQueryLong wordFlagsQuery = compiledQuery.root.newQuery(wordFlags);
+        if (!meetsQueryStrategyRequirements(wordFlagsQuery, queryParams.queryStrategy())) {
+            return null;
+        }
+
+        boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
+        int minFlagsCount = intMaxMinAggregate(wordFlagsQuery, flags -> Long.bitCount(flags & 0xff));
+        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.valueCount());
+
+        if (minFlagsCount == 0 && !allSynthetic && minPositionsCount == 0) {
             return null;
         }
 
@@ -102,28 +99,7 @@ public class IndexResultScoreCalculator {
                 searchTerms.coherences,
                 rankingContext);
 
-        SearchResultItem searchResult = new SearchResultItem(combinedId,
-                docMetadata,
-                htmlFeatures);
-
-        searchResult.setScore(score);
-
-        return searchResult;
-    }
-
-    private boolean testRelevance(CompiledQueryLong wordFlagsQuery, CompiledQueryInt countsQuery) {
-        boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
-        int flagsCount = intMaxMinAggregate(wordFlagsQuery, flags ->  Long.bitCount(flags & flagsFilterMask));
-        int positionsCount = intMaxMinAggregate(countsQuery, p -> p);
-
-        if (!meetsQueryStrategyRequirements(wordFlagsQuery, queryParams.queryStrategy())) {
-            return true;
-        }
-        if (flagsCount == 0 && !allSynthetic && positionsCount == 0) {
-            return true;
-        }
-
-        return false;
+        return new SearchResultItem(combinedId, docMetadata, htmlFeatures, score);
     }
 
     private boolean meetsQueryStrategyRequirements(CompiledQueryLong queryGraphScores,
@@ -320,6 +296,11 @@ public class IndexResultScoreCalculator {
                         weightedCounts[i] += 0.2f;
                     else if (spans.nav.containsPosition(pos))
                         weightedCounts[i] += 0.1f;
+                    else
+                        weightedCounts[i] += 1.0f;
+
+                    if (spans.externalLinkText.containsPosition(pos))
+                        weightedCounts[i] += 1.0f;
                 }
 
                 if (titleMatch) {
@@ -375,14 +356,19 @@ public class IndexResultScoreCalculator {
             rankingFactors.addDocumentFactor("bm25.main", Double.toString(bM25));
             rankingFactors.addDocumentFactor("bm25.flags", Double.toString(bFlags));
 
+            rankingFactors.addDocumentFactor("unordered.title", Integer.toString(unorderedMatchInTitleCount));
+            rankingFactors.addDocumentFactor("unordered.heading", Integer.toString(unorderedMatchInHeadingCount));
+
             for (int i = 0; i < searchTerms.termIdsAll.size(); i++) {
                 long termId = searchTerms.termIdsAll.at(i);
 
                 rankingFactors.addTermFactor(termId, "factor.weightedCount", Double.toString(weightedCounts[i]));
-                byte flags = (byte) wordFlagsQuery.at(i);
+                var flags = wordFlagsQuery.at(i);
+
+                rankingFactors.addTermFactor(termId, "flags.rawEncoded", Long.toString(flags));
 
                 for (var flag : WordFlags.values()) {
-                    if (flag.isPresent(flags)) {
+                    if (flag.isPresent((byte) flags)) {
                         rankingFactors.addTermFactor(termId, "flags." + flag.name(), "true");
                     }
                 }
@@ -408,9 +394,6 @@ public class IndexResultScoreCalculator {
                 if (verbatimMatchInTitle) {
                     rankingFactors.addTermFactor(termId, "verbatim.title", "true");
                 }
-
-                rankingFactors.addTermFactor(termId, "unordered.title", Integer.toString(unorderedMatchInTitleCount));
-                rankingFactors.addTermFactor(termId, "unordered.heading", Integer.toString(unorderedMatchInHeadingCount));
 
                 if (positions[i] != null) {
                     rankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
