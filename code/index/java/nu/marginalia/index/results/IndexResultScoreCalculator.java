@@ -102,9 +102,7 @@ public class IndexResultScoreCalculator {
                 searchTerms.coherences,
                 rankingContext);
 
-        SearchResultItem searchResult = new SearchResultItem(combinedId,
-                docMetadata,
-                htmlFeatures);
+        SearchResultItem searchResult = new SearchResultItem(combinedId, docMetadata, htmlFeatures);
 
         searchResult.setScore(score);
 
@@ -320,6 +318,11 @@ public class IndexResultScoreCalculator {
                         weightedCounts[i] += 0.2f;
                     else if (spans.nav.containsPosition(pos))
                         weightedCounts[i] += 0.1f;
+                    else
+                        weightedCounts[i] += 0.5f;
+
+                    if (spans.externalLinkText.containsPosition(pos))
+                        weightedCounts[i] += 1.0f;
                 }
 
                 if (titleMatch) {
