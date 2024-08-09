@@ -102,7 +102,7 @@ public class IndexResultScoreCalculator {
                 searchTerms.coherences,
                 rankingContext);
 
-        SearchResultItem searchResult = new SearchResultItem(docId,
+        SearchResultItem searchResult = new SearchResultItem(combinedId,
                 docMetadata,
                 htmlFeatures);
 
