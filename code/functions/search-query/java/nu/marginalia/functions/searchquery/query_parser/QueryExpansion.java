@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordPathsRenderer;
-import nu.marginalia.language.WordPatterns;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
@@ -131,6 +130,10 @@ public class QueryExpansion {
             nodes.add(qw);
         }
 
+        if (nodes.size() <= 1) {
+            return List.of();
+        }
+
         String[] words = nodes.stream().map(QWord::stemmed).toArray(String[]::new);
 
         // Grab all segments
@@ -141,29 +144,28 @@ public class QueryExpansion {
         }
         allSegments.sort(Comparator.comparing(NgramLexicon.SentenceSegment::start));
 
-        if (allSegments.isEmpty()) {
-            return List.of();
-        }
-
-        Set<NgramLexicon.SentenceSegment> bestSegmentation =
-                findBestSegmentation(allSegments);
-
         List<List<String>> coherences = new ArrayList<>();
 
-        for (var segment : bestSegmentation) {
+        if (!allSegments.isEmpty()) {
 
-            int start = segment.start();
-            int end = segment.start() + segment.length();
+            Set<NgramLexicon.SentenceSegment> bestSegmentation =
+                    findBestSegmentation(allSegments);
 
-            List<String> components = new ArrayList<>(end - start);
-            for (int i = start; i < end; i++) {
-                components.add(nodes.get(i).word());
+            for (var segment : bestSegmentation) {
+
+                int start = segment.start();
+                int end = segment.start() + segment.length();
+
+                List<String> components = new ArrayList<>(end - start);
+                for (int i = start; i < end; i++) {
+                    components.add(nodes.get(i).word());
+                }
+                coherences.add(components);
+
+                // Create an n-gram search term for the segment
+                String word = String.join("_", components);
+                graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
             }
-            coherences.add(components);
-
-            // Create an n-gram search term for the segment
-            String word = String.join("_", components);
-            graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
         }
 
         // also create a segmentation that is just the entire query
