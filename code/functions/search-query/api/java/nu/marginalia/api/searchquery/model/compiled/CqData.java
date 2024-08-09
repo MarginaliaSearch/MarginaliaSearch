@@ -33,13 +33,13 @@ public class CqData<T> {
         return new CqDataLong(newData);
     }
 
-    public CqDataLong mapToInt(ToIntFunction<T> mapper) {
-        long[] newData = new long[data.length];
+    public CqDataInt mapToInt(ToIntFunction<T> mapper) {
+        int[] newData = new int[data.length];
         for (int i = 0; i < data.length; i++) {
-            newData[i] = mapper.applyAsInt((T) data[i]);
+            newData[i] = mapper.applyAsInt(data[i]);
         }
 
-        return new CqDataLong(newData);
+        return new CqDataInt(newData);
     }
 
     public T get(int i) {

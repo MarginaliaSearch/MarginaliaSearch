@@ -3,7 +3,9 @@ package nu.marginalia.api.searchquery.model.compiled;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
-import java.util.function.*;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -46,8 +48,8 @@ public class CompiledQuery<T> implements Iterable<T> {
         return new CompiledQueryLong(root, data.mapToLong(mapper));
     }
 
-    public CompiledQueryLong mapToInt(ToIntFunction<T> mapper) {
-        return new CompiledQueryLong(root, data.mapToInt(mapper));
+    public CompiledQueryInt mapToInt(ToIntFunction<T> mapper) {
+        return new CompiledQueryInt(root, data.mapToInt(mapper));
     }
 
     public CqExpression root() {
