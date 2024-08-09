@@ -3,7 +3,6 @@ package nu.marginalia.index.results.model.ids;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.LongStream;
 
 public final class TermIdList {
@@ -27,6 +26,24 @@ public final class TermIdList {
 
     public long[] array() {
         return array;
+    }
+
+    public long at(int i) {
+        return array[i];
+    }
+
+    public boolean contains(long id) {
+        // array is typically small and unsorted, so linear search is fine
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int indexOf(long id) {
+        return Arrays.binarySearch(array, id);
     }
 
     @Override
