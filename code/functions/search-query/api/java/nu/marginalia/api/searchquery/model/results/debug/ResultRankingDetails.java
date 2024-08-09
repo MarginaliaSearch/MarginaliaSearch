@@ -1,6 +1,9 @@
 package nu.marginalia.api.searchquery.model.results.debug;
 
-public record ResultRankingDetails(ResultRankingInputs inputs, ResultRankingOutputs outputs)
+import java.util.List;
+
+public record ResultRankingDetails(List<DebugFactorGroup> docFactorGroups,
+                                   List<DebugTermFactorGroup> termFactorGroups)
 {
 
 }

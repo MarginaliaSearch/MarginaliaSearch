@@ -6,13 +6,13 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TObjectLongHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
-import nu.marginalia.api.searchquery.RpcRawResultItem;
-import nu.marginalia.api.searchquery.RpcResultKeywordScore;
+import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
@@ -48,6 +48,7 @@ public class IndexResultRankingService {
     }
 
     public List<SearchResultItem> rankResults(SearchParameters params,
+                                              boolean exportDebugData,
                                               ResultRankingContext rankingContext,
                                               CombinedDocIdList resultIds)
     {
@@ -99,10 +100,19 @@ public class IndexResultRankingService {
                     continue;
                 }
 
-                // Calculate the preliminary score
-                var score = resultRanker.calculateScore(arena, resultIds.at(i), searchTerms, flags, positions);
-                if (score != null) {
-                    results.add(score);
+                if (!exportDebugData) {
+                    var score = resultRanker.calculateScore(arena, null, resultIds.at(i), searchTerms, flags, positions);
+                    if (score != null) {
+                        results.add(score);
+                    }
+                }
+                else {
+                    var rankingFactors = new DebugRankingFactors();
+                    var score = resultRanker.calculateScore(arena, rankingFactors, resultIds.at(i), searchTerms, flags, positions);
+                    if (score != null) {
+                        score.debugRankingFactors = rankingFactors;
+                        results.add(score);
+                    }
                 }
             }
 
@@ -112,6 +122,7 @@ public class IndexResultRankingService {
 
 
     public List<RpcDecoratedResultItem> selectBestResults(SearchParameters params,
+                                                          ResultRankingContext resultRankingContext,
                                                           Collection<SearchResultItem> results) throws SQLException {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
@@ -134,6 +145,25 @@ public class IndexResultRankingService {
                 //
 
             }
+        }
+
+        // If we're exporting debug data from the ranking, we need to re-run the ranking calculation
+        // for the selected results, as this would be comically expensive to do for all the results we
+        // discard along the way
+
+        if (params.rankingParams.exportDebugData) {
+            var combinedIdsList = new LongArrayList(resultsList.size());
+            for (var item : resultsList) {
+                combinedIdsList.add(item.combinedId);
+            }
+
+            resultsList.clear();
+            resultsList.addAll(this.rankResults(
+                    params,
+                    true,
+                    resultRankingContext,
+                    new CombinedDocIdList(combinedIdsList))
+            );
         }
 
         // Fetch the document details for the selected results in one go, from the local document database
@@ -189,11 +219,45 @@ public class IndexResultRankingService {
                 decoratedBuilder.setPubYear(docData.pubYear());
             }
 
-            /* FIXME
-            var rankingDetails = IndexProtobufCodec.convertRankingDetails(result.rankingDetails);
-            if (rankingDetails != null) {
-                decoratedBuilder.setRankingDetails(rankingDetails);
-            }*/
+            if (result.debugRankingFactors != null) {
+                var debugFactors = result.debugRankingFactors;
+                var detailsBuilder = RpcResultRankingDetails.newBuilder();
+                var documentOutputs = RpcResultDocumentRankingOutputs.newBuilder();
+
+                for (var factor : debugFactors.getDocumentFactors()) {
+                    documentOutputs.addFactor(factor.factor());
+                    documentOutputs.addValue(factor.value());
+                }
+
+                detailsBuilder.setDocumentOutputs(documentOutputs);
+
+                var termOutputs = RpcResultTermRankingOutputs.newBuilder();
+
+                CqDataLong termIds = params.compiledQueryIds.data;;
+
+                for (var entry : debugFactors.getTermFactors()) {
+                    String term = "[ERROR IN LOOKUP]";
+
+                    // CURSED: This is a linear search, but the number of terms is small, and it's in a debug path
+                    for (int i = 0; i < termIds.size(); i++) {
+                        if (termIds.get(i) == entry.termId()) {
+                            term = params.compiledQuery.at(i);
+                            break;
+                        }
+                    }
+
+                    termOutputs
+                            .addTermId(entry.termId())
+                            .addTerm(term)
+                            .addFactor(entry.factor())
+                            .addValue(entry.value());
+                }
+
+                detailsBuilder.setTermOutputs(termOutputs);
+                decoratedBuilder.setRankingDetails(detailsBuilder);
+            }
+
+            resultItems.add(decoratedBuilder.build());
         }
 
         return resultItems;

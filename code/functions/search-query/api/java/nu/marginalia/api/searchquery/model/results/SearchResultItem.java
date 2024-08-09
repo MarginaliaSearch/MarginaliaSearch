@@ -2,6 +2,7 @@ package nu.marginalia.api.searchquery.model.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +27,8 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     public final List<SearchResultKeywordScore> keywordScores;
 
     public boolean hasPrioTerm;
+
+    public DebugRankingFactors debugRankingFactors;
 
     public SearchResultItem(long combinedId,
                             long encodedDocMetadata,

@@ -118,7 +118,13 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                     .labels(nodeName, "GRPC")
                     .time(() -> {
                         // Perform the search
-                        return executeSearch(params);
+                        try {
+                            return executeSearch(params);
+                        }
+                        catch (Exception ex) {
+                            logger.error("Error in handling request", ex);
+                            return List.of();
+                        }
                     });
 
             // Prometheus bookkeeping
@@ -286,7 +292,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             awaitCompletion();
 
             // Return the best results
-            return resultValuator.selectBestResults(parameters, resultHeap);
+            return resultValuator.selectBestResults(parameters, resultRankingContext, resultHeap);
         }
 
         /** Wait for all tasks to complete */
@@ -399,6 +405,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                     }
                 }
             }
+
             private boolean execute() throws InterruptedException {
                 long start = System.currentTimeMillis();
 
@@ -417,7 +424,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                     stallTime.addAndGet(System.currentTimeMillis() - start);
 
                     resultHeap.addAll(
-                            resultValuator.rankResults(parameters, rankingContext, resultIds)
+                            resultValuator.rankResults(parameters, false, rankingContext, resultIds)
                     );
                 }
 

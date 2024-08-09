@@ -4,9 +4,6 @@ import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
@@ -147,43 +144,4 @@ public class IndexProtobufCodec {
         return builder.build();
     }
 
-
-    public static RpcResultRankingDetails convertRankingDetails(ResultRankingDetails rankingDetails) {
-        if (rankingDetails == null) {
-            return null;
-        }
-
-        return RpcResultRankingDetails.newBuilder()
-                .setInputs(convertRankingInputs(rankingDetails.inputs()))
-                .setOutput(convertRankingOutput(rankingDetails.outputs()))
-                .build();
-    }
-
-    private static RpcResultRankingOutputs convertRankingOutput(ResultRankingOutputs outputs) {
-        return RpcResultRankingOutputs.newBuilder()
-                .setAverageSentenceLengthPenalty(outputs.averageSentenceLengthPenalty())
-                .setQualityPenalty(outputs.qualityPenalty())
-                .setRankingBonus(outputs.rankingBonus())
-                .setTopologyBonus(outputs.topologyBonus())
-                .setDocumentLengthPenalty(outputs.documentLengthPenalty())
-                .setTemporalBias(outputs.temporalBias())
-                .setFlagsPenalty(outputs.flagsPenalty())
-                .setOverallPart(outputs.overallPart())
-                .setTcfAvgDist(outputs.tcfAvgDist())
-                .setTcfFirstPosition(outputs.tcfFirstPosition())
-                .setBm25Part(outputs.bm25())
-                .build();
-    }
-
-    private static RpcResultRankingInputs convertRankingInputs(ResultRankingInputs inputs) {
-        return RpcResultRankingInputs.newBuilder()
-                .setRank(inputs.rank())
-                .setAsl(inputs.asl())
-                .setQuality(inputs.quality())
-                .setSize(inputs.size())
-                .setTopology(inputs.topology())
-                .setYear(inputs.year())
-                .addAllFlags(inputs.flags())
-                .build();
-    }
 }

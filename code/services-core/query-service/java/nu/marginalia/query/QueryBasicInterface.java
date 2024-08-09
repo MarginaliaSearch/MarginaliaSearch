@@ -3,12 +3,12 @@ package nu.marginalia.query;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import spark.Request;
@@ -82,7 +82,7 @@ public class QueryBasicInterface {
                 domainCount, count, 250, 8192
         ), set);
 
-        var rankingParams = rankingParamsFromRequest(request);
+        var rankingParams = debugRankingParamsFromRequest(request);
 
         var detailedDirectResult = queryGRPCService.executeDirect(
                 queryString, queryParams, rankingParams
@@ -98,7 +98,7 @@ public class QueryBasicInterface {
         );
     }
 
-    private ResultRankingParameters rankingParamsFromRequest(Request request) {
+    private ResultRankingParameters debugRankingParamsFromRequest(Request request) {
         var sensibleDefaults = ResultRankingParameters.sensibleDefaults();
 
         return ResultRankingParameters.builder()

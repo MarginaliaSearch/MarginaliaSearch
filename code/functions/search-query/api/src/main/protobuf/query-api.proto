@@ -143,8 +143,8 @@ message RpcResultRankingParameters {
 }
 
 message RpcResultRankingDetails {
-  RpcResultRankingInputs inputs = 1;
-  RpcResultRankingOutputs output = 2;
+  RpcResultDocumentRankingOutputs documentOutputs = 1;
+  RpcResultTermRankingOutputs termOutputs = 2;
 }
 
 message RpcResultRankingInputs {
@@ -158,19 +158,16 @@ message RpcResultRankingInputs {
 }
 
 /** Summary of the output of the ranking function */
-message RpcResultRankingOutputs {
-  double averageSentenceLengthPenalty = 1;
-  double qualityPenalty = 2;
-  double rankingBonus = 3;
-  double topologyBonus = 4;
-  double documentLengthPenalty = 5;
-  double temporalBias = 6;
-  double flagsPenalty = 7;
-  double overallPart = 8;
-  double bm25Part = 9;
-  // 10-14 unused
-  double tcfAvgDist = 15;
-  double tcfFirstPosition = 16;
+message RpcResultDocumentRankingOutputs {
+  repeated string factor = 1;
+  repeated string value = 2;
+}
+
+message RpcResultTermRankingOutputs {
+  repeated int64 termId = 1;
+  repeated string term = 2;
+  repeated string factor = 3;
+  repeated string value = 4;
 }
 
 /* Defines a single subquery */

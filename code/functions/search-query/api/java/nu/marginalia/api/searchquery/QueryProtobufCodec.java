@@ -9,13 +9,17 @@ import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
+import nu.marginalia.api.searchquery.model.results.debug.DebugFactor;
+import nu.marginalia.api.searchquery.model.results.debug.DebugFactorGroup;
+import nu.marginalia.api.searchquery.model.results.debug.DebugTermFactorGroup;
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class QueryProtobufCodec {
 
@@ -138,44 +142,108 @@ public class QueryProtobufCodec {
     private static ResultRankingDetails convertRankingDetails(RpcResultRankingDetails rankingDetails) {
         if (rankingDetails == null)
             return null;
-        var inputs = rankingDetails.getInputs();
-        var outputs = rankingDetails.getOutput();
+
+        var docData = rankingDetails.getDocumentOutputs();
+        var termData = rankingDetails.getTermOutputs();
 
         return new ResultRankingDetails(
-                convertRankingInputs(inputs),
-                convertRankingOutputs(outputs)
+                convertDocumentOutputs(docData),
+                convertTermData(termData)
         );
 
     }
 
-    private static ResultRankingOutputs convertRankingOutputs(RpcResultRankingOutputs outputs) {
-        return new ResultRankingOutputs(
-                outputs.getAverageSentenceLengthPenalty(),
-                outputs.getQualityPenalty(),
-                outputs.getRankingBonus(),
-                outputs.getTopologyBonus(),
-                outputs.getDocumentLengthPenalty(),
-                outputs.getTemporalBias(),
-                outputs.getFlagsPenalty(),
-                outputs.getOverallPart(),
-                outputs.getBm25Part(),
-                outputs.getTcfAvgDist(),
-                outputs.getTcfFirstPosition()
+    private static List<DebugTermFactorGroup> convertTermData(RpcResultTermRankingOutputs termData) {
+        Map<String, Long> termIdByName = new HashMap<>();
+        Map<String, List<DebugFactor>> factorsByTerm = new HashMap<>();
 
-        );
+        for (int i = 0; i < termData.getTermCount(); i++) {
+            termIdByName.put(termData.getTerm(i), termData.getTermId(i));
+            factorsByTerm.computeIfAbsent(termData.getTerm(i), k -> new ArrayList<>())
+                    .add(new DebugFactor(termData.getFactor(i), termData.getValue(i)));
+        }
+
+        Map<String, List<DebugFactorGroup>> factorGroupsByTerm = new HashMap<>();
+        for (var entry : factorsByTerm.entrySet()) {
+            String term = entry.getKey();
+            var factorsList = entry.getValue();
+
+            Map<String, List<DebugFactor>> factorsByGroup = new HashMap<>();
+
+            for (var factor : factorsList) {
+                String[] parts = factor.factor().split("\\.");
+
+                String group, name;
+
+                if (parts.length != 2) {
+                    group = "unknown";
+                    name = parts[0];
+                } else {
+                    group = parts[0];
+                    name = parts[1];
+                }
+
+
+                factorsByGroup.computeIfAbsent(group, k -> new ArrayList<>())
+                        .add(new DebugFactor(name, factor.value()));
+            }
+
+            factorsByGroup.forEach((groupName, groupData) -> {
+                factorGroupsByTerm.computeIfAbsent(term, k -> new ArrayList<>())
+                        .add(new DebugFactorGroup(groupName, groupData));
+            });
+
+        }
+
+        List<DebugTermFactorGroup> groups = new ArrayList<>();
+
+        for (var entry : factorGroupsByTerm.entrySet()) {
+            groups.add(new DebugTermFactorGroup(entry.getKey(), termIdByName.get(entry.getKey()), entry.getValue()));
+        }
+
+        return groups;
     }
 
-    private static ResultRankingInputs convertRankingInputs(RpcResultRankingInputs inputs) {
-        return new ResultRankingInputs(
-                inputs.getRank(),
-                inputs.getAsl(),
-                inputs.getQuality(),
-                inputs.getSize(),
-                inputs.getTopology(),
-                inputs.getYear(),
-                inputs.getFlagsList()
-        );
+    private static List<DebugFactorGroup> convertDocumentOutputs(RpcResultDocumentRankingOutputs docData) {
+
+        List<DebugFactor> unclusteredFactors = new ArrayList<>();
+        for (int i = 0; i < docData.getFactorCount(); i++) {
+            String factor = docData.getFactor(i);
+            String value = docData.getValue(i);
+            unclusteredFactors.add(new DebugFactor(factor, value));
+        }
+
+        Map<String, List<DebugFactor>> factorsByGroup = new HashMap<>();
+
+        for (var factor : unclusteredFactors) {
+            String factorName = factor.factor();
+            String value = factor.value();
+
+            String[] parts = factorName.split("\\.");
+
+            String group, name;
+
+            if (parts.length != 2) {
+                group = "unknown";
+                name = factorName;
+            }
+            else {
+                group = parts[0];
+                name = parts[1];
+            }
+
+            factorsByGroup.computeIfAbsent(group, k -> new ArrayList<>())
+                    .add(new DebugFactor(name, value));
+        }
+
+        List<DebugFactorGroup> groups = new ArrayList<>();
+        for (var entry : factorsByGroup.entrySet()) {
+            groups.add(new DebugFactorGroup(entry.getKey(), entry.getValue()));
+        }
+
+        return groups;
     }
+
 
     private static SearchResultItem convertRawResult(RpcRawResultItem rawItem) {
         var keywordScores = new ArrayList<SearchResultKeywordScore>(rawItem.getKeywordScoresCount());
@@ -189,6 +257,7 @@ public class QueryProtobufCodec {
                 rawItem.getHtmlFeatures(),
                 keywordScores,
                 rawItem.getHasPriorityTerms(),
+                null, // Not set
                 Double.NaN // Not set
         );
     }

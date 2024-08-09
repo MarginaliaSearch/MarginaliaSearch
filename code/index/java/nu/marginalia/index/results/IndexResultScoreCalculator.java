@@ -7,6 +7,7 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
@@ -57,6 +58,7 @@ public class IndexResultScoreCalculator {
 
     @Nullable
     public SearchResultItem calculateScore(Arena arena,
+                                           @Nullable DebugRankingFactors rankingFactors,
                                            long combinedId,
                                            QuerySearchTerms searchTerms,
                                            long[] wordFlags,
@@ -88,6 +90,8 @@ public class IndexResultScoreCalculator {
         DocumentSpans spans = index.getDocumentSpans(arena, docId);
 
         double score = calculateSearchResultValue(
+                rankingFactors,
+                searchTerms,
                 wordFlagsQuery,
                 positionsQuery,
                 docMetadata,
@@ -157,7 +161,9 @@ public class IndexResultScoreCalculator {
         return true;
     }
 
-    public double calculateSearchResultValue(CompiledQueryLong wordFlagsQuery,
+    public double calculateSearchResultValue(DebugRankingFactors rankingFactors,
+                                             QuerySearchTerms searchTerms,
+                                             CompiledQueryLong wordFlagsQuery,
                                              CompiledQuery<CodedSequence> positionsQuery,
                                              long documentMetadata,
                                              int features,
@@ -344,11 +350,81 @@ public class IndexResultScoreCalculator {
                 + verbatimMatchScore
                 + keywordMinDistFac;
 
+
+
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
         double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
 
         double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
         double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
+
+        if (rankingFactors != null) {
+            rankingFactors.addDocumentFactor("overall.averageSentenceLengthPenalty", Double.toString(averageSentenceLengthPenalty));
+            rankingFactors.addDocumentFactor("overall.documentLengthPenalty", Double.toString(documentLengthPenalty));
+            rankingFactors.addDocumentFactor("overall.qualityPenalty", Double.toString(qualityPenalty));
+            rankingFactors.addDocumentFactor("overall.rankingBonus", Double.toString(rankingBonus));
+            rankingFactors.addDocumentFactor("overall.topologyBonus", Double.toString(topologyBonus));
+            rankingFactors.addDocumentFactor("overall.temporalBias", Double.toString(temporalBias));
+            rankingFactors.addDocumentFactor("overall.flagsPenalty", Double.toString(flagsPenalty));
+            rankingFactors.addDocumentFactor("overall.verbatimMatchScore", Double.toString(verbatimMatchScore));
+            rankingFactors.addDocumentFactor("overall.keywordMinDistFac", Double.toString(keywordMinDistFac));
+
+            rankingFactors.addDocumentFactor("tcf.avgDist", Double.toString(tcfAvgDist));
+            rankingFactors.addDocumentFactor("tcf.firstPosition", Double.toString(tcfFirstPosition));
+
+            rankingFactors.addDocumentFactor("bm25.main", Double.toString(bM25));
+            rankingFactors.addDocumentFactor("bm25.flags", Double.toString(bFlags));
+
+            for (int i = 0; i < searchTerms.termIdsAll.size(); i++) {
+                long termId = searchTerms.termIdsAll.at(i);
+
+                rankingFactors.addTermFactor(termId, "factor.weightedCount", Double.toString(weightedCounts[i]));
+                byte flags = (byte) wordFlagsQuery.at(i);
+
+                for (var flag : WordFlags.values()) {
+                    if (flag.isPresent(flags)) {
+                        rankingFactors.addTermFactor(termId, "flags." + flag.name(), "true");
+                    }
+                }
+
+                if (verbatimMatchInAnchor) {
+                    rankingFactors.addTermFactor(termId, "verbatim.anchor", "true");
+                }
+                if (verbatimMatchInBody) {
+                    rankingFactors.addTermFactor(termId, "verbatim.body", "true");
+                }
+                if (verbatimMatchInCode) {
+                    rankingFactors.addTermFactor(termId, "verbatim.code", "true");
+                }
+                if (verbatimMatchInExtLink) {
+                    rankingFactors.addTermFactor(termId, "verbatim.extLink", "true");
+                }
+                if (verbatimMatchInHeading) {
+                    rankingFactors.addTermFactor(termId, "verbatim.heading", "true");
+                }
+                if (verbatimMatchInNav) {
+                    rankingFactors.addTermFactor(termId, "verbatim.nav", "true");
+                }
+                if (verbatimMatchInTitle) {
+                    rankingFactors.addTermFactor(termId, "verbatim.title", "true");
+                }
+
+                rankingFactors.addTermFactor(termId, "unordered.title", Integer.toString(unorderedMatchInTitleCount));
+                rankingFactors.addTermFactor(termId, "unordered.heading", Integer.toString(unorderedMatchInHeadingCount));
+
+                if (positions[i] != null) {
+                    rankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
+                    rankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title.iterator(), positions[i].iterator()).iterator());
+                    rankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading.iterator(), positions[i].iterator()).iterator());
+                    rankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.iterator(), positions[i].iterator()).iterator());
+                    rankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.iterator(), positions[i].iterator()).iterator());
+                    rankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.iterator(), positions[i].iterator()).iterator());
+                    rankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.iterator(), positions[i].iterator()).iterator());
+                }
+
+            }
+
+        }
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
