@@ -88,6 +88,11 @@ public class IndexResultScoreCalculator {
         int docSize = index.getDocumentSize(docId);
         DocumentSpans spans = index.getDocumentSpans(arena, docId);
 
+        if (rankingFactors != null) {
+            rankingFactors.addDocumentFactor("doc.docId", Long.toString(combinedId));
+            rankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
+        }
+
         double score = calculateSearchResultValue(
                 rankingFactors,
                 searchTerms,
