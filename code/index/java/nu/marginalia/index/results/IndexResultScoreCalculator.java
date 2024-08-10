@@ -407,7 +407,7 @@ public class IndexResultScoreCalculator {
 
         public VerbatimMatches() {
             matches = new BitSet(HtmlTag.includedTags.length);
-            weights = new float[] { HtmlTag.includedTags.length };
+            weights = new float[HtmlTag.includedTags.length];
 
             for (int i = 0; i < weights.length; i++) {
                 weights[i] = switch(HtmlTag.includedTags[i]) {
