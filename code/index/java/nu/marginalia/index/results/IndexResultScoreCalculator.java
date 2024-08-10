@@ -218,7 +218,7 @@ public class IndexResultScoreCalculator {
         int unorderedMatchInTitleCount = 0;
         int unorderedMatchInHeadingCount = 0;
 
-        int firstPosition = 0;
+        int firstPosition = 1;
         for (int i = 0; i < weightedCounts.length; i++) {
             if (positions[i] != null && ctx.regularMask.get(i)) {
                 searchableKeywordsCount ++;
