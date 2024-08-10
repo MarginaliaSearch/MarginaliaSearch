@@ -417,6 +417,7 @@ public class IndexResultScoreCalculator {
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
                     case EXTERNAL_LINKTEXT -> 1.0f;
+                    case BODY -> 1.0f;
                     default -> 0.0f;
                 };
             }
