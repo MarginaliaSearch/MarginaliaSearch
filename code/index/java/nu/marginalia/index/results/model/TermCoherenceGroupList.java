@@ -10,6 +10,7 @@ import nu.marginalia.sequence.SequenceOperations;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,6 +28,10 @@ public class TermCoherenceGroupList {
                 optionalGroups.add(group);
             }
         }
+    }
+
+    public List<TermCoherenceGroup> getOptionalGroups() {
+        return Collections.unmodifiableList(optionalGroups);
     }
 
     public boolean testMandatory(CodedSequence[] positions) {

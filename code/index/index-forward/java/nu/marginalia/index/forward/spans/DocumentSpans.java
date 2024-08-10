@@ -15,6 +15,22 @@ public class DocumentSpans {
 
     public DocumentSpan externalLinkText = EMPTY_SPAN;
 
+    public DocumentSpan getSpan(HtmlTag tag) {
+        if (tag == HtmlTag.HEADING)
+            return heading;
+        else if (tag == HtmlTag.TITLE)
+            return title;
+        else if (tag == HtmlTag.NAV)
+            return nav;
+        else if (tag == HtmlTag.CODE)
+            return code;
+        else if (tag == HtmlTag.ANCHOR)
+            return anchor;
+        else if (tag == HtmlTag.EXTERNAL_LINKTEXT)
+            return externalLinkText;
+        return EMPTY_SPAN;
+    }
+
     void accept(byte code, CodedSequence positions) {
         if (code == HtmlTag.HEADING.code)
             this.heading = new DocumentSpan(positions);
