@@ -106,7 +106,7 @@
         {{#each .}}
             <div><small>{{name}}</small></div>
             {{#each factors}}
-                <div><small class="text-muted">{{factor}}: {{value}}</small></div>
+                <div style="margin-left: 1ch"><small class="text-muted">{{factor}}: {{value}}</small></div>
             {{/each}}
         {{/each}}
     {{/with}}
@@ -115,9 +115,9 @@
         {{#each .}}
         <div>{{termId}}:{{term}}</div>
         {{#each factorList}}
-            <div>{{name}}</div>
+            <div style="margin-left: 1ch">{{name}}</div>
             {{#each factors}}
-                <div><small class="text-muted">{{factor}}: {{value}}</small></div>
+                <div style="margin-left: 2ch"><small class="text-muted">{{factor}}: {{value}}</small></div>
             {{/each}}
 
         {{/each}}
