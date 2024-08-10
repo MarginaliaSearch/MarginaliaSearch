@@ -6,6 +6,7 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TObjectLongHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
@@ -174,6 +175,7 @@ public class IndexResultRankingService {
         }
 
         List<RpcDecoratedResultItem> resultItems = new ArrayList<>(resultsList.size());
+        LongOpenHashSet seenDocumentHashes = new LongOpenHashSet(resultsList.size());
 
         // Decorate the results with the document details
         for (var result : resultsList) {
@@ -182,6 +184,11 @@ public class IndexResultRankingService {
 
             if (docData == null) {
                 logger.warn("No document data for id {}", id);
+                continue;
+            }
+
+            // Filter out duplicates by content
+            if (!seenDocumentHashes.add(docData.dataHash())) {
                 continue;
             }
 
