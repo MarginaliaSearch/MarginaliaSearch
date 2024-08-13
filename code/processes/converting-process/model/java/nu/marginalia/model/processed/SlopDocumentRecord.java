@@ -5,6 +5,7 @@ import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
 import nu.marginalia.sequence.slop.GammaCodedSequenceArrayReader;
 import nu.marginalia.sequence.slop.GammaCodedSequenceArrayWriter;
+import nu.marginalia.slop.ColumnTypes;
 import nu.marginalia.slop.column.array.ByteArrayColumnReader;
 import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
 import nu.marginalia.slop.column.array.ObjectArrayColumnReader;
@@ -16,7 +17,6 @@ import nu.marginalia.slop.column.string.EnumColumnReader;
 import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 import org.jetbrains.annotations.Nullable;
@@ -111,30 +111,30 @@ public record SlopDocumentRecord(
     }
 
     // Basic information
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnType.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> urlsColumn = new ColumnDesc<>("url", ColumnType.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<VarintColumnReader, VarintColumnWriter> ordinalsColumn = new ColumnDesc<>("ordinal", ColumnType.VARINT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnType.ENUM_LE, StorageType.PLAIN);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> stateReasonsColumn = new ColumnDesc<>("stateReason", ColumnType.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> urlsColumn = new ColumnDesc<>("url", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<VarintColumnReader, VarintColumnWriter> ordinalsColumn = new ColumnDesc<>("ordinal", ColumnTypes.VARINT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnTypes.ENUM_LE, StorageType.PLAIN);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> stateReasonsColumn = new ColumnDesc<>("stateReason", ColumnTypes.TXTSTRING, StorageType.GZIP);
 
     // Document metadata
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> titlesColumn = new ColumnDesc<>("title", ColumnType.STRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> descriptionsColumn = new ColumnDesc<>("description", ColumnType.STRING, StorageType.GZIP);
-    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> htmlStandardsColumn = new ColumnDesc<>("htmlStandard", ColumnType.ENUM_LE, StorageType.GZIP);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> htmlFeaturesColumn = new ColumnDesc<>("htmlFeatures", ColumnType.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> lengthsColumn = new ColumnDesc<>("length", ColumnType.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> pubYearColumn = new ColumnDesc<>("pubYear", ColumnType.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<LongColumnReader, LongColumnWriter> hashesColumn = new ColumnDesc<>("hash", ColumnType.LONG_LE, StorageType.PLAIN);
-    private static final ColumnDesc<FloatColumnReader, FloatColumnWriter> qualitiesColumn = new ColumnDesc<>("quality", ColumnType.FLOAT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<LongColumnReader, LongColumnWriter> domainMetadata = new ColumnDesc<>("domainMetadata", ColumnType.LONG_LE, StorageType.PLAIN);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> titlesColumn = new ColumnDesc<>("title", ColumnTypes.STRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> descriptionsColumn = new ColumnDesc<>("description", ColumnTypes.STRING, StorageType.GZIP);
+    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> htmlStandardsColumn = new ColumnDesc<>("htmlStandard", ColumnTypes.ENUM_LE, StorageType.GZIP);
+    private static final ColumnDesc<IntColumnReader, IntColumnWriter> htmlFeaturesColumn = new ColumnDesc<>("htmlFeatures", ColumnTypes.INT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<IntColumnReader, IntColumnWriter> lengthsColumn = new ColumnDesc<>("length", ColumnTypes.INT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<IntColumnReader, IntColumnWriter> pubYearColumn = new ColumnDesc<>("pubYear", ColumnTypes.INT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<LongColumnReader, LongColumnWriter> hashesColumn = new ColumnDesc<>("hash", ColumnTypes.LONG_LE, StorageType.PLAIN);
+    private static final ColumnDesc<FloatColumnReader, FloatColumnWriter> qualitiesColumn = new ColumnDesc<>("quality", ColumnTypes.FLOAT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<LongColumnReader, LongColumnWriter> domainMetadata = new ColumnDesc<>("domainMetadata", ColumnTypes.LONG_LE, StorageType.PLAIN);
 
     // Keyword-level columns, these are enumerated by the counts column
-    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> keywordsColumn = new ColumnDesc<>("keywords", ColumnType.STRING_ARRAY, StorageType.ZSTD);
-    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> termMetaColumn = new ColumnDesc<>("termMetadata", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
+    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> keywordsColumn = new ColumnDesc<>("keywords", ColumnTypes.STRING_ARRAY, StorageType.ZSTD);
+    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> termMetaColumn = new ColumnDesc<>("termMetadata", ColumnTypes.BYTE_ARRAY, StorageType.ZSTD);
     private static final ColumnDesc<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> termPositionsColumn = new ColumnDesc<>("termPositions", GammaCodedSequenceArrayColumn.TYPE, StorageType.ZSTD);
 
     // Spans columns
-    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodesColumn = new ColumnDesc<>("spanCodes", ColumnType.BYTE_ARRAY, StorageType.ZSTD);
+    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodesColumn = new ColumnDesc<>("spanCodes", ColumnTypes.BYTE_ARRAY, StorageType.ZSTD);
     private static final ColumnDesc<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> spansColumn = new ColumnDesc<>("spans", GammaCodedSequenceArrayColumn.TYPE, StorageType.ZSTD);
 
     public static class KeywordsProjectionReader extends SlopTable {
@@ -156,18 +156,19 @@ public record SlopDocumentRecord(
         }
 
         public KeywordsProjectionReader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
-            ordinalsReader = ordinalsColumn.forPage(page).open(this, baseDir);
-            htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(this, baseDir);
-            domainMetadataReader = domainMetadata.forPage(page).open(this, baseDir);
-            lengthsReader = lengthsColumn.forPage(page).open(this, baseDir);
+            super(page);
+            domainsReader = domainsColumn.open(this, baseDir);
+            ordinalsReader = ordinalsColumn.open(this, baseDir);
+            htmlFeaturesReader = htmlFeaturesColumn.open(this, baseDir);
+            domainMetadataReader = domainMetadata.open(this, baseDir);
+            lengthsReader = lengthsColumn.open(this, baseDir);
 
-            keywordsReader = keywordsColumn.forPage(page).open(this, baseDir);
-            termMetaReader = termMetaColumn.forPage(page).open(this, baseDir);
-            termPositionsReader = termPositionsColumn.forPage(page).open(this, baseDir);
+            keywordsReader = keywordsColumn.open(this, baseDir);
+            termMetaReader = termMetaColumn.open(this, baseDir);
+            termPositionsReader = termPositionsColumn.open(this, baseDir);
 
-            spanCodesReader = spanCodesColumn.forPage(page).open(this, baseDir);
-            spansReader = spansColumn.forPage(page).open(this, baseDir);
+            spanCodesReader = spanCodesColumn.open(this, baseDir);
+            spansReader = spansColumn.open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -223,17 +224,19 @@ public record SlopDocumentRecord(
         }
 
         public MetadataReader(Path baseDir, int page) throws IOException {
-            this.domainsReader = domainsColumn.forPage(page).open(this, baseDir);
-            this.urlsReader = urlsColumn.forPage(page).open(this, baseDir);
-            this.ordinalsReader = ordinalsColumn.forPage(page).open(this, baseDir);
-            this.titlesReader = titlesColumn.forPage(page).open(this, baseDir);
-            this.descriptionsReader = descriptionsColumn.forPage(page).open(this, baseDir);
-            this.htmlFeaturesReader = htmlFeaturesColumn.forPage(page).open(this, baseDir);
-            this.htmlStandardsReader = htmlStandardsColumn.forPage(page).open(this, baseDir);
-            this.lengthsReader = lengthsColumn.forPage(page).open(this, baseDir);
-            this.hashesReader = hashesColumn.forPage(page).open(this, baseDir);
-            this.qualitiesReader = qualitiesColumn.forPage(page).open(this, baseDir);
-            this.pubYearReader = pubYearColumn.forPage(page).open(this, baseDir);
+            super(page);
+
+            this.domainsReader = domainsColumn.open(this, baseDir);
+            this.urlsReader = urlsColumn.open(this, baseDir);
+            this.ordinalsReader = ordinalsColumn.open(this, baseDir);
+            this.titlesReader = titlesColumn.open(this, baseDir);
+            this.descriptionsReader = descriptionsColumn.open(this, baseDir);
+            this.htmlFeaturesReader = htmlFeaturesColumn.open(this, baseDir);
+            this.htmlStandardsReader = htmlStandardsColumn.open(this, baseDir);
+            this.lengthsReader = lengthsColumn.open(this, baseDir);
+            this.hashesReader = hashesColumn.open(this, baseDir);
+            this.qualitiesReader = qualitiesColumn.open(this, baseDir);
+            this.pubYearReader = pubYearColumn.open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -281,27 +284,29 @@ public record SlopDocumentRecord(
         private final GammaCodedSequenceArrayWriter spansWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            domainsWriter = domainsColumn.forPage(page).create(this, baseDir);
-            urlsWriter = urlsColumn.forPage(page).create(this, baseDir);
-            ordinalsWriter = ordinalsColumn.forPage(page).create(this, baseDir);
-            statesWriter = statesColumn.forPage(page).create(this, baseDir);
-            stateReasonsWriter = stateReasonsColumn.forPage(page).create(this, baseDir);
-            titlesWriter = titlesColumn.forPage(page).create(this, baseDir);
-            descriptionsWriter = descriptionsColumn.forPage(page).create(this, baseDir);
-            htmlFeaturesWriter = htmlFeaturesColumn.forPage(page).create(this, baseDir);
-            htmlStandardsWriter = htmlStandardsColumn.forPage(page).create(this, baseDir);
-            lengthsWriter = lengthsColumn.forPage(page).create(this, baseDir);
-            hashesWriter = hashesColumn.forPage(page).create(this, baseDir);
-            qualitiesWriter = qualitiesColumn.forPage(page).create(this, baseDir);
-            domainMetadataWriter = domainMetadata.forPage(page).create(this, baseDir);
-            pubYearWriter = pubYearColumn.forPage(page).create(this, baseDir);
+            super(page);
 
-            keywordsWriter = keywordsColumn.forPage(page).create(this, baseDir);
-            termMetaWriter = termMetaColumn.forPage(page).create(this, baseDir);
-            termPositionsWriter = termPositionsColumn.forPage(page).create(this, baseDir);
+            domainsWriter = domainsColumn.create(this, baseDir);
+            urlsWriter = urlsColumn.create(this, baseDir);
+            ordinalsWriter = ordinalsColumn.create(this, baseDir);
+            statesWriter = statesColumn.create(this, baseDir);
+            stateReasonsWriter = stateReasonsColumn.create(this, baseDir);
+            titlesWriter = titlesColumn.create(this, baseDir);
+            descriptionsWriter = descriptionsColumn.create(this, baseDir);
+            htmlFeaturesWriter = htmlFeaturesColumn.create(this, baseDir);
+            htmlStandardsWriter = htmlStandardsColumn.create(this, baseDir);
+            lengthsWriter = lengthsColumn.create(this, baseDir);
+            hashesWriter = hashesColumn.create(this, baseDir);
+            qualitiesWriter = qualitiesColumn.create(this, baseDir);
+            domainMetadataWriter = domainMetadata.create(this, baseDir);
+            pubYearWriter = pubYearColumn.create(this, baseDir);
 
-            spansCodesWriter = spanCodesColumn.forPage(page).create(this, baseDir);
-            spansWriter = spansColumn.forPage(page).create(this, baseDir);
+            keywordsWriter = keywordsColumn.create(this, baseDir);
+            termMetaWriter = termMetaColumn.create(this, baseDir);
+            termPositionsWriter = termPositionsColumn.create(this, baseDir);
+
+            spansCodesWriter = spanCodesColumn.create(this, baseDir);
+            spansWriter = spansColumn.create(this, baseDir);
         }
 
         public void write(SlopDocumentRecord record) throws IOException {

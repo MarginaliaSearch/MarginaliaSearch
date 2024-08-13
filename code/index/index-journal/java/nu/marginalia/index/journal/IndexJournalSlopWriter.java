@@ -32,23 +32,25 @@ public class IndexJournalSlopWriter extends SlopTable {
     private static final MurmurHash3_128 hash = new MurmurHash3_128();
 
     public IndexJournalSlopWriter(Path dir, int page) throws IOException {
+
+        super(page);
+
         if (!Files.exists(dir)) {
             Files.createDirectory(dir);
         }
 
+        featuresWriter = IndexJournalPage.features.create(this, dir);
+        sizeWriter = IndexJournalPage.size.create(this, dir);
 
-        featuresWriter = IndexJournalPage.features.forPage(page).create(this, dir);
-        sizeWriter = IndexJournalPage.size.forPage(page).create(this, dir);
+        combinedIdWriter = IndexJournalPage.combinedId.create(this, dir);
+        documentMetaWriter = IndexJournalPage.documentMeta.create(this, dir);
 
-        combinedIdWriter = IndexJournalPage.combinedId.forPage(page).create(this, dir);
-        documentMetaWriter = IndexJournalPage.documentMeta.forPage(page).create(this, dir);
+        termIdsWriter = IndexJournalPage.termIds.create(this, dir);
+        termMetadataWriter = IndexJournalPage.termMeta.create(this, dir);
+        termPositionsWriter = IndexJournalPage.positions.create(this, dir);
 
-        termIdsWriter = IndexJournalPage.termIds.forPage(page).create(this, dir);
-        termMetadataWriter = IndexJournalPage.termMeta.forPage(page).create(this, dir);
-        termPositionsWriter = IndexJournalPage.positions.forPage(page).create(this, dir);
-
-        spanCodesWriter = IndexJournalPage.spanCodes.forPage(page).create(this, dir);
-        spansWriter = IndexJournalPage.spans.forPage(page).create(this, dir);
+        spanCodesWriter = IndexJournalPage.spanCodes.create(this, dir);
+        spansWriter = IndexJournalPage.spans.create(this, dir);
     }
 
     @SneakyThrows

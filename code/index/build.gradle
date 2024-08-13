@@ -22,7 +22,6 @@ dependencies {
 
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:slop')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:language-processing')
 
@@ -41,6 +40,7 @@ dependencies {
     implementation project(':code:index:index-journal')
 
 
+    implementation libs.slop
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus

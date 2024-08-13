@@ -77,7 +77,7 @@ public class FullPreindexDocuments {
         final ByteBuffer tempBuffer = ByteBuffer.allocate(1024*1024*100);
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var slopTable = new SlopTable())
+             var slopTable = new SlopTable(journalInstance.page()))
         {
             var docIds = journalInstance.openCombinedId(slopTable);
             var termIds = journalInstance.openTermIds(slopTable);

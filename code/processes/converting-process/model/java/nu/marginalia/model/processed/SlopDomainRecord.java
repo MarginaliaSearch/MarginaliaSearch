@@ -1,5 +1,6 @@
 package nu.marginalia.model.processed;
 
+import nu.marginalia.slop.ColumnTypes;
 import nu.marginalia.slop.column.array.ObjectArrayColumnReader;
 import nu.marginalia.slop.column.array.ObjectArrayColumnWriter;
 import nu.marginalia.slop.column.primitive.IntColumnReader;
@@ -8,7 +9,6 @@ import nu.marginalia.slop.column.string.EnumColumnReader;
 import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 
@@ -33,16 +33,16 @@ public record SlopDomainRecord(
             String ip)
     {}
 
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnType.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnType.ENUM_LE, StorageType.PLAIN);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> redirectDomainsColumn = new ColumnDesc<>("redirectDomain", ColumnType.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> ipColumn = new ColumnDesc<>("ip", ColumnType.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnTypes.ENUM_LE, StorageType.PLAIN);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> redirectDomainsColumn = new ColumnDesc<>("redirectDomain", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> ipColumn = new ColumnDesc<>("ip", ColumnTypes.TXTSTRING, StorageType.GZIP);
 
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> knownUrlsColumn = new ColumnDesc<>("knownUrls", ColumnType.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> goodUrlsColumn = new ColumnDesc<>("goodUrls", ColumnType.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> visitedUrlsColumn = new ColumnDesc<>("visitedUrls", ColumnType.INT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<IntColumnReader, IntColumnWriter> knownUrlsColumn = new ColumnDesc<>("knownUrls", ColumnTypes.INT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<IntColumnReader, IntColumnWriter> goodUrlsColumn = new ColumnDesc<>("goodUrls", ColumnTypes.INT_LE, StorageType.PLAIN);
+    private static final ColumnDesc<IntColumnReader, IntColumnWriter> visitedUrlsColumn = new ColumnDesc<>("visitedUrls", ColumnTypes.INT_LE, StorageType.PLAIN);
 
-    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> rssFeedsColumn = new ColumnDesc<>("rssFeeds", ColumnType.TXTSTRING_ARRAY, StorageType.GZIP);
+    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> rssFeedsColumn = new ColumnDesc<>("rssFeeds", ColumnTypes.TXTSTRING_ARRAY, StorageType.GZIP);
 
 
     public static class DomainNameReader extends SlopTable {
@@ -53,7 +53,9 @@ public record SlopDomainRecord(
         }
 
         public DomainNameReader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
+            super(page);
+
+            domainsReader = domainsColumn.open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -74,8 +76,10 @@ public record SlopDomainRecord(
         }
 
         public DomainWithIpReader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
-            ipReader = ipColumn.forPage(page).open(this, baseDir);
+            super(page);
+
+            domainsReader = domainsColumn.open(this, baseDir);
+            ipReader = ipColumn.open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -108,16 +112,18 @@ public record SlopDomainRecord(
         }
 
         public Reader(Path baseDir, int page) throws IOException {
-            domainsReader = domainsColumn.forPage(page).open(this, baseDir);
-            statesReader = statesColumn.forPage(page).open(this, baseDir);
-            redirectReader = redirectDomainsColumn.forPage(page).open(this, baseDir);
-            ipReader = ipColumn.forPage(page).open(this, baseDir);
+            super(page);
 
-            knownUrlsReader = knownUrlsColumn.forPage(page).open(this, baseDir);
-            goodUrlsReader = goodUrlsColumn.forPage(page).open(this, baseDir);
-            visitedUrlsReader = visitedUrlsColumn.forPage(page).open(this, baseDir);
+            domainsReader = domainsColumn.open(this, baseDir);
+            statesReader = statesColumn.open(this, baseDir);
+            redirectReader = redirectDomainsColumn.open(this, baseDir);
+            ipReader = ipColumn.open(this, baseDir);
 
-            rssFeedsReader = rssFeedsColumn.forPage(page).open(this, baseDir);
+            knownUrlsReader = knownUrlsColumn.open(this, baseDir);
+            goodUrlsReader = goodUrlsColumn.open(this, baseDir);
+            visitedUrlsReader = visitedUrlsColumn.open(this, baseDir);
+
+            rssFeedsReader = rssFeedsColumn.open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -157,16 +163,18 @@ public record SlopDomainRecord(
         private final ObjectArrayColumnWriter<String> rssFeedsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            domainsWriter = domainsColumn.forPage(page).create(this, baseDir);
-            statesWriter = statesColumn.forPage(page).create(this, baseDir);
-            redirectWriter = redirectDomainsColumn.forPage(page).create(this, baseDir);
-            ipWriter = ipColumn.forPage(page).create(this, baseDir);
+            super(page);
 
-            knownUrlsWriter = knownUrlsColumn.forPage(page).create(this, baseDir);
-            goodUrlsWriter = goodUrlsColumn.forPage(page).create(this, baseDir);
-            visitedUrlsWriter = visitedUrlsColumn.forPage(page).create(this, baseDir);
+            domainsWriter = domainsColumn.create(this, baseDir);
+            statesWriter = statesColumn.create(this, baseDir);
+            redirectWriter = redirectDomainsColumn.create(this, baseDir);
+            ipWriter = ipColumn.create(this, baseDir);
 
-            rssFeedsWriter = rssFeedsColumn.forPage(page).create(this, baseDir);
+            knownUrlsWriter = knownUrlsColumn.create(this, baseDir);
+            goodUrlsWriter = goodUrlsColumn.create(this, baseDir);
+            visitedUrlsWriter = visitedUrlsColumn.create(this, baseDir);
+
+            rssFeedsWriter = rssFeedsColumn.create(this, baseDir);
         }
 
         public void write(SlopDomainRecord record) throws IOException {

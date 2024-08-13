@@ -1,9 +1,9 @@
 package nu.marginalia.model.processed;
 
+import nu.marginalia.slop.ColumnTypes;
 import nu.marginalia.slop.column.string.StringColumnReader;
 import nu.marginalia.slop.column.string.StringColumnWriter;
 import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.SlopTable;
 import nu.marginalia.slop.desc.StorageType;
 
@@ -15,8 +15,8 @@ public record SlopDomainLinkRecord(
         String source,
         String dest)
 {
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> sourcesColumn = new ColumnDesc<>("source", ColumnType.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> destsColumn = new ColumnDesc<>("dest", ColumnType.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> sourcesColumn = new ColumnDesc<>("source", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final ColumnDesc<StringColumnReader, StringColumnWriter> destsColumn = new ColumnDesc<>("dest", ColumnTypes.TXTSTRING, StorageType.GZIP);
 
     public static Reader reader(Path baseDir, int page) throws IOException {
         return new Reader(baseDir, page);
@@ -31,8 +31,10 @@ public record SlopDomainLinkRecord(
         }
 
         public Reader(Path baseDir, int page) throws IOException {
-            sourcesReader = sourcesColumn.forPage(page).open(this, baseDir);
-            destsReader = destsColumn.forPage(page).open(this, baseDir);
+            super(page);
+
+            sourcesReader = sourcesColumn.open(this, baseDir);
+            destsReader = destsColumn.open(this, baseDir);
         }
 
         public boolean hasMore() throws IOException {
@@ -59,8 +61,10 @@ public record SlopDomainLinkRecord(
         private final StringColumnWriter destsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            sourcesWriter = sourcesColumn.forPage(page).create(this, baseDir);
-            destsWriter = destsColumn.forPage(page).create(this, baseDir);
+            super(page);
+
+            sourcesWriter = sourcesColumn.create(this, baseDir);
+            destsWriter = destsColumn.create(this, baseDir);
         }
 
         public void write(SlopDomainLinkRecord record) throws IOException {

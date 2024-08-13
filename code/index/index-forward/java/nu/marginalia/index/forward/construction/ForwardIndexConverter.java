@@ -86,7 +86,7 @@ public class ForwardIndexConverter {
 
             ByteBuffer workArea = ByteBuffer.allocate(65536);
             for (var instance : journal.pages()) {
-                try (var slopTable = new SlopTable())
+                try (var slopTable = new SlopTable(instance.page()))
                 {
                     var docIdReader = instance.openCombinedId(slopTable);
                     var metaReader = instance.openDocumentMeta(slopTable);
@@ -152,7 +152,7 @@ public class ForwardIndexConverter {
         Roaring64Bitmap rbm = new Roaring64Bitmap();
 
         for (var instance : journalReader.pages()) {
-            try (var slopTable = new SlopTable()) {
+            try (var slopTable = new SlopTable(instance.page())) {
                 LongColumnReader idReader = instance.openCombinedId(slopTable);
 
                 while (idReader.hasRemaining()) {

@@ -40,7 +40,6 @@ include 'code:libraries:array:cpp'
 include 'code:libraries:coded-sequence'
 include 'code:libraries:geo-ip'
 include 'code:libraries:btree'
-include 'code:libraries:slop'
 include 'code:libraries:easy-lsh'
 include 'code:libraries:guarded-regex'
 include 'code:libraries:random-write-funnel'
@@ -107,6 +106,8 @@ dependencyResolutionManagement {
         maven { url "https://repo1.maven.org/maven2/" }
         maven { url "https://www2.ph.ed.ac.uk/maven2/" }
         maven { url "https://jitpack.io/" }
+        maven { url "https://artifacts.marginalia.nu/snapshots" }
+
         exclusiveContent {
             forRepository {
                 maven {
@@ -116,6 +117,18 @@ dependencyResolutionManagement {
             filter {
                 // Only use JitPack for the `gson-record-type-adapter-factory` library
                 includeModule("com.github.Marcono1234", "gson-record-type-adapter-factory")
+            }
+        }
+
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = uri("https://artifacts.marginalia.nu/snapshots")
+                }
+            }
+            filter {
+                // Only use the Marginalia snapshot repository for the `slop` library
+                includeModule("nu.marginalia", "slop")
             }
         }
     }
@@ -212,6 +225,8 @@ dependencyResolutionManagement {
             library('jetty-server','org.eclipse.jetty','jetty-server').version('9.4.54.v20240208')
             library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
+
+            library('slop', 'nu.marginalia', 'slop').version('0.0.1-SNAPSHOT')
 
             bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 

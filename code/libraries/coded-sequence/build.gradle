@@ -14,7 +14,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation libs.bundles.slf4j
 
-    implementation project(':code:libraries:slop')
+    implementation libs.slop
     implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test

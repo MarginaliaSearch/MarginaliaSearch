@@ -16,7 +16,6 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:slop')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:random-write-funnel')
     implementation project(':code:index:query')
@@ -31,6 +30,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
 
+    implementation libs.slop
     implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test

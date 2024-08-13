@@ -1,6 +1,7 @@
 package nu.marginalia.sequence.slop;
 
 import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.slop.ColumnTypes;
 import nu.marginalia.slop.column.dynamic.VarintColumn;
 import nu.marginalia.slop.column.dynamic.VarintColumnReader;
 import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
@@ -20,13 +21,13 @@ import java.nio.file.Path;
 /** Slop column extension for storing GammaCodedSequence objects. */
 public class GammaCodedSequenceColumn {
 
-    public static ColumnType<GammaCodedSequenceReader, GammaCodedSequenceWriter> TYPE = ColumnType.register("s8[]+gcs", ByteOrder.nativeOrder(), GammaCodedSequenceColumn::open, GammaCodedSequenceColumn::create);
+    public static ColumnType<GammaCodedSequenceReader, GammaCodedSequenceWriter> TYPE = ColumnTypes.register("s8[]+gcs", ByteOrder.nativeOrder(), GammaCodedSequenceColumn::open, GammaCodedSequenceColumn::create);
 
     public static GammaCodedSequenceReader open(Path path, ColumnDesc columnDesc) throws IOException {
         return new Reader(columnDesc,
                 Storage.reader(path, columnDesc, false), // note we must never pass aligned=true here, as the data is not guaranteed alignment
                 VarintColumn.open(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN,
-                        ColumnType.VARINT_LE,
+                        ColumnTypes.VARINT_LE,
                         StorageType.PLAIN)
                 )
         );
@@ -36,7 +37,7 @@ public class GammaCodedSequenceColumn {
         return new Writer(columnDesc,
                 Storage.writer(path, columnDesc),
                 VarintColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.DATA_LEN,
-                        ColumnType.VARINT_LE,
+                        ColumnTypes.VARINT_LE,
                         StorageType.PLAIN)
                 )
         );

@@ -1,5 +1,7 @@
 package nu.marginalia.index.journal;
 
+import nu.marginalia.slop.desc.SlopTable;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -25,12 +27,7 @@ public record IndexJournal(Path journalDir) {
 
     /** Returns the number of versions of the journal file in the base directory. */
     public static int numPages(Path baseDirectory) {
-        for (int version = 0; ; version++) {
-            if (!IndexJournalPage.combinedId.forPage(version).exists(baseDirectory)) {
-                return version;
-            }
-        }
-
+        return SlopTable.getNumPages(baseDirectory, IndexJournalPage.combinedId);
     }
 
     public IndexJournal {

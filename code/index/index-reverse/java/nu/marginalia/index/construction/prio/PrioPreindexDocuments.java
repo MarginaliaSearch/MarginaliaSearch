@@ -65,7 +65,7 @@ public class PrioPreindexDocuments {
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var slopTable = new SlopTable())
+             var slopTable = new SlopTable(journalInstance.page()))
         {
             var docIds = journalInstance.openCombinedId(slopTable);
             var termIds = journalInstance.openTermIds(slopTable);

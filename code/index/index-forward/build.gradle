@@ -15,7 +15,6 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:slop')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:index:query')
@@ -30,6 +29,7 @@ dependencies {
     implementation libs.roaringbitmap
     implementation libs.fastutil
     implementation libs.trove
+    implementation libs.slop
 
     testImplementation project(':code:libraries:test-helpers')
     testImplementation libs.bundles.slf4j.test
