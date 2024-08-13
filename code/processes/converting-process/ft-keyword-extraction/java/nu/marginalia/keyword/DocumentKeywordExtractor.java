@@ -111,7 +111,7 @@ public class DocumentKeywordExtractor {
         int pos = 0;
 
         List<SpanRecorder> spanRecorders = new ArrayList<>();
-        for (var htmlTag : HtmlTag.values()) {
+        for (var htmlTag : HtmlTag.includedTags) {
             if (!htmlTag.exclude) {
                 spanRecorders.add(new SpanRecorder(htmlTag));
             }
@@ -241,7 +241,11 @@ public class DocumentKeywordExtractor {
         public void update(DocumentSentence sentence, int pos) {
             assert pos > 0;
 
-            if (sentence.htmlTags.contains(htmlTag)) {
+            if (
+                    sentence.htmlTags.contains(htmlTag)
+                || (sentence.htmlTags.isEmpty() && htmlTag == HtmlTag.BODY)  // special case for body tag, we match against no tag on the sentence
+            )
+            {
                 if (start <= 0) start = pos;
             }
             else {
