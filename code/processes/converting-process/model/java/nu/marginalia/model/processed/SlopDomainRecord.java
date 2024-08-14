@@ -1,15 +1,10 @@
 package nu.marginalia.model.processed;
 
-import nu.marginalia.slop.ColumnTypes;
-import nu.marginalia.slop.column.array.ObjectArrayColumnReader;
-import nu.marginalia.slop.column.array.ObjectArrayColumnWriter;
-import nu.marginalia.slop.column.primitive.IntColumnReader;
-import nu.marginalia.slop.column.primitive.IntColumnWriter;
-import nu.marginalia.slop.column.string.EnumColumnReader;
-import nu.marginalia.slop.column.string.StringColumnReader;
-import nu.marginalia.slop.column.string.StringColumnWriter;
-import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.array.ObjectArrayColumn;
+import nu.marginalia.slop.column.primitive.IntColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
+import nu.marginalia.slop.column.string.TxtStringColumn;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -33,20 +28,20 @@ public record SlopDomainRecord(
             String ip)
     {}
 
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnTypes.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnTypes.ENUM_LE, StorageType.PLAIN);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> redirectDomainsColumn = new ColumnDesc<>("redirectDomain", ColumnTypes.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> ipColumn = new ColumnDesc<>("ip", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StorageType.GZIP);
+    private static final EnumColumn statesColumn = new EnumColumn("state", StorageType.PLAIN);
+    private static final TxtStringColumn redirectDomainsColumn = new TxtStringColumn("redirectDomain", StorageType.GZIP);
+    private static final TxtStringColumn ipColumn = new TxtStringColumn("ip", StorageType.GZIP);
 
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> knownUrlsColumn = new ColumnDesc<>("knownUrls", ColumnTypes.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> goodUrlsColumn = new ColumnDesc<>("goodUrls", ColumnTypes.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> visitedUrlsColumn = new ColumnDesc<>("visitedUrls", ColumnTypes.INT_LE, StorageType.PLAIN);
+    private static final IntColumn knownUrlsColumn = new IntColumn("knownUrls", StorageType.PLAIN);
+    private static final IntColumn goodUrlsColumn = new IntColumn("goodUrls", StorageType.PLAIN);
+    private static final IntColumn visitedUrlsColumn = new IntColumn("visitedUrls", StorageType.PLAIN);
 
-    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> rssFeedsColumn = new ColumnDesc<>("rssFeeds", ColumnTypes.TXTSTRING_ARRAY, StorageType.GZIP);
+    private static final ObjectArrayColumn<String> rssFeedsColumn = new TxtStringColumn("rssFeeds", StorageType.GZIP).asArray();
 
 
     public static class DomainNameReader extends SlopTable {
-        private final StringColumnReader domainsReader;
+        private final TxtStringColumn.Reader domainsReader;
 
         public DomainNameReader(SlopPageRef<SlopDomainRecord> page) throws IOException {
             this(page.baseDir(), page.page());
@@ -68,8 +63,8 @@ public record SlopDomainRecord(
     }
 
     public static class DomainWithIpReader extends SlopTable {
-        private final StringColumnReader domainsReader;
-        private final StringColumnReader ipReader;
+        private final TxtStringColumn.Reader domainsReader;
+        private final TxtStringColumn.Reader ipReader;
 
         public DomainWithIpReader(SlopPageRef<SlopDomainRecord> page) throws IOException {
             this(page.baseDir(), page.page());
@@ -96,16 +91,16 @@ public record SlopDomainRecord(
     }
 
     public static class Reader extends SlopTable {
-        private final StringColumnReader domainsReader;
-        private final StringColumnReader statesReader;
-        private final StringColumnReader redirectReader;
-        private final StringColumnReader ipReader;
+        private final TxtStringColumn.Reader domainsReader;
+        private final EnumColumn.Reader statesReader;
+        private final TxtStringColumn.Reader redirectReader;
+        private final TxtStringColumn.Reader ipReader;
 
-        private final IntColumnReader knownUrlsReader;
-        private final IntColumnReader goodUrlsReader;
-        private final IntColumnReader visitedUrlsReader;
+        private final IntColumn.Reader knownUrlsReader;
+        private final IntColumn.Reader goodUrlsReader;
+        private final IntColumn.Reader visitedUrlsReader;
 
-        private final ObjectArrayColumnReader<String> rssFeedsReader;
+        private final ObjectArrayColumn<String>.Reader rssFeedsReader;
 
         public Reader(SlopPageRef<SlopDomainRecord> page) throws IOException {
             this(page.baseDir(), page.page());
@@ -151,16 +146,16 @@ public record SlopDomainRecord(
     }
 
     public static class Writer extends SlopTable {
-        private final StringColumnWriter domainsWriter;
-        private final StringColumnWriter statesWriter;
-        private final StringColumnWriter redirectWriter;
-        private final StringColumnWriter ipWriter;
+        private final TxtStringColumn.Writer domainsWriter;
+        private final EnumColumn.Writer statesWriter;
+        private final TxtStringColumn.Writer redirectWriter;
+        private final TxtStringColumn.Writer ipWriter;
 
-        private final IntColumnWriter knownUrlsWriter;
-        private final IntColumnWriter goodUrlsWriter;
-        private final IntColumnWriter visitedUrlsWriter;
+        private final IntColumn.Writer knownUrlsWriter;
+        private final IntColumn.Writer goodUrlsWriter;
+        private final IntColumn.Writer visitedUrlsWriter;
 
-        private final ObjectArrayColumnWriter<String> rssFeedsWriter;
+        private final ObjectArrayColumn<String>.Writer rssFeedsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
             super(page);

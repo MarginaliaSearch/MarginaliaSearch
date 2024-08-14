@@ -3,12 +3,12 @@ package nu.marginalia.index.journal;
 import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.processed.SlopDocumentRecord;
-import nu.marginalia.sequence.slop.GammaCodedSequenceArrayWriter;
-import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
-import nu.marginalia.slop.column.array.LongArrayColumnWriter;
-import nu.marginalia.slop.column.primitive.IntColumnWriter;
-import nu.marginalia.slop.column.primitive.LongColumnWriter;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
+import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.array.ByteArrayColumn;
+import nu.marginalia.slop.column.array.LongArrayColumn;
+import nu.marginalia.slop.column.primitive.IntColumn;
+import nu.marginalia.slop.column.primitive.LongColumn;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,17 +17,17 @@ import java.util.List;
 
 public class IndexJournalSlopWriter extends SlopTable {
 
-    private final IntColumnWriter featuresWriter;
-    private final IntColumnWriter sizeWriter;
-    private final LongColumnWriter combinedIdWriter;
-    private final LongColumnWriter documentMetaWriter;
+    private final IntColumn.Writer featuresWriter;
+    private final IntColumn.Writer sizeWriter;
+    private final LongColumn.Writer combinedIdWriter;
+    private final LongColumn.Writer documentMetaWriter;
 
-    private final LongArrayColumnWriter termIdsWriter;
-    private final ByteArrayColumnWriter termMetadataWriter;
-    private final GammaCodedSequenceArrayWriter termPositionsWriter;
+    private final LongArrayColumn.Writer termIdsWriter;
+    private final ByteArrayColumn.Writer termMetadataWriter;
+    private final GammaCodedSequenceArrayColumn.Writer termPositionsWriter;
 
-    private final GammaCodedSequenceArrayWriter spansWriter;
-    private final ByteArrayColumnWriter spanCodesWriter;
+    private final GammaCodedSequenceArrayColumn.Writer spansWriter;
+    private final ByteArrayColumn.Writer spanCodesWriter;
 
     private static final MurmurHash3_128 hash = new MurmurHash3_128();
 

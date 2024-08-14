@@ -3,21 +3,16 @@ package nu.marginalia.model.processed;
 import lombok.Builder;
 import nu.marginalia.sequence.GammaCodedSequence;
 import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
-import nu.marginalia.sequence.slop.GammaCodedSequenceArrayReader;
-import nu.marginalia.sequence.slop.GammaCodedSequenceArrayWriter;
-import nu.marginalia.slop.ColumnTypes;
-import nu.marginalia.slop.column.array.ByteArrayColumnReader;
-import nu.marginalia.slop.column.array.ByteArrayColumnWriter;
-import nu.marginalia.slop.column.array.ObjectArrayColumnReader;
-import nu.marginalia.slop.column.array.ObjectArrayColumnWriter;
-import nu.marginalia.slop.column.dynamic.VarintColumnReader;
-import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
-import nu.marginalia.slop.column.primitive.*;
-import nu.marginalia.slop.column.string.EnumColumnReader;
-import nu.marginalia.slop.column.string.StringColumnReader;
-import nu.marginalia.slop.column.string.StringColumnWriter;
-import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.array.ByteArrayColumn;
+import nu.marginalia.slop.column.array.ObjectArrayColumn;
+import nu.marginalia.slop.column.dynamic.VarintColumn;
+import nu.marginalia.slop.column.primitive.FloatColumn;
+import nu.marginalia.slop.column.primitive.IntColumn;
+import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
+import nu.marginalia.slop.column.string.StringColumn;
+import nu.marginalia.slop.column.string.TxtStringColumn;
 import nu.marginalia.slop.desc.StorageType;
 import org.jetbrains.annotations.Nullable;
 
@@ -111,45 +106,47 @@ public record SlopDocumentRecord(
     }
 
     // Basic information
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> domainsColumn = new ColumnDesc<>("domain", ColumnTypes.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> urlsColumn = new ColumnDesc<>("url", ColumnTypes.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<VarintColumnReader, VarintColumnWriter> ordinalsColumn = new ColumnDesc<>("ordinal", ColumnTypes.VARINT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> statesColumn = new ColumnDesc<>("state", ColumnTypes.ENUM_LE, StorageType.PLAIN);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> stateReasonsColumn = new ColumnDesc<>("stateReason", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StorageType.GZIP);
+    private static final TxtStringColumn urlsColumn = new TxtStringColumn("url", StorageType.GZIP);
+    private static final VarintColumn ordinalsColumn = new VarintColumn("ordinal", StorageType.PLAIN);
+    private static final EnumColumn statesColumn = new EnumColumn("state", StorageType.PLAIN);
+    private static final StringColumn stateReasonsColumn = new StringColumn("stateReason", StorageType.GZIP);
 
     // Document metadata
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> titlesColumn = new ColumnDesc<>("title", ColumnTypes.STRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> descriptionsColumn = new ColumnDesc<>("description", ColumnTypes.STRING, StorageType.GZIP);
-    private static final ColumnDesc<EnumColumnReader, StringColumnWriter> htmlStandardsColumn = new ColumnDesc<>("htmlStandard", ColumnTypes.ENUM_LE, StorageType.GZIP);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> htmlFeaturesColumn = new ColumnDesc<>("htmlFeatures", ColumnTypes.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> lengthsColumn = new ColumnDesc<>("length", ColumnTypes.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<IntColumnReader, IntColumnWriter> pubYearColumn = new ColumnDesc<>("pubYear", ColumnTypes.INT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<LongColumnReader, LongColumnWriter> hashesColumn = new ColumnDesc<>("hash", ColumnTypes.LONG_LE, StorageType.PLAIN);
-    private static final ColumnDesc<FloatColumnReader, FloatColumnWriter> qualitiesColumn = new ColumnDesc<>("quality", ColumnTypes.FLOAT_LE, StorageType.PLAIN);
-    private static final ColumnDesc<LongColumnReader, LongColumnWriter> domainMetadata = new ColumnDesc<>("domainMetadata", ColumnTypes.LONG_LE, StorageType.PLAIN);
+    private static final StringColumn titlesColumn = new StringColumn("title", StorageType.GZIP);
+    private static final StringColumn descriptionsColumn = new StringColumn("description", StorageType.GZIP);
+    private static final EnumColumn htmlStandardsColumn = new EnumColumn("htmlStandard", StorageType.PLAIN);
+    private static final IntColumn htmlFeaturesColumn = new IntColumn("htmlFeatures", StorageType.PLAIN);
+    private static final IntColumn lengthsColumn = new IntColumn("length", StorageType.PLAIN);
+    private static final IntColumn pubYearColumn = new IntColumn("pubYear", StorageType.PLAIN);
+    private static final LongColumn hashesColumn = new LongColumn("hash", StorageType.PLAIN);
+    private static final FloatColumn qualitiesColumn = new FloatColumn("quality", StorageType.PLAIN);
+    private static final LongColumn domainMetadata = new LongColumn("domainMetadata", StorageType.PLAIN);
 
     // Keyword-level columns, these are enumerated by the counts column
-    private static final ColumnDesc<ObjectArrayColumnReader<String>, ObjectArrayColumnWriter<String>> keywordsColumn = new ColumnDesc<>("keywords", ColumnTypes.STRING_ARRAY, StorageType.ZSTD);
-    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> termMetaColumn = new ColumnDesc<>("termMetadata", ColumnTypes.BYTE_ARRAY, StorageType.ZSTD);
-    private static final ColumnDesc<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> termPositionsColumn = new ColumnDesc<>("termPositions", GammaCodedSequenceArrayColumn.TYPE, StorageType.ZSTD);
+
+    private static final ObjectArrayColumn<String> keywordsColumn = new StringColumn("keywords", StorageType.ZSTD).asArray();
+    private static final ByteArrayColumn termMetaColumn = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
+    private static final GammaCodedSequenceArrayColumn termPositionsColumn = new GammaCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
 
     // Spans columns
-    private static final ColumnDesc<ByteArrayColumnReader, ByteArrayColumnWriter> spanCodesColumn = new ColumnDesc<>("spanCodes", ColumnTypes.BYTE_ARRAY, StorageType.ZSTD);
-    private static final ColumnDesc<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> spansColumn = new ColumnDesc<>("spans", GammaCodedSequenceArrayColumn.TYPE, StorageType.ZSTD);
+
+    private static final ByteArrayColumn spanCodesColumn = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
+    private static final GammaCodedSequenceArrayColumn spansColumn = new GammaCodedSequenceArrayColumn("spans", StorageType.ZSTD);
 
     public static class KeywordsProjectionReader extends SlopTable {
-        private final StringColumnReader domainsReader;
-        private final VarintColumnReader ordinalsReader;
-        private final IntColumnReader htmlFeaturesReader;
-        private final LongColumnReader domainMetadataReader;
-        private final IntColumnReader lengthsReader;
+        private final TxtStringColumn.Reader domainsReader;
+        private final VarintColumn.Reader ordinalsReader;
+        private final IntColumn.Reader htmlFeaturesReader;
+        private final LongColumn.Reader domainMetadataReader;
+        private final IntColumn.Reader lengthsReader;
 
-        private final ObjectArrayColumnReader<String> keywordsReader;
-        private final ByteArrayColumnReader termMetaReader;
-        private final GammaCodedSequenceArrayReader termPositionsReader;
+        private final ObjectArrayColumn<String>.Reader keywordsReader;
+        private final ByteArrayColumn.Reader termMetaReader;
+        private final GammaCodedSequenceArrayColumn.Reader termPositionsReader;
 
-        private final ByteArrayColumnReader spanCodesReader;
-        private final GammaCodedSequenceArrayReader spansReader;
+        private final ByteArrayColumn.Reader spanCodesReader;
+        private final GammaCodedSequenceArrayColumn.Reader spansReader;
 
         public KeywordsProjectionReader(SlopPageRef<SlopDocumentRecord> pageRef) throws IOException {
             this(pageRef.baseDir(), pageRef.page());
@@ -206,18 +203,18 @@ public record SlopDocumentRecord(
     }
 
     public static class MetadataReader extends SlopTable {
-        private final StringColumnReader domainsReader;
-        private final StringColumnReader urlsReader;
-        private final VarintColumnReader ordinalsReader;
-        private final StringColumnReader titlesReader;
-        private final StringColumnReader descriptionsReader;
+        private final TxtStringColumn.Reader domainsReader;
+        private final TxtStringColumn.Reader urlsReader;
+        private final VarintColumn.Reader ordinalsReader;
+        private final StringColumn.Reader titlesReader;
+        private final StringColumn.Reader descriptionsReader;
 
-        private final IntColumnReader htmlFeaturesReader;
-        private final StringColumnReader htmlStandardsReader;
-        private final IntColumnReader lengthsReader;
-        private final LongColumnReader hashesReader;
-        private final FloatColumnReader qualitiesReader;
-        private final IntColumnReader pubYearReader;
+        private final IntColumn.Reader htmlFeaturesReader;
+        private final EnumColumn.Reader htmlStandardsReader;
+        private final IntColumn.Reader lengthsReader;
+        private final LongColumn.Reader hashesReader;
+        private final FloatColumn.Reader qualitiesReader;
+        private final IntColumn.Reader pubYearReader;
 
         public MetadataReader(SlopPageRef<SlopDocumentRecord> pageRef) throws IOException{
             this(pageRef.baseDir(), pageRef.page());
@@ -263,25 +260,25 @@ public record SlopDocumentRecord(
     }
 
     public static class Writer extends SlopTable {
-        private final StringColumnWriter domainsWriter;
-        private final StringColumnWriter urlsWriter;
-        private final VarintColumnWriter ordinalsWriter;
-        private final StringColumnWriter statesWriter;
-        private final StringColumnWriter stateReasonsWriter;
-        private final StringColumnWriter titlesWriter;
-        private final StringColumnWriter descriptionsWriter;
-        private final IntColumnWriter htmlFeaturesWriter;
-        private final StringColumnWriter htmlStandardsWriter;
-        private final IntColumnWriter lengthsWriter;
-        private final LongColumnWriter hashesWriter;
-        private final FloatColumnWriter qualitiesWriter;
-        private final LongColumnWriter domainMetadataWriter;
-        private final IntColumnWriter pubYearWriter;
-        private final ObjectArrayColumnWriter<String> keywordsWriter;
-        private final ByteArrayColumnWriter termMetaWriter;
-        private final GammaCodedSequenceArrayWriter termPositionsWriter;
-        private final ByteArrayColumnWriter spansCodesWriter;
-        private final GammaCodedSequenceArrayWriter spansWriter;
+        private final TxtStringColumn.Writer domainsWriter;
+        private final TxtStringColumn.Writer urlsWriter;
+        private final VarintColumn.Writer ordinalsWriter;
+        private final EnumColumn.Writer statesWriter;
+        private final StringColumn.Writer stateReasonsWriter;
+        private final StringColumn.Writer titlesWriter;
+        private final StringColumn.Writer descriptionsWriter;
+        private final IntColumn.Writer htmlFeaturesWriter;
+        private final EnumColumn.Writer htmlStandardsWriter;
+        private final IntColumn.Writer lengthsWriter;
+        private final LongColumn.Writer hashesWriter;
+        private final FloatColumn.Writer qualitiesWriter;
+        private final LongColumn.Writer domainMetadataWriter;
+        private final IntColumn.Writer pubYearWriter;
+        private final ObjectArrayColumn<String>.Writer keywordsWriter;
+        private final ByteArrayColumn.Writer termMetaWriter;
+        private final GammaCodedSequenceArrayColumn.Writer termPositionsWriter;
+        private final ByteArrayColumn.Writer spansCodesWriter;
+        private final GammaCodedSequenceArrayColumn.Writer spansWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
             super(page);

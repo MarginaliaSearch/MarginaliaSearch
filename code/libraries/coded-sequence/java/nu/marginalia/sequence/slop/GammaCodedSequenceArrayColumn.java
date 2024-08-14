@@ -1,13 +1,12 @@
 package nu.marginalia.sequence.slop;
 
 import nu.marginalia.sequence.GammaCodedSequence;
-import nu.marginalia.slop.ColumnTypes;
+import nu.marginalia.slop.column.AbstractColumn;
+import nu.marginalia.slop.column.AbstractObjectColumn;
+import nu.marginalia.slop.column.ObjectColumnReader;
+import nu.marginalia.slop.column.ObjectColumnWriter;
 import nu.marginalia.slop.column.dynamic.VarintColumn;
-import nu.marginalia.slop.column.dynamic.VarintColumnReader;
-import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
-import nu.marginalia.slop.desc.ColumnDesc;
 import nu.marginalia.slop.desc.ColumnFunction;
-import nu.marginalia.slop.desc.ColumnType;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -18,45 +17,54 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Slop column extension for storing GammaCodedSequence objects. */
-public class GammaCodedSequenceArrayColumn {
+public class GammaCodedSequenceArrayColumn extends AbstractObjectColumn<List<GammaCodedSequence>, GammaCodedSequenceArrayColumn.Reader, GammaCodedSequenceArrayColumn.Writer> {
 
-    public static ColumnType<GammaCodedSequenceArrayReader, GammaCodedSequenceArrayWriter> TYPE = ColumnTypes.register("s8[]+gcs[]", ByteOrder.nativeOrder(), GammaCodedSequenceArrayColumn::open, GammaCodedSequenceArrayColumn::create);
+    private final VarintColumn groupsColumn;
+    private final GammaCodedSequenceColumn dataColumn;
 
-    public static GammaCodedSequenceArrayReader open(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Reader(columnDesc,
-                GammaCodedSequenceColumn.open(path, columnDesc),
-                VarintColumn.open(path, columnDesc.createSupplementaryColumn(ColumnFunction.GROUP_LENGTH,
-                        ColumnTypes.VARINT_LE,
-                        StorageType.PLAIN)
-                )
+    public GammaCodedSequenceArrayColumn(String name) {
+        this(name, StorageType.PLAIN);
+    }
+
+    public GammaCodedSequenceArrayColumn(String name, StorageType storageType) {
+        super(name,
+                "gcs[]",
+                ByteOrder.nativeOrder(),
+                ColumnFunction.DATA,
+                storageType);
+
+        groupsColumn = new VarintColumn(name, ColumnFunction.GROUP_LENGTH, storageType);
+        dataColumn = new GammaCodedSequenceColumn(name);
+    }
+
+    public Writer createUnregistered(Path path, int page) throws IOException {
+        return new Writer(
+                dataColumn.createUnregistered(path, page),
+                groupsColumn.createUnregistered(path, page)
         );
     }
 
-    public static GammaCodedSequenceArrayWriter create(Path path, ColumnDesc columnDesc) throws IOException {
-        return new Writer(columnDesc,
-                GammaCodedSequenceColumn.create(path, columnDesc),
-                VarintColumn.create(path, columnDesc.createSupplementaryColumn(ColumnFunction.GROUP_LENGTH,
-                        ColumnTypes.VARINT_LE,
-                        StorageType.PLAIN)
-                )
+    public Reader openUnregistered(Path path, int page) throws IOException {
+        return new Reader(
+                dataColumn.openUnregistered(path, page),
+                groupsColumn.openUnregistered(path, page)
         );
     }
 
-    private static class Writer implements GammaCodedSequenceArrayWriter {
-        private final VarintColumnWriter groupsWriter;
-        private final GammaCodedSequenceWriter dataWriter;
-        private final ColumnDesc<?, ?> columnDesc;
 
-        public Writer(ColumnDesc<?, ?> columnDesc, GammaCodedSequenceWriter dataWriter, VarintColumnWriter groupsWriter)
+    public class Writer implements ObjectColumnWriter<List<GammaCodedSequence>> {
+        private final VarintColumn.Writer groupsWriter;
+        private final GammaCodedSequenceColumn.Writer dataWriter;
+
+        Writer(GammaCodedSequenceColumn.Writer dataWriter, VarintColumn.Writer groupsWriter)
         {
             this.groupsWriter = groupsWriter;
             this.dataWriter = dataWriter;
-            this.columnDesc = columnDesc;
         }
 
         @Override
-        public ColumnDesc<?, ?> columnDesc() {
-            return columnDesc;
+        public AbstractColumn<?, ?> columnDesc() {
+            return GammaCodedSequenceArrayColumn.this;
         }
 
         @Override
@@ -77,20 +85,18 @@ public class GammaCodedSequenceArrayColumn {
         }
     }
 
-    private static class Reader implements GammaCodedSequenceArrayReader {
-        private final GammaCodedSequenceReader dataReader;
-        private final VarintColumnReader groupsReader;
-        private final ColumnDesc<?, ?> columnDesc;
+    public class Reader implements ObjectColumnReader<List<GammaCodedSequence>> {
+        private final GammaCodedSequenceColumn.Reader dataReader;
+        private final VarintColumn.Reader groupsReader;
 
-        public Reader(ColumnDesc<?, ?> columnDesc, GammaCodedSequenceReader dataReader, VarintColumnReader groupsReader) throws IOException {
+        public Reader(GammaCodedSequenceColumn.Reader dataReader, VarintColumn.Reader groupsReader) {
             this.dataReader = dataReader;
             this.groupsReader = groupsReader;
-            this.columnDesc = columnDesc;
         }
 
         @Override
-        public ColumnDesc<?, ?> columnDesc() {
-            return columnDesc;
+        public AbstractColumn<?, ?> columnDesc() {
+            return GammaCodedSequenceArrayColumn.this;
         }
 
         @Override
@@ -123,7 +129,6 @@ public class GammaCodedSequenceArrayColumn {
             return ret;
         }
 
-        @Override
         public List<ByteBuffer> getData(ByteBuffer workArea) throws IOException {
             int count = groupsReader.get();
             var ret = new ArrayList<ByteBuffer>(count);

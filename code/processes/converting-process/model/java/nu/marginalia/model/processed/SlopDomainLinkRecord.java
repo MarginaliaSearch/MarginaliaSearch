@@ -1,10 +1,7 @@
 package nu.marginalia.model.processed;
 
-import nu.marginalia.slop.ColumnTypes;
-import nu.marginalia.slop.column.string.StringColumnReader;
-import nu.marginalia.slop.column.string.StringColumnWriter;
-import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.string.TxtStringColumn;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
@@ -15,16 +12,16 @@ public record SlopDomainLinkRecord(
         String source,
         String dest)
 {
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> sourcesColumn = new ColumnDesc<>("source", ColumnTypes.TXTSTRING, StorageType.GZIP);
-    private static final ColumnDesc<StringColumnReader, StringColumnWriter> destsColumn = new ColumnDesc<>("dest", ColumnTypes.TXTSTRING, StorageType.GZIP);
+    private static final TxtStringColumn sourcesColumn = new TxtStringColumn("source", StorageType.GZIP);
+    private static final TxtStringColumn destsColumn = new TxtStringColumn("dest", StorageType.GZIP);
 
     public static Reader reader(Path baseDir, int page) throws IOException {
         return new Reader(baseDir, page);
     }
 
     public static class Reader extends SlopTable {
-        private final StringColumnReader sourcesReader;
-        private final StringColumnReader destsReader;
+        private final TxtStringColumn.Reader sourcesReader;
+        private final TxtStringColumn.Reader destsReader;
 
         public Reader(SlopPageRef<SlopDomainLinkRecord> page) throws IOException {
             this(page.baseDir(), page.page());
@@ -57,8 +54,8 @@ public record SlopDomainLinkRecord(
     }
 
     public static class Writer extends SlopTable {
-        private final StringColumnWriter sourcesWriter;
-        private final StringColumnWriter destsWriter;
+        private final TxtStringColumn.Writer sourcesWriter;
+        private final TxtStringColumn.Writer destsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
             super(page);

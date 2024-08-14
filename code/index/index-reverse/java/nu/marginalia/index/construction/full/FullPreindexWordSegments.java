@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.IndexJournalPage;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
 
 import java.io.IOException;
 import java.nio.file.Files;

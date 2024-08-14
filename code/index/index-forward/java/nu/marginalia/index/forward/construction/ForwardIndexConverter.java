@@ -10,8 +10,8 @@ import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.slop.column.primitive.LongColumnReader;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.primitive.LongColumn;
 import org.roaringbitmap.longlong.LongConsumer;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
@@ -153,7 +153,7 @@ public class ForwardIndexConverter {
 
         for (var instance : journalReader.pages()) {
             try (var slopTable = new SlopTable(instance.page())) {
-                LongColumnReader idReader = instance.openCombinedId(slopTable);
+                LongColumn.Reader idReader = instance.openCombinedId(slopTable);
 
                 while (idReader.hasRemaining()) {
                     rbm.add(idReader.get());

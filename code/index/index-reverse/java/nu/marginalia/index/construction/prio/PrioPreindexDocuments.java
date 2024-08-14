@@ -6,7 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.rwf.RandomFileAssembler;
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

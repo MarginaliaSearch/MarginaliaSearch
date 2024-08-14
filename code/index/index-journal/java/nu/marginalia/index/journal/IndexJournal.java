@@ -1,6 +1,6 @@
 package nu.marginalia.index.journal;
 
-import nu.marginalia.slop.desc.SlopTable;
+import nu.marginalia.slop.SlopTable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
