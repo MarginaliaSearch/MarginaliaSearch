@@ -10,7 +10,6 @@ import java.util.StringJoiner;
 
 public class QueryParams {
 
-
     @Nullable
     public static String queryParamsSanitizer(String path, @Nullable String queryParams) {
         if (queryParams == null) {
