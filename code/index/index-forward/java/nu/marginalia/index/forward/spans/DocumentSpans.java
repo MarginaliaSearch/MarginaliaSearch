@@ -8,6 +8,7 @@ public class DocumentSpans {
 
     public DocumentSpan title = EMPTY_SPAN;
     public DocumentSpan heading = EMPTY_SPAN;
+    public DocumentSpan body = EMPTY_SPAN;
 
     public DocumentSpan nav = EMPTY_SPAN;
     public DocumentSpan code = EMPTY_SPAN;
@@ -28,6 +29,9 @@ public class DocumentSpans {
             return anchor;
         else if (tag == HtmlTag.EXTERNAL_LINKTEXT)
             return externalLinkText;
+        else if (tag == HtmlTag.BODY)
+            return body;
+
         return EMPTY_SPAN;
     }
 
@@ -44,6 +48,8 @@ public class DocumentSpans {
             this.anchor = new DocumentSpan(positions);
         else if (code == HtmlTag.EXTERNAL_LINKTEXT.code)
             this.externalLinkText = new DocumentSpan(positions);
+        else if (code == HtmlTag.BODY.code)
+            this.body = new DocumentSpan(positions);
     }
 
 }

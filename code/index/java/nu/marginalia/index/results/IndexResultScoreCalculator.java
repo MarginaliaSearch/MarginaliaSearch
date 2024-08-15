@@ -192,8 +192,6 @@ public class IndexResultScoreCalculator {
 
         VerbatimMatches verbatimMatches = new VerbatimMatches();
 
-
-
         float verbatimMatchScore = findVerbatimMatches(verbatimMatches, coherences, positions, spans);
 
         float[] weightedCounts = new float[compiledQuery.size()];
