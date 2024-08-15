@@ -293,6 +293,9 @@ public class IndexResultScoreCalculator {
         double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
         double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
 
+        bM25 *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
+        bFlags *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
+
         if (rankingFactors != null) {
             rankingFactors.addDocumentFactor("overall.averageSentenceLengthPenalty", Double.toString(averageSentenceLengthPenalty));
             rankingFactors.addDocumentFactor("overall.documentLengthPenalty", Double.toString(documentLengthPenalty));
