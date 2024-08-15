@@ -57,7 +57,7 @@ public class DocumentSpan {
         return false;
     }
 
-    /** Returns an iterator over the start and end positions of each span in the document of this type */
+    /** Returns an iterator over each position between the start and end positions of each span in the document of this type */
     public IntIterator iterator() {
         if (null == startsEnds) {
             return IntList.of().iterator();
