@@ -1,7 +1,5 @@
 package nu.marginalia.language;
 
-import org.apache.commons.lang3.StringUtils;
-
 /** Logic for deciding which words are eligible to be keywords.
  * <p/>
  * This is in dire need of oversight. Here be towering dragons with names,
@@ -14,8 +12,6 @@ public class WordPatterns {
     public static final int MAX_WORD_LENGTH = 64;
 
     public static final String WORD_TOKEN_JOINER = "_";
-    private static final WordDictionary stopWords =
-            WordDictionary.fromClasspathResource("dictionary/en-stopwords");
 
     /** Run checks on the word and exclude terms with too many special characters
      */
@@ -57,24 +53,10 @@ public class WordPatterns {
         return true;
     }
 
+    // Stopword exclusion has been moved to the index.  We just filter out
+    // junk words here now.
     public static boolean isStopWord(String s) {
-        if (s.length() < MIN_WORD_LENGTH) {
-            return true;
-        }
-
         if (!isNotJunkWord(s)) {
-            return true;
-        }
-
-        String sLc;
-        if (StringUtils.isAllLowerCase(s)) {
-            sLc = s;
-        }
-        else {
-            sLc = s.toLowerCase();
-        }
-
-        if (stopWords.contains(sLc)) {
             return true;
         }
 

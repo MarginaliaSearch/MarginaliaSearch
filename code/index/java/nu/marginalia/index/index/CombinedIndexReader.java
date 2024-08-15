@@ -111,11 +111,22 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(elements.getLong(0));
-            for (int i = 1; i < elements.size(); i++) {
-                head.addInclusionFilter(hasWordFull(elements.getLong(i)));
+            if (!SearchTerms.stopWords.contains(elements.getLong(0))) {
+                var head = findFullWord(elements.getLong(0));
+
+                for (int i = 1; i < elements.size(); i++) {
+                    long termId = elements.getLong(i);
+
+                    // if a stop word is present in the query, skip the step of requiring it to be in the document,
+                    // we'll assume it's there and save IO
+                    if (SearchTerms.stopWords.contains(termId)) {
+                        continue;
+                    }
+
+                    head.addInclusionFilter(hasWordFull(termId));
+                }
+                queryHeads.add(head);
             }
-            queryHeads.add(head);
 
             // If there are few paths, we can afford to check the priority index as well
             if (paths.size() < 4) {

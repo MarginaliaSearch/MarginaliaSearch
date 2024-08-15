@@ -1,6 +1,7 @@
 package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongComparator;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
@@ -18,6 +19,14 @@ public final class SearchTerms {
 
     private final List<LongList> coherencesMandatory;
     private final List<LongList> coherencesOptional;
+
+    public static final LongArraySet stopWords = new LongArraySet(
+            new long[] {
+                    getWordId("a"),
+                    getWordId("an"),
+                    getWordId("the"),
+            }
+    );
 
     private final CompiledQueryLong compiledQueryIds;
 
