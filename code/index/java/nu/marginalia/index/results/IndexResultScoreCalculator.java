@@ -340,6 +340,7 @@ public class IndexResultScoreCalculator {
                     rankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.iterator(), positions[i].iterator()).iterator());
                     rankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.iterator(), positions[i].iterator()).iterator());
                     rankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.iterator(), positions[i].iterator()).iterator());
+                    rankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.iterator(), positions[i].iterator()).iterator());
                     rankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.iterator(), positions[i].iterator()).iterator());
                 }
 
