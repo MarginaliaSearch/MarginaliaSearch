@@ -5,22 +5,8 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.io.BitReader;
 import nu.marginalia.sequence.io.BitWriter;
-import nu.marginalia.slop.column.ColumnReader;
-import nu.marginalia.slop.column.ColumnWriter;
-import nu.marginalia.slop.column.dynamic.VarintColumn;
-import nu.marginalia.slop.column.dynamic.VarintColumnReader;
-import nu.marginalia.slop.column.dynamic.VarintColumnWriter;
-import nu.marginalia.slop.desc.ColumnDesc;
-import nu.marginalia.slop.desc.ColumnFunction;
-import nu.marginalia.slop.desc.ColumnType;
-import nu.marginalia.slop.desc.StorageType;
-import nu.marginalia.slop.storage.Storage;
-import nu.marginalia.slop.storage.StorageReader;
-import nu.marginalia.slop.storage.StorageWriter;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
