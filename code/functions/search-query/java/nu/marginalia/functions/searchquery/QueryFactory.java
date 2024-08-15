@@ -73,7 +73,7 @@ public class QueryFactory {
 
                     if (parts.length > 1) {
                         // Require that the terms appear in sequence
-                        queryBuilder.coherenceConstraint(SearchCoherenceConstraint.mandatory(parts));
+                        queryBuilder.phraseConstraint(SearchPhraseConstraint.mandatory(parts));
 
                         // Construct a regular query from the parts in the quoted string
                         queryBuilder.include(parts);
@@ -126,11 +126,14 @@ public class QueryFactory {
 
         var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsInclude);
 
-        // Query expansion may produce suggestions for coherence constraints,
+        // Query expansion may produce suggestions for phrase constraints,
         // add these to the query
-        for (var coh : expansion.extraCoherences()) {
-            queryBuilder.coherenceConstraint(SearchCoherenceConstraint.optional(coh));
+        for (var coh : expansion.optionalPharseConstraints()) {
+            queryBuilder.phraseConstraint(SearchPhraseConstraint.optional(coh));
         }
+
+        // add a pseudo-constraint for the full query
+        queryBuilder.phraseConstraint(SearchPhraseConstraint.full(expansion.fullPhraseConstraint()));
 
         queryBuilder.compiledQuery(expansion.compiledQuery());
 

@@ -31,7 +31,7 @@ public class SearchQuery {
     public final List<String> searchTermsPriority;
 
     /** Terms that we require to be in the same sentence */
-    public final List<SearchCoherenceConstraint> searchTermCoherences;
+    public final List<SearchPhraseConstraint> phraseConstraints;
 
     @Deprecated // why does this exist?
     private double value = 0;
@@ -46,7 +46,7 @@ public class SearchQuery {
         this.searchTermsExclude = new ArrayList<>();
         this.searchTermsAdvice = new ArrayList<>();
         this.searchTermsPriority = new ArrayList<>();
-        this.searchTermCoherences = new ArrayList<>();
+        this.phraseConstraints = new ArrayList<>();
     }
 
     public SearchQuery(String compiledQuery,
@@ -54,13 +54,13 @@ public class SearchQuery {
                        List<String> searchTermsExclude,
                        List<String> searchTermsAdvice,
                        List<String> searchTermsPriority,
-                       List<SearchCoherenceConstraint> searchTermCoherences) {
+                       List<SearchPhraseConstraint> phraseConstraints) {
         this.compiledQuery = compiledQuery;
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.searchTermsAdvice = searchTermsAdvice;
         this.searchTermsPriority = searchTermsPriority;
-        this.searchTermCoherences = searchTermCoherences;
+        this.phraseConstraints = phraseConstraints;
     }
 
     @Deprecated // why does this exist?
@@ -80,7 +80,7 @@ public class SearchQuery {
         if (!searchTermsExclude.isEmpty()) sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsAdvice.isEmpty()) sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
         if (!searchTermsPriority.isEmpty()) sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));
-        if (!searchTermCoherences.isEmpty()) sb.append("coherences=").append(searchTermCoherences.stream().map(coh->coh.terms().stream().collect(Collectors.joining(",", "[", "] "))).collect(Collectors.joining(", ")));
+        if (!phraseConstraints.isEmpty()) sb.append("phraseConstraints=").append(phraseConstraints.stream().map(coh->coh.terms().stream().collect(Collectors.joining(",", "[", "] "))).collect(Collectors.joining(", ")));
 
         return sb.toString();
     }
@@ -91,7 +91,7 @@ public class SearchQuery {
         public final List<String> searchTermsExclude = new ArrayList<>();
         public final List<String> searchTermsAdvice = new ArrayList<>();
         public final List<String> searchTermsPriority = new ArrayList<>();
-        public final List<SearchCoherenceConstraint> searchTermCoherences = new ArrayList<>();
+        public final List<SearchPhraseConstraint> searchPhraseConstraints = new ArrayList<>();
 
         private SearchQueryBuilder() {
         }
@@ -121,13 +121,13 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQueryBuilder coherenceConstraint(SearchCoherenceConstraint constraint) {
-            searchTermCoherences.add(constraint);
+        public SearchQueryBuilder phraseConstraint(SearchPhraseConstraint constraint) {
+            searchPhraseConstraints.add(constraint);
             return this;
         }
 
         public SearchQuery build() {
-            return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermCoherences);
+            return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchPhraseConstraints);
         }
 
         /** If there are no ranking terms, promote the advice terms to ranking terms */

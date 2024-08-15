@@ -79,9 +79,9 @@
 <tr> <th title="terms that must be present">Search Terms Exclude</th><td>{{#each specs.query.searchTermsExclude}} {{.}} {{/each}}</td> </tr>
 <tr> <th title="mandatory terms, no effect on ranking">Search Terms Advice</th><td>{{#each specs.query.searchTermsAdvice}} {{.}} {{/each}}</td> </tr>
 <tr> <th title="not mandatory, effects ranking">Search Terms Priority</th><td>{{#each specs.query.searchTermsPriority}} {{.}} {{/each}}</td> </tr>
-{{#each specs.query.searchTermCoherences}}
+{{#each specs.query.phraseConstraints}}
 <tr>
-    <th title="terms must appear close by">Coherence Requirement</th>
+    <th title="terms must appear close by">Phrase Constraints</th>
     <td>
         {{#each .}}
         {{.}}

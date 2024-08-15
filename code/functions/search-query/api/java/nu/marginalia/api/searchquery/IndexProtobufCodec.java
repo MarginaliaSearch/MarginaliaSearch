@@ -1,6 +1,6 @@
 package nu.marginalia.api.searchquery;
 
-import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -46,18 +46,21 @@ public class IndexProtobufCodec {
     }
 
     public static SearchQuery convertRpcQuery(RpcQuery query) {
-        List<SearchCoherenceConstraint>  coherences = new ArrayList<>();
+        List<SearchPhraseConstraint> phraeConstraints = new ArrayList<>();
 
-        for (int j = 0; j < query.getCoherencesCount(); j++) {
-            var coh = query.getCoherences(j);
-            if (coh.getType() == RpcCoherences.TYPE.OPTIONAL) {
-                coherences.add(new SearchCoherenceConstraint(false, List.copyOf(coh.getCoherencesList())));
+        for (int j = 0; j < query.getPhrasesCount(); j++) {
+            var coh = query.getPhrases(j);
+            if (coh.getType() == RpcPhrases.TYPE.OPTIONAL) {
+                phraeConstraints.add(new SearchPhraseConstraint.Optional(List.copyOf(coh.getTermsList())));
             }
-            else if (coh.getType() == RpcCoherences.TYPE.MANDATORY) {
-                coherences.add(new SearchCoherenceConstraint(true, List.copyOf(coh.getCoherencesList())));
+            else if (coh.getType() == RpcPhrases.TYPE.MANDATORY) {
+                phraeConstraints.add(new SearchPhraseConstraint.Mandatory(List.copyOf(coh.getTermsList())));
+            }
+            else if (coh.getType() == RpcPhrases.TYPE.FULL) {
+                phraeConstraints.add(new SearchPhraseConstraint.Full(List.copyOf(coh.getTermsList())));
             }
             else {
-                throw new IllegalArgumentException("Unknown coherence type: " + coh.getType());
+                throw new IllegalArgumentException("Unknown phrase constraint type: " + coh.getType());
             }
         }
 
@@ -67,7 +70,7 @@ public class IndexProtobufCodec {
                 query.getExcludeList(),
                 query.getAdviceList(),
                 query.getPriorityList(),
-                coherences
+                phraeConstraints
         );
     }
 
@@ -80,11 +83,21 @@ public class IndexProtobufCodec {
                         .addAllExclude(searchQuery.getSearchTermsExclude())
                         .addAllPriority(searchQuery.getSearchTermsPriority());
 
-        for (var coherences : searchQuery.searchTermCoherences) {
-            subqueryBuilder.addCoherencesBuilder()
-                    .addAllCoherences(coherences.terms())
-                    .setType(coherences.mandatory() ? RpcCoherences.TYPE.MANDATORY : RpcCoherences.TYPE.OPTIONAL)
-                    .build();
+        for (var constraint : searchQuery.phraseConstraints) {
+            switch (constraint) {
+                case SearchPhraseConstraint.Optional(List<String> terms) ->
+                    subqueryBuilder.addPhrasesBuilder()
+                            .addAllTerms(terms)
+                            .setType(RpcPhrases.TYPE.OPTIONAL);
+                case SearchPhraseConstraint.Mandatory(List<String> terms) ->
+                    subqueryBuilder.addPhrasesBuilder()
+                            .addAllTerms(terms)
+                            .setType(RpcPhrases.TYPE.MANDATORY);
+                case SearchPhraseConstraint.Full(List<String> terms) ->
+                    subqueryBuilder.addPhrasesBuilder()
+                            .addAllTerms(terms)
+                            .setType(RpcPhrases.TYPE.FULL);
+            }
         }
 
         return subqueryBuilder.build();

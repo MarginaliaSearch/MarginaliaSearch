@@ -1,17 +1,17 @@
 package nu.marginalia.query.svc;
 
 import nu.marginalia.WmsaHome;
-import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.QueryFactory;
+import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.segmentation.NgramLexicon;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -143,7 +143,7 @@ public class QueryFactoryTest {
             var specs = parseAndGetSpecs("\"tde shining\"");
             assertEquals("( shining tde | tde_shining )", specs.query.compiledQuery);
             assertEquals(List.of("tde_shining"), specs.query.searchTermsPriority);
-            assertEquals(List.of(new SearchCoherenceConstraint(true, List.of("tde", "shining"))), specs.query.searchTermCoherences);
+            assertEquals(List.of(new SearchPhraseConstraint.Mandatory(List.of("tde", "shining"))), specs.query.phraseConstraints);
         }
     }
 

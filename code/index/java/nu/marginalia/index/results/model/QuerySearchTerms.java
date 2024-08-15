@@ -7,14 +7,14 @@ public class QuerySearchTerms {
     private final TObjectLongHashMap<String> termToId;
     public final TermIdList termIdsAll;
 
-    public final TermCoherenceGroupList coherences;
+    public final PhraseConstraintGroupList phraseConstraints;
 
     public QuerySearchTerms(TObjectLongHashMap<String> termToId,
                             TermIdList termIdsAll,
-                            TermCoherenceGroupList coherences) {
+                            PhraseConstraintGroupList phraseConstraints) {
         this.termToId = termToId;
         this.termIdsAll = termIdsAll;
-        this.coherences = coherences;
+        this.phraseConstraints = phraseConstraints;
     }
 
     public long getIdForTerm(String searchTerm) {

@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -18,8 +19,8 @@ import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTermsUtil;
+import nu.marginalia.index.results.model.PhraseConstraintGroupList;
 import nu.marginalia.index.results.model.QuerySearchTerms;
-import nu.marginalia.index.results.model.TermCoherenceGroupList;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.TermIdList;
 import nu.marginalia.index.results.model.ids.TermMetadataList;
@@ -97,7 +98,7 @@ public class IndexResultRankingService {
                 }
 
                 // Ignore documents that don't match the mandatory constraints
-                if (!searchTerms.coherences.testMandatory(positions)) {
+                if (!searchTerms.phraseConstraints.testMandatory(positions)) {
                     continue;
                 }
 
@@ -295,14 +296,26 @@ public class IndexResultRankingService {
 
         var idsAll = new TermIdList(termIdsList);
 
-        var constraints = new ArrayList<TermCoherenceGroupList.TermCoherenceGroup>();
-        for (var coherence : searchQuery.searchTermCoherences) {
-            constraints.add(new TermCoherenceGroupList.TermCoherenceGroup(coherence, idsAll));
+        var constraintsMandatory = new ArrayList<PhraseConstraintGroupList.PhraseConstraintGroup>();
+        var constraintsFull = new ArrayList<PhraseConstraintGroupList.PhraseConstraintGroup>();
+        var constraintsOptional = new ArrayList<PhraseConstraintGroupList.PhraseConstraintGroup>();
+
+        for (var constraint : searchQuery.phraseConstraints) {
+            switch (constraint) {
+                case SearchPhraseConstraint.Mandatory(List<String> terms) ->
+                        constraintsMandatory.add(new PhraseConstraintGroupList.PhraseConstraintGroup(terms, idsAll));
+                case SearchPhraseConstraint.Optional(List<String> terms) ->
+                        constraintsOptional.add(new PhraseConstraintGroupList.PhraseConstraintGroup(terms, idsAll));
+                case SearchPhraseConstraint.Full(List<String> terms) ->
+                        constraintsFull.add(new PhraseConstraintGroupList.PhraseConstraintGroup(terms, idsAll));
+            }
         }
+
+        assert constraintsFull.size() == 1 : "Exactly one full constraint group is required";
 
         return new QuerySearchTerms(termToId,
                 idsAll,
-                new TermCoherenceGroupList(constraints)
+                new PhraseConstraintGroupList(constraintsFull.getFirst(), constraintsMandatory, constraintsOptional)
         );
     }
 }

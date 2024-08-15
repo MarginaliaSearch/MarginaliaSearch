@@ -1,7 +1,6 @@
 package nu.marginalia.index.results.model;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
 import nu.marginalia.index.forward.spans.DocumentSpan;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.ids.TermIdList;
@@ -16,28 +15,32 @@ import java.util.List;
 /**
  * wordIds that we require to be in the same sentence
  */
-public class TermCoherenceGroupList {
-    List<TermCoherenceGroup> mandatoryGroups = new ArrayList<>();
-    List<TermCoherenceGroup> optionalGroups = new ArrayList<>();
+public class PhraseConstraintGroupList {
+    List<PhraseConstraintGroup> mandatoryGroups = new ArrayList<>();
+    List<PhraseConstraintGroup> optionalGroups = new ArrayList<>();
+    PhraseConstraintGroup fullGroup;
 
-    public TermCoherenceGroupList(List<TermCoherenceGroup> groups) {
-        for (var group : groups) {
-            if (group.mandatory) {
-                mandatoryGroups.add(group);
-            } else {
-                optionalGroups.add(group);
-            }
-        }
+    public PhraseConstraintGroupList(
+            PhraseConstraintGroup fullGroup,
+            List<PhraseConstraintGroup> mandatoryGroups,
+            List<PhraseConstraintGroup> optionalGroups) {
+        this.mandatoryGroups.addAll(mandatoryGroups);
+        this.optionalGroups.addAll(optionalGroups);
+        this.fullGroup = fullGroup;
     }
 
-    public List<TermCoherenceGroup> getOptionalGroups() {
+    public List<PhraseConstraintGroup> getOptionalGroups() {
         return Collections.unmodifiableList(optionalGroups);
+    }
+
+    public PhraseConstraintGroup getFullGroup() {
+        return fullGroup;
     }
 
     public boolean testMandatory(CodedSequence[] positions) {
 
-        for (var coherenceSet : mandatoryGroups) {
-            if (!coherenceSet.test(positions)) {
+        for (var constraint : mandatoryGroups) {
+            if (!constraint.test(positions)) {
                 return false;
             }
         }
@@ -48,9 +51,9 @@ public class TermCoherenceGroupList {
     public int testOptional(CodedSequence[] positions) {
 
         int best = 0;
-        for (var coherenceSet : optionalGroups) {
-            if (coherenceSet.test(positions)) {
-                best = Math.max(coherenceSet.size, best);
+        for (var constraint : optionalGroups) {
+            if (constraint.test(positions)) {
+                best = Math.max(constraint.size, best);
             }
         }
         return best;
@@ -59,8 +62,8 @@ public class TermCoherenceGroupList {
     public int countOptional(CodedSequence[] positions) {
 
         int ct = 0;
-        for (var coherenceSet : optionalGroups) {
-            if (coherenceSet.test(positions)) {
+        for (var constraint : optionalGroups) {
+            if (constraint.test(positions)) {
                 ct++;
             }
         }
@@ -70,17 +73,17 @@ public class TermCoherenceGroupList {
     public int testOptional(CodedSequence[] positions, DocumentSpan span) {
 
         int best = 0;
-        for (var coherenceSet : optionalGroups) {
-            if (coherenceSet.test(span, positions)) {
-                best = Math.max(coherenceSet.size, best);
+        for (var constraint : optionalGroups) {
+            if (constraint.test(span, positions)) {
+                best = Math.max(constraint.size, best);
             }
         }
         return best;
     }
 
     public boolean allOptionalInSpan(CodedSequence[] positions, DocumentSpan span) {
-        for (var coherenceSet : optionalGroups) {
-            if (!coherenceSet.test(span, positions)) {
+        for (var constraint : optionalGroups) {
+            if (!constraint.test(span, positions)) {
                 return false;
             }
         }
@@ -91,34 +94,46 @@ public class TermCoherenceGroupList {
         return optionalGroups.size();
     }
     public int largestOptional() {
-        int best = 0;
-        for (var coherenceSet : optionalGroups) {
-            best = Math.max(coherenceSet.size, best);
-        }
-        return best;
+        return fullGroup.size;
     }
 
 
-    public static final class TermCoherenceGroup {
+    public static final class PhraseConstraintGroup {
         private final int[] offsets;
         private final BitSet present;
+        private final BitSet termIdsMask;
 
         public final int size;
-        public final boolean mandatory;
-        public TermCoherenceGroup(SearchCoherenceConstraint cons, TermIdList termIdsAll) {
-            offsets = new int[cons.size()];
-            present = new BitSet(cons.size());
-            mandatory = cons.mandatory();
-            size = cons.size();
+        public PhraseConstraintGroup(List<String> terms, TermIdList termIdsAll) {
+            offsets = new int[terms.size()];
+            present = new BitSet(terms.size());
+            size = terms.size();
+
+            termIdsMask = new BitSet(termIdsAll.size());
 
             int i = 0;
-            for (String term : cons.terms()) {
-                if (!term.isEmpty()) {
-                    present.set(i);
-                    long termId = SearchTermsUtil.getWordId(term);
-                    offsets[i++] = termIdsAll.indexOf(termId);
+            for (String term : terms) {
+                if (term.isEmpty()) {
+                    continue;
+                }
+
+                present.set(i);
+                long termId = SearchTermsUtil.getWordId(term);
+
+                int idx = termIdsAll.indexOf(termId);
+                if (idx < 0) {
+                    offsets[i++] = -1;
+                }
+                else {
+                    offsets[i++] = idx;
+                    termIdsMask.set(idx);
                 }
             }
+        }
+
+        /** Returns true if the term with index termIdx in the query is in the group */
+        public boolean containsTerm(int termIdx) {
+            return termIdsMask.get(termIdx);
         }
 
         public boolean test(CodedSequence[] positions) {

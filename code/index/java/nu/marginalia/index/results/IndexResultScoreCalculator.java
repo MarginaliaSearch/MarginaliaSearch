@@ -13,8 +13,8 @@ import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.query.limit.QueryStrategy;
+import nu.marginalia.index.results.model.PhraseConstraintGroupList;
 import nu.marginalia.index.results.model.QuerySearchTerms;
-import nu.marginalia.index.results.model.TermCoherenceGroupList;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
@@ -103,7 +103,7 @@ public class IndexResultScoreCalculator {
                 docSize,
                 spans,
                 positions,
-                searchTerms.coherences,
+                searchTerms.phraseConstraints,
                 rankingContext);
 
         return new SearchResultItem(combinedId, docMetadata, htmlFeatures, score);
@@ -155,7 +155,7 @@ public class IndexResultScoreCalculator {
                                              int length,
                                              DocumentSpans spans,
                                              CodedSequence[] positions,
-                                             TermCoherenceGroupList coherences,
+                                             PhraseConstraintGroupList constraintGroups,
                                              ResultRankingContext ctx)
     {
         if (length < 0) {
@@ -192,7 +192,7 @@ public class IndexResultScoreCalculator {
 
         VerbatimMatches verbatimMatches = new VerbatimMatches();
 
-        float verbatimMatchScore = findVerbatimMatches(verbatimMatches, coherences, positions, spans);
+        float verbatimMatchScore = findVerbatimMatches(verbatimMatches, constraintGroups, positions, spans);
 
         float[] weightedCounts = new float[compiledQuery.size()];
         float keywordMinDistFac = 0;
@@ -373,19 +373,19 @@ public class IndexResultScoreCalculator {
     }
 
     private float findVerbatimMatches(VerbatimMatches verbatimMatches,
-                                      TermCoherenceGroupList coherences,
+                                      PhraseConstraintGroupList constraints,
                                       CodedSequence[] positions,
                                       DocumentSpans spans) {
 
         // Calculate a bonus for keyword coherences when large ones exist
-        int largestOptional = coherences.largestOptional();
+        int largestOptional = constraints.largestOptional();
         if (largestOptional < 2) {
             return 0;
         }
 
         float verbatimMatchScore = 0.f;
 
-        for (var optionalGroup : coherences.getOptionalGroups()) {
+        for (var optionalGroup : constraints.getOptionalGroups()) {
             int groupSize = optionalGroup.size;
             float sizeScalingFactor = groupSize / (float) largestOptional;
 
@@ -400,8 +400,8 @@ public class IndexResultScoreCalculator {
             }
         }
 
-        if (coherences.numOptional() > 0) {
-            verbatimMatchScore += (float) Math.pow(coherences.countOptional(positions) / (double) coherences.numOptional(), 2);
+        if (constraints.numOptional() > 0) {
+            verbatimMatchScore += (float) Math.pow(constraints.countOptional(positions) / (double) constraints.numOptional(), 2);
         }
 
         return verbatimMatchScore;

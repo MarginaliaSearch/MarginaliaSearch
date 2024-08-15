@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.api.searchquery.model.query.SearchCoherenceConstraint;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -175,7 +175,7 @@ public class IndexQueryServiceIntegrationTest {
                                 List.of(),
                                 List.of(),
                                 List.of(),
-                                List.of(SearchCoherenceConstraint.mandatory(List.of("missing", "hello")))
+                                List.of(SearchPhraseConstraint.mandatory(List.of("missing", "hello")))
                         )));
 
         executeSearch(queryMissingCoherence)
@@ -443,7 +443,7 @@ public class IndexQueryServiceIntegrationTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                List.of(SearchCoherenceConstraint.mandatory(List.of(includes)))
+                List.of(SearchPhraseConstraint.mandatory(List.of(includes)))
         );
     }
     private MockDataDocument d(int domainId, int ordinal) {

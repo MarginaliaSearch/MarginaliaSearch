@@ -176,17 +176,18 @@ message RpcQuery {
   repeated string exclude = 2;  // These terms must be absent
   repeated string advice = 3;   // These terms must be present, but do not affect ranking
   repeated string priority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
-  repeated RpcCoherences coherences = 5; // Groups of terms that must exist in proximity of each other
+  repeated RpcPhrases phrases = 5; // Groups of terms that must exist in proximity of each other
   string compiledQuery = 6;  // Compiled query in infix notation
 }
 
-/* Defines a group of search terms that must exist in close proximity within the document */
-message RpcCoherences {
-  repeated string coherences = 1;
+/* Defines a group of search terms that must exist in the the specified order within the document */
+message RpcPhrases {
+  repeated string terms = 1;
   TYPE type = 2;
 
   enum TYPE {
     OPTIONAL = 0;
     MANDATORY = 1;
+    FULL = 2;
   };
 }

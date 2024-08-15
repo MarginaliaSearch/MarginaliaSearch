@@ -7,18 +7,12 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static nu.marginalia.index.model.SearchTermsUtil.getWordId;
 
 public final class SearchTerms {
     private final LongList advice;
     private final LongList excludes;
     private final LongList priority;
-
-    private final List<LongList> coherencesMandatory;
-    private final List<LongList> coherencesOptional;
 
     public static final LongArraySet stopWords = new LongArraySet(
             new long[] {
@@ -36,29 +30,11 @@ public final class SearchTerms {
         this.excludes = new LongArrayList();
         this.priority = new LongArrayList();
 
-        this.coherencesMandatory = new ArrayList<>();
-        this.coherencesOptional = new ArrayList<>();
-
         this.advice = new LongArrayList();
         this.compiledQueryIds = compiledQueryIds;
 
         for (var word : query.searchTermsAdvice) {
             advice.add(getWordId(word));
-        }
-
-        for (var coherence : query.searchTermCoherences) {
-            LongList parts = new LongArrayList(coherence.size());
-
-            for (var word : coherence.terms()) {
-                parts.add(getWordId(word));
-            }
-
-            if (coherence.mandatory()) {
-                coherencesMandatory.add(parts);
-            }
-            else {
-                coherencesOptional.add(parts);
-            }
         }
 
         for (var word : query.searchTermsExclude) {
@@ -91,12 +67,6 @@ public final class SearchTerms {
         return priority;
     }
 
-    public List<LongList> coherencesMandatory() {
-        return coherencesMandatory;
-    }
-    public List<LongList> coherencesOptional() {
-        return coherencesOptional;
-    }
     public CompiledQueryLong compiledQuery() { return compiledQueryIds; }
 
 }
