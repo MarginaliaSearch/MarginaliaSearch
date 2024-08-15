@@ -209,7 +209,9 @@ public class IntegrationTest {
 
         var params = QueryProtobufCodec.convertRequest(request);
 
-        var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
+        var p = ResultRankingParameters.sensibleDefaults();
+        p.exportDebugData = true;
+        var query = queryFactory.createQuery(params, p);
 
 
         var indexRequest = QueryProtobufCodec.convertQuery(request, query);

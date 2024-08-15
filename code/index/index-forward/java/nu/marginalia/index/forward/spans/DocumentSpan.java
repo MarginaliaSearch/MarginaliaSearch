@@ -3,7 +3,6 @@ package nu.marginalia.index.forward.spans;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.CodedSequence;
-import nu.marginalia.sequence.SequenceOperations;
 
 public class DocumentSpan {
 
@@ -58,17 +57,55 @@ public class DocumentSpan {
         return false;
     }
 
-    public boolean overlapsRange(CodedSequence sequence) {
-        return SequenceOperations.intersectSequences(iterator(), sequence.iterator());
-    }
-
     /** Returns an iterator over the start and end positions of each span in the document of this type */
     public IntIterator iterator() {
         if (null == startsEnds) {
             return IntList.of().iterator();
         }
 
-        return startsEnds.iterator();
+        return new DocumentSpanPositionsIterator();
+    }
+
+    /** Iteator over the values between the start and end positions of each span in the document of this type */
+    class DocumentSpanPositionsIterator implements IntIterator {
+        private final IntIterator startStopIterator;
+
+        private int value = -1;
+        private int current = -1;
+        private int end = -1;
+
+        public DocumentSpanPositionsIterator() {
+            this.startStopIterator = startsEnds.iterator();
+        }
+
+        @Override
+        public int nextInt() {
+            if (hasNext()) {
+                int ret = value;
+                value = -1;
+                return ret;
+            }
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (value >= 0) {
+                return true;
+            }
+            else if (current >= 0 && current < end) {
+                value = ++current;
+                return true;
+            }
+            else if (startStopIterator.hasNext()) {
+                current = startStopIterator.nextInt();
+                end = startStopIterator.nextInt();
+                value = current;
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public int length() {

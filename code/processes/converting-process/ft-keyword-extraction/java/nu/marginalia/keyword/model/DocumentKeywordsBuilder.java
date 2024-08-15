@@ -142,7 +142,19 @@ public class DocumentKeywordsBuilder {
         StringBuilder sb = new StringBuilder("[ ");
 
         wordToMeta.forEach((word, meta) -> {
-            sb.append(word).append("->").append(WordFlags.decode(meta)).append(',').append(wordToPos.getOrDefault(word, new IntArrayList())).append(' ');
+            sb.append(word)
+                    .append("->")
+                    .append(WordFlags.decode(meta))
+                    .append(',')
+                    .append(wordToPos.getOrDefault(word, new IntArrayList()))
+                    .append(' ');
+        });
+
+        wordSpans.forEach((tag, spans) -> {
+            sb.append(tag)
+                    .append("->")
+                    .append(spans)
+                    .append(' ');
         });
         return sb.append(']').toString();
     }

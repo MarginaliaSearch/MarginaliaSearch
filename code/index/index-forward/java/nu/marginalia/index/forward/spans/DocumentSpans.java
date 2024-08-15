@@ -4,7 +4,7 @@ import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.CodedSequence;
 
 public class DocumentSpans {
-    private static DocumentSpan EMPTY_SPAN = new DocumentSpan();
+    private static final DocumentSpan EMPTY_SPAN = new DocumentSpan();
 
     public DocumentSpan title = EMPTY_SPAN;
     public DocumentSpan heading = EMPTY_SPAN;
