@@ -52,7 +52,7 @@ public class FullPreindexWordSegments {
         return ret;
     }
 
-    public static FullPreindexWordSegments construct(IndexJournalPage journalInstance,
+    public static FullPreindexWordSegments construct(IndexJournalPage instance,
                                                      Path wordIdsFile,
                                                      Path countsFile)
     throws IOException
@@ -60,8 +60,8 @@ public class FullPreindexWordSegments {
         Long2IntOpenHashMap countsMap = new Long2IntOpenHashMap(100_000, 0.75f);
         countsMap.defaultReturnValue(0);
 
-        try (var slopTable = new SlopTable(journalInstance.page())) {
-            var termIds = journalInstance.openTermIds(slopTable);
+        try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
+            var termIds = instance.openTermIds(slopTable);
             while (termIds.hasRemaining()) {
                 long[] tids = termIds.get();
                 for (long termId : tids) {

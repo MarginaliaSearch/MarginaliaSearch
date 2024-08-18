@@ -68,7 +68,7 @@ public class FullPreindexDocuments {
 
     private static void createUnsortedDocsFile(Path docsFile,
                                                Path workDir,
-                                               IndexJournalPage journalInstance,
+                                               IndexJournalPage instance,
                                                FullPreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
 
@@ -77,12 +77,12 @@ public class FullPreindexDocuments {
         final ByteBuffer tempBuffer = ByteBuffer.allocate(1024*1024*100);
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var slopTable = new SlopTable(journalInstance.page()))
+             var slopTable = new SlopTable(instance.baseDir(), instance.page()))
         {
-            var docIds = journalInstance.openCombinedId(slopTable);
-            var termIds = journalInstance.openTermIds(slopTable);
-            var termMeta = journalInstance.openTermMetadata(slopTable);
-            var positions = journalInstance.openTermPositions(slopTable);
+            var docIds = instance.openCombinedId(slopTable);
+            var termIds = instance.openTermIds(slopTable);
+            var termMeta = instance.openTermMetadata(slopTable);
+            var positions = instance.openTermPositions(slopTable);
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);

@@ -31,39 +31,39 @@ public record IndexJournalPage(Path baseDir, int page) {
     }
 
     public LongColumn.Reader openCombinedId(SlopTable table) throws IOException {
-        return combinedId.open(table, baseDir);
+        return combinedId.open(table);
     }
 
     public LongColumn.Reader openDocumentMeta(SlopTable table) throws IOException {
-        return documentMeta.open(table, baseDir);
+        return documentMeta.open(table);
     }
 
     public IntColumn.Reader openFeatures(SlopTable table) throws IOException {
-        return features.open(table, baseDir);
+        return features.open(table);
     }
 
     public IntColumn.Reader openSize(SlopTable table) throws IOException {
-        return size.open(table, baseDir);
+        return size.open(table);
     }
 
 
     public LongArrayColumn.Reader openTermIds(SlopTable table) throws IOException {
-        return termIds.open(table, baseDir);
+        return termIds.open(table);
     }
 
     public ByteArrayColumn.Reader openTermMetadata(SlopTable table) throws IOException {
-        return termMeta.open(table, baseDir);
+        return termMeta.open(table);
     }
 
     public GammaCodedSequenceArrayColumn.Reader openTermPositions(SlopTable table) throws IOException {
-        return positions.open(table, baseDir);
+        return positions.open(table);
     }
 
     public GammaCodedSequenceArrayColumn.Reader openSpans(SlopTable table) throws IOException {
-        return spans.open(table, baseDir);
+        return spans.open(table);
     }
 
     public ByteArrayColumn.Reader openSpanCodes(SlopTable table) throws IOException {
-        return spanCodes.open(table, baseDir);
+        return spanCodes.open(table);
     }
 }

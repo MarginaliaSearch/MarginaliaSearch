@@ -33,24 +33,24 @@ public class IndexJournalSlopWriter extends SlopTable {
 
     public IndexJournalSlopWriter(Path dir, int page) throws IOException {
 
-        super(page);
+        super(dir, page);
 
         if (!Files.exists(dir)) {
             Files.createDirectory(dir);
         }
 
-        featuresWriter = IndexJournalPage.features.create(this, dir);
-        sizeWriter = IndexJournalPage.size.create(this, dir);
+        featuresWriter = IndexJournalPage.features.create(this);
+        sizeWriter = IndexJournalPage.size.create(this);
 
-        combinedIdWriter = IndexJournalPage.combinedId.create(this, dir);
-        documentMetaWriter = IndexJournalPage.documentMeta.create(this, dir);
+        combinedIdWriter = IndexJournalPage.combinedId.create(this);
+        documentMetaWriter = IndexJournalPage.documentMeta.create(this);
 
-        termIdsWriter = IndexJournalPage.termIds.create(this, dir);
-        termMetadataWriter = IndexJournalPage.termMeta.create(this, dir);
-        termPositionsWriter = IndexJournalPage.positions.create(this, dir);
+        termIdsWriter = IndexJournalPage.termIds.create(this);
+        termMetadataWriter = IndexJournalPage.termMeta.create(this);
+        termPositionsWriter = IndexJournalPage.positions.create(this);
 
-        spanCodesWriter = IndexJournalPage.spanCodes.create(this, dir);
-        spansWriter = IndexJournalPage.spans.create(this, dir);
+        spanCodesWriter = IndexJournalPage.spanCodes.create(this);
+        spansWriter = IndexJournalPage.spans.create(this);
     }
 
     @SneakyThrows

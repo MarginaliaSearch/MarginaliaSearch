@@ -153,19 +153,19 @@ public record SlopDocumentRecord(
         }
 
         public KeywordsProjectionReader(Path baseDir, int page) throws IOException {
-            super(page);
-            domainsReader = domainsColumn.open(this, baseDir);
-            ordinalsReader = ordinalsColumn.open(this, baseDir);
-            htmlFeaturesReader = htmlFeaturesColumn.open(this, baseDir);
-            domainMetadataReader = domainMetadata.open(this, baseDir);
-            lengthsReader = lengthsColumn.open(this, baseDir);
+            super(baseDir, page);
+            domainsReader = domainsColumn.open(this);
+            ordinalsReader = ordinalsColumn.open(this);
+            htmlFeaturesReader = htmlFeaturesColumn.open(this);
+            domainMetadataReader = domainMetadata.open(this);
+            lengthsReader = lengthsColumn.open(this);
 
-            keywordsReader = keywordsColumn.open(this, baseDir);
-            termMetaReader = termMetaColumn.open(this, baseDir);
-            termPositionsReader = termPositionsColumn.open(this, baseDir);
+            keywordsReader = keywordsColumn.open(this);
+            termMetaReader = termMetaColumn.open(this);
+            termPositionsReader = termPositionsColumn.open(this);
 
-            spanCodesReader = spanCodesColumn.open(this, baseDir);
-            spansReader = spansColumn.open(this, baseDir);
+            spanCodesReader = spanCodesColumn.open(this);
+            spansReader = spansColumn.open(this);
         }
 
         public boolean hasMore() throws IOException {
@@ -221,19 +221,19 @@ public record SlopDocumentRecord(
         }
 
         public MetadataReader(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            this.domainsReader = domainsColumn.open(this, baseDir);
-            this.urlsReader = urlsColumn.open(this, baseDir);
-            this.ordinalsReader = ordinalsColumn.open(this, baseDir);
-            this.titlesReader = titlesColumn.open(this, baseDir);
-            this.descriptionsReader = descriptionsColumn.open(this, baseDir);
-            this.htmlFeaturesReader = htmlFeaturesColumn.open(this, baseDir);
-            this.htmlStandardsReader = htmlStandardsColumn.open(this, baseDir);
-            this.lengthsReader = lengthsColumn.open(this, baseDir);
-            this.hashesReader = hashesColumn.open(this, baseDir);
-            this.qualitiesReader = qualitiesColumn.open(this, baseDir);
-            this.pubYearReader = pubYearColumn.open(this, baseDir);
+            this.domainsReader = domainsColumn.open(this);
+            this.urlsReader = urlsColumn.open(this);
+            this.ordinalsReader = ordinalsColumn.open(this);
+            this.titlesReader = titlesColumn.open(this);
+            this.descriptionsReader = descriptionsColumn.open(this);
+            this.htmlFeaturesReader = htmlFeaturesColumn.open(this);
+            this.htmlStandardsReader = htmlStandardsColumn.open(this);
+            this.lengthsReader = lengthsColumn.open(this);
+            this.hashesReader = hashesColumn.open(this);
+            this.qualitiesReader = qualitiesColumn.open(this);
+            this.pubYearReader = pubYearColumn.open(this);
         }
 
         public boolean hasMore() throws IOException {
@@ -281,29 +281,29 @@ public record SlopDocumentRecord(
         private final GammaCodedSequenceArrayColumn.Writer spansWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            domainsWriter = domainsColumn.create(this, baseDir);
-            urlsWriter = urlsColumn.create(this, baseDir);
-            ordinalsWriter = ordinalsColumn.create(this, baseDir);
-            statesWriter = statesColumn.create(this, baseDir);
-            stateReasonsWriter = stateReasonsColumn.create(this, baseDir);
-            titlesWriter = titlesColumn.create(this, baseDir);
-            descriptionsWriter = descriptionsColumn.create(this, baseDir);
-            htmlFeaturesWriter = htmlFeaturesColumn.create(this, baseDir);
-            htmlStandardsWriter = htmlStandardsColumn.create(this, baseDir);
-            lengthsWriter = lengthsColumn.create(this, baseDir);
-            hashesWriter = hashesColumn.create(this, baseDir);
-            qualitiesWriter = qualitiesColumn.create(this, baseDir);
-            domainMetadataWriter = domainMetadata.create(this, baseDir);
-            pubYearWriter = pubYearColumn.create(this, baseDir);
+            domainsWriter = domainsColumn.create(this);
+            urlsWriter = urlsColumn.create(this);
+            ordinalsWriter = ordinalsColumn.create(this);
+            statesWriter = statesColumn.create(this);
+            stateReasonsWriter = stateReasonsColumn.create(this);
+            titlesWriter = titlesColumn.create(this);
+            descriptionsWriter = descriptionsColumn.create(this);
+            htmlFeaturesWriter = htmlFeaturesColumn.create(this);
+            htmlStandardsWriter = htmlStandardsColumn.create(this);
+            lengthsWriter = lengthsColumn.create(this);
+            hashesWriter = hashesColumn.create(this);
+            qualitiesWriter = qualitiesColumn.create(this);
+            domainMetadataWriter = domainMetadata.create(this);
+            pubYearWriter = pubYearColumn.create(this);
 
-            keywordsWriter = keywordsColumn.create(this, baseDir);
-            termMetaWriter = termMetaColumn.create(this, baseDir);
-            termPositionsWriter = termPositionsColumn.create(this, baseDir);
+            keywordsWriter = keywordsColumn.create(this);
+            termMetaWriter = termMetaColumn.create(this);
+            termPositionsWriter = termPositionsColumn.create(this);
 
-            spansCodesWriter = spanCodesColumn.create(this, baseDir);
-            spansWriter = spansColumn.create(this, baseDir);
+            spansCodesWriter = spanCodesColumn.create(this);
+            spansWriter = spansColumn.create(this);
         }
 
         public void write(SlopDocumentRecord record) throws IOException {

@@ -48,9 +48,9 @@ public record SlopDomainRecord(
         }
 
         public DomainNameReader(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            domainsReader = domainsColumn.open(this, baseDir);
+            domainsReader = domainsColumn.open(this);
         }
 
         public boolean hasMore() throws IOException {
@@ -71,10 +71,10 @@ public record SlopDomainRecord(
         }
 
         public DomainWithIpReader(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            domainsReader = domainsColumn.open(this, baseDir);
-            ipReader = ipColumn.open(this, baseDir);
+            domainsReader = domainsColumn.open(this);
+            ipReader = ipColumn.open(this);
         }
 
         public boolean hasMore() throws IOException {
@@ -107,18 +107,18 @@ public record SlopDomainRecord(
         }
 
         public Reader(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            domainsReader = domainsColumn.open(this, baseDir);
-            statesReader = statesColumn.open(this, baseDir);
-            redirectReader = redirectDomainsColumn.open(this, baseDir);
-            ipReader = ipColumn.open(this, baseDir);
+            domainsReader = domainsColumn.open(this);
+            statesReader = statesColumn.open(this);
+            redirectReader = redirectDomainsColumn.open(this);
+            ipReader = ipColumn.open(this);
 
-            knownUrlsReader = knownUrlsColumn.open(this, baseDir);
-            goodUrlsReader = goodUrlsColumn.open(this, baseDir);
-            visitedUrlsReader = visitedUrlsColumn.open(this, baseDir);
+            knownUrlsReader = knownUrlsColumn.open(this);
+            goodUrlsReader = goodUrlsColumn.open(this);
+            visitedUrlsReader = visitedUrlsColumn.open(this);
 
-            rssFeedsReader = rssFeedsColumn.open(this, baseDir);
+            rssFeedsReader = rssFeedsColumn.open(this);
         }
 
         public boolean hasMore() throws IOException {
@@ -158,18 +158,18 @@ public record SlopDomainRecord(
         private final ObjectArrayColumn<String>.Writer rssFeedsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            domainsWriter = domainsColumn.create(this, baseDir);
-            statesWriter = statesColumn.create(this, baseDir);
-            redirectWriter = redirectDomainsColumn.create(this, baseDir);
-            ipWriter = ipColumn.create(this, baseDir);
+            domainsWriter = domainsColumn.create(this);
+            statesWriter = statesColumn.create(this);
+            redirectWriter = redirectDomainsColumn.create(this);
+            ipWriter = ipColumn.create(this);
 
-            knownUrlsWriter = knownUrlsColumn.create(this, baseDir);
-            goodUrlsWriter = goodUrlsColumn.create(this, baseDir);
-            visitedUrlsWriter = visitedUrlsColumn.create(this, baseDir);
+            knownUrlsWriter = knownUrlsColumn.create(this);
+            goodUrlsWriter = goodUrlsColumn.create(this);
+            visitedUrlsWriter = visitedUrlsColumn.create(this);
 
-            rssFeedsWriter = rssFeedsColumn.create(this, baseDir);
+            rssFeedsWriter = rssFeedsColumn.create(this);
         }
 
         public void write(SlopDomainRecord record) throws IOException {

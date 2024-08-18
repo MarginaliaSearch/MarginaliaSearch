@@ -52,7 +52,7 @@ public class PrioPreindexWordSegments {
         return ret;
     }
 
-    public static PrioPreindexWordSegments construct(IndexJournalPage journalInstance,
+    public static PrioPreindexWordSegments construct(IndexJournalPage instance,
                                                      Path wordIdsFile,
                                                      Path countsFile)
     throws IOException
@@ -60,9 +60,9 @@ public class PrioPreindexWordSegments {
         Long2IntOpenHashMap countsMap = new Long2IntOpenHashMap(100_000, 0.75f);
         countsMap.defaultReturnValue(0);
 
-        try (var slopTable = new SlopTable(journalInstance.page())) {
-            var termIds = journalInstance.openTermIds(slopTable);
-            var termMetas = journalInstance.openTermMetadata(slopTable);
+        try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
+            var termIds = instance.openTermIds(slopTable);
+            var termMetas = instance.openTermMetadata(slopTable);
 
             while (termIds.hasRemaining()) {
                 long[] data = termIds.get();

@@ -28,10 +28,10 @@ public record SlopDomainLinkRecord(
         }
 
         public Reader(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            sourcesReader = sourcesColumn.open(this, baseDir);
-            destsReader = destsColumn.open(this, baseDir);
+            sourcesReader = sourcesColumn.open(this);
+            destsReader = destsColumn.open(this);
         }
 
         public boolean hasMore() throws IOException {
@@ -58,10 +58,10 @@ public record SlopDomainLinkRecord(
         private final TxtStringColumn.Writer destsWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
-            super(page);
+            super(baseDir, page);
 
-            sourcesWriter = sourcesColumn.create(this, baseDir);
-            destsWriter = destsColumn.create(this, baseDir);
+            sourcesWriter = sourcesColumn.create(this);
+            destsWriter = destsColumn.create(this);
         }
 
         public void write(SlopDomainLinkRecord record) throws IOException {

@@ -58,18 +58,18 @@ public class PrioPreindexDocuments {
 
     private static void createUnsortedDocsFile(Path docsFile,
                                                Path workDir,
-                                               IndexJournalPage journalInstance,
+                                               IndexJournalPage instance,
                                                PrioPreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var slopTable = new SlopTable(journalInstance.page()))
+             var slopTable = new SlopTable(instance.baseDir(), instance.page()))
         {
-            var docIds = journalInstance.openCombinedId(slopTable);
-            var termIds = journalInstance.openTermIds(slopTable);
-            var termMeta = journalInstance.openTermMetadata(slopTable);
+            var docIds = instance.openCombinedId(slopTable);
+            var termIds = instance.openTermIds(slopTable);
+            var termMeta = instance.openTermMetadata(slopTable);
 
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
