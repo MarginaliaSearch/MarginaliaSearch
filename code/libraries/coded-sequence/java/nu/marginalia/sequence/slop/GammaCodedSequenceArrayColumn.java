@@ -10,6 +10,7 @@ import nu.marginalia.slop.desc.ColumnFunction;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
@@ -44,10 +45,10 @@ public class GammaCodedSequenceArrayColumn extends AbstractObjectColumn<List<Gam
         );
     }
 
-    public Reader openUnregistered(Path path, int page) throws IOException {
+    public Reader openUnregistered(URI uri, int page) throws IOException {
         return new Reader(
-                dataColumn.openUnregistered(path, page),
-                groupsColumn.openUnregistered(path, page)
+                dataColumn.openUnregistered(uri, page),
+                groupsColumn.openUnregistered(uri, page)
         );
     }
 

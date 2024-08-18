@@ -13,6 +13,7 @@ import nu.marginalia.slop.storage.StorageReader;
 import nu.marginalia.slop.storage.StorageWriter;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
@@ -43,10 +44,10 @@ public class GammaCodedSequenceColumn extends AbstractObjectColumn<GammaCodedSeq
         );
     }
 
-    public Reader openUnregistered(Path path, int page) throws IOException {
+    public Reader openUnregistered(URI uri, int page) throws IOException {
         return new Reader(
-                Storage.reader(path, this, page, false),
-                indexColumn.openUnregistered(path, page)
+                Storage.reader(uri, this, page, false),
+                indexColumn.openUnregistered(uri, page)
         );
     }
 
