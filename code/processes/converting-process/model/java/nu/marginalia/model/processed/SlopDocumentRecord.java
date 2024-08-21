@@ -148,12 +148,8 @@ public record SlopDocumentRecord(
         private final ByteArrayColumn.Reader spanCodesReader;
         private final GammaCodedSequenceArrayColumn.Reader spansReader;
 
-        public KeywordsProjectionReader(SlopPageRef<SlopDocumentRecord> pageRef) throws IOException {
-            this(pageRef.baseDir(), pageRef.page());
-        }
-
-        public KeywordsProjectionReader(Path baseDir, int page) throws IOException {
-            super(baseDir, page);
+        public KeywordsProjectionReader(SlopTable.Ref<SlopDocumentRecord> pageRef) throws IOException {
+            super(pageRef);
             domainsReader = domainsColumn.open(this);
             ordinalsReader = ordinalsColumn.open(this);
             htmlFeaturesReader = htmlFeaturesColumn.open(this);
@@ -216,12 +212,8 @@ public record SlopDocumentRecord(
         private final FloatColumn.Reader qualitiesReader;
         private final IntColumn.Reader pubYearReader;
 
-        public MetadataReader(SlopPageRef<SlopDocumentRecord> pageRef) throws IOException{
-            this(pageRef.baseDir(), pageRef.page());
-        }
-
-        public MetadataReader(Path baseDir, int page) throws IOException {
-            super(baseDir, page);
+        public MetadataReader(SlopTable.Ref<SlopDocumentRecord> pageRef) throws IOException{
+            super(pageRef);
 
             this.domainsReader = domainsColumn.open(this);
             this.urlsReader = urlsColumn.open(this);
@@ -234,6 +226,10 @@ public record SlopDocumentRecord(
             this.hashesReader = hashesColumn.open(this);
             this.qualitiesReader = qualitiesColumn.open(this);
             this.pubYearReader = pubYearColumn.open(this);
+        }
+
+        public MetadataReader(Path baseDir, int page) throws IOException {
+            this(new Ref<>(baseDir, page));
         }
 
         public boolean hasMore() throws IOException {

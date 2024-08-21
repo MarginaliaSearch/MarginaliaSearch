@@ -7,8 +7,8 @@ import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.SlopDocumentRecord;
-import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.slop.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +30,10 @@ public class KeywordLoaderService {
                              LoaderInputData inputData) throws IOException {
         try (var task = heartbeat.createAdHocTaskHeartbeat("KEYWORDS")) {
 
-            Collection<SlopPageRef<SlopDocumentRecord>> documentFiles = inputData.listDocumentFiles();
+            Collection<SlopTable.Ref<SlopDocumentRecord>> documentFiles = inputData.listDocumentFiles();
             int processed = 0;
 
-            for (SlopPageRef<SlopDocumentRecord> pageRef : documentFiles) {
+            for (SlopTable.Ref<SlopDocumentRecord> pageRef : documentFiles) {
                 task.progress("LOAD", processed++, documentFiles.size());
 
                 try (var keywordsReader = new SlopDocumentRecord.KeywordsProjectionReader(pageRef)) {

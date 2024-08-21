@@ -10,8 +10,8 @@ import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.SlopDocumentRecord;
-import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.slop.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public class DocumentLoaderService {
                              LoaderInputData inputData)
             throws IOException, SQLException
     {
-        Collection<SlopPageRef<SlopDocumentRecord>> pageRefs = inputData.listDocumentFiles();
+        Collection<SlopTable.Ref<SlopDocumentRecord>> pageRefs = inputData.listDocumentFiles();
 
         try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS")) {
 

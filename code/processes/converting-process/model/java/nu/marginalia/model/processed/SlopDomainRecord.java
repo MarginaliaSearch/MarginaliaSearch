@@ -43,12 +43,12 @@ public record SlopDomainRecord(
     public static class DomainNameReader extends SlopTable {
         private final TxtStringColumn.Reader domainsReader;
 
-        public DomainNameReader(SlopPageRef<SlopDomainRecord> page) throws IOException {
-            this(page.baseDir(), page.page());
+        public DomainNameReader(Path baseDir, int page) throws IOException {
+            this(new Ref<>(baseDir, page));
         }
 
-        public DomainNameReader(Path baseDir, int page) throws IOException {
-            super(baseDir, page);
+        public DomainNameReader(SlopTable.Ref<SlopDomainRecord> ref) throws IOException {
+            super(ref);
 
             domainsReader = domainsColumn.open(this);
         }
@@ -66,15 +66,15 @@ public record SlopDomainRecord(
         private final TxtStringColumn.Reader domainsReader;
         private final TxtStringColumn.Reader ipReader;
 
-        public DomainWithIpReader(SlopPageRef<SlopDomainRecord> page) throws IOException {
-            this(page.baseDir(), page.page());
-        }
-
-        public DomainWithIpReader(Path baseDir, int page) throws IOException {
-            super(baseDir, page);
+        public DomainWithIpReader(SlopTable.Ref<SlopDomainRecord> ref) throws IOException {
+            super(ref);
 
             domainsReader = domainsColumn.open(this);
             ipReader = ipColumn.open(this);
+        }
+
+        public DomainWithIpReader(Path baseDir, int page) throws IOException {
+            this(new Ref<>(baseDir, page));
         }
 
         public boolean hasMore() throws IOException {
@@ -102,12 +102,8 @@ public record SlopDomainRecord(
 
         private final ObjectArrayColumn<String>.Reader rssFeedsReader;
 
-        public Reader(SlopPageRef<SlopDomainRecord> page) throws IOException {
-            this(page.baseDir(), page.page());
-        }
-
-        public Reader(Path baseDir, int page) throws IOException {
-            super(baseDir, page);
+        public Reader(SlopTable.Ref<SlopDomainRecord> ref) throws IOException {
+            super(ref);
 
             domainsReader = domainsColumn.open(this);
             statesReader = statesColumn.open(this);
@@ -119,6 +115,10 @@ public record SlopDomainRecord(
             visitedUrlsReader = visitedUrlsColumn.open(this);
 
             rssFeedsReader = rssFeedsColumn.open(this);
+        }
+
+        public Reader(Path baseDir, int page) throws IOException {
+            this(new Ref<>(baseDir, page));
         }
 
         public boolean hasMore() throws IOException {

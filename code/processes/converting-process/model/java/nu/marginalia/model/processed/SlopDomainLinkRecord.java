@@ -23,15 +23,15 @@ public record SlopDomainLinkRecord(
         private final TxtStringColumn.Reader sourcesReader;
         private final TxtStringColumn.Reader destsReader;
 
-        public Reader(SlopPageRef<SlopDomainLinkRecord> page) throws IOException {
-            this(page.baseDir(), page.page());
-        }
-
-        public Reader(Path baseDir, int page) throws IOException {
-            super(baseDir, page);
+        public Reader(SlopTable.Ref<SlopDomainLinkRecord> ref) throws IOException {
+            super(ref);
 
             sourcesReader = sourcesColumn.open(this);
             destsReader = destsColumn.open(this);
+        }
+
+        public Reader(Path baseDir, int page) throws IOException {
+            this(new Ref<>(baseDir, page));
         }
 
         public boolean hasMore() throws IOException {

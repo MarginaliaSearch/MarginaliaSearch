@@ -8,9 +8,9 @@ import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
 import nu.marginalia.model.processed.SlopDomainRecord;
-import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
+import nu.marginalia.slop.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +59,8 @@ public class DomainLoaderService {
         {
             taskHeartbeat.progress(Steps.PREP_DATA);
 
-            Collection<SlopPageRef<SlopDomainRecord>> domainPageRefs = inputData.listDomainPages();
-            Collection<SlopPageRef<SlopDomainLinkRecord>> domainLinkPageRefs = inputData.listDomainLinkPages();
+            Collection<SlopTable.Ref<SlopDomainRecord>> domainPageRefs = inputData.listDomainPages();
+            Collection<SlopTable.Ref<SlopDomainLinkRecord>> domainLinkPageRefs = inputData.listDomainLinkPages();
 
             // Ensure that the domains we've just crawled are in the domain database to this node
             try (var inserter = new DomainInserter(conn, nodeId);
@@ -68,7 +68,7 @@ public class DomainLoaderService {
                 // Add domain names from this data set with the current node affinity
                 int pageIdx = 0;
 
-                for (SlopPageRef<SlopDomainRecord> page : inputData.listDomainPages()) {
+                for (SlopTable.Ref<SlopDomainRecord> page : inputData.listDomainPages()) {
                     processHeartbeat.progress("INSERT", pageIdx++, domainPageRefs.size());
 
                     try (var reader = new SlopDomainRecord.DomainNameReader(page)) {
@@ -89,7 +89,7 @@ public class DomainLoaderService {
                 // Add linked domains, but with -1 affinity meaning they can be grabbed by any index node
                 int pageIdx = 0;
 
-                for (SlopPageRef<SlopDomainLinkRecord> page : inputData.listDomainLinkPages()) {
+                for (SlopTable.Ref<SlopDomainLinkRecord> page : inputData.listDomainLinkPages()) {
                     processHeartbeat.progress("INSERT", pageIdx++, domainLinkPageRefs.size());
 
                     try (var reader = new SlopDomainLinkRecord.Reader(page)) {
@@ -111,7 +111,7 @@ public class DomainLoaderService {
                 // Update the node affinity and IP address for each domain
                 int pageIdx = 0;
 
-                for (SlopPageRef<SlopDomainRecord> page : inputData.listDomainPages()) {
+                for (SlopTable.Ref<SlopDomainRecord> page : inputData.listDomainPages()) {
                     processHeartbeat.progress("UPDATE", pageIdx++, domainPageRefs.size());
 
                     try (var updater = new DomainAffinityAndIpUpdater(conn, nodeId);
@@ -154,7 +154,7 @@ public class DomainLoaderService {
 
             int processed = 0;
 
-            Collection<SlopPageRef<SlopDomainRecord>> pages = inputData.listDomainPages();
+            Collection<SlopTable.Ref<SlopDomainRecord>> pages = inputData.listDomainPages();
             for (var page : pages) {
                 taskHeartbeat.progress("UPDATE-META", processed++, pages.size());
 

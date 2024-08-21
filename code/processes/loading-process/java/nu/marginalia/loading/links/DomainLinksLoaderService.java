@@ -7,8 +7,8 @@ import nu.marginalia.linkgraph.io.DomainLinksWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
-import nu.marginalia.model.processed.SlopPageRef;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.slop.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class DomainLinksLoaderService {
         try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS");
              var linkLoader = new LinkLoader(domainIdRegistry))
         {
-            Collection<SlopPageRef<SlopDomainLinkRecord>> pageRefs = inputData.listDomainLinkPages();
+            Collection<SlopTable.Ref<SlopDomainLinkRecord>> pageRefs = inputData.listDomainLinkPages();
 
             int processed = 0;
 

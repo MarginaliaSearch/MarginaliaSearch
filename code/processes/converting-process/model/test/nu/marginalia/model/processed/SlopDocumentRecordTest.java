@@ -1,6 +1,7 @@
 package nu.marginalia.model.processed;
 
 import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.slop.SlopTable;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -54,7 +55,7 @@ public class SlopDocumentRecordTest {
             writer.write(record);
         }
 
-        try (var keywordReader = new SlopDocumentRecord.KeywordsProjectionReader(testDir, 0)) {
+        try (var keywordReader = new SlopDocumentRecord.KeywordsProjectionReader(new SlopTable.Ref<>(testDir, 0))) {
             assertTrue(keywordReader.hasMore());
             var readRecord = keywordReader.next();
             assertFalse(keywordReader.hasMore());
