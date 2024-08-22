@@ -222,9 +222,9 @@ public class SearchOperator {
     }
 
     private String searchTermToProblemDescription(String term, List<String> suggestions) {
-        String suggestionsStr = suggestions.stream().map(s -> STR."\"\{s}\"").collect(Collectors.joining(", "));
+        String suggestionsStr = suggestions.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", "));
 
-        return STR."\"\{term}\" could be spelled \{suggestionsStr}";
+        return "\"%s\" could be spelled %s".formatted(term, suggestionsStr);
     }
 
 }
