@@ -9,11 +9,10 @@ import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 
 /** A class to hold details about a single search result. */
 @AllArgsConstructor @NoArgsConstructor @With @Getter @ToString
-public class UrlDetails implements Comparable<UrlDetails> {
+public class UrlDetails {
     public long id;
     public int domainId;
 
@@ -63,12 +62,6 @@ public class UrlDetails implements Comparable<UrlDetails> {
         return Long.hashCode(id);
     }
 
-    @Override
-    public int compareTo(UrlDetails other) {
-        int result = Double.compare(getTermScore(), other.getTermScore());
-        if (result == 0) result = Long.compare(getId(), other.getId());
-        return result;
-    }
 
     public boolean equals(Object other) {
         if (other == null) {
