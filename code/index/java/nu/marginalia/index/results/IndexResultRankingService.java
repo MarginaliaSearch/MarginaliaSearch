@@ -179,7 +179,7 @@ public class IndexResultRankingService {
         LongOpenHashSet seenDocumentHashes = new LongOpenHashSet(resultsList.size());
 
         // Decorate the results with the document details
-        for (var result : resultsList) {
+        for (SearchResultItem result : resultsList) {
             final long id = result.getDocumentId();
             final DocdbUrlDetail docData = detailsById.get(id);
 
@@ -219,7 +219,7 @@ public class IndexResultRankingService {
                     .setUrl(docData.url().toString())
                     .setUrlQuality(docData.urlQuality())
                     .setWordsTotal(docData.wordsTotal())
-                    .setBestPositions(0 /* FIXME */)
+                    .setBestPositions(result.getBestPositions())
                     .setResultsFromDomain(domainCountFilter.getCount(result))
                     .setRawItem(rawItem);
 

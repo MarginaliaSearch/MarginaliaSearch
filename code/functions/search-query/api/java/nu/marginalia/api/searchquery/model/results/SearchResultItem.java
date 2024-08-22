@@ -28,14 +28,18 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
     public boolean hasPrioTerm;
 
+    public long bestPositions;
+
     public DebugRankingFactors debugRankingFactors;
 
     public SearchResultItem(long combinedId,
                             long encodedDocMetadata,
                             int htmlFeatures,
-                            double score) {
+                            double score,
+                            long bestPositions) {
         this.combinedId = combinedId;
         this.encodedDocMetadata = encodedDocMetadata;
+        this.bestPositions = bestPositions;
         this.keywordScores = new ArrayList<>();
         this.htmlFeatures = htmlFeatures;
         this.scoreValue = score;

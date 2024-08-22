@@ -257,6 +257,7 @@ public class QueryProtobufCodec {
                 rawItem.getHtmlFeatures(),
                 keywordScores,
                 rawItem.getHasPriorityTerms(),
+                0, // Not set
                 null, // Not set
                 Double.NaN // Not set
         );

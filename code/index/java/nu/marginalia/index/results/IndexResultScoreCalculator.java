@@ -106,7 +106,35 @@ public class IndexResultScoreCalculator {
                 searchTerms.phraseConstraints,
                 rankingContext);
 
-        return new SearchResultItem(combinedId, docMetadata, htmlFeatures, score);
+        return new SearchResultItem(combinedId,
+                docMetadata,
+                htmlFeatures,
+                score,
+                calculatePositionsMask(positions)
+        );
+    }
+
+    /** Calculate a bitmask illustrating the intersected positions of the search terms in the document.
+     *  This is used in the GUI.
+     * */
+    private long calculatePositionsMask(CodedSequence[] positions) {
+        IntIterator[] iters = new IntIterator[rankingContext.regularMask.cardinality()];
+        for (int i = 0, j = 0; i < positions.length; i++) {
+            if (rankingContext.regularMask.get(i)) {
+                iters[j++] = positions[i].iterator();
+            }
+        }
+        IntIterator intersection = SequenceOperations.findIntersections(iters).intIterator();
+
+        long result = 0;
+        int bit = 0;
+
+        while (intersection.hasNext() && bit < 64) {
+            bit = (int) (Math.sqrt(intersection.nextInt()));
+            result |= 1L << bit;
+        }
+
+        return result;
     }
 
     private boolean meetsQueryStrategyRequirements(CompiledQueryLong queryGraphScores,

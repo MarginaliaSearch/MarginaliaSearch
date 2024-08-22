@@ -55,7 +55,7 @@ public class SequenceOperations {
 
     public static IntList findIntersections(IntIterator... sequences) {
 
-        if (sequences.length <= 1)
+        if (sequences.length < 1)
             return IntList.of();
 
         // Initialize values and find the maximum value

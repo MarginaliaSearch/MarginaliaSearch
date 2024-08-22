@@ -2,14 +2,12 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import lombok.SneakyThrows;
-import nu.marginalia.bbpc.BrailleBlockPunchCards;
+import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.UrlDeduplicator;
 import org.slf4j.Logger;
@@ -17,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @Singleton
 public class SearchQueryIndexService {
@@ -99,7 +99,7 @@ public class SearchQueryIndexService {
     }
 
     private String getPositionsString(DecoratedSearchResultItem resultItem) {
-        return BrailleBlockPunchCards.printBits(resultItem.bestPositions, 56);
+        return BrailleBlockPunchCards.printBits(resultItem.bestPositions, 64);
 
     }
 }
