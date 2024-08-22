@@ -7,14 +7,19 @@ import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
+import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
+import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.ClusteredUrlDetails;
 import nu.marginalia.search.model.DecoratedSearchResults;
 import nu.marginalia.search.model.SearchFilters;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.svc.SearchQueryIndexService;
+import nu.marginalia.search.results.UrlDeduplicator;
+import nu.marginalia.search.svc.SearchQueryCountService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
@@ -23,9 +28,10 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -41,30 +47,30 @@ public class SearchOperator {
     private final MathClient mathClient;
     private final DbDomainQueries domainQueries;
     private final QueryClient queryClient;
-    private final SearchQueryIndexService searchQueryService;
     private final SearchQueryParamFactory paramFactory;
     private final WebsiteUrl websiteUrl;
     private final SearchUnitConversionService searchUnitConversionService;
+    private final SearchQueryCountService searchVisitorCount;
 
 
     @Inject
     public SearchOperator(MathClient mathClient,
                           DbDomainQueries domainQueries,
                           QueryClient queryClient,
-                          SearchQueryIndexService searchQueryService,
                           SearchQueryParamFactory paramFactory,
                           WebsiteUrl websiteUrl,
-                          SearchUnitConversionService searchUnitConversionService)
+                          SearchUnitConversionService searchUnitConversionService,
+                          SearchQueryCountService searchVisitorCount
+                          )
     {
 
         this.mathClient = mathClient;
         this.domainQueries = domainQueries;
         this.queryClient = queryClient;
-
-        this.searchQueryService = searchQueryService;
         this.paramFactory = paramFactory;
         this.websiteUrl = websiteUrl;
         this.searchUnitConversionService = searchUnitConversionService;
+        this.searchVisitorCount = searchVisitorCount;
     }
 
     public List<UrlDetails> doSiteSearch(String domain,
@@ -74,7 +80,7 @@ public class SearchOperator {
         var queryParams = paramFactory.forSiteSearch(domain, domainId, count);
         var queryResponse = queryClient.search(queryParams);
 
-        return searchQueryService.getResultsFromQuery(queryResponse);
+        return getResultsFromQuery(queryResponse);
     }
 
     public List<UrlDetails> doBacklinkSearch(String domain) {
@@ -82,63 +88,35 @@ public class SearchOperator {
         var queryParams = paramFactory.forBacklinkSearch(domain);
         var queryResponse = queryClient.search(queryParams);
 
-        return searchQueryService.getResultsFromQuery(queryResponse);
+        return getResultsFromQuery(queryResponse);
     }
 
     public List<UrlDetails> doLinkSearch(String source, String dest) {
         var queryParams = paramFactory.forLinkSearch(source, dest);
         var queryResponse = queryClient.search(queryParams);
 
-        return searchQueryService.getResultsFromQuery(queryResponse);
+        return getResultsFromQuery(queryResponse);
     }
-
-    private volatile WeakReference<List<ClusteredUrlDetails>> oldResults = new WeakReference<>(Collections.emptyList());
 
     public DecoratedSearchResults doSearch(SearchParameters userParams) {
 
         Future<String> eval = searchUnitConversionService.tryEval(userParams.query());
 
-        List<ClusteredUrlDetails> clusteredResults;
-        QueryResponse queryResponse;
-        List<String> problems;
-        String evalResult;
-        String focusDomain;
+        var queryParams = paramFactory.forRegularSearch(userParams);
+        QueryResponse queryResponse = queryClient.search(queryParams);
+        var queryResults = getResultsFromQuery(queryResponse);
 
-        if (userParams.poisonResults() && Math.random() > 0.1) {
+        logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
+        logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
 
-            // For botnet users, we return random old query results.  This is to make
-            // it harder for them to figure out if they are being rate limited.
+        String evalResult = getFutureOrDefault(eval, "");
 
-            clusteredResults = new ArrayList<>(Objects.requireNonNullElse(oldResults.get(), List.of()));
+        List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
+                .selectStrategy(queryResponse)
+                .clusterResults(queryResults, 25);
 
-            // Shuffle the results to make it harder to distinguish
-            Collections.shuffle(clusteredResults);
-
-            problems = List.of();
-            evalResult = "";
-            focusDomain = "";
-        } else {
-            var queryParams = paramFactory.forRegularSearch(userParams);
-            queryResponse = queryClient.search(queryParams);
-            var queryResults = searchQueryService.getResultsFromQuery(queryResponse);
-
-            logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
-            logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
-
-            evalResult = getFutureOrDefault(eval, "");
-
-            clusteredResults = SearchResultClusterer
-                    .selectStrategy(queryResponse)
-                    .clusterResults(queryResults, 25);
-
-            focusDomain = queryResponse.domain();
-            problems = getProblems(evalResult, queryResults, queryResponse);
-
-            if (userParams.poisonResults()) {
-                // Save the results to feed to the botnet
-                oldResults = new WeakReference<>(clusteredResults);
-            }
-        }
+        String focusDomain = queryResponse.domain();
+        List<String> problems = getProblems(evalResult, queryResults, queryResponse);
 
         return DecoratedSearchResults.builder()
                 .params(userParams)
@@ -150,6 +128,41 @@ public class SearchOperator {
                 .focusDomainId(getDomainId(focusDomain))
                 .build();
     }
+
+
+    public List<UrlDetails> getResultsFromQuery(QueryResponse queryResponse) {
+        final QueryLimits limits = queryResponse.specs().queryLimits;
+        final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
+
+        // Update the query count (this is what you see on the front page)
+        searchVisitorCount.registerQuery();
+
+        return queryResponse.results().stream()
+                .filter(deduplicator::shouldRetain)
+                .limit(limits.resultsTotal())
+                .map(SearchOperator::createDetails)
+                .toList();
+    }
+
+    private static UrlDetails createDetails(DecoratedSearchResultItem item) {
+        return new UrlDetails(
+                item.documentId(),
+                item.domainId(),
+                item.url,
+                item.title,
+                item.description,
+                item.format,
+                item.features,
+                DomainIndexingState.ACTIVE,
+                item.rankingScore, // termScore
+                item.resultsFromDomain,
+                BrailleBlockPunchCards.printBits(item.bestPositions, 64),
+                Long.bitCount(item.bestPositions),
+                item.rawIndexResult,
+                item.rawIndexResult.keywordScores
+        );
+    }
+
 
     private <T> T getFutureOrDefault(@Nullable Future<T> fut, T defaultValue) {
         if (fut == null || fut.isCancelled())  {
@@ -213,7 +226,5 @@ public class SearchOperator {
 
         return STR."\"\{term}\" could be spelled \{suggestionsStr}";
     }
-
-
 
 }
