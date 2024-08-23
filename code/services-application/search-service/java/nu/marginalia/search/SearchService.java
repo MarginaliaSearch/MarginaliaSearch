@@ -6,7 +6,9 @@ import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.svc.*;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.SparkService;
+import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -17,7 +19,7 @@ import spark.Spark;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-public class SearchService extends Service {
+public class SearchService extends SparkService {
 
     private final WebsiteUrl websiteUrl;
     private final StaticResources staticResources;

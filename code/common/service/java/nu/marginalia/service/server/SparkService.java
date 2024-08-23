@@ -1,16 +1,11 @@
 package nu.marginalia.service.server;
 
 import io.grpc.*;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
-import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
-import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.*;
-import nu.marginalia.util.NamedExecutorFactory;
 import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.*;
-import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +15,9 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Optional;
 
-public class Service {
+public class SparkService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // Marker for filtering out sensitive content from the persistent logs
@@ -52,10 +45,10 @@ public class Service {
     private GrpcServer grpcServer;
 
     @SneakyThrows
-    public Service(BaseServiceParams params,
-                   Runnable configureStaticFiles,
-                   ServicePartition partition,
-                   List<BindableService> grpcServices) {
+    public SparkService(BaseServiceParams params,
+                        Runnable configureStaticFiles,
+                        ServicePartition partition,
+                        List<BindableService> grpcServices) {
 
         this.initialization = params.initialization;
         var config = params.configuration;
@@ -135,18 +128,18 @@ public class Service {
         }
     }
 
-    public Service(BaseServiceParams params,
-                   ServicePartition partition,
-                   List<BindableService> grpcServices) {
+    public SparkService(BaseServiceParams params,
+                        ServicePartition partition,
+                        List<BindableService> grpcServices) {
         this(params,
-                Service::defaultSparkConfig,
+                SparkService::defaultSparkConfig,
                 partition,
                 grpcServices);
     }
 
-    public Service(BaseServiceParams params) {
+    public SparkService(BaseServiceParams params) {
         this(params,
-                Service::defaultSparkConfig,
+                SparkService::defaultSparkConfig,
                 ServicePartition.any(),
                 List.of());
     }

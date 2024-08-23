@@ -1,6 +1,6 @@
 package nu.marginalia.process.log;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Pattern;
 
@@ -13,7 +13,7 @@ public record WorkLogEntry(String id, String ts, String path, int cnt) {
     }
 
     static boolean isJobId(String line) {
-        return Strings.isNotBlank(line) && !line.startsWith("#");
+        return StringUtils.isNotBlank(line) && !line.startsWith("#");
     }
 
     static String parseJobIdFromLogLine(String s) {

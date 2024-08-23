@@ -1,48 +1,57 @@
 package nu.marginalia.query;
 
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.MapModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.HeaderParam;
+import io.jooby.annotation.Path;
+import io.jooby.annotation.QueryParam;
+import lombok.SneakyThrows;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.renderer.MustacheRenderer;
-import nu.marginalia.renderer.RendererFactory;
-import spark.Request;
-import spark.Response;
 
-import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
+
+import static java.util.Objects.requireNonNullElse;
 
 public class QueryBasicInterface {
-    private final MustacheRenderer<Object> basicRenderer;
-    private final MustacheRenderer<Object> qdebugRenderer;
     private final Gson gson = GsonFactory.get();
 
     private final QueryGRPCService queryGRPCService;
 
     @Inject
-    public QueryBasicInterface(RendererFactory rendererFactory,
-                               QueryGRPCService queryGRPCService
-    ) throws IOException
+    @SneakyThrows
+    public QueryBasicInterface(QueryGRPCService queryGRPCService
+    )
     {
-        this.basicRenderer = rendererFactory.renderer("search");
-        this.qdebugRenderer = rendererFactory.renderer("qdebug");
         this.queryGRPCService = queryGRPCService;
     }
 
-    public Object handleBasic(Request request, Response response) {
-        String queryParams = request.queryParams("q");
+    @GET
+    @Path("/search")
+    public Object handleBasic(
+            Context context,
+            @HeaderParam("Accept") String acceptHeader,
+            @QueryParam("q") String queryParams,
+            @QueryParam("count") Integer countParam,
+            @QueryParam("domainCount") Integer domainCountParam,
+            @QueryParam("set") String setParam
+    ) {
         if (queryParams == null) {
-            return basicRenderer.render(new Object());
+            context.setResponseType("text/html");
+            return new MapModelAndView("search.hbs", Map.of());
         }
 
-        int count = request.queryParams("count") == null ? 10 : Integer.parseInt(request.queryParams("count"));
-        int domainCount = request.queryParams("domainCount") == null ? 5 : Integer.parseInt(request.queryParams("domainCount"));
-        String set = request.queryParams("set") == null ? "" : request.queryParams("set");
+        int count = requireNonNullElse(countParam, 10);
+        int domainCount = requireNonNullElse(domainCountParam, 5);
+        String set = requireNonNullElse(setParam, "");
 
         var params = new QueryParams(queryParams, new QueryLimits(
                 domainCount, count, 250, 8192
@@ -55,35 +64,88 @@ public class QueryBasicInterface {
 
         var results = detailedDirectResult.result();
 
-        if (request.headers("Accept").contains("application/json")) {
-            response.type("application/json");
+        if (acceptHeader.contains("application/json")) {
+            context.setResponseType("application/json");
             return gson.toJson(results);
         }
         else {
-            return basicRenderer.render(
+            context.setResponseType("text/html");
+            return new MapModelAndView("search.hbs",
                     Map.of("query", queryParams,
                             "results", results)
             );
         }
     }
 
-    public Object handleAdvanced(Request request, Response response) {
-        String queryString = request.queryParams("q");
+    @GET
+    @Path("/qdebug")
+    public Object handleQdebug(
+            Context context,
+            @QueryParam("q") String queryString,
+            @QueryParam("count") Integer countParam,
+            @QueryParam("domainCount") Integer domainCountParam,
+            @QueryParam("set") String setParam,
+            @QueryParam("domainRankBonus") Double domainRankBonus,
+            @QueryParam("qualityPenalty") Double qualityPenalty,
+            @QueryParam("shortDocumentThreshold") Integer shortDocumentThreshold,
+            @QueryParam("shortDocumentPenalty") Double shortDocumentPenalty,
+            @QueryParam("tcfJaccardWeight") Double tcfJaccardWeight,
+            @QueryParam("tcfOverlapWeight") Double tcfOverlapWeight,
+            @QueryParam("fullParams.k1") Double fullParamsK1,
+            @QueryParam("fullParams.b") Double fullParamsB,
+            @QueryParam("prioParams.k1") Double prioParamsK1,
+            @QueryParam("prioParams.b") Double prioParamsB,
+            @QueryParam("temporalBias") String temporalBias,
+            @QueryParam("temporalBiasWeight") Double temporalBiasWeight,
+            @QueryParam("shortSentenceThreshold") Integer shortSentenceThreshold,
+            @QueryParam("shortSentencePenalty") Double shortSentencePenalty,
+            @QueryParam("bm25FullWeight") Double bm25FullWeight,
+            @QueryParam("bm25NgramWeight") Double bm25NgramWeight,
+            @QueryParam("bm25PrioWeight") Double bm25PrioWeight
+    ) {
         if (queryString == null) {
-            // Show the default query form if no query is given
-            return qdebugRenderer.render(Map.of("rankingParams", ResultRankingParameters.sensibleDefaults())
+            context.setResponseType("text/html");
+            return new MapModelAndView("qdebug.hbs",
+                    Map.of("rankingParams", ResultRankingParameters.sensibleDefaults())
             );
         }
 
-        int count = request.queryParams("count") == null ? 10 : Integer.parseInt(request.queryParams("count"));
-        int domainCount = request.queryParams("domainCount") == null ? 5 : Integer.parseInt(request.queryParams("domainCount"));
-        String set = request.queryParams("set") == null ? "" : request.queryParams("set");
+        int count = requireNonNullElse(countParam, 10);
+        int domainCount = requireNonNullElse(domainCountParam, 5);
+        String set = requireNonNullElse(setParam, "");
 
         var queryParams = new QueryParams(queryString, new QueryLimits(
                 domainCount, count, 250, 8192
         ), set);
 
-        var rankingParams = rankingParamsFromRequest(request);
+        var sensibleDefaults = ResultRankingParameters.sensibleDefaults();
+
+        var rankingParams = ResultRankingParameters.builder()
+                .domainRankBonus(Objects.requireNonNullElse(domainRankBonus, sensibleDefaults.domainRankBonus))
+                .qualityPenalty(Objects.requireNonNullElse(qualityPenalty, sensibleDefaults.qualityPenalty))
+                .shortDocumentThreshold(Objects.requireNonNullElse(shortDocumentThreshold, sensibleDefaults.shortDocumentThreshold))
+                .shortDocumentPenalty(Objects.requireNonNullElse(shortDocumentPenalty, sensibleDefaults.shortDocumentPenalty))
+                .tcfJaccardWeight(Objects.requireNonNullElse(tcfJaccardWeight, sensibleDefaults.tcfJaccardWeight))
+                .tcfOverlapWeight(Objects.requireNonNullElse(tcfOverlapWeight, sensibleDefaults.tcfOverlapWeight))
+                .fullParams(new Bm25Parameters(
+                        Objects.requireNonNullElse(fullParamsK1, sensibleDefaults.fullParams.k()),
+                        Objects.requireNonNullElse(fullParamsB, sensibleDefaults.fullParams.b())
+                ))
+                .prioParams(
+                        new Bm25Parameters(
+                                Objects.requireNonNullElse(prioParamsK1, sensibleDefaults.prioParams.k()),
+                                Objects.requireNonNullElse(prioParamsB, sensibleDefaults.prioParams.b())
+                        )
+                )
+                .temporalBias(ResultRankingParameters.TemporalBias.valueOf(Objects.requireNonNullElse(temporalBias, sensibleDefaults.temporalBias.toString())))
+                .temporalBiasWeight(Objects.requireNonNullElse(temporalBiasWeight, sensibleDefaults.temporalBiasWeight))
+                .shortSentenceThreshold(Objects.requireNonNullElse(shortSentenceThreshold, sensibleDefaults.shortSentenceThreshold))
+                .shortSentencePenalty(Objects.requireNonNullElse(shortSentencePenalty, sensibleDefaults.shortSentencePenalty))
+                .bm25FullWeight(Objects.requireNonNullElse(bm25FullWeight, sensibleDefaults.bm25FullWeight))
+                .bm25NgramWeight(Objects.requireNonNullElse(bm25NgramWeight, sensibleDefaults.bm25NgramWeight))
+                .bm25PrioWeight(Objects.requireNonNullElse(bm25PrioWeight, sensibleDefaults.bm25PrioWeight))
+                .exportDebugData(true)
+                .build();
 
         var detailedDirectResult = queryGRPCService.executeDirect(queryString,
                 queryParams,
@@ -92,52 +154,13 @@ public class QueryBasicInterface {
 
         var results = detailedDirectResult.result();
 
-        return qdebugRenderer.render(
-                Map.of("query", queryString,
+        return new MapModelAndView("qdebug.hbs",
+                Map.of(
+                        "query", queryString,
                         "specs", detailedDirectResult.processedQuery().specs,
-                        "rankingParams", rankingParams, // we can't grab this from the specs as it will null the object if it's the default values
-                        "results", results)
+                        "rankingParams", rankingParams,
+                        "results", results
+                )
         );
-    }
-
-    private ResultRankingParameters rankingParamsFromRequest(Request request) {
-        var sensibleDefaults = ResultRankingParameters.sensibleDefaults();
-
-        return ResultRankingParameters.builder()
-                .domainRankBonus(doubleFromRequest(request, "domainRankBonus", sensibleDefaults.domainRankBonus))
-                .qualityPenalty(doubleFromRequest(request, "qualityPenalty", sensibleDefaults.qualityPenalty))
-                .shortDocumentThreshold(intFromRequest(request, "shortDocumentThreshold", sensibleDefaults.shortDocumentThreshold))
-                .shortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.shortDocumentPenalty))
-                .tcfJaccardWeight(doubleFromRequest(request, "tcfJaccardWeight", sensibleDefaults.tcfJaccardWeight))
-                .tcfOverlapWeight(doubleFromRequest(request, "tcfOverlapWeight", sensibleDefaults.tcfOverlapWeight))
-                .fullParams(new Bm25Parameters(
-                        doubleFromRequest(request, "fullParams.k1", sensibleDefaults.fullParams.k()),
-                        doubleFromRequest(request, "fullParams.b", sensibleDefaults.fullParams.b())
-                ))
-                .prioParams(new Bm25Parameters(
-                        doubleFromRequest(request, "prioParams.k1", sensibleDefaults.prioParams.k()),
-                        doubleFromRequest(request, "prioParams.b", sensibleDefaults.prioParams.b())
-                ))
-                .temporalBias(ResultRankingParameters.TemporalBias.valueOf(stringFromRequest(request, "temporalBias", sensibleDefaults.temporalBias.toString())))
-                .temporalBiasWeight(doubleFromRequest(request, "temporalBiasWeight", sensibleDefaults.temporalBiasWeight))
-                .shortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.shortSentenceThreshold))
-                .shortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.shortSentencePenalty))
-                .bm25FullWeight(doubleFromRequest(request, "bm25FullWeight", sensibleDefaults.bm25FullWeight))
-                .bm25NgramWeight(doubleFromRequest(request, "bm25NgramWeight", sensibleDefaults.bm25NgramWeight))
-                .bm25PrioWeight(doubleFromRequest(request, "bm25PrioWeight", sensibleDefaults.bm25PrioWeight))
-                .exportDebugData(true)
-                .build();
-    }
-
-    double doubleFromRequest(Request request, String param, double defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Double.parseDouble(request.queryParams(param));
-    }
-
-    int intFromRequest(Request request, String param, int defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Integer.parseInt(request.queryParams(param));
-    }
-
-    String stringFromRequest(Request request, String param, String defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : request.queryParams(param);
     }
 }

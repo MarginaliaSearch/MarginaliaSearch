@@ -40,10 +40,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
 
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
-    implementation libs.bundles.jetty
+    implementation libs.bundles.jooby
     implementation libs.gson
     implementation libs.prometheus
     implementation libs.notnull
@@ -59,7 +56,7 @@ dependencies {
         }
     }
 
-
+    annotationProcessor "io.jooby:jooby-apt:3.2.7"
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

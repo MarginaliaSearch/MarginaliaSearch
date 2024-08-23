@@ -1,6 +1,6 @@
 package nu.marginalia.crawling.io;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,7 +71,7 @@ public class CrawlerOutputFile {
      */
     private static String padId(String id) {
         if (id.length() < 4) {
-            id = Strings.repeat("0", 4 - id.length()) + id;
+            id = StringUtils.repeat("0", 4 - id.length()) + id;
         }
 
         return id;

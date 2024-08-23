@@ -16,9 +16,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Testcontainers
 @Execution(ExecutionMode.SAME_THREAD)
@@ -54,7 +55,7 @@ class DomainListRefreshServiceTest {
     void downloadDomainsList() throws SQLException {
         DomainTypes domainTypes = new DomainTypes(dataSource);
         DomainListRefreshService service = new DomainListRefreshService(dataSource,
-                domainTypes, new ServiceConfiguration(null, 1, null, null, -1, null));
+                domainTypes, new ServiceConfiguration(new String[0], null, 1, null, null, -1, null));
 
         domainTypes.updateUrlForSelection(DomainTypes.Type.CRAWL, "https://downloads.marginalia.nu/domain-list-test.txt");
         service.synchronizeDomainList();

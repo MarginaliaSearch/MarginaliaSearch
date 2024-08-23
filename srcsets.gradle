@@ -11,8 +11,10 @@ dependencies {
     implementation libs.lombok
     testImplementation libs.lombok
     annotationProcessor libs.lombok
-
     lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
+
+    implementation "io.jooby:jooby-apt:3.2.7"
+    annotationProcessor "io.jooby:jooby-apt:3.2.7"
 }
 
 test {

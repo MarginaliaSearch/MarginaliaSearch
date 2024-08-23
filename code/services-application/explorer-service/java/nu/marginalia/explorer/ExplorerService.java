@@ -5,7 +5,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.SparkService;
+import nu.marginalia.service.server.StaticResources;
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -14,7 +16,7 @@ import spark.Spark;
 import java.sql.SQLException;
 import java.util.*;
 
-public class ExplorerService extends Service {
+public class ExplorerService extends SparkService {
 
     private final MustacheRenderer<Object> renderer;
     private final HikariDataSource dataSource;

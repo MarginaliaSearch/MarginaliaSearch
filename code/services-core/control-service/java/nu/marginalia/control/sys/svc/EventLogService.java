@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.sys.model.EventLogEntry;
 import nu.marginalia.control.sys.model.EventLogServiceFilter;
 import nu.marginalia.control.sys.model.EventLogTypeFilter;
-import org.apache.logging.log4j.util.Strings;
 import spark.Request;
 import spark.Response;
 
@@ -29,9 +28,9 @@ public class EventLogService {
         String typeParam = request.queryParams("type");
         String afterParam = request.queryParams("after");
 
-        if (Strings.isBlank(serviceParam)) serviceParam = null;
-        if (Strings.isBlank(typeParam)) typeParam = null;
-        if (Strings.isBlank(afterParam)) afterParam = null;
+        if (serviceParam != null && serviceParam.isBlank()) serviceParam = null;
+        if (typeParam != null && typeParam.isBlank()) typeParam = null;
+        if (afterParam != null && afterParam.isBlank()) afterParam = null;
 
         long afterId = Optional.ofNullable(afterParam).map(Long::parseLong).orElse(Long.MAX_VALUE);
 

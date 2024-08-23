@@ -30,7 +30,7 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import nu.marginalia.worklog.BatchingWorkLog;
 import nu.marginalia.worklog.BatchingWorkLogImpl;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,7 +212,7 @@ public class ConverterMain extends ProcessMainClass {
             if (sp >= 0 && sp + 1< fileName.length())
                 fileName = fileName.substring(sp + 1);
             if (fileName.length() < 4)
-                fileName = Strings.repeat("0", 4 - fileName.length()) + fileName;
+                fileName = StringUtils.repeat("0", 4 - fileName.length()) + fileName;
 
             String sp1 = fileName.substring(0, 2);
             String sp2 = fileName.substring(2, 4);

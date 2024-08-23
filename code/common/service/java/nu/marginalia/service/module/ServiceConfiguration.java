@@ -14,7 +14,8 @@ import java.util.UUID;
  * @param metricsPort - prometheus metrics server port
  * @param instanceUuid - unique identifier for this instance of the service
  */
-public record ServiceConfiguration(ServiceId serviceId,
+public record ServiceConfiguration(String[] cmdArgs,
+                                   ServiceId serviceId,
                                    int node,
                                    String bindAddress,
                                    String externalAddress,

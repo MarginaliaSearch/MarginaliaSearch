@@ -2,16 +2,18 @@ package nu.marginalia.control;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import nu.marginalia.service.ServiceMonitors;
 import nu.marginalia.control.actor.ControlActorService;
 import nu.marginalia.control.app.svc.*;
-import nu.marginalia.control.node.svc.ControlNodeActionsService;
 import nu.marginalia.control.node.svc.ControlFileStorageService;
+import nu.marginalia.control.node.svc.ControlNodeActionsService;
 import nu.marginalia.control.node.svc.ControlNodeService;
 import nu.marginalia.control.sys.svc.*;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.screenshot.ScreenshotService;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.ServiceMonitors;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.SparkService;
+import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -19,9 +21,9 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
 
-public class ControlService extends Service {
+public class ControlService extends SparkService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();

@@ -11,16 +11,19 @@ import java.util.UUID;
 
 public class ServiceConfigurationModule extends AbstractModule {
     private final ServiceId id;
+    private final String[] cmdArgs;
     private static final Logger logger = LoggerFactory.getLogger(ServiceConfigurationModule.class);
 
-    public ServiceConfigurationModule(ServiceId id) {
+    public ServiceConfigurationModule(ServiceId id, String[] cmdArgs) {
         this.id = id;
+        this.cmdArgs = cmdArgs;
     }
 
     public void configure() {
         int node = getNode();
 
-        var configObject = new ServiceConfiguration(id,
+        var configObject = new ServiceConfiguration(cmdArgs,
+                id,
                 node,
                 getBindAddress(),
                 getExternalHost(),

@@ -144,8 +144,9 @@ dependencyResolutionManagement {
             library('prometheus-server', 'io.prometheus', 'simpleclient_httpserver').version('0.16.0')
             library('prometheus-hotspot', 'io.prometheus', 'simpleclient_hotspot').version('0.16.0')
 
-            library('slf4j.api', 'org.slf4j', 'slf4j-api').version('1.7.36')
+            library('slf4j.api', 'org.slf4j', 'slf4j-api').version('2.0.13')
             library('slf4j.jdk14', 'org.slf4j', 'slf4j-jdk14').version('2.0.3')
+            library('slf4j.reload4j', 'org.slf4j', 'slf4j-reload4j').version('2.0.16')
 
             library('log4j.api', 'org.apache.logging.log4j', 'log4j-api').version('2.17.2')
             library('log4j.core', 'org.apache.logging.log4j', 'log4j-core').version('2.17.2')
@@ -211,6 +212,9 @@ dependencyResolutionManagement {
             library('parquet-column', 'org.apache.parquet','parquet-column').version('1.14.0')
             library('parquet-hadoop', 'org.apache.parquet','parquet-hadoop').version('1.14.0')
 
+            library('jooby-netty','io.jooby','jooby-netty').version('3.2.7')
+            library('jooby-handlebars','io.jooby','jooby-handlebars').version('3.2.7')
+
             library('curator-framework', 'org.apache.curator','curator-framework').version('5.6.0')
             library('curator-x-discovery', 'org.apache.curator','curator-x-discovery').version('5.6.0')
 
@@ -219,8 +223,10 @@ dependencyResolutionManagement {
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
 
             bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
+            bundle('jooby', ['jooby-netty', 'jooby-handlebars'])
 
-            bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
+            bundle('slf4j', ['slf4j.jdk14'])
+
             bundle('slf4j.test', ['slf4j.jdk14'])
             bundle('prometheus', ['prometheus', 'prometheus-servlet', 'prometheus-server', 'prometheus-hotspot'])
             bundle('mariadb', ['mariadb-client', 'hikaricp'])

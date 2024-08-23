@@ -16,7 +16,6 @@ import nu.marginalia.search.model.SearchFilters;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -122,7 +121,7 @@ public class SearchOperator {
             queryResponse = queryClient.search(queryParams);
             var queryResults = searchQueryService.getResultsFromQuery(queryResponse);
 
-            logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
+            logger.info(queryMarker, "Human terms: {}", String.join(", ", queryResponse.searchTermsHuman()));
             logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
 
             evalResult = getFutureOrDefault(eval, "");
