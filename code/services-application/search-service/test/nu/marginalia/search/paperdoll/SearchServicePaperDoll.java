@@ -215,7 +215,7 @@ public class SearchServicePaperDoll extends AbstractModule {
         }
 
         var injector = Guice.createInjector(
-                new ServiceConfigurationModule(ServiceId.Search),
+                new ServiceConfigurationModule(ServiceId.Search, new String[] {}),
                 new SearchModule(),
                 this);
 

@@ -17,7 +17,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -119,7 +121,7 @@ public class GrpcServerTest {
         var mockRegistry = Mockito.mock(ServiceRegistryIf.class);
         when(mockRegistry.requestPort(any(), any())).thenReturn(port);
 
-        var config = new ServiceConfiguration(ServiceId.Api, 1,
+        var config = new ServiceConfiguration(new String[] {}, ServiceId.Api, 1,
                 "127.0.0.1", "127.0.0.1", -1, uuid);
 
         var server = new GrpcServer(config, mockRegistry, ServicePartition.any(), List.of(services));

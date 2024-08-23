@@ -9,7 +9,8 @@ import nu.marginalia.functions.math.MathGrpcService;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.SparkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -18,7 +19,7 @@ import spark.Spark;
 
 import java.util.List;
 
-public class AssistantService extends Service {
+public class AssistantService extends SparkService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
     private final Suggestions suggestions;

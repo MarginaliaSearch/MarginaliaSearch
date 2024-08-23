@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.execution.*;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.mq.MqRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import spark.Spark;
 import java.util.List;
 
 // Weird name for this one to not have clashes with java.util.concurrent.ExecutorService
-public class ExecutorSvc extends Service {
+public class ExecutorSvc extends SparkService {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutorSvc.class);
     private final ExecutionInit executionInit;

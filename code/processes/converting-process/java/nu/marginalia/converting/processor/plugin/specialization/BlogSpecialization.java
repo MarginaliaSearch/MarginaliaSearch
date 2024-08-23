@@ -7,7 +7,7 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.summary.SummaryExtractor;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -144,7 +144,7 @@ public class BlogSpecialization extends DefaultSpecialization {
         int lookForTags = -1;
 
         public Set<String> getTags() {
-            Set<String> tagsClean = tags.stream().map(String::toLowerCase).map(this::cleanTag).filter(Strings::isNotBlank).collect(Collectors.toSet());
+            Set<String> tagsClean = tags.stream().map(String::toLowerCase).map(this::cleanTag).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
 
             // If there are more than 5 tags, it's probably a global tag listing
             // and not a post-specific tag listing
@@ -178,7 +178,7 @@ public class BlogSpecialization extends DefaultSpecialization {
             }
 
 
-            return Arrays.stream(parts).filter(Strings::isNotBlank).collect(Collectors.joining("_"));
+            return Arrays.stream(parts).filter(StringUtils::isNotBlank).collect(Collectors.joining("_"));
         }
 
         @Override

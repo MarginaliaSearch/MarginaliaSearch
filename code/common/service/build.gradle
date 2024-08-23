@@ -16,6 +16,7 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:config')
 
+    implementation libs.bundles.jooby
     implementation dependencies.create(libs.spark.get()) {
         exclude group: 'org.eclipse.jetty'
     }
@@ -34,6 +35,7 @@ dependencies {
     }
 
     implementation libs.guava
+
 
     implementation libs.bundles.prometheus
     implementation libs.bundles.slf4j

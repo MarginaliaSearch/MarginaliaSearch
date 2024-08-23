@@ -15,9 +15,7 @@ public class ConvertingIntegrationTestModule  extends AbstractModule {
         bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(250);
         bind(Integer.class).annotatedWith(Names.named("max-title-length")).toInstance(128);
         bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);
-        bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
-                null, 1, "localhost", "localhost", 0, null
-        ));
+        bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(new String[0], null, 1, "localhost", "localhost", 0, null));
         bind(ProcessConfiguration.class).toInstance(new ProcessConfiguration(
                 "converting-process", 1, null
         ));

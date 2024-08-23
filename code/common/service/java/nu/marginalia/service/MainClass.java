@@ -22,6 +22,8 @@ public abstract class MainClass {
     public MainClass() {
     }
 
+    protected void start() {}
+
     protected static void init(ServiceId id, String... args) {
         System.setProperty("log4j2.isThreadContextMapInheritable", "true");
         System.setProperty("isThreadContextMapInheritable", "true");

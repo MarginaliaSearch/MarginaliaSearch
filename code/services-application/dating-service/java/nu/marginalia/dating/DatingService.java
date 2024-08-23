@@ -9,7 +9,8 @@ import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.SparkService;
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -18,7 +19,7 @@ import spark.Spark;
 import java.util.Map;
 import java.util.Optional;
 
-public class DatingService extends Service {
+public class DatingService extends SparkService {
     private final DomainBlacklist blacklist;
     private final DbBrowseDomainsSimilarCosine browseSimilarCosine;
     private final DbBrowseDomainsRandom browseRandom;

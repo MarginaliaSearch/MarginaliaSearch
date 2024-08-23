@@ -2,21 +2,23 @@ package nu.marginalia.index;
 
 import com.google.inject.AbstractModule;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.util.TestUtil;
-import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBase;
-import nu.marginalia.storage.model.FileStorageBaseType;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.index.domainrankings.DomainRankings;
-import nu.marginalia.service.control.*;
 import nu.marginalia.service.ServiceId;
+import nu.marginalia.service.control.FakeServiceHeartbeat;
+import nu.marginalia.service.control.ServiceEventLog;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBase;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -79,7 +81,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
                     IndexLocations.getIndexConstructionArea(fileStorageServiceMock)
             ));
 
-            bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
+            bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(new String[0],
                     ServiceId.Index,
                     0,
                     "127.0.0.1",

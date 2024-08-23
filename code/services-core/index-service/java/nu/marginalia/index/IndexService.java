@@ -3,16 +3,18 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.linkgraph.PartitionLinkGraphService;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.linkgraph.DomainLinks;
-import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.api.IndexMqEndpoints;
+import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
+import nu.marginalia.linkgraph.DomainLinks;
+import nu.marginalia.linkgraph.PartitionLinkGraphService;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.discovery.property.ServicePartition;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.Initialization;
+import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.mq.MqRequest;
+import nu.marginalia.storage.FileStorageService;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,7 @@ import java.util.List;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
 
-public class IndexService extends Service {
+public class IndexService extends SparkService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @NotNull
