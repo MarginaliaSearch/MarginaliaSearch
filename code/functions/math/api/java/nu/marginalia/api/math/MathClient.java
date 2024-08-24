@@ -2,6 +2,11 @@ package nu.marginalia.api.math;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.api.math.MathProtobufCodec.DictionaryLookup;
+import nu.marginalia.api.math.MathProtobufCodec.EvalMath;
+import nu.marginalia.api.math.MathProtobufCodec.SpellCheck;
+import nu.marginalia.api.math.MathProtobufCodec.UnitConversion;
+import nu.marginalia.api.math.model.DictionaryResponse;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -9,14 +14,11 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
-
-import nu.marginalia.api.math.model.*;
-import nu.marginalia.api.math.MathProtobufCodec.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 @Singleton
@@ -49,24 +51,14 @@ public class MathClient {
                 .thenApply(SpellCheck::convertResponse);
     }
 
-    public Map<String, List<String>> spellCheck(List<String> words, Duration timeout) throws InterruptedException {
+    // This looks a bit different because we need to spell check multiple words, and we want to do it in parallel
+    public Future<Map<String, List<String>>> spellCheck(List<String> words) throws InterruptedException {
         List<RpcSpellCheckRequest> requests = words.stream().map(SpellCheck::createRequest).toList();
 
-        var future = channelPool.call(MathApiGrpc.MathApiBlockingStub::spellCheck)
+        return channelPool.call(MathApiGrpc.MathApiBlockingStub::spellCheck)
                 .async(executor)
-                .runFor(requests);
-
-        try {
-            var results = future.get();
-            Map<String, List<String>> map = new HashMap<>();
-            for (int i = 0; i < words.size(); i++) {
-                map.put(words.get(i), SpellCheck.convertResponse(results.get(i)));
-            }
-            return map;
-        }
-        catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+                .runFor(requests)
+                .thenApply(rsp -> SpellCheck.convertResponses(words, rsp));
     }
 
     public Future<String> unitConversion(String value, String from, String to) {

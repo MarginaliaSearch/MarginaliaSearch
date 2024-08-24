@@ -21,7 +21,6 @@ public class SearchQueryParamFactory {
         userParams.js().addTacitTerms(prototype);
         userParams.adtech().addTacitTerms(prototype);
 
-
         return new QueryParams(
                 userParams.query(),
                 null,
@@ -81,7 +80,7 @@ public class SearchQueryParamFactory {
     }
 
     public QueryParams forLinkSearch(String sourceDomain, String destDomain) {
-        return new QueryParams(STR."site:\{sourceDomain} links:\{destDomain}",
+        return new QueryParams("site:" + sourceDomain + " links:" + destDomain,
                 null,
                 List.of(),
                 List.of(),

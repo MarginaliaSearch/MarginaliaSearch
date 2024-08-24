@@ -3,7 +3,9 @@ package nu.marginalia.api.math;
 import nu.marginalia.api.math.model.DictionaryEntry;
 import nu.marginalia.api.math.model.DictionaryResponse;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MathProtobufCodec {
 
@@ -34,6 +36,15 @@ public class MathProtobufCodec {
 
         public static List<String> convertResponse(RpcSpellCheckResponse rsp) {
             return rsp.getSuggestionsList();
+        }
+
+
+        public static Map<String, List<String>> convertResponses(List<String> words, List<RpcSpellCheckResponse> responses) {
+            var map = new HashMap<String, List<String>>();
+            for (int i = 0; i < words.size(); i++) {
+                map.put(words.get(i), responses.get(i).getSuggestionsList());
+            }
+            return map;
         }
     }
 

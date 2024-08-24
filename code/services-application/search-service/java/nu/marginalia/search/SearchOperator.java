@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -99,25 +100,38 @@ public class SearchOperator {
     }
 
     public DecoratedSearchResults doSearch(SearchParameters userParams) {
+        // The full user-facing search query does additional work to try to evaluate the query
+        // e.g. as a unit conversion query. This is done in parallel with the regular search.
 
         Future<String> eval = searchUnitConversionService.tryEval(userParams.query());
+
+        // Perform the regular search
 
         var queryParams = paramFactory.forRegularSearch(userParams);
         QueryResponse queryResponse = queryClient.search(queryParams);
         var queryResults = getResultsFromQuery(queryResponse);
 
-        logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
-        logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
-
-        String evalResult = getFutureOrDefault(eval, "");
-
+        // Cluster the results based on the query response
         List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
                 .selectStrategy(queryResponse)
                 .clusterResults(queryResults, 25);
 
+        // Log the query and results
+
+        logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
+        logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
+
+        // Get the evaluation result and other data to return to the user
+        String evalResult = getFutureOrDefault(eval, "");
+
         String focusDomain = queryResponse.domain();
+        int focusDomainId = focusDomain == null
+                ? -1
+                : domainQueries.tryGetDomainId(new EdgeDomain(focusDomain)).orElse(-1);
+
         List<String> problems = getProblems(evalResult, queryResults, queryResponse);
 
+        // Return the results to the user
         return DecoratedSearchResults.builder()
                 .params(userParams)
                 .problems(problems)
@@ -125,7 +139,7 @@ public class SearchOperator {
                 .results(clusteredResults)
                 .filters(new SearchFilters(websiteUrl, userParams))
                 .focusDomain(focusDomain)
-                .focusDomainId(getDomainId(focusDomain))
+                .focusDomainId(focusDomainId)
                 .build();
     }
 
@@ -163,68 +177,56 @@ public class SearchOperator {
         );
     }
 
-
-    private <T> T getFutureOrDefault(@Nullable Future<T> fut, T defaultValue) {
-        if (fut == null || fut.isCancelled())  {
-            return defaultValue;
-        }
-        try {
-            return fut.get(50, TimeUnit.MILLISECONDS);
-        }
-        catch (Exception ex) {
-            logger.warn("Error fetching eval result", ex);
-            return defaultValue;
-        }
-    }
-
-    private int getDomainId(String domain) {
-        if (domain == null) {
-            return -1;
-        }
-
-        return domainQueries.tryGetDomainId(new EdgeDomain(domain)).orElse(-1);
-    }
-
+    @SneakyThrows
     private List<String> getProblems(String evalResult, List<UrlDetails> queryResults, QueryResponse response) {
+
+        // We don't debug the query if it's a site search
+        if (response.domain() == null)
+            return List.of();
+
         final List<String> problems = new ArrayList<>(response.problems());
-        boolean siteSearch = response.domain() != null;
 
-        if (!siteSearch) {
-            if (queryResults.size() <= 5 && null == evalResult) {
-                spellCheckTerms(response);
-            }
+        if (queryResults.size() <= 5 && null == evalResult) {
+            problems.add("Try rephrasing the query, changing the word order or using synonyms to get different results.");
 
-            if (queryResults.size() <= 5) {
-                problems.add("Try rephrasing the query, changing the word order or using synonyms to get different results. <a href=\"https://memex.marginalia.nu/projects/edge/search-tips.gmi\">Tips</a>.");
-            }
+            // Try to spell check the search terms
+            var suggestions = getFutureOrDefault(
+                    mathClient.spellCheck(response.searchTermsHuman()),
+                    Map.of()
+            );
 
-            Set<String> representativeKeywords = response.getAllKeywords();
-            if (representativeKeywords.size()>1 && (representativeKeywords.contains("definition") || representativeKeywords.contains("define") || representativeKeywords.contains("meaning")))
-            {
-                problems.add("Tip: Try using a query that looks like <tt>define:word</tt> if you want a dictionary definition");
-            }
+            suggestions.forEach((term, suggestion) -> {
+                if (suggestion.size() > 1) {
+                    String suggestionsStr = "\"%s\" could be spelled %s".formatted(term, suggestion.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")));
+                    problems.add(suggestionsStr);
+                }
+            });
+        }
+
+        Set<String> representativeKeywords = response.getAllKeywords();
+        if (representativeKeywords.size() > 1 && (representativeKeywords.contains("definition") || representativeKeywords.contains("define") || representativeKeywords.contains("meaning")))
+        {
+            problems.add("Tip: Try using a query that looks like <tt>define:word</tt> if you want a dictionary definition");
         }
 
         return problems;
     }
 
-
-    @SneakyThrows
-    private void spellCheckTerms(QueryResponse response) {
-        var suggestions = mathClient
-                .spellCheck(response.searchTermsHuman(), Duration.ofMillis(20));
-
-        suggestions.entrySet()
-                .stream()
-                .filter(e -> e.getValue().size() > 1)
-                .map(e -> searchTermToProblemDescription(e.getKey(), e.getValue()))
-                .forEach(response.problems()::add);
+    private <T> T getFutureOrDefault(@Nullable Future<T> fut, T defaultValue) {
+        return getFutureOrDefault(fut, Duration.ofMillis(50), defaultValue);
     }
 
-    private String searchTermToProblemDescription(String term, List<String> suggestions) {
-        String suggestionsStr = suggestions.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", "));
-
-        return "\"%s\" could be spelled %s".formatted(term, suggestionsStr);
+    private <T> T getFutureOrDefault(@Nullable Future<T> fut, Duration timeout, T defaultValue) {
+        if (fut == null || fut.isCancelled())  {
+            return defaultValue;
+        }
+        try {
+            return fut.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        }
+        catch (Exception ex) {
+            logger.warn("Error fetching eval result", ex);
+            return defaultValue;
+        }
     }
 
 }
