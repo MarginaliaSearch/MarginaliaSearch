@@ -54,7 +54,8 @@ public class SequenceOperations {
     public static IntList findIntersections(IntList... positions) {
         return findIntersections(new int[positions.length], positions);
     }
-    public static IntList findIntersections(int[] iterOffsets, IntList... positions) {
+
+    public static IntList findIntersections(int[] offsets, IntList... positions) {
 
         if (positions.length < 1)
             return IntList.of();
@@ -65,7 +66,7 @@ public class SequenceOperations {
 
         for (int i = 0; i < positions.length; i++) {
             if (indexes[i] < positions[i].size())
-                values[i] = positions[i].getInt(indexes[i]++) + iterOffsets[i];
+                values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
             else
                 return IntList.of();
         }
@@ -84,8 +85,8 @@ public class SequenceOperations {
                 ret.add(max);
                 successes = 1;
 
-                if (indexes[i]++ < positions[i].size()) {
-                    values[i] = positions[i].getInt(indexes[i]++) + iterOffsets[i];
+                if (indexes[i] < positions[i].size()) {
+                    values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
                 } else {
                     break;
                 }
@@ -97,8 +98,8 @@ public class SequenceOperations {
                 // Discard values until we reach the maximum value seen so far,
                 // or until the end of the sequence is reached
                 while (values[i] < max) {
-                    if (indexes[i]++ < positions[i].size()) {
-                        values[i] = positions[i].getInt(indexes[i]++) + iterOffsets[i];
+                    if (indexes[i] < positions[i].size()) {
+                        values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
                     } else {
                         break outer;
                     }
