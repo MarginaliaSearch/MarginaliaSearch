@@ -7,10 +7,10 @@ import nu.marginalia.sequence.CodedSequence;
 public class DocumentSpan {
 
     /** A list of the interlaced start and end positions of each span in the document of this type */
-    private final CodedSequence startsEnds;
+    private final IntList startsEnds;
 
     public DocumentSpan(CodedSequence startsEnds) {
-        this.startsEnds = startsEnds;
+        this.startsEnds = startsEnds.values();
     }
 
     public DocumentSpan() {
@@ -160,6 +160,6 @@ public class DocumentSpan {
             return 0;
         }
 
-        return startsEnds.valueCount() / 2;
+        return startsEnds.size() / 2;
     }
 }
