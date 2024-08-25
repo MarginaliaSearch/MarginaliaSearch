@@ -414,7 +414,7 @@ public class IndexResultScoreCalculator {
         var fullGroup = constraints.getFullGroup();
         for (var tag : HtmlTag.includedTags) {
             if (fullGroup.test(spans.getSpan(tag), positions)) {
-                verbatimMatchScore += verbatimMatches.getWeight(tag) * fullGroup.size;
+                verbatimMatchScore += verbatimMatches.getWeightFull(tag) * fullGroup.size;
                 verbatimMatches.set(tag);
             }
         }
@@ -426,29 +426,26 @@ public class IndexResultScoreCalculator {
 
             for (var tag : HtmlTag.includedTags) {
                 if (optionalGroup.test(spans.getSpan(tag), positions)) {
-                    verbatimMatchScore += verbatimMatches.getWeight(tag) * sizeScalingFactor * groupSize;
+                    verbatimMatchScore += verbatimMatches.getWeightPartial(tag) * sizeScalingFactor * groupSize;
                 }
             }
         }
 
-        if (constraints.numOptional() > 0) {
-            verbatimMatchScore += (float) Math.pow(constraints.countOptional(positions) / (double) constraints.numOptional(), 2);
-        }
-
         return verbatimMatchScore;
-
     }
 
     private static class VerbatimMatches {
         private final BitSet matches;
-        private final float[] weights;
+        private final float[] weights_full;
+        private final float[] weights_partial;
 
         public VerbatimMatches() {
             matches = new BitSet(HtmlTag.includedTags.length);
-            weights = new float[HtmlTag.includedTags.length];
+            weights_full = new float[HtmlTag.includedTags.length];
+            weights_partial = new float[HtmlTag.includedTags.length];
 
-            for (int i = 0; i < weights.length; i++) {
-                weights[i] = switch(HtmlTag.includedTags[i]) {
+            for (int i = 0; i < weights_full.length; i++) {
+                weights_full[i] = switch(HtmlTag.includedTags[i]) {
                     case TITLE -> 4.0f;
                     case HEADING -> 1.5f;
                     case ANCHOR -> 0.2f;
@@ -456,6 +453,19 @@ public class IndexResultScoreCalculator {
                     case CODE -> 0.25f;
                     case EXTERNAL_LINKTEXT -> 1.0f;
                     case BODY -> 1.0f;
+                    default -> 0.0f;
+                };
+            }
+
+            for (int i = 0; i < weights_full.length; i++) {
+                weights_partial[i] = switch(HtmlTag.includedTags[i]) {
+                    case TITLE -> 1.5f;
+                    case HEADING -> 1.f;
+                    case ANCHOR -> 0.2f;
+                    case NAV -> 0.1f;
+                    case CODE -> 0.25f;
+                    case EXTERNAL_LINKTEXT -> 1.0f;
+                    case BODY -> 0.25f;
                     default -> 0.0f;
                 };
             }
@@ -471,11 +481,14 @@ public class IndexResultScoreCalculator {
             matches.set(tag.ordinal());
         }
 
-        public float getWeight(HtmlTag tag) {
+        public float getWeightFull(HtmlTag tag) {
             assert !tag.exclude;
-            return weights[tag.ordinal()];
+            return weights_full[tag.ordinal()];
         }
-
+        public float getWeightPartial(HtmlTag tag) {
+            assert !tag.exclude;
+            return weights_partial[tag.ordinal()];
+        }
 
     }
 
