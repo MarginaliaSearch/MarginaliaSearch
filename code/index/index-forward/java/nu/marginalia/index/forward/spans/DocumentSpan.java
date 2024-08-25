@@ -18,7 +18,7 @@ public class DocumentSpan {
     }
 
     public boolean intersects(IntIterator positionsIter) {
-        if (null == startsEnds) {
+        if (null == startsEnds || !positionsIter.hasNext()) {
             return false;
         }
 
@@ -26,7 +26,7 @@ public class DocumentSpan {
         int start = -1;
         int end = -1;
 
-        while (iter.hasNext()) {
+        while (iter.hasNext() && positionsIter.hasNext()) {
             if (start < 0) {
                 start = iter.nextInt();
                 end = iter.nextInt();
