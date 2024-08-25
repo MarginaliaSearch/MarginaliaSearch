@@ -301,7 +301,7 @@ public class IndexResultScoreCalculator {
                 + temporalBias
                 + flagsPenalty;
 
-        double score_avg_dist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
+        double score_avg_dist = rankingParams.tcfAvgDist * calculateAvgMinDistance(positionsQuery, ctx);
         double score_firstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
 
         double score_bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
@@ -581,13 +581,15 @@ public class IndexResultScoreCalculator {
                     continue;
 
                 int distance = SequenceOperations.minDistance(posi.iterator(), posj.iterator());
-                sum += distance;
-                cnt++;
+                if (distance > 0) {
+                    sum += (1.0 / distance);
+                    cnt++;
+                }
             }
         }
 
         if (cnt > 0 && sum > 0) {
-            return sum / cnt;
+            return cnt / sum;
         } else {
             return 1000.;
         }
