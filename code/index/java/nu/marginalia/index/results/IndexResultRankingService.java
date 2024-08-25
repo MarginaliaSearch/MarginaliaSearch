@@ -311,7 +311,11 @@ public class IndexResultRankingService {
             }
         }
 
-        assert constraintsFull.size() == 1 : "Exactly one full constraint group is required";
+        if (constraintsFull.isEmpty()) {
+            logger.warn("No full constraints in query, adding empty group");
+            constraintsFull.add(new PhraseConstraintGroupList.PhraseConstraintGroup(List.of(), idsAll));
+        }
+
 
         return new QuerySearchTerms(termToId,
                 idsAll,

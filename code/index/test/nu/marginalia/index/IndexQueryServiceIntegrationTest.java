@@ -578,7 +578,7 @@ public class IndexQueryServiceIntegrationTest {
                         "HTML5",
                         0,
                         null,
-                        0,
+                        key.hashCode(),
                         5
                 ));
             }

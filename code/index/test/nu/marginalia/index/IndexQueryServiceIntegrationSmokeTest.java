@@ -4,6 +4,8 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
@@ -123,15 +125,19 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
-                        .query(new SearchQuery(
-                                "2 3 5",
-                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
-                                Collections.emptyList())).build());
+                        .query(
+                            SearchQuery.builder()
+                                    .compiledQuery("2 3 5")
+                                    .include("3", "5", "2")
+                                    .exclude("4")
+                                    .build()
+                        ).build());
 
         int[] idxes = new int[] { 30, 510, 90, 150, 210, 270, 330, 390, 450 };
         long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
         long[] actual = rsp
                 .stream()
+                .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
                 .mapToLong(i -> i.getRawItem().getCombinedId())
                 .toArray();
 
@@ -171,6 +177,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                                 SearchQuery.builder()
                                 .compiledQuery("2")
                                 .include("2")
+                                .phraseConstraint(new SearchPhraseConstraint.Full("2"))
                                 .build()
                         ).build()
         );
@@ -179,6 +186,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         long[] ids = IntStream.of(idxes).mapToLong(Long::valueOf).toArray();
         long[] actual = rsp
                 .stream()
+                .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
                 .mapToLong(i -> i.getRawItem().getCombinedId())
                 .map(UrlIdCodec::getDocumentOrdinal)
                 .toArray();
@@ -221,10 +229,12 @@ public class IndexQueryServiceIntegrationSmokeTest {
                                 List.of("4"),
                                 Collections.emptyList(),
                                 Collections.emptyList(),
-                                Collections.emptyList())).build());
+                                List.of(new SearchPhraseConstraint.Full("2", "3", "5")))).build());
         int[] idxes = new int[] {  210, 270 };
         long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
-        long[] actual = rsp.stream().mapToLong(i -> i.getRawItem().getCombinedId()).toArray();
+        long[] actual = rsp.stream()
+                .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
+                .mapToLong(i -> i.getRawItem().getCombinedId()).toArray();
 
         Assertions.assertArrayEquals(ids, actual);
     }
@@ -256,7 +266,11 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .searchSetIdentifier("NONE")
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .query(
-                            new SearchQuery("4", List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList())
+                            new SearchQuery("4", List.of("4"),
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    List.of(new SearchPhraseConstraint.Full("4")))
                         ).build());
 
 
@@ -354,7 +368,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", 0., "HTML5", 0, null, 0, 10
+                "test", "test", 0., "HTML5", 0, null, fullId, 10
         ));
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
