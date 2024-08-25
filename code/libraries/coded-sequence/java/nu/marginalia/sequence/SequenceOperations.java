@@ -148,19 +148,19 @@ public class SequenceOperations {
         return minDistance;
     }
 
-    public static int minDistance(IntIterator[] iterators) {
-        return minDistance(iterators, new int[iterators.length]);
+    public static int minDistance(IntList[] positions) {
+        return minDistance(positions, new int[positions.length]);
     }
 
-    public static int minDistance(IntIterator[] iterators, int[] iterOffsets) {
-        if (iterators.length <= 1)
+    public static int minDistance(IntList[] positions, int[] offsets) {
+        if (positions.length <= 1)
             return 0;
 
-        int[] values = new int[iterators.length];
-
-        for (int i = 0; i < iterators.length; i++) {
-            if (iterators[i].hasNext())
-                values[i] = iterators[i].nextInt() + iterOffsets[i];
+        int[] values = new int[positions.length];
+        int[] indexes = new int[positions.length];
+        for (int i = 0; i < positions.length; i++) {
+            if (indexes[i] < positions[i].size())
+                values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
             else
                 return 0;
         }
@@ -177,13 +177,14 @@ public class SequenceOperations {
 
         minDist = Math.min(minDist, maxVal - minVal);
 
-        for (int i = 0;; i = (i + 1) % iterators.length)
+        for (int i = 0;; i = (i + 1) % positions.length)
         {
             if (values[i] == minVal) {
-                if (!iterators[i].hasNext()) {
+                if (indexes[i] < positions[i].size()) {
+                    values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+                } else {
                     break;
                 }
-                values[i] = iterators[i].nextInt() + iterOffsets[i];
 
                 if (values[i] > maxVal) {
                     maxVal = values[i];

@@ -142,7 +142,7 @@ public class PhraseConstraintGroupList {
         }
 
         public int minDistance(IntList[] positions) {
-            IntIterator[] sequences = new IntIterator[present.cardinality()];
+            IntList[] sequences = new IntList[present.cardinality()];
             int[] iterOffsets = new int[sequences.length];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
@@ -162,7 +162,7 @@ public class PhraseConstraintGroupList {
                 if (posForTerm == null) {
                     return Integer.MAX_VALUE;
                 }
-                sequences[si++] = posForTerm.iterator();
+                sequences[si++] = posForTerm;
                 iterOffsets[si - 1] = -oi;
             }
 
