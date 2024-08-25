@@ -398,8 +398,9 @@ public class IndexResultScoreCalculator {
         float verbatimMatchScore = 0.f;
 
         var fullGroup = constraints.getFullGroup();
+        IntList fullGroupIntersections = fullGroup.findIntersections(positions);
         for (var tag : HtmlTag.includedTags) {
-            if (fullGroup.test(spans.getSpan(tag), positions)) {
+            if (spans.getSpan(tag).containsRange(fullGroupIntersections.iterator(), fullGroup.size)) {
                 verbatimMatchScore += verbatimMatches.getWeightFull(tag) * fullGroup.size;
                 verbatimMatches.set(tag);
             }
@@ -410,8 +411,9 @@ public class IndexResultScoreCalculator {
             int groupSize = optionalGroup.size;
             float sizeScalingFactor = groupSize / (float) largestOptional;
 
+            IntList intersections = optionalGroup.findIntersections(positions);
             for (var tag : HtmlTag.includedTags) {
-                if (optionalGroup.test(spans.getSpan(tag), positions)) {
+                if (spans.getSpan(tag).containsRange(intersections.iterator(), groupSize)) {
                     verbatimMatchScore += verbatimMatches.getWeightPartial(tag) * sizeScalingFactor * groupSize;
                 }
             }

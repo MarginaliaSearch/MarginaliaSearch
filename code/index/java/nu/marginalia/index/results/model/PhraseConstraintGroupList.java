@@ -2,7 +2,6 @@ package nu.marginalia.index.results.model;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.index.forward.spans.DocumentSpan;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.ids.TermIdList;
 import nu.marginalia.sequence.CodedSequence;
@@ -114,7 +113,7 @@ public class PhraseConstraintGroupList {
         }
 
 
-        public boolean test(DocumentSpan span, IntList[] positions) {
+        public IntList findIntersections(IntList[] positions) {
             IntIterator[] sequences = new IntIterator[present.cardinality()];
             int[] iterOffsets = new int[sequences.length];
 
@@ -124,7 +123,7 @@ public class PhraseConstraintGroupList {
                 }
                 int offset = offsets[oi];
                 if (offset < 0)
-                    return false;
+                    return IntList.of();
 
                 // Create iterators that are offset by their relative position in the
                 // sequence.  This is done by subtracting the index from the offset,
@@ -133,21 +132,13 @@ public class PhraseConstraintGroupList {
 
                 var posForTerm = positions[offset];
                 if (posForTerm == null) {
-                    return false;
+                    return IntList.of();
                 }
                 sequences[si++] = posForTerm.iterator();
                 iterOffsets[si - 1] = -oi;
             }
 
-            var intersections = SequenceOperations.findIntersections(iterOffsets, sequences);
-
-            for (int idx = 0; idx < intersections.size(); idx++) {
-                if (span.containsRange(intersections.getInt(idx), sequences.length)) {
-                    return true;
-                }
-            }
-
-            return false;
+            return SequenceOperations.findIntersections(iterOffsets, sequences);
         }
 
         public int minDistance(IntList[] positions) {

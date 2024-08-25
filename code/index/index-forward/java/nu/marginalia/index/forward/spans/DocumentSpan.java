@@ -68,21 +68,31 @@ public class DocumentSpan {
         return false;
     }
 
-    public boolean containsRange(int rangeStart, int len) {
-        if (startsEnds == null) {
+    public boolean containsRange(IntIterator positionsIter, int len) {
+        if (null == startsEnds || !positionsIter.hasNext()) {
             return false;
         }
 
         var iter = startsEnds.iterator();
-        while (iter.hasNext()) {
-            int start = iter.nextInt();
-            if (start > rangeStart) {
-                return false;
+        int start = -1;
+        int end = -1;
+
+        while (iter.hasNext() && positionsIter.hasNext()) {
+            if (start < 0) {
+                start = iter.nextInt();
+                end = iter.nextInt();
             }
-            int end = iter.nextInt();
-            if (end > rangeStart + len) {
+
+            int position = positionsIter.nextInt();
+            if (position < start) {
+                continue;
+            }
+
+            if (position + len < end) {
                 return true;
             }
+
+            start = -1;
         }
 
         return false;
