@@ -23,10 +23,15 @@ public class DocumentSpan {
         }
 
         int cnt = 0;
+        int seis = 0;
+
         for (int pi = 0; pi < positions.size(); pi++) {
-            for (int sei = 0; sei < startsEnds.size(); sei ++) {
-                if (startsEnds.getInt(sei) > positions.getInt(pi)) {
+            int position = positions.getInt(pi);
+
+            for (int sei = seis; sei < startsEnds.size(); sei ++) {
+                if (startsEnds.getInt(sei) > position) {
                     cnt += sei % 2;
+                    seis = Math.max(seis, sei - 1);
                     break;
                 }
             }
