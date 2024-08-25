@@ -117,7 +117,6 @@ public class IndexProtobufCodec {
                 params.getShortSentencePenalty(),
                 params.getBm25Weight(),
                 params.getTcfFirstPositionWeight(),
-                params.getTcfAvgDistWeight(),
                 params.getTcfVerbatimWeight(),
                 params.getTcfProximityWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
@@ -143,7 +142,6 @@ public class IndexProtobufCodec {
                         .setShortSentenceThreshold(rankingParams.shortSentenceThreshold)
                         .setShortSentencePenalty(rankingParams.shortSentencePenalty)
                         .setBm25Weight(rankingParams.bm25Weight)
-                        .setTcfAvgDistWeight(rankingParams.tcfAvgDist)
                         .setTcfFirstPositionWeight(rankingParams.tcfFirstPosition)
                         .setTcfProximityWeight(rankingParams.tcfProximity)
                         .setTcfVerbatimWeight(rankingParams.tcfVerbatim)

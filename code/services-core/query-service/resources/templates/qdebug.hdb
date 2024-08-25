@@ -31,8 +31,6 @@
         <div class="col-sm-2"><input type="text" class="form-control" id="shortDocumentPenalty" name="shortDocumentPenalty" value="{{shortDocumentPenalty}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="tcfAvgDist">TCF Average Distance</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="tcfAvgDist" name="tcfAvgDist" value="{{tcfAvgDist}}"></div>
         <div class="col-sm-2"><label for="tcfFirstPosition">TCF First Position Weight</label></div>
         <div class="col-sm-2"><input type="text" class="form-control" id="tcfFirstPosition" name="tcfFirstPosition" value="{{tcfFirstPosition}}"></div>
     </div>

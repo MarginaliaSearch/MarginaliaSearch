@@ -139,7 +139,7 @@ message RpcResultRankingParameters {
   int32 shortSentenceThreshold = 9;
   double shortSentencePenalty = 10;
   double bm25Weight = 11;
-  double tcfAvgDistWeight = 12;
+  // -- 12 unused --
   double tcfFirstPositionWeight = 13;
   double tcfVerbatimWeight = 14;
   double tcfProximityWeight = 15;

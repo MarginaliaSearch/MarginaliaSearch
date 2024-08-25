@@ -301,7 +301,6 @@ public class IndexResultScoreCalculator {
                 + temporalBias
                 + flagsPenalty;
 
-        double score_avg_dist = rankingParams.tcfAvgDist * calculateAvgMinDistance(positionsQuery, ctx);
         double score_firstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
 
         double score_bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
@@ -327,7 +326,6 @@ public class IndexResultScoreCalculator {
             rankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
             rankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
             rankingFactors.addDocumentFactor("score.proximity", Double.toString(score_proximity));
-            rankingFactors.addDocumentFactor("score.avgDist", Double.toString(score_avg_dist));
             rankingFactors.addDocumentFactor("score.firstPosition", Double.toString(score_firstPosition));
 
             rankingFactors.addDocumentFactor("unordered.title", Integer.toString(unorderedMatchInTitleCount));
@@ -370,7 +368,7 @@ public class IndexResultScoreCalculator {
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
         double ret = normalize(
-                score_avg_dist + score_firstPosition + score_proximity + score_verbatim
+                score_firstPosition + score_proximity + score_verbatim
                         + score_bM25
                         + score_bFlags
                         + Math.max(0, overallPart),
@@ -549,50 +547,6 @@ public class IndexResultScoreCalculator {
             value = 0;
 
         return Math.sqrt((1.0 + 500. + 10 * penalty) / (1.0 + value));
-    }
-
-
-    public static double calculateAvgMinDistance(CompiledQuery<CodedSequence> positions, ResultRankingContext ctx) {
-        double sum = 0;
-        int cnt = 0;
-
-        for (int i = 0; i < positions.size(); i++) {
-
-            // Skip terms that are not in the regular mask
-            if (!ctx.regularMask.get(i))
-                continue;
-
-            var posi = positions.at(i);
-
-            // Skip terms that are not in the document
-            if (posi == null)
-                continue;
-
-            for (int j = i + 1; j < positions.size(); j++) {
-
-                // Skip terms that are not in the regular mask
-                if (!ctx.regularMask.get(j))
-                    continue;
-
-                var posj = positions.at(j);
-
-                // Skip terms that are not in the document
-                if (posj == null)
-                    continue;
-
-                int distance = SequenceOperations.minDistance(posi.iterator(), posj.iterator());
-                if (distance > 0) {
-                    sum += (1.0 / distance);
-                    cnt++;
-                }
-            }
-        }
-
-        if (cnt > 0 && sum > 0) {
-            return cnt / sum;
-        } else {
-            return 0;
-        }
     }
 
 }

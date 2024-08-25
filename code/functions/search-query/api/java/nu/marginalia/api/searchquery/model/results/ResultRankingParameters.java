@@ -32,7 +32,6 @@ public class ResultRankingParameters {
 
     public double bm25Weight;
     public double tcfFirstPosition;
-    public double tcfAvgDist;
     public double tcfVerbatim;
     public double tcfProximity;
 
@@ -51,7 +50,6 @@ public class ResultRankingParameters {
                 .shortSentenceThreshold(2)
                 .shortSentencePenalty(5)
                 .bm25Weight(1.)
-                .tcfAvgDist(25.)
                 .tcfVerbatim(1.)
                 .tcfProximity(1.)
                 .tcfFirstPosition(25)
