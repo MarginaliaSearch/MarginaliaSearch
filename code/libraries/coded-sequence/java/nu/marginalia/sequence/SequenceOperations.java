@@ -64,8 +64,8 @@ public class SequenceOperations {
         int[] values = new int[positions.length];
 
         for (int i = 0; i < positions.length; i++) {
-            if (indexes[i]++ < positions[i].size())
-                values[i] = positions[i].getInt(indexes[i]) + iterOffsets[i];
+            if (indexes[i] < positions[i].size())
+                values[i] = positions[i].getInt(indexes[i]++) + iterOffsets[i];
             else
                 return IntList.of();
         }
@@ -85,7 +85,7 @@ public class SequenceOperations {
                 successes = 1;
 
                 if (indexes[i]++ < positions[i].size()) {
-                    values[i] = positions[i].getInt(indexes[i]) + iterOffsets[i];
+                    values[i] = positions[i].getInt(indexes[i]++) + iterOffsets[i];
                 } else {
                     break;
                 }
@@ -98,7 +98,7 @@ public class SequenceOperations {
                 // or until the end of the sequence is reached
                 while (values[i] < max) {
                     if (indexes[i]++ < positions[i].size()) {
-                        values[i] = positions[i].getInt(indexes[i]) + iterOffsets[i];
+                        values[i] = positions[i].getInt(indexes[i]++) + iterOffsets[i];
                     } else {
                         break outer;
                     }
