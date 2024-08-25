@@ -24,8 +24,6 @@ public class DocumentSpan {
             return 0;
         }
 
-
-
         int cnt = 0;
 
         if (positions.length < 8) {
@@ -44,11 +42,13 @@ public class DocumentSpan {
             }
         }
         else {
-            for (int sei = 0; sei < startsEnds.size(); ) {
+            int ss = 0;
+
+            for (int sei = 0; sei < startsEnds.size() && ss < positions.length; ) {
                 int start = startsEnds.getInt(sei++);
                 int end = startsEnds.getInt(sei++);
 
-                int i = Arrays.binarySearch(positions, start);
+                int i = Arrays.binarySearch(positions, ss, positions.length, start);
                 if (i < 0) {
                     i = -i - 1;
                 }
@@ -56,6 +56,7 @@ public class DocumentSpan {
                     cnt++;
                     i++;
                 }
+                ss = i;
             }
         }
 
