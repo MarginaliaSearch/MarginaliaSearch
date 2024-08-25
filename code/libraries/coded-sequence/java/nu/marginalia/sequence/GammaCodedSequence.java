@@ -93,8 +93,8 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
     }
 
     public IntList values() {
-        var intItr = iterator();
-        IntArrayList ret = new IntArrayList(8);
+        var intItr = new EliasGammaSequenceIterator(buffer());
+        IntArrayList ret = new IntArrayList(intItr.rem);
         while (intItr.hasNext()) {
             ret.add(intItr.nextInt());
         }
