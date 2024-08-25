@@ -245,9 +245,6 @@ public class IndexResultScoreCalculator {
             if (positions[i] != null && ctx.regularMask.get(i)) {
                 searchableKeywordsCount ++;
 
-                boolean titleMatch = false;
-                boolean headingMatch = false;
-
                 IntList positionValues = positions[i].values();
 
                 for (int idx = 0; idx < positionValues.size(); idx++) {
@@ -255,28 +252,26 @@ public class IndexResultScoreCalculator {
                     firstPosition = Math.max(firstPosition, pos);
                 }
 
-                if (spans.title.intersects(positionValues.iterator())) {
-                    titleMatch = true;
-                    weightedCounts[i] += 2.5f;
-                }
-                else if (spans.heading.intersects(positionValues.iterator())) {
-                    headingMatch = true;
-                    weightedCounts[i] += 2.5f;
-                }
-                else if (spans.code.intersects(positionValues.iterator()))
-                    weightedCounts[i] += 0.25f;
-                else if (spans.anchor.intersects(positionValues.iterator()))
-                    weightedCounts[i] += 0.2f;
-                else if (spans.nav.intersects(positionValues.iterator()))
-                    weightedCounts[i] += 0.1f;
-                else
-                    weightedCounts[i] += 1.0f;
-
-                if (titleMatch) {
+                int cnt;
+                if ((cnt = spans.title.countIntersections(positionValues.iterator())) != 0) {
                     unorderedMatchInTitleCount++;
+                    weightedCounts[i] += 2.5f * cnt;
                 }
-                if (headingMatch) {
+                if ((cnt = spans.heading.countIntersections(positionValues.iterator())) != 0) {
                     unorderedMatchInHeadingCount++;
+                    weightedCounts[i] += 2.5f * cnt;
+                }
+                if ((cnt = spans.code.countIntersections(positionValues.iterator())) != 0) {
+                    weightedCounts[i] += 0.25f * cnt;
+                }
+                if ((cnt = spans.anchor.countIntersections(positionValues.iterator())) != 0) {
+                    weightedCounts[i] += 0.2f * cnt;
+                }
+                if ((cnt = spans.nav.countIntersections(positionValues.iterator())) != 0) {
+                    weightedCounts[i] += 0.1f * cnt;
+                }
+                if ((cnt = spans.body.countIntersections(positionValues.iterator())) != 0) {
+                    weightedCounts[i] += 1.0f * cnt;
                 }
             }
         }
