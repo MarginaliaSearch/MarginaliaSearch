@@ -250,8 +250,10 @@ public class IndexResultScoreCalculator {
 
         int firstPosition = 1;
         for (int i = 0; i < weightedCounts.length; i++) {
+
             if (positions[i] != null && ctx.regularMask.get(i)) {
                 searchableKeywordsCount ++;
+                int[] posArray = positions[i].toIntArray();
 
                 for (int idx = 0; idx < positions[i].size(); idx++) {
                     int pos = positions[i].getInt(idx);
@@ -259,24 +261,24 @@ public class IndexResultScoreCalculator {
                 }
 
                 int cnt;
-                if ((cnt = spans.title.countIntersections(positions[i])) != 0) {
+                if ((cnt = spans.title.countIntersections(posArray)) != 0) {
                     unorderedMatchInTitleCount++;
                     weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.heading.countIntersections(positions[i])) != 0) {
+                if ((cnt = spans.heading.countIntersections(posArray)) != 0) {
                     unorderedMatchInHeadingCount++;
                     weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.code.countIntersections(positions[i])) != 0) {
+                if ((cnt = spans.code.countIntersections(posArray)) != 0) {
                     weightedCounts[i] += 0.25f * cnt;
                 }
-                if ((cnt = spans.anchor.countIntersections(positions[i])) != 0) {
+                if ((cnt = spans.anchor.countIntersections(posArray)) != 0) {
                     weightedCounts[i] += 0.2f * cnt;
                 }
-                if ((cnt = spans.nav.countIntersections(positions[i])) != 0) {
+                if ((cnt = spans.nav.countIntersections(posArray)) != 0) {
                     weightedCounts[i] += 0.1f * cnt;
                 }
-                if ((cnt = spans.body.countIntersections(positions[i])) != 0) {
+                if ((cnt = spans.body.countIntersections(posArray)) != 0) {
                     weightedCounts[i] += 1.0f * cnt;
                 }
             }

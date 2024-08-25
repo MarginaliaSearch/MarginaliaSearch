@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.CodedSequence;
 
+import java.util.Arrays;
+
 public class DocumentSpan {
 
     /** A list of the interlaced start and end positions of each span in the document of this type */
@@ -17,22 +19,42 @@ public class DocumentSpan {
         this.startsEnds = null;
     }
 
-    public int countIntersections(IntList positions) {
-        if (null == startsEnds || startsEnds.isEmpty() || positions.isEmpty()) {
+    public int countIntersections(int[] positions) {
+        if (null == startsEnds || startsEnds.isEmpty() || positions.length == 0) {
             return 0;
         }
 
+
+
         int cnt = 0;
-        int seis = 0;
 
-        for (int pi = 0; pi < positions.size(); pi++) {
-            int position = positions.getInt(pi);
+        if (positions.length < 8) {
+            int seis = 0;
 
-            for (int sei = seis; sei < startsEnds.size(); sei ++) {
-                if (startsEnds.getInt(sei) > position) {
-                    cnt += sei % 2;
-                    seis = Math.max(seis, sei - 1);
-                    break;
+            for (int pi = 0; pi < positions.length; pi++) {
+                int position = positions[pi];
+
+                for (int sei = seis; sei < startsEnds.size(); sei ++) {
+                    if (startsEnds.getInt(sei) > position) {
+                        cnt += sei % 2;
+                        seis = Math.max(seis, sei - 1);
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            for (int sei = 0; sei < startsEnds.size(); ) {
+                int start = startsEnds.getInt(sei++);
+                int end = startsEnds.getInt(sei++);
+
+                int i = Arrays.binarySearch(positions, start);
+                if (i < 0) {
+                    i = -i - 1;
+                }
+                while (i < positions.length && positions[i] < end) {
+                    cnt++;
+                    i++;
                 }
             }
         }
