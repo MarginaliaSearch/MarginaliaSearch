@@ -87,6 +87,9 @@ public class SequenceOperations {
 
                 if (indexes[i] < positions[i].size()) {
                     values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+
+                    // Update the maximum value, if necessary
+                    max = Math.max(max, values[i]);
                 } else {
                     break;
                 }
@@ -177,18 +180,22 @@ public class SequenceOperations {
 
         minDist = Math.min(minDist, maxVal - minVal);
 
-        for (int i = 0;; i = (i + 1) % positions.length)
-        {
-            if (values[i] == minVal) {
+        for (;;) {
+            for (int i = 0; i < positions.length; i++) {
+                if (values[i] > minVal) {
+                    continue;
+                }
+
                 if (indexes[i] < positions[i].size()) {
                     values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
                 } else {
-                    break;
+                    return minDist;
                 }
 
                 if (values[i] > maxVal) {
                     maxVal = values[i];
                 }
+
                 if (values[i] > minVal) {
                     minVal = Integer.MAX_VALUE;
                     for (int val : values) {
@@ -199,7 +206,5 @@ public class SequenceOperations {
                 minDist = Math.min(minDist, maxVal - minVal);
             }
         }
-
-        return minDist;
     }
 }
