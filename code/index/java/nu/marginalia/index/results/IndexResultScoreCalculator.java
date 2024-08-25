@@ -404,7 +404,7 @@ public class IndexResultScoreCalculator {
                                       DocumentSpans spans) {
 
         // Calculate a bonus for keyword coherences when large ones exist
-        int largestOptional = constraints.largestOptional();
+        int largestOptional = constraints.getFullGroup().size;
         if (largestOptional < 2) {
             return 0;
         }
@@ -414,10 +414,12 @@ public class IndexResultScoreCalculator {
         var fullGroup = constraints.getFullGroup();
         for (var tag : HtmlTag.includedTags) {
             if (fullGroup.test(spans.getSpan(tag), positions)) {
+                verbatimMatchScore += verbatimMatches.getWeight(tag) * fullGroup.size;
                 verbatimMatches.set(tag);
             }
         }
 
+        // For optional groups, we scale the score by the size of the group relative to the full group
         for (var optionalGroup : constraints.getOptionalGroups()) {
             int groupSize = optionalGroup.size;
             float sizeScalingFactor = groupSize / (float) largestOptional;

@@ -93,10 +93,6 @@ public class PhraseConstraintGroupList {
     public int numOptional() {
         return optionalGroups.size();
     }
-    public int largestOptional() {
-        return fullGroup.size;
-    }
-
 
     public static final class PhraseConstraintGroup {
         private final int[] offsets;
