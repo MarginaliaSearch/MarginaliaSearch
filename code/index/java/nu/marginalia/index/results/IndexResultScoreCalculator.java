@@ -27,9 +27,7 @@ import nu.marginalia.sequence.SequenceOperations;
 
 import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
@@ -225,19 +223,11 @@ public class IndexResultScoreCalculator {
         float[] weightedCounts = new float[compiledQuery.size()];
         float keywordMinDistFac = 0;
         if (positions.length > 2) {
-            List<IntIterator> iterators = new ArrayList<>(positions.length);
-
-            for (int i = 0; i < positions.length; i++) {
-                if (positions[i] != null && ctx.regularMask.get(i)) {
-                    iterators.add(positions[i].iterator());
-                }
-            }
-
-            int minDist = SequenceOperations.minDistance(iterators);
-            if (minDist > 0) {
+            int minDist = constraintGroups.getFullGroup().minDistance(positions);
+            if (minDist > 0 && minDist < Integer.MAX_VALUE) {
                 if (minDist < 32) {
                     // If min-dist is sufficiently small, we give a tapering reward to the document
-                    keywordMinDistFac = 2.0f / (1.f + (float) Math.sqrt(minDist));
+                    keywordMinDistFac = 2.0f / (0.1f + (float) Math.sqrt(minDist));
                 } else {
                     // if it is too large, we add a mounting penalty
                     keywordMinDistFac = -1.0f * (float) Math.sqrt(minDist);

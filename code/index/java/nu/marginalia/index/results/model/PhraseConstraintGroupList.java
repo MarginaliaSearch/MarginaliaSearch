@@ -193,5 +193,30 @@ public class PhraseConstraintGroupList {
             return false;
         }
 
+        public int minDistance(CodedSequence[] positions) {
+            IntIterator[] sequences = new IntIterator[present.cardinality()];
+
+            for (int oi = 0, si = 0; oi < offsets.length; oi++) {
+                if (!present.get(oi)) {
+                    continue;
+                }
+                int offset = offsets[oi];
+                if (offset < 0)
+                    return Integer.MAX_VALUE;
+
+                // Create iterators that are offset by their relative position in the
+                // sequence.  This is done by subtracting the index from the offset,
+                // so that when we intersect them, an overlap means that the terms are
+                // in the correct order.  Note the offset is negative!
+
+                var posForTerm = positions[offset];
+                if (posForTerm == null) {
+                    return Integer.MAX_VALUE;
+                }
+                sequences[si++] = posForTerm.offsetIterator(-oi);
+            }
+
+            return SequenceOperations.minDistance(sequences);
+        }
     }
 }

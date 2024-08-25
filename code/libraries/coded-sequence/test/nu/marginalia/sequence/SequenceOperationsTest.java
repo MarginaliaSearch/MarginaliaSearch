@@ -1,10 +1,10 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,8 +91,6 @@ class SequenceOperationsTest {
         GammaCodedSequence seq2 = GammaCodedSequence.generate(wa, 20, 50, 100);
         GammaCodedSequence seq3 = GammaCodedSequence.generate(wa, 30, 60, 90);
 
-        assertEquals(19, SequenceOperations.minDistance(List.of(seq1.iterator(), seq2.iterator(), seq3.iterator())));
-
-
+        assertEquals(19, SequenceOperations.minDistance(new IntIterator[]{seq1.iterator(), seq2.iterator(), seq3.iterator()}));
     }
 }
