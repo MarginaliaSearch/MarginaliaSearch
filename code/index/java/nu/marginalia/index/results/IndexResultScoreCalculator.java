@@ -591,7 +591,7 @@ public class IndexResultScoreCalculator {
         if (cnt > 0 && sum > 0) {
             return cnt / sum;
         } else {
-            return 1000.;
+            return 0;
         }
     }
 
