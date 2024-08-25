@@ -71,7 +71,7 @@ class SequenceOperationsTest {
         GammaCodedSequence seq2 = GammaCodedSequence.generate(wa, 2, 5, 8, 10, 14);
         GammaCodedSequence seq3 = GammaCodedSequence.generate(wa, 1, 5, 8, 9, 10);
 
-        assertEquals(IntList.of(8, 10), SequenceOperations.findIntersections(seq1.iterator(), seq2.iterator(), seq3.iterator()));
+        assertEquals(IntList.of(8, 10), SequenceOperations.findIntersections(iterOffsets, seq1.iterator(), seq2.iterator(), seq3.iterator()));
     }
 
 

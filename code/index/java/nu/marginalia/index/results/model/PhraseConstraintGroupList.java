@@ -1,6 +1,7 @@
 package nu.marginalia.index.results.model;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.forward.spans.DocumentSpan;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.ids.TermIdList;
@@ -46,52 +47,6 @@ public class PhraseConstraintGroupList {
         }
 
         return true;
-    }
-
-    public int testOptional(CodedSequence[] positions) {
-
-        int best = 0;
-        for (var constraint : optionalGroups) {
-            if (constraint.test(positions)) {
-                best = Math.max(constraint.size, best);
-            }
-        }
-        return best;
-    }
-
-    public int countOptional(CodedSequence[] positions) {
-
-        int ct = 0;
-        for (var constraint : optionalGroups) {
-            if (constraint.test(positions)) {
-                ct++;
-            }
-        }
-        return ct;
-    }
-
-    public int testOptional(CodedSequence[] positions, DocumentSpan span) {
-
-        int best = 0;
-        for (var constraint : optionalGroups) {
-            if (constraint.test(span, positions)) {
-                best = Math.max(constraint.size, best);
-            }
-        }
-        return best;
-    }
-
-    public boolean allOptionalInSpan(CodedSequence[] positions, DocumentSpan span) {
-        for (var constraint : optionalGroups) {
-            if (!constraint.test(span, positions)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public int numOptional() {
-        return optionalGroups.size();
     }
 
     public static final class PhraseConstraintGroup {
@@ -159,8 +114,9 @@ public class PhraseConstraintGroupList {
         }
 
 
-        public boolean test(DocumentSpan span, CodedSequence[] positions) {
+        public boolean test(DocumentSpan span, IntList[] positions) {
             IntIterator[] sequences = new IntIterator[present.cardinality()];
+            int[] iterOffsets = new int[sequences.length];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
@@ -179,10 +135,11 @@ public class PhraseConstraintGroupList {
                 if (posForTerm == null) {
                     return false;
                 }
-                sequences[si++] = posForTerm.offsetIterator(-oi);
+                sequences[si++] = posForTerm.iterator();
+                iterOffsets[si - 1] = -oi;
             }
 
-            var intersections = SequenceOperations.findIntersections(sequences);
+            var intersections = SequenceOperations.findIntersections(iterOffsets, sequences);
 
             for (int idx = 0; idx < intersections.size(); idx++) {
                 if (span.containsRange(intersections.getInt(idx), sequences.length)) {
@@ -193,8 +150,9 @@ public class PhraseConstraintGroupList {
             return false;
         }
 
-        public int minDistance(CodedSequence[] positions) {
+        public int minDistance(IntList[] positions) {
             IntIterator[] sequences = new IntIterator[present.cardinality()];
+            int[] iterOffsets = new int[sequences.length];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
@@ -213,10 +171,11 @@ public class PhraseConstraintGroupList {
                 if (posForTerm == null) {
                     return Integer.MAX_VALUE;
                 }
-                sequences[si++] = posForTerm.offsetIterator(-oi);
+                sequences[si++] = posForTerm.iterator();
+                iterOffsets[si - 1] = -oi;
             }
 
-            return SequenceOperations.minDistance(sequences);
+            return SequenceOperations.minDistance(sequences, iterOffsets);
         }
     }
 }

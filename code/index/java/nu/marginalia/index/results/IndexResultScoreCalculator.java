@@ -92,6 +92,16 @@ public class IndexResultScoreCalculator {
             rankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
         }
 
+        IntList[] decodedPositions = new IntList[positions.length];
+        for (int i = 0; i < positions.length; i++) {
+            if (positions[i] != null) {
+                decodedPositions[i] = positions[i].values();
+            }
+            else {
+                decodedPositions[i] = IntList.of();
+            }
+        }
+
         double score = calculateSearchResultValue(
                 rankingFactors,
                 searchTerms,
@@ -100,7 +110,7 @@ public class IndexResultScoreCalculator {
                 htmlFeatures,
                 docSize,
                 spans,
-                positions,
+                decodedPositions,
                 searchTerms.phraseConstraints,
                 rankingContext);
 
@@ -179,7 +189,7 @@ public class IndexResultScoreCalculator {
                                              int features,
                                              int length,
                                              DocumentSpans spans,
-                                             CodedSequence[] positions,
+                                             IntList[] positions,
                                              PhraseConstraintGroupList constraintGroups,
                                              ResultRankingContext ctx)
     {
@@ -243,32 +253,30 @@ public class IndexResultScoreCalculator {
             if (positions[i] != null && ctx.regularMask.get(i)) {
                 searchableKeywordsCount ++;
 
-                IntList positionValues = positions[i].values();
-
-                for (int idx = 0; idx < positionValues.size(); idx++) {
-                    int pos = positionValues.getInt(idx);
+                for (int idx = 0; idx < positions[i].size(); idx++) {
+                    int pos = positions[i].getInt(idx);
                     firstPosition = Math.max(firstPosition, pos);
                 }
 
                 int cnt;
-                if ((cnt = spans.title.countIntersections(positionValues.iterator())) != 0) {
+                if ((cnt = spans.title.countIntersections(positions[i].iterator())) != 0) {
                     unorderedMatchInTitleCount++;
                     weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.heading.countIntersections(positionValues.iterator())) != 0) {
+                if ((cnt = spans.heading.countIntersections(positions[i].iterator())) != 0) {
                     unorderedMatchInHeadingCount++;
                     weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.code.countIntersections(positionValues.iterator())) != 0) {
+                if ((cnt = spans.code.countIntersections(positions[i].iterator())) != 0) {
                     weightedCounts[i] += 0.25f * cnt;
                 }
-                if ((cnt = spans.anchor.countIntersections(positionValues.iterator())) != 0) {
+                if ((cnt = spans.anchor.countIntersections(positions[i].iterator())) != 0) {
                     weightedCounts[i] += 0.2f * cnt;
                 }
-                if ((cnt = spans.nav.countIntersections(positionValues.iterator())) != 0) {
+                if ((cnt = spans.nav.countIntersections(positions[i].iterator())) != 0) {
                     weightedCounts[i] += 0.1f * cnt;
                 }
-                if ((cnt = spans.body.countIntersections(positionValues.iterator())) != 0) {
+                if ((cnt = spans.body.countIntersections(positions[i].iterator())) != 0) {
                     weightedCounts[i] += 1.0f * cnt;
                 }
             }
@@ -378,7 +386,7 @@ public class IndexResultScoreCalculator {
 
     private float findVerbatimMatches(VerbatimMatches verbatimMatches,
                                       PhraseConstraintGroupList constraints,
-                                      CodedSequence[] positions,
+                                      IntList[] positions,
                                       DocumentSpans spans) {
 
         // Calculate a bonus for keyword coherences when large ones exist

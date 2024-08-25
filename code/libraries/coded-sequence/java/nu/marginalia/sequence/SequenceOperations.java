@@ -52,6 +52,9 @@ public class SequenceOperations {
     }
 
     public static IntList findIntersections(IntIterator... sequences) {
+        return findIntersections(new int[sequences.length], sequences);
+    }
+    public static IntList findIntersections(int[] iterOffsets, IntIterator... sequences) {
 
         if (sequences.length < 1)
             return IntList.of();
@@ -61,7 +64,7 @@ public class SequenceOperations {
 
         for (int i = 0; i < sequences.length; i++) {
             if (sequences[i].hasNext())
-                values[i] = sequences[i].nextInt();
+                values[i] = sequences[i].nextInt() + iterOffsets[i];
             else
                 return IntList.of();
         }
@@ -81,7 +84,7 @@ public class SequenceOperations {
                 successes = 1;
 
                 if (sequences[i].hasNext()) {
-                    max = sequences[i].nextInt();
+                    max = sequences[i].nextInt() + iterOffsets[i];
                 } else {
                     break;
                 }
@@ -94,7 +97,7 @@ public class SequenceOperations {
                 // or until the end of the sequence is reached
                 while (values[i] < max) {
                     if (sequences[i].hasNext()) {
-                        values[i] = sequences[i].nextInt();
+                        values[i] = sequences[i].nextInt() + iterOffsets[i];
                     } else {
                         break outer;
                     }
@@ -144,6 +147,10 @@ public class SequenceOperations {
     }
 
     public static int minDistance(IntIterator[] iterators) {
+        return minDistance(iterators, new int[iterators.length]);
+    }
+
+    public static int minDistance(IntIterator[] iterators, int[] iterOffsets) {
         if (iterators.length <= 1)
             return 0;
 
@@ -151,7 +158,7 @@ public class SequenceOperations {
 
         for (int i = 0; i < iterators.length; i++) {
             if (iterators[i].hasNext())
-                values[i] = iterators[i].nextInt();
+                values[i] = iterators[i].nextInt() + iterOffsets[i];
             else
                 return 0;
         }
@@ -174,7 +181,7 @@ public class SequenceOperations {
                 if (!iterators[i].hasNext()) {
                     break;
                 }
-                values[i] = iterators[i].nextInt();
+                values[i] = iterators[i].nextInt() + iterOffsets[i];
 
                 if (values[i] > maxVal) {
                     maxVal = values[i];
