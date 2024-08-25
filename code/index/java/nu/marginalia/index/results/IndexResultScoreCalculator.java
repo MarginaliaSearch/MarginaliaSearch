@@ -118,18 +118,18 @@ public class IndexResultScoreCalculator {
                 docMetadata,
                 htmlFeatures,
                 score,
-                calculatePositionsMask(positions)
+                calculatePositionsMask(decodedPositions)
         );
     }
 
     /** Calculate a bitmask illustrating the intersected positions of the search terms in the document.
      *  This is used in the GUI.
      * */
-    private long calculatePositionsMask(CodedSequence[] positions) {
+    private long calculatePositionsMask(IntList[] positions) {
         IntList[] iters = new IntList[rankingContext.regularMask.cardinality()];
         for (int i = 0, j = 0; i < positions.length; i++) {
             if (rankingContext.regularMask.get(i)) {
-                iters[j++] = positions[i].values();
+                iters[j++] = positions[i];
             }
         }
         IntIterator intersection = SequenceOperations.findIntersections(iters).intIterator();
