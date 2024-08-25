@@ -17,6 +17,36 @@ public class DocumentSpan {
         this.startsEnds = null;
     }
 
+    public boolean intersects(IntIterator positionsIter) {
+        if (null == startsEnds) {
+            return false;
+        }
+
+        var iter = startsEnds.iterator();
+        int start = -1;
+        int end = -1;
+
+        while (iter.hasNext()) {
+            if (start < 0) {
+                start = iter.nextInt();
+                end = iter.nextInt();
+            }
+
+            int position = positionsIter.nextInt();
+            if (position < start) {
+                continue;
+            }
+
+            if (position < end) {
+                return true;
+            }
+
+            start = -1;
+        }
+
+        return false;
+    }
+
     public boolean containsPosition(int position) {
         if (startsEnds == null) {
             return false;

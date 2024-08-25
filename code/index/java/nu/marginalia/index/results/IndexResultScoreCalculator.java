@@ -1,6 +1,7 @@
 package nu.marginalia.index.results;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
@@ -247,33 +248,29 @@ public class IndexResultScoreCalculator {
                 boolean titleMatch = false;
                 boolean headingMatch = false;
 
-                var iter = positions[i].iterator();
+                IntList positionValues = positions[i].values();
 
-                while (iter.hasNext()) {
-                    int pos = iter.nextInt();
-
+                for (int idx = 0; idx < positionValues.size(); idx++) {
+                    int pos = positionValues.getInt(idx);
                     firstPosition = Math.max(firstPosition, pos);
-
-                    if (spans.title.containsPosition(pos)) {
-                        titleMatch = true;
-                        weightedCounts[i] += 2.5f;
-                    }
-                    else if (spans.heading.containsPosition(pos)) {
-                        headingMatch = true;
-                        weightedCounts[i] += 2.5f;
-                    }
-                    else if (spans.code.containsPosition(pos))
-                        weightedCounts[i] += 0.25f;
-                    else if (spans.anchor.containsPosition(pos))
-                        weightedCounts[i] += 0.2f;
-                    else if (spans.nav.containsPosition(pos))
-                        weightedCounts[i] += 0.1f;
-                    else
-                        weightedCounts[i] += 1.0f;
-
-                    if (spans.externalLinkText.containsPosition(pos))
-                        weightedCounts[i] += 1.0f;
                 }
+
+                if (spans.title.intersects(positionValues.iterator())) {
+                    titleMatch = true;
+                    weightedCounts[i] += 2.5f;
+                }
+                else if (spans.heading.intersects(positionValues.iterator())) {
+                    headingMatch = true;
+                    weightedCounts[i] += 2.5f;
+                }
+                else if (spans.code.intersects(positionValues.iterator()))
+                    weightedCounts[i] += 0.25f;
+                else if (spans.anchor.intersects(positionValues.iterator()))
+                    weightedCounts[i] += 0.2f;
+                else if (spans.nav.intersects(positionValues.iterator()))
+                    weightedCounts[i] += 0.1f;
+                else
+                    weightedCounts[i] += 1.0f;
 
                 if (titleMatch) {
                     unorderedMatchInTitleCount++;
