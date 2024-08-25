@@ -103,6 +103,13 @@ message RpcRawResultItem {
   int32 htmlFeatures = 4; // bitmask encoding features of the document
   repeated RpcResultKeywordScore keywordScores = 5;
   bool hasPriorityTerms = 6; // true if this word is important to the document
+  MATCH_TYPE matchType = 7; // the type of match this result represents
+
+  enum MATCH_TYPE {
+    FLAGS = 0;
+    PROXIMITY = 1;
+    PHRASE = 2;
+  };
 }
 
 /* Information about how well a keyword matches a query */
@@ -134,7 +141,8 @@ message RpcResultRankingParameters {
   double bm25Weight = 11;
   double tcfAvgDistWeight = 12;
   double tcfFirstPositionWeight = 13;
-  // 14, 15 unused
+  double tcfVerbatimWeight = 14;
+  double tcfProximityWeight = 15;
   RpcTemporalBias temporalBias = 16;
   double temporalBiasWeight = 17;
 

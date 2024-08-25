@@ -309,14 +309,12 @@ public class IndexResultScoreCalculator {
                 + rankingBonus
                 + topologyBonus
                 + temporalBias
-                + flagsPenalty
-                + verbatimMatchScore
-                + keywordMinDistFac;
-
-
+                + flagsPenalty;
 
         double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
         double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
+        double tcfProximity = rankingParams.tcfProximity * keywordMinDistFac;
+        double tcfVerbatim = rankingParams.tcfVerbatim * verbatimMatchScore;
 
         double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
         double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
@@ -376,13 +374,12 @@ public class IndexResultScoreCalculator {
                 }
 
             }
-
         }
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
         double ret = normalize(
-                tcfAvgDist + tcfFirstPosition
+                tcfAvgDist + tcfFirstPosition + tcfProximity + tcfVerbatim
                         + bM25
                         + bFlags
                         + Math.max(0, overallPart),

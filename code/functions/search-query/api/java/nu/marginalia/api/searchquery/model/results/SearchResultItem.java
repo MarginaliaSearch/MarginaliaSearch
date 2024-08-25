@@ -88,7 +88,6 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
     @Override
     public int compareTo(@NotNull SearchResultItem o) {
-        // this looks like a bug, but we actually want this in a reversed order
         int diff = Double.compare(getScore(), o.getScore());
         if (diff != 0)
             return diff;

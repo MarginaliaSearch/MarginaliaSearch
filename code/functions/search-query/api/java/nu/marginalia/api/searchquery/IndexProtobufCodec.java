@@ -118,6 +118,8 @@ public class IndexProtobufCodec {
                 params.getBm25Weight(),
                 params.getTcfFirstPositionWeight(),
                 params.getTcfAvgDistWeight(),
+                params.getTcfVerbatimWeight(),
+                params.getTcfProximityWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight(),
                 params.getExportDebugData()
@@ -143,6 +145,8 @@ public class IndexProtobufCodec {
                         .setBm25Weight(rankingParams.bm25Weight)
                         .setTcfAvgDistWeight(rankingParams.tcfAvgDist)
                         .setTcfFirstPositionWeight(rankingParams.tcfFirstPosition)
+                        .setTcfProximityWeight(rankingParams.tcfProximity)
+                        .setTcfVerbatimWeight(rankingParams.tcfVerbatim)
                         .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
                         .setExportDebugData(rankingParams.exportDebugData);
 

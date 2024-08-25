@@ -33,6 +33,8 @@ public class ResultRankingParameters {
     public double bm25Weight;
     public double tcfFirstPosition;
     public double tcfAvgDist;
+    public double tcfVerbatim;
+    public double tcfProximity;
 
     public TemporalBias temporalBias;
     public double temporalBiasWeight;
@@ -50,7 +52,9 @@ public class ResultRankingParameters {
                 .shortSentencePenalty(5)
                 .bm25Weight(1.)
                 .tcfAvgDist(25.)
-                .tcfFirstPosition(5) // FIXME: what's a good default?
+                .tcfVerbatim(1.)
+                .tcfProximity(1.)
+                .tcfFirstPosition(25)
                 .temporalBias(TemporalBias.NONE)
                 .temporalBiasWeight(1. / (5.))
                 .exportDebugData(false)

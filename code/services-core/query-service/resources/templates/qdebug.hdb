@@ -37,6 +37,12 @@
         <div class="col-sm-2"><input type="text" class="form-control" id="tcfFirstPosition" name="tcfFirstPosition" value="{{tcfFirstPosition}}"></div>
     </div>
     <div class="row my-2">
+        <div class="col-sm-2"><label for="tcfVerbatim">TCF Verbatim</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfVerbatim" name="tcfVerbatim" value="{{tcfVerbatim}}"></div>
+        <div class="col-sm-2"><label for="tcfProximity">TCF Proximity</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfProximity" name="tcfProximity" value="{{tcfProximity}}"></div>
+    </div>
+    <div class="row my-2">
         <div class="col-sm-2"><label for="bm25.k1">BM25 K1</label></div>
         <div class="col-sm-2"><input type="text" class="form-control" id="bm25.k1" name="bm25.k1" value="{{bm25Params.k}}"></div>
         <div class="col-sm-2"><label for="bm25.b">BM25 B</label></div>

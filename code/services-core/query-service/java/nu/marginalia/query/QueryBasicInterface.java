@@ -108,6 +108,8 @@ public class QueryBasicInterface {
                 .shortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.shortDocumentPenalty))
                 .tcfFirstPosition(doubleFromRequest(request, "tcfFirstPosition", sensibleDefaults.tcfFirstPosition))
                 .tcfAvgDist(doubleFromRequest(request, "tcfAvgDist", sensibleDefaults.tcfAvgDist))
+                .tcfVerbatim(doubleFromRequest(request, "tcfVerbatim", sensibleDefaults.tcfVerbatim))
+                .tcfProximity(doubleFromRequest(request, "tcfProximity", sensibleDefaults.tcfProximity))
                 .bm25Params(new Bm25Parameters(
                         doubleFromRequest(request, "bm25.k1", sensibleDefaults.bm25Params.k()),
                         doubleFromRequest(request, "bm25.b", sensibleDefaults.bm25Params.b())
