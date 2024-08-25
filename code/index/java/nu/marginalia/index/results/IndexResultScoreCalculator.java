@@ -410,6 +410,13 @@ public class IndexResultScoreCalculator {
 
         float verbatimMatchScore = 0.f;
 
+        var fullGroup = constraints.getFullGroup();
+        for (var tag : HtmlTag.includedTags) {
+            if (fullGroup.test(spans.getSpan(tag), positions)) {
+                verbatimMatches.set(tag);
+            }
+        }
+
         for (var optionalGroup : constraints.getOptionalGroups()) {
             int groupSize = optionalGroup.size;
             float sizeScalingFactor = groupSize / (float) largestOptional;
@@ -417,10 +424,6 @@ public class IndexResultScoreCalculator {
             for (var tag : HtmlTag.includedTags) {
                 if (optionalGroup.test(spans.getSpan(tag), positions)) {
                     verbatimMatchScore += verbatimMatches.getWeight(tag) * sizeScalingFactor * groupSize;
-
-                    if (optionalGroup.size == largestOptional) {
-                        verbatimMatches.set(tag);
-                    }
                 }
             }
         }
