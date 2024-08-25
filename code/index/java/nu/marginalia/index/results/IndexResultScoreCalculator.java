@@ -126,10 +126,10 @@ public class IndexResultScoreCalculator {
      *  This is used in the GUI.
      * */
     private long calculatePositionsMask(CodedSequence[] positions) {
-        IntIterator[] iters = new IntIterator[rankingContext.regularMask.cardinality()];
+        IntList[] iters = new IntList[rankingContext.regularMask.cardinality()];
         for (int i = 0, j = 0; i < positions.length; i++) {
             if (rankingContext.regularMask.get(i)) {
-                iters[j++] = positions[i].iterator();
+                iters[j++] = positions[i].values();
             }
         }
         IntIterator intersection = SequenceOperations.findIntersections(iters).intIterator();
@@ -259,24 +259,24 @@ public class IndexResultScoreCalculator {
                 }
 
                 int cnt;
-                if ((cnt = spans.title.countIntersections(positions[i].iterator())) != 0) {
+                if ((cnt = spans.title.countIntersections(positions[i])) != 0) {
                     unorderedMatchInTitleCount++;
                     weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.heading.countIntersections(positions[i].iterator())) != 0) {
+                if ((cnt = spans.heading.countIntersections(positions[i])) != 0) {
                     unorderedMatchInHeadingCount++;
                     weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.code.countIntersections(positions[i].iterator())) != 0) {
+                if ((cnt = spans.code.countIntersections(positions[i])) != 0) {
                     weightedCounts[i] += 0.25f * cnt;
                 }
-                if ((cnt = spans.anchor.countIntersections(positions[i].iterator())) != 0) {
+                if ((cnt = spans.anchor.countIntersections(positions[i])) != 0) {
                     weightedCounts[i] += 0.2f * cnt;
                 }
-                if ((cnt = spans.nav.countIntersections(positions[i].iterator())) != 0) {
+                if ((cnt = spans.nav.countIntersections(positions[i])) != 0) {
                     weightedCounts[i] += 0.1f * cnt;
                 }
-                if ((cnt = spans.body.countIntersections(positions[i].iterator())) != 0) {
+                if ((cnt = spans.body.countIntersections(positions[i])) != 0) {
                     weightedCounts[i] += 1.0f * cnt;
                 }
             }
@@ -351,13 +351,13 @@ public class IndexResultScoreCalculator {
 
                 if (positions[i] != null) {
                     rankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
-                    rankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title.iterator(), positions[i].iterator()).iterator());
-                    rankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading.iterator(), positions[i].iterator()).iterator());
-                    rankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.iterator(), positions[i].iterator()).iterator());
-                    rankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.iterator(), positions[i].iterator()).iterator());
-                    rankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.iterator(), positions[i].iterator()).iterator());
-                    rankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.iterator(), positions[i].iterator()).iterator());
-                    rankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.iterator(), positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title, positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading, positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.iterator(), positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.iterator(), positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.iterator(), positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.iterator(), positions[i].iterator()).iterator());
+//                    rankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.iterator(), positions[i].iterator()).iterator());
                 }
 
             }
@@ -400,7 +400,7 @@ public class IndexResultScoreCalculator {
         var fullGroup = constraints.getFullGroup();
         IntList fullGroupIntersections = fullGroup.findIntersections(positions);
         for (var tag : HtmlTag.includedTags) {
-            if (spans.getSpan(tag).containsRange(fullGroupIntersections.iterator(), fullGroup.size)) {
+            if (spans.getSpan(tag).containsRange(fullGroupIntersections, fullGroup.size)) {
                 verbatimMatchScore += verbatimMatches.getWeightFull(tag) * fullGroup.size;
                 verbatimMatches.set(tag);
             }
@@ -413,7 +413,7 @@ public class IndexResultScoreCalculator {
 
             IntList intersections = optionalGroup.findIntersections(positions);
             for (var tag : HtmlTag.includedTags) {
-                if (spans.getSpan(tag).containsRange(intersections.iterator(), groupSize)) {
+                if (spans.getSpan(tag).containsRange(intersections, groupSize)) {
                     verbatimMatchScore += verbatimMatches.getWeightPartial(tag) * sizeScalingFactor * groupSize;
                 }
             }

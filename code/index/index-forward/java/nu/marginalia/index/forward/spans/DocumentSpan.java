@@ -17,32 +17,30 @@ public class DocumentSpan {
         this.startsEnds = null;
     }
 
-    public int countIntersections(IntIterator positionsIter) {
-        if (null == startsEnds || !positionsIter.hasNext()) {
+    public int countIntersections(IntList positions) {
+        if (null == startsEnds || startsEnds.isEmpty() || positions.isEmpty()) {
             return 0;
         }
 
-        var iter = startsEnds.iterator();
-        int start = -1;
-        int end = -1;
+        int sei = 0;
+        int start = startsEnds.getInt(sei++);
+        int end = startsEnds.getInt(sei++);
 
         int cnt = 0;
-        while (iter.hasNext() && positionsIter.hasNext()) {
-            if (start < 0) {
-                start = iter.nextInt();
-                end = iter.nextInt();
-            }
-
-            int position = positionsIter.nextInt();
+        for (int pi = 0; pi < positions.size(); pi++) {
+            int position = positions.getInt(pi);
             if (position < start) {
                 continue;
             }
 
             if (position < end) {
                 cnt++;
+            } else if (sei + 2 < startsEnds.size()) {
+                start = startsEnds.getInt(sei++);
+                end = startsEnds.getInt(sei++);
+            } else {
+                return cnt;
             }
-
-            start = -1;
         }
 
         return cnt;
@@ -68,31 +66,32 @@ public class DocumentSpan {
         return false;
     }
 
-    public boolean containsRange(IntIterator positionsIter, int len) {
-        if (null == startsEnds || !positionsIter.hasNext()) {
+    public boolean containsRange(IntList positions, int len) {
+        if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
             return false;
         }
 
-        var iter = startsEnds.iterator();
-        int start = -1;
-        int end = -1;
+        int sei = 0;
 
-        while (iter.hasNext() && positionsIter.hasNext()) {
-            if (start < 0) {
-                start = iter.nextInt();
-                end = iter.nextInt();
-            }
 
-            int position = positionsIter.nextInt();
+        int start = startsEnds.getInt(sei++);
+        int end = startsEnds.getInt(sei++);
+
+        for (int pi = 0; pi < positions.size(); pi++) {
+            int position = positions.getInt(pi);
             if (position < start) {
                 continue;
             }
 
             if (position + len < end) {
                 return true;
+            } else if (sei + 2 < startsEnds.size()) {
+                start = startsEnds.getInt(sei++);
+                end = startsEnds.getInt(sei++);
             }
-
-            start = -1;
+            else {
+                return false;
+            }
         }
 
         return false;
