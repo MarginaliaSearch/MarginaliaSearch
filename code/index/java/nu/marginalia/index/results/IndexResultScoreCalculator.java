@@ -311,16 +311,16 @@ public class IndexResultScoreCalculator {
                 + temporalBias
                 + flagsPenalty;
 
-        double tcfAvgDist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
-        double tcfFirstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
-        double tcfProximity = rankingParams.tcfProximity * keywordMinDistFac;
-        double tcfVerbatim = rankingParams.tcfVerbatim * verbatimMatchScore;
+        double score_avg_dist = rankingParams.tcfAvgDist * (1.0 / calculateAvgMinDistance(positionsQuery, ctx));
+        double score_firstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
 
-        double bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
-        double bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
+        double score_bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
+        double score_bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
+        double score_verbatim = rankingParams.tcfVerbatim * verbatimMatchScore;
+        double score_proximity = rankingParams.tcfProximity * keywordMinDistFac;
 
-        bM25 *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
-        bFlags *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
+        score_bM25 *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
+        score_bFlags *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
 
         if (rankingFactors != null) {
             rankingFactors.addDocumentFactor("overall.averageSentenceLengthPenalty", Double.toString(averageSentenceLengthPenalty));
@@ -330,14 +330,15 @@ public class IndexResultScoreCalculator {
             rankingFactors.addDocumentFactor("overall.topologyBonus", Double.toString(topologyBonus));
             rankingFactors.addDocumentFactor("overall.temporalBias", Double.toString(temporalBias));
             rankingFactors.addDocumentFactor("overall.flagsPenalty", Double.toString(flagsPenalty));
-            rankingFactors.addDocumentFactor("overall.verbatimMatchScore", Double.toString(verbatimMatchScore));
-            rankingFactors.addDocumentFactor("overall.keywordMinDistFac", Double.toString(keywordMinDistFac));
 
-            rankingFactors.addDocumentFactor("tcf.avgDist", Double.toString(tcfAvgDist));
-            rankingFactors.addDocumentFactor("tcf.firstPosition", Double.toString(tcfFirstPosition));
 
-            rankingFactors.addDocumentFactor("bm25.main", Double.toString(bM25));
-            rankingFactors.addDocumentFactor("bm25.flags", Double.toString(bFlags));
+
+            rankingFactors.addDocumentFactor("score.bm25-main", Double.toString(score_bM25));
+            rankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
+            rankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
+            rankingFactors.addDocumentFactor("score.proximity", Double.toString(score_proximity));
+            rankingFactors.addDocumentFactor("score.avgDist", Double.toString(score_avg_dist));
+            rankingFactors.addDocumentFactor("score.firstPosition", Double.toString(score_firstPosition));
 
             rankingFactors.addDocumentFactor("unordered.title", Integer.toString(unorderedMatchInTitleCount));
             rankingFactors.addDocumentFactor("unordered.heading", Integer.toString(unorderedMatchInHeadingCount));
@@ -379,9 +380,9 @@ public class IndexResultScoreCalculator {
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
         double ret = normalize(
-                tcfAvgDist + tcfFirstPosition + tcfProximity + tcfVerbatim
-                        + bM25
-                        + bFlags
+                score_avg_dist + score_firstPosition + score_proximity + score_verbatim
+                        + score_bM25
+                        + score_bFlags
                         + Math.max(0, overallPart),
                 -Math.min(0, overallPart));
 
