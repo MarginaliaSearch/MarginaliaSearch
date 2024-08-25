@@ -22,24 +22,13 @@ public class DocumentSpan {
             return 0;
         }
 
-        int sei = 0;
-        int start = startsEnds.getInt(sei++);
-        int end = startsEnds.getInt(sei++);
-
         int cnt = 0;
         for (int pi = 0; pi < positions.size(); pi++) {
-            int position = positions.getInt(pi);
-            if (position < start) {
-                continue;
-            }
-
-            if (position < end) {
-                cnt++;
-            } else if (sei + 2 < startsEnds.size()) {
-                start = startsEnds.getInt(sei++);
-                end = startsEnds.getInt(sei++);
-            } else {
-                return cnt;
+            for (int sei = 0; sei < startsEnds.size(); sei ++) {
+                if (startsEnds.getInt(sei) > positions.getInt(pi)) {
+                    cnt += sei % 2;
+                    break;
+                }
             }
         }
 
