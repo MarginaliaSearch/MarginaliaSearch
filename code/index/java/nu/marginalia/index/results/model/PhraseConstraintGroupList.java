@@ -1,5 +1,6 @@
 package nu.marginalia.index.results.model;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.model.SearchTermsUtil;
@@ -142,8 +143,8 @@ public class PhraseConstraintGroupList {
         }
 
         public int minDistance(IntList[] positions) {
-            IntList[] sequences = new IntList[present.cardinality()];
-            int[] iterOffsets = new int[sequences.length];
+            List<IntList> sequences = new ArrayList<>(present.cardinality());
+            IntList iterOffsets = new IntArrayList(present.cardinality());
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
@@ -162,11 +163,16 @@ public class PhraseConstraintGroupList {
                 if (posForTerm == null) {
                     return Integer.MAX_VALUE;
                 }
-                sequences[si++] = posForTerm;
-                iterOffsets[si - 1] = -oi;
+
+                if (posForTerm.size() > 16) { // heuristic to avoid large sequences, which is expensive and not very useful
+                    continue;
+                }
+
+                sequences.add(posForTerm);
+                iterOffsets.add(-oi);
             }
 
-            return SequenceOperations.minDistance(sequences, iterOffsets);
+            return SequenceOperations.minDistance(sequences.toArray(IntList[]::new), iterOffsets.toIntArray());
         }
     }
 }

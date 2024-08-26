@@ -158,7 +158,6 @@ public class SequenceOperations {
         }
 
         int minDist = Integer.MAX_VALUE;
-
         int maxVal = Integer.MIN_VALUE;
 
         int maxI = 0;
