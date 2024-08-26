@@ -251,36 +251,40 @@ public class IndexResultScoreCalculator {
         int firstPosition = 1;
         for (int i = 0; i < weightedCounts.length; i++) {
 
-            if (positions[i] != null && ctx.regularMask.get(i)) {
-                searchableKeywordsCount ++;
-                int[] posArray = positions[i].toIntArray();
+            if (positions[i] == null || !ctx.regularMask.get(i))
+                continue;
 
-                for (int idx = 0; idx < positions[i].size(); idx++) {
-                    int pos = positions[i].getInt(idx);
-                    firstPosition = Math.max(firstPosition, pos);
-                }
+            searchableKeywordsCount ++;
+            int[] posArray = positions[i].toIntArray();
 
-                int cnt;
-                if ((cnt = spans.title.countIntersections(posArray)) != 0) {
-                    unorderedMatchInTitleCount++;
-                    weightedCounts[i] += 2.5f * cnt;
-                }
-                if ((cnt = spans.heading.countIntersections(posArray)) != 0) {
+            for (int idx = 0; idx < positions[i].size(); idx++) {
+                int pos = positions[i].getInt(idx);
+                firstPosition = Math.max(firstPosition, pos);
+            }
+
+            int cnt;
+            if ((cnt = spans.title.countIntersections(posArray)) != 0) {
+                unorderedMatchInTitleCount++;
+                weightedCounts[i] += 2.5f * cnt;
+            }
+            if ((cnt = spans.heading.countIntersections(posArray)) != 0) {
+                if (spans.heading.size() < 64) {
+                    // Correct for the case where there's a lot of headings everywhere, or the entire document is a heading
                     unorderedMatchInHeadingCount++;
-                    weightedCounts[i] += 2.5f * cnt;
                 }
-                if ((cnt = spans.code.countIntersections(posArray)) != 0) {
-                    weightedCounts[i] += 0.25f * cnt;
-                }
-                if ((cnt = spans.anchor.countIntersections(posArray)) != 0) {
-                    weightedCounts[i] += 0.2f * cnt;
-                }
-                if ((cnt = spans.nav.countIntersections(posArray)) != 0) {
-                    weightedCounts[i] += 0.1f * cnt;
-                }
-                if ((cnt = spans.body.countIntersections(posArray)) != 0) {
-                    weightedCounts[i] += 1.0f * cnt;
-                }
+                weightedCounts[i] += 2.5f * cnt;
+            }
+            if ((cnt = spans.code.countIntersections(posArray)) != 0) {
+                weightedCounts[i] += 0.25f * cnt;
+            }
+            if ((cnt = spans.anchor.countIntersections(posArray)) != 0) {
+                weightedCounts[i] += 0.2f * cnt;
+            }
+            if ((cnt = spans.nav.countIntersections(posArray)) != 0) {
+                weightedCounts[i] += 0.1f * cnt;
+            }
+            if ((cnt = spans.body.countIntersections(posArray)) != 0) {
+                weightedCounts[i] += 1.0f * cnt;
             }
         }
 
@@ -290,7 +294,7 @@ public class IndexResultScoreCalculator {
         }
 
         if (!verbatimMatches.get(HtmlTag.HEADING) && unorderedMatchInHeadingCount == searchableKeywordsCount) {
-            verbatimMatchScore += 2.0f * unorderedMatchInHeadingCount;
+            verbatimMatchScore += 1.0f * unorderedMatchInHeadingCount;
         }
 
         double overallPart = averageSentenceLengthPenalty
