@@ -1,6 +1,6 @@
 package nu.marginalia.index.journal;
 
-import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
+import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
@@ -19,10 +19,10 @@ public record IndexJournalPage(Path baseDir, int page) {
 
     public static LongArrayColumn termIds = new LongArrayColumn("termIds", StorageType.ZSTD);
     public static ByteArrayColumn termMeta = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
-    public static GammaCodedSequenceArrayColumn positions = new GammaCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
+    public static VarintCodedSequenceArrayColumn positions = new VarintCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
 
     public static ByteArrayColumn spanCodes = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
-    public static GammaCodedSequenceArrayColumn spans = new GammaCodedSequenceArrayColumn("spans", StorageType.ZSTD);
+    public static VarintCodedSequenceArrayColumn spans = new VarintCodedSequenceArrayColumn("spans", StorageType.ZSTD);
 
     public IndexJournalPage {
         if (!baseDir.toFile().isDirectory()) {
@@ -55,11 +55,11 @@ public record IndexJournalPage(Path baseDir, int page) {
         return termMeta.open(table);
     }
 
-    public GammaCodedSequenceArrayColumn.Reader openTermPositions(SlopTable table) throws IOException {
+    public VarintCodedSequenceArrayColumn.Reader openTermPositions(SlopTable table) throws IOException {
         return positions.open(table);
     }
 
-    public GammaCodedSequenceArrayColumn.Reader openSpans(SlopTable table) throws IOException {
+    public VarintCodedSequenceArrayColumn.Reader openSpans(SlopTable table) throws IOException {
         return spans.open(table);
     }
 

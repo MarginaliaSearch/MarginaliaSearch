@@ -33,7 +33,7 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
@@ -46,7 +46,6 @@ import org.junit.jupiter.api.parallel.Execution;
 import javax.annotation.CheckReturnValue;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -544,10 +543,9 @@ public class IndexQueryServiceIntegrationTest {
                     metadata[i] = (byte) words.get(i).termMetadata;
                 }
 
-                List<GammaCodedSequence> positions = new ArrayList<>();
-                ByteBuffer workBuffer = ByteBuffer.allocate(8192);
+                List<VarintCodedSequence> positions = new ArrayList<>();
                 for (int i = 0; i < words.size(); i++) {
-                    positions.add(GammaCodedSequence.generate(workBuffer, words.get(i).positions));
+                    positions.add(VarintCodedSequence.generate(words.get(i).positions));
                 }
 
                 indexJournalWriter.put(doc,

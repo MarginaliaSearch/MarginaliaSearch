@@ -1,6 +1,6 @@
 package nu.marginalia.model.processed;
 
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -46,9 +46,9 @@ public class SlopDocumentRecordTest {
                 null,
                 List.of("test1", "test2"),
                 new byte[] { 2, 3},
-                List.of(GammaCodedSequence.generate(workArea, 1, 3, 5), GammaCodedSequence.generate(workArea, 2, 4, 6)),
+                List.of(VarintCodedSequence.generate(1, 3, 5), VarintCodedSequence.generate(2, 4, 6)),
                 new byte[] { 'a', 'b' },
-                List.of(GammaCodedSequence.generate(workArea, 2, 3, 5), GammaCodedSequence.generate(workArea, 3, 4, 6))
+                List.of(VarintCodedSequence.generate(2, 3, 5), VarintCodedSequence.generate(3, 4, 6))
         );
 
         try (var writer = new SlopDocumentRecord.Writer(testDir, 0)) {

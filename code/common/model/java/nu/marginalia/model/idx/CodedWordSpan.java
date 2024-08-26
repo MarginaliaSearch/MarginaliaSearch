@@ -1,6 +1,6 @@
 package nu.marginalia.model.idx;
 
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 
-public record CodedWordSpan(byte code, GammaCodedSequence spans) {
+public record CodedWordSpan(byte code, VarintCodedSequence spans) {
 }

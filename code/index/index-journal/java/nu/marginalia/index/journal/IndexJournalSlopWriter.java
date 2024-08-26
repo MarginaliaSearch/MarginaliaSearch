@@ -3,7 +3,7 @@ package nu.marginalia.index.journal;
 import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.processed.SlopDocumentRecord;
-import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
+import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
@@ -24,9 +24,9 @@ public class IndexJournalSlopWriter extends SlopTable {
 
     private final LongArrayColumn.Writer termIdsWriter;
     private final ByteArrayColumn.Writer termMetadataWriter;
-    private final GammaCodedSequenceArrayColumn.Writer termPositionsWriter;
+    private final VarintCodedSequenceArrayColumn.Writer termPositionsWriter;
 
-    private final GammaCodedSequenceArrayColumn.Writer spansWriter;
+    private final VarintCodedSequenceArrayColumn.Writer spansWriter;
     private final ByteArrayColumn.Writer spanCodesWriter;
 
     private static final MurmurHash3_128 hash = new MurmurHash3_128();

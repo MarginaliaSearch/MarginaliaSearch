@@ -31,7 +31,7 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
@@ -377,11 +377,11 @@ public class IndexQueryServiceIntegrationSmokeTest {
             metadata[i] = WordFlags.Title.asBit();
         }
 
-        List<GammaCodedSequence> positions = new ArrayList<>();
+        List<VarintCodedSequence> positions = new ArrayList<>();
 
         ByteBuffer wa = ByteBuffer.allocate(32);
         for (int i = 0; i < factors.length; i++) {
-            positions.add(GammaCodedSequence.generate(wa, factors));
+            positions.add(VarintCodedSequence.generate(factors));
         }
 
         indexJournalWriter.put(fullId,
@@ -417,11 +417,11 @@ public class IndexQueryServiceIntegrationSmokeTest {
             metadata[i] = WordFlags.Title.asBit();
         }
 
-        List<GammaCodedSequence> positions = new ArrayList<>();
+        List<VarintCodedSequence> positions = new ArrayList<>();
 
         ByteBuffer wa = ByteBuffer.allocate(32);
         for (int i = 0; i < factors.length; i++) {
-            positions.add(GammaCodedSequence.generate(wa, i + 1));
+            positions.add(VarintCodedSequence.generate(i + 1));
         }
 
         indexJournalWriter.put(fullId,

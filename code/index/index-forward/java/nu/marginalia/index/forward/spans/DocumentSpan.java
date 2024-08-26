@@ -6,6 +6,7 @@ import nu.marginalia.sequence.CodedSequence;
 
 import java.util.Arrays;
 
+/** A list of the interlaced start and end positions of each span in the document of this type */
 public class DocumentSpan {
 
     /** A list of the interlaced start and end positions of each span in the document of this type */
@@ -19,6 +20,7 @@ public class DocumentSpan {
         this.startsEnds = null;
     }
 
+    /** Counts the number of intersections between the spans in the document of this type and the given list of positions */
     public int countIntersections(int[] positions) {
         if (null == startsEnds || startsEnds.isEmpty() || positions.length == 0) {
             return 0;
@@ -26,37 +28,39 @@ public class DocumentSpan {
 
         int cnt = 0;
 
-        if (positions.length < 8) {
+        if (positions.length < 8) { // for small arrays we can do a linear search
             int seis = 0;
 
             for (int pi = 0; pi < positions.length; pi++) {
                 int position = positions[pi];
 
+                // search through the spans until we find an item that is greater than the given position
                 for (int sei = seis; sei < startsEnds.size(); sei ++) {
                     if (startsEnds.getInt(sei) > position) {
-                        cnt += sei % 2;
+                        cnt += sei % 2;  // if sei is odd, we are between a start and end position in the spans list
                         seis = Math.max(seis, sei - 1);
                         break;
                     }
                 }
             }
         }
-        else {
-            int ss = 0;
+        else { // for large arrays we use a binary search
+            int searchStart = 0;
 
-            for (int sei = 0; sei < startsEnds.size() && ss < positions.length; ) {
+            for (int sei = 0; sei < startsEnds.size() && searchStart < positions.length; ) {
                 int start = startsEnds.getInt(sei++);
                 int end = startsEnds.getInt(sei++);
 
-                int i = Arrays.binarySearch(positions, ss, positions.length, start);
-                if (i < 0) {
-                    i = -i - 1;
-                }
+                // find the first position that is greater or equal to the start position
+                int i = Arrays.binarySearch(positions, searchStart, positions.length, start);
+                if (i < 0) i = -i - 1; // if the position is not found, we get the insertion point
+
+                // ... from that point, count the number of positions that smaller than the end position
                 while (i < positions.length && positions[i] < end) {
                     cnt++;
                     i++;
                 }
-                ss = i;
+                searchStart = i;
             }
         }
 
@@ -83,6 +87,8 @@ public class DocumentSpan {
         return false;
     }
 
+    /** Returns true if for any position in the list, there exists a range
+     * (position[i], position[i]+len] that is overlapped by a span */
     public boolean containsRange(IntList positions, int len) {
         if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
             return false;

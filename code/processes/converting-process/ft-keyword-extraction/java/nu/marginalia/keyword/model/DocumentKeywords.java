@@ -1,7 +1,7 @@
 package nu.marginalia.keyword.model;
 
 import nu.marginalia.model.idx.CodedWordSpan;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 
 import java.util.List;
 
@@ -9,12 +9,12 @@ public final class DocumentKeywords {
 
     public final List<String> keywords;
     public final byte[] metadata;
-    public final List<GammaCodedSequence> positions;
+    public final List<VarintCodedSequence> positions;
     public final List<CodedWordSpan> spans;
 
     public DocumentKeywords(List<String> keywords,
                             byte[] metadata,
-                            List<GammaCodedSequence> positions,
+                            List<VarintCodedSequence> positions,
                             List<CodedWordSpan> spans)
     {
         this.keywords = keywords;

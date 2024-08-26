@@ -1,7 +1,7 @@
 package nu.marginalia.index.positions;
 
 import nu.marginalia.sequence.CodedSequence;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 
 import java.nio.ByteBuffer;
 
@@ -17,6 +17,6 @@ public class TermData {
     }
 
     public CodedSequence positions() {
-        return new GammaCodedSequence(buffer, 1, buffer.capacity());
+        return new VarintCodedSequence(buffer, 1, buffer.capacity());
     }
 }

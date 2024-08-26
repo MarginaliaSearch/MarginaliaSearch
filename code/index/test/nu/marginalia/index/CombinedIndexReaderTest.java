@@ -28,7 +28,7 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
 import org.junit.jupiter.api.AfterEach;
@@ -39,7 +39,6 @@ import org.junit.jupiter.api.parallel.Execution;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -321,7 +320,7 @@ public class CombinedIndexReaderTest {
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = words.get(i).termMetadata;
                 }
-                var positions = words.stream().map(w -> w.positions).map(pos ->  GammaCodedSequence.generate(ByteBuffer.allocate(1024), pos.toIntArray())).toList();
+                var positions = words.stream().map(w -> w.positions).map(pos ->  VarintCodedSequence.generate(pos.toIntArray())).toList();
 
                 indexJournalWriter.put(doc,
                         new SlopDocumentRecord.KeywordsProjection(

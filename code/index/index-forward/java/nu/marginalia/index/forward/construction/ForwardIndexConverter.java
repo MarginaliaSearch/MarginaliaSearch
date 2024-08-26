@@ -120,7 +120,6 @@ public class ForwardIndexConverter {
                         for (int i = 0; i < spansCodes.length; i++) {
                             spansWriter.writeSpan(spansCodes[i], spans.get(i));
                         }
-
                         long encodedSpansOffset = spansWriter.endRecord();
 
 

@@ -20,6 +20,13 @@ public class VarintCodedSequence implements CodedSequence {
         this.startLimit = buffer.limit();
     }
 
+    public VarintCodedSequence(ByteBuffer buffer, int startPos, int startLimit) {
+        this.raw = buffer;
+
+        this.startPos = startPos;
+        this.startLimit = startLimit;
+    }
+
     private static int requiredBufferSize(int[] values) {
         int prev = 0;
         int size = 0;
@@ -32,9 +39,45 @@ public class VarintCodedSequence implements CodedSequence {
         return size + varintSize(size + 1);
     }
 
+    private static int requiredBufferSize(IntList values) {
+        int prev = 0;
+        int size = 0;
+
+        for (int i = 0; i < values.size(); i++) {
+            int value = values.getInt(i);
+            size += varintSize(value - prev);
+            prev = value;
+        }
+
+        return size + varintSize(size + 1);
+    }
+
     private static int varintSize(int value) {
         int bits = 32 - Integer.numberOfLeadingZeros(value);
         return (bits + 6) / 7;
+    }
+
+    public static VarintCodedSequence generate(IntList values) {
+        int bufferSize = requiredBufferSize(values);
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+
+        int prev = 0;
+
+        encodeValue(buffer, values.size() + 1);
+
+        for (int i = 0; i < values.size(); i++) {
+            int value = values.getInt(i);
+            int toEncode = value - prev;
+            assert toEncode > 0 : "Values must be strictly increasing";
+
+            encodeValue(buffer, toEncode);
+
+            prev = value;
+        }
+
+        buffer.flip();
+
+        return new VarintCodedSequence(buffer);
     }
 
     public static VarintCodedSequence generate(int... values) {
@@ -60,20 +103,23 @@ public class VarintCodedSequence implements CodedSequence {
     }
 
     private static void encodeValue(ByteBuffer buffer, int value) {
-        if (value < 0x80) {
+        if (value < (1<<7)) {
             buffer.put((byte) value);
         }
-        else if (value < 0x4_000) {
+        else if (value < (1<<14)) {
             buffer.put((byte) (value >>> (7) | 0x80));
             buffer.put((byte) (value & 0x7F));
         }
-        else if (value < 0x20_0000) {
+        else if (value < (1<<21)) {
             buffer.put((byte) (value >>> (14) | 0x80));
             buffer.put((byte) (value >>> (7) | 0x80));
             buffer.put((byte) (value & 0x7F));
         }
-        else if (value < 0x1000_0000) {
-            buffer.putInt(Integer.expand(value, 0x00808080) | 0x80808000);
+        else if (value < (1<<28)) {
+            buffer.put((byte) ((value >>> 21) | 0x80));
+            buffer.put((byte) ((value >>> 14) | 0x80));
+            buffer.put((byte) ((value >>> 7) | 0x80));
+            buffer.put((byte) (value & 0x7F));
         }
         else {
             throw new IllegalArgumentException("Value too large to encode");
@@ -139,11 +185,12 @@ public class VarintCodedSequence implements CodedSequence {
             return b;
         }
 
-        int value = b;
+        int value = b & 0x7F;
         do {
             b = buffer.get();
-            value = value << 7 | (b & 0x7F);
+            value = (value << 7) | (b & 0x7F);
         } while ((b & 0x80) != 0);
+
 
         return value;
     }

@@ -3,6 +3,10 @@ package nu.marginalia.index.forward.spans;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.CodedSequence;
 
+/** All spans associated with a document
+ * <p></p>
+ * A span is a list of document positions that are associated with a particular tag in the document.
+ * */
 public class DocumentSpans {
     private static final DocumentSpan EMPTY_SPAN = new DocumentSpan();
 

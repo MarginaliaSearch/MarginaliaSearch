@@ -63,6 +63,8 @@ class SequenceOperationsTest {
         assertTrue(SequenceOperations.intersectSequences(seq1.iterator(), seq2.iterator(), seq3.iterator()));
     }
 
+
+
     @Test
     void intersectSequencesDeepMatch3findIntersections() {
         ByteBuffer wa = ByteBuffer.allocate(1024);

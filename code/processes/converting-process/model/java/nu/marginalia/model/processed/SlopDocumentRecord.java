@@ -1,8 +1,8 @@
 package nu.marginalia.model.processed;
 
 import lombok.Builder;
-import nu.marginalia.sequence.GammaCodedSequence;
-import nu.marginalia.sequence.slop.GammaCodedSequenceArrayColumn;
+import nu.marginalia.sequence.VarintCodedSequence;
+import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.ObjectArrayColumn;
@@ -39,9 +39,9 @@ public record SlopDocumentRecord(
         Integer pubYear,
         List<String> words,
         byte[] metas,
-        List<GammaCodedSequence> positions,
+        List<VarintCodedSequence> positions,
         byte[] spanCodes,
-        List<GammaCodedSequence> spans
+        List<VarintCodedSequence> spans
 ) {
 
     public SlopDocumentRecord {
@@ -60,9 +60,9 @@ public record SlopDocumentRecord(
             int length,
             List<String> words,
             byte[] metas,
-            List<GammaCodedSequence> positions,
+            List<VarintCodedSequence> positions,
             byte[] spanCodes,
-            List<GammaCodedSequence> spans)
+            List<VarintCodedSequence> spans)
     {
         // Override the equals method since records don't generate default equals that deal with array fields properly
         @Override
@@ -127,12 +127,12 @@ public record SlopDocumentRecord(
 
     private static final ObjectArrayColumn<String> keywordsColumn = new StringColumn("keywords", StorageType.ZSTD).asArray();
     private static final ByteArrayColumn termMetaColumn = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
-    private static final GammaCodedSequenceArrayColumn termPositionsColumn = new GammaCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
+    private static final VarintCodedSequenceArrayColumn termPositionsColumn = new VarintCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
 
     // Spans columns
 
     private static final ByteArrayColumn spanCodesColumn = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
-    private static final GammaCodedSequenceArrayColumn spansColumn = new GammaCodedSequenceArrayColumn("spans", StorageType.ZSTD);
+    private static final VarintCodedSequenceArrayColumn spansColumn = new VarintCodedSequenceArrayColumn("spans", StorageType.ZSTD);
 
     public static class KeywordsProjectionReader extends SlopTable {
         private final TxtStringColumn.Reader domainsReader;
@@ -143,10 +143,10 @@ public record SlopDocumentRecord(
 
         private final ObjectArrayColumn<String>.Reader keywordsReader;
         private final ByteArrayColumn.Reader termMetaReader;
-        private final GammaCodedSequenceArrayColumn.Reader termPositionsReader;
+        private final VarintCodedSequenceArrayColumn.Reader termPositionsReader;
 
         private final ByteArrayColumn.Reader spanCodesReader;
-        private final GammaCodedSequenceArrayColumn.Reader spansReader;
+        private final VarintCodedSequenceArrayColumn.Reader spansReader;
 
         public KeywordsProjectionReader(SlopTable.Ref<SlopDocumentRecord> pageRef) throws IOException {
             super(pageRef);
@@ -177,10 +177,10 @@ public record SlopDocumentRecord(
             int length = lengthsReader.get();
 
             List<String> words = keywordsReader.get();
-            List<GammaCodedSequence> positions = termPositionsReader.get();
+            List<VarintCodedSequence> positions = termPositionsReader.get();
             byte[] metas = termMetaReader.get();
             byte[] spanCodes = spanCodesReader.get();
-            List<GammaCodedSequence> spans = spansReader.get();
+            List<VarintCodedSequence> spans = spansReader.get();
 
             return new KeywordsProjection(
                     domain,
@@ -272,9 +272,9 @@ public record SlopDocumentRecord(
         private final IntColumn.Writer pubYearWriter;
         private final ObjectArrayColumn<String>.Writer keywordsWriter;
         private final ByteArrayColumn.Writer termMetaWriter;
-        private final GammaCodedSequenceArrayColumn.Writer termPositionsWriter;
+        private final VarintCodedSequenceArrayColumn.Writer termPositionsWriter;
         private final ByteArrayColumn.Writer spansCodesWriter;
-        private final GammaCodedSequenceArrayColumn.Writer spansWriter;
+        private final VarintCodedSequenceArrayColumn.Writer spansWriter;
 
         public Writer(Path baseDir, int page) throws IOException {
             super(baseDir, page);

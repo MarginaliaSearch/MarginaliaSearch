@@ -49,20 +49,22 @@ public class BitReader {
 
     /** Read the next width bits from the buffer */
     public int get(int width) {
-        if (width == 0) {
-            return 0;
+        // Fast path for reading a full integer from the current value
+        if (bitPosition >= width) {
+            // We have enough bits in the current value to satisfy the request
+            int result = (int)(currentValue >>> (bitPosition - width)) & ~-(1<<width);
+            // Update the bit position
+            bitPosition -= width;
+            return result;
         }
-        assert width <= 32;
 
         if (bitPosition <= 0) {
             readNext();
         }
 
         int result = 0;
-
-        while (width > 0) {
+        do {
             int dw = bitPosition - width;
-
             if (dw >= 0) { // We have enough bits in the current value to satisfy the request
                 result |= ((int)(currentValue >>> dw)) & ~-(1<<width);
 
@@ -85,6 +87,7 @@ public class BitReader {
                 readNext(); // implicitly: bitPosition = 0 here
             }
         }
+        while (width > 0);
 
         return result;
     }

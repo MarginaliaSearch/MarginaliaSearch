@@ -3,11 +3,10 @@ package nu.marginalia.index.construction.full;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.model.processed.SlopDocumentRecord;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.test.TestUtil;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -46,14 +45,14 @@ public class TestJournalFactory {
                     '}';
         }
     }
-    public record WordWithMeta(String wordId, byte meta, GammaCodedSequence gcs) {
-        public WordWithMeta(long wordId, byte meta, GammaCodedSequence gcs) {
+    public record WordWithMeta(String wordId, byte meta, VarintCodedSequence gcs) {
+        public WordWithMeta(long wordId, byte meta, VarintCodedSequence gcs) {
             this(String.valueOf(wordId), meta, gcs);
         }
     }
 
     public static WordWithMeta wm(long wordId, int meta, int... positions) {
-        return new WordWithMeta(wordId, (byte) meta, GammaCodedSequence.generate(ByteBuffer.allocate(128), positions));
+        return new WordWithMeta(wordId, (byte) meta, VarintCodedSequence.generate(positions));
     }
 
     public IndexJournalPage createReader(EntryData... entries) throws IOException {
@@ -64,11 +63,11 @@ public class TestJournalFactory {
             String[] termIds = new String[entry.wordIds.length];
             byte[] meta = new byte[entry.wordIds.length];
 
-            GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
+            VarintCodedSequence[] positions = new VarintCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
                 termIds[i] = entry.wordIds[i];
                 meta[i] = 0;
-                positions[i] = new GammaCodedSequence(new byte[1]);
+                positions[i] = VarintCodedSequence.generate();
             }
 
             writer.put(
@@ -100,11 +99,11 @@ public class TestJournalFactory {
 
             String[] termIds = new String[entry.wordIds.length];
             byte[] meta = new byte[entry.wordIds.length];
-            GammaCodedSequence[] positions = new GammaCodedSequence[entry.wordIds.length];
+            VarintCodedSequence[] positions = new VarintCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
                 termIds[i] = entry.wordIds[i].wordId;
                 meta[i] = entry.wordIds[i].meta;
-                positions[i] = Objects.requireNonNullElseGet(entry.wordIds[i].gcs, () -> new GammaCodedSequence(new byte[1]));
+                positions[i] = Objects.requireNonNullElseGet(entry.wordIds[i].gcs, VarintCodedSequence::generate);
             }
 
             writer.put(

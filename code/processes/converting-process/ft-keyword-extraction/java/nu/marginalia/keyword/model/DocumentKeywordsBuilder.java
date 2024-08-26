@@ -8,7 +8,7 @@ import lombok.Getter;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.idx.CodedWordSpan;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class DocumentKeywordsBuilder {
     public DocumentKeywords build(ByteBuffer workArea) {
         final List<String> wordArray = new ArrayList<>(wordToMeta.size());
         final TByteArrayList meta = new TByteArrayList(wordToMeta.size());
-        final List<GammaCodedSequence> positions = new ArrayList<>(wordToMeta.size());
+        final List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
 
         var iter = wordToMeta.object2ByteEntrySet().fastIterator();
 
@@ -49,13 +49,13 @@ public class DocumentKeywordsBuilder {
             meta.add(entry.getByteValue());
             wordArray.add(entry.getKey());
 
-            var posList = wordToPos.getOrDefault(entry.getKey(), IntList.of());
+            IntList posList = wordToPos.getOrDefault(entry.getKey(), IntList.of());
 
             if (posList.size() > MAX_POSITIONS_PER_WORD) {
                 posList.subList(MAX_POSITIONS_PER_WORD, posList.size()).clear();
             }
 
-            positions.add(GammaCodedSequence.generate(workArea, posList));
+            positions.add(VarintCodedSequence.generate(posList));
         }
 
         // Encode spans
@@ -70,7 +70,7 @@ public class DocumentKeywordsBuilder {
                 positionsForTag.add(span.end());
             }
 
-            spans.add(new CodedWordSpan((byte) tag.charValue(), GammaCodedSequence.generate(workArea, positionsForTag)));
+            spans.add(new CodedWordSpan((byte) tag.charValue(), VarintCodedSequence.generate(positionsForTag)));
         });
 
         return new DocumentKeywords(wordArray, meta.toArray(), positions, spans);
