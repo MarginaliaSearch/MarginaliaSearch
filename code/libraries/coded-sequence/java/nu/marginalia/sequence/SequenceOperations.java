@@ -183,9 +183,13 @@ public class SequenceOperations {
                 int prevValue = values[i];
                 int value = prevValue;
 
-                for (; indexes[i] < len && value <= maxVal;) {
+                while (indexes[i] < len) {
                     prevValue = value;
                     value = positions[i].getInt(indexes[i]++) + offset;
+                    if (value >= maxVal) {
+                        indexes[i]--; // correct for overshooting the largest value smaller than maxVal
+                        break;
+                    }
                 }
 
                 values[i] = prevValue;
