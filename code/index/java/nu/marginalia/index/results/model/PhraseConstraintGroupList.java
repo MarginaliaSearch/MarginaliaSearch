@@ -138,7 +138,7 @@ public class PhraseConstraintGroupList {
                 iterOffsets[si - 1] = -oi;
             }
 
-            return SequenceOperations.findIntersections(iterOffsets, sequences);
+            return SequenceOperations.findIntersections(sequences, iterOffsets);
         }
 
         public int minDistance(IntList[] positions) {

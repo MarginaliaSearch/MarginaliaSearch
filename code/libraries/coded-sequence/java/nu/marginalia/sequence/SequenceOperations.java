@@ -51,11 +51,24 @@ public class SequenceOperations {
         return true;
     }
 
+    /** Find any intersections between the given positions lists, and return the list of intersections.
+     * If any of the lists are empty, return an empty list.
+     * <p></p>
+     */
     public static IntList findIntersections(IntList... positions) {
-        return findIntersections(new int[positions.length], positions);
+        return findIntersections(positions, new int[positions.length]);
     }
 
-    public static IntList findIntersections(int[] offsets, IntList... positions) {
+    /** Find any intersections between the given positions lists, and return the list of intersections.
+     * If any of the lists are empty, return an empty list.
+     * <p></p>
+     * A constant offset can be applied to each position list by providing an array of offsets.
+     *
+     * @param positions the positions lists to compare - each list must be sorted in ascending order
+     *                  and contain unique values.
+     * @param offsets constant offsets to apply to each position
+     * */
+    public static IntList findIntersections(IntList[] positions, int[] offsets) {
 
         if (positions.length < 1)
             return IntList.of();
@@ -116,51 +129,27 @@ public class SequenceOperations {
         return ret;
     }
 
-    /** Return the minimum word distance between two sequences, or a negative value if either sequence is empty.
+
+    /** Given each set of positions, one from each list, find the set with the smallest distance between them
+     * and return that distance.  If any of the lists are empty, return 0.
      * */
-    public static int minDistance(IntIterator seqA, IntIterator seqB)
-    {
-        int minDistance = Integer.MAX_VALUE;
-
-        if (!seqA.hasNext() || !seqB.hasNext())
-            return -1;
-
-        int a = seqA.nextInt();
-        int b = seqB.nextInt();
-
-        while (true) {
-            int distance = Math.abs(a - b);
-            if (distance < minDistance)
-                minDistance = distance;
-
-            if (a <= b) {
-                if (seqA.hasNext()) {
-                    a = seqA.nextInt();
-                } else {
-                    break;
-                }
-            } else {
-                if (seqB.hasNext()) {
-                    b = seqB.nextInt();
-                } else {
-                    break;
-                }
-            }
-        }
-
-        return minDistance;
-    }
-
     public static int minDistance(IntList[] positions) {
         return minDistance(positions, new int[positions.length]);
     }
 
+    /** Given each set of positions, one from each list, find the set with the smallest distance between them
+     * and return that distance.  If any of the lists are empty, return 0.
+     *
+     * @param positions the positions lists to compare - each list must be sorted in ascending order
+     * @param offsets the offsets to apply to each position
+     */
     public static int minDistance(IntList[] positions, int[] offsets) {
         if (positions.length <= 1)
             return 0;
 
         int[] values = new int[positions.length];
         int[] indexes = new int[positions.length];
+
         for (int i = 0; i < positions.length; i++) {
             if (indexes[i] < positions[i].size())
                 values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
@@ -170,40 +159,68 @@ public class SequenceOperations {
 
         int minDist = Integer.MAX_VALUE;
 
-        int minVal = Integer.MAX_VALUE;
         int maxVal = Integer.MIN_VALUE;
 
-        for (int val : values) {
-            minVal = Math.min(minVal, val);
-            maxVal = Math.max(maxVal, val);
+        int maxI = 0;
+
+        // Find the maximum value in values[] and its index in positions[]
+        for (int i = 0; i < positions.length; i++) {
+            if (values[i] > maxVal) {
+                maxVal = values[i];
+                maxI = i;
+            }
         }
 
-        minDist = Math.min(minDist, maxVal - minVal);
-
         for (;;) {
+            // For all the other indexes except maxI, update values[] with the largest value smaller than maxVal
+            for (int idx = 0; idx < positions.length - 1; idx++) {
+                int i = (maxI + idx) % positions.length;
+
+                // Update values[i] until it is the largest value smaller than maxVal
+
+                int len = positions[i].size();
+                int offset = offsets[i];
+                int prevValue = values[i];
+                int value = prevValue;
+
+                for (; indexes[i] < len && value <= maxVal;) {
+                    prevValue = value;
+                    value = positions[i].getInt(indexes[i]++) + offset;
+                }
+
+                values[i] = prevValue;
+            }
+
+            // Calculate minVal and update minDist
+            int minVal = Integer.MAX_VALUE;
+            for (int val : values) {
+                minVal = Math.min(minVal, val);
+            }
+            minDist = Math.min(minDist, maxVal - minVal);
+
+
+            // Find the next maximum value and its index.  We look for the largest value smaller than the current maxVal,
+            // which is the next target value
+            maxVal = Integer.MAX_VALUE;
+
             for (int i = 0; i < positions.length; i++) {
-                if (values[i] > minVal) {
+                int index = indexes[i];
+                if (index >= positions[i].size()) { // no more values in this list, skip
                     continue;
                 }
 
-                if (indexes[i] < positions[i].size()) {
-                    values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
-                } else {
-                    return minDist;
+                int value =  positions[i].getInt(index) + offsets[i];
+                if (value < maxVal) {
+                    maxVal = value;
+                    maxI = i;
                 }
+            }
 
-                if (values[i] > maxVal) {
-                    maxVal = values[i];
-                }
-
-                if (values[i] > minVal) {
-                    minVal = Integer.MAX_VALUE;
-                    for (int val : values) {
-                        minVal = Math.min(minVal, val);
-                    }
-                }
-
-                minDist = Math.min(minDist, maxVal - minVal);
+            if (maxVal != Integer.MAX_VALUE) {
+                indexes[maxI]++;
+            }
+            else {
+                return minDist;
             }
         }
     }
