@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Domains</h1>
+
+    <table class="table">
+        <form method="get">
+            <tr>
+                <td>
+                    <select name="field" class="form-select" aria-label="Select Field">
+                        <option value="domain" {{#if selectedField.domain}}selected{{/if}}>Domain Name</option>
+                        <option value="id" {{#if selectedField.id}}selected{{/if}}>Domain ID</option>
+                        <option value="ip" {{#if selectedField.ip}}selected{{/if}}>IP</option>
+                    </select>
+                </td>
+                <td colspan="3"><input type="text" name="filter" class="form-control" placeholder="Domain" value="{{query}}"></td>
+                <td>
+                    <select name="affinity" class="form-select" aria-label="Select Node Affinity">
+                        <option value="all" {{#if selectedAffinity.all}}selected{{/if}}>-</option>
+                        <option value="known" {{#if selectedAffinity.known}}selected{{/if}}>Known</option>
+                        <option value="scheduled" {{#if selectedAffinity.scheduled}}selected{{/if}}>Scheduled</option>
+                        <option value="assigned" {{#if selectedAffinity.assigned}}selected{{/if}}>Assigned</option>
+                    </select>
+                </td>
+                <td><button type="submit" class="btn btn-primary">Search</button></td>
+            </tr>
+        </form>
+        <tr>
+            <th>Domain</th>
+            <th>ID</th>
+            <th>Node Affinity</th>
+            <th>Rank</th>
+            <th>IP</th>
+            <th>Blacklisted</th>
+        </tr>
+        {{#each results}}
+            <tr>
+                <td>{{name}}</td>
+                <td>{{id}}</td>
+                <td title="{{affinityState.desc}}">{{affinityState}} ({{nodeAffinity}})</td>
+                <td>{{rank}}</td>
+                <td>{{ip}}</td>
+                <td>{{#if blacklisted}}&check;{{/if}}</td>
+            </tr>
+        {{/each}}
+        {{#unless results}}
+            <tr>
+                <td colspan="5">No results found</td>
+            </tr>
+        {{/unless}}
+        <tr>
+            <td>
+                {{#if hasPrevious}}
+                    <a href="?page={{previousPage}}&filter={{query}}&field={{field}}&affinity={{affinity}}">Previous</a>
+                {{/if}}
+            </td>
+            <td colspan="3"></td>
+            <td>
+                {{#if hasNext}}
+                    <a href="?page={{nextPage}}&filter={{query}}&field={{field}}&affinity={{affinity}}">Next</a>
+                {{/if}}
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

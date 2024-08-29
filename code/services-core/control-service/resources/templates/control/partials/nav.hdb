@@ -23,6 +23,7 @@
 					</ul>
 				</li>
                 {{/unless}}
+                <li class="nav-item"><a class="nav-link" href="/domains">Domains</a></li>
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">Index Nodes</a>
                     <ul class="dropdown-menu">
