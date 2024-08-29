@@ -1,5 +1,6 @@
 package nu.marginalia.index.forward.spans;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.sequence.CodedSequence;
@@ -129,7 +130,24 @@ public class DocumentSpan {
         return new DocumentSpanPositionsIterator();
     }
 
-    /** Iteator over the values between the start and end positions of each span in the document of this type */
+    /** Returns a list with all values between the start and end positions of each span in the document of this type
+     * This is an expensive operation and should not be used in the main execution path, but only for debugging
+     * and testing
+     * */
+    public IntList positionValues() {
+        if (null == startsEnds)
+            return IntList.of();
+
+        IntList ret = new IntArrayList();
+        var iter = startsEnds.iterator();
+        while (iter.hasNext()) {
+            ret.add(iter.nextInt());
+        }
+        return ret;
+    }
+
+    /** Iteator over the values between the start and end positions of each span in the document of this type
+     * */
     class DocumentSpanPositionsIterator implements IntIterator {
         private final IntIterator startStopIterator;
 

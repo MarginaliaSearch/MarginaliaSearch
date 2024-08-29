@@ -56,7 +56,7 @@ public class IndexResultScoreCalculator {
 
     @Nullable
     public SearchResultItem calculateScore(Arena arena,
-                                           @Nullable DebugRankingFactors rankingFactors,
+                                           @Nullable DebugRankingFactors debugRankingFactors,
                                            long combinedId,
                                            QuerySearchTerms searchTerms,
                                            long[] wordFlags,
@@ -84,14 +84,19 @@ public class IndexResultScoreCalculator {
         long docId = UrlIdCodec.removeRank(combinedId);
         long docMetadata = index.getDocumentMetadata(docId);
         int htmlFeatures = index.getHtmlFeatures(docId);
+
         int docSize = index.getDocumentSize(docId);
+        if (docSize <= 0) docSize = 5000;
+
         DocumentSpans spans = index.getDocumentSpans(arena, docId);
 
-        if (rankingFactors != null) {
-            rankingFactors.addDocumentFactor("doc.docId", Long.toString(combinedId));
-            rankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
+        if (debugRankingFactors != null) {
+            debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(combinedId));
+            debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
         }
 
+        // Decode the coded positions lists into plain IntLists as at this point we will be
+        // going over them multiple times
         IntList[] decodedPositions = new IntList[positions.length];
         for (int i = 0; i < positions.length; i++) {
             if (positions[i] != null) {
@@ -102,17 +107,78 @@ public class IndexResultScoreCalculator {
             }
         }
 
-        double score = calculateSearchResultValue(
-                rankingFactors,
-                searchTerms,
-                wordFlagsQuery,
-                docMetadata,
-                htmlFeatures,
-                docSize,
-                spans,
-                decodedPositions,
-                searchTerms.phraseConstraints,
-                rankingContext);
+        var params = rankingContext.params;
+
+        double documentBonus = calculateDocumentBonus(docMetadata, htmlFeatures, docSize, params, debugRankingFactors);
+
+        VerbatimMatches verbatimMatches = new VerbatimMatches(decodedPositions, searchTerms.phraseConstraints, spans);
+        UnorderedMatches unorderedMatches = new UnorderedMatches(decodedPositions, compiledQuery, rankingContext.regularMask, spans);
+
+        float proximitiyFac = getProximitiyFac(decodedPositions, searchTerms.phraseConstraints, verbatimMatches, unorderedMatches, spans);
+
+        double score_firstPosition = params.tcfFirstPosition * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
+        double score_verbatim = params.tcfVerbatim * verbatimMatches.getScore();
+        double score_proximity = params.tcfProximity * proximitiyFac;
+        double score_bM25 = params.bm25Weight
+                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.bm25Params, unorderedMatches.getWeightedCounts(), docSize, rankingContext))
+                / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
+        double score_bFlags = params.bm25Weight
+                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.bm25Params, wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
+                / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
+
+        double score = normalize(
+                score_firstPosition + score_proximity + score_verbatim
+                        + score_bM25
+                        + score_bFlags
+                        + Math.max(0, documentBonus),
+                -Math.min(0, documentBonus));
+
+        if (Double.isNaN(score)) { // This should never happen but if it does, we want to know about it
+            if (getClass().desiredAssertionStatus()) {
+                throw new IllegalStateException("NaN in result value calculation");
+            }
+            score = Double.MAX_VALUE;
+        }
+
+        // Capture ranking factors for debugging
+        if (debugRankingFactors != null) {
+            debugRankingFactors.addDocumentFactor("score.bm25-main", Double.toString(score_bM25));
+            debugRankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
+            debugRankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
+            debugRankingFactors.addDocumentFactor("score.proximity", Double.toString(score_proximity));
+            debugRankingFactors.addDocumentFactor("score.firstPosition", Double.toString(score_firstPosition));
+
+            for (int i = 0; i < searchTerms.termIdsAll.size(); i++) {
+                long termId = searchTerms.termIdsAll.at(i);
+
+                var flags = wordFlagsQuery.at(i);
+
+                debugRankingFactors.addTermFactor(termId, "flags.rawEncoded", Long.toString(flags));
+
+                for (var flag : WordFlags.values()) {
+                    if (flag.isPresent((byte) flags)) {
+                        debugRankingFactors.addTermFactor(termId, "flags." + flag.name(), "true");
+                    }
+                }
+
+                for (HtmlTag tag : HtmlTag.includedTags) {
+                    if (verbatimMatches.get(tag)) {
+                        debugRankingFactors.addTermFactor(termId, "verbatim." + tag.name().toLowerCase(), "true");
+                    }
+                }
+
+                if (positions[i] != null) {
+                    debugRankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.positionValues(), decodedPositions[i]).iterator());
+                }
+            }
+        }
 
         return new SearchResultItem(combinedId,
                 docMetadata,
@@ -120,29 +186,6 @@ public class IndexResultScoreCalculator {
                 score,
                 calculatePositionsMask(decodedPositions)
         );
-    }
-
-    /** Calculate a bitmask illustrating the intersected positions of the search terms in the document.
-     *  This is used in the GUI.
-     * */
-    private long calculatePositionsMask(IntList[] positions) {
-        IntList[] iters = new IntList[rankingContext.regularMask.cardinality()];
-        for (int i = 0, j = 0; i < positions.length; i++) {
-            if (rankingContext.regularMask.get(i)) {
-                iters[j++] = positions[i];
-            }
-        }
-        IntIterator intersection = SequenceOperations.findIntersections(iters).intIterator();
-
-        long result = 0;
-        int bit = 0;
-
-        while (intersection.hasNext() && bit < 64) {
-            bit = (int) (Math.sqrt(intersection.nextInt()));
-            result |= 1L << bit;
-        }
-
-        return result;
     }
 
     private boolean meetsQueryStrategyRequirements(CompiledQueryLong queryGraphScores,
@@ -180,24 +223,35 @@ public class IndexResultScoreCalculator {
         return true;
     }
 
+    /** Calculate a bitmask illustrating the intersected positions of the search terms in the document.
+     *  This is used in the GUI.
+     * */
+    private long calculatePositionsMask(IntList[] positions) {
+        IntList[] iters = new IntList[rankingContext.regularMask.cardinality()];
+        for (int i = 0, j = 0; i < positions.length; i++) {
+            if (rankingContext.regularMask.get(i)) {
+                iters[j++] = positions[i];
+            }
+        }
+        IntIterator intersection = SequenceOperations.findIntersections(iters).intIterator();
 
+        long result = 0;
+        int bit = 0;
 
-    public double calculateSearchResultValue(DebugRankingFactors rankingFactors,
-                                             QuerySearchTerms searchTerms,
-                                             CompiledQueryLong wordFlagsQuery,
-                                             long documentMetadata,
-                                             int features,
-                                             int length,
-                                             DocumentSpans spans,
-                                             IntList[] positions,
-                                             PhraseConstraintGroupList constraintGroups,
-                                             ResultRankingContext ctx)
-    {
-        if (length < 0) {
-            length = 5000;
+        while (intersection.hasNext() && bit < 64) {
+            bit = (int) (Math.sqrt(intersection.nextInt()));
+            result |= 1L << bit;
         }
 
-        var rankingParams = ctx.params;
+        return result;
+    }
+
+
+    private double calculateDocumentBonus(long documentMetadata,
+                                          int features,
+                                          int length,
+                                          ResultRankingParameters rankingParams,
+                                          @Nullable DebugRankingFactors debugRankingFactors) {
 
         int rank = DocumentMetadata.decodeRank(documentMetadata);
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
@@ -223,218 +277,76 @@ public class IndexResultScoreCalculator {
             temporalBias = 0;
         }
 
-        final int titleLength = Math.max(1, spans.title.length());
-
-        VerbatimMatches verbatimMatches = new VerbatimMatches();
-
-        float verbatimMatchScore = findVerbatimMatches(verbatimMatches, constraintGroups, positions, spans);
-
-        float[] weightedCounts = new float[compiledQuery.size()];
-        float keywordMinDistFac = 0;
-        if (positions.length > 2) {
-            int minDist = constraintGroups.getFullGroup().minDistance(positions);
-            if (minDist > 0 && minDist < Integer.MAX_VALUE) {
-                if (minDist < 32) {
-                    // If min-dist is sufficiently small, we give a tapering reward to the document
-                    keywordMinDistFac = 2.0f / (0.1f + (float) Math.sqrt(minDist));
-                } else {
-                    // if it is too large, we add a mounting penalty
-                    keywordMinDistFac = -1.0f * (float) Math.sqrt(minDist);
-                }
-            }
+        if (debugRankingFactors != null) {
+            debugRankingFactors.addDocumentFactor("documentBonus.averageSentenceLengthPenalty", Double.toString(averageSentenceLengthPenalty));
+            debugRankingFactors.addDocumentFactor("documentBonus.documentLengthPenalty", Double.toString(documentLengthPenalty));
+            debugRankingFactors.addDocumentFactor("documentBonus.qualityPenalty", Double.toString(qualityPenalty));
+            debugRankingFactors.addDocumentFactor("documentBonus.rankingBonus", Double.toString(rankingBonus));
+            debugRankingFactors.addDocumentFactor("documentBonus.topologyBonus", Double.toString(topologyBonus));
+            debugRankingFactors.addDocumentFactor("documentBonus.temporalBias", Double.toString(temporalBias));
+            debugRankingFactors.addDocumentFactor("documentBonus.flagsPenalty", Double.toString(flagsPenalty));
         }
 
-        int searchableKeywordsCount = 0;
-        int unorderedMatchInTitleCount = 0;
-        int unorderedMatchInHeadingCount = 0;
-
-        int firstPosition = 1;
-        for (int i = 0; i < weightedCounts.length; i++) {
-
-            if (positions[i] == null || !ctx.regularMask.get(i))
-                continue;
-
-            searchableKeywordsCount ++;
-            int[] posArray = positions[i].toIntArray();
-
-            for (int idx = 0; idx < positions[i].size(); idx++) {
-                int pos = positions[i].getInt(idx);
-                firstPosition = Math.max(firstPosition, pos);
-            }
-
-            int cnt;
-            if ((cnt = spans.title.countIntersections(posArray)) != 0) {
-                unorderedMatchInTitleCount++;
-                weightedCounts[i] += 2.5f * cnt;
-            }
-            if ((cnt = spans.heading.countIntersections(posArray)) != 0) {
-                if (spans.heading.size() < 64) {
-                    // Correct for the case where there's a lot of headings everywhere, or the entire document is a heading
-                    unorderedMatchInHeadingCount++;
-                }
-                weightedCounts[i] += 2.5f * cnt;
-            }
-            if ((cnt = spans.code.countIntersections(posArray)) != 0) {
-                weightedCounts[i] += 0.25f * cnt;
-            }
-            if ((cnt = spans.anchor.countIntersections(posArray)) != 0) {
-                weightedCounts[i] += 0.2f * cnt;
-            }
-            if ((cnt = spans.nav.countIntersections(posArray)) != 0) {
-                weightedCounts[i] += 0.1f * cnt;
-            }
-            if ((cnt = spans.body.countIntersections(posArray)) != 0) {
-                weightedCounts[i] += 1.0f * cnt;
-            }
-        }
-
-        if (!verbatimMatches.get(HtmlTag.TITLE) && searchableKeywordsCount > 2 && unorderedMatchInTitleCount == searchableKeywordsCount) {
-            verbatimMatchScore += 2.5f * unorderedMatchInTitleCount;
-            verbatimMatchScore += 2.f * unorderedMatchInTitleCount / titleLength;
-        }
-
-        if (!verbatimMatches.get(HtmlTag.HEADING) && unorderedMatchInHeadingCount == searchableKeywordsCount) {
-            verbatimMatchScore += 1.0f * unorderedMatchInHeadingCount;
-        }
-
-        double overallPart = averageSentenceLengthPenalty
+        return averageSentenceLengthPenalty
                 + documentLengthPenalty
                 + qualityPenalty
                 + rankingBonus
                 + topologyBonus
                 + temporalBias
                 + flagsPenalty;
-
-        double score_firstPosition = rankingParams.tcfFirstPosition * (1.0 / Math.sqrt(firstPosition));
-
-        double score_bM25 = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new Bm25GraphVisitor(rankingParams.bm25Params, weightedCounts, length, ctx));
-        double score_bFlags = rankingParams.bm25Weight * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(rankingParams.bm25Params, wordFlagsQuery.data, weightedCounts, ctx));
-        double score_verbatim = rankingParams.tcfVerbatim * verbatimMatchScore;
-        double score_proximity = rankingParams.tcfProximity * keywordMinDistFac;
-
-        score_bM25 *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
-        score_bFlags *= 1.0 / (Math.sqrt(weightedCounts.length + 1));
-
-        if (rankingFactors != null) {
-            rankingFactors.addDocumentFactor("overall.averageSentenceLengthPenalty", Double.toString(averageSentenceLengthPenalty));
-            rankingFactors.addDocumentFactor("overall.documentLengthPenalty", Double.toString(documentLengthPenalty));
-            rankingFactors.addDocumentFactor("overall.qualityPenalty", Double.toString(qualityPenalty));
-            rankingFactors.addDocumentFactor("overall.rankingBonus", Double.toString(rankingBonus));
-            rankingFactors.addDocumentFactor("overall.topologyBonus", Double.toString(topologyBonus));
-            rankingFactors.addDocumentFactor("overall.temporalBias", Double.toString(temporalBias));
-            rankingFactors.addDocumentFactor("overall.flagsPenalty", Double.toString(flagsPenalty));
-
-
-
-            rankingFactors.addDocumentFactor("score.bm25-main", Double.toString(score_bM25));
-            rankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
-            rankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
-            rankingFactors.addDocumentFactor("score.proximity", Double.toString(score_proximity));
-            rankingFactors.addDocumentFactor("score.firstPosition", Double.toString(score_firstPosition));
-
-            rankingFactors.addDocumentFactor("unordered.title", Integer.toString(unorderedMatchInTitleCount));
-            rankingFactors.addDocumentFactor("unordered.heading", Integer.toString(unorderedMatchInHeadingCount));
-
-            for (int i = 0; i < searchTerms.termIdsAll.size(); i++) {
-                long termId = searchTerms.termIdsAll.at(i);
-
-                rankingFactors.addTermFactor(termId, "factor.weightedCount", Double.toString(weightedCounts[i]));
-                var flags = wordFlagsQuery.at(i);
-
-                rankingFactors.addTermFactor(termId, "flags.rawEncoded", Long.toString(flags));
-
-                for (var flag : WordFlags.values()) {
-                    if (flag.isPresent((byte) flags)) {
-                        rankingFactors.addTermFactor(termId, "flags." + flag.name(), "true");
-                    }
-                }
-
-                for (HtmlTag tag : HtmlTag.includedTags) {
-                    if (verbatimMatches.get(tag)) {
-                        rankingFactors.addTermFactor(termId, "verbatim." + tag.name().toLowerCase(), "true");
-                    }
-                }
-
-                if (positions[i] != null) {
-                    rankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title, positions[i].iterator()).iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading, positions[i].iterator()).iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.iterator(), positions[i].iterator()).iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.iterator(), positions[i].iterator()).iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.iterator(), positions[i].iterator()).iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.iterator(), positions[i].iterator()).iterator());
-//                    rankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.iterator(), positions[i].iterator()).iterator());
-                }
-
-            }
-        }
-
-        // Renormalize to 0...15, where 0 is the best possible score;
-        // this is a historical artifact of the original ranking function
-        double ret = normalize(
-                score_firstPosition + score_proximity + score_verbatim
-                        + score_bM25
-                        + score_bFlags
-                        + Math.max(0, overallPart),
-                -Math.min(0, overallPart));
-
-        if (Double.isNaN(ret)) { // This should never happen but if it does, we want to know about it
-            if (getClass().desiredAssertionStatus()) {
-                throw new IllegalStateException("NaN in result value calculation");
-            }
-
-            return Double.MAX_VALUE;
-        }
-        else {
-            return ret;
-        }
     }
 
-    private float findVerbatimMatches(VerbatimMatches verbatimMatches,
-                                      PhraseConstraintGroupList constraints,
-                                      IntList[] positions,
-                                      DocumentSpans spans) {
+    /** Calculate the proximity factor for the document.
+     * <p></p>
+     * The proximity factor is a bonus based on how close the search terms are to each other in the document
+     * that turns into a penalty if the distance is too large.
+     * */
+    private static float getProximitiyFac(IntList[] positions,
+                                          PhraseConstraintGroupList constraintGroups,
+                                          VerbatimMatches verbatimMatches,
+                                          UnorderedMatches unorderedMatches,
+                                          DocumentSpans spans
+                                          ) {
+        float proximitiyFac = 0;
 
-        // Calculate a bonus for keyword coherences when large ones exist
-        int largestOptional = constraints.getFullGroup().size;
-        if (largestOptional < 2) {
-            return 0;
-        }
-
-        float verbatimMatchScore = 0.f;
-
-        var fullGroup = constraints.getFullGroup();
-        IntList fullGroupIntersections = fullGroup.findIntersections(positions);
-        for (var tag : HtmlTag.includedTags) {
-            if (spans.getSpan(tag).containsRange(fullGroupIntersections, fullGroup.size)) {
-                verbatimMatchScore += verbatimMatches.getWeightFull(tag) * fullGroup.size;
-                verbatimMatches.set(tag);
-            }
-        }
-
-        // For optional groups, we scale the score by the size of the group relative to the full group
-        for (var optionalGroup : constraints.getOptionalGroups()) {
-            int groupSize = optionalGroup.size;
-            float sizeScalingFactor = groupSize / (float) largestOptional;
-
-            IntList intersections = optionalGroup.findIntersections(positions);
-            for (var tag : HtmlTag.includedTags) {
-                if (spans.getSpan(tag).containsRange(intersections, groupSize)) {
-                    verbatimMatchScore += verbatimMatches.getWeightPartial(tag) * sizeScalingFactor * groupSize;
+        if (positions.length > 2) {
+            int minDist = constraintGroups.getFullGroup().minDistance(positions);
+            if (minDist > 0 && minDist < Integer.MAX_VALUE) {
+                if (minDist < 32) {
+                    // If min-dist is sufficiently small, we give a tapering reward to the document
+                    proximitiyFac = 2.0f / (0.1f + (float) Math.sqrt(minDist));
+                } else {
+                    // if it is too large, we add a mounting penalty
+                    proximitiyFac = -1.0f * (float) Math.sqrt(minDist);
                 }
             }
         }
 
-        return verbatimMatchScore;
+
+        // Give bonus proximity score if all keywords are in the title
+        if (!verbatimMatches.get(HtmlTag.TITLE) && unorderedMatches.searchableKeywordCount > 2 && unorderedMatches.getObservationCount(HtmlTag.TITLE) == unorderedMatches.searchableKeywordCount) {
+            proximitiyFac += unorderedMatches.getObservationCount(HtmlTag.TITLE) * (2.5f + 2.f / Math.max(1, spans.title.length()));
+        }
+        // Give bonus proximity score if all keywords are in a heading
+        if (spans.heading.size() < 64 &&
+                ! verbatimMatches.get(HtmlTag.HEADING)
+                && unorderedMatches.getObservationCount(HtmlTag.HEADING) == unorderedMatches.searchableKeywordCount)
+        {
+            proximitiyFac += 1.0f * unorderedMatches.getObservationCount(HtmlTag.HEADING);
+        }
+
+        return proximitiyFac;
     }
 
+    /** A helper class for capturing the verbatim phrase matches in the document */
     private static class VerbatimMatches {
         private final BitSet matches;
-        private final float[] weights_full;
-        private final float[] weights_partial;
+        private float score = 0.f;
 
-        public VerbatimMatches() {
-            matches = new BitSet(HtmlTag.includedTags.length);
+        private static final float[] weights_full;
+        private static final float[] weights_partial;
+
+        static {
             weights_full = new float[HtmlTag.includedTags.length];
             weights_partial = new float[HtmlTag.includedTags.length];
 
@@ -451,7 +363,7 @@ public class IndexResultScoreCalculator {
                 };
             }
 
-            for (int i = 0; i < weights_full.length; i++) {
+            for (int i = 0; i < weights_partial.length; i++) {
                 weights_partial[i] = switch(HtmlTag.includedTags[i]) {
                     case TITLE -> 1.5f;
                     case HEADING -> 1.f;
@@ -465,25 +377,108 @@ public class IndexResultScoreCalculator {
             }
         }
 
+        public VerbatimMatches(IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
+            matches = new BitSet(HtmlTag.includedTags.length);
+
+            int largestOptional = constraints.getFullGroup().size;
+            if (largestOptional < 2) {
+                return;
+            }
+
+            // Capture full query matches
+            var fullGroup = constraints.getFullGroup();
+            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
+            for (var tag : HtmlTag.includedTags) {
+                if (spans.getSpan(tag).containsRange(fullGroupIntersections, fullGroup.size)) {
+                    matches.set(tag.ordinal());
+                    score += weights_full[tag.ordinal()] * fullGroup.size;
+                }
+            }
+
+            // For optional groups, we scale the score by the size of the group relative to the full group
+            for (var optionalGroup : constraints.getOptionalGroups()) {
+                int groupSize = optionalGroup.size;
+                float sizeScalingFactor = groupSize / (float) largestOptional;
+
+                IntList intersections = optionalGroup.findIntersections(positions);
+                for (var tag : HtmlTag.includedTags) {
+                    if (spans.getSpan(tag).containsRange(intersections, groupSize)) {
+                        score += weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor;
+                    }
+                }
+            }
+        }
+
         public boolean get(HtmlTag tag) {
             assert !tag.exclude;
             return matches.get(tag.ordinal());
         }
 
-        public void set(HtmlTag tag) {
-            assert !tag.exclude;
-            matches.set(tag.ordinal());
+        public float getScore() {
+            return score;
+        }
+    }
+
+    /** A helper class for capturing the counts of unordered matches in the document */
+    private static class UnorderedMatches {
+        private final int[] observationsByTag;
+        private final float[] valuesByWordIdx;
+        private static final float[] weights;
+
+        private int firstPosition = 1;
+        private int searchableKeywordCount = 0;
+        static {
+            weights = new float[HtmlTag.includedTags.length];
+
+            for (int i = 0; i < weights.length; i++) {
+                weights[i] = switch(HtmlTag.includedTags[i]) {
+                    case TITLE -> 2.5f;
+                    case HEADING -> 2.5f;
+                    case ANCHOR -> 0.2f;
+                    case NAV -> 0.1f;
+                    case CODE -> 0.25f;
+                    case BODY -> 1.0f;
+                    default -> 0.0f;
+                };
+            }
         }
 
-        public float getWeightFull(HtmlTag tag) {
-            assert !tag.exclude;
-            return weights_full[tag.ordinal()];
-        }
-        public float getWeightPartial(HtmlTag tag) {
-            assert !tag.exclude;
-            return weights_partial[tag.ordinal()];
+        public UnorderedMatches(IntList[] positions, CompiledQuery<String> compiledQuery,
+                                BitSet regularMask,
+                                DocumentSpans spans) {
+            observationsByTag = new int[HtmlTag.includedTags.length];
+            valuesByWordIdx = new float[compiledQuery.size()];
+
+            for (int i = 0; i < compiledQuery.size(); i++) {
+
+                if (positions[i] == null || !regularMask.get(i))
+                    continue;
+
+                if (positions[i].isEmpty()) continue;
+
+                firstPosition = Math.max(firstPosition, positions[i].getInt(0));
+                searchableKeywordCount ++;
+
+                int[] posArray = positions[i].toIntArray();
+                for (var tag : HtmlTag.includedTags) {
+                    int cnt = spans.getSpan(tag).countIntersections(posArray);
+                    observationsByTag[tag.ordinal()] += cnt;
+                    valuesByWordIdx[i] += cnt * weights[tag.ordinal()];
+                }
+            }
         }
 
+        public int getObservationCount(HtmlTag tag) {
+            return observationsByTag[tag.ordinal()];
+        }
+
+        public float[] getWeightedCounts() {
+            return valuesByWordIdx;
+        }
+
+        public int size() {
+            return valuesByWordIdx.length;
+        }
     }
 
 

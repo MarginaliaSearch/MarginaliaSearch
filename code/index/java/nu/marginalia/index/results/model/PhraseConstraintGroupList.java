@@ -17,9 +17,14 @@ import java.util.List;
  * wordIds that we require to be in the same sentence
  */
 public class PhraseConstraintGroupList {
-    List<PhraseConstraintGroup> mandatoryGroups = new ArrayList<>();
-    List<PhraseConstraintGroup> optionalGroups = new ArrayList<>();
-    PhraseConstraintGroup fullGroup;
+    /** A list of groups representing parts of the query that must be present in the specified order */
+    private final List<PhraseConstraintGroup> mandatoryGroups = new ArrayList<>();
+
+    /** A list of groups representing segments of the query */
+    private final List<PhraseConstraintGroup> optionalGroups = new ArrayList<>();
+
+    /** A group representing all terms in the query, segmentation be damned */
+    private final PhraseConstraintGroup fullGroup;
 
     public PhraseConstraintGroupList(
             PhraseConstraintGroup fullGroup,
@@ -146,7 +151,7 @@ public class PhraseConstraintGroupList {
             List<IntList> sequences = new ArrayList<>(present.cardinality());
             IntList iterOffsets = new IntArrayList(present.cardinality());
 
-            for (int oi = 0, si = 0; oi < offsets.length; oi++) {
+            for (int oi = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
                     continue;
                 }

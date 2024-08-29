@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
+/** Utility for capturing debug information about ranking factors */
 public class DebugRankingFactors {
     private final List<DebugFactor> documentFactors = new ArrayList<>();
     private final List<DebugTermFactor> termFactors = new ArrayList<>();
@@ -28,10 +29,10 @@ public class DebugRankingFactors {
         }
         termFactors.add(new DebugTermFactor(termId, null, factor, joiner.toString()));
     }
+
     public List<DebugFactor> getDocumentFactors() {
         return documentFactors;
     }
-
     public List<DebugTermFactor> getTermFactors() {
         return termFactors;
     }
