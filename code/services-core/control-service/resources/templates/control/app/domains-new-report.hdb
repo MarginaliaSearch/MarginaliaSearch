@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Add Domains Report</h1>
+
+    <p></p>
+    {{#unless invalidDomains}}
+        <p>All domains were added successfully!</p>
+    {{/unless}}
+    {{#if invalidDomains}}
+        <p>Some domains were invalid and could not be added:</p>
+        <textarea class="form-control" rows="10" disabled>
+{{#each invalidDomains}}{{.}}{{/each}}
+        </textarea>
+    {{/if}}
+    <p></p>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

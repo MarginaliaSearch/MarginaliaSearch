@@ -11,6 +11,7 @@ public record DomainSearchResultModel(String query,
                                       int page,
                                       boolean hasNext,
                                       boolean hasPrevious,
+                                      List<Integer> nodes,
                                       List<DomainModel> results)
 {
     public Integer getNextPage() {

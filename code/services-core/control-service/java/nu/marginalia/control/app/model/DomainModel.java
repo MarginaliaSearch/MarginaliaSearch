@@ -6,8 +6,9 @@ public record DomainModel(int id,
                           int nodeAffinity,
                           double rank,
                           boolean blacklisted) {
-    public boolean isIndexed() {
-        return nodeAffinity > 0;
+
+    public boolean isUnassigned() {
+        return nodeAffinity < 0;
     }
 
     public DomainAffinityState getAffinityState() {
