@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class CrawlerRetreiver implements AutoCloseable {
@@ -223,7 +224,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
 
             EdgeUrl faviconUrl = url.withPathAndParam("/favicon.ico", null);
-            EdgeUrl sitemapUrl = null;
+            Optional<EdgeUrl> sitemapUrl = Optional.empty();
 
             for (var link : doc.getElementsByTag("link")) {
                 String rel = link.attr("rel");
@@ -243,14 +244,13 @@ public class CrawlerRetreiver implements AutoCloseable {
                     String href = link.attr("href");
 
                     sitemapUrl = linkParser.parseLink(url, href)
-                            .filter(crawlFrontier::isSameDomain)
-                            .orElse(sitemapUrl);
+                            .filter(crawlFrontier::isSameDomain);
                 }
             }
 
             // Download the sitemap if available exists
-            if (sitemapUrl != null) {
-                sitemapFetcher.downloadSitemaps(List.of(sitemapUrl));
+            if (sitemapUrl.isPresent()) {
+                sitemapFetcher.downloadSitemaps(List.of(sitemapUrl.get()));
                 timer.waitFetchDelay(0);
             }
 
