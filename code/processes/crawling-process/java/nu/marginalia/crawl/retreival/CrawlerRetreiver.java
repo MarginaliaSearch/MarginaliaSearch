@@ -223,7 +223,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
 
             EdgeUrl faviconUrl = url.withPathAndParam("/favicon.ico", null);
-            EdgeUrl sitemapUrl = url.withPathAndParam("/sitemap.xml", null);
+            EdgeUrl sitemapUrl = null;
 
             for (var link : doc.getElementsByTag("link")) {
                 String rel = link.attr("rel");
@@ -248,9 +248,11 @@ public class CrawlerRetreiver implements AutoCloseable {
                 }
             }
 
-            // Download the sitemap if it exists
-            sitemapFetcher.downloadSitemaps(List.of(sitemapUrl));
-            timer.waitFetchDelay(0);
+            // Download the sitemap if available exists
+            if (sitemapUrl != null) {
+                sitemapFetcher.downloadSitemaps(List.of(sitemapUrl));
+                timer.waitFetchDelay(0);
+            }
 
             // Grab the favicon if it exists
             fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
