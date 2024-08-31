@@ -10,7 +10,8 @@ import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
 import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
 import nu.marginalia.crawling.body.HttpFetchResult;
-import nu.marginalia.crawling.model.*;
+import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.CrawlerDomainStatus;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
@@ -87,17 +88,8 @@ public class CrawlerRetreiver implements AutoCloseable {
     }
 
     public int fetch(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
-        final DomainProber.ProbeResult probeResult = domainProber.probeDomain(
-                fetcher,
-                domain,
-                new EdgeUrl("http", new EdgeDomain(domain), null, "/", null));
-
         try {
-            // Sleep a bit to avoid hammering the server with requests, we just probed it
-            TimeUnit.SECONDS.sleep(1);
-
-            // Fetch the domain
-            return crawlDomain(oldCrawlData, probeResult, domainLinks);
+            return crawlDomain(oldCrawlData, domainLinks);
         }
         catch (Exception ex) {
             logger.error("Error crawling domain {}", domain, ex);
@@ -111,25 +103,33 @@ public class CrawlerRetreiver implements AutoCloseable {
         resync.run(warcFile);
     }
 
-    private int crawlDomain(CrawlDataReference oldCrawlData, DomainProber.ProbeResult probeResult, DomainLinks domainLinks) throws IOException, InterruptedException {
-        String ip = findIp(domain);
-        EdgeUrl rootUrl;
+    private DomainProber.ProbeResult probeRootUrl(String ip) throws IOException {
+        // Construct an URL to the root of the domain, we don't know the schema yet so we'll
+        // start with http and then try https if that fails
+        var httpUrl = new EdgeUrl("http", new EdgeDomain(domain), null, "/", null);
+        final DomainProber.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, httpUrl);
 
         warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), probeResult);
 
-        if (!(probeResult instanceof DomainProber.ProbeResultOk ok)) {
-            return 1;
-        }
-        else {
-            rootUrl = ok.probedUrl();
-        }
+        return probeResult;
+    }
+
+    private int crawlDomain(CrawlDataReference oldCrawlData, DomainLinks domainLinks) throws IOException, InterruptedException {
+        String ip = findIp(domain);
+        EdgeUrl rootUrl;
+
+        if (probeRootUrl(ip) instanceof DomainProber.ProbeResultOk ok) rootUrl = ok.probedUrl();
+        else return 1;
+
+        // Sleep after the initial probe, we don't have access to the robots.txt yet
+        // so we don't know the crawl delay
+        TimeUnit.SECONDS.sleep(1);
 
         final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(rootUrl.domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
         delayTimer.waitFetchDelay(0); // initial delay after robots.txt
         sniffRootDocument(rootUrl, delayTimer);
-        delayTimer.waitFetchDelay(0); // delay after sniffing
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
         int recrawled = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
@@ -187,7 +187,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
 
             try {
-                if (fetchWriteAndSleep(top, delayTimer, DocumentWithReference.empty()).isOk()) {
+                if (fetchContentWithReference(top, delayTimer, DocumentWithReference.empty()).isOk()) {
                     fetchedCount++;
                 }
             }
@@ -208,21 +208,8 @@ public class CrawlerRetreiver implements AutoCloseable {
 
             var url = rootUrl.withPathAndParam("/", null);
 
-            HttpFetchResult result = null;
-
-            for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
-                try {
-                    result = fetcher.fetchContent(url, warcRecorder, ContentTags.empty());
-                    break;
-                }
-                catch (RateLimitException ex) {
-                    timer.waitRetryDelay(ex);
-                }
-                catch (Exception ex) {
-                    logger.warn("Failed to fetch {}", url, ex);
-                    result = new HttpFetchResult.ResultException(ex);
-                }
-            }
+            HttpFetchResult result = fetchWithRetry(url, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
+            timer.waitFetchDelay(0);
 
             if (!(result instanceof HttpFetchResult.ResultOk ok))
                 return;
@@ -235,24 +222,39 @@ public class CrawlerRetreiver implements AutoCloseable {
             var doc = optDoc.get();
             crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
 
+            EdgeUrl faviconUrl = url.withPathAndParam("/favicon.ico", null);
+            EdgeUrl sitemapUrl = url.withPathAndParam("/sitemap.xml", null);
+
             for (var link : doc.getElementsByTag("link")) {
                 String rel = link.attr("rel");
                 String type = link.attr("type");
 
-                if (!rel.equalsIgnoreCase("alternate"))
-                    continue;
+                if (rel.equals("icon") || rel.equals("shortcut icon")) {
+                    String href = link.attr("href");
 
-                if (!(type.equalsIgnoreCase("application/atom+xml")
-                   || type.equalsIgnoreCase("application/rss+xml")))
-                    continue;
+                    faviconUrl = linkParser.parseLink(url, href)
+                            .filter(crawlFrontier::isSameDomain)
+                            .orElse(faviconUrl);
+                }
 
-                String href = link.attr("href");
+                // Grab the RSS/Atom as a sitemap if it exists
+                if (rel.equalsIgnoreCase("alternate")
+                && (type.equalsIgnoreCase("application/atom+xml") || type.equalsIgnoreCase("application/atomsvc+xml"))) {
+                    String href = link.attr("href");
 
-                linkParser.parseLink(url, href)
-                        .filter(crawlFrontier::isSameDomain)
-                        .map(List::of)
-                        .ifPresent(sitemapFetcher::downloadSitemaps);
+                    sitemapUrl = linkParser.parseLink(url, href)
+                            .filter(crawlFrontier::isSameDomain)
+                            .orElse(sitemapUrl);
+                }
             }
+
+            // Download the sitemap if it exists
+            sitemapFetcher.downloadSitemaps(List.of(sitemapUrl));
+            timer.waitFetchDelay(0);
+
+            // Grab the favicon if it exists
+            fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
+            timer.waitFetchDelay(0);
         }
         catch (Exception ex) {
             logger.error("Error configuring link filter", ex);
@@ -262,31 +264,16 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    public HttpFetchResult fetchWriteAndSleep(EdgeUrl top,
-                                              CrawlDelayTimer timer,
-                                              DocumentWithReference reference) throws InterruptedException
+    public HttpFetchResult fetchContentWithReference(EdgeUrl top,
+                                                     CrawlDelayTimer timer,
+                                                     DocumentWithReference reference) throws InterruptedException
     {
         logger.debug("Fetching {}", top);
-
-        HttpFetchResult fetchedDoc = new HttpFetchResult.ResultNone();
 
         long startTime = System.currentTimeMillis();
         var contentTags = reference.getContentTags();
 
-        // Fetch the document, retrying if we get a rate limit exception
-        for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
-            try {
-                fetchedDoc = fetcher.fetchContent(top, warcRecorder, contentTags);
-                break;
-            }
-            catch (RateLimitException ex) {
-                timer.waitRetryDelay(ex);
-            }
-            catch (Exception ex) {
-                logger.warn("Failed to fetch {}", top, ex);
-                fetchedDoc = new HttpFetchResult.ResultException(ex);
-            }
-        }
+        HttpFetchResult fetchedDoc = fetchWithRetry(top, timer, HttpFetcher.ProbeType.FULL, contentTags);
 
         // Parse the document and enqueue links
         try {
@@ -326,6 +313,27 @@ public class CrawlerRetreiver implements AutoCloseable {
         timer.waitFetchDelay(System.currentTimeMillis() - startTime);
 
         return fetchedDoc;
+    }
+
+    /** Fetch a document and retry on 429s */
+    private HttpFetchResult fetchWithRetry(EdgeUrl url,
+                                           CrawlDelayTimer timer,
+                                           HttpFetcher.ProbeType probeType,
+                                           ContentTags contentTags) throws InterruptedException {
+        for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
+            try {
+                return fetcher.fetchContent(url, warcRecorder, contentTags, probeType);
+            }
+            catch (RateLimitException ex) {
+                timer.waitRetryDelay(ex);
+            }
+            catch (Exception ex) {
+                logger.warn("Failed to fetch {}", url, ex);
+                return new HttpFetchResult.ResultException(ex);
+            }
+        }
+
+        return new HttpFetchResult.ResultNone();
     }
 
     private boolean isAllowedProtocol(String proto) {

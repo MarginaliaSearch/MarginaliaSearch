@@ -5,8 +5,8 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.*;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -23,7 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CrawlerMockFetcherTest {
 
@@ -119,7 +122,7 @@ public class CrawlerMockFetcherTest {
 
         @SneakyThrows
         @Override
-        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
+        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags, ProbeType probeType) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 byte[] bodyBytes = mockData.get(url).documentBody.getBytes();

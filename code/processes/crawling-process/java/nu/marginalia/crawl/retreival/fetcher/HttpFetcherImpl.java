@@ -11,10 +11,10 @@ import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeR
 import nu.marginalia.crawl.retreival.fetcher.socket.FastTerminatingSocketFactory;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.socket.NoSecuritySSL;
-import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.body.ContentTypeLogic;
+import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.ConnectionPool;
@@ -145,12 +145,13 @@ public class HttpFetcherImpl implements HttpFetcher {
     @SneakyThrows
     public HttpFetchResult fetchContent(EdgeUrl url,
                                            WarcRecorder warcRecorder,
-                                           ContentTags contentTags)
+                                           ContentTags contentTags,
+                                           ProbeType probeType)
     {
 
         // We don't want to waste time and resources on URLs that are not HTML, so if the file ending
         // looks like it might be something else, we perform a HEAD first to check the content type
-        if (contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
+        if (probeType == ProbeType.FULL && contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
         {
             ContentTypeProbeResult probeResult = contentTypeProber.probeContentType(url);
             if (probeResult instanceof ContentTypeProbeResult.Ok ok) {
@@ -174,7 +175,9 @@ public class HttpFetcherImpl implements HttpFetcher {
         else {
             // Possibly do a soft probe to see if the URL has been modified since the last time we crawled it
             // if we have reason to suspect ETags are not supported by the server.
-            if (softIfModifiedSinceProber.probeModificationTime(url, contentTags)) {
+            if (probeType == ProbeType.IF_MODIFIED_SINCE
+              && softIfModifiedSinceProber.probeModificationTime(url, contentTags))
+            {
                 return new HttpFetchResult.Result304Raw();
             }
         }
