@@ -145,9 +145,9 @@ public class RedditSideloader implements SideloadSource {
         var doc = sideloaderProcessing
                 .processDocument(fullUrl,
                         fullHtml,
-                        List.of("encyclopedia", "wiki"),
+                        List.of("reddit"),
                         domainLinks,
-                        GeneratorType.WIKI,
+                        GeneratorType.FORUM,
                         DocumentClass.SIDELOAD,
                         pubYear,
                         10_000_000);
