@@ -30,7 +30,7 @@
                 <option value="-1">Unassigned</option>
                 <option value="0" selected>Auto</option>
                 {{#each global-context.nodes}}
-                    <option value="{{this}}">Node {{id}}</option>
+                    <option value="{{id}}">Node {{id}}</option>
                 {{/each}}
 
             </select>
