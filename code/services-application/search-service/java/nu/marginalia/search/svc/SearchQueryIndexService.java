@@ -2,14 +2,14 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import lombok.SneakyThrows;
-import nu.marginalia.bbpc.BrailleBlockPunchCards;
+import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.bbpc.BrailleBlockPunchCards;
+import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.UrlDeduplicator;
 import org.slf4j.Logger;
@@ -17,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @Singleton
 public class SearchQueryIndexService {
@@ -80,7 +82,7 @@ public class SearchQueryIndexService {
             ret.add(new UrlDetails(
                     detail.documentId(),
                     detail.domainId(),
-                    detail.url,
+                    cleanUrl(detail.url),
                     detail.title,
                     detail.description,
                     detail.format,
@@ -96,6 +98,14 @@ public class SearchQueryIndexService {
         }
 
         return ret;
+    }
+
+    private EdgeUrl cleanUrl(EdgeUrl url) {
+        if (url.domain.topDomain.equals("fandom.com")) {
+            String subdomain = url.domain.subDomain;
+            return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null, "/" + subdomain + url.path, null);
+        }
+        return url;
     }
 
     private String getPositionsString(DecoratedSearchResultItem resultItem) {
