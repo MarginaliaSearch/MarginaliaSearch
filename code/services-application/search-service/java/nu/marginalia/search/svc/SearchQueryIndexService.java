@@ -106,7 +106,10 @@ public class SearchQueryIndexService {
         String path = url.path;
 
         if (topdomain.equals("fandom.com")) {
-            return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null, "/" + subdomain + path, null);
+            int wikiIndex = path.indexOf("/wiki/");
+            if (wikiIndex >= 0) {
+                return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null,  "/" + subdomain + path.substring(wikiIndex), null);
+            }
         }
         else if (topdomain.equals("medium.com")) {
             if (!subdomain.isBlank()) {
