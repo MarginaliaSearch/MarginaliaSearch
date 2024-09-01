@@ -8,6 +8,8 @@ import nu.marginalia.control.app.model.DomainModel;
 import nu.marginalia.control.app.model.DomainSearchResultModel;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -16,6 +18,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -38,17 +43,20 @@ public class DomainsManagementService {
     public void register() throws IOException {
 
         var domainsViewRenderer = rendererFactory.renderer("control/app/domains");
-        var addDomainsViewRenderer = rendererFactory.renderer("control/app/domains-new");
+        var addDomainsTxtViewRenderer = rendererFactory.renderer("control/app/domains-new");
+        var addDomainsUrlViewRenderer = rendererFactory.renderer("control/app/domains-new-url");
         var addDomainsAfterReportRenderer = rendererFactory.renderer("control/app/domains-new-report");
 
         Spark.get("/domain", this::getDomains, domainsViewRenderer::render);
-        Spark.get("/domain/new", this::addDomains, addDomainsViewRenderer::render);
-        Spark.post("/domain/new", this::addDomains, addDomainsAfterReportRenderer::render);
+        Spark.get("/domain/new", this::addDomainsTextfield, addDomainsTxtViewRenderer::render);
+        Spark.post("/domain/new", this::addDomainsTextfield, addDomainsAfterReportRenderer::render);
+        Spark.get("/domain/new-url", this::addDomainsFromDownload, addDomainsUrlViewRenderer::render);
+        Spark.post("/domain/new-url", this::addDomainsFromDownload, addDomainsAfterReportRenderer::render);
         Spark.post("/domain/:id/assign/:node", this::assignDomain, new Redirects.HtmlRedirect("/domain"));
 
     }
 
-    private Object addDomains(Request request, Response response) throws SQLException {
+    private Object addDomainsTextfield(Request request, Response response) throws SQLException {
         if ("GET".equals(request.requestMethod())) {
             return "";
         }
@@ -57,55 +65,139 @@ public class DomainsManagementService {
             String domainsStr = request.queryParams("domains");
 
             int node = Integer.parseInt(nodeStr);
-            String[] domains = domainsStr.split("\n+");
 
-            List<EdgeDomain> validDomains = new ArrayList<>();
-            List<String> invalidDomains = new ArrayList<>();
+            List<EdgeDomain> validDomains;
+            List<String> invalidDomains;
 
-            for (String domain : domains) {
-                domain = domain.trim();
-                if (domain.isBlank()) continue;
-                if (domain.length() > 255) {
-                    invalidDomains.add(domain);
-                    continue;
-                }
-                if (domain.startsWith("#")) {
-                    continue;
-                }
+            Map.Entry<List<EdgeDomain>, List<String>> domainsList = parseDomainsList(domainsStr);
 
-                // Run through the URI parser to check for bad domains
-                try {
-                    if (domain.contains(":")) {
-                        domain = new URI(domain ).toURL().getHost();
-                    }
-                    else {
-                        domain = new URI("https://" + domain + "/").toURL().getHost();
-                    }
-                } catch (URISyntaxException | MalformedURLException e) {
-                    invalidDomains.add(domain);
-                    continue;
-                }
+            validDomains = domainsList.getKey();
+            invalidDomains = domainsList.getValue();
 
-                validDomains.add(new EdgeDomain(domain));
-            }
-
-            try (var conn = dataSource.getConnection();
-                 var stmt = conn.prepareStatement("INSERT IGNORE INTO EC_DOMAIN (DOMAIN_NAME, DOMAIN_TOP, NODE_AFFINITY) VALUES (?, ?, ?)"))
-            {
-                for (var domain : validDomains) {
-                    stmt.setString(1, domain.toString());
-                    stmt.setString(2, domain.getTopDomain());
-                    stmt.setInt(3, node);
-                    stmt.addBatch();
-                }
-                stmt.executeBatch();
-            }
+            insertDomains(validDomains, node);
 
             return Map.of("validDomains", validDomains,
                           "invalidDomains", invalidDomains);
         }
         return "";
     }
+
+    private Map.Entry<List<EdgeDomain>, List<String>> parseDomainsList(String domainsStr) {
+        List<EdgeDomain> validDomains = new ArrayList<>();
+        List<String> invalidDomains = new ArrayList<>();
+
+        for (String domain : domainsStr.split("\n+")) {
+            domain = domain.trim();
+            if (domain.isBlank()) continue;
+            if (domain.length() > 255) {
+                invalidDomains.add(domain);
+                continue;
+            }
+            if (domain.startsWith("#")) {
+                continue;
+            }
+
+            // Run through the URI parser to check for bad domains
+            try {
+                if (domain.contains(":")) {
+                    domain = new URI(domain ).toURL().getHost();
+                }
+                else {
+                    domain = new URI("https://" + domain + "/").toURL().getHost();
+                }
+            } catch (URISyntaxException | MalformedURLException e) {
+                invalidDomains.add(domain);
+                continue;
+            }
+
+            validDomains.add(new EdgeDomain(domain));
+        }
+
+        return Map.entry(validDomains, invalidDomains);
+    }
+
+    private Object addDomainsFromDownload(Request request, Response response) throws SQLException, URISyntaxException, IOException, InterruptedException {
+        if ("GET".equals(request.requestMethod())) {
+            return "";
+        }
+        else if ("POST".equals(request.requestMethod())) {
+            String nodeStr = request.queryParams("node");
+            URI domainsUrl = new URI(request.queryParams("url"));
+
+            int node = Integer.parseInt(nodeStr);
+
+            HttpClient client = HttpClient.newBuilder().build();
+            var httpReq = HttpRequest.newBuilder(domainsUrl).GET().build();
+
+
+            HttpResponse<String> result = client.send(httpReq, HttpResponse.BodyHandlers.ofString());
+            if (result.statusCode() != 200) {
+                return Map.of("error", "Failed to download domains");
+            }
+            Optional<String> ct = result.headers().firstValue("Content-Type");
+            if (ct.isEmpty()) {
+                return Map.of("error", "No content type");
+            }
+
+            List<EdgeDomain> validDomains = new ArrayList<>();
+            List<String> invalidDomains = new ArrayList<>();
+
+            String contentType = ct.get().toLowerCase();
+
+            if (contentType.startsWith("text/plain")) {
+                var parsedDomains = parseDomainsList(result.body());
+                validDomains = parsedDomains.getKey();
+                invalidDomains = parsedDomains.getValue();
+            }
+            else {
+                for (Element e : Jsoup.parse(result.body()).select("a")) {
+                    String s = e.attr("href");
+                    if (s.isBlank()) continue;
+                    if (!s.contains("://")) continue;
+
+                    URI uri = URI.create(s);
+                    String scheme = uri.getScheme();
+                    String host = uri.getHost();
+
+                    if (scheme == null || host == null)
+                        continue;
+                    if (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https"))
+                        continue;
+
+                    validDomains.add(new EdgeDomain(host));
+                }
+            }
+
+
+            insertDomains(validDomains, node);
+
+
+            return Map.of("validDomains", validDomains,
+                    "invalidDomains", invalidDomains);
+        }
+        return "";
+    }
+
+    private void insertDomains(List<EdgeDomain> domains, int node) throws SQLException {
+
+        // Insert the domains into the database, updating the node affinity if the domain already exists and the affinity is not already set to a node
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                        INSERT INTO EC_DOMAIN (DOMAIN_NAME, DOMAIN_TOP, NODE_AFFINITY)
+                        VALUES (?, ?, ?)
+                        ON DUPLICATE KEY UPDATE NODE_AFFINITY = IF(NODE_AFFINITY<=0, VALUES(NODE_AFFINITY), NODE_AFFINITY)
+                        """))
+        {
+            for (var domain : domains) {
+                stmt.setString(1, domain.toString());
+                stmt.setString(2, domain.getTopDomain());
+                stmt.setInt(3, node);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+    }
+
 
     private Object assignDomain(Request request, Response response) throws SQLException {
 

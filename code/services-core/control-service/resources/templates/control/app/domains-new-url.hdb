@@ -7,20 +7,21 @@
 <body>
 {{> control/partials/nav}}
 <div class="container">
-    <h1 class="my-3">Add Domains</h1>
+    <h1 class="my-3">Add Domains (URL)</h1>
 
     <div class="my-3 p-3 border bg-light">
-        <p>This utility lets you add domains to be crawled via a text area.</p>
-        <a href="/domain/new-url">It's also possible to add domains via an external URL</a>
+        <p>This utility lets you add domains to be crawled via an external URL.</p>
+        <a href="/domain/new">It's also possible to add domains directly via a text area</a>
     </div>
 
     <form method="post">
         <div class="form-group my-3">
-            <label for="domains" class="form-label">Domains to add</label>
-            <textarea name="domains" class="form-control" rows="10"></textarea>
+            <label for="url" class="form-label">Domains to add</label>
+            <input type="text" class="form-control" name="url"/>
             <span class="text-muted">
-            Enter a list of domains to add, one per line. The system will check if the domain is already in the database and
-            will not add duplicates.  Spaces and empty lines are ignored.
+            Enter the URL to the file or page that contains the domains to add.   If the URL leads to a text file,
+            the domains will be parsed from the file, one per line.  If it leads to a HTML page, the HTML
+            will be parsed and all the links will be extracted and added as domains.
         </span>
         </div>
 
