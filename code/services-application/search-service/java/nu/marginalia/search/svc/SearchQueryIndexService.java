@@ -101,9 +101,22 @@ public class SearchQueryIndexService {
     }
 
     private EdgeUrl cleanUrl(EdgeUrl url) {
-        if (url.domain.topDomain.equals("fandom.com")) {
-            String subdomain = url.domain.subDomain;
-            return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null, "/" + subdomain + url.path, null);
+        String topdomain = url.domain.topDomain;
+        String subdomain = url.domain.subDomain;
+        String path = url.path;
+
+        if (topdomain.equals("fandom.com")) {
+            return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null, "/" + subdomain + path, null);
+        }
+        else if (topdomain.equals("medium.com")) {
+            if (!subdomain.isBlank()) {
+                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
+            }
+            else {
+                String article = path.substring(path.indexOf("/", 1));
+                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
+            }
+
         }
         return url;
     }
