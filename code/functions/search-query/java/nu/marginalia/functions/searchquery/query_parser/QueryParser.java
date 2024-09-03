@@ -37,20 +37,19 @@ public class QueryParser {
         query = noisePattern.matcher(query).replaceAll(" ");
 
         int chr = -1;
-        int prevChr = -1;
+        int parenDepth = 0;
         for (int i = 0; i < query.length(); i++) {
-            prevChr = chr;
             chr = query.charAt(i);
 
-            boolean escape = prevChr == '\\';
-
-            if (!escape && '(' == chr) {
+            if ('(' == chr) {
+                parenDepth++;
                 tokens.add(new QueryToken.LParen());
             }
-            else if (!escape && ')' == chr && prevChr != '(') { // special case to deal with queries like "strlen()"
+            else if (')' == chr) {
+                parenDepth--;
                 tokens.add(new QueryToken.RParen());
             }
-            else if (!escape && '"' == chr) {
+            else if ('"' == chr) {
                 int end = query.indexOf('"', i+1);
 
                 if (end == -1) {
@@ -61,17 +60,30 @@ public class QueryParser {
 
                 i = end;
             }
-            else if (!escape && '-' == chr) {
+            else if ('-' == chr) {
                 tokens.add(new QueryToken.Minus());
             }
-            else if (!escape && '?' == chr) {
+            else if ('?' == chr) {
                 tokens.add(new QueryToken.QMark());
             }
             else if (!Character.isSpaceChar(chr)) {
 
+                // search for the end of the term
                 int end = i+1;
+                int prevC = -1;
+                int c = -1;
                 for (; end < query.length(); end++) {
-                    if (query.charAt(end) == ' ' || query.charAt(end) == ')')
+                    prevC = c;
+                    c = query.charAt(end);
+
+                    if (prevC == '\\')
+                        continue;
+                    if (c == ' ')
+                        break;
+
+                    // special case to deal with possible RPAREN token at the end,
+                    // but we don't want to break if it's likely part of the search term
+                    if (c == '(' && prevC != ')' && parenDepth > 0)
                         break;
                 }
 

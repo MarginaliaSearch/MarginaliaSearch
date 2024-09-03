@@ -243,4 +243,13 @@ public class QueryFactoryTest {
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
+
+    @Test
+    public void testParsing() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("strlen()");
+        assertEquals("strlen", subquery.query.compiledQuery);
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
 }
