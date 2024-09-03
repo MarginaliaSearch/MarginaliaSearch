@@ -16,8 +16,8 @@ public class QueryParser {
 
         TransformList<QueryToken> list = new TransformList<>(basicTokens);
 
-        list.transformEach(QueryParser::handleQuoteTokens);
         list.transformEach(QueryParser::trimLiterals);
+        list.transformEach(QueryParser::handleQuoteTokens);
         list.transformEachPair(QueryParser::createNegatedTerms);
         list.transformEachPair(QueryParser::createPriorityTerms);
         list.transformEach(QueryParser::handleSpecialOperations);
