@@ -3,16 +3,17 @@ package nu.marginalia.functions.searchquery.query_parser;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
+import nu.marginalia.language.encoding.AsciiFlattener;
 import nu.marginalia.util.transform_list.TransformList;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class QueryParser {
 
-    private final QueryTokenizer tokenizer = new QueryTokenizer();
-
     public List<QueryToken> parse(String query) {
-        List<QueryToken> basicTokens = tokenizer.tokenizeQuery(query);
+        List<QueryToken> basicTokens = tokenizeQuery(query);
 
         TransformList<QueryToken> list = new TransformList<>(basicTokens);
 
@@ -25,6 +26,84 @@ public class QueryParser {
         list.transformEach(QueryParser::normalizeDomainName);
 
         return list.getBackingList();
+    }
+
+    private static final Pattern noisePattern = Pattern.compile("[,\\s]");
+
+    public List<QueryToken> tokenizeQuery(String rawQuery) {
+        List<QueryToken> tokens = new ArrayList<>();
+
+        String query = AsciiFlattener.flattenUnicode(rawQuery);
+        query = noisePattern.matcher(query).replaceAll(" ");
+
+        int chr = -1;
+        int prevChr = -1;
+        for (int i = 0; i < query.length(); i++) {
+            prevChr = chr;
+            chr = query.charAt(i);
+
+            boolean escape = prevChr == '\\';
+
+            if (!escape && '(' == chr) {
+                tokens.add(new QueryToken.LParen());
+            }
+            else if (!escape && ')' == chr && prevChr != '(') { // special case to deal with queries like "strlen()"
+                tokens.add(new QueryToken.RParen());
+            }
+            else if (!escape && '"' == chr) {
+                int end = query.indexOf('"', i+1);
+
+                if (end == -1) {
+                    end = query.length();
+                }
+
+                tokens.add(new QueryToken.Quot(query.substring(i + 1, end).toLowerCase()));
+
+                i = end;
+            }
+            else if (!escape && '-' == chr) {
+                tokens.add(new QueryToken.Minus());
+            }
+            else if (!escape && '?' == chr) {
+                tokens.add(new QueryToken.QMark());
+            }
+            else if (!Character.isSpaceChar(chr)) {
+
+                int end = i+1;
+                for (; end < query.length(); end++) {
+                    if (query.charAt(end) == ' ' || query.charAt(end) == ')')
+                        break;
+                }
+
+                String displayStr = query.substring(i, end);
+                String str = trimEscape(displayStr.toLowerCase());
+
+                tokens.add(new QueryToken.LiteralTerm(str, displayStr));
+
+                i = end-1;
+            }
+        }
+        return tokens;
+    }
+
+    private String trimEscape(String str) {
+        if (!str.contains("\\")) {
+            return str;
+        }
+
+        StringBuilder sb = new StringBuilder(str.length());
+        for (int j = 0; j < str.length(); j++) {
+            char c = str.charAt(j);
+            if (c == '\\') {
+                if (j + 1 < str.length()) {
+                    sb.append(str.charAt(j + 1));
+                    j++;
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     private static void normalizeDomainName(TransformList<QueryToken>.Entity entity) {
@@ -63,10 +142,12 @@ public class QueryParser {
 
         // Remove trailing punctuation
         int lastChar = str.charAt(str.length() - 1);
-        if (":.,!?$".indexOf(lastChar) >= 0)
+        if (":.,!?$'".indexOf(lastChar) >= 0)
             entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 1), lt.displayStr()));
 
         // Remove term elements that aren't indexed by the search engine
+        if (str.endsWith("'s"))
+            entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 2), lt.displayStr()));
         if (str.endsWith("()"))
             entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 2), lt.displayStr()));
         if (str.startsWith("$"))
