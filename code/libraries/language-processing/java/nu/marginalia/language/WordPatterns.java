@@ -1,11 +1,6 @@
 package nu.marginalia.language;
 
 /** Logic for deciding which words are eligible to be keywords.
- * <p/>
- * This is in dire need of oversight. Here be towering dragons with names,
- * a skull next to their HP bar, and their own Mick Gordon soundtrack just
- * for the battle.
- *
  */
 public class WordPatterns {
     public static final int MIN_WORD_LENGTH = 1;

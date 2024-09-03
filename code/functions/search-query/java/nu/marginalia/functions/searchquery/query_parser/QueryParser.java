@@ -61,10 +61,20 @@ public class QueryParser {
         if (str.isBlank())
             return;
 
-        if (str.endsWith(":") || str.endsWith(".")) {
+        // Remove trailing punctuation
+        int lastChar = str.charAt(str.length() - 1);
+        if (":.,!?$".indexOf(lastChar) >= 0)
             entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 1), lt.displayStr()));
-        }
 
+        // Remove term elements that aren't indexed by the search engine
+        if (str.endsWith("()"))
+            entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 2), lt.displayStr()));
+        if (str.startsWith("$"))
+            entity.replace(new QueryToken.LiteralTerm(str.substring(1), lt.displayStr()));
+
+        if (entity.isBlank()) {
+            entity.remove();
+        }
     }
 
     private static void createNegatedTerms(TransformList<QueryToken>.Entity first, TransformList<QueryToken>.Entity second) {

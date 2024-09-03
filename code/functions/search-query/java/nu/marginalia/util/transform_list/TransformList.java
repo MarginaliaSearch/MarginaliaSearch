@@ -1,5 +1,7 @@
 package nu.marginalia.util.transform_list;
 
+import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -30,7 +32,7 @@ import java.util.function.Predicate;
  * </pre>
  * </code>
  */
-public class TransformList<T> {
+public class TransformList<T extends QueryToken> {
     private final List<T> backingList;
 
     public TransformList(List<T> backingList) {
@@ -136,6 +138,10 @@ public class TransformList<T> {
         public void replace(T newValue) {
             action = Action.REPLACE;
             value = newValue;
+        }
+
+        public boolean isBlank() {
+            return value == null || value.str().isBlank();
         }
 
         public void remove() {
