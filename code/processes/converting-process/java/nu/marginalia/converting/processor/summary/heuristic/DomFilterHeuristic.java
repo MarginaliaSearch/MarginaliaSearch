@@ -20,7 +20,7 @@ public class DomFilterHeuristic implements SummaryHeuristic {
 
         var filter = new SummarizingDOMFilter();
 
-        doc.filter(filter);
+        doc.body().filter(filter);
 
         return filter.getSummary(
                 maxSummaryLength+32,

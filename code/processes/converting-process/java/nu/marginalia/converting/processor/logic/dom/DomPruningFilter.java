@@ -50,6 +50,12 @@ public class DomPruningFilter implements NodeFilter {
             }
         }
 
+        if (node instanceof Element el) {
+            if (shouldAlwaysPurge(el)) {
+                return FilterResult.REMOVE;
+            }
+        }
+
         data.put(node, dataForNode);
 
         if (dataForNode.depth <= 1)
@@ -62,11 +68,6 @@ public class DomPruningFilter implements NodeFilter {
                 && dataForNode.treeSize > 3)
             return FilterResult.REMOVE;
 
-        if (node instanceof Element el) {
-            if (shouldAlwaysPurge(el)) {
-                return FilterResult.REMOVE;
-            }
-        }
 
         return FilterResult.CONTINUE;
     }
@@ -97,6 +98,8 @@ public class DomPruningFilter implements NodeFilter {
         if ("nav".equalsIgnoreCase(tagName))
             return true;
         if ("iframe".equalsIgnoreCase(tagName))
+            return true;
+        if ("noscript".equalsIgnoreCase(tagName))
             return true;
         if ("footer".equalsIgnoreCase(tagName))
             return true;

@@ -135,8 +135,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.IRRELEVANT);
         }
 
-        DocumentLanguageData dld =
-                sentenceExtractorProvider.get().extractSentences(specialization.prune(doc));
+        var prunedDoc = specialization.prune(doc);
+        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(prunedDoc);
 
         checkDocumentLanguage(dld);
 
@@ -174,7 +174,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
-        ret.description = specialization.getSummary(doc, words.importantWords);
+        ret.description = specialization.getSummary(prunedDoc, words.importantWords);
         ret.generator = generatorParts.type();
 
         var tagWords = new MetaTagsBuilder()
