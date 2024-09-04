@@ -8,6 +8,7 @@ import nu.marginalia.slop.column.string.TxtStringColumn;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
@@ -28,16 +29,16 @@ public record SlopDomainRecord(
             String ip)
     {}
 
-    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StorageType.GZIP);
-    private static final EnumColumn statesColumn = new EnumColumn("state", StorageType.PLAIN);
-    private static final TxtStringColumn redirectDomainsColumn = new TxtStringColumn("redirectDomain", StorageType.GZIP);
-    private static final TxtStringColumn ipColumn = new TxtStringColumn("ip", StorageType.GZIP);
+    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final EnumColumn statesColumn = new EnumColumn("state", StandardCharsets.US_ASCII, StorageType.PLAIN);
+    private static final TxtStringColumn redirectDomainsColumn = new TxtStringColumn("redirectDomain", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final TxtStringColumn ipColumn = new TxtStringColumn("ip", StandardCharsets.US_ASCII, StorageType.GZIP);
 
     private static final IntColumn knownUrlsColumn = new IntColumn("knownUrls", StorageType.PLAIN);
     private static final IntColumn goodUrlsColumn = new IntColumn("goodUrls", StorageType.PLAIN);
     private static final IntColumn visitedUrlsColumn = new IntColumn("visitedUrls", StorageType.PLAIN);
 
-    private static final ObjectArrayColumn<String> rssFeedsColumn = new TxtStringColumn("rssFeeds", StorageType.GZIP).asArray();
+    private static final ObjectArrayColumn<String> rssFeedsColumn = new TxtStringColumn("rssFeeds", StandardCharsets.UTF_8, StorageType.GZIP).asArray();
 
 
     public static class DomainNameReader extends SlopTable {

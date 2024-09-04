@@ -5,6 +5,7 @@ import nu.marginalia.slop.column.string.TxtStringColumn;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
 
@@ -12,8 +13,8 @@ public record SlopDomainLinkRecord(
         String source,
         String dest)
 {
-    private static final TxtStringColumn sourcesColumn = new TxtStringColumn("source", StorageType.GZIP);
-    private static final TxtStringColumn destsColumn = new TxtStringColumn("dest", StorageType.GZIP);
+    private static final TxtStringColumn sourcesColumn = new TxtStringColumn("source", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final TxtStringColumn destsColumn = new TxtStringColumn("dest", StandardCharsets.UTF_8, StorageType.GZIP);
 
     public static Reader reader(Path baseDir, int page) throws IOException {
         return new Reader(baseDir, page);

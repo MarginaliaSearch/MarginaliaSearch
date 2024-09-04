@@ -17,6 +17,7 @@ import nu.marginalia.slop.desc.StorageType;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -106,16 +107,16 @@ public record SlopDocumentRecord(
     }
 
     // Basic information
-    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StorageType.GZIP);
-    private static final TxtStringColumn urlsColumn = new TxtStringColumn("url", StorageType.GZIP);
+    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final TxtStringColumn urlsColumn = new TxtStringColumn("url", StandardCharsets.UTF_8, StorageType.GZIP);
     private static final VarintColumn ordinalsColumn = new VarintColumn("ordinal", StorageType.PLAIN);
-    private static final EnumColumn statesColumn = new EnumColumn("state", StorageType.PLAIN);
-    private static final StringColumn stateReasonsColumn = new StringColumn("stateReason", StorageType.GZIP);
+    private static final EnumColumn statesColumn = new EnumColumn("state", StandardCharsets.US_ASCII, StorageType.PLAIN);
+    private static final StringColumn stateReasonsColumn = new StringColumn("stateReason", StandardCharsets.US_ASCII, StorageType.GZIP);
 
     // Document metadata
-    private static final StringColumn titlesColumn = new StringColumn("title", StorageType.GZIP);
-    private static final StringColumn descriptionsColumn = new StringColumn("description", StorageType.GZIP);
-    private static final EnumColumn htmlStandardsColumn = new EnumColumn("htmlStandard", StorageType.PLAIN);
+    private static final StringColumn titlesColumn = new StringColumn("title", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final StringColumn descriptionsColumn = new StringColumn("description", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final EnumColumn htmlStandardsColumn = new EnumColumn("htmlStandard", StandardCharsets.UTF_8, StorageType.PLAIN);
     private static final IntColumn htmlFeaturesColumn = new IntColumn("htmlFeatures", StorageType.PLAIN);
     private static final IntColumn lengthsColumn = new IntColumn("length", StorageType.PLAIN);
     private static final IntColumn pubYearColumn = new IntColumn("pubYear", StorageType.PLAIN);
@@ -125,7 +126,7 @@ public record SlopDocumentRecord(
 
     // Keyword-level columns, these are enumerated by the counts column
 
-    private static final ObjectArrayColumn<String> keywordsColumn = new StringColumn("keywords", StorageType.ZSTD).asArray();
+    private static final ObjectArrayColumn<String> keywordsColumn = new StringColumn("keywords", StandardCharsets.UTF_8, StorageType.ZSTD).asArray();
     private static final ByteArrayColumn termMetaColumn = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
     private static final VarintCodedSequenceArrayColumn termPositionsColumn = new VarintCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
 
