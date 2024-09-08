@@ -34,7 +34,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -201,7 +200,7 @@ public class ConverterMain extends ProcessMainClass {
             try {
                 return Optional.of(CrawledDomainReader.createDataStream(path));
             }
-            catch (IOException ex) {
+            catch (Exception ex) {
                 return Optional.empty();
             }
         }

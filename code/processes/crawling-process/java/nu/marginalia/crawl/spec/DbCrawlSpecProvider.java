@@ -46,22 +46,35 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
 
         blacklist.waitUntilLoaded();
 
+        List<Integer> domainIds = new ArrayList<>(10_000);
+
         try (var conn = dataSource.getConnection();
+             var assignFreeDomains = conn.prepareStatement("UPDATE EC_DOMAIN SET NODE_AFFINITY=? WHERE NODE_AFFINITY=0");
              var query = conn.prepareStatement("""
                      SELECT DOMAIN_NAME, COALESCE(KNOWN_URLS, 0), EC_DOMAIN.ID
                      FROM EC_DOMAIN
                      LEFT JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
-                     WHERE NODE_AFFINITY=?
-                     """))
+                     WHERE NODE_AFFINITY=? OR NODE_AFFINITY=0
+                     """)
+             )
         {
+
+            // Assign any domains with node_affinity=0 to this node.  We must do this now, before we start crawling
+            // to avoid race conditions with other crawl runs.  We don't want multiple crawlers to crawl the same domain.
+            assignFreeDomains.setInt(1, processConfiguration.node());
+            assignFreeDomains.executeUpdate();
+
+            // Fetch the domains to be crawled
             query.setInt(1, processConfiguration.node());
             query.setFetchSize(10_000);
             var rs = query.executeQuery();
 
             while (rs.next()) {
                 // Skip blacklisted domains
-                if (blacklist.isBlacklisted(rs.getInt(3)))
+                int id = rs.getInt(3);
+                if (blacklist.isBlacklisted(id))
                     continue;
+                domainIds.add(id);
 
                 int urls = rs.getInt(2);
                 double growthFactor;
@@ -83,6 +96,7 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
 
                 domains.add(record);
             }
+
         }
 
         logger.info("Loaded {} domains", domains.size());

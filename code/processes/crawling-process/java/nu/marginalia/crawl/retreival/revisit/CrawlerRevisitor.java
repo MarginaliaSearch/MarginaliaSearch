@@ -137,7 +137,7 @@ public class CrawlerRevisitor {
 
                 DocumentWithReference reference =  new DocumentWithReference(doc, oldCrawlData);
 
-                var result = crawlerRetreiver.fetchWriteAndSleep(url, delayTimer, reference);
+                var result = crawlerRetreiver.fetchContentWithReference(url, delayTimer, reference);
 
                 if (reference.isSame(result)) {
                     retained++;

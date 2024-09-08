@@ -122,7 +122,7 @@ public class CrawlerMockFetcherTest {
 
         @SneakyThrows
         @Override
-        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
+        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags, ProbeType probeType) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 byte[] bodyBytes = mockData.get(url).documentBody.getBytes();

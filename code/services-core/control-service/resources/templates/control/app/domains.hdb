@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Domains</h1>
+
+    <table class="table">
+        <form method="get">
+            <tr>
+                <td>
+                    <select name="field" class="form-select" aria-label="Select Field">
+                        <option value="domain" {{#if selectedField.domain}}selected{{/if}}>Domain Name</option>
+                        <option value="id" {{#if selectedField.id}}selected{{/if}}>Domain ID</option>
+                        <option value="ip" {{#if selectedField.ip}}selected{{/if}}>IP</option>
+                    </select>
+                </td>
+                <td colspan="3"><input type="text" name="filter" class="form-control" placeholder="Domain" value="{{query}}"></td>
+                <td>
+                    <select name="affinity" class="form-select" aria-label="Select Node Affinity">
+                        <option value="all" {{#if selectedAffinity.all}}selected{{/if}}>-</option>
+                        <option value="unassigned" {{#if selectedAffinity.unassigned}}selected{{/if}}>Unassigned</option>
+                        <option value="scheduled" {{#if selectedAffinity.scheduled}}selected{{/if}}>Scheduled</option>
+                        <option value="assigned" {{#if selectedAffinity.assigned}}selected{{/if}}>Assigned</option>
+                    </select>
+                </td>
+                <td><button type="submit" class="btn btn-primary">Search</button></td>
+            </tr>
+        </form>
+        <tr>
+            <th>Domain</th>
+            <th>ID</th>
+            <th title="Which, if any, index node owns a domain and will crawl and index it">Node Affinity</th>
+            <th>Rank</th>
+            <th>IP</th>
+            <th>Blacklisted</th>
+        </tr>
+        {{#each results}}
+            <tr>
+                <td>{{name}}</td>
+                <td>{{id}}</td>
+                <td title="{{affinityState.desc}}">{{#unless unassigned}}{{affinityState}} {{#if nodeAffinity}}{{nodeAffinity}}{{/if}} {{/unless}}
+                    {{#if unassigned}}
+                        <div class="dropdown">
+                            <button title="Assign to a node" class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                Unassigned
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <form method="post">
+                                    <input type="hidden" name="node" value="0">
+                                    <li>
+                                        <button
+                                            class="dropdown-item"
+                                            title="Assign to the next node that performs a crawl"
+                                            formaction="/domain/{{id}}/assign/0"
+                                            type="submit">
+                                            Any
+                                        </button>
+                                    </li>
+
+                                {{#each nodes}}
+                                    <input type="hidden" name="node" value="{{.}}">
+                                    <li>
+                                        <button
+                                                class="dropdown-item"
+                                                title="Assign to node {{.}}"
+                                                formaction="/domain/{{id}}/assign/{{.}}"
+                                                type="submit">
+                                            Node {{.}}
+                                        </button>
+                                    </li>
+                                {{/each}}
+                                </form>
+                            </ul>
+                        </div>
+                    {{/if}}
+                </td>
+                <td>{{rank}}</td>
+                <td>{{ip}}</td>
+                <td>{{#if blacklisted}}&check;{{/if}}</td>
+            </tr>
+        {{/each}}
+        {{#unless results}}
+            <tr>
+                <td colspan="5">No results found</td>
+            </tr>
+        {{/unless}}
+        <tr>
+            <td>
+                {{#if hasPrevious}}
+                    <a href="?page={{previousPage}}&filter={{query}}&field={{field}}&affinity={{affinity}}">Previous</a>
+                {{/if}}
+            </td>
+            <td colspan="4"></td>
+            <td>
+                {{#if hasNext}}
+                    <a href="?page={{nextPage}}&filter={{query}}&field={{field}}&affinity={{affinity}}">Next</a>
+                {{/if}}
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

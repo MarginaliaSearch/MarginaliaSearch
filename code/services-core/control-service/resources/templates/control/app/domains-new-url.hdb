@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Add Domains (URL)</h1>
+
+    <div class="my-3 p-3 border bg-light">
+        <p>This utility lets you add domains to be crawled via an external URL.</p>
+        <a href="/domain/new">It's also possible to add domains directly via a text area</a>
+    </div>
+
+    <form method="post">
+        <div class="form-group my-3">
+            <label for="url" class="form-label">Domains to add</label>
+            <input type="text" class="form-control" name="url"/>
+            <span class="text-muted">
+            Enter the URL to the file or page that contains the domains to add.   If the URL leads to a text file,
+            the domains will be parsed from the file, one per line.  If it leads to a HTML page, the HTML
+            will be parsed and all the links will be extracted and added as domains.
+        </span>
+        </div>
+
+        <div class="form-group my-3">
+            <label for="node" class="form-label">Node</label>
+            <select name="node" class="form-select">
+                <option value="-1">Unassigned</option>
+                <option value="0" selected>Auto</option>
+                {{#each global-context.nodes}}
+                    <option value="{{id}}">Node {{id}}</option>
+                {{/each}}
+
+            </select>
+            <span class="text-muted">
+                Select the node to assign the domains to, this is the index node that will "own" the domain, crawl its documents
+                and index dem. If you select "Auto", the system will assign the domains to the next node that performs a crawl.
+            </span>
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

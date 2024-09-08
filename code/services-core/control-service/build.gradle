@@ -54,6 +54,7 @@ dependencies {
     implementation libs.handlebars
 
     implementation libs.duckdb
+    implementation libs.jsoup
 
     implementation libs.trove
     implementation dependencies.create(libs.spark.get()) {

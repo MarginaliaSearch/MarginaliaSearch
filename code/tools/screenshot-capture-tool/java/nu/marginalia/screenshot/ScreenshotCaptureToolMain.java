@@ -16,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class ScreenshotCaptureToolMain {
 
         System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");
 
-        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 1000);
+        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 10_000);
 
         HttpClient httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
@@ -137,16 +138,33 @@ public class ScreenshotCaptureToolMain {
         List<EdgeDomain> ret = new ArrayList<>(queueSize);
 
         try (var conn = ds.getConnection(); var stmt = conn.createStatement()) {
-            var rsp = stmt.executeQuery(
+            int newCount = queueSize / 4;
+            int oldCount = queueSize - newCount;
+
+            ResultSet rst = stmt.executeQuery(
                     """
                     SELECT EC_DOMAIN.DOMAIN_NAME FROM EC_DOMAIN
                     LEFT JOIN DATA_DOMAIN_HISTORY ON EC_DOMAIN.DOMAIN_NAME=DATA_DOMAIN_HISTORY.DOMAIN_NAME
                     ORDER BY SCREENSHOT_DATE IS NULL DESC, SCREENSHOT_DATE, INDEXED DESC
                     LIMIT
-                    """ + queueSize);
-            while (rsp.next()) {
-                ret.add(new EdgeDomain(rsp.getString(1)));
+                    """ + newCount);
+            while (rst.next()) {
+                ret.add(new EdgeDomain(rst.getString(1)));
             }
+
+            rst = stmt.executeQuery("""
+                SELECT DATA_DOMAIN_HISTORY.DOMAIN_NAME FROM DATA_DOMAIN_HISTORY
+                INNER JOIN DATA_DOMAIN_SCREENSHOT ON DATA_DOMAIN_SCREENSHOT.DOMAIN_NAME = DATA_DOMAIN_HISTORY.DOMAIN_NAME
+                WHERE SCREENSHOT_DATE IS NOT NULL
+                ORDER BY SCREENSHOT_DATE ASC
+                LIMIT
+                """ + oldCount);
+
+            while (rst.next()) {
+                ret.add(new EdgeDomain(rst.getString(1)));
+            }
+
+
         }
         catch (Exception ex) {
             logger.warn("Exception in fetching queue", ex);

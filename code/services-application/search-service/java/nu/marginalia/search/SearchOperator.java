@@ -12,6 +12,7 @@ import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.ClusteredUrlDetails;
@@ -162,7 +163,7 @@ public class SearchOperator {
         return new UrlDetails(
                 item.documentId(),
                 item.domainId(),
-                item.url,
+                cleanUrl(item.url),
                 item.title,
                 item.description,
                 item.format,
@@ -175,6 +176,31 @@ public class SearchOperator {
                 item.rawIndexResult,
                 item.rawIndexResult.keywordScores
         );
+    }
+
+    /** Replace nuisance domains with replacements where available */
+    private static EdgeUrl cleanUrl(EdgeUrl url) {
+        String topdomain = url.domain.topDomain;
+        String subdomain = url.domain.subDomain;
+        String path = url.path;
+
+        if (topdomain.equals("fandom.com")) {
+            int wikiIndex = path.indexOf("/wiki/");
+            if (wikiIndex >= 0) {
+                return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null,  "/" + subdomain + path.substring(wikiIndex), null);
+            }
+        }
+        else if (topdomain.equals("medium.com")) {
+            if (!subdomain.isBlank()) {
+                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
+            }
+            else {
+                String article = path.substring(path.indexOf("/", 1));
+                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
+            }
+
+        }
+        return url;
     }
 
     @SneakyThrows

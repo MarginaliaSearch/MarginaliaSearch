@@ -261,6 +261,7 @@ class CrawlerRetreiverTest {
                         .collect(Collectors.toSet());
 
         assertEquals(Set.of("https://www.marginalia.nu/",
+                            "https://www.marginalia.nu/favicon.ico",
                             "https://www.marginalia.nu/log/06-optimization.gmi/"),
                     fetchedUrls);
 
