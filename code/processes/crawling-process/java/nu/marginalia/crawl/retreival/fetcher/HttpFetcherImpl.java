@@ -12,9 +12,6 @@ import nu.marginalia.crawl.retreival.fetcher.socket.FastTerminatingSocketFactory
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.socket.NoSecuritySSL;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawling.body.ContentTypeLogic;
-import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
