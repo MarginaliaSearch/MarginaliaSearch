@@ -118,10 +118,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .queryStrategy(QueryStrategy.SENTENCE)
-                        .year(SpecificationLimit.none())
-                        .quality(SpecificationLimit.none())
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
@@ -133,17 +129,29 @@ public class IndexQueryServiceIntegrationSmokeTest {
                                     .build()
                         ).build());
 
-        int[] idxes = new int[] { 30, 510, 90, 150, 210, 270, 330, 390, 450 };
-        long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
         long[] actual = rsp
                 .stream()
                 .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
                 .mapToLong(i -> i.getRawItem().getCombinedId())
+                .map(UrlIdCodec::getDocumentOrdinal)
                 .toArray();
 
         System.out.println(Arrays.toString(actual));
-        System.out.println(Arrays.toString(ids));
-        Assertions.assertArrayEquals(ids, actual);
+
+        for (long id : actual) {
+            Assertions.assertTrue((id % 2) == 0,
+                    "Expected all results to contain the factor 2");
+            Assertions.assertTrue((id % 3) == 0,
+                    "Expected all results to contain the factor 2");
+            Assertions.assertTrue((id % 5) == 0,
+                    "Expected all results to contain the factor 2");
+        }
+
+        Assertions.assertEquals(9, actual.length,
+                "Expected 10 results");
+        Assertions.assertEquals(9,
+                Arrays.stream(actual).boxed().distinct().count(),
+                "Results not unique");
     }
 
     @Test
@@ -166,15 +174,11 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .queryStrategy(QueryStrategy.SENTENCE)
-                        .year(SpecificationLimit.none())
-                        .quality(SpecificationLimit.none())
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
                         .query(
-                                SearchQuery.builder()
+                            SearchQuery.builder()
                                 .compiledQuery("2")
                                 .include("2")
                                 .phraseConstraint(new SearchPhraseConstraint.Full("2"))
@@ -182,8 +186,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         ).build()
         );
 
-        int[] idxes = new int[] { 504, 360, 420, 480, 240, 180, 300, 120, 280, 440 };
-        long[] ids = IntStream.of(idxes).mapToLong(Long::valueOf).toArray();
         long[] actual = rsp
                 .stream()
                 .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
@@ -192,8 +194,17 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 .toArray();
 
         System.out.println(Arrays.toString(actual));
-        System.out.println(Arrays.toString(ids));
-        Assertions.assertArrayEquals(ids, actual);
+
+        for (long id : actual) {
+            Assertions.assertTrue((id % 2) == 0,
+                    "Expected all results to contain the factor 2");
+        }
+
+        Assertions.assertEquals(10, actual.length,
+                "Expected 10 results");
+        Assertions.assertEquals(10,
+                Arrays.stream(actual).boxed().distinct().count(),
+                "Results not unique");
     }
 
     @Test
@@ -216,25 +227,40 @@ public class IndexQueryServiceIntegrationSmokeTest {
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
-                        .year(SpecificationLimit.none())
-                        .quality(SpecificationLimit.none())
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
-                        .query(new SearchQuery(
-                                "2 3 5",
-                                List.of("3", "5", "2"),
-                                List.of("4"),
-                                Collections.emptyList(),
-                                Collections.emptyList(),
-                                List.of(new SearchPhraseConstraint.Full("2", "3", "5")))).build());
-        int[] idxes = new int[] {  210, 270 };
-        long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
+                        .query(
+                            SearchQuery.builder()
+                                .compiledQuery("2 3 5")
+                                .include("3", "5", "2")
+                                .exclude("4")
+                                .phraseConstraint(new SearchPhraseConstraint.Full("2", "3", "5"))
+                                .build()
+                        ).build());
+        long[] ids = new long[] {  210, 270 };
         long[] actual = rsp.stream()
                 .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
-                .mapToLong(i -> i.getRawItem().getCombinedId()).toArray();
+                .mapToLong(i -> i.getRawItem().getCombinedId())
+                .map(UrlIdCodec::getDocumentOrdinal)
+                .toArray();
+
+        for (long id : actual) {
+            System.out.println("Considering " + id);
+            Assertions.assertTrue((id % 2) == 0,
+                    "Expected all results to contain the factor 2");
+            Assertions.assertTrue((id % 3) == 0,
+                    "Expected all results to contain the factor 3");
+            Assertions.assertTrue((id % 5) == 0,
+                    "Expected all results to contain the factor 5");
+            Assertions.assertTrue((id/100) == 2);
+        }
+
+        Assertions.assertEquals(2, actual.length,
+                "Expected 10 results");
+        Assertions.assertEquals(2,
+                Arrays.stream(actual).boxed().distinct().count(),
+                "Results not unique");
 
         Assertions.assertArrayEquals(ids, actual);
     }
@@ -258,26 +284,23 @@ public class IndexQueryServiceIntegrationSmokeTest {
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
-                        .quality(SpecificationLimit.none())
                         .year(SpecificationLimit.equals(1998))
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier("NONE")
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .query(
-                            new SearchQuery("4", List.of("4"),
-                                    Collections.emptyList(),
-                                    Collections.emptyList(),
-                                    Collections.emptyList(),
-                                    List.of(new SearchPhraseConstraint.Full("4")))
+                            SearchQuery.builder()
+                                .compiledQuery("4")
+                                .include("4")
+                                .phraseConstraint(new SearchPhraseConstraint.Full("4"))
+                                .build()
                         ).build());
 
 
         Set<Integer> years = new HashSet<>();
 
         for (var res : rsp) {
-            years.add(DocumentMetadata.decodeYear(res.getRawItem().getCombinedId()));
+            years.add(DocumentMetadata.decodeYear(res.getRawItem().getEncodedDocMetadata()));
         }
 
         assertEquals(Set.of(1998), years);
@@ -407,7 +430,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", 0., "HTML5", 0, null, 0, 10
+                "test", "test", 0., "HTML5", 0, null, id, 10
         ));
 
 

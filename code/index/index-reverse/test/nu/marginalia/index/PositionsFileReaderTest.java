@@ -2,9 +2,9 @@ package nu.marginalia.index;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.construction.PositionsFileConstructor;
-import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.positions.PositionsFileReader;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.index.positions.TermData;
+import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PositionsFileReaderTest {
 
@@ -35,9 +35,9 @@ class PositionsFileReaderTest {
         ByteBuffer workArea = ByteBuffer.allocate(8192);
         long key1, key2, key3;
         try (PositionsFileConstructor constructor = new PositionsFileConstructor(file)) {
-            key1 = constructor.add((byte) 43, GammaCodedSequence.generate(workArea, 1, 2, 3).buffer());
-            key2 = constructor.add((byte) 51, GammaCodedSequence.generate(workArea, 2, 3, 5, 1000, 5000, 20241).buffer());
-            key3 = constructor.add((byte) 61, GammaCodedSequence.generate(workArea, 3, 5, 7).buffer());
+            key1 = constructor.add((byte) 43, VarintCodedSequence.generate(1, 2, 3).buffer());
+            key2 = constructor.add((byte) 51, VarintCodedSequence.generate(2, 3, 5, 1000, 5000, 20241).buffer());
+            key3 = constructor.add((byte) 61, VarintCodedSequence.generate(3, 5, 7).buffer());
         }
 
         System.out.println("key1: " + Long.toHexString(key1));

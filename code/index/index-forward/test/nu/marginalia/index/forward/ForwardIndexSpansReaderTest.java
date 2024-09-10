@@ -2,7 +2,8 @@ package nu.marginalia.index.forward;
 
 import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
 import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
-import nu.marginalia.sequence.GammaCodedSequence;
+import nu.marginalia.language.sentence.tag.HtmlTag;
+import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,12 +34,12 @@ class ForwardIndexSpansReaderTest {
         long offset2;
         try (var writer = new ForwardIndexSpansWriter(testFile)) {
             writer.beginRecord(1);
-            writer.writeSpan((byte) 'h', GammaCodedSequence.generate(wa, 1, 3, 5, 8).buffer());
+            writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate(1, 3, 5, 8).buffer());
             offset1 = writer.endRecord();
 
             writer.beginRecord(2);
-            writer.writeSpan((byte) 'c', GammaCodedSequence.generate(wa, 2, 4, 6, 7).buffer());
-            writer.writeSpan((byte) 'a', GammaCodedSequence.generate(wa, 3, 5).buffer());
+            writer.writeSpan(HtmlTag.CODE.code, VarintCodedSequence.generate(2, 4, 6, 7).buffer());
+            writer.writeSpan(HtmlTag.ANCHOR.code, VarintCodedSequence.generate(3, 5).buffer());
             offset2 = writer.endRecord();
         }
 
