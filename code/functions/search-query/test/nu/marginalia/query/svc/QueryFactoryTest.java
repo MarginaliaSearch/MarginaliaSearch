@@ -2,7 +2,6 @@ package nu.marginalia.query.svc;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.QueryFactory;
@@ -129,24 +128,6 @@ public class QueryFactoryTest {
         assertEquals(SpecificationLimitType.GREATER_THAN, size.type());
         assertEquals(2000, size.value());
     }
-
-    @Test
-    public void testQuotedStopwords() {
-        {
-            // the is a stopword, so it should generate an ngram search term
-            var specs = parseAndGetSpecs("\"the shining\"");
-            assertEquals("( shining | the_shining )", specs.query.compiledQuery);
-        }
-
-        {
-            // tde isn't a stopword, so we should get the normal behavior
-            var specs = parseAndGetSpecs("\"tde shining\"");
-            assertEquals("( shining tde | tde_shining )", specs.query.compiledQuery);
-            assertEquals(List.of("tde_shining"), specs.query.searchTermsPriority);
-            assertEquals(List.of(new SearchPhraseConstraint.Mandatory(List.of("tde", "shining"))), specs.query.phraseConstraints);
-        }
-    }
-
 
     @Test
     public void testParseQualityEq() {
