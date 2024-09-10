@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 public class VarintCodedSequence implements CodedSequence {
 
@@ -241,5 +242,16 @@ public class VarintCodedSequence implements CodedSequence {
         }
 
 
+    }
+
+    public int hashCode() {
+        return values().hashCode();
+    }
+
+    public boolean equals(Object other) {
+        if (other instanceof CodedSequence cs) {
+            return Objects.equals(values(), cs.values());
+        }
+        return false;
     }
 }

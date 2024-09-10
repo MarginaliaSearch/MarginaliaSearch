@@ -19,4 +19,5 @@ public interface CodedSequence  {
     int bufferSize();
 
     int valueCount();
+
 }

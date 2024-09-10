@@ -7,7 +7,7 @@ import nu.marginalia.sequence.io.BitReader;
 import nu.marginalia.sequence.io.BitWriter;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /** A sequence of integers encoded using the Elias Gamma code,
@@ -102,11 +102,14 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
     }
 
     public int hashCode() {
-        return raw.hashCode();
+        return values().hashCode();
     }
 
-    public boolean equals(Object obj) {
-        return obj instanceof GammaCodedSequence other && Arrays.equals(bytes(), other.bytes());
+    public boolean equals(Object other) {
+        if (other instanceof CodedSequence cs) {
+            return Objects.equals(values(), cs.values());
+        }
+        return false;
     }
 
     public String toString() {
@@ -255,4 +258,6 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
 
 
     }
+
+
 }
