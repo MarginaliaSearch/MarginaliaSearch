@@ -83,9 +83,15 @@ public class DocumentLoaderService {
                     projection.ordinal()
             );
 
+            var parsedUrl = EdgeUrl.parse(projection.url());
+            if (parsedUrl.isEmpty()) {
+                logger.error("Failed to parse URL: {}", projection.url());
+                return;
+            }
+
             documentDbWriter.add(new DocdbUrlDetail(
                     urlId,
-                    new EdgeUrl(projection.url()),
+                    parsedUrl.get(),
                     projection.title(),
                     projection.description(),
                     projection.quality(),
