@@ -8,5 +8,4 @@ This package contains common models to the search engine
 * [EdgeUrl](java/nu/marginalia/model/EdgeUrl.java)
 * [DocumentMetadata](java/nu/marginalia/model/idx/DocumentMetadata.java)
 * [DocumentFlags](java/nu/marginalia/model/idx/DocumentFlags.java)
-* [WordMetadata](java/nu/marginalia/model/idx/WordMetadata.java)
 * [WordFlags](java/nu/marginalia/model/idx/WordFlags.java)

@@ -11,4 +11,4 @@ functions based on [POS tags](https://www.ling.upenn.edu/courses/Fall_2003/ling0
 
 ## See Also
 
-* [libraries/language-processing](../../libraries/language-processing) does a lot of the heavy lifting.
+* [libraries/language-processing](../../../libraries/language-processing) does a lot of the heavy lifting.

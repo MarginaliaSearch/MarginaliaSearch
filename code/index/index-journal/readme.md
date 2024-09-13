@@ -6,19 +6,13 @@ This journal is written by [processes/loading-process](../../processes/loading-p
 when constructing the [forward](../index-forward) and [reverse](../index-reverse) 
 indices. 
 
-The journal format is a file header, followed by a zstd-compressed list of entries,
-each containing a header with document-level data, and a data section
-with keyword-level data.
+The journal uses the [Slop library](https://github.com/MarginaliaSearch/SlopData) to store data
+in a columnar fashion. 
 
-The journal data may be split into multiple files, and the journal writers and readers
-are designed to handle this transparently via their *Paging* implementation.
+The journal will may be split into multiple files to help index
+construction, as a merge strategy is used to reduce the amount
+of RAM required during index construction.
 
-## Central Classes
-
-### Model
-* [IndexJournalEntry](java/nu/marginalia/index/journal/model/IndexJournalEntry.java)
-* [IndexJournalEntryHeader](java/nu/marginalia/index/journal/model/IndexJournalEntryHeader.java)
-* [IndexJournalEntryData](java/nu/marginalia/index/journal/model/IndexJournalEntryData.java)
-### I/O
-* [IndexJournalReader](java/nu/marginalia/index/journal/reader/IndexJournalReader.java)
-* [IndexJournalWriter](java/nu/marginalia/index/journal/writer/IndexJournalWriter.java)
+Unlike most slop data stores, the index journal allows direct access
+to the underlying columns, as the needs of the index construction processes
+are fairly varied. 
