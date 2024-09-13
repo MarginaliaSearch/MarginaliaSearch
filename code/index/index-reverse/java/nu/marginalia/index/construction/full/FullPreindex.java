@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -87,13 +86,10 @@ public class FullPreindex {
 
         // Write the docs file
         LongArray finalDocs = LongArrayFactory.mmapForWritingConfined(outputFileDocs, sizeEstimator.size);
-        try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
-            offsets.transformEachIO(0, offsets.size(),
-                    new FullIndexBTreeTransformer(finalDocs, 2,
-                            ReverseIndexParameters.fullDocsBTreeContext,
-                            intermediateDocChannel));
-            intermediateDocChannel.force(false);
-        }
+        offsets.transformEachIO(0, offsets.size(),
+                new FullIndexBTreeTransformer(finalDocs, 2,
+                        ReverseIndexParameters.fullDocsBTreeContext,
+                        documents.documents));
 
         LongArray wordIds = segments.wordIds;
 
@@ -148,42 +144,36 @@ public class FullPreindex {
         leftIter.next();
         rightIter.next();
 
-        try (FileChannel leftChannel = left.documents.createDocumentsFileChannel();
-             FileChannel rightChannel = right.documents.createDocumentsFileChannel())
+        while (mergingIter.canPutMore()
+                && leftIter.isPositionBeforeEnd()
+                && rightIter.isPositionBeforeEnd())
         {
+            final long currentWord = mergingIter.wordId;
 
-            while (mergingIter.canPutMore()
-                    && leftIter.isPositionBeforeEnd()
-                    && rightIter.isPositionBeforeEnd())
+            if (leftIter.wordId == currentWord && rightIter.wordId == currentWord)
             {
-                final long currentWord = mergingIter.wordId;
-
-                if (leftIter.wordId == currentWord && rightIter.wordId == currentWord)
-                {
-                    // both inputs have documents for the current word
-                    mergeSegments(leftIter, rightIter,
-                            left.documents, right.documents,
-                            mergedDocuments, mergingIter);
-                }
-                else if (leftIter.wordId == currentWord) {
-                    if (!copySegment(leftIter, mergedDocuments, leftChannel, mergingIter))
-                        break;
-                }
-                else if (rightIter.wordId == currentWord) {
-                    if (!copySegment(rightIter, mergedDocuments, rightChannel, mergingIter))
-                        break;
-                }
-                else assert false : "This should never happen"; // the helvetica scenario
+                // both inputs have documents for the current word
+                mergeSegments(leftIter, rightIter,
+                        left.documents, right.documents,
+                        mergedDocuments, mergingIter);
             }
-
-            if (leftIter.isPositionBeforeEnd()) {
-                while (copySegment(leftIter, mergedDocuments, leftChannel, mergingIter));
+            else if (leftIter.wordId == currentWord) {
+                if (!copySegment(leftIter, left.documents,  mergingIter, mergedDocuments))
+                    break;
             }
-
-            if (rightIter.isPositionBeforeEnd()) {
-                while (copySegment(rightIter, mergedDocuments, rightChannel, mergingIter));
+            else if (rightIter.wordId == currentWord) {
+                if (!copySegment(rightIter, right.documents,  mergingIter, mergedDocuments))
+                    break;
             }
+            else assert false : "This should never happen"; // the helvetica scenario
+        }
 
+        if (leftIter.isPositionBeforeEnd()) {
+            while (copySegment(leftIter, left.documents,  mergingIter, mergedDocuments));
+        }
+
+        if (rightIter.isPositionBeforeEnd()) {
+            while (copySegment(rightIter, right.documents,  mergingIter, mergedDocuments));
         }
 
         if (leftIter.isPositionBeforeEnd())
@@ -284,15 +274,15 @@ public class FullPreindex {
      * into the destination segment, and advance the construction iterator.
      */
     private static boolean copySegment(FullPreindexWordSegments.SegmentIterator sourceIter,
-                                       LongArray dest,
-                                       FileChannel sourceChannel,
-                                       FullPreindexWordSegments.SegmentConstructionIterator mergingIter) throws IOException {
+                                       FullPreindexDocuments srcDocuments,
+                                       FullPreindexWordSegments.SegmentConstructionIterator mergingIter,
+                                       LongArray dest) throws IOException {
 
         long size = sourceIter.endOffset - sourceIter.startOffset;
         long start = mergingIter.startOffset;
         long end = start + size;
 
-        dest.transferFrom(sourceChannel,
+        dest.transferFrom(srcDocuments.documents,
                 sourceIter.startOffset,
                 mergingIter.startOffset,
                 end);

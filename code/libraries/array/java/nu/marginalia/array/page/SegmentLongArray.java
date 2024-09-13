@@ -167,6 +167,25 @@ public class SegmentLongArray implements LongArray {
         }
 
     }
+    
+    @Override
+    public void transferFrom(LongArray source,
+                             long sourceStartL,
+                             long destStartL,
+                             long destEndL)
+    {
+        if (destStartL > destEndL)
+            throw new IndexOutOfBoundsException("Source start after end");
+
+        if (sourceStartL + (destEndL - destStartL) > source.size())
+            throw new IndexOutOfBoundsException("Source array too small");
+        if (destEndL > size())
+            throw new IndexOutOfBoundsException("Destination array too small");
+
+        for (long i = destStartL; i < destEndL; i++) {
+            set(i, source.get(sourceStartL + i - destStartL));
+        }
+    }
 
     @Override
     public MemorySegment getMemorySegment() {

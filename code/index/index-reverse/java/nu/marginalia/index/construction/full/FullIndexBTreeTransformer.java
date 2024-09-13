@@ -6,14 +6,12 @@ import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.btree.model.BTreeContext;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 
 /** Constructs the BTrees in a reverse index */
 public class FullIndexBTreeTransformer implements LongArrayTransformations.LongIOTransformer {
     private final BTreeWriter writer;
-    private final FileChannel intermediateChannel;
-
     private final int entrySize;
+    private final LongArray documentsArray;
 
     long start = 0;
     long writeOffset = 0;
@@ -21,10 +19,10 @@ public class FullIndexBTreeTransformer implements LongArrayTransformations.LongI
     public FullIndexBTreeTransformer(LongArray urlsFileMap,
                                      int entrySize,
                                      BTreeContext bTreeContext,
-                                     FileChannel intermediateChannel) {
+                                     LongArray documentsArray) {
+        this.documentsArray = documentsArray;
         this.writer = new BTreeWriter(urlsFileMap, bTreeContext);
         this.entrySize = entrySize;
-        this.intermediateChannel = intermediateChannel;
     }
 
     @Override
@@ -39,7 +37,7 @@ public class FullIndexBTreeTransformer implements LongArrayTransformations.LongI
         final long offsetForBlock = writeOffset;
 
         writeOffset += writer.write(writeOffset, size,
-                mapRegion -> mapRegion.transferFrom(intermediateChannel, start, 0, end - start)
+                mapRegion -> mapRegion.transferFrom(documentsArray, start, 0, end - start)
         );
 
         start = end;

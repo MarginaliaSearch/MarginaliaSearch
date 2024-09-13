@@ -108,4 +108,5 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
     void write(Path file) throws IOException;
 
     void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException;
+    void transferFrom(LongArray source, long sourceStart, long arrayStart, long arrayEnd) throws IOException;
 }

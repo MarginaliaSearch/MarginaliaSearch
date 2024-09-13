@@ -139,43 +139,38 @@ public class PrioPreindex {
         leftIter.next();
         rightIter.next();
 
-        try (FileChannel leftChannel = left.documents.createDocumentsFileChannel();
-             FileChannel rightChannel = right.documents.createDocumentsFileChannel())
+        while (mergingIter.canPutMore()
+                && leftIter.isPositionBeforeEnd()
+                && rightIter.isPositionBeforeEnd())
         {
+            final long currentWord = mergingIter.wordId;
 
-            while (mergingIter.canPutMore()
-                    && leftIter.isPositionBeforeEnd()
-                    && rightIter.isPositionBeforeEnd())
+            if (leftIter.wordId == currentWord && rightIter.wordId == currentWord)
             {
-                final long currentWord = mergingIter.wordId;
-
-                if (leftIter.wordId == currentWord && rightIter.wordId == currentWord)
-                {
-                    // both inputs have documents for the current word
-                    mergeSegments(leftIter, rightIter,
-                            left.documents, right.documents,
-                            mergedDocuments, mergingIter);
-                }
-                else if (leftIter.wordId == currentWord) {
-                    if (!copySegment(leftIter, mergedDocuments, leftChannel, mergingIter))
-                        break;
-                }
-                else if (rightIter.wordId == currentWord) {
-                    if (!copySegment(rightIter, mergedDocuments, rightChannel, mergingIter))
-                        break;
-                }
-                else assert false : "This should never happen"; // the helvetica scenario
+                // both inputs have documents for the current word
+                mergeSegments(leftIter, rightIter,
+                        left.documents, right.documents,
+                        mergedDocuments, mergingIter);
             }
-
-            if (leftIter.isPositionBeforeEnd()) {
-                while (copySegment(leftIter, mergedDocuments, leftChannel, mergingIter));
+            else if (leftIter.wordId == currentWord) {
+                if (!copySegment(leftIter, left.documents,  mergingIter, mergedDocuments))
+                    break;
             }
-
-            if (rightIter.isPositionBeforeEnd()) {
-                while (copySegment(rightIter, mergedDocuments, rightChannel, mergingIter));
+            else if (rightIter.wordId == currentWord) {
+                if (!copySegment(rightIter, right.documents,  mergingIter, mergedDocuments))
+                    break;
             }
-
+            else assert false : "This should never happen"; // the helvetica scenario
         }
+
+        if (leftIter.isPositionBeforeEnd()) {
+            while (copySegment(leftIter, left.documents,  mergingIter, mergedDocuments));
+        }
+
+        if (rightIter.isPositionBeforeEnd()) {
+            while (copySegment(rightIter, right.documents,  mergingIter, mergedDocuments));
+        }
+
 
         if (leftIter.isPositionBeforeEnd())
             throw new IllegalStateException("Left has more to go");
@@ -273,21 +268,24 @@ public class PrioPreindex {
     /** Copy the data from the source segment at the position and length indicated by sourceIter,
      * into the destination segment, and advance the construction iterator.
      */
+    /** Copy the data from the source segment at the position and length indicated by sourceIter,
+     * into the destination segment, and advance the construction iterator.
+     */
     private static boolean copySegment(PrioPreindexWordSegments.SegmentIterator sourceIter,
-                                       LongArray dest,
-                                       FileChannel sourceChannel,
-                                       PrioPreindexWordSegments.SegmentConstructionIterator mergingIter) throws IOException {
+                                       PrioPreindexDocuments srcDocuments,
+                                       PrioPreindexWordSegments.SegmentConstructionIterator mergingIter,
+                                       LongArray dest) throws IOException {
 
         long size = sourceIter.endOffset - sourceIter.startOffset;
         long start = mergingIter.startOffset;
         long end = start + size;
 
-        dest.transferFrom(sourceChannel,
+        dest.transferFrom(srcDocuments.documents,
                 sourceIter.startOffset,
                 mergingIter.startOffset,
                 end);
 
-        boolean putNext = mergingIter.putNext(size);
+        boolean putNext = mergingIter.putNext(size / 2);
         boolean iterNext = sourceIter.next();
 
         if (!putNext && iterNext)
