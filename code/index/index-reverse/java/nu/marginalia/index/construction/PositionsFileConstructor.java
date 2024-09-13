@@ -63,9 +63,11 @@ public class PositionsFileConstructor implements AutoCloseable {
     }
 
     public void close() throws IOException {
-        while (workBuffer.position() < workBuffer.limit()) {
+        if (workBuffer.hasRemaining()) {
             workBuffer.flip();
-            channel.write(workBuffer);
+
+            while (workBuffer.hasRemaining())
+                channel.write(workBuffer);
         }
 
         channel.force(false);
