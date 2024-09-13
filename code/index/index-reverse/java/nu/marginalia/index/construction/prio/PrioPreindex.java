@@ -229,7 +229,7 @@ public class PrioPreindex {
         mergedDocuments.force();
 
         long beforeSize = mergedDocuments.size();
-        long afterSize = sizeLongs * 8;
+        long afterSize = sizeLongs;
         if (beforeSize != afterSize) {
             mergedDocuments.close();
             try (var bc = Files.newByteChannel(docsFile, StandardOpenOption.WRITE)) {
