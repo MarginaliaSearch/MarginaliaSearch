@@ -285,7 +285,7 @@ public class PrioPreindex {
                 mergingIter.startOffset,
                 end);
 
-        boolean putNext = mergingIter.putNext(size / 2);
+        boolean putNext = mergingIter.putNext(size);
         boolean iterNext = sourceIter.next();
 
         if (!putNext && iterNext)
