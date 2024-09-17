@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 public class TestGraphSourceForSimilarityData implements GraphSource {
+    // The data is available at
+    // https://downloads.marginalia.nu/link-test-data.tar.gz
+
     private static Path domainDataPath = Paths.get("/home/vlofgren/Exports/Links/domains.export.tsv");
     private static Path similarityDataPath = Paths.get("/home/vlofgren/Exports/Links/neighbors.tsv");
 

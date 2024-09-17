@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public class TestGraphSourceForInvertedLinkData implements GraphSource {
+    // The data is available at
+    // https://downloads.marginalia.nu/link-test-data.tar.gz
     private static Path domainDataPath = Paths.get("/home/vlofgren/Exports/Links/domains.export.tsv");
     private static Path[] linksDataPaths = new Path[] {
             Paths.get("/home/vlofgren/Exports/Links/domain-links-1.dat"),
