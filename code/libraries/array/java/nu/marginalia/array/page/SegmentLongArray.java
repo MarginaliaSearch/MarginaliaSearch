@@ -183,10 +183,11 @@ public class SegmentLongArray implements LongArray {
             throw new IndexOutOfBoundsException("Destination array too small");
 
         MemorySegment.copy(
-                source.getMemorySegment(), JAVA_LONG, sourceStartL,
-                segment, JAVA_LONG, destStartL,
+                source.getMemorySegment(), JAVA_LONG, sourceStartL * JAVA_LONG.byteSize(),
+                segment, JAVA_LONG, destStartL * JAVA_LONG.byteSize(),
                 destEndL - destStartL
         );
+
     }
 
     @Override
