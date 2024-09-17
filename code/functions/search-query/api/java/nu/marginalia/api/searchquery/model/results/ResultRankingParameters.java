@@ -54,7 +54,7 @@ public class ResultRankingParameters {
                 .tcfProximity(2.)
                 .tcfFirstPosition(25)
                 .temporalBias(TemporalBias.NONE)
-                .temporalBiasWeight(1. / (5.))
+                .temporalBiasWeight(5.0)
                 .exportDebugData(false)
                 .build();
     }
