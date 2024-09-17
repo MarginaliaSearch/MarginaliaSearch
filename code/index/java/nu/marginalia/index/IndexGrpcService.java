@@ -336,10 +336,10 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
             }
 
             private void executeSearch() {
-                final LongArrayList results = new LongArrayList(512);
+                final LongArrayList results = new LongArrayList(64);
 
                 // These queries are different indices for one subquery
-                final LongQueryBuffer buffer = new LongQueryBuffer(512);
+                final LongQueryBuffer buffer = new LongQueryBuffer(64);
 
                 while (query.hasMore() && budget.hasTimeLeft())
                 {
@@ -350,7 +350,7 @@ public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
                         results.add(buffer.data.get(i));
                     }
 
-                    if (results.size() >= 512) {
+                    if (results.size() >= 64) {
                         enqueueResults(new CombinedDocIdList(results));
                         results.clear();
                     }
