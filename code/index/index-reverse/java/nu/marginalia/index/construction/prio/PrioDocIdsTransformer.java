@@ -19,8 +19,8 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
     private final FileChannel writeChannel;
     private final FileChannel readChannel;
 
-    private final ByteBuffer readBuffer = ByteBuffer.allocate(8192).order(ByteOrder.LITTLE_ENDIAN);
-    private final ByteBuffer writeBuffer = ByteBuffer.allocate(8192);
+    private final ByteBuffer readBuffer = ByteBuffer.allocate(65536).order(ByteOrder.LITTLE_ENDIAN);
+    private final ByteBuffer writeBuffer = ByteBuffer.allocate(65536);
 
     long startL = 0;
     long writeOffsetB = 0;
