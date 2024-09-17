@@ -283,9 +283,11 @@ public class UnsafeLongArray implements LongArray {
         if (destEndL > size())
             throw new IndexOutOfBoundsException("Destination array too small");
 
-        for (long i = destStartL; i < destEndL; i++) {
-            set(i, source.get(sourceStartL + i - destStartL));
-        }
+        MemorySegment.copy(
+                source.getMemorySegment(), JAVA_LONG, sourceStartL,
+                segment, JAVA_LONG, destStartL,
+                destEndL - destStartL
+        );
     }
 
 }
