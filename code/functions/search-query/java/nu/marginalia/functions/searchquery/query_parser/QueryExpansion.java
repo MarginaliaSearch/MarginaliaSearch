@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordPathsRenderer;
-import nu.marginalia.language.WordPatterns;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
@@ -45,11 +44,17 @@ public class QueryExpansion {
             strategy.expand(graph);
         }
 
-        List<List<String>> coherences = createSegments(graph);
+        List<List<String>> optionalPhraseConstraints = createSegments(graph);
+
+        // also create a segmentation that is just the entire query
+        List<String> fullPhraseConstraint = new ArrayList<> ();
+        for (var qw : graph) {
+            fullPhraseConstraint.add(qw.word());
+        }
 
         var compiled = QWordPathsRenderer.render(graph);
 
-        return new Expansion(compiled, coherences);
+        return new Expansion(compiled, optionalPhraseConstraints, fullPhraseConstraint);
     }
 
     private static final Pattern dashPattern = Pattern.compile("-");
@@ -131,6 +136,10 @@ public class QueryExpansion {
             nodes.add(qw);
         }
 
+        if (nodes.size() <= 1) {
+            return List.of();
+        }
+
         String[] words = nodes.stream().map(QWord::stemmed).toArray(String[]::new);
 
         // Grab all segments
@@ -141,14 +150,10 @@ public class QueryExpansion {
         }
         allSegments.sort(Comparator.comparing(NgramLexicon.SentenceSegment::start));
 
-        if (allSegments.isEmpty()) {
-            return List.of();
-        }
+        Set<List<String>> constraints = new HashSet<>();
 
         Set<NgramLexicon.SentenceSegment> bestSegmentation =
                 findBestSegmentation(allSegments);
-
-        List<List<String>> coherences = new ArrayList<>();
 
         for (var segment : bestSegmentation) {
 
@@ -159,14 +164,14 @@ public class QueryExpansion {
             for (int i = start; i < end; i++) {
                 components.add(nodes.get(i).word());
             }
-            coherences.add(components);
+            constraints.add(components);
 
             // Create an n-gram search term for the segment
             String word = String.join("_", components);
             graph.addVariantForSpan(nodes.get(start), nodes.get(end - 1), word);
         }
 
-        return coherences;
+        return new ArrayList<>(constraints);
     }
 
     private Set<NgramLexicon.SentenceSegment> findBestSegmentation(List<NgramLexicon.SentenceSegment> allSegments) {
@@ -209,5 +214,5 @@ public class QueryExpansion {
         void expand(QWordGraph graph);
     }
 
-    public record Expansion(String compiledQuery, List<List<String>> extraCoherences) {}
+    public record Expansion(String compiledQuery, List<List<String>> optionalPharseConstraints, List<String> fullPhraseConstraint) {}
 }

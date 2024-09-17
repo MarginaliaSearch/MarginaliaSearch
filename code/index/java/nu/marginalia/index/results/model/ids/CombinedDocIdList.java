@@ -15,6 +15,10 @@ import java.util.stream.LongStream;
 public final class CombinedDocIdList {
     private final long[] data;
 
+    public CombinedDocIdList(long... data) {
+        this.data = Arrays.copyOf(data, data.length);
+    }
+
     public CombinedDocIdList(LongArrayList data) {
         this.data = data.toLongArray();
     }
@@ -28,6 +32,7 @@ public final class CombinedDocIdList {
     public int size() {
         return data.length;
     }
+    public long at(int i) { return data[i]; }
 
     public LongStream stream() {
         return Arrays.stream(data);

@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
-import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.segmentation.NgramLexicon;
+import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
@@ -17,15 +17,14 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class SentenceStatisticsExperiment extends LegacyExperiment {
 
-    NgramLexicon lexicon = new NgramLexicon(WmsaHome.getLanguageModels());
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
-    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(
-            new TermFrequencyDict(WmsaHome.getLanguageModels()), lexicon);
+    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
     Path filename;
     PrintWriter writer;
 
@@ -47,6 +46,7 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
 
         logLine("Processing: " + domain.domain);
 
+        ByteBuffer workArea = ByteBuffer.allocate(8192);
         for (var doc : domain.doc) {
             if (doc.documentBody == null) continue;
 
@@ -55,9 +55,9 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
             parsed.body().filter(new DomPruningFilter(0.5));
 
             var dld = se.extractSentences(parsed);
-            var keywords = documentKeywordExtractor.extractKeywords(dld, new EdgeUrl(doc.url));
+            var keywords = documentKeywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(doc.url));
 
-            keywords.build();
+            keywords.build(workArea);
         }
 
         return true;

@@ -3,7 +3,7 @@ package nu.marginalia.lsh;
 /** This is a very simple locality sensitive hash for collections of Java objects.
  * <p>
  * The resulting LSH is a 64 bit value, whose hamming distance is a measure
- * of the similarity of the two collections, where smaller similarities imply
+ * of the similarity of the two collections, where a smaller value implies
  * similarity.
  * <p>
  * It hinges on a lot of relatively sketchy assumptions about Object$hashCode().

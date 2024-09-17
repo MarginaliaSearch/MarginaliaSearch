@@ -1,10 +1,11 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CompiledQueryParserTest {
 
@@ -20,6 +21,21 @@ class CompiledQueryParserTest {
     public void testSingleWord() {
         CompiledQuery<String> q = CompiledQueryParser.parse("foo");
         assertEquals(w(q, "foo"), q.root);
+    }
+
+    @Test
+    public void testCohen() {
+        CompiledQuery<String> q = CompiledQueryParser.parse("( tube brief of elaboration | brief_elaboration_of_a_tube )");
+        int val = CompiledQueryAggregates.intMaxMinAggregate(q, s ->
+            switch (s) {
+                case "brief" -> 3;
+                case "tube" -> 2;
+                case "of" -> 1;
+                default -> 0;
+            });
+        assertEquals(0, val);
+
+        System.out.println(q.stream().toList());
     }
 
     @Test

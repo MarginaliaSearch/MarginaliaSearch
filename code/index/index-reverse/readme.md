@@ -7,7 +7,10 @@ There are two tiers of this index.
 * A priority index which only indexes terms that are flagged with priority flags<sup>1</sup>.
 * A full index that indexes all terms. 
 
-The full index also provides access to term-level metadata, while the priority index is a binary index that only offers information about which documents has a specific word.
+The full index also provides access to term-level metadata, while the priority index is 
+a binary index that only offers information about which documents has a specific word.
+
+The priority index is also compressed, while the full index at this point is not.
 
 [1] See WordFlags in [common/model](../../common/model/) and
 KeywordMetadata in [features-convert/keyword-extraction](../../features-convert/keyword-extraction).
@@ -34,9 +37,16 @@ to form a finalized reverse index.
 ![Illustration of the data layout of the finalized index](index.svg)
 ## Central Classes
 
-* [ReversePreindex](java/nu/marginalia/index/construction/ReversePreindex.java) intermediate reverse index state.
-* [ReverseIndexConstructor](java/nu/marginalia/index/construction/ReverseIndexConstructor.java) constructs the index.
-* [ReverseIndexReader](java/nu/marginalia/index/ReverseIndexReader.java) interrogates the index.
+Full index:
+* [FullPreindex](java/nu/marginalia/index/construction/full/FullPreindex.java) intermediate reverse index state.
+* [FullIndexConstructor](java/nu/marginalia/index/construction/full/FullIndexConstructor.java) constructs the index.
+* [FullReverseIndexReader](java/nu/marginalia/index/FullReverseIndexReader.java) interrogates the index.
+
+Prio index:
+* [PrioPreindex](java/nu/marginalia/index/construction/prio/PrioPreindex.java) intermediate reverse index state.
+* [PrioIndexConstructor](java/nu/marginalia/index/construction/prio/PrioIndexConstructor.java) constructs the index.
+* [PrioIndexReader](java/nu/marginalia/index/PrioReverseIndexReader.java) interrogates the index.
+
 
 ## See Also
 

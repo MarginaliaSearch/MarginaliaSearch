@@ -71,8 +71,6 @@ Features are relatively stand-alone components that serve some part of the domai
 but isolated. 
 
 * [features-search](features-search)
-* [features-crawl](features-crawl)
-* [features-convert](features-convert)
 
 ### Libraries and primitives
 

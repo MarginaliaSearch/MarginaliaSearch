@@ -3,10 +3,10 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.summary.SummaryExtractor;
 import org.apache.logging.log4j.util.Strings;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -121,6 +121,11 @@ public class BlogSpecialization extends DefaultSpecialization {
             if (node instanceof Element el) {
                 String classes = el.attr("class");
                 String id = el.id();
+
+                String tagName = el.tagName();
+
+                if (tagName.equalsIgnoreCase("noscript"))
+                    return FilterResult.REMOVE;
 
                 for (String badClassElement : badClassElements) {
                     if (classes.contains(badClassElement)) {

@@ -93,22 +93,30 @@ message RpcDecoratedResultItem {
   double rankingScore = 11; // The ranking score of this search result item, lower is better
   int64 bestPositions = 12;
   RpcResultRankingDetails rankingDetails = 13; // optional, only present if exportDebugData is true in RpcResultRankingParameters
+  int32 resultsFromDomain = 14;
 }
 
 /** A raw index-service view of a search result */
 message RpcRawResultItem {
   int64 combinedId = 1; // raw ID with bit-encoded ranking information still present
-  int32 resultsFromDomain = 2; // number of other results from the same domain
   int64 encodedDocMetadata = 3; // bit encoded document metadata
   int32 htmlFeatures = 4; // bitmask encoding features of the document
   repeated RpcResultKeywordScore keywordScores = 5;
   bool hasPriorityTerms = 6; // true if this word is important to the document
+  MATCH_TYPE matchType = 7; // the type of match this result represents
+
+  enum MATCH_TYPE {
+    FLAGS = 0;
+    PROXIMITY = 1;
+    PHRASE = 2;
+  };
 }
 
 /* Information about how well a keyword matches a query */
 message RpcResultKeywordScore {
   string keyword = 1; // the keyword
-  int64 encodedWordMetadata = 2; // bit encoded word metadata
+  int32 flags = 2;
+  int32 positions = 3;
 }
 
 /* Query execution parameters */
@@ -119,30 +127,32 @@ message RpcQueryLimits {
   int32 fetchSize = 4; // Size of the fetch buffer in the index service
 }
 
+/** Parameters for the result ranking function */
 message RpcResultRankingParameters {
-  double fullK = 1; // BM25 parameter
-  double fullB = 2; // BM25 parameter
-  double prioK = 3; // BM25 parameter
-  double prioB = 4; // BM25 parameter
+  double bm25K = 1; // BM25 parameter
+  double bm25B = 2; // BM25 parameter
+
   int32 shortDocumentThreshold = 5;
   double shortDocumentPenalty = 6;
   double domainRankBonus = 7;
   double qualityPenalty = 8;
   int32 shortSentenceThreshold = 9;
   double shortSentencePenalty = 10;
-  double bm25FullWeight = 11;
-  double bm25NgramWeight = 12;
-  double bm25PrioWeight = 13;
-  double tcfOverlapWeight = 14;
-  double tcfJaccardWeight = 15;
+  double bm25Weight = 11;
+  // -- 12 unused --
+  double tcfFirstPositionWeight = 13;
+  double tcfVerbatimWeight = 14;
+  double tcfProximityWeight = 15;
   RpcTemporalBias temporalBias = 16;
   double temporalBiasWeight = 17;
+
   bool exportDebugData = 18;
+
 }
 
 message RpcResultRankingDetails {
-  RpcResultRankingInputs inputs = 1;
-  RpcResultRankingOutputs output = 2;
+  RpcResultDocumentRankingOutputs documentOutputs = 1;
+  RpcResultTermRankingOutputs termOutputs = 2;
 }
 
 message RpcResultRankingInputs {
@@ -155,20 +165,17 @@ message RpcResultRankingInputs {
   repeated string flags = 7;
 }
 
-message RpcResultRankingOutputs {
-  double averageSentenceLengthPenalty = 1;
-  double qualityPenalty = 2;
-  double rankingBonus = 3;
-  double topologyBonus = 4;
-  double documentLengthPenalty = 5;
-  double temporalBias = 6;
-  double flagsPenalty = 7;
-  double overallPart = 8;
-  double tcfOverlap = 9;
-  double tcfJaccard = 10;
-  double bM25F = 11;
-  double bM25N = 12;
-  double bM25P = 13;
+/** Summary of the output of the ranking function */
+message RpcResultDocumentRankingOutputs {
+  repeated string factor = 1;
+  repeated string value = 2;
+}
+
+message RpcResultTermRankingOutputs {
+  repeated int64 termId = 1;
+  repeated string term = 2;
+  repeated string factor = 3;
+  repeated string value = 4;
 }
 
 /* Defines a single subquery */
@@ -177,11 +184,18 @@ message RpcQuery {
   repeated string exclude = 2;  // These terms must be absent
   repeated string advice = 3;   // These terms must be present, but do not affect ranking
   repeated string priority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
-  repeated RpcCoherences coherences = 5; // Groups of terms that must exist in proximity of each other
+  repeated RpcPhrases phrases = 5; // Groups of terms that must exist in proximity of each other
   string compiledQuery = 6;  // Compiled query in infix notation
 }
 
-/* Defines a group of search terms that must exist in close proximity within the document */
-message RpcCoherences {
-  repeated string coherences = 1;
+/* Defines a group of search terms that must exist in the the specified order within the document */
+message RpcPhrases {
+  repeated string terms = 1;
+  TYPE type = 2;
+
+  enum TYPE {
+    OPTIONAL = 0;
+    MANDATORY = 1;
+    FULL = 2;
+  };
 }

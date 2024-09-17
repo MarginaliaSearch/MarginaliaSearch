@@ -2,19 +2,18 @@ package nu.marginalia.loading.documents;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.io.processed.DocumentRecordParquetFileReader;
-import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.model.processed.DocumentRecordKeywordsProjection;
+import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.slop.SlopTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.Collection;
 
 @Singleton
 public class KeywordLoaderService {
@@ -31,16 +30,32 @@ public class KeywordLoaderService {
                              LoaderInputData inputData) throws IOException {
         try (var task = heartbeat.createAdHocTaskHeartbeat("KEYWORDS")) {
 
-            var documentFiles = inputData.listDocumentFiles();
+            Collection<SlopTable.Ref<SlopDocumentRecord>> documentFiles = inputData.listDocumentFiles();
             int processed = 0;
 
-            for (var file : documentFiles) {
+            for (SlopTable.Ref<SlopDocumentRecord> pageRef : documentFiles) {
                 task.progress("LOAD", processed++, documentFiles.size());
 
-                loadKeywordsFromFile(domainIdRegistry, file);
+                try (var keywordsReader = new SlopDocumentRecord.KeywordsProjectionReader(pageRef)) {
+                    logger.info("Loading keywords from {}", pageRef);
+
+                    while (keywordsReader.hasMore()) {
+                        var projection = keywordsReader.next();
+
+                        long combinedId = UrlIdCodec.encodeId(
+                                domainIdRegistry.getDomainId(projection.domain()),
+                                projection.ordinal());
+
+                        writer.putWords(combinedId, projection);
+                    }
+                }
             }
 
             task.progress("LOAD", processed, documentFiles.size());
+        }
+        catch (IOException e) {
+            logger.error("Failed to load keywords", e);
+            throw e;
         }
 
         logger.info("Finished");
@@ -48,30 +63,8 @@ public class KeywordLoaderService {
         return true;
     }
 
-    private void loadKeywordsFromFile(DomainIdRegistry domainIdRegistry, Path file) throws IOException {
-        try (var stream = DocumentRecordParquetFileReader.streamKeywordsProjection(file)) {
-            logger.info("Loading keywords from {}", file);
 
-            stream.filter(DocumentRecordKeywordsProjection::hasKeywords)
-                    .forEach(proj -> insertKeywords(domainIdRegistry, proj));
-        }
-    }
-
-    private void insertKeywords(DomainIdRegistry domainIdRegistry,
-                                DocumentRecordKeywordsProjection projection)
-    {
-        long combinedId = UrlIdCodec.encodeId(
-                domainIdRegistry.getDomainId(projection.domain),
-                projection.ordinal);
-
-        var words = new DocumentKeywords(
-                projection.words.toArray(String[]::new),
-                projection.metas.toArray()
-        );
-
-        writer.putWords(combinedId,
-                projection.htmlFeatures,
-                projection.documentMetadata,
-                words);
+    public void close() throws IOException {
+        writer.close();
     }
 }

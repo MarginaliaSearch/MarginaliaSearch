@@ -269,4 +269,26 @@ public class UnsafeLongArray implements LongArray {
         }
     }
 
+    @Override
+    public void transferFrom(LongArray source,
+                             long sourceStartL,
+                             long destStartL,
+                             long destEndL)
+    {
+        if (destStartL > destEndL)
+            throw new IndexOutOfBoundsException("Source start after end");
+
+        if (sourceStartL + (destEndL - destStartL) > source.size())
+            throw new IndexOutOfBoundsException("Source array too small");
+        if (destEndL > size())
+            throw new IndexOutOfBoundsException("Destination array too small");
+
+        MemorySegment.copy(
+                source.getMemorySegment(), JAVA_LONG, sourceStartL * JAVA_LONG.byteSize(),
+                segment, JAVA_LONG, destStartL * JAVA_LONG.byteSize(),
+                destEndL - destStartL
+        );
+
+    }
+
 }

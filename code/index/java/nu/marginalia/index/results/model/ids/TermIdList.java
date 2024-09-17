@@ -43,7 +43,12 @@ public final class TermIdList {
     }
 
     public int indexOf(long id) {
-        return Arrays.binarySearch(array, id);
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == id) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override

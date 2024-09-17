@@ -1,13 +1,15 @@
 package nu.marginalia.index.forward;
 
-import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -26,41 +28,47 @@ import static nu.marginalia.index.forward.ForwardIndexParameters.*;
  * The metadata is a binary encoding of {@see nu.marginalia.idx.DocumentMetadata}
  */
 public class ForwardIndexReader {
-    private final TLongIntHashMap idToOffset;
+    private final LongArray ids;
     private final LongArray data;
+
+    private final ForwardIndexSpansReader spansReader;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ForwardIndexReader(Path idsFile, Path dataFile) throws IOException {
+    public ForwardIndexReader(Path idsFile,
+                              Path dataFile,
+                              Path spansFile) throws IOException {
         if (!Files.exists(dataFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", dataFile);
-            idToOffset = null;
+            ids = null;
             data = null;
+            spansReader = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", idsFile);
-            idToOffset = null;
+            ids = null;
             data = null;
+            spansReader = null;
+            return;
+        }
+        else if (!Files.exists(spansFile)) {
+            logger.warn("Failed to create ForwardIndexReader, {} is absent", spansFile);
+            ids = null;
+            data = null;
+            spansReader = null;
             return;
         }
 
         logger.info("Switching forward index");
 
-        idToOffset = loadIds(idsFile);
+        ids = loadIds(idsFile);
         data = loadData(dataFile);
+        spansReader = new ForwardIndexSpansReader(spansFile);
     }
 
-    private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
-        try (var idsArray = LongArrayFactory.mmapForReadingShared(idsFile)) {
-            assert idsArray.size() < Integer.MAX_VALUE;
-
-            var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
-            // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
-            idsArray.forEach(0, idsArray.size(), (pos, val) -> ids.put(val, (int) pos));
-
-            return ids;
-        }
+    private static LongArray loadIds(Path idsFile) throws IOException {
+        return LongArrayFactory.mmapForReadingShared(idsFile);
     }
 
     private static LongArray loadData(Path dataFile) throws IOException {
@@ -82,25 +90,52 @@ public class ForwardIndexReader {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
-        return (int) data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) & 0xFFFF_FFFFL);
     }
+
+    public int getDocumentSize(long docId) {
+        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
+        long offset = idxForDoc(docId);
+        if (offset < 0) return 0;
+
+        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L);
+    }
+
 
     private int idxForDoc(long docId) {
         assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
 
-        if (getClass().desiredAssertionStatus()) {
-            long offset = idToOffset.get(docId);
-            if (offset < 0) { // Ideally we'd always check this, but this is a very hot method
+        long offset = ids.binarySearch(docId, 0, ids.size());
+
+        if (offset >= ids.size() || offset < 0 || ids.get(offset) != docId) {
+            if (getClass().desiredAssertionStatus()) {
                 logger.warn("Could not find offset for doc {}", docId);
             }
+            return -1;
         }
 
-        return idToOffset.get(docId);
+        return (int) offset;
+    }
+
+    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
+        long offset = idxForDoc(docId);
+        if (offset < 0) return new DocumentSpans();
+
+        long encodedOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
+
+        try {
+            return spansReader.readSpans(arena, encodedOffset);
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read spans for doc " + docId, ex);
+            return new DocumentSpans();
+        }
     }
 
 
     public int totalDocCount() {
-        return idToOffset.size();
+        return (int) ids.size();
     }
 
     public void close() {

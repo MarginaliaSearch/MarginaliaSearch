@@ -4,22 +4,20 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
+import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.process.control.FakeProcessHeartbeat;
-import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.ReverseIndexConstructor;
-import nu.marginalia.index.forward.ForwardIndexConverter;
+import nu.marginalia.index.construction.full.FullIndexConstructor;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
+import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.forward.construction.ForwardIndexConverter;
+import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
@@ -28,12 +26,15 @@ import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.model.idx.WordFlags;
+import nu.marginalia.model.processed.SlopDocumentRecord;
+import nu.marginalia.process.control.FakeProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
+import nu.marginalia.storage.FileStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -68,7 +70,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     ServiceHeartbeat heartbeat;
 
     @Inject
-    IndexJournalWriter indexJournalWriter;
+    IndexJournalSlopWriter indexJournalWriter;
 
     @Inject
     FileStorageService fileStorageService;
@@ -116,28 +118,93 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .queryStrategy(QueryStrategy.SENTENCE)
-                        .year(SpecificationLimit.none())
-                        .quality(SpecificationLimit.none())
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
-                        .query(new SearchQuery(
-                                "2 3 5",
-                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
-                                Collections.emptyList())).build());
+                        .query(
+                            SearchQuery.builder()
+                                    .compiledQuery("2 3 5")
+                                    .include("3", "5", "2")
+                                    .exclude("4")
+                                    .build()
+                        ).build());
 
-        int[] idxes = new int[] { 30, 510, 90, 150, 210, 270, 330, 390, 450 };
-        long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
-        long[] actual = rsp.results
+        long[] actual = rsp
                 .stream()
-                .mapToLong(i -> i.rawIndexResult.getDocumentId())
+                .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
+                .mapToLong(i -> i.getRawItem().getCombinedId())
+                .map(UrlIdCodec::getDocumentOrdinal)
                 .toArray();
 
         System.out.println(Arrays.toString(actual));
-        System.out.println(Arrays.toString(ids));
-        Assertions.assertArrayEquals(ids, actual);
+
+        for (long id : actual) {
+            Assertions.assertTrue((id % 2) == 0,
+                    "Expected all results to contain the factor 2");
+            Assertions.assertTrue((id % 3) == 0,
+                    "Expected all results to contain the factor 2");
+            Assertions.assertTrue((id % 5) == 0,
+                    "Expected all results to contain the factor 2");
+        }
+
+        Assertions.assertEquals(9, actual.length,
+                "Expected 10 results");
+        Assertions.assertEquals(9,
+                Arrays.stream(actual).boxed().distinct().count(),
+                "Results not unique");
+    }
+
+    @Test
+    public void testSimple() throws Exception {
+        var linkdbWriter = new DocumentDbWriter(
+                IndexLocations.getLinkdbLivePath(fileStorageService)
+                        .resolve(DOCDB_FILE_NAME)
+        );
+        for (int i = 1; i < 512; i++) {
+            loadData(linkdbWriter, i);
+        }
+        linkdbWriter.close();
+        documentDbReader.reconnect();
+
+        indexJournalWriter.close();
+        constructIndex();
+        statefulIndex.switchIndex();
+
+        var rsp = queryService.justQuery(
+                SearchSpecification.builder()
+                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
+                        .queryStrategy(QueryStrategy.SENTENCE)
+                        .rankingParams(ResultRankingParameters.sensibleDefaults())
+                        .domains(new ArrayList<>())
+                        .searchSetIdentifier("NONE")
+                        .query(
+                            SearchQuery.builder()
+                                .compiledQuery("2")
+                                .include("2")
+                                .phraseConstraint(new SearchPhraseConstraint.Full("2"))
+                                .build()
+                        ).build()
+        );
+
+        long[] actual = rsp
+                .stream()
+                .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
+                .mapToLong(i -> i.getRawItem().getCombinedId())
+                .map(UrlIdCodec::getDocumentOrdinal)
+                .toArray();
+
+        System.out.println(Arrays.toString(actual));
+
+        for (long id : actual) {
+            Assertions.assertTrue((id % 2) == 0,
+                    "Expected all results to contain the factor 2");
+        }
+
+        Assertions.assertEquals(10, actual.length,
+                "Expected 10 results");
+        Assertions.assertEquals(10,
+                Arrays.stream(actual).boxed().distinct().count(),
+                "Results not unique");
     }
 
     @Test
@@ -160,23 +227,40 @@ public class IndexQueryServiceIntegrationSmokeTest {
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
-                        .year(SpecificationLimit.none())
-                        .quality(SpecificationLimit.none())
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
-                        .query(new SearchQuery(
-                                "2 3 5",
-                                List.of("3", "5", "2"),
-                                List.of("4"),
-                                Collections.emptyList(),
-                                Collections.emptyList(),
-                                Collections.emptyList())).build());
-        int[] idxes = new int[] {  210, 270 };
-        long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
-        long[] actual = rsp.results.stream().mapToLong(i -> i.rawIndexResult.getDocumentId()).toArray();
+                        .query(
+                            SearchQuery.builder()
+                                .compiledQuery("2 3 5")
+                                .include("3", "5", "2")
+                                .exclude("4")
+                                .phraseConstraint(new SearchPhraseConstraint.Full("2", "3", "5"))
+                                .build()
+                        ).build());
+        long[] ids = new long[] {  210, 270 };
+        long[] actual = rsp.stream()
+                .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
+                .mapToLong(i -> i.getRawItem().getCombinedId())
+                .map(UrlIdCodec::getDocumentOrdinal)
+                .toArray();
+
+        for (long id : actual) {
+            System.out.println("Considering " + id);
+            Assertions.assertTrue((id % 2) == 0,
+                    "Expected all results to contain the factor 2");
+            Assertions.assertTrue((id % 3) == 0,
+                    "Expected all results to contain the factor 3");
+            Assertions.assertTrue((id % 5) == 0,
+                    "Expected all results to contain the factor 5");
+            Assertions.assertTrue((id/100) == 2);
+        }
+
+        Assertions.assertEquals(2, actual.length,
+                "Expected 10 results");
+        Assertions.assertEquals(2,
+                Arrays.stream(actual).boxed().distinct().count(),
+                "Results not unique");
 
         Assertions.assertArrayEquals(ids, actual);
     }
@@ -200,26 +284,27 @@ public class IndexQueryServiceIntegrationSmokeTest {
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
-                        .quality(SpecificationLimit.none())
                         .year(SpecificationLimit.equals(1998))
-                        .size(SpecificationLimit.none())
-                        .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier("NONE")
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .query(
-                            new SearchQuery("4", List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList())
+                            SearchQuery.builder()
+                                .compiledQuery("4")
+                                .include("4")
+                                .phraseConstraint(new SearchPhraseConstraint.Full("4"))
+                                .build()
                         ).build());
 
 
         Set<Integer> years = new HashSet<>();
 
-        for (var res : rsp.results) {
-            years.add(DocumentMetadata.decodeYear(res.rawIndexResult.encodedDocMetadata));
+        for (var res : rsp) {
+            years.add(DocumentMetadata.decodeYear(res.getRawItem().getEncodedDocMetadata()));
         }
 
         assertEquals(Set.of(1998), years);
-        assertEquals(rsp.results.size(), 10);
+        assertEquals(rsp.size(), 10);
 
     }
 
@@ -235,38 +320,54 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor = new FullIndexConstructor(
+                    outputFileDocs,
+                    outputFileWords,
+                    outputFilePositions,
+                    DocIdRewriter.identity(),
+                    tmpDir);
+
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
 
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor = new PrioIndexConstructor(
+                    outputFileDocs,
+                    outputFileWords,
+                    DocIdRewriter.identity(),
+                    tmpDir);
+
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createForwardIndex() throws SQLException, IOException {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(processHeartbeat,
-                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
+                outputFileSpansData,
+                IndexJournal.findJournal(workDir).orElseThrow(),
                 domainRankings
         );
 
@@ -277,7 +378,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
         return UrlIdCodec.encodeId((32 - (id % 32)), id);
     }
 
-    MurmurHash3_128 hasher = new MurmurHash3_128();
     @SneakyThrows
     public void loadData(DocumentDbWriter ldbw, int id) {
         int[] factors = IntStream
@@ -285,43 +385,82 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 .filter(v -> (id % v) == 0)
                 .toArray();
 
+        System.out.println("id:" + id + " factors: " + Arrays.toString(factors));
+
         long fullId = fullId(id);
-
-        var header = new IndexJournalEntryHeader(factors.length, 0, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
-
-        long[] data = new long[factors.length * 2];
-        for (int i = 0; i < factors.length; i++) {
-            data[2 * i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
-            data[2 * i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
-        }
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", 0., "HTML5", 0, null, 0, 10
+                "test", "test", 0., "HTML5", 0, null, fullId, 10
         ));
 
-        indexJournalWriter.put(header, new IndexJournalEntryData(data));
+        List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
+        byte[] metadata = new byte[factors.length];
+        for (int i = 0; i < factors.length; i++) {
+            metadata[i] = WordFlags.Title.asBit();
+        }
+
+        List<VarintCodedSequence> positions = new ArrayList<>();
+
+        ByteBuffer wa = ByteBuffer.allocate(32);
+        for (int i = 0; i < factors.length; i++) {
+            positions.add(VarintCodedSequence.generate(factors));
+        }
+
+        indexJournalWriter.put(fullId,
+                new SlopDocumentRecord.KeywordsProjection(
+                        "",
+                        -1,
+                        0,
+                        new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode(),
+                        100,
+                        keywords,
+                        metadata,
+                        positions,
+                        new byte[0],
+                        List.of()
+                ));
+
     }
 
     @SneakyThrows
     public void loadDataWithDomain(DocumentDbWriter ldbw, int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
         long fullId = UrlIdCodec.encodeId(domain, id);
-        var header = new IndexJournalEntryHeader(factors.length, 0, fullId, DocumentMetadata.defaultValue());
-
-        long[] data = new long[factors.length*2];
-        for (int i = 0; i < factors.length; i++) {
-            data[2*i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
-        }
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", 0., "HTML5", 0, null, 0, 10
+                "test", "test", 0., "HTML5", 0, null, id, 10
         ));
 
 
-        indexJournalWriter.put(header, new IndexJournalEntryData(data));
+        List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
+        byte[] metadata = new byte[factors.length];
+        for (int i = 0; i < factors.length; i++) {
+            metadata[i] = WordFlags.Title.asBit();
+        }
+
+        List<VarintCodedSequence> positions = new ArrayList<>();
+
+        ByteBuffer wa = ByteBuffer.allocate(32);
+        for (int i = 0; i < factors.length; i++) {
+            positions.add(VarintCodedSequence.generate(i + 1));
+        }
+
+        indexJournalWriter.put(fullId,
+                new SlopDocumentRecord.KeywordsProjection(
+                        "",
+                        -1,
+                        0,
+                        new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode(),
+                        100,
+                        keywords,
+                        metadata,
+                        positions,
+                        new byte[0],
+                        List.of()
+                ));
+
     }
 
 }

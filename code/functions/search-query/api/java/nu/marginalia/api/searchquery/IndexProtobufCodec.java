@@ -1,11 +1,9 @@
 package nu.marginalia.api.searchquery;
 
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingInputs;
-import nu.marginalia.api.searchquery.model.results.debug.ResultRankingOutputs;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
@@ -48,11 +46,22 @@ public class IndexProtobufCodec {
     }
 
     public static SearchQuery convertRpcQuery(RpcQuery query) {
-        List<List<String>>  coherences = new ArrayList<>();
+        List<SearchPhraseConstraint> phraeConstraints = new ArrayList<>();
 
-        for (int j = 0; j < query.getCoherencesCount(); j++) {
-            var coh = query.getCoherences(j);
-            coherences.add(new ArrayList<>(coh.getCoherencesList()));
+        for (int j = 0; j < query.getPhrasesCount(); j++) {
+            var coh = query.getPhrases(j);
+            if (coh.getType() == RpcPhrases.TYPE.OPTIONAL) {
+                phraeConstraints.add(new SearchPhraseConstraint.Optional(List.copyOf(coh.getTermsList())));
+            }
+            else if (coh.getType() == RpcPhrases.TYPE.MANDATORY) {
+                phraeConstraints.add(new SearchPhraseConstraint.Mandatory(List.copyOf(coh.getTermsList())));
+            }
+            else if (coh.getType() == RpcPhrases.TYPE.FULL) {
+                phraeConstraints.add(new SearchPhraseConstraint.Full(List.copyOf(coh.getTermsList())));
+            }
+            else {
+                throw new IllegalArgumentException("Unknown phrase constraint type: " + coh.getType());
+            }
         }
 
         return new SearchQuery(
@@ -61,7 +70,7 @@ public class IndexProtobufCodec {
                 query.getExcludeList(),
                 query.getAdviceList(),
                 query.getPriorityList(),
-                coherences
+                phraeConstraints
         );
     }
 
@@ -74,8 +83,21 @@ public class IndexProtobufCodec {
                         .addAllExclude(searchQuery.getSearchTermsExclude())
                         .addAllPriority(searchQuery.getSearchTermsPriority());
 
-        for (var coherences : searchQuery.searchTermCoherences) {
-            subqueryBuilder.addCoherencesBuilder().addAllCoherences(coherences);
+        for (var constraint : searchQuery.phraseConstraints) {
+            switch (constraint) {
+                case SearchPhraseConstraint.Optional(List<String> terms) ->
+                    subqueryBuilder.addPhrasesBuilder()
+                            .addAllTerms(terms)
+                            .setType(RpcPhrases.TYPE.OPTIONAL);
+                case SearchPhraseConstraint.Mandatory(List<String> terms) ->
+                    subqueryBuilder.addPhrasesBuilder()
+                            .addAllTerms(terms)
+                            .setType(RpcPhrases.TYPE.MANDATORY);
+                case SearchPhraseConstraint.Full(List<String> terms) ->
+                    subqueryBuilder.addPhrasesBuilder()
+                            .addAllTerms(terms)
+                            .setType(RpcPhrases.TYPE.FULL);
+            }
         }
 
         return subqueryBuilder.build();
@@ -86,19 +108,17 @@ public class IndexProtobufCodec {
             return ResultRankingParameters.sensibleDefaults();
 
         return new ResultRankingParameters(
-                new Bm25Parameters(params.getFullK(), params.getFullB()),
-                new Bm25Parameters(params.getPrioK(), params.getPrioB()),
+                new Bm25Parameters(params.getBm25K(), params.getBm25B()),
                 params.getShortDocumentThreshold(),
                 params.getShortDocumentPenalty(),
                 params.getDomainRankBonus(),
                 params.getQualityPenalty(),
                 params.getShortSentenceThreshold(),
                 params.getShortSentencePenalty(),
-                params.getBm25FullWeight(),
-                params.getBm25NgramWeight(),
-                params.getBm25PrioWeight(),
-                params.getTcfJaccardWeight(),
-                params.getTcfOverlapWeight(),
+                params.getBm25Weight(),
+                params.getTcfFirstPositionWeight(),
+                params.getTcfVerbatimWeight(),
+                params.getTcfProximityWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight(),
                 params.getExportDebugData()
@@ -113,21 +133,18 @@ public class IndexProtobufCodec {
         }
 
         var builder = RpcResultRankingParameters.newBuilder()
-                        .setFullB(rankingParams.fullParams.b())
-                        .setFullK(rankingParams.fullParams.k())
-                        .setPrioB(rankingParams.prioParams.b())
-                        .setPrioK(rankingParams.prioParams.k())
+                        .setBm25B(rankingParams.bm25Params.b())
+                        .setBm25K(rankingParams.bm25Params.k())
                         .setShortDocumentThreshold(rankingParams.shortDocumentThreshold)
                         .setShortDocumentPenalty(rankingParams.shortDocumentPenalty)
                         .setDomainRankBonus(rankingParams.domainRankBonus)
                         .setQualityPenalty(rankingParams.qualityPenalty)
                         .setShortSentenceThreshold(rankingParams.shortSentenceThreshold)
                         .setShortSentencePenalty(rankingParams.shortSentencePenalty)
-                        .setBm25FullWeight(rankingParams.bm25FullWeight)
-                        .setBm25NgramWeight(rankingParams.bm25NgramWeight)
-                        .setBm25PrioWeight(rankingParams.bm25PrioWeight)
-                        .setTcfOverlapWeight(rankingParams.tcfOverlapWeight)
-                        .setTcfJaccardWeight(rankingParams.tcfJaccardWeight)
+                        .setBm25Weight(rankingParams.bm25Weight)
+                        .setTcfFirstPositionWeight(rankingParams.tcfFirstPosition)
+                        .setTcfProximityWeight(rankingParams.tcfProximity)
+                        .setTcfVerbatimWeight(rankingParams.tcfVerbatim)
                         .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
                         .setExportDebugData(rankingParams.exportDebugData);
 
@@ -142,45 +159,4 @@ public class IndexProtobufCodec {
         return builder.build();
     }
 
-
-    public static RpcResultRankingDetails convertRankingDetails(ResultRankingDetails rankingDetails) {
-        if (rankingDetails == null) {
-            return null;
-        }
-
-        return RpcResultRankingDetails.newBuilder()
-                .setInputs(convertRankingInputs(rankingDetails.inputs()))
-                .setOutput(convertRankingOutput(rankingDetails.outputs()))
-                .build();
-    }
-
-    private static RpcResultRankingOutputs convertRankingOutput(ResultRankingOutputs outputs) {
-        return RpcResultRankingOutputs.newBuilder()
-                .setAverageSentenceLengthPenalty(outputs.averageSentenceLengthPenalty())
-                .setQualityPenalty(outputs.qualityPenalty())
-                .setRankingBonus(outputs.rankingBonus())
-                .setTopologyBonus(outputs.topologyBonus())
-                .setDocumentLengthPenalty(outputs.documentLengthPenalty())
-                .setTemporalBias(outputs.temporalBias())
-                .setFlagsPenalty(outputs.flagsPenalty())
-                .setOverallPart(outputs.overallPart())
-                .setTcfOverlap(outputs.tcfOverlap())
-                .setTcfJaccard(outputs.tcfJaccard())
-                .setBM25F(outputs.bM25F())
-                .setBM25N(outputs.bM25N())
-                .setBM25P(outputs.bM25P())
-                .build();
-    }
-
-    private static RpcResultRankingInputs convertRankingInputs(ResultRankingInputs inputs) {
-        return RpcResultRankingInputs.newBuilder()
-                .setRank(inputs.rank())
-                .setAsl(inputs.asl())
-                .setQuality(inputs.quality())
-                .setSize(inputs.size())
-                .setTopology(inputs.topology())
-                .setYear(inputs.year())
-                .addAllFlags(inputs.flags())
-                .build();
-    }
 }

@@ -19,4 +19,4 @@ interfaces are implemented within the index-service module.
 
 * [index/index-reverse](../index-reverse) implements many of these interfaces.
 * [libraries/array](../../libraries/array)
-* [libraries/array/.../LongQueryBuffer](../../libraries/array/java/nu/marginalia/array/buffer/LongQueryBuffer.java)
+* [libraries/array/.../LongQueryBuffer](../../libraries/array/java/nu/marginalia/array/page/LongQueryBuffer.java)

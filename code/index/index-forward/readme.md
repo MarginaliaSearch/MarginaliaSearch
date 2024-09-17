@@ -17,5 +17,5 @@ so it's relatively easy to construct.
 
 ## Central Classes
 
-* [ForwardIndexConverter](java/nu/marginalia/index/forward/ForwardIndexConverter.java) constructs the index.
+* [ForwardIndexConverter](java/nu/marginalia/index/forward/construction/ForwardIndexConverter.java) constructs the index.
 * [ForwardIndexReader](java/nu/marginalia/index/forward/ForwardIndexReader.java) interrogates the index.

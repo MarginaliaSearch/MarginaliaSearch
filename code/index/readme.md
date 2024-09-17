@@ -32,7 +32,8 @@ results higher.
 
 ## Central Classes
 
-* [ResultValuator](java/nu/marginalia/ranking/results/ResultValuator.java)
+* [IndexResultRankingService](java/nu/marginalia/index/results/IndexResultRankingService.java)
+* [IndexResultScoreCalculator](java/nu/marginalia/index/results/IndexResultScoreCalculator.java)
 
 ---
 

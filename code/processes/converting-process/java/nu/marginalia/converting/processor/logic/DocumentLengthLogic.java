@@ -10,7 +10,6 @@ import nu.marginalia.language.model.DocumentLanguageData;
 public class DocumentLengthLogic {
     private final int minDocumentLength;
 
-
     @Inject
     public DocumentLengthLogic(@Named("min-document-length") Integer minDocumentLength) {
         this.minDocumentLength = minDocumentLength;
@@ -18,7 +17,7 @@ public class DocumentLengthLogic {
 
     public int getEncodedAverageLength(DocumentLanguageData dld) {
         int totalWords = dld.totalNumWords();
-        int numSentences = dld.sentences.length;
+        int numSentences = dld.numSentences();
 
         if (totalWords == 0 || numSentences == 0) {
             return 0;

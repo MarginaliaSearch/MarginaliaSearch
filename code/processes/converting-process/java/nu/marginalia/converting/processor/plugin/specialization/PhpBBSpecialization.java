@@ -3,7 +3,7 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.summary.SummaryExtractor;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

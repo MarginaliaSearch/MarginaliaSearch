@@ -9,7 +9,6 @@ import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 
 /** A class to hold details about a single search result. */
 @AllArgsConstructor @NoArgsConstructor @With @Getter @ToString

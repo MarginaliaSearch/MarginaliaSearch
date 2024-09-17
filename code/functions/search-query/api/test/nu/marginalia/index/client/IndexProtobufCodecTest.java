@@ -1,6 +1,7 @@
 package nu.marginalia.index.client;
 
 import nu.marginalia.api.searchquery.IndexProtobufCodec;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.function.Function;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class IndexProtobufCodecTest {
     @Test
@@ -41,7 +42,9 @@ class IndexProtobufCodecTest {
                 List.of("c", "d"),
                 List.of("e", "f"),
                 List.of("g", "h"),
-                List.of(List.of("i", "j"), List.of("k"))
+                List.of(
+                        SearchPhraseConstraint.mandatory(List.of("i", "j")),
+                        SearchPhraseConstraint.optional(List.of("k")))
                 ),
                 s -> IndexProtobufCodec.convertRpcQuery(IndexProtobufCodec.convertRpcQuery(s))
         );

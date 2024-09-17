@@ -37,12 +37,12 @@ include 'code:index:index-reverse'
 
 include 'code:libraries:array'
 include 'code:libraries:array:cpp'
+include 'code:libraries:coded-sequence'
 include 'code:libraries:geo-ip'
 include 'code:libraries:btree'
 include 'code:libraries:easy-lsh'
 include 'code:libraries:guarded-regex'
 include 'code:libraries:random-write-funnel'
-include 'code:libraries:next-prime'
 include 'code:libraries:blocking-thread-pool'
 include 'code:libraries:braille-block-punch-cards'
 include 'code:libraries:language-processing'
@@ -55,21 +55,14 @@ include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
 include 'code:features-search:feedlot-client'
 
-include 'code:features-convert:adblock'
-include 'code:features-convert:anchor-keywords'
-include 'code:features-convert:data-extractors'
-include 'code:features-convert:stackexchange-xml'
-include 'code:features-convert:reddit-json'
-include 'code:features-convert:pubdate'
-include 'code:features-convert:summary-extraction'
-include 'code:features-convert:keyword-extraction'
-include 'code:features-convert:topic-detection'
+include 'code:processes:converting-process:ft-anchor-keywords'
+include 'code:execution:data-extractors'
 
-include 'code:features-crawl:crawl-blocklist'
-include 'code:features-crawl:link-parser'
-include 'code:features-crawl:content-type'
+include 'code:processes:crawling-process:ft-crawl-blocklist'
+include 'code:processes:crawling-process:ft-link-parser'
+include 'code:processes:crawling-process:ft-content-type'
 
-include 'code:process-mqapi'
+include 'code:processes:process-mq-api'
 
 include 'code:common:db'
 include 'code:common:linkdb'
@@ -80,20 +73,21 @@ include 'code:common:renderer'
 include 'code:common:process'
 
 include 'code:processes:converting-process'
+include 'code:processes:converting-process:model'
+include 'code:processes:converting-process:ft-keyword-extraction'
+
 include 'code:processes:crawling-process'
+include 'code:processes:crawling-process:model'
+
 include 'code:processes:loading-process'
 include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
 include 'code:processes:website-adjacencies-calculator'
 
-include 'code:process-models:crawling-model'
-include 'code:process-models:work-log'
-include 'code:process-models:crawl-spec'
-include 'code:process-models:processed-data'
-
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
+include 'code:tools:integration-test'
 
 include 'third-party:porterstemmer'
 include 'third-party:symspell'
@@ -112,6 +106,8 @@ dependencyResolutionManagement {
         maven { url "https://repo1.maven.org/maven2/" }
         maven { url "https://www2.ph.ed.ac.uk/maven2/" }
         maven { url "https://jitpack.io/" }
+        maven { url "https://artifacts.marginalia.nu/snapshots" }
+
         exclusiveContent {
             forRepository {
                 maven {
@@ -121,6 +117,18 @@ dependencyResolutionManagement {
             filter {
                 // Only use JitPack for the `gson-record-type-adapter-factory` library
                 includeModule("com.github.Marcono1234", "gson-record-type-adapter-factory")
+            }
+        }
+
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = uri("https://artifacts.marginalia.nu/snapshots")
+                }
+            }
+            filter {
+                // Only use the Marginalia snapshot repository for the `slop` library
+                includeModule("nu.marginalia", "slop")
             }
         }
     }
@@ -217,6 +225,8 @@ dependencyResolutionManagement {
             library('jetty-server','org.eclipse.jetty','jetty-server').version('9.4.54.v20240208')
             library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
+
+            library('slop', 'nu.marginalia', 'slop').version('0.0.8-SNAPSHOT')
 
             bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 

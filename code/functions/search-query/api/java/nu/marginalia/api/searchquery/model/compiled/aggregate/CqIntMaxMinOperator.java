@@ -1,6 +1,7 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 
@@ -21,7 +22,9 @@ public class CqIntMaxMinOperator implements CqExpression.IntVisitor {
     public CqIntMaxMinOperator(CompiledQueryLong query, LongToIntFunction operator) {
         this.operator = idx -> operator.applyAsInt(query.at(idx));
     }
-
+    public CqIntMaxMinOperator(CompiledQueryInt query, IntUnaryOperator operator) {
+        this.operator = idx -> operator.applyAsInt(query.at(idx));
+    }
     @Override
     public int onAnd(List<? extends CqExpression> parts) {
         int value = parts.getFirst().visit(this);

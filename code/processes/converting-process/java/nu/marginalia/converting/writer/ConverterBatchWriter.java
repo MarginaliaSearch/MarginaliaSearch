@@ -1,50 +1,50 @@
 package nu.marginalia.converting.writer;
 
-import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TLongArrayList;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
-import nu.marginalia.io.processed.DocumentRecordParquetFileWriter;
-import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
-import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.model.processed.DocumentRecord;
-import nu.marginalia.model.processed.DomainLinkRecord;
-import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.model.processed.SlopDocumentRecord;
+import nu.marginalia.model.processed.SlopDomainLinkRecord;
+import nu.marginalia.model.processed.SlopDomainRecord;
+import nu.marginalia.sequence.VarintCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 
 /** Writer for a single batch of converter parquet files */
 public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriterIf {
-    private final DomainRecordParquetFileWriter domainWriter;
-    private final DomainLinkRecordParquetFileWriter domainLinkWriter;
-    private final DocumentRecordParquetFileWriter documentWriter;
+    private final SlopDomainRecord.Writer domainWriter;
+    private final SlopDomainLinkRecord.Writer domainLinkWriter;
+    private final SlopDocumentRecord.Writer documentWriter;
 
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
     public ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
-        domainWriter = new DomainRecordParquetFileWriter(
-                ProcessedDataFileNames.domainFileName(basePath, batchNumber)
-        );
-        domainLinkWriter = new DomainLinkRecordParquetFileWriter(
-                ProcessedDataFileNames.domainLinkFileName(basePath, batchNumber)
-        );
-        documentWriter = new DocumentRecordParquetFileWriter(
-                ProcessedDataFileNames.documentFileName(basePath, batchNumber)
-        );
+        if (!Files.exists(ProcessedDataFileNames.domainFileName(basePath))) {
+            Files.createDirectory(ProcessedDataFileNames.domainFileName(basePath));
+        }
+        domainWriter = new SlopDomainRecord.Writer(ProcessedDataFileNames.domainFileName(basePath), batchNumber);
+
+        if (!Files.exists(ProcessedDataFileNames.domainLinkFileName(basePath))) {
+            Files.createDirectory(ProcessedDataFileNames.domainLinkFileName(basePath));
+        }
+        domainLinkWriter = new SlopDomainLinkRecord.Writer(ProcessedDataFileNames.domainLinkFileName(basePath), batchNumber);
+
+        if (!Files.exists(ProcessedDataFileNames.documentFileName(basePath))) {
+            Files.createDirectory(ProcessedDataFileNames.documentFileName(basePath));
+        }
+        documentWriter = new SlopDocumentRecord.Writer(ProcessedDataFileNames.documentFileName(basePath), batchNumber);
     }
 
     @Override
@@ -57,39 +57,23 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         var domain = sideloadSource.getDomain();
 
         writeDomainData(domain);
-
         writeDocumentData(domain.domain, sideloadSource.getDocumentsStream());
     }
 
     @Override
     @SneakyThrows
     public void writeProcessedDomain(ProcessedDomain domain) {
-        var results = ForkJoinPool.commonPool().invokeAll(
-                writeTasks(domain)
-        );
-
-        for (var result : results) {
-            if (result.state() == Future.State.FAILED) {
-                logger.warn("Parquet writing job failed", result.exceptionNow());
+        try {
+            if (domain.documents != null) {
+                writeDocumentData(domain.domain, domain.documents.iterator());
             }
+            writeLinkData(domain);
+            writeDomainData(domain);
         }
-    }
+        catch (IOException e) {
+            logger.error("Data writing job failed", e);
+        }
 
-    private List<Callable<Object>> writeTasks(ProcessedDomain domain) {
-        return List.of(
-                () -> writeDocumentData(domain),
-                () -> writeLinkData(domain),
-                () -> writeDomainData(domain)
-        );
-    }
-
-    private Object writeDocumentData(ProcessedDomain domain) throws IOException {
-        if (domain.documents == null)
-            return this;
-
-        writeDocumentData(domain.domain, domain.documents.iterator());
-
-        return this;
     }
 
     private void writeDocumentData(EdgeDomain domain,
@@ -101,52 +85,48 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
 
         String domainName = domain.toString();
 
+        ByteBuffer workArea = ByteBuffer.allocate(16384);
+
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
-            if (document.details == null) {
-                new DocumentRecord(
-                        domainName,
-                        document.url.toString(),
-                        ordinal,
-                        document.state.toString(),
-                        document.stateReason,
-                        null,
-                        null,
-                        0,
-                        null,
-                        0,
-                        0L,
-                        -15,
-                        0L,
-                        null,
-                        null,
-                        null);
-            }
-            else {
-                var wb = document.words.build();
-                List<String> words = Arrays.asList(wb.keywords);
-                TLongList metas = new TLongArrayList(wb.metadata);
 
-                documentWriter.write(new DocumentRecord(
-                        domainName,
-                        document.url.toString(),
-                        ordinal,
-                        document.state.toString(),
-                        document.stateReason,
-                        document.details.title,
-                        document.details.description,
-                        HtmlFeature.encode(document.details.features),
-                        document.details.standard.name(),
-                        document.details.length,
-                        document.details.hashCode,
-                        (float) document.details.quality,
-                        document.details.metadata.encode(),
-                        document.details.pubYear,
-                        words,
-                        metas
-                ));
-
+            if (document.details == null || document.words == null) {
+                continue;
             }
+
+            var wb = document.words.build(workArea);
+
+            List<VarintCodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
+            byte[] spanCodes = new byte[wb.spans.size()];
+
+            for (int i = 0; i < wb.spans.size(); i++) {
+                var span = wb.spans.get(i);
+
+                spanCodes[i] = span.code();
+                spanSequences.add(span.spans());
+            }
+
+            documentWriter.write(new SlopDocumentRecord(
+                    domainName,
+                    document.url.toString(),
+                    ordinal,
+                    document.state.toString(),
+                    document.stateReason,
+                    document.details.title,
+                    document.details.description,
+                    HtmlFeature.encode(document.details.features),
+                    document.details.standard.name(),
+                    document.details.length,
+                    document.details.hashCode,
+                    (float) document.details.quality,
+                    document.details.metadata.encode(),
+                    document.details.pubYear,
+                    wb.keywords,
+                    wb.metadata,
+                    wb.positions,
+                    spanCodes,
+                    spanSequences
+            ));
 
             ordinal++;
         }
@@ -172,7 +152,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     continue;
                 }
 
-                domainLinkWriter.write(new DomainLinkRecord(
+                domainLinkWriter.write(new SlopDomainLinkRecord(
                         from,
                         dest.toString()
                 ));
@@ -180,7 +160,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         }
 
         if (domain.redirect != null) {
-            domainLinkWriter.write(new DomainLinkRecord(
+            domainLinkWriter.write(new SlopDomainLinkRecord(
                     from,
                     domain.redirect.toString()
             ));
@@ -195,13 +175,13 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         List<String> feeds = getFeedUrls(domain);
 
         domainWriter.write(
-                new DomainRecord(
+                new SlopDomainRecord(
                         domain.domain.toString(),
                         metadata.known(),
                         metadata.good(),
                         metadata.visited(),
-                        Optional.ofNullable(domain.state).map(DomainIndexingState::toString).orElse(null),
-                        Optional.ofNullable(domain.redirect).map(EdgeDomain::toString).orElse(null),
+                        Optional.ofNullable(domain.state).map(DomainIndexingState::toString).orElse(""),
+                        Optional.ofNullable(domain.redirect).map(EdgeDomain::toString).orElse(""),
                         domain.ip,
                         feeds
                 )

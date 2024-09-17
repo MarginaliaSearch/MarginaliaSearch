@@ -21,7 +21,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:common:process')
-    implementation project(':code:process-mqapi')
+    implementation project(':code:processes:process-mq-api')
     implementation project(':code:index:api')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
@@ -31,18 +31,20 @@ dependencies {
     implementation project(':code:index:index-journal')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:coded-sequence')
     implementation project(':third-party:commons-codec')
+    implementation project(':third-party:parquet-floor')
     testImplementation project(':code:services-application:search-service')
 
-    implementation project(':code:process-models:crawling-model')
-    implementation project(':code:process-models:processed-data')
-    implementation project(':code:process-models:work-log')
-    implementation project(':code:features-convert:keyword-extraction')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:converting-process:model')
+    implementation project(':code:processes:converting-process:ft-keyword-extraction')
 
     implementation project(':code:functions:link-graph:partition')
 
     implementation libs.bundles.slf4j
 
+    implementation libs.slop
     implementation libs.guava
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
@@ -50,6 +52,7 @@ dependencies {
     implementation libs.gson
     implementation libs.commons.lang3
     implementation libs.zstd
+    implementation libs.roaringbitmap
     implementation libs.trove
     implementation libs.bundles.mariadb
 
@@ -59,6 +62,7 @@ dependencies {
 
     testImplementation libs.bundles.selenium
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation libs.commons.codec
     testImplementation 'org.testcontainers:mariadb:1.17.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
     testImplementation project(':code:libraries:test-helpers')

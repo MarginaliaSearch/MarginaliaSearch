@@ -2,6 +2,7 @@ package nu.marginalia.api.searchquery.model.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,20 +26,23 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     /** How did the subqueries match against the document ? */
     public final List<SearchResultKeywordScore> keywordScores;
 
-    /** How many other potential results existed in the same domain */
-    public int resultsFromDomain;
-
     public boolean hasPrioTerm;
+
+    public long bestPositions;
+
+    public DebugRankingFactors debugRankingFactors;
 
     public SearchResultItem(long combinedId,
                             long encodedDocMetadata,
                             int htmlFeatures,
-                            boolean hasPrioTerm) {
+                            double score,
+                            long bestPositions) {
         this.combinedId = combinedId;
         this.encodedDocMetadata = encodedDocMetadata;
+        this.bestPositions = bestPositions;
         this.keywordScores = new ArrayList<>();
         this.htmlFeatures = htmlFeatures;
-        this.hasPrioTerm = hasPrioTerm;
+        this.scoreValue = score;
     }
 
 
@@ -84,7 +88,6 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
     @Override
     public int compareTo(@NotNull SearchResultItem o) {
-        // this looks like a bug, but we actually want this in a reversed order
         int diff = Double.compare(getScore(), o.getScore());
         if (diff != 0)
             return diff;

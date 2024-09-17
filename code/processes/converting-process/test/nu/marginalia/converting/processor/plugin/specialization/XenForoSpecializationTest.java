@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor.plugin.specialization;
 
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
-import nu.marginalia.summary.SummaryExtractor;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.test.CommonTestData;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;

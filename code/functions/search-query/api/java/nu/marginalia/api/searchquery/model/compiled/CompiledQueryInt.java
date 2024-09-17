@@ -5,8 +5,8 @@ import java.util.stream.IntStream;
 
 /** A compiled index service query */
 public class CompiledQueryInt {
-    private final CqExpression root;
-    private final CqDataInt data;
+    public final CqExpression root;
+    public final CqDataInt data;
 
     public CompiledQueryInt(CqExpression root, CqDataInt data) {
         this.root = root;
@@ -26,7 +26,7 @@ public class CompiledQueryInt {
         return IntStream.range(0, data.size());
     }
 
-    public long at(int index) {
+    public int at(int index) {
         return data.get(index);
     }
 

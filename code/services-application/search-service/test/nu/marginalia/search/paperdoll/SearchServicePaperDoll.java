@@ -91,7 +91,7 @@ public class SearchServicePaperDoll extends AbstractModule {
             long positions)
     {
         results.add(new DecoratedSearchResultItem(
-                new SearchResultItem(url.hashCode(), 2, 3, false),
+                new SearchResultItem(url.hashCode(), 2, 3, score, 0),
                 new EdgeUrl(url),
                 title,
                 description,
@@ -103,6 +103,7 @@ public class SearchServicePaperDoll extends AbstractModule {
                 400,
                 positions,
                 score,
+                4,
                 null)
         );
     }

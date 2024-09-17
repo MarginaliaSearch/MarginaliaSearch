@@ -3,7 +3,7 @@ plugins {
 
     id 'application'
     id 'jvm-test-suite'
-    id 'com.google.cloud.tools.jib' version '3.4.2'
+    id 'com.google.cloud.tools.jib' version '3.4.3'
 }
 
 application {
@@ -45,15 +45,13 @@ dependencies {
 
     implementation project(':code:functions:link-graph:api')
 
-    implementation project(':code:process-models:crawl-spec')
-    implementation project(':code:process-models:crawling-model')
-    implementation project(':code:features-crawl:link-parser')
-    implementation project(':code:features-convert:data-extractors')
-    implementation project(':code:features-convert:stackexchange-xml')
-    implementation project(':code:features-convert:reddit-json')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+    implementation project(':code:execution:data-extractors')
     implementation project(':code:index:index-journal')
     implementation project(':code:index:api')
-    implementation project(':code:process-mqapi')
+    implementation project(':code:processes:process-mq-api')
 
     implementation project(':code:execution')
     implementation project(':code:execution:api')
@@ -94,6 +92,7 @@ dependencies {
     testImplementation libs.mockito
 
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation libs.commons.codec
     testImplementation 'org.testcontainers:mariadb:1.17.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
     testImplementation project(':code:libraries:test-helpers')

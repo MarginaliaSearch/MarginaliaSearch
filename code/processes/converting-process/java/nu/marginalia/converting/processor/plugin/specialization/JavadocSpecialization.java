@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.summary.SummaryExtractor;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;

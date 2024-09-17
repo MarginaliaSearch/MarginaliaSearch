@@ -1,16 +1,16 @@
 package nu.marginalia.query.svc;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
-import nu.marginalia.functions.searchquery.svc.QueryFactory;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.segmentation.NgramLexicon;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,12 @@ public class QueryFactoryTest {
 
     @Test
     void qsec10() {
-        try (var lines = Files.lines(Path.of("/home/vlofgren/Exports/qsec10/webis-qsec-10-training-set/webis-qsec-10-training-set-queries.txt"))) {
+        Path webis = Path.of("/home/vlofgren/Exports/qsec10/webis-qsec-10-training-set/webis-qsec-10-training-set-queries.txt");
+
+        if (!Files.exists(webis))
+            return;
+
+        try (var lines = Files.lines(webis)) {
             lines.limit(1000).forEach(line -> {
                 String[] parts = line.split("\t");
                 if (parts.length == 2) {
@@ -123,24 +128,6 @@ public class QueryFactoryTest {
         assertEquals(SpecificationLimitType.GREATER_THAN, size.type());
         assertEquals(2000, size.value());
     }
-
-    @Test
-    public void testQuotedStopwords() {
-        {
-            // the is a stopword, so it should generate an ngram search term
-            var specs = parseAndGetSpecs("\"the shining\"");
-            assertEquals("the_shining", specs.query.compiledQuery);
-        }
-
-        {
-            // tde isn't a stopword, so we should get the normal behavior
-            var specs = parseAndGetSpecs("\"tde shining\"");
-            assertEquals("( shining tde | tde_shining )", specs.query.compiledQuery);
-            assertEquals(List.of("tde_shining"), specs.query.searchTermsAdvice);
-            assertEquals(List.of(List.of("tde", "shining")), specs.query.searchTermCoherences);
-        }
-    }
-
 
     @Test
     public void testParseQualityEq() {
@@ -212,11 +199,37 @@ public class QueryFactoryTest {
         var subquery = parseAndGetSpecs("The");
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
-    }    @Test
+    }
 
+    @Test
     public void testExpansion6() {
         long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("burning the nerves in the neck");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testExpansion7() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("amazing work being done");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testExpansion8() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("success often consists of");
+        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testParsing() {
+        long start = System.currentTimeMillis();
+        var subquery = parseAndGetSpecs("strlen()");
+        assertEquals("strlen", subquery.query.compiledQuery);
         System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }

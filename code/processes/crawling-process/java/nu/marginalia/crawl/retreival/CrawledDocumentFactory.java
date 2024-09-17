@@ -1,9 +1,9 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawling.body.HttpFetchResult;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.HttpFetchResult;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

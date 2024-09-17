@@ -7,19 +7,21 @@ import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
+import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.*;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.geoip.sources.AsnTable;
-import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.converting.processor.logic.links.TopKeywords;
-import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
+import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawledDomain;
+import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -102,7 +104,7 @@ public class DomainProcessor {
             domain = new ProcessedDomain();
             domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
 
-            documentDecorator = new DocumentDecorator(anchorTextKeywords);
+            documentDecorator = new DocumentDecorator();
 
             processDomain(crawledDomain, domain, documentDecorator);
 
@@ -177,7 +179,7 @@ public class DomainProcessor {
         }
 
         DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
-        DocumentDecorator documentDecorator = new DocumentDecorator(anchorTextKeywords);
+        DocumentDecorator documentDecorator = new DocumentDecorator();
 
         // Process Domain Record
 

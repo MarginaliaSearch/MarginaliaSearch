@@ -7,11 +7,12 @@ import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawl.UrlIndexingState;
+import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -37,6 +38,7 @@ public class SideloaderProcessing {
                                              DomainLinks domainLinks,
                                              GeneratorType type,
                                              DocumentClass documentClass,
+                                             LinkTexts linkTexts,
                                              int pubYear,
                                              int size) throws URISyntaxException {
         var crawledDoc = new CrawledDocument(
@@ -64,12 +66,12 @@ public class SideloaderProcessing {
 
         var ret = new ProcessedDocument();
         try {
-            var details = htmlProcessorPlugin.createDetails(crawledDoc, documentClass);
+            var details = htmlProcessorPlugin.createDetails(crawledDoc, linkTexts, documentClass);
 
             ret.words = details.words();
 
             for (String keyword : extraKeywords)
-                ret.words.add(keyword, WordFlags.Subjects.asBit());
+                ret.words.addMeta(keyword, WordFlags.Subjects.asBit());
 
             if (type == GeneratorType.WIKI) {
                 ret.words.addAllSyntheticTerms(List.of("generator:wiki"));

@@ -2,21 +2,22 @@ package nu.marginalia.index;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
+import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.ReverseIndexConstructor;
-import nu.marginalia.index.forward.ForwardIndexConverter;
+import nu.marginalia.index.construction.full.FullIndexConstructor;
+import nu.marginalia.index.construction.prio.PrioIndexConstructor;
+import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
-import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.forward.construction.ForwardIndexConverter;
+import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
@@ -29,12 +30,13 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
+import nu.marginalia.storage.FileStorageService;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +73,7 @@ public class IndexQueryServiceIntegrationTest {
     ServiceHeartbeat heartbeat;
 
     @Inject
-    IndexJournalWriter indexJournalWriter;
+    IndexJournalSlopWriter indexJournalWriter;
 
     @Inject
     FileStorageService fileStorageService;
@@ -172,35 +174,11 @@ public class IndexQueryServiceIntegrationTest {
                                 List.of(),
                                 List.of(),
                                 List.of(),
-                                List.of(List.of("missing", "hello"))
+                                List.of(SearchPhraseConstraint.mandatory(List.of("missing", "hello")))
                         )));
 
         executeSearch(queryMissingCoherence)
                 .expectCount(0);
-    }
-
-    @Test
-    public void testPositions() throws Exception {
-
-        // Test position rules
-        new MockData()
-            .add( // Case 1: Both words have a position set, should be considered
-                d(1, 1),
-                new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
-            ).add( // Case 2: Only one of the words have a position set, should not be considered
-                d(2, 2),
-                new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(0L, EnumSet.noneOf(WordFlags.class)).encode())
-            ).load();
-
-
-        var query = basicQuery(builder -> builder.query(justInclude("hello", "world")));
-
-        executeSearch(query)
-            .expectDocumentsInOrder(d(1,1));
     }
 
     @Test
@@ -211,19 +189,19 @@ public class IndexQueryServiceIntegrationTest {
                 .add( // Case 1: Document is dated 1999
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(1999), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 ).add( // Case 2: Document is dated 2000
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2000), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .add( // Case 2: Document is dated 2001
                         d(3, 3),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .load();
 
@@ -266,26 +244,26 @@ public class IndexQueryServiceIntegrationTest {
                 .add(
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(1999), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 ).add(
                         d(1, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2000), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 // docs from domain 2
                 .add(
                         d(2, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .add(
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 )
                 .load();
 
@@ -319,13 +297,13 @@ public class IndexQueryServiceIntegrationTest {
                 .add( // Case 1: The required include is present, exclude is absent; should be a result
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("world", EnumSet.noneOf(WordFlags.class), 1)
                 ).add( // Case 2: The required include is present, excluded term is absent; should not be a result
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                        w("my_darling", new WordMetadata(0L, EnumSet.noneOf(WordFlags.class)).encode())
+                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                        w("my_darling", EnumSet.noneOf(WordFlags.class), 1)
                 ).load();
 
         var query = basicQuery(builder ->
@@ -368,8 +346,8 @@ public class IndexQueryServiceIntegrationTest {
 
         System.out.println(rsp);
 
-        for (var result : rsp.results) {
-            long docId = result.rawIndexResult.getDocumentId();
+        for (var result : rsp) {
+            long docId = result.getRawItem().getCombinedId();
             actual.add(new MockDataDocument(UrlIdCodec.getDomainId(docId), UrlIdCodec.getDocumentOrdinal(docId)));
         }
 
@@ -386,14 +364,14 @@ public class IndexQueryServiceIntegrationTest {
             .add( // Case 1: Both positions overlap; should be included
                 d(1, 1),
                 new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode())
+                w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                w("world", EnumSet.noneOf(WordFlags.class), 1)
             )
             .add( // Case 2: Positions do not overlap, do not include
                 d(2, 2),
                 new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", new WordMetadata(1L, EnumSet.noneOf(WordFlags.class)).encode()),
-                w("world", new WordMetadata(2L, EnumSet.noneOf(WordFlags.class)).encode())
+                w("hello", EnumSet.noneOf(WordFlags.class), 1),
+                w("world", EnumSet.noneOf(WordFlags.class), 2)
             )
         .load();
 
@@ -403,9 +381,9 @@ public class IndexQueryServiceIntegrationTest {
                         includeAndCohere("hello", "world")
                 )));
 
-        assertEquals(1, rsp.results.size());
-        assertEquals(d(1,1).docId(),
-                rsp.results.get(0).rawIndexResult.getDocumentId());
+        assertEquals(1, rsp.size());
+        assertEquals(d(2,2).docId(),
+                rsp.get(0).getRawItem().getCombinedId());
     }
 
     SearchSpecification basicQuery(Function<SearchSpecification.SearchSpecificationBuilder, SearchSpecification.SearchSpecificationBuilder> mutator)
@@ -464,7 +442,7 @@ public class IndexQueryServiceIntegrationTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                List.of(List.of(includes))
+                List.of(SearchPhraseConstraint.mandatory(List.of(includes)))
         );
     }
     private MockDataDocument d(int domainId, int ordinal) {
@@ -482,13 +460,21 @@ public class IndexQueryServiceIntegrationTest {
 
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor =
+                new FullIndexConstructor(
+                    outputFileDocs,
+                    outputFileWords,
+                    outputFilePositions,
+                    DocIdRewriter.identity(),
+                    tmpDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
@@ -500,20 +486,27 @@ public class IndexQueryServiceIntegrationTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor = new PrioIndexConstructor(
+                outputFileDocs,
+                outputFileWords,
+                DocIdRewriter.identity(),
+                tmpDir);
+
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createForwardIndex() throws SQLException, IOException {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(processHeartbeat,
-                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
+                outputFileSpansData,
+                IndexJournal.findJournal(workDir).orElseThrow(),
                 domainRankings
         );
 
@@ -543,19 +536,31 @@ public class IndexQueryServiceIntegrationTest {
 
                 var meta = metaByDoc.get(doc);
 
-                var header = new IndexJournalEntryHeader(
-                        doc,
-                        meta.features,
-                        meta.documentMetadata.encode()
-                );
+                List<String> keywords = words.stream().map(w -> w.keyword).toList();
 
-                long[] dataArray = new long[words.size() * 2];
+                byte[] metadata = new byte[keywords.size()];
                 for (int i = 0; i < words.size(); i++) {
-                    dataArray[2*i] = hasher.hashNearlyASCII(words.get(i).keyword);
-                    dataArray[2*i+1] = words.get(i).termMetadata;
+                    metadata[i] = (byte) words.get(i).termMetadata;
                 }
-                var entry = new IndexJournalEntryData(dataArray);
-                indexJournalWriter.put(header, entry);
+
+                List<VarintCodedSequence> positions = new ArrayList<>();
+                for (int i = 0; i < words.size(); i++) {
+                    positions.add(VarintCodedSequence.generate(words.get(i).positions));
+                }
+
+                indexJournalWriter.put(doc,
+                        new SlopDocumentRecord.KeywordsProjection(
+                                "",
+                                -1,
+                                meta.features,
+                                meta.documentMetadata.encode(),
+                                100,
+                                keywords,
+                                metadata,
+                                positions,
+                                new byte[0],
+                                List.of()
+                        ));
             });
 
             var linkdbWriter = new DocumentDbWriter(
@@ -571,7 +576,7 @@ public class IndexQueryServiceIntegrationTest {
                         "HTML5",
                         0,
                         null,
-                        0,
+                        key.hashCode(),
                         5
                 ));
             }
@@ -595,9 +600,11 @@ public class IndexQueryServiceIntegrationTest {
             this(features, new DocumentMetadata(encoded));
         }
     }
-    record MockDataKeyword(String keyword, long termMetadata) {}
+    record MockDataKeyword(String keyword, long termMetadata, IntList positions) {}
 
-    public MockDataKeyword w(String keyword, long termMetadata) { return new MockDataKeyword(keyword, termMetadata); }
-    public MockDataKeyword w(String keyword) { return new MockDataKeyword(keyword, 0L); }
-    public MockDataKeyword w(String keyword, WordFlags flags) { return new MockDataKeyword(keyword, new WordMetadata(0L, EnumSet.of(flags)).encode()); }
+    public MockDataKeyword w(String keyword, EnumSet<WordFlags> wordFlags, int... positions) {
+        return new MockDataKeyword(keyword, WordFlags.encode(wordFlags), IntList.of(positions));
+    }
+    public MockDataKeyword w(String keyword) { return new MockDataKeyword(keyword, 0L, IntList.of()); }
+    public MockDataKeyword w(String keyword, WordFlags flags) { return new MockDataKeyword(keyword, flags.asBit(), IntList.of()); }
 }

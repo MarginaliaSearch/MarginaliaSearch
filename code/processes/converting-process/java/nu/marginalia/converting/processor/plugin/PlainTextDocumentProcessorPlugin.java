@@ -2,22 +2,23 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.language.filter.LanguageFilter;
-import nu.marginalia.converting.processor.DocumentClass;
-import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.keyword.DocumentKeywordExtractor;
-import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
-import nu.marginalia.model.html.HtmlStandard;
-import nu.marginalia.model.idx.DocumentFlags;
-import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
+import nu.marginalia.converting.processor.DocumentClass;
+import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.logic.PlainTextLogic;
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.converting.util.LineUtils;
+import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.PubDate;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.html.HtmlStandard;
+import nu.marginalia.model.idx.DocumentFlags;
+import nu.marginalia.model.idx.DocumentMetadata;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URISyntaxException;
@@ -65,7 +66,9 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     }
 
     @Override
-    public DetailsWithWords createDetails(CrawledDocument crawledDocument, DocumentClass documentClass)
+    public DetailsWithWords createDetails(CrawledDocument crawledDocument,
+                                          LinkTexts linkTexts,
+                                          DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException {
 
         String documentBody = crawledDocument.documentBody;
@@ -104,7 +107,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         ret.metadata = new DocumentMetadata(documentLengthLogic.getEncodedAverageLength(dld),
                 pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
         var tagWords = new MetaTagsBuilder()
                 .addPubDate(pubDate)

@@ -3,12 +3,12 @@ package nu.marginalia.query;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import spark.Request;
@@ -48,10 +48,9 @@ public class QueryBasicInterface {
                 domainCount, count, 250, 8192
         ), set);
 
-        var detailedDirectResult = queryGRPCService.executeDirect(queryParams,
-                params,
-                ResultRankingParameters.sensibleDefaults(),
-                count);
+        var detailedDirectResult = queryGRPCService.executeDirect(
+                queryParams, params, ResultRankingParameters.sensibleDefaults()
+        );
 
         var results = detailedDirectResult.result();
 
@@ -83,12 +82,11 @@ public class QueryBasicInterface {
                 domainCount, count, 250, 8192
         ), set);
 
-        var rankingParams = rankingParamsFromRequest(request);
+        var rankingParams = debugRankingParamsFromRequest(request);
 
-        var detailedDirectResult = queryGRPCService.executeDirect(queryString,
-                queryParams,
-                rankingParams,
-                count);
+        var detailedDirectResult = queryGRPCService.executeDirect(
+                queryString, queryParams, rankingParams
+        );
 
         var results = detailedDirectResult.result();
 
@@ -100,7 +98,7 @@ public class QueryBasicInterface {
         );
     }
 
-    private ResultRankingParameters rankingParamsFromRequest(Request request) {
+    private ResultRankingParameters debugRankingParamsFromRequest(Request request) {
         var sensibleDefaults = ResultRankingParameters.sensibleDefaults();
 
         return ResultRankingParameters.builder()
@@ -108,23 +106,18 @@ public class QueryBasicInterface {
                 .qualityPenalty(doubleFromRequest(request, "qualityPenalty", sensibleDefaults.qualityPenalty))
                 .shortDocumentThreshold(intFromRequest(request, "shortDocumentThreshold", sensibleDefaults.shortDocumentThreshold))
                 .shortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.shortDocumentPenalty))
-                .tcfJaccardWeight(doubleFromRequest(request, "tcfJaccardWeight", sensibleDefaults.tcfJaccardWeight))
-                .tcfOverlapWeight(doubleFromRequest(request, "tcfOverlapWeight", sensibleDefaults.tcfOverlapWeight))
-                .fullParams(new Bm25Parameters(
-                        doubleFromRequest(request, "fullParams.k1", sensibleDefaults.fullParams.k()),
-                        doubleFromRequest(request, "fullParams.b", sensibleDefaults.fullParams.b())
-                ))
-                .prioParams(new Bm25Parameters(
-                        doubleFromRequest(request, "prioParams.k1", sensibleDefaults.prioParams.k()),
-                        doubleFromRequest(request, "prioParams.b", sensibleDefaults.prioParams.b())
+                .tcfFirstPosition(doubleFromRequest(request, "tcfFirstPosition", sensibleDefaults.tcfFirstPosition))
+                .tcfVerbatim(doubleFromRequest(request, "tcfVerbatim", sensibleDefaults.tcfVerbatim))
+                .tcfProximity(doubleFromRequest(request, "tcfProximity", sensibleDefaults.tcfProximity))
+                .bm25Params(new Bm25Parameters(
+                        doubleFromRequest(request, "bm25.k1", sensibleDefaults.bm25Params.k()),
+                        doubleFromRequest(request, "bm25.b", sensibleDefaults.bm25Params.b())
                 ))
                 .temporalBias(ResultRankingParameters.TemporalBias.valueOf(stringFromRequest(request, "temporalBias", sensibleDefaults.temporalBias.toString())))
                 .temporalBiasWeight(doubleFromRequest(request, "temporalBiasWeight", sensibleDefaults.temporalBiasWeight))
                 .shortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.shortSentenceThreshold))
                 .shortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.shortSentencePenalty))
-                .bm25FullWeight(doubleFromRequest(request, "bm25FullWeight", sensibleDefaults.bm25FullWeight))
-                .bm25NgramWeight(doubleFromRequest(request, "bm25NgramWeight", sensibleDefaults.bm25NgramWeight))
-                .bm25PrioWeight(doubleFromRequest(request, "bm25PrioWeight", sensibleDefaults.bm25PrioWeight))
+                .bm25Weight(doubleFromRequest(request, "bm25Weight", sensibleDefaults.bm25Weight))
                 .exportDebugData(true)
                 .build();
     }

@@ -34,6 +34,8 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     public final long bestPositions;
     public final double rankingScore;
 
+    public final int resultsFromDomain;
+
     @Nullable
     public ResultRankingDetails rankingDetails;
 
@@ -42,9 +44,6 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     }
     public int domainId() {
         return rawIndexResult.getDomainId();
-    }
-    public int resultsFromDomain() {
-        return rawIndexResult.getResultsFromDomain();
     }
 
     public List<SearchResultKeywordScore> keywordScores() {
@@ -72,6 +71,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
                                      int wordsTotal,
                                      long bestPositions,
                                      double rankingScore,
+                                     int resultsFromDomain,
                                      @Nullable
                                      ResultRankingDetails rankingDetails
                                      )
@@ -88,6 +88,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
         this.wordsTotal = wordsTotal;
         this.bestPositions = bestPositions;
         this.rankingScore = rankingScore;
+        this.resultsFromDomain = resultsFromDomain;
         this.rankingDetails = rankingDetails;
     }
 

@@ -3,7 +3,7 @@ package nu.marginalia.tools.experiments;
 import com.google.inject.Inject;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.BlogSpecialization;
-import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
 

@@ -1,10 +1,8 @@
 package nu.marginalia.control.node.svc;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.service.ServiceMonitors;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
@@ -12,11 +10,12 @@ import nu.marginalia.control.node.model.*;
 import nu.marginalia.control.sys.model.EventLogEntry;
 import nu.marginalia.control.sys.svc.EventLogService;
 import nu.marginalia.control.sys.svc.HeartbeatService;
+import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
-import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.service.ServiceId;
+import nu.marginalia.service.ServiceMonitors;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,16 +23,10 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import javax.annotation.Nullable;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class ControlNodeService {
     private final FileStorageService fileStorageService;
@@ -403,7 +396,7 @@ public class ControlNodeService {
             // Sort by timestamp, then by relPath
             // this ensures that the newest file is listed last
             items.sort(Comparator
-                    .comparing(FileStorageWithActions::getTimestamp)
+                    .comparing(FileStorageWithActions::getTimestampFull)
                     .thenComparing(FileStorageWithActions::getRelPath)
             );
 

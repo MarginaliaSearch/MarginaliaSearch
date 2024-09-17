@@ -3,14 +3,15 @@ package nu.marginalia.tools;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.converting.ConverterModule;
-import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.io.crawldata.CrawledDomainReader;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.tools.experiments.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
 
 public class ExperimentRunnerMain {
 
@@ -18,7 +19,6 @@ public class ExperimentRunnerMain {
             "test", TestExperiment.class,
             "adblock", AdblockExperiment.class,
             "topic", TopicExperiment.class,
-            "atags", AtagsExperiment.class,
             "sentence-statistics", SentenceStatisticsExperiment.class,
             "site-statistics", SiteStatisticsExperiment.class,
             "export-atags", ExportExternalLinksExperiment.class,
@@ -27,7 +27,7 @@ public class ExperimentRunnerMain {
 
     public static void main(String... args) throws IOException {
         if (args.length < 2) {
-            System.err.println("Expected arguments: plan.yaml experiment-name [experiment-args]");
+            System.err.println("Expected arguments: crawl-data-path experiment-name [experiment-args]");
             return;
         }
 

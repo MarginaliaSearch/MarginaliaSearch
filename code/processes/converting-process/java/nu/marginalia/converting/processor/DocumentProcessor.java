@@ -1,23 +1,28 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
+import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PlainTextDocumentProcessorPlugin;
+import nu.marginalia.keyword.LinkTexts;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawl.UrlIndexingState;
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 public class DocumentProcessor {
 
@@ -30,11 +35,14 @@ public class DocumentProcessor {
 
 
     private final List<AbstractDocumentProcessorPlugin> processorPlugins = new ArrayList<>();
+    private final AnchorTextKeywords anchorTextKeywords;
 
     @Inject
     public DocumentProcessor(HtmlDocumentProcessorPlugin htmlDocumentProcessorPlugin,
-                             PlainTextDocumentProcessorPlugin plainTextDocumentProcessorPlugin)
+                             PlainTextDocumentProcessorPlugin plainTextDocumentProcessorPlugin,
+                             AnchorTextKeywords anchorTextKeywords)
     {
+        this.anchorTextKeywords = anchorTextKeywords;
 
         processorPlugins.add(htmlDocumentProcessorPlugin);
         processorPlugins.add(plainTextDocumentProcessorPlugin);
@@ -78,7 +86,12 @@ public class DocumentProcessor {
         return ret;
     }
 
-    private void processDocument(CrawledDocument crawledDocument, DocumentClass documentClass, DocumentDecorator documentDecorator, DomainLinks externalDomainLinks, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
+    private void processDocument(CrawledDocument crawledDocument,
+                                 DocumentClass documentClass,
+                                 DocumentDecorator documentDecorator,
+                                 DomainLinks externalDomainLinks,
+                                 ProcessedDocument ret) throws URISyntaxException, DisqualifiedException
+    {
 
         var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
         if (crawlerStatus != CrawlerDocumentStatus.OK) {
@@ -97,12 +110,15 @@ public class DocumentProcessor {
 
         final var plugin = findPlugin(crawledDocument);
 
-        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDocument, documentClass);
+        EdgeUrl url = new EdgeUrl(crawledDocument.url);
+        LinkTexts linkTexts = anchorTextKeywords.getAnchorTextKeywords(externalDomainLinks, url);
+
+        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDocument, linkTexts, documentClass);
 
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();
 
-        documentDecorator.apply(ret, externalDomainLinks);
+        documentDecorator.apply(ret);
 
         if (Boolean.TRUE.equals(crawledDocument.hasCookies)
          && ret.details != null

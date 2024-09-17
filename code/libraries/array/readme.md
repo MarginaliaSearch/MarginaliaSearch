@@ -36,7 +36,7 @@ try (var array = LongArrayFactory.mmapForWritingConfined(Path.of("/tmp/test"), 1
 
 ## Query Buffers
 
-The class and [LongQueryBuffer](java/nu/marginalia/array/buffer/LongQueryBuffer.java) is used heavily in the search engine's query processing.
+The class and [LongQueryBuffer](java/nu/marginalia/array/page/LongQueryBuffer.java) is used heavily in the search engine's query processing.
 
 It is a dual-pointer buffer that offers tools for filtering data.
 

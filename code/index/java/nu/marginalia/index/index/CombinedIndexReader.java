@@ -5,8 +5,10 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
-import nu.marginalia.index.ReverseIndexReader;
+import nu.marginalia.index.FullReverseIndexReader;
+import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
+import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
@@ -14,12 +16,13 @@ import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
-import nu.marginalia.index.results.model.ids.DocMetadataList;
+import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,29 +40,24 @@ public class CombinedIndexReader {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ForwardIndexReader forwardIndexReader;
-    private final ReverseIndexReader reverseIndexFullReader;
-    private final ReverseIndexReader reverseIndexPriorityReader;
+    private final FullReverseIndexReader reverseIndexFullReader;
+    private final PrioReverseIndexReader reverseIndexPriorityReader;
 
     public CombinedIndexReader(ForwardIndexReader forwardIndexReader,
-                               ReverseIndexReader reverseIndexFullReader,
-                               ReverseIndexReader reverseIndexPriorityReader) {
+                               FullReverseIndexReader reverseIndexFullReader,
+                               PrioReverseIndexReader reverseIndexPriorityReader) {
         this.forwardIndexReader = forwardIndexReader;
         this.reverseIndexFullReader = reverseIndexFullReader;
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
     public IndexQueryBuilderImpl newQueryBuilder(IndexQuery query) {
-        return new IndexQueryBuilderImpl(reverseIndexFullReader, reverseIndexPriorityReader, query);
+        return new IndexQueryBuilderImpl(reverseIndexFullReader, query);
     }
 
     public QueryFilterStepIf hasWordFull(long termId) {
         return reverseIndexFullReader.also(termId);
     }
-
-    public QueryFilterStepIf hasWordPrio(long termId) {
-        return reverseIndexPriorityReader.also(termId);
-    }
-
 
     /** Creates a query builder for terms in the priority index */
     public IndexQueryBuilder findPriorityWord(long wordId) {
@@ -113,17 +111,28 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(elements.getLong(0));
-            for (int i = 1; i < elements.size(); i++) {
-                head.addInclusionFilter(hasWordFull(elements.getLong(i)));
+            if (!SearchTerms.stopWords.contains(elements.getLong(0))) {
+                var head = findFullWord(elements.getLong(0));
+
+                for (int i = 1; i < elements.size(); i++) {
+                    long termId = elements.getLong(i);
+
+                    // if a stop word is present in the query, skip the step of requiring it to be in the document,
+                    // we'll assume it's there and save IO
+                    if (SearchTerms.stopWords.contains(termId)) {
+                        continue;
+                    }
+
+                    head.addInclusionFilter(hasWordFull(termId));
+                }
+                queryHeads.add(head);
             }
-            queryHeads.add(head);
 
             // If there are few paths, we can afford to check the priority index as well
             if (paths.size() < 4) {
                 var prioHead = findPriorityWord(elements.getLong(0));
                 for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordPrio(elements.getLong(i)));
+                    prioHead.addInclusionFilter(hasWordFull(elements.getLong(i)));
                 }
                 queryHeads.add(prioHead);
             }
@@ -169,8 +178,11 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
-    public DocMetadataList getMetadata(long wordId, CombinedDocIdList docIds) {
-        return new DocMetadataList(reverseIndexFullReader.getTermMeta(wordId, docIds.array()));
+    public TermMetadataList getTermMetadata(Arena arena,
+                                            long wordId,
+                                            CombinedDocIdList docIds)
+    {
+        return new TermMetadataList(reverseIndexFullReader.getTermData(arena, wordId, docIds.array()));
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -186,6 +198,16 @@ public class CombinedIndexReader {
     /** Retrieves the HTML features for the specified document */
     public int getHtmlFeatures(long docId) {
         return forwardIndexReader.getHtmlFeatures(docId);
+    }
+
+    /** Retrieves the HTML features for the specified document */
+    public int getDocumentSize(long docId) {
+        return forwardIndexReader.getDocumentSize(docId);
+    }
+
+    /** Retrieves the document spans for the specified document */
+    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
+        return forwardIndexReader.getDocumentSpans(arena, docId);
     }
 
     /** Close the indexes (this is not done immediately)

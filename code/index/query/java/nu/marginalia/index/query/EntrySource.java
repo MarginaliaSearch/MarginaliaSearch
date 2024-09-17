@@ -6,6 +6,7 @@ import nu.marginalia.array.page.LongQueryBuffer;
  */
 public interface EntrySource {
     /** Skip n entries. */
+    @Deprecated
     void skip(int n);
 
     /** Fill the buffer with entries, updating its data and length appropriately. */

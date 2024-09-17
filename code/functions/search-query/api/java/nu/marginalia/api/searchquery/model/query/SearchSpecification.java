@@ -19,10 +19,14 @@ public class SearchSpecification {
 
     public final String humanQuery;
 
-    public final SpecificationLimit quality;
-    public final SpecificationLimit year;
-    public final SpecificationLimit size;
-    public final SpecificationLimit rank;
+    @Builder.Default
+    public final SpecificationLimit quality = SpecificationLimit.none();
+    @Builder.Default
+    public final SpecificationLimit year = SpecificationLimit.none();
+    @Builder.Default
+    public final SpecificationLimit size = SpecificationLimit.none();
+    @Builder.Default
+    public final SpecificationLimit rank = SpecificationLimit.none();
 
     public final QueryLimits queryLimits;
 

@@ -24,7 +24,7 @@ public class UrlDeduplicator {
         this.resultsPerKey = resultsPerKey;
     }
 
-    public synchronized boolean shouldRemove(DecoratedSearchResultItem details) {
+    public boolean shouldRemove(DecoratedSearchResultItem details) {
         if (!deduplicateOnSuperficialHash(details))
             return true;
         if (!deduplicateOnLSH(details))
@@ -33,6 +33,10 @@ public class UrlDeduplicator {
             return true;
 
         return false;
+    }
+
+    public boolean shouldRetain(DecoratedSearchResultItem details) {
+        return !shouldRemove(details);
     }
 
     private boolean deduplicateOnSuperficialHash(DecoratedSearchResultItem details) {

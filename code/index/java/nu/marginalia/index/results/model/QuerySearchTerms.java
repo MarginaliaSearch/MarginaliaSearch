@@ -6,18 +6,15 @@ import nu.marginalia.index.results.model.ids.TermIdList;
 public class QuerySearchTerms {
     private final TObjectLongHashMap<String> termToId;
     public final TermIdList termIdsAll;
-    public final TermIdList termIdsPrio;
 
-    public final TermCoherenceGroupList coherences;
+    public final PhraseConstraintGroupList phraseConstraints;
 
     public QuerySearchTerms(TObjectLongHashMap<String> termToId,
                             TermIdList termIdsAll,
-                            TermIdList termIdsPrio,
-                            TermCoherenceGroupList coherences) {
+                            PhraseConstraintGroupList phraseConstraints) {
         this.termToId = termToId;
         this.termIdsAll = termIdsAll;
-        this.termIdsPrio = termIdsPrio;
-        this.coherences = coherences;
+        this.phraseConstraints = phraseConstraints;
     }
 
     public long getIdForTerm(String searchTerm) {

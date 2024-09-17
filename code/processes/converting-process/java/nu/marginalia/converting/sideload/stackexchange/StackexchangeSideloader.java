@@ -1,10 +1,14 @@
 package nu.marginalia.converting.sideload.stackexchange;
 
 import lombok.SneakyThrows;
-import nu.marginalia.converting.model.*;
+import nu.marginalia.converting.model.GeneratorType;
+import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDocumentDetails;
+import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.integration.stackexchange.sqlite.StackExchangePostsDb;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -122,7 +126,7 @@ public class StackexchangeSideloader implements SideloadSource {
             var dld = sentenceExtractorProvider.get().extractSentences(doc);
 
             ret.url = url;
-            ret.words = keywordExtractor.extractKeywords(dld, url);
+            ret.words = keywordExtractor.extractKeywords(dld, new LinkTexts(), url);
             ret.words.addAllSyntheticTerms(List.of(
                     "site:" + domainName,
                     "site:" + url.domain.topDomain,
