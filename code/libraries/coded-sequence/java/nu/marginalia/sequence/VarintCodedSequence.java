@@ -139,7 +139,7 @@ public class VarintCodedSequence implements CodedSequence {
 
     @Override
     public IntIterator offsetIterator(int offset) {
-        return new VarintSequenceIterator(buffer(), offset);
+        return new VarintSequenceIterator(buffer().slice(), offset);
     }
 
     @Override
@@ -181,6 +181,7 @@ public class VarintCodedSequence implements CodedSequence {
     private static int decodeValue(ByteBuffer buffer) {
         // most common case gets a fast path, this is a fairly large performance win
         // on average, something like 10-20% faster than not having this check
+
         byte b = buffer.get();
         if ((b & 0x80) == 0) {
             return b;
@@ -192,8 +193,9 @@ public class VarintCodedSequence implements CodedSequence {
             value = (value << 7) | (b & 0x7F);
         } while ((b & 0x80) != 0);
 
-
         return value;
+
+
     }
 
     public static class VarintSequenceIterator implements IntIterator {
@@ -222,6 +224,7 @@ public class VarintCodedSequence implements CodedSequence {
         public boolean hasNext() {
             if (next != Integer.MIN_VALUE) return true;
             if (--rem < 0) return false;
+            if (!buffer.hasRemaining()) return false;
 
             int delta = decodeValue(buffer);
 
