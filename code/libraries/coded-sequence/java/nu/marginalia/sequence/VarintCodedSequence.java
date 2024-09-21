@@ -28,36 +28,6 @@ public class VarintCodedSequence implements CodedSequence {
         this.startLimit = startLimit;
     }
 
-    private static int requiredBufferSize(int[] values) {
-        int prev = 0;
-        int size = 0;
-
-        for (int value : values) {
-            size += varintSize(value - prev);
-            prev = value;
-        }
-
-        return size + varintSize(size + 1);
-    }
-
-    private static int requiredBufferSize(IntList values) {
-        int prev = 0;
-        int size = 0;
-
-        for (int i = 0; i < values.size(); i++) {
-            int value = values.getInt(i);
-            size += varintSize(value - prev);
-            prev = value;
-        }
-
-        return size + varintSize(size + 1);
-    }
-
-    private static int varintSize(int value) {
-        int bits = 32 - Integer.numberOfLeadingZeros(value);
-        return (bits + 6) / 7;
-    }
-
     public static VarintCodedSequence generate(IntList values) {
         int bufferSize = requiredBufferSize(values);
         ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
@@ -103,6 +73,39 @@ public class VarintCodedSequence implements CodedSequence {
         return new VarintCodedSequence(buffer);
     }
 
+    /** Calculate the number of bytes required to encode a sequence of values as a varint. */
+    private static int requiredBufferSize(int[] values) {
+        int prev = 0;
+        int size = 0;
+
+        for (int value : values) {
+            size += varintSize(value - prev);
+            prev = value;
+        }
+
+        return size + varintSize(size + 1);
+    }
+
+    /** Calculate the number of bytes required to encode a sequence of values as a varint. */
+    private static int requiredBufferSize(IntList values) {
+        int prev = 0;
+        int size = 0;
+
+        for (int i = 0; i < values.size(); i++) {
+            int value = values.getInt(i);
+            size += varintSize(value - prev);
+            prev = value;
+        }
+
+        return size + varintSize(size + 1);
+    }
+
+    /** Calculate the number of bytes required to encode a value as a varint. */
+    private static int varintSize(int value) {
+        int bits = 32 - Integer.numberOfLeadingZeros(value);
+        return (bits + 6) / 7;
+    }
+
     private static void encodeValue(ByteBuffer buffer, int value) {
         if (value < (1<<7)) {
             buffer.put((byte) value);
@@ -134,12 +137,12 @@ public class VarintCodedSequence implements CodedSequence {
 
     @Override
     public IntIterator iterator() {
-        return new VarintSequenceIterator(buffer());
+        return new VarintSequenceIterator(raw, startPos);
     }
 
     @Override
     public IntIterator offsetIterator(int offset) {
-        return new VarintSequenceIterator(buffer().slice(), offset);
+        return new VarintSequenceIterator(raw, startPos, offset);
     }
 
     @Override
@@ -194,51 +197,92 @@ public class VarintCodedSequence implements CodedSequence {
         } while ((b & 0x80) != 0);
 
         return value;
-
-
     }
 
     public static class VarintSequenceIterator implements IntIterator {
 
         private final ByteBuffer buffer;
-        int rem = 0;
-        private int last;
-        private int next = Integer.MIN_VALUE;
 
-        public VarintSequenceIterator(ByteBuffer buffer, int zero) {
+        // The position in the buffer where the next value is read from,
+        // we don't use the buffer's position, because we might want to access
+        // this buffer from multiple iterators simultaneously without interference.
+        private int bufferPos;
+
+        /** The number of values remaining to be decoded from the buffer. */
+        private int numRemainingValues;
+
+        /** The previous value that was read from the buffer,
+         * used in differential decoding. */
+        private int previousValue;
+
+        /** The next value that will be returned by nextInt,
+         * set to MIN_VALUE if no value is yet decoded */
+        private int nextValue = Integer.MIN_VALUE;
+
+        /** Create a new VarintSequenceIterator from a buffer.
+         * <p></p>
+         * The iterator will start at the given position in the buffer.
+         * The zero point is added to each value being read from the buffer.
+         * */
+        public VarintSequenceIterator(ByteBuffer buffer,
+                                      int startPos,
+                                      int zero) {
             this.buffer = buffer;
             if (zero == Integer.MIN_VALUE) {
                 throw new IllegalArgumentException("Integer.MIN_VALUE is a reserved offset that may not be used as zero point");
             }
 
-            last = zero;
-            rem = decodeValue(buffer) - 1;
+            bufferPos = startPos;
+
+            previousValue = zero;
+            numRemainingValues = decodeValue() - 1;
         }
 
-        public VarintSequenceIterator(ByteBuffer buffer) {
-            this(buffer, 0);
+        /** Create a new VarintSequenceIterator from a buffer.
+         * <p></p>
+         * The iterator will start at the given position in the buffer.
+         * The zero point is 0.
+         * */
+        public VarintSequenceIterator(ByteBuffer buffer, int startPos) {
+            this(buffer, startPos, 0);
         }
 
         // This is BitWriter.getGamma with more checks in place for streaming iteration
         @Override
         public boolean hasNext() {
-            if (next != Integer.MIN_VALUE) return true;
-            if (--rem < 0) return false;
-            if (!buffer.hasRemaining()) return false;
+            if (nextValue != Integer.MIN_VALUE) return true;
+            if (--numRemainingValues < 0) return false;
 
-            int delta = decodeValue(buffer);
+            int delta = decodeValue();
 
-            last += delta;
-            next = last;
+            previousValue += delta;
+            nextValue = previousValue;
 
             return true;
+        }
+
+        // This is the same operation as decodeValue in the outer class,
+        // except we don't use the buffer's inbuilt position().
+        private int decodeValue() {
+            byte b = buffer.get(bufferPos++);
+            if ((b & 0x80) == 0) {
+                return b;
+            }
+
+            int value = b & 0x7F;
+            do {
+                b = buffer.get(bufferPos++);
+                value = (value << 7) | (b & 0x7F);
+            } while ((b & 0x80) != 0);
+
+            return value;
         }
 
         @Override
         public int nextInt() {
             if (hasNext()) {
-                int ret = next;
-                next = Integer.MIN_VALUE;
+                int ret = nextValue;
+                nextValue = Integer.MIN_VALUE;
                 return ret;
             }
             throw new ArrayIndexOutOfBoundsException("No more data to read");
