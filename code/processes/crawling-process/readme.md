@@ -36,7 +36,3 @@ On top of organic links, the crawler can use sitemaps and rss-feeds to discover 
   visits known addresses from a domain and downloads each document.
 * [HttpFetcher](java/nu/marginalia/crawl/retreival/fetcher/HttpFetcherImpl.java)
   fetches URLs.
-
-## See Also
-
-* [features-crawl](../../features-crawl/)

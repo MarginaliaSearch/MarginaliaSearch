@@ -49,7 +49,3 @@ has HTML-specific logic related to a document, keywords and identifies features 
 
 * [DomainProcessor](java/nu/marginalia/converting/processor/DomainProcessor.java) converts each document and 
 generates domain-wide metadata such as link graphs.
-
-## See Also
-
-* [features-convert](../../features-convert/)

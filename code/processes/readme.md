@@ -3,15 +3,13 @@
 ## 1. Crawl Process
 
 The [crawling-process](crawling-process/) fetches website contents, temporarily saving them as WARC files, and then
-re-converts them into parquet models.  Both are described in [crawling-model](../process-models/crawling-model/).
-
-The operation is optionally defined by a [crawl specification](../process-models/crawl-spec), which can be created in the control GUI.
+re-converts them into parquet models.  Both are described in [crawling-process/model](crawling-process/model/).
 
 ## 2. Converting Process
 
 The [converting-process](converting-process/) reads crawl data from the crawling step and 
 processes them, extracting keywords and metadata and saves them as parquet files 
-described in [processed-data](../process-models/processed-data/).
+described in [converting-process/model](converting-process/model/).
 
 ## 3. Loading Process
 
@@ -51,7 +49,7 @@ Schematically the crawling and loading process looks like this:
     +------------+  features, links, URLs
           |
     //==================\\
-    || Parquet:         ||  Processed
+    || Slop   :         ||  Processed
     ||  Documents[]     ||  Files
     ||  Domains[]       ||
     ||  Links[]         ||  

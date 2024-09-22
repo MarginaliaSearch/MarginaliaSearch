@@ -13,7 +13,7 @@ a binary index that only offers information about which documents has a specific
 The priority index is also compressed, while the full index at this point is not.
 
 [1] See WordFlags in [common/model](../../common/model/) and
-KeywordMetadata in [features-convert/keyword-extraction](../../features-convert/keyword-extraction).
+KeywordMetadata in [converting-process/ft-keyword-extraction](../../processes/converting-process/ft-keyword-extraction).
 
 ## Construction
 

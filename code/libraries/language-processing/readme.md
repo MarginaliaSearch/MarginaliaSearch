@@ -10,5 +10,5 @@ its words, how they stem, POS tags, and so on.
 
 ## See Also
 
-[features-convert/keyword-extraction](../../features-convert/keyword-extraction) uses this code to identify which keywords
+[converting-process/ft-keyword-extraction](../../processes/converting-process/ft-keyword-extraction) uses this code to identify which keywords
 are important.
