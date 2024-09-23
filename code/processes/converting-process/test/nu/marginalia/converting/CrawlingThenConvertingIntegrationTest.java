@@ -7,11 +7,11 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -266,7 +266,7 @@ public class CrawlingThenConvertingIntegrationTest {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder(fileName)) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, recorder).fetch();
+            new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, recorder).crawlDomain();
         }
 
         CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain,

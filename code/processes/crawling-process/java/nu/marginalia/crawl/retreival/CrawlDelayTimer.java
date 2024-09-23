@@ -1,6 +1,9 @@
 package nu.marginalia.crawl.retreival;
 
 import lombok.SneakyThrows;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+
+import java.time.Duration;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -22,12 +25,21 @@ public class CrawlDelayTimer {
 
     /** Call when we've gotten an HTTP 429 response.  This will wait a moment, and then
      * set a flag that slows down the main crawl delay as well. */
-    public void waitRetryDelay(RateLimitException ex) throws InterruptedException {
+    public void waitRetryDelay(HttpFetcherImpl.RateLimitException ex) throws InterruptedException {
         slowDown = true;
 
-        int delay = ex.retryAfter();
+        Duration delay = ex.retryAfter();
 
-        Thread.sleep(Math.clamp(delay, 100, 5000));
+        if (delay.compareTo(Duration.ofSeconds(1)) < 0) {
+            // If the server wants us to retry in less than a second, we'll just wait a bit
+            delay = Duration.ofSeconds(1);
+        }
+        else if (delay.compareTo(Duration.ofSeconds(5)) > 0) {
+            // If the server wants us to retry in more than a minute, we'll wait a bit
+            delay = Duration.ofSeconds(5);
+        }
+
+        Thread.sleep(delay.toMillis());
     }
 
     @SneakyThrows

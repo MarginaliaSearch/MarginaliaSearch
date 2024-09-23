@@ -2,10 +2,13 @@ package nu.marginalia.crawling.retreival;
 
 import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.SitemapRetriever;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.retreival.fetcher.*;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
@@ -68,7 +71,7 @@ public class CrawlerMockFetcherTest {
     void crawl(CrawlSpecRecord spec)  throws IOException {
         try (var recorder = new WarcRecorder()) {
             new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, recorder)
-                    .fetch();
+                    .crawlDomain();
         }
     }
 
@@ -115,9 +118,9 @@ public class CrawlerMockFetcherTest {
         public void clearCookies() {}
 
         @Override
-        public FetchResult probeDomain(EdgeUrl url) {
+        public HttpFetcherImpl.ProbeResult probeDomain(EdgeUrl url) {
             logger.info("Probing {}", url);
-            return new FetchResult(FetchResultState.OK, url);
+            return new HttpFetcherImpl.ProbeResultOk(url);
         }
 
         @SneakyThrows

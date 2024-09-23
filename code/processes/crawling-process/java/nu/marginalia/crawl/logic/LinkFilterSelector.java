@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival;
+package nu.marginalia.crawl.logic;
 
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
@@ -25,6 +25,20 @@ public class LinkFilterSelector {
         }
         if (isDiscourse(head)) {
             return url -> url.path.startsWith("/t/") || url.path.contains("/latest");
+        }
+        if (isMediawiki(head)) {
+            return url -> {
+                if (url.path.endsWith(".php")) {
+                    return false;
+                }
+                if (url.path.contains("Special:")) {
+                    return false;
+                }
+                if (url.path.contains("Talk:")) {
+                    return false;
+                }
+                return true;
+            };
         }
 
         return LinkFilterSelector::defaultFilter;

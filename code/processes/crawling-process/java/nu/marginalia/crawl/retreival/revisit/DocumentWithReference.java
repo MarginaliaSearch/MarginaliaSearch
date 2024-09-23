@@ -1,7 +1,7 @@
 package nu.marginalia.crawl.retreival.revisit;
 
+import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
-import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.DocumentBodyResult;
 import nu.marginalia.model.body.HttpFetchResult;

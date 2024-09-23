@@ -1,7 +1,6 @@
-package nu.marginalia.crawl.retreival.fetcher.warc;
+package nu.marginalia.crawl.fetcher.warc;
 
 import okhttp3.Protocol;
-import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 
@@ -73,7 +72,7 @@ public class WarcProtocolReconstructor {
 
         String headerString = getHeadersAsString(headersAsString);
 
-        return STR."HTTP/\{version} \{statusCode} \{statusMessage}\r\n\{headerString}\r\n\r\n";
+        return "HTTP/" + version + " " + statusCode + " " + statusMessage + "\r\n" + headerString + "\r\n\r\n";
     }
 
     static String getResponseHeader(Response response, long size) {
@@ -84,7 +83,7 @@ public class WarcProtocolReconstructor {
 
         String headerString = getHeadersAsString(response, size);
 
-        return STR."HTTP/\{version} \{statusCode} \{statusMessage}\r\n\{headerString}\r\n\r\n";
+        return "HTTP/" + version + " " + statusCode + " " + statusMessage + "\r\n" + headerString + "\r\n\r\n";
     }
 
     private static final Map<Integer, String> STATUS_CODE_MAP = Map.ofEntries(

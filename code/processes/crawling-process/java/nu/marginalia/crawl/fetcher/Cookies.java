@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival;
+package nu.marginalia.crawl.fetcher;
 
 import okhttp3.Cookie;
 import okhttp3.CookieJar;

@@ -2,12 +2,12 @@ package nu.marginalia.crawl.retreival.revisit;
 
 import com.google.common.base.Strings;
 import crawlercommons.robots.SimpleRobotRules;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
-import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawledDocument;
@@ -125,6 +125,7 @@ public class CrawlerRevisitor {
                         doc.contentType,
                         doc.httpStatus,
                         doc.documentBody,
+                        doc.headers,
                         new ContentTags(doc.etagMaybe, doc.lastModifiedMaybe)
                 );
 

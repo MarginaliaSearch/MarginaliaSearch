@@ -1,7 +1,7 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
@@ -21,7 +21,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class CrawlerWarcResynchronizerTest {
     Path fileName;

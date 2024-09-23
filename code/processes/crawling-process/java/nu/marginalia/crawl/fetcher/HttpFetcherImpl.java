@@ -1,22 +1,23 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.fetcher;
 
 import com.google.inject.Inject;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.SneakyThrows;
 import nu.marginalia.UserAgent;
-import nu.marginalia.crawl.retreival.Cookies;
-import nu.marginalia.crawl.retreival.RateLimitException;
-import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult;
-import nu.marginalia.crawl.retreival.fetcher.socket.FastTerminatingSocketFactory;
-import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
-import nu.marginalia.crawl.retreival.fetcher.socket.NoSecuritySSL;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.socket.FastTerminatingSocketFactory;
+import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.crawl.fetcher.socket.NoSecuritySSL;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.logic.ContentTypeProber;
+import nu.marginalia.crawl.logic.ContentTypeProber.ContentTypeProbeResult;
+import nu.marginalia.crawl.logic.SoftIfModifiedSinceProber;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
+import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.X509TrustManager;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -114,7 +116,7 @@ public class HttpFetcherImpl implements HttpFetcher {
      */
     @Override
     @SneakyThrows
-    public FetchResult probeDomain(EdgeUrl url) {
+    public ProbeResult probeDomain(EdgeUrl url) {
         var head = new Request.Builder().head().addHeader("User-agent", userAgentString)
                 .url(url.toString())
                 .build();
@@ -125,9 +127,9 @@ public class HttpFetcherImpl implements HttpFetcher {
             EdgeUrl requestUrl = new EdgeUrl(rsp.request().url().toString());
 
             if (!Objects.equals(requestUrl.domain, url.domain)) {
-                return new FetchResult(FetchResultState.REDIRECT, requestUrl);
+                return new ProbeResultRedirect(url.domain);
             }
-            return new FetchResult(FetchResultState.OK, requestUrl);
+            return new ProbeResultOk(requestUrl);
         }
 
         catch (Exception ex) {
@@ -136,7 +138,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
 
             logger.info("Error during fetching {}", ex.getMessage());
-            return new FetchResult(FetchResultState.ERROR, url);
+            return new ProbeResultError(CrawlerDomainStatus.ERROR, ex.getMessage());
         }
     }
 
@@ -196,8 +198,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         if (result instanceof HttpFetchResult.ResultOk ok) {
             if (ok.statusCode() == 429) {
-                String retryAfter = Objects.requireNonNullElse(ok.header("Retry-After"), "1000");
-                throw new RateLimitException(retryAfter);
+                throw new RateLimitException(Objects.requireNonNullElse(ok.header("Retry-After"), "1"));
             }
             if (ok.statusCode() == 304) {
                 return new HttpFetchResult.Result304Raw();
@@ -249,5 +250,44 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
 
+    public sealed interface ProbeResult permits ProbeResultError, ProbeResultRedirect, ProbeResultOk {}
+
+    /** The probing failed for one reason or another
+     * @param status  Machine readable status
+     * @param desc   Human-readable description of the error
+     */
+    public record ProbeResultError(CrawlerDomainStatus status, String desc) implements ProbeResult {}
+
+    /** This domain redirects to another domain */
+    public record ProbeResultRedirect(EdgeDomain domain) implements ProbeResult {}
+
+    /** If the retrieval of the probed url was successful, return the url as it was fetched
+     * (which may be different from the url we probed, if we attempted another URL schema).
+     *
+     * @param probedUrl  The url we successfully probed
+     */
+    public record ProbeResultOk(EdgeUrl probedUrl) implements ProbeResult {}
+
+
+    /** Exception thrown when the server signals the rate limit is exceeded */
+    public static class RateLimitException extends Exception {
+        private final String retryAfter;
+
+        public RateLimitException(String retryAfterHeader) {
+            this.retryAfter = retryAfterHeader;
+        }
+
+        @Override
+        public StackTraceElement[] getStackTrace() { return new StackTraceElement[0]; }
+
+        public Duration retryAfter() {
+            try {
+                return Duration.ofSeconds(Integer.parseInt(retryAfter));
+            }
+            catch (NumberFormatException ex) {
+                return Duration.ofSeconds(1);
+            }
+        }
+    }
 }
 

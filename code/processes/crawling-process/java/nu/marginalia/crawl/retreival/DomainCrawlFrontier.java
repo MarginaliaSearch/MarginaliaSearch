@@ -9,9 +9,14 @@ import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Predicate;
 
+/** Encapsulates the crawl frontier for a single domain,
+ * that is information about known and visited URLs
+ */
 public class DomainCrawlFrontier {
 
     private static final LinkParser linkParser = new LinkParser();

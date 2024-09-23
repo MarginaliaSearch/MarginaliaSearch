@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher.warc;
+package nu.marginalia.crawl.fetcher.warc;
 
 import okhttp3.Headers;
 import okhttp3.Response;

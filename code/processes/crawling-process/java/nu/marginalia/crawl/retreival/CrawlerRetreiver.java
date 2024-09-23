@@ -3,9 +3,11 @@ package nu.marginalia.crawl.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentType;
-import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.logic.LinkFilterSelector;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
 import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
@@ -14,8 +16,6 @@ import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
-import nu.marginalia.model.crawldata.CrawledDomain;
-import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -84,11 +83,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         return crawlFrontier;
     }
 
-    public int fetch() {
-        return fetch(new DomainLinks(), new CrawlDataReference());
+    public int crawlDomain() {
+        return crawlDomain(new DomainLinks(), new CrawlDataReference());
     }
 
-    public int fetch(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
+    public int crawlDomain(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
         try {
             return crawlDomain(oldCrawlData, domainLinks);
         }
@@ -98,28 +97,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    public void syncAbortedRun(Path warcFile) {
-        var resync = new CrawlerWarcResynchronizer(crawlFrontier, warcRecorder);
-
-        resync.run(warcFile);
-    }
-
-    private DomainProber.ProbeResult probeRootUrl(String ip) throws IOException {
-        // Construct an URL to the root of the domain, we don't know the schema yet so we'll
-        // start with http and then try https if that fails
-        var httpUrl = new EdgeUrl("http", new EdgeDomain(domain), null, "/", null);
-        final DomainProber.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, httpUrl);
-
-        warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), probeResult);
-
-        return probeResult;
-    }
-
     private int crawlDomain(CrawlDataReference oldCrawlData, DomainLinks domainLinks) throws IOException, InterruptedException {
         String ip = findIp(domain);
         EdgeUrl rootUrl;
 
-        if (probeRootUrl(ip) instanceof DomainProber.ProbeResultOk ok) rootUrl = ok.probedUrl();
+        if (probeRootUrl(ip) instanceof HttpFetcherImpl.ProbeResultOk ok) rootUrl = ok.probedUrl();
         else return 1;
 
         // Sleep after the initial probe, we don't have access to the robots.txt yet
@@ -130,12 +112,13 @@ public class CrawlerRetreiver implements AutoCloseable {
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
         delayTimer.waitFetchDelay(0); // initial delay after robots.txt
+
         sniffRootDocument(rootUrl, delayTimer);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
-        int recrawled = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
+        int fetchedCount = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
 
-        if (recrawled > 0) {
+        if (fetchedCount > 0) {
             // If we have reference data, we will always grow the crawl depth a bit
             crawlFrontier.increaseDepth(1.5, 2500);
         }
@@ -146,15 +129,6 @@ public class CrawlerRetreiver implements AutoCloseable {
         // Add links from the sitemap to the crawl frontier
         sitemapFetcher.downloadSitemaps(robotsRules, rootUrl);
 
-        CrawledDomain ret = new CrawledDomain(domain,
-                null,
-                CrawlerDomainStatus.OK.name(),
-                null,
-                ip,
-                new ArrayList<>(),
-                null);
-
-        int fetchedCount = recrawled;
 
         while (!crawlFrontier.isEmpty()
             && !crawlFrontier.isCrawlDepthReached()
@@ -186,7 +160,6 @@ public class CrawlerRetreiver implements AutoCloseable {
             if (!crawlFrontier.addVisited(top))
                 continue;
 
-
             try {
                 if (fetchContentWithReference(top, delayTimer, DocumentWithReference.empty()).isOk()) {
                     fetchedCount++;
@@ -198,15 +171,28 @@ public class CrawlerRetreiver implements AutoCloseable {
             }
         }
 
-        ret.cookies = fetcher.getCookies();
-
         return fetchedCount;
+    }
+
+    public void syncAbortedRun(Path warcFile) {
+        var resync = new CrawlerWarcResynchronizer(crawlFrontier, warcRecorder);
+
+        resync.run(warcFile);
+    }
+
+    private HttpFetcherImpl.ProbeResult probeRootUrl(String ip) throws IOException {
+        // Construct an URL to the root of the domain, we don't know the schema yet so we'll
+        // start with http and then try https if that fails
+        var httpUrl = new EdgeUrl("http", new EdgeDomain(domain), null, "/", null);
+        final HttpFetcherImpl.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, httpUrl);
+
+        warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), probeResult);
+
+        return probeResult;
     }
 
     private void sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
         try {
-            logger.debug("Configuring link filter");
-
             var url = rootUrl.withPathAndParam("/", null);
 
             HttpFetchResult result = fetchWithRetry(url, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
@@ -291,7 +277,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             else if (fetchedDoc instanceof HttpFetchResult.Result304Raw && reference.doc() != null) {
                 var doc = reference.doc();
 
-                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody, contentTags);
+                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody, doc.headers, contentTags);
 
                 fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
                         new ContentType(doc.contentType, "UTF-8"),
@@ -326,7 +312,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             try {
                 return fetcher.fetchContent(url, warcRecorder, contentTags, probeType);
             }
-            catch (RateLimitException ex) {
+            catch (HttpFetcherImpl.RateLimitException ex) {
                 timer.waitRetryDelay(ex);
             }
             catch (Exception ex) {

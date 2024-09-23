@@ -1,6 +1,6 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
@@ -38,7 +38,7 @@ public class CrawlerWarcResynchronizer {
                 accept(item);
             }
         } catch (Exception e) {
-            logger.info(STR."(Expected) Failed read full warc file \{tempFile}: \{e.getClass().getSimpleName()} \{e.getMessage()}");
+            logger.info("(Expected) Failed read full warc file " + tempFile + ": " + e.getClass().getSimpleName() + " " + e.getMessage());
         }
 
         // Second pass, copy records to the new warc file
@@ -47,7 +47,7 @@ public class CrawlerWarcResynchronizer {
                 recorder.resync(item);
             }
         } catch (Exception e) {
-            logger.info(STR."(Expected) Failed read full warc file \{tempFile}: \{e.getClass().getSimpleName()} \{e.getMessage()}");
+            logger.info("(Expected) Failed read full warc file " + tempFile + ": " + e.getClass().getSimpleName() + " " + e.getMessage());
         }
     }
 
@@ -63,7 +63,7 @@ public class CrawlerWarcResynchronizer {
 
         }
         catch (Exception ex) {
-            logger.info(STR."Failed to process warc record \{item}", ex);
+            logger.info("Failed to process warc record " + item, ex);
         }
     }
 
@@ -78,7 +78,8 @@ public class CrawlerWarcResynchronizer {
     }
 
     private void request(WarcRequest request) {
-        EdgeUrl.parse(request.target()).ifPresent(crawlFrontier::addVisited);
+        var url = new EdgeUrl(request.targetURI());
+        crawlFrontier.addVisited(url);
     }
 
     private void response(WarcResponse rsp) {
@@ -97,7 +98,7 @@ public class CrawlerWarcResynchronizer {
             });
         }
         catch (Exception e) {
-            logger.info(STR."Failed to parse response body for \{url}", e);
+            logger.info("Failed to parse response body for " + url, e);
         }
     }
 

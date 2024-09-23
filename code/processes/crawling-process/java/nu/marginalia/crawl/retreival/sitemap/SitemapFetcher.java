@@ -1,8 +1,8 @@
 package nu.marginalia.crawl.retreival.sitemap;
 
 import crawlercommons.robots.SimpleRobotRules;
+import nu.marginalia.crawl.fetcher.SitemapRetriever;
 import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
-import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

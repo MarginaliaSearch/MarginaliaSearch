@@ -1,9 +1,8 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.fetcher;
 
 import com.google.inject.ImplementedBy;
 import crawlercommons.robots.SimpleRobotRules;
-import nu.marginalia.crawl.retreival.RateLimitException;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
@@ -17,12 +16,12 @@ public interface HttpFetcher {
     List<String> getCookies();
     void clearCookies();
 
-    FetchResult probeDomain(EdgeUrl url);
+    HttpFetcherImpl.ProbeResult probeDomain(EdgeUrl url);
 
     HttpFetchResult fetchContent(EdgeUrl url,
                                  WarcRecorder recorder,
                                  ContentTags tags,
-                                 ProbeType probeType) throws RateLimitException;
+                                 ProbeType probeType) throws HttpFetcherImpl.RateLimitException;
 
     SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder);
 

@@ -1,13 +1,14 @@
-package nu.marginalia.crawl.retreival.fetcher.warc;
+package nu.marginalia.crawl.fetcher.warc;
 
-import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.jetbrains.annotations.Nullable;
 import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,7 +184,7 @@ public class WarcRecorder implements AutoCloseable {
         writer.write(item);
     }
 
-    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, String documentBody, ContentTags contentTags) {
+    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, String documentBody, @Nullable String headers, ContentTags contentTags) {
         try {
             WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
             WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
@@ -192,24 +193,42 @@ public class WarcRecorder implements AutoCloseable {
 
             if (documentBody == null) {
                 bytes = new byte[0];
-            }
-            else {
+            } else {
                 bytes = documentBody.getBytes();
             }
 
-            StringJoiner fakeHeadersBuilder = new StringJoiner("\n");
+            // Create a synthesis of custom headers and the original headers
+            // to create a new set of headers that will be written to the WARC file.
 
-            fakeHeadersBuilder.add(STR."Content-Type: \{contentType}");
-            fakeHeadersBuilder.add(STR."Content-Length: \{bytes.length}");
+            StringJoiner syntheticHeadersBuilder = new StringJoiner("\n");
+
+            syntheticHeadersBuilder.add("Content-Type: " + contentType);
+            syntheticHeadersBuilder.add("Content-Length: " + bytes.length);
             if (contentTags.etag() != null) {
-                fakeHeadersBuilder.add(STR."ETag: \{contentTags.etag()}");
+                syntheticHeadersBuilder.add("ETag: " + contentTags.etag());
             }
             if (contentTags.lastMod() != null) {
-                fakeHeadersBuilder.add(STR."Last-Modified: \{contentTags.lastMod()}");
+                syntheticHeadersBuilder.add("Last-Modified: " + contentTags.lastMod());
+            }
+
+            // Grab the headers from the original response and add them to the fake headers if they are not
+            // Content-Type, Content-Length, ETag, or Last-Modified
+            for (String headerLine : Objects.requireNonNullElse(headers, "").split("\n")) {
+                if (headerLine.isBlank()) continue;
+
+                var lowerCase = headerLine.toLowerCase();
+
+                if (lowerCase.startsWith("content-type:")) continue;
+                if (lowerCase.startsWith("content-length:")) continue;
+
+                if (contentTags.etag() != null && lowerCase.startsWith("etag:")) continue;
+                if (contentTags.lastMod() != null && lowerCase.startsWith("last-modified:")) continue;
+
+                syntheticHeadersBuilder.add(headerLine);
             }
 
             byte[] header = WarcProtocolReconstructor
-                                        .getResponseHeader(fakeHeadersBuilder.toString(), statusCode)
+                                        .getResponseHeader(syntheticHeadersBuilder.toString(), statusCode)
                                         .getBytes(StandardCharsets.UTF_8);
             ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(bytes.length + header.length);
             responseDataBuffer.put(header);
@@ -244,25 +263,25 @@ public class WarcRecorder implements AutoCloseable {
      * an E-Tag or Last-Modified header, and the server responds with a 304 Not Modified.  In this
      * scenario we want to record the data as it was in the previous crawl, but not re-fetch it.
      */
-    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, String documentBody, ContentTags ctags) {
-        saveOldResponse(url, contentType, statusCode, documentBody, ctags);
+    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, String documentBody, @Nullable String headers, ContentTags ctags) {
+        saveOldResponse(url, contentType, statusCode, documentBody, headers, ctags);
     }
 
-    public void writeWarcinfoHeader(String ip, EdgeDomain domain, DomainProber.ProbeResult result) throws IOException {
+    public void writeWarcinfoHeader(String ip, EdgeDomain domain, HttpFetcherImpl.ProbeResult result) throws IOException {
 
         Map<String, List<String>> fields = new HashMap<>();
         fields.put("ip", List.of(ip));
-        fields.put("software", List.of(STR."search.marginalia.nu/\{warcRecorderVersion}"));
+        fields.put("software", List.of("search.marginalia.nu/" + warcRecorderVersion));
         fields.put("domain", List.of(domain.toString()));
 
         switch (result) {
-            case DomainProber.ProbeResultRedirect redirectDomain:
-                fields.put("X-WARC-Probe-Status", List.of(STR."REDIRECT;\{redirectDomain.domain()}"));
+            case HttpFetcherImpl.ProbeResultRedirect redirectDomain:
+                fields.put("X-WARC-Probe-Status", List.of("REDIRECT;" + redirectDomain.domain()));
                 break;
-            case DomainProber.ProbeResultError error:
-                fields.put("X-WARC-Probe-Status", List.of(STR."\{error.status().toString()};\{error.desc()}"));
+            case HttpFetcherImpl.ProbeResultError error:
+                fields.put("X-WARC-Probe-Status", List.of(error.status().toString() + ";" + error.desc()));
                 break;
-            case DomainProber.ProbeResultOk ok:
+            case HttpFetcherImpl.ProbeResultOk ok:
                 fields.put("X-WARC-Probe-Status", List.of("OK"));
                 break;
         }

@@ -1,8 +1,9 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
 import nu.marginalia.UserAgent;
-import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileReader;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
@@ -80,6 +81,7 @@ class WarcRecorderTest {
                     "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>",
+                    null,
                     ContentTags.empty());
         }
 
@@ -103,7 +105,7 @@ class WarcRecorderTest {
                     "text/html",
                     200,
                     null,
-                    ContentTags.empty());
+                    null, ContentTags.empty());
         }
 
     }
@@ -115,7 +117,7 @@ class WarcRecorderTest {
                     "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>",
-                    ContentTags.empty());
+                    null, ContentTags.empty());
         }
 
         try (var reader = new WarcReader(fileNameWarc)) {

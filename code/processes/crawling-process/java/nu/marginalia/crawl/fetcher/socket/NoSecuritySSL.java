@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher.socket;
+package nu.marginalia.crawl.fetcher.socket;
 
 import lombok.SneakyThrows;
 

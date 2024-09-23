@@ -1,11 +1,10 @@
 package nu.marginalia.crawling;
 
 import lombok.SneakyThrows;
-import nu.marginalia.crawl.retreival.RateLimitException;
-import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
@@ -33,7 +32,7 @@ class HttpFetcherTest {
     }
 
     @Test
-    void fetchUTF8() throws URISyntaxException, RateLimitException, IOException {
+    void fetchUTF8() throws URISyntaxException, HttpFetcherImpl.RateLimitException, IOException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
         try (var recorder = new WarcRecorder()) {
             var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty(), HttpFetcher.ProbeType.FULL);
@@ -44,7 +43,7 @@ class HttpFetcherTest {
     }
 
     @Test
-    void fetchText() throws URISyntaxException, RateLimitException, IOException {
+    void fetchText() throws URISyntaxException, HttpFetcherImpl.RateLimitException, IOException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
 
         try (var recorder = new WarcRecorder()) {

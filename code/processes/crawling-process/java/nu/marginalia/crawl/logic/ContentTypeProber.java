@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.logic;
 
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
@@ -7,7 +7,7 @@ import okhttp3.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.SocketTimeoutException;
+import java.io.InterruptedIOException;
 import java.util.Objects;
 
 public class ContentTypeProber {
@@ -68,7 +68,7 @@ public class ContentTypeProber {
 
             return new ContentTypeProbeResult.Ok(ret);
 
-        } catch (SocketTimeoutException ex) {
+        } catch (InterruptedIOException ex) {
             return new ContentTypeProbeResult.Timeout(ex);
         } catch (Exception ex) {
             logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());

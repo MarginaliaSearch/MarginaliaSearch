@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher.warc;
+package nu.marginalia.crawl.fetcher.warc;
 
 import org.netpreserve.jwarc.WarcDigest;
 

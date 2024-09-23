@@ -8,9 +8,9 @@ import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
-import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.index.IndexGrpcService;
 import nu.marginalia.index.ReverseIndexFullFileNames;
@@ -120,7 +120,7 @@ public class IntegrationTest {
         /** CREATE WARC */
         try (WarcRecorder warcRecorder = new WarcRecorder(warcData)) {
             warcRecorder.writeWarcinfoHeader("127.0.0.1", new EdgeDomain("www.example.com"),
-                    new DomainProber.ProbeResultOk(new EdgeUrl("https://www.example.com/")));
+                    new HttpFetcherImpl.ProbeResultOk(new EdgeUrl("https://www.example.com/")));
 
             warcRecorder.writeReferenceCopy(new EdgeUrl("https://www.example.com/"),
                     "text/html", 200,
@@ -134,6 +134,7 @@ public class IntegrationTest {
                             </body>
                             </html>
                             """,
+                    "",
                     ContentTags.empty()
             );
         }
@@ -204,7 +205,7 @@ public class IntegrationTest {
                         .setFetchSize(1000)
                         .build())
                 .setQueryStrategy("AUTO")
-                .setHumanQuery("\"This is how thinking works\"")
+                .setHumanQuery("\"is that there is\"")
                 .build();
 
         var params = QueryProtobufCodec.convertRequest(request);

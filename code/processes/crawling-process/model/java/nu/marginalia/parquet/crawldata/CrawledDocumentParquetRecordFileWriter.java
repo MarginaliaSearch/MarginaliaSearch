@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
     private final ParquetWriter<CrawledDocumentParquetRecord> writer;
@@ -150,6 +151,14 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             contentType = "";
         }
 
+        String headersStr = null;
+        StringJoiner headersStrBuilder = new StringJoiner("\n");
+        for (var header : headers) {
+            headersStrBuilder.add(header.getFirst() + ": " + header.getSecond());
+        }
+        headersStr = headersStrBuilder.toString();
+
+
         write(new CrawledDocumentParquetRecord(
                 domain,
                 response.target(),
@@ -159,6 +168,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 response.date(),
                 contentType,
                 bodyBytes,
+                headersStr,
                 headers.get("ETag"),
                 headers.get("Last-Modified"))
         );
@@ -179,6 +189,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 "x-marginalia/advisory;state=redirect",
                 new byte[0],
                 null,
+                null,
                 null
         );
     }
@@ -191,6 +202,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 date,
                 "x-marginalia/advisory;state=error",
                 errorStatus.getBytes(),
+                null,
                 null,
                 null
         );
@@ -205,6 +217,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 date,
                 errorStatus,
                 new byte[0],
+                null,
                 null,
                 null
         );

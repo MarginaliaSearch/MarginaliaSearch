@@ -23,7 +23,6 @@ public class CrawledDocument implements SerializableCrawlData {
     public String crawlerStatusDesc;
 
     @Nullable
-    @Deprecated // use getETag() or getLastModified() instead
     public String headers;
 
     public String documentBody;

@@ -4,10 +4,10 @@ import lombok.SneakyThrows;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.*;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.io.crawldata.CrawledDomainReader;
 import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
@@ -468,7 +468,7 @@ class CrawlerRetreiverTest {
 
     private void doCrawlWithReferenceStream(CrawlSpecRecord specs, SerializableCrawlDataStream stream) {
         try (var recorder = new WarcRecorder(tempFileWarc2)) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).fetch(new DomainLinks(),
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).crawlDomain(new DomainLinks(),
                     new CrawlDataReference(stream));
         }
         catch (IOException ex) {
@@ -480,7 +480,7 @@ class CrawlerRetreiverTest {
     private DomainCrawlFrontier doCrawl(Path tempFileWarc1, CrawlSpecRecord specs) {
         try (var recorder = new WarcRecorder(tempFileWarc1)) {
             var crawler = new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder);
-            crawler.fetch();
+            crawler.crawlDomain();
             return crawler.getCrawlFrontier();
         } catch (IOException ex) {
             Assertions.fail(ex);

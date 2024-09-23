@@ -10,12 +10,12 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.logic.DomainLocks;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.DomainLocks;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
 import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
@@ -294,7 +294,7 @@ public class CrawlerMain extends ProcessMainClass {
                     Files.delete(tempFile);
                 }
 
-                int size = retriever.fetch(domainLinks, reference);
+                int size = retriever.crawlDomain(domainLinks, reference);
 
                 // Delete the reference crawl data if it's not the same as the new one
                 // (mostly a case when migrating from legacy->warc)

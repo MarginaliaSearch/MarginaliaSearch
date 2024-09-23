@@ -1,6 +1,7 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.logic;
 
 import com.google.common.base.Strings;
+import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher.socket;
+package nu.marginalia.crawl.fetcher.socket;
 
 import okhttp3.Interceptor;
 import okhttp3.Response;

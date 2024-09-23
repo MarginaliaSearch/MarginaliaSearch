@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.fetcher;
 
 import okhttp3.Request;
 

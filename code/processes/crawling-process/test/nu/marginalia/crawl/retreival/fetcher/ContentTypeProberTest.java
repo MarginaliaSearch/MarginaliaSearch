@@ -1,7 +1,8 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
-import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult.BadContentType;
-import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult.Ok;
+import nu.marginalia.crawl.logic.ContentTypeProber;
+import nu.marginalia.crawl.logic.ContentTypeProber.ContentTypeProbeResult.BadContentType;
+import nu.marginalia.crawl.logic.ContentTypeProber.ContentTypeProbeResult.Ok;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
@@ -13,7 +14,7 @@ import java.net.URISyntaxException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ContentTypeProberTest {
 
