@@ -105,6 +105,8 @@ public class CrawlingThenConvertingIntegrationTest {
 
         CrawledDomain crawlData = crawl(specs);
 
+        System.out.println(crawlData);
+
         assertEquals("REDIRECT", crawlData.crawlerStatus);
         assertEquals("www.marginalia.nu", crawlData.redirectDomain);
         assertTrue(crawlData.doc.isEmpty());

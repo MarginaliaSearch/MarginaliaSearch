@@ -127,7 +127,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             EdgeUrl requestUrl = new EdgeUrl(rsp.request().url().toString());
 
             if (!Objects.equals(requestUrl.domain, url.domain)) {
-                return new ProbeResultRedirect(url.domain);
+                return new ProbeResultRedirect(requestUrl.domain);
             }
             return new ProbeResultOk(requestUrl);
         }

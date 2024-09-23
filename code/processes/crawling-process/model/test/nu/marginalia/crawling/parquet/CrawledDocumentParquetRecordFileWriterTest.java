@@ -42,6 +42,7 @@ class CrawledDocumentParquetRecordFileWriterTest {
                 Instant.now(),
                 "text/html",
                 "hello world".getBytes(),
+                null,
                 null, null);
 
         // Write the record to a file

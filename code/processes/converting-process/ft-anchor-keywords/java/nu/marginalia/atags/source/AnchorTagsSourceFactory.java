@@ -20,6 +20,7 @@ public class AnchorTagsSourceFactory {
     private final int nodeId;
     private final HikariDataSource dataSource;
     private static final Logger logger = LoggerFactory.getLogger(AnchorTagsSourceFactory.class);
+
     @Inject
     public AnchorTagsSourceFactory(HikariDataSource dataSource,
                                    ProcessConfiguration config)
@@ -30,7 +31,14 @@ public class AnchorTagsSourceFactory {
     }
 
     public AnchorTagsSource create() throws SQLException {
-        return create(getRelevantDomainsByNodeAffinity());
+        try {
+            return create(getRelevantDomainsByNodeAffinity());
+        }
+        catch (Exception e) {
+            // likely a test environment
+            logger.warn("Failed to create anchor tags source", e);
+            return domain -> new DomainLinks();
+        }
     }
 
     public AnchorTagsSource create(List<EdgeDomain> relevantDomains) throws SQLException {
