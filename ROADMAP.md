@@ -11,7 +11,7 @@ Major goals:
 * Improve technical ability of indexing and search.  Although this area has improved a bit, the
   search engine is still not very good at dealing with longer queries.
 
-## Proper Position Index
+## Proper Position Index (COMPLETED 2024-09)
 
 The search engine uses a fixed width bit mask to indicate word positions.  It has the benefit
 of being very fast to evaluate and works well for what it is, but is inaccurate and has the 
@@ -20,6 +20,8 @@ word n-grams known beforehand.  This limits the ability to interpret longer quer
 
 The positions mask should be supplemented or replaced with a more accurate (e.g.) gamma coded positions
 list, as is the civilized way of doing this.
+
+Completed with PR https://github.com/MarginaliaSearch/MarginaliaSearch/pull/99
 
 ## Hybridize crawler w/ Common Crawl data
 
@@ -51,7 +53,8 @@ It would be very helpful to find a speaker of a large language other than Englis
 
 Marginalia has experimental RSS preview support for a few domains.  This works well and
 it should be extended to all domains.  It would also be interesting to offer search of the
-RSS data itself.
+RSS data itself, or use the RSS set to feed a special live index that updates faster than the
+main dataset. 
 
 ## Support for binary formats like PDF
 
