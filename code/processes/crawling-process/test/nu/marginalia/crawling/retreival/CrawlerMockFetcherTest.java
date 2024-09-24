@@ -118,9 +118,15 @@ public class CrawlerMockFetcherTest {
         public void clearCookies() {}
 
         @Override
-        public HttpFetcherImpl.ProbeResult probeDomain(EdgeUrl url) {
+        public HttpFetcherImpl.DomainProbeResult probeDomain(EdgeUrl url) {
             logger.info("Probing {}", url);
-            return new HttpFetcherImpl.ProbeResultOk(url);
+            return new HttpFetcher.DomainProbeResult.Ok(url);
+        }
+
+        @Override
+        public ContentTypeProbeResult probeContentType(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
+            logger.info("Probing {}", url);
+            return new HttpFetcher.ContentTypeProbeResult.Ok(url);
         }
 
         @SneakyThrows

@@ -120,7 +120,7 @@ public class IntegrationTest {
         /** CREATE WARC */
         try (WarcRecorder warcRecorder = new WarcRecorder(warcData)) {
             warcRecorder.writeWarcinfoHeader("127.0.0.1", new EdgeDomain("www.example.com"),
-                    new HttpFetcherImpl.ProbeResultOk(new EdgeUrl("https://www.example.com/")));
+                    new HttpFetcherImpl.DomainProbeResult.Ok(new EdgeUrl("https://www.example.com/")));
 
             warcRecorder.writeReferenceCopy(new EdgeUrl("https://www.example.com/"),
                     "text/html", 200,

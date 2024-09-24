@@ -89,7 +89,16 @@ public class CrawlerRetreiver implements AutoCloseable {
 
     public int crawlDomain(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
         try {
-            return crawlDomain(oldCrawlData, domainLinks);
+            // Do an initial domain probe to determine the root URL
+            EdgeUrl rootUrl;
+            if (probeRootUrl() instanceof HttpFetcher.DomainProbeResult.Ok ok) rootUrl = ok.probedUrl();
+            else return 1;
+
+            // Sleep after the initial probe, we don't have access to the robots.txt yet
+            // so we don't know the crawl delay
+            TimeUnit.SECONDS.sleep(1);
+
+            return crawlDomain(oldCrawlData, rootUrl, domainLinks);
         }
         catch (Exception ex) {
             logger.error("Error crawling domain {}", domain, ex);
@@ -97,16 +106,9 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    private int crawlDomain(CrawlDataReference oldCrawlData, DomainLinks domainLinks) throws IOException, InterruptedException {
-        String ip = findIp(domain);
-        EdgeUrl rootUrl;
-
-        if (probeRootUrl(ip) instanceof HttpFetcherImpl.ProbeResultOk ok) rootUrl = ok.probedUrl();
-        else return 1;
-
-        // Sleep after the initial probe, we don't have access to the robots.txt yet
-        // so we don't know the crawl delay
-        TimeUnit.SECONDS.sleep(1);
+    private int crawlDomain(CrawlDataReference oldCrawlData,
+                            EdgeUrl rootUrl,
+                            DomainLinks domainLinks) throws InterruptedException {
 
         final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(rootUrl.domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
@@ -180,15 +182,23 @@ public class CrawlerRetreiver implements AutoCloseable {
         resync.run(warcFile);
     }
 
-    private HttpFetcherImpl.ProbeResult probeRootUrl(String ip) throws IOException {
+    private HttpFetcher.DomainProbeResult probeRootUrl() throws IOException {
         // Construct an URL to the root of the domain, we don't know the schema yet so we'll
         // start with http and then try https if that fails
-        var httpUrl = new EdgeUrl("http", new EdgeDomain(domain), null, "/", null);
-        final HttpFetcherImpl.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, httpUrl);
+        var httpUrl = new EdgeUrl("https", new EdgeDomain(domain), null, "/", null);
+        final HttpFetcher.DomainProbeResult domainProbeResult = domainProber.probeDomain(fetcher, domain, httpUrl);
 
-        warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), probeResult);
+        String ip;
+        try {
+            ip = InetAddress.getByName(domain).getHostAddress();
+        } catch (UnknownHostException e) {
+            ip = "";
+        }
 
-        return probeResult;
+        // Write the domain probe result to the WARC file
+        warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), domainProbeResult);
+
+        return domainProbeResult;
     }
 
     private void sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
@@ -308,6 +318,40 @@ public class CrawlerRetreiver implements AutoCloseable {
                                            CrawlDelayTimer timer,
                                            HttpFetcher.ProbeType probeType,
                                            ContentTags contentTags) throws InterruptedException {
+
+        long probeStart = System.currentTimeMillis();
+
+        if (probeType == HttpFetcher.ProbeType.FULL) {
+            for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
+                try {
+                    var probeResult = fetcher.probeContentType(url, warcRecorder, contentTags);
+
+                    if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.Ok ok) {
+                        url = ok.resolvedUrl(); // If we were redirected while probing, use the final URL for fetching
+                        break;
+                    } else if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.BadContentType badContentType) {
+                        return new HttpFetchResult.ResultNone();
+                    } else if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.BadContentType.Timeout timeout) {
+                        return new HttpFetchResult.ResultException(timeout.ex());
+                    } else if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.Exception exception) {
+                        return new HttpFetchResult.ResultException(exception.ex());
+                    }
+                    else { // should be unreachable
+                        throw new IllegalStateException("Unknown probe result");
+                    }
+                }
+                catch (HttpFetcherImpl.RateLimitException ex) {
+                    timer.waitRetryDelay(ex);
+                }
+                catch (Exception ex) {
+                    logger.warn("Failed to fetch {}", url, ex);
+                    return new HttpFetchResult.ResultException(ex);
+                }
+            }
+        }
+
+        timer.waitFetchDelay(System.currentTimeMillis() - probeStart);
+
         for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
             try {
                 return fetcher.fetchContent(url, warcRecorder, contentTags, probeType);
@@ -327,14 +371,6 @@ public class CrawlerRetreiver implements AutoCloseable {
     private boolean isAllowedProtocol(String proto) {
         return proto.equalsIgnoreCase("http")
                 || proto.equalsIgnoreCase("https");
-    }
-
-    private String findIp(String domain) {
-        try {
-            return InetAddress.getByName(domain).getHostAddress();
-        } catch (UnknownHostException e) {
-            return "";
-        }
     }
 
     @Override

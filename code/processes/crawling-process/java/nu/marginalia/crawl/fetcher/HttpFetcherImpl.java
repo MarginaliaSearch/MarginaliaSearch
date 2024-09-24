@@ -9,9 +9,6 @@ import nu.marginalia.crawl.fetcher.socket.FastTerminatingSocketFactory;
 import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.fetcher.socket.NoSecuritySSL;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawl.logic.ContentTypeProber;
-import nu.marginalia.crawl.logic.ContentTypeProber.ContentTypeProbeResult;
-import nu.marginalia.crawl.logic.SoftIfModifiedSinceProber;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
@@ -26,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.X509TrustManager;
+import java.io.InterruptedIOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -41,10 +39,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     private final Cookies cookies = new Cookies();
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
-
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
-    private final ContentTypeProber contentTypeProber;
-    private final SoftIfModifiedSinceProber softIfModifiedSinceProber;
 
     @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
@@ -95,18 +90,19 @@ public class HttpFetcherImpl implements HttpFetcher {
         this.client = createClient(dispatcher, connectionPool);
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
-        this.contentTypeProber = new ContentTypeProber(userAgentString, client);
-        this.softIfModifiedSinceProber = new SoftIfModifiedSinceProber(userAgentString, client);
     }
 
     public HttpFetcherImpl(String userAgent) {
         this.client = createClient(null, new ConnectionPool());
         this.userAgentString = userAgent;
         this.userAgentIdentifier = userAgent;
-        this.contentTypeProber = new ContentTypeProber(userAgent, client);
-        this.softIfModifiedSinceProber = new SoftIfModifiedSinceProber(userAgent, client);
     }
 
+    // Not necessary in prod, but useful in test
+    public void close() {
+        client.dispatcher().executorService().shutdown();
+        client.connectionPool().evictAll();
+    }
     /**
      * Probe the domain to see if it is reachable, attempting to identify which schema to use,
      * and if there are any redirects.  This is done by one or more HEAD requests.
@@ -116,7 +112,7 @@ public class HttpFetcherImpl implements HttpFetcher {
      */
     @Override
     @SneakyThrows
-    public ProbeResult probeDomain(EdgeUrl url) {
+    public DomainProbeResult probeDomain(EdgeUrl url) {
         var head = new Request.Builder().head().addHeader("User-agent", userAgentString)
                 .url(url.toString())
                 .build();
@@ -127,22 +123,89 @@ public class HttpFetcherImpl implements HttpFetcher {
             EdgeUrl requestUrl = new EdgeUrl(rsp.request().url().toString());
 
             if (!Objects.equals(requestUrl.domain, url.domain)) {
-                return new ProbeResultRedirect(requestUrl.domain);
+                return new DomainProbeResult.Redirect(requestUrl.domain);
             }
-            return new ProbeResultOk(requestUrl);
+            return new DomainProbeResult.Ok(requestUrl);
         }
-
         catch (Exception ex) {
-            if (url.proto.equalsIgnoreCase("http") && "/".equals(url.path)) {
-                return probeDomain(new EdgeUrl("https", url.domain, url.port, url.path, url.param));
-            }
-
-            logger.info("Error during fetching {}", ex.getMessage());
-            return new ProbeResultError(CrawlerDomainStatus.ERROR, ex.getMessage());
+            return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, ex.getMessage());
         }
     }
 
+    /** Perform a HEAD request to fetch the content type of a URL.
+     * If the content type is not allowed, flag the URL as a failed
+     * content type probe.
+     * <p></p>
+     * The outcome of the probe is returned, and the result is also
+     * recorded in the WARC file on failure.
+     */
+    public ContentTypeProbeResult probeContentType(EdgeUrl url,
+                                                   WarcRecorder warcRecorder,
+                                                   ContentTags tags) throws RateLimitException {
+        if (tags.isEmpty()) {
+            var headBuilder = new Request.Builder().head()
+                    .addHeader("User-agent", userAgentString)
+                    .addHeader("Accept-Encoding", "gzip")
+                    .url(url.toString());
 
+            var head = headBuilder.build();
+            var call = client.newCall(head);
+
+            try (var rsp = call.execute()) {
+                var contentTypeHeader = rsp.header("Content-type");
+
+                if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
+                    warcRecorder.flagAsFailedContentTypeProbe(url, contentTypeHeader, rsp.code());
+
+                    return new ContentTypeProbeResult.BadContentType(contentTypeHeader, rsp.code());
+                }
+
+                // Update the URL to the final URL of the HEAD request, otherwise we might end up doing
+
+                // HEAD 301 url1 -> url2
+                // HEAD 200 url2
+                // GET 301 url1 -> url2
+                // GET 200 url2
+
+                // which is not what we want. Overall we want to do as few requests as possible to not raise
+                // too many eyebrows when looking at the logs on the target server.  Overall it's probably desirable
+                // that it looks like the traffic makes sense, as opposed to looking like a broken bot.
+
+                var redirectUrl = new EdgeUrl(rsp.request().url().toString());
+                EdgeUrl ret;
+
+                if (Objects.equals(redirectUrl.domain, url.domain)) ret = redirectUrl;
+                else ret = url;
+
+                // Intercept rate limiting
+                if (rsp.code() == 429) {
+                    throw new HttpFetcherImpl.RateLimitException(Objects.requireNonNullElse(rsp.header("Retry-After"), "1"));
+                }
+
+                return new ContentTypeProbeResult.Ok(ret);
+            }
+            catch (RateLimitException ex) {
+                throw ex;
+            }
+            catch (InterruptedIOException ex) {
+                warcRecorder.flagAsTimeout(url);
+
+                return new ContentTypeProbeResult.Timeout(ex);
+            } catch (Exception ex) {
+                logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+
+                warcRecorder.flagAsError(url, ex);
+
+                return new ContentTypeProbeResult.Exception(ex);
+            }
+        }
+        return new ContentTypeProbeResult.Ok(url);
+    }
+
+    /** Fetch the content of a URL, and record it in a WARC file,
+     * returning a result object that can be used to determine
+     * the outcome of the fetch.
+     */
     @Override
     @SneakyThrows
     public HttpFetchResult fetchContent(EdgeUrl url,
@@ -150,40 +213,6 @@ public class HttpFetcherImpl implements HttpFetcher {
                                            ContentTags contentTags,
                                            ProbeType probeType)
     {
-
-        // We don't want to waste time and resources on URLs that are not HTML, so if the file ending
-        // looks like it might be something else, we perform a HEAD first to check the content type
-        if (probeType == ProbeType.FULL && contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
-        {
-            ContentTypeProbeResult probeResult = contentTypeProber.probeContentType(url);
-            if (probeResult instanceof ContentTypeProbeResult.Ok ok) {
-                url = ok.resolvedUrl();
-            }
-            else if (probeResult instanceof ContentTypeProbeResult.BadContentType badContentType) {
-                warcRecorder.flagAsFailedContentTypeProbe(url, badContentType.contentType(), badContentType.statusCode());
-                return new HttpFetchResult.ResultNone();
-            }
-            else if (probeResult instanceof ContentTypeProbeResult.BadContentType.Timeout timeout) {
-                warcRecorder.flagAsTimeout(url);
-
-                return new HttpFetchResult.ResultException(timeout.ex());
-            }
-            else if (probeResult instanceof ContentTypeProbeResult.Exception exception) {
-                warcRecorder.flagAsError(url, exception.ex());
-
-                return new HttpFetchResult.ResultException(exception.ex());
-            }
-        }
-        else {
-            // Possibly do a soft probe to see if the URL has been modified since the last time we crawled it
-            // if we have reason to suspect ETags are not supported by the server.
-            if (probeType == ProbeType.IF_MODIFIED_SINCE
-              && softIfModifiedSinceProber.probeModificationTime(url, contentTags))
-            {
-                return new HttpFetchResult.Result304Raw();
-            }
-        }
-
         var getBuilder = new Request.Builder().get();
 
         getBuilder.url(url.toString())
@@ -212,21 +241,25 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     @Override
-    public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
-        return fetchRobotsForProto("https", recorder, domain)
-                .or(() -> fetchRobotsForProto("http", recorder, domain))
-                .orElseGet(() -> new SimpleRobotRules(SimpleRobotRules.RobotRulesMode.ALLOW_ALL));
-    }
-
-    @Override
     public SitemapRetriever createSitemapRetriever() {
         return new SitemapRetriever();
     }
 
-    private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, WarcRecorder recorder, EdgeDomain domain) {
-        try {
-            var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
+    @Override
+    public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
+        var ret = fetchAndParseRobotsTxt(new EdgeUrl("https", domain, null, "/robots.txt", null), recorder);
+        if (ret.isPresent())
+            return ret.get();
 
+        ret = fetchAndParseRobotsTxt(new EdgeUrl("http", domain, null, "/robots.txt", null), recorder);
+        if (ret.isPresent())
+            return ret.get();
+
+        return new SimpleRobotRules(SimpleRobotRules.RobotRulesMode.ALLOW_ALL);
+    }
+
+    private Optional<SimpleRobotRules> fetchAndParseRobotsTxt(EdgeUrl url, WarcRecorder recorder) {
+        try {
             var getBuilder = new Request.Builder().get();
 
             getBuilder.url(url.toString())
@@ -242,7 +275,6 @@ public class HttpFetcherImpl implements HttpFetcher {
                         contentType.toString(),
                         userAgentIdentifier)
             );
-
         }
         catch (Exception ex) {
             return Optional.empty();
@@ -250,26 +282,6 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
 
-    public sealed interface ProbeResult permits ProbeResultError, ProbeResultRedirect, ProbeResultOk {}
-
-    /** The probing failed for one reason or another
-     * @param status  Machine readable status
-     * @param desc   Human-readable description of the error
-     */
-    public record ProbeResultError(CrawlerDomainStatus status, String desc) implements ProbeResult {}
-
-    /** This domain redirects to another domain */
-    public record ProbeResultRedirect(EdgeDomain domain) implements ProbeResult {}
-
-    /** If the retrieval of the probed url was successful, return the url as it was fetched
-     * (which may be different from the url we probed, if we attempted another URL schema).
-     *
-     * @param probedUrl  The url we successfully probed
-     */
-    public record ProbeResultOk(EdgeUrl probedUrl) implements ProbeResult {}
-
-
-    /** Exception thrown when the server signals the rate limit is exceeded */
     public static class RateLimitException extends Exception {
         private final String retryAfter;
 

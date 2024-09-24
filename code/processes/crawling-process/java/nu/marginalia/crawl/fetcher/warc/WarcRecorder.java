@@ -267,7 +267,7 @@ public class WarcRecorder implements AutoCloseable {
         saveOldResponse(url, contentType, statusCode, documentBody, headers, ctags);
     }
 
-    public void writeWarcinfoHeader(String ip, EdgeDomain domain, HttpFetcherImpl.ProbeResult result) throws IOException {
+    public void writeWarcinfoHeader(String ip, EdgeDomain domain, HttpFetcherImpl.DomainProbeResult result) throws IOException {
 
         Map<String, List<String>> fields = new HashMap<>();
         fields.put("ip", List.of(ip));
@@ -275,13 +275,13 @@ public class WarcRecorder implements AutoCloseable {
         fields.put("domain", List.of(domain.toString()));
 
         switch (result) {
-            case HttpFetcherImpl.ProbeResultRedirect redirectDomain:
+            case HttpFetcherImpl.DomainProbeResult.Redirect redirectDomain:
                 fields.put("X-WARC-Probe-Status", List.of("REDIRECT;" + redirectDomain.domain()));
                 break;
-            case HttpFetcherImpl.ProbeResultError error:
+            case HttpFetcherImpl.DomainProbeResult.Error error:
                 fields.put("X-WARC-Probe-Status", List.of(error.status().toString() + ";" + error.desc()));
                 break;
-            case HttpFetcherImpl.ProbeResultOk ok:
+            case HttpFetcherImpl.DomainProbeResult.Ok ok:
                 fields.put("X-WARC-Probe-Status", List.of("OK"));
                 break;
         }

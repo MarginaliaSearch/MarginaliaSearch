@@ -3,7 +3,6 @@ package nu.marginalia.crawl.retreival;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
-import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.ip_blocklist.IpBlockList;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -34,18 +33,37 @@ public class DomainProber {
      *  doesn't immediately redirect to another domain (which should be crawled separately, not under the name
      *  of this domain).
      */
-    public HttpFetcherImpl.ProbeResult probeDomain(HttpFetcher fetcher, String domain, @Nullable EdgeUrl firstUrlInQueue) {
+    public HttpFetcher.DomainProbeResult probeDomain(HttpFetcher fetcher, String domain, @Nullable EdgeUrl firstUrlInQueue) {
 
         if (firstUrlInQueue == null) {
             logger.warn("No valid URLs for domain {}", domain);
 
-            return new HttpFetcherImpl.ProbeResultError(CrawlerDomainStatus.ERROR, "No known URLs");
+            return new HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "No known URLs");
         }
 
         if (!domainBlacklist.test(firstUrlInQueue.domain))
-            return new HttpFetcherImpl.ProbeResultError(CrawlerDomainStatus.BLOCKED, "IP not allowed");
+            return new HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus.BLOCKED, "IP not allowed");
 
-        return fetcher.probeDomain(firstUrlInQueue.withPathAndParam("/", null));
+        HttpFetcher.DomainProbeResult result;
+
+        result = fetcher.probeDomain(firstUrlInQueue.withPathAndParam("/", null));
+
+        // If the domain is not reachable over HTTPS, try HTTP
+        if (result instanceof HttpFetcher.DomainProbeResult.Error) {
+            if ("https".equalsIgnoreCase(firstUrlInQueue.proto)) {
+                firstUrlInQueue = new EdgeUrl(
+                        "http",
+                        firstUrlInQueue.domain,
+                        firstUrlInQueue.port,
+                        firstUrlInQueue.path,
+                        firstUrlInQueue.param
+                );
+
+                result = fetcher.probeDomain(firstUrlInQueue.withPathAndParam("/", null));
+            }
+        }
+
+        return result;
     }
 
 }
