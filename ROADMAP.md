@@ -72,3 +72,5 @@ This looks like a good idea that wouldn't just help clean up the search filters 
 website, but might be cheap enough we might go as far as to offer a number of ad-hoc custom search
 filter for any API consumer.
 
+I've talked to the stract dev and he does not think it's a good idea to mimic their optics language, 
+which is quite ad-hoc, but instead to work together to find some new common description language for this. 
