@@ -446,10 +446,13 @@ public class IndexResultScoreCalculator {
 
             for (int i = 0; i < compiledQuery.size(); i++) {
 
-                if (positions[i] == null || !regularMask.get(i))
+                if (!regularMask.get(i))
                     continue;
 
-                if (positions[i].isEmpty()) continue;
+                if (positions[i] == null || positions[i].isEmpty()) {
+                    firstPosition = Integer.MAX_VALUE;
+                    continue;
+                }
 
                 firstPosition = Math.max(firstPosition, positions[i].getInt(0));
                 searchableKeywordCount ++;
