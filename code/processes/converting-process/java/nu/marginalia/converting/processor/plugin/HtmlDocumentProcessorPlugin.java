@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import static nu.marginalia.converting.model.DisqualifiedException.DisqualificationReason;
@@ -127,7 +128,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
-        final var generatorParts = documentGeneratorExtractor.detectGenerator(doc, crawledDocument.headers);
+        final var generatorParts = documentGeneratorExtractor.detectGenerator(doc,
+                Objects.requireNonNullElse(crawledDocument.headers, "")
+        );
 
         final var specialization = htmlProcessorSpecializations.select(generatorParts, url);
 
@@ -162,7 +165,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
-        PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, standard, true);
+        PubDate pubDate = pubDateSniffer.getPubDate(
+                Objects.requireNonNullElse(crawledDocument.headers, ""),
+                url,
+                doc,
+                standard,
+                true);
 
         EnumSet<DocumentFlags> documentFlags = documentFlags(features, generatorParts.type());
 

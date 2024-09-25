@@ -17,6 +17,9 @@ public class AcceptableAds {
     }
 
     public static boolean hasAcceptableAdsHeader(CrawledDocument document) {
-        return document.headers.contains("X-Adblock-Key");
+        if (document.headers != null) {
+            return document.headers.contains("X-Adblock-Key");
+        }
+        return false;
     }
 }
