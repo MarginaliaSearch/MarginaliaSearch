@@ -83,7 +83,7 @@ public class IndexClient {
         int indexEnd = (pagination.page) * pagination.pageSize;
 
         results = results.subList(
-                clamp(indexStart, 0, results.size() - 1), // from is inclusive, so subtract 1 from size()
+                clamp(indexStart, 0, Math.max(0, results.size() - 1)), // from is inclusive, so subtract 1 from size()
                 clamp(indexEnd, 0, results.size()));
 
         return new AggregateQueryResponse(results, pagination.page(), numReceivedResults);
