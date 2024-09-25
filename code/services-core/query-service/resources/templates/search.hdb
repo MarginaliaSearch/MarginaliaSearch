@@ -25,6 +25,20 @@
     <p>{{description}}</p>
 </div>
 {{/each}}
+<nav aria-label="pagination">
+    <ul class="pagination">
+        {{#each pages}}
+            <form action="/search">
+                <input type="hidden" name="q" value="{{query}}">
+                <input type="hidden" name="page" value="{{number}}">
+                <li class="page-item {{#if current}}active{{/if}}"><input type="submit" class="page-link" value="{{number}}"></li>
+            </form>
+        {{/each}}
+    </ul>
+</nav>
+{{#each pages}}
+
+{{/each}}
 {{/if}}
 </div>
 </body>

@@ -7,6 +7,7 @@ import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
+import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.MustacheRenderer;
@@ -15,7 +16,13 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import static java.lang.Integer.min;
+import static java.lang.Integer.parseInt;
+import static java.util.Objects.requireNonNullElse;
 
 public class QueryBasicInterface {
     private final MustacheRenderer<Object> basicRenderer;
@@ -34,25 +41,38 @@ public class QueryBasicInterface {
         this.queryGRPCService = queryGRPCService;
     }
 
+    /** Handle the basic search endpoint exposed in the bare-bones search interface. */
     public Object handleBasic(Request request, Response response) {
-        String queryParams = request.queryParams("q");
-        if (queryParams == null) {
+        String queryString = request.queryParams("q");
+        if (queryString == null) {
             return basicRenderer.render(new Object());
         }
 
-        int count = request.queryParams("count") == null ? 10 : Integer.parseInt(request.queryParams("count"));
-        int domainCount = request.queryParams("domainCount") == null ? 5 : Integer.parseInt(request.queryParams("domainCount"));
-        String set = request.queryParams("set") == null ? "" : request.queryParams("set");
+        int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));
+        int page = parseInt(requireNonNullElse(request.queryParams("page"), "1"));
+        int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
+        String set = requireNonNullElse(request.queryParams("set"), "");
 
-        var params = new QueryParams(queryParams, new QueryLimits(
-                domainCount, count, 250, 8192
+        var params = new QueryParams(queryString, new QueryLimits(
+                domainCount, min(100, count * 10), 250, 8192
         ), set);
 
+        var pagination = new IndexClient.Pagination(page, count);
+
         var detailedDirectResult = queryGRPCService.executeDirect(
-                queryParams, params, ResultRankingParameters.sensibleDefaults()
+                queryString,
+                params,
+                pagination,
+                ResultRankingParameters.sensibleDefaults()
         );
 
         var results = detailedDirectResult.result();
+
+        List<PaginationInfoPage> paginationInfo = new ArrayList<>();
+
+        for (int i = 1; i <= detailedDirectResult.totalResults() / pagination.pageSize(); i++) {
+            paginationInfo.add(new PaginationInfoPage(i, i == pagination.page()));
+        }
 
         if (request.headers("Accept").contains("application/json")) {
             response.type("application/json");
@@ -60,12 +80,14 @@ public class QueryBasicInterface {
         }
         else {
             return basicRenderer.render(
-                    Map.of("query", queryParams,
+                    Map.of("query", queryString,
+                            "pages", paginationInfo,
                             "results", results)
             );
         }
     }
 
+    /** Handle the qdebug endpoint, which allows for query debugging and ranking parameter tuning. */
     public Object handleAdvanced(Request request, Response response) {
         String queryString = request.queryParams("q");
         if (queryString == null) {
@@ -74,18 +96,24 @@ public class QueryBasicInterface {
             );
         }
 
-        int count = request.queryParams("count") == null ? 10 : Integer.parseInt(request.queryParams("count"));
-        int domainCount = request.queryParams("domainCount") == null ? 5 : Integer.parseInt(request.queryParams("domainCount"));
-        String set = request.queryParams("set") == null ? "" : request.queryParams("set");
+        int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));
+        int page = parseInt(requireNonNullElse(request.queryParams("page"), "1"));
+        int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
+        String set = requireNonNullElse(request.queryParams("set"), "");
 
         var queryParams = new QueryParams(queryString, new QueryLimits(
-                domainCount, count, 250, 8192
+                domainCount, min(100, count * 10), 250, 8192
         ), set);
+
+        var pagination = new IndexClient.Pagination(page, count);
 
         var rankingParams = debugRankingParamsFromRequest(request);
 
         var detailedDirectResult = queryGRPCService.executeDirect(
-                queryString, queryParams, rankingParams
+                queryString,
+                queryParams,
+                pagination,
+                rankingParams
         );
 
         var results = detailedDirectResult.result();
@@ -127,10 +155,12 @@ public class QueryBasicInterface {
     }
 
     int intFromRequest(Request request, String param, int defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Integer.parseInt(request.queryParams(param));
+        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : parseInt(request.queryParams(param));
     }
 
     String stringFromRequest(Request request, String param, String defaultValue) {
         return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : request.queryParams(param);
     }
+
+    record PaginationInfoPage(int number, boolean current) {}
 }
