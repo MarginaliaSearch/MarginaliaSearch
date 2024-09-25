@@ -49,6 +49,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                     .labels(Integer.toString(request.getQueryLimits().getTimeoutMs()),
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
+
                 var params = QueryProtobufCodec.convertRequest(request);
                 var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
 
@@ -68,7 +69,8 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                         .addAllResults(response.results())
                         .setPagination(
                                 RpcQsResultPagination.newBuilder()
-                                        .setPage(response.page())
+                                        .setPage(requestPagination.getPage())
+                                        .setPageSize(requestPagination.getPageSize())
                                         .setTotalResults(response.totalResults())
                         )
                         .setSpecs(indexRequest)

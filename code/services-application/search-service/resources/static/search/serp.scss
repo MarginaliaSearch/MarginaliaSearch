@@ -794,6 +794,25 @@ footer {
   }
 }
 
+.page-link {
+  padding-top: 0.25ch;
+  padding-bottom: 0.25ch;
+  padding-left: 0.5ch;
+  padding-right: 0.5ch;
+  margin-right: 0.5ch;
+
+  font-size: 12pt;
+  border: 1px solid var(--clr-border);
+  background-color: var(--clr-bg-highlight);
+  color: var(--clr-text-ui) !important;
+  text-decoration: none;
+}
+
+.page-link.active {
+  border: 1px solid var(--clr-text-ui);
+  background-color: var(--clr-bg-ui);
+}
+
 // The search results page is very confusing on text-based browsers, so we add a hr to separate the search results.  This is
 // hidden on modern browsers via CSS.
 

@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Singleton
 public class SearchOperator {
@@ -132,6 +133,14 @@ public class SearchOperator {
 
         List<String> problems = getProblems(evalResult, queryResults, queryResponse);
 
+        List<DecoratedSearchResults.Page> resultPages = IntStream.rangeClosed(1, queryResponse.totalPages())
+                .mapToObj(number -> new DecoratedSearchResults.Page(
+                        number,
+                        number == userParams.page(),
+                        userParams.withPage(number).renderUrl(websiteUrl)
+                ))
+                .toList();
+
         // Return the results to the user
         return DecoratedSearchResults.builder()
                 .params(userParams)
@@ -141,6 +150,7 @@ public class SearchOperator {
                 .filters(new SearchFilters(websiteUrl, userParams))
                 .focusDomain(focusDomain)
                 .focusDomainId(focusDomainId)
+                .resultPages(resultPages)
                 .build();
     }
 

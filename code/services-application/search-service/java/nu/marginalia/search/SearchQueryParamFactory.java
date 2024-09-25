@@ -36,7 +36,8 @@ public class SearchQueryParamFactory {
                 new QueryLimits(5, 100, 200, 8192),
                 profile.searchSetIdentifier.name(),
                 userParams.strategy(),
-                userParams.temporalBias()
+                userParams.temporalBias(),
+                userParams.page()
         );
 
     }
@@ -56,7 +57,8 @@ public class SearchQueryParamFactory {
                 new QueryLimits(count, count, 100, 512),
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE
+                ResultRankingParameters.TemporalBias.NONE,
+                1
         );
     }
 
@@ -75,7 +77,8 @@ public class SearchQueryParamFactory {
                 new QueryLimits(100, 100, 100, 512),
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE
+                ResultRankingParameters.TemporalBias.NONE,
+                1
         );
     }
 
@@ -94,7 +97,8 @@ public class SearchQueryParamFactory {
                 new QueryLimits(100, 100, 100, 512),
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE
+                ResultRankingParameters.TemporalBias.NONE,
+                1
         );
     }
 }

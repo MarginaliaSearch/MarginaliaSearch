@@ -4,6 +4,7 @@ import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -23,7 +24,8 @@ public record QueryParams(
         QueryLimits limits,
         String identifier,
         QueryStrategy queryStrategy,
-        ResultRankingParameters.TemporalBias temporalBias
+        ResultRankingParameters.TemporalBias temporalBias,
+        int page
 )
 {
     public QueryParams(String query, QueryLimits limits, String identifier) {
@@ -40,7 +42,8 @@ public record QueryParams(
                 limits,
                 identifier,
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE
+                ResultRankingParameters.TemporalBias.NONE,
+                1 // page
                 );
     }
 }

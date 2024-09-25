@@ -3,8 +3,8 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.*;
-import nu.marginalia.search.model.SearchProfile;
+import nu.marginalia.search.command.CommandEvaluator;
+import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.exceptions.RedirectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,15 +52,7 @@ public class SearchQueryService {
                 throw new RedirectException(websiteUrl.url());
             }
 
-            return new SearchParameters(queryParam.trim(),
-                    SearchProfile.getSearchProfile(request.queryParams("profile")),
-                    SearchJsParameter.parse(request.queryParams("js")),
-                    SearchRecentParameter.parse(request.queryParams("recent")),
-                    SearchTitleParameter.parse(request.queryParams("searchTitle")),
-                    SearchAdtechParameter.parse(request.queryParams("adtech")),
-                    "1".equals(request.headers("X-Poison-Results")),
-                    "true".equals(request.queryParams("newfilter"))
-            );
+            return new SearchParameters(queryParam.trim(), request);
         }
         catch (Exception ex) {
             // Bots keep sending bad requests, suppress the error otherwise it will

@@ -25,6 +25,10 @@ public class DecoratedSearchResults {
     private final int focusDomainId;
     private final SearchFilters filters;
 
+    private final List<Page> resultPages;
+
+    public record Page(int number, boolean current, String href) {}
+
     // These are used by the search form, they look unused in the IDE but are used by the mustache template,
     // DO NOT REMOVE THEM
     public int getResultCount() { return results.size(); }
@@ -34,5 +38,7 @@ public class DecoratedSearchResults {
     public String getAdtech() { return params.adtech().value; }
     public String getRecent() { return params.recent().value; }
     public String getSearchTitle() { return params.searchTitle().value; }
+    public int page() { return params.page(); }
     public Boolean isNewFilter() { return params.newFilter(); }
+
 }
