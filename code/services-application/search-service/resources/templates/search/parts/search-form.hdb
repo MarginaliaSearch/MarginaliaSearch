@@ -4,7 +4,7 @@
             Search The Internet
         </h1>
         <div id="suggestions-anchor"></div>
-        <input autofocus type="text" id="query" name="query" placeholder="Search..." value="{{query}}">
+        <input {{#unless query}}autofocus{{/unless}} type="text" id="query" name="query" placeholder="Search..." value="{{query}}">
         <input type="hidden" name="js" value="{{js}}">
         <input type="hidden" name="adtech" value="{{adtech}}">
         <input type="hidden" name="searchTitle" value="{{searchTitle}}">
