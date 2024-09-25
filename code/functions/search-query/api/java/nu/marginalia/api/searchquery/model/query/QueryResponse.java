@@ -11,6 +11,8 @@ public record QueryResponse(SearchSpecification specs,
                             List<DecoratedSearchResultItem> results,
                             List<String> searchTermsHuman,
                             List<String> problems,
+                            int currentPage,
+                            int totalPages,
                             @Nullable String domain)
 {
     public Set<String> getAllKeywords() {

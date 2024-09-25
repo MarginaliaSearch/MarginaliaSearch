@@ -53,6 +53,12 @@
             {{/with}}
             {{/if}}
         {{/each}}
+
+        <nav aria-label="pagination">
+        {{#each resultPages}}
+            <a {{#unless current}}href="{{{href}}}"{{/unless}} class="page-link {{#if current}}active{{/if}}">{{number}}</a>
+        {{/each}}
+        </nav>
     </section>
 
     {{#with filters}}

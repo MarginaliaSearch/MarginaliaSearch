@@ -30,6 +30,8 @@ message RpcQsQuery {
   string searchSetIdentifier = 14;
   string queryStrategy = 15;      // Named query configuration
   RpcTemporalBias temporalBias = 16;
+
+  RpcQsQueryPagination pagination = 17;
 }
 
 /* Query service query response */
@@ -39,6 +41,19 @@ message RpcQsResponse {
   repeated string searchTermsHuman = 3;
   repeated string problems = 4;
   string domain = 5;
+
+  RpcQsResultPagination pagination = 6;
+}
+
+message RpcQsQueryPagination {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+
+message RpcQsResultPagination {
+  int32 page = 1;
+  int32 pageSize = 2;
+  int32 totalResults = 3;
 }
 
 message RpcTemporalBias {

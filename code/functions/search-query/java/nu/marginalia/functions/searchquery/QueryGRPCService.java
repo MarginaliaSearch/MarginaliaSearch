@@ -8,13 +8,13 @@ import io.prometheus.client.Histogram;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.api.IndexClient;
-import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
 
 @Singleton
 public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
@@ -49,17 +49,30 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                     .labels(Integer.toString(request.getQueryLimits().getTimeoutMs()),
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
+
                 var params = QueryProtobufCodec.convertRequest(request);
                 var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
 
                 var indexRequest = QueryProtobufCodec.convertQuery(request, query);
 
+                var requestPagination = request.getPagination();
+
+                IndexClient.Pagination pagination = new IndexClient.Pagination(
+                        requestPagination.getPage(),
+                        requestPagination.getPageSize());
+
                 // Execute the query on the index partitions
-                List<RpcDecoratedResultItem> bestItems = indexClient.executeQueries(indexRequest);
+                IndexClient.AggregateQueryResponse response = indexClient.executeQueries(indexRequest, pagination);
 
                  // Convert results to response and send it back
                 var responseBuilder = RpcQsResponse.newBuilder()
-                        .addAllResults(bestItems)
+                        .addAllResults(response.results())
+                        .setPagination(
+                                RpcQsResultPagination.newBuilder()
+                                        .setPage(requestPagination.getPage())
+                                        .setPageSize(requestPagination.getPageSize())
+                                        .setTotalResults(response.totalResults())
+                        )
                         .setSpecs(indexRequest)
                         .addAllSearchTermsHuman(query.searchTermsHuman);
 
@@ -77,18 +90,22 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
     }
 
     public record DetailedDirectResult(ProcessedQuery processedQuery,
-                                       List<DecoratedSearchResultItem> result) {}
+                                       List<DecoratedSearchResultItem> result,
+                                       int totalResults) {}
 
     /** Local query execution, without GRPC. */
     public DetailedDirectResult executeDirect(
             String originalQuery,
             QueryParams params,
+            IndexClient.Pagination pagination,
             ResultRankingParameters rankingParameters) {
 
         var query = queryFactory.createQuery(params, rankingParameters);
-        var items = indexClient.executeQueries(QueryProtobufCodec.convertQuery(originalQuery, query));
+        IndexClient.AggregateQueryResponse response = indexClient.executeQueries(QueryProtobufCodec.convertQuery(originalQuery, query), pagination);
 
-        return new DetailedDirectResult(query, Lists.transform(items, QueryProtobufCodec::convertQueryResult));
+        return new DetailedDirectResult(query,
+                Lists.transform(response.results(), QueryProtobufCodec::convertQueryResult),
+                response.totalResults());
     }
 
 }

@@ -17,9 +17,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static java.lang.Math.clamp;
 
 @Singleton
 public class IndexClient {
@@ -39,17 +43,23 @@ public class IndexClient {
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
+    public record Pagination(int page, int pageSize) {}
+
+    public record AggregateQueryResponse(List<RpcDecoratedResultItem> results,
+                                         int page,
+                                         int totalResults
+                                     ) {}
 
     /** Execute a query on the index partitions and return the combined results. */
     @SneakyThrows
-    public List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest) {
-        var futures =
+    public AggregateQueryResponse executeQueries(RpcIndexQuery indexRequest, Pagination pagination) {
+        List<CompletableFuture<Iterator<RpcDecoratedResultItem>>> futures =
                 channelPool.call(IndexApiGrpc.IndexApiBlockingStub::query)
                         .async(executor)
                         .runEach(indexRequest);
 
-        final int resultsTotal = indexRequest.getQueryLimits().getResultsTotal();
-        final int resultsUpperBound = resultsTotal * channelPool.getNumNodes();
+        final int requestedMaxResults = indexRequest.getQueryLimits().getResultsTotal();
+        final int resultsUpperBound = requestedMaxResults * channelPool.getNumNodes();
 
         List<RpcDecoratedResultItem> results = new ArrayList<>(resultsUpperBound);
 
@@ -66,12 +76,17 @@ public class IndexClient {
         results.sort(comparator);
         results.removeIf(this::isBlacklisted);
 
-        // Keep only as many results as were requested
-        if (results.size() > resultsTotal) {
-            results = results.subList(0, resultsTotal);
-        }
+        int numReceivedResults = results.size();
 
-        return results;
+        // pagination is typically 1-indexed, so we need to adjust the start and end indices
+        int indexStart = (pagination.page - 1) * pagination.pageSize;
+        int indexEnd = (pagination.page) * pagination.pageSize;
+
+        results = results.subList(
+                clamp(indexStart, 0, results.size() - 1), // from is inclusive, so subtract 1 from size()
+                clamp(indexEnd, 0, results.size()));
+
+        return new AggregateQueryResponse(results, pagination.page(), numReceivedResults);
     }
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {

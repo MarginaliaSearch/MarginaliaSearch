@@ -99,7 +99,8 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertQueryLimits(request.getQueryLimits()),
                 request.getSearchSetIdentifier(),
                 QueryStrategy.valueOf(request.getQueryStrategy()),
-                ResultRankingParameters.TemporalBias.valueOf(request.getTemporalBias().getBias().name())
+                ResultRankingParameters.TemporalBias.valueOf(request.getTemporalBias().getBias().name()),
+                request.getPagination().getPage()
         );
     }
 
@@ -107,14 +108,22 @@ public class QueryProtobufCodec {
     public static QueryResponse convertQueryResponse(RpcQsResponse query) {
         var results = new ArrayList<DecoratedSearchResultItem>(query.getResultsCount());
 
-        for (int i = 0; i < query.getResultsCount(); i++)
+        for (int i = 0; i < query.getResultsCount(); i++) {
             results.add(convertDecoratedResult(query.getResults(i)));
+        }
+
+        var requestPagination = query.getPagination();
+        int totalResults = requestPagination.getTotalResults();
+        int pageSize = requestPagination.getPageSize();
+        int totalPages = (totalResults + pageSize - 1) / pageSize;
 
         return new QueryResponse(
                 convertSearchSpecification(query.getSpecs()),
                 results,
                 query.getSearchTermsHumanList(),
                 query.getProblemsList(),
+                query.getPagination().getPage(),
+                totalPages,
                 query.getDomain()
         );
     }
@@ -304,6 +313,10 @@ public class QueryProtobufCodec {
                 .setQueryStrategy(params.queryStrategy().name())
                 .setTemporalBias(RpcTemporalBias.newBuilder()
                         .setBias(RpcTemporalBias.Bias.valueOf(params.temporalBias().name()))
+                        .build())
+                .setPagination(RpcQsQueryPagination.newBuilder()
+                        .setPage(params.page())
+                        .setPageSize(Math.min(100, params.limits().resultsTotal()))
                         .build());
 
         if (params.nearDomain() != null)
