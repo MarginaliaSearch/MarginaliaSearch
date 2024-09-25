@@ -1,20 +1,20 @@
 package nu.marginalia.functions.domains;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.db.DbDomainQueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 
 @Singleton
 public class DomainInformationService {
@@ -63,7 +63,8 @@ public class DomainInformationService {
             if (rs.next()) {
                 String ip = rs.getString("IP");
 
-                builder.setIp(ip);
+                builder.setIp(Objects.requireNonNullElse(ip, ""));
+
                 geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
                     builder.setAsn(asnInfo.asn());
                     builder.setAsnOrg(asnInfo.org());

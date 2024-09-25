@@ -71,7 +71,6 @@ public class GeoIpDictionary {
         try {
             return getAsnInfo(InetAddress.getByName(ip));
         } catch (Exception e) {
-            e.printStackTrace();
             return Optional.empty();
         }
     }
