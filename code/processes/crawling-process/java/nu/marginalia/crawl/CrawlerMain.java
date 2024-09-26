@@ -180,6 +180,11 @@ public class CrawlerMain extends ProcessMainClass {
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
         ) {
+            // Set the number of tasks done to the number of tasks that are already finished,
+            // (this happens when the process is restarted after a crash or a shutdown)
+            tasksDone.set(workLog.countFinishedJobs());
+
+            // Process the crawl tasks
             try (var specStream = specProvider.stream()) {
                 specStream
                         .takeWhile((e) -> abortMonitor.isAlive())
