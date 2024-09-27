@@ -204,6 +204,8 @@ public class SearchServicePaperDoll extends AbstractModule {
                 results,
                 List.of(),
                 List.of(),
+                1,
+                1,
                 null
         );
     }

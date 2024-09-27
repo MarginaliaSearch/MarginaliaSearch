@@ -5,7 +5,8 @@ import nu.marginalia.search.exceptions.RedirectException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BangCommandTest {
     public BangCommand bangCommand = new BangCommand();
@@ -15,7 +16,7 @@ class BangCommandTest {
         try {
             bangCommand.process(null,
                     new SearchParameters(" !g test",
-                    null, null, null, null, null, false, false)
+                    null, null, null, null, null, false, 1)
             );
             Assertions.fail("Should have thrown RedirectException");
         }
