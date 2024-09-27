@@ -20,7 +20,6 @@ public sealed interface ServicePartition {
         public String identifier() {
             return Integer.toString(node);
         }
-
     }
     record None() implements ServicePartition, PartitionTraits.NoGrpc {
         public String identifier() { return ""; }

@@ -4,13 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
-import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DomainBlacklist;
+import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Singleton
 public class DbBrowseDomainsRandom {
@@ -47,7 +48,7 @@ public class DbBrowseDomainsRandom {
                     boolean indexed = rsp.getBoolean("INDEXED");
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0, indexed));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrlHttp(), id, 0, indexed));
                     }
                 }
             }

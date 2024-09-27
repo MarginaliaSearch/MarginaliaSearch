@@ -6,10 +6,12 @@ import lombok.SneakyThrows;
 import nu.marginalia.assistant.suggest.Suggestions;
 import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
+import nu.marginalia.livecapture.LiveCaptureGrpcService;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -28,12 +30,11 @@ public class AssistantService extends Service {
     public AssistantService(BaseServiceParams params,
                             ScreenshotService screenshotService,
                             DomainInfoGrpcService domainInfoGrpcService,
+                            LiveCaptureGrpcService liveCaptureGrpcService,
                             MathGrpcService mathGrpcService,
                             Suggestions suggestions)
     {
-        super(params,
-                ServicePartition.any(),
-                List.of(domainInfoGrpcService, mathGrpcService));
+        super(params, ServicePartition.any(), List.of(domainInfoGrpcService, mathGrpcService, liveCaptureGrpcService));
 
         this.suggestions = suggestions;
 

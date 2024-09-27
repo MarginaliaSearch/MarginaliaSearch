@@ -42,6 +42,7 @@ dependencies {
     implementation project(':code:libraries:braille-block-punch-cards')
     implementation project(':code:libraries:term-frequency-dict')
 
+    implementation project(':code:functions:live-capture:api')
     implementation project(':code:functions:math:api')
     implementation project(':code:functions:domain-info:api')
     implementation project(':code:functions:search-query:api')

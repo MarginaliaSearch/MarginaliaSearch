@@ -92,9 +92,12 @@ public class EdgeDomain implements Serializable {
 
 
 
-    public EdgeUrl toRootUrl() {
+    public EdgeUrl toRootUrlHttp() {
         // Set default protocol to http, as most https websites redirect http->https, but few http websites redirect https->http
         return new EdgeUrl("http", this, null, "/", null);
+    }
+    public EdgeUrl toRootUrlHttps() {
+        return new EdgeUrl("https", this, null, "/", null);
     }
 
     public String toString() {

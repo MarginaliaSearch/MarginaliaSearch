@@ -3,15 +3,7 @@ plugins {
 
     id 'application'
     id 'jvm-test-suite'
-    id 'com.google.cloud.tools.jib' version '3.4.3'
 }
-
-application {
-    mainClass = 'nu.marginalia.assistant.AssistantMain'
-    applicationName = 'assistant-service'
-}
-
-tasks.distZip.enabled = false
 
 java {
     toolchain {
@@ -20,30 +12,17 @@ java {
 }
 
 apply from: "$rootProject.projectDir/srcsets.gradle"
-apply from: "$rootProject.projectDir/docker.gradle"
 
 dependencies {
-    implementation project(':third-party:symspell')
-
-    implementation project(':code:functions:live-capture')
     implementation project(':code:functions:live-capture:api')
-    implementation project(':code:functions:math')
-    implementation project(':code:functions:math:api')
-    implementation project(':code:functions:domain-info')
-    implementation project(':code:functions:domain-info:api')
 
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
 
-    implementation project(':code:features-search:screenshots')
-
-    implementation project(':code:libraries:geo-ip')
-    implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:term-frequency-dict')
-
     implementation libs.bundles.slf4j
+    implementation libs.commons.lang3
 
     implementation libs.prometheus
     implementation libs.guava
@@ -63,15 +42,19 @@ dependencies {
         exclude group: 'org.eclipse.jetty'
     }
     implementation libs.bundles.jetty
-    implementation libs.opencsv
-    implementation libs.trove
-    implementation libs.fastutil
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
+
+
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation libs.commons.codec
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
 
 }

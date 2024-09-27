@@ -77,7 +77,7 @@ public class SearchBrowseService {
             if (resultDomain.isEmpty())
                 continue;
 
-            results.add(new BrowseResult(resultDomain.get().toRootUrl(), sd.domainId(), 0, sd.screenshot()));
+            results.add(new BrowseResult(resultDomain.get().toRootUrlHttp(), sd.domainId(), 0, sd.screenshot()));
         }
         // shuffle the items for a less repetitive experience
         shuffle(neighbors);
