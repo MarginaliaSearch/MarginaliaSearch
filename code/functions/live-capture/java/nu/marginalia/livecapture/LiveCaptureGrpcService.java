@@ -170,7 +170,9 @@ public class LiveCaptureGrpcService
                 byte[] pngBytes = client.screenshot(domain.toRootUrlHttps().toString(),
                         BrowserlessClient.GotoOptions.defaultValues(),
                         BrowserlessClient.ScreenshotOptions.defaultValues());
-                ScreenshotDbOperations.uploadScreenshot(conn, domain, pngBytes);
+                if (pngBytes.length > 0) {
+                    ScreenshotDbOperations.uploadScreenshot(conn, domain, pngBytes);
+                }
             } catch (Exception e) {
                 ScreenshotDbOperations.flagDomainAsFetched(conn, domain);
             }

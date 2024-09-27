@@ -74,6 +74,7 @@ public class BrowserlessClient implements AutoCloseable {
 
         if (rsp.statusCode() >= 300) {
             logger.info("Failed to fetch screenshot for {}, status {}", url, rsp.statusCode());
+            return new byte[0];
         }
 
         return rsp.body();
