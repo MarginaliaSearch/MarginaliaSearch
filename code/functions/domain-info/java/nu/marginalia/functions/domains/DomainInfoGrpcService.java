@@ -32,11 +32,15 @@ public class DomainInfoGrpcService
     @Override
     public void getSimilarDomains(RpcDomainLinksRequest request,
                                   StreamObserver<RpcSimilarDomains> responseObserver) {
-        var ret = similarDomainsService.getSimilarDomains(request.getDomainId(), request.getCount());
 
-        var responseBuilder = RpcSimilarDomains
-                .newBuilder()
-                .addAllDomains(ret);
+
+        var responseBuilder = RpcSimilarDomains.newBuilder();
+
+        if (similarDomainsService.isReady()) {
+            var ret = similarDomainsService.getSimilarDomains(request.getDomainId(), request.getCount());
+            responseBuilder.addAllDomains(ret);
+        }
+
 
         responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
@@ -44,11 +48,12 @@ public class DomainInfoGrpcService
 
     @Override
     public void getLinkingDomains(RpcDomainLinksRequest request, StreamObserver<RpcSimilarDomains> responseObserver) {
-        var ret = similarDomainsService.getLinkingDomains(request.getDomainId(), request.getCount());
+        var responseBuilder = RpcSimilarDomains.newBuilder();
 
-        var responseBuilder = RpcSimilarDomains
-                .newBuilder()
-                .addAllDomains(ret);
+        if (similarDomainsService.isReady()) {
+            var ret = similarDomainsService.getLinkingDomains(request.getDomainId(), request.getCount());
+            responseBuilder.addAllDomains(ret);
+        }
 
         responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
