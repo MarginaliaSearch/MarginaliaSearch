@@ -195,9 +195,14 @@ public class SimilarDomainsService {
     public List<RpcSimilarDomain> getSimilarDomains(int domainId, int count) {
         int domainIdx = domainIdToIdx.get(domainId);
 
+        if (domainNeighbors.length >= domainIdx) {
+            return List.of();
+        }
+
         TIntList allIdsList = domainNeighbors[domainIdx];
         if (allIdsList == null)
             return List.of();
+
         TIntList allIds = new TIntArrayList(new TIntHashSet(allIdsList));
 
         TIntSet linkingIdsDtoS = getLinkingIdsDToS(domainIdx);
