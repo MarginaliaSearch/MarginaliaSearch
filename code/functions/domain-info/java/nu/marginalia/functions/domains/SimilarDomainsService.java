@@ -53,31 +53,10 @@ public class SimilarDomainsService {
 
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
-        service.scheduleWithFixedDelay(this::init, 0, 1, TimeUnit.SECONDS);
+        service.schedule(this::init, 1, TimeUnit.SECONDS);
 
         // Update screenshot info every hour
         service.scheduleAtFixedRate(this::updateScreenshotInfo, 1, 1, TimeUnit.HOURS);
-    }
-
-    private void updateScreenshotInfo() {
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.createStatement()) {
-                var rs = stmt.executeQuery("""
-                    SELECT EC_DOMAIN.ID
-                    FROM EC_DOMAIN INNER JOIN DATA_DOMAIN_SCREENSHOT AS SCREENSHOT ON EC_DOMAIN.DOMAIN_NAME = SCREENSHOT.DOMAIN_NAME
-                    """);
-
-                while (rs.next()) {
-                    final int id = rs.getInt(1);
-                    final int idx = domainIdToIdx.get(id);
-
-                    screenshotDomains.add(idx);
-                }
-            }
-        }
-        catch (SQLException throwables) {
-            logger.warn("Failed to update screenshot info", throwables);
-        }
     }
 
     private void init() {
@@ -174,6 +153,27 @@ public class SimilarDomainsService {
         }
         catch (SQLException throwables) {
             logger.warn("Failed to get domain neighbors for domain", throwables);
+        }
+    }
+
+    private void updateScreenshotInfo() {
+        try (var connection = dataSource.getConnection()) {
+            try (var stmt = connection.createStatement()) {
+                var rs = stmt.executeQuery("""
+                    SELECT EC_DOMAIN.ID
+                    FROM EC_DOMAIN INNER JOIN DATA_DOMAIN_SCREENSHOT AS SCREENSHOT ON EC_DOMAIN.DOMAIN_NAME = SCREENSHOT.DOMAIN_NAME
+                    """);
+
+                while (rs.next()) {
+                    final int id = rs.getInt(1);
+                    final int idx = domainIdToIdx.get(id);
+
+                    screenshotDomains.add(idx);
+                }
+            }
+        }
+        catch (SQLException throwables) {
+            logger.warn("Failed to update screenshot info", throwables);
         }
     }
 
