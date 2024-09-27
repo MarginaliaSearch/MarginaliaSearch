@@ -173,6 +173,9 @@ public class LiveCaptureGrpcService
                 if (pngBytes.length > 0) {
                     ScreenshotDbOperations.uploadScreenshot(conn, domain, pngBytes);
                 }
+                else {
+                    ScreenshotDbOperations.flagDomainAsFetched(conn, domain);
+                }
             } catch (Exception e) {
                 ScreenshotDbOperations.flagDomainAsFetched(conn, domain);
             }
