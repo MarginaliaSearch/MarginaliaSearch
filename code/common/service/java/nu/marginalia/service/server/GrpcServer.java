@@ -1,6 +1,5 @@
 package nu.marginalia.service.server;
 
-import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
@@ -20,7 +19,7 @@ public class GrpcServer {
     public GrpcServer(ServiceConfiguration config,
                       ServiceRegistryIf serviceRegistry,
                       ServicePartition partition,
-                      List<BindableService> grpcServices) throws Exception {
+                      List<DiscoverableService> grpcServices) throws Exception {
 
         int port = serviceRegistry.requestPort(config.externalAddress(), new ServiceKey.Grpc<>("-", partition));
 
@@ -34,6 +33,10 @@ public class GrpcServer {
                 .channelType(NioServerSocketChannel.class);
 
         for (var grpcService : grpcServices) {
+            if (!grpcService.shouldRegisterService()) {
+                continue;
+            }
+
             var svc = grpcService.bindService();
 
             serviceRegistry.registerService(

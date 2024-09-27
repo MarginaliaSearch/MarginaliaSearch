@@ -3,14 +3,16 @@ package nu.marginalia.linkgraph;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.linkgraph.*;
-import nu.marginalia.api.linkgraph.Empty;
-import nu.marginalia.api.linkgraph.LinkGraphApiGrpc;
+import nu.marginalia.service.server.DiscoverableService;
 
 /**  GRPC service for interrogating domain links for a single partition.  For accessing the data
  * in the application, the AggregateLinkGraphService should be used instead via the
  * AggregateLinkGraphClient.
  */
-public class PartitionLinkGraphService extends LinkGraphApiGrpc.LinkGraphApiImplBase {
+public class PartitionLinkGraphService
+        extends LinkGraphApiGrpc.LinkGraphApiImplBase
+        implements DiscoverableService
+{
     private final DomainLinks domainLinks;
 
     @Inject

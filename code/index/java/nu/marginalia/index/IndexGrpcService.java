@@ -29,6 +29,7 @@ import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
 import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -45,7 +46,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Singleton
-public class IndexGrpcService extends IndexApiGrpc.IndexApiImplBase {
+public class IndexGrpcService
+        extends IndexApiGrpc.IndexApiImplBase
+        implements DiscoverableService
+{
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 

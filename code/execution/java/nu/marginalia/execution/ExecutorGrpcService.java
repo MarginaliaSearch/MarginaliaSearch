@@ -13,6 +13,7 @@ import nu.marginalia.actor.task.RestoreBackupActor;
 import nu.marginalia.actor.task.TriggerAdjacencyCalculationActor;
 import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.service.server.DiscoverableService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 
@@ -23,7 +24,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 
-public class ExecutorGrpcService extends ExecutorApiGrpc.ExecutorApiImplBase {
+public class ExecutorGrpcService
+        extends ExecutorApiGrpc.ExecutorApiImplBase
+        implements DiscoverableService
+{
     private final ActorApi actorApi;
     private final FileStorageService fileStorageService;
     private final ServiceConfiguration serviceConfiguration;

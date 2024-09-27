@@ -1,6 +1,5 @@
 package nu.marginalia.service.server;
 
-import io.grpc.BindableService;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
@@ -17,7 +16,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -115,7 +116,7 @@ public class GrpcServerTest {
 
     }
 
-    private GrpcServer createServerOnPort(int port, UUID uuid, BindableService... services) throws Exception {
+    private GrpcServer createServerOnPort(int port, UUID uuid, DiscoverableService... services) throws Exception {
         var mockRegistry = Mockito.mock(ServiceRegistryIf.class);
         when(mockRegistry.requestPort(any(), any())).thenReturn(port);
 
@@ -139,7 +140,7 @@ public class GrpcServerTest {
         return 12000 + (int) (Math.random() * 1000);
     }
 
-    private static class TestGrpcService extends TestApiGrpc.TestApiImplBase {
+    private static class TestGrpcService extends TestApiGrpc.TestApiImplBase implements DiscoverableService {
 
         @Override
         public void increment(RpcInteger request, StreamObserver<RpcInteger> obs) {

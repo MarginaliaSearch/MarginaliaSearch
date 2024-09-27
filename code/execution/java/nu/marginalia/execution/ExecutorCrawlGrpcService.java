@@ -6,11 +6,15 @@ import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.*;
 import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.service.server.DiscoverableService;
 import nu.marginalia.storage.model.FileStorageId;
 
 import java.util.stream.Collectors;
 
-public class ExecutorCrawlGrpcService extends ExecutorCrawlApiGrpc.ExecutorCrawlApiImplBase {
+public class ExecutorCrawlGrpcService
+        extends ExecutorCrawlApiGrpc.ExecutorCrawlApiImplBase
+        implements DiscoverableService
+{
     private final ExecutorActorControlService actorControlService;
 
     @Inject
