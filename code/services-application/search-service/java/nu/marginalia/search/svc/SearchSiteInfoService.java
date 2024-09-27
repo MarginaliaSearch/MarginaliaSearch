@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
+import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.feedlot.FeedlotClient;
 import nu.marginalia.feedlot.model.FeedItems;
@@ -37,6 +38,7 @@ public class SearchSiteInfoService {
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
     private final FeedlotClient feedlotClient;
+    private final LiveCaptureClient liveCaptureClient;
     private final ScreenshotService screenshotService;
 
     @Inject
@@ -46,6 +48,7 @@ public class SearchSiteInfoService {
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries,
                                  FeedlotClient feedlotClient,
+                                 LiveCaptureClient liveCaptureClient,
                                  ScreenshotService screenshotService) throws IOException
     {
         this.searchOperator = searchOperator;
@@ -56,6 +59,7 @@ public class SearchSiteInfoService {
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
 
         this.feedlotClient = feedlotClient;
+        this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
     }
 
@@ -165,7 +169,7 @@ public class SearchSiteInfoService {
             logger.debug("Failed to get feed items for {}: {}", domainName, e.getMessage());
         }
 
-        return new SiteInfoWithContext(domainName,
+        var result = new SiteInfoWithContext(domainName,
                 domainId,
                 url,
                 hasScreenshot,
@@ -175,6 +179,46 @@ public class SearchSiteInfoService {
                 feedItems,
                 sampleResults
         );
+
+        requestMissingScreenshots(result);
+
+        return result;
+    }
+
+    /** Request missing screenshots for the given site info */
+    private void requestMissingScreenshots(SiteInfoWithContext result) {
+        int requests = 0;
+        if (!result.hasScreenshot()) {
+            liveCaptureClient.requestScreengrab((int) result.domainId());
+            requests++;
+        }
+
+        if (result.similar() != null) {
+            for (var similar : result.similar()) {
+                if (similar.screenshot()) {
+                    continue;
+                }
+                if (++requests > 5) {
+                    break;
+                }
+
+                liveCaptureClient.requestScreengrab(similar.domainId());
+            }
+        }
+
+        if (result.linking() != null) {
+            for (var linking : result.linking()) {
+                if (linking.screenshot()) {
+                    continue;
+                }
+                if (++requests > 5) {
+                    break;
+                }
+
+                liveCaptureClient.requestScreengrab(linking.domainId());
+            }
+        }
+
     }
 
     private <T> T waitForFuture(Future<T> future, Supplier<T> fallback) {
@@ -233,7 +277,7 @@ public class SearchSiteInfoService {
     public record SiteInfoWithContext(Map<String, Boolean> view,
                                       Map<String, Boolean> domainState,
                                       String domain,
-                                      long domainId,
+                                      int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,
                                       DomainInformation domainInformation,
@@ -243,7 +287,7 @@ public class SearchSiteInfoService {
                                       List<UrlDetails> samples
                                       ) {
         public SiteInfoWithContext(String domain,
-                                   long domainId,
+                                   int domainId,
                                    String siteUrl,
                                    boolean hasScreenshot,
                                    DomainInformation domainInformation,

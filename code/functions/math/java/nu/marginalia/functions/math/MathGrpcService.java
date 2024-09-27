@@ -7,8 +7,12 @@ import nu.marginalia.functions.math.dict.DictionaryService;
 import nu.marginalia.functions.math.dict.SpellChecker;
 import nu.marginalia.functions.math.eval.MathParser;
 import nu.marginalia.functions.math.eval.Units;
+import nu.marginalia.service.server.DiscoverableService;
 
-public class MathGrpcService extends MathApiGrpc.MathApiImplBase {
+public class MathGrpcService
+        extends MathApiGrpc.MathApiImplBase
+        implements DiscoverableService
+{
 
     private final DictionaryService dictionaryService;
     private final SpellChecker spellChecker;

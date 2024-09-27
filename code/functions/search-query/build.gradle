@@ -17,6 +17,7 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:config')
     implementation project(':code:common:model')
+    implementation project(':code:common:service')
 
     implementation project(':code:functions:search-query:api')
 

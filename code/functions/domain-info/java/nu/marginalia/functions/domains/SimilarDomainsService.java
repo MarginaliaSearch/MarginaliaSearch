@@ -9,7 +9,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
-import nu.marginalia.api.domains.*;
+import nu.marginalia.api.domains.RpcSimilarDomain;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.model.EdgeDomain;
@@ -21,8 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.IntStream;
 
 public class SimilarDomainsService {
@@ -227,7 +225,7 @@ public class SimilarDomainsService {
 
             domains.add(RpcSimilarDomain.newBuilder()
                     .setDomainId(id)
-                    .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
+                    .setUrl(new EdgeDomain(domainNames[idx]).toRootUrlHttp().toString())
                     .setRelatedness(getRelatedness(domainId, id))
                     .setRank(domainRanks.get(idx))
                     .setIndexed(indexedDomains.contains(idx))
@@ -342,7 +340,7 @@ public class SimilarDomainsService {
 
             domains.add(RpcSimilarDomain.newBuilder()
                             .setDomainId(id)
-                            .setUrl(new EdgeDomain(domainNames[idx]).toRootUrl().toString())
+                            .setUrl(new EdgeDomain(domainNames[idx]).toRootUrlHttp().toString())
                             .setRelatedness(getRelatedness(domainId, id))
                             .setRank(domainRanks.get(idx))
                             .setIndexed(indexedDomains.contains(idx))

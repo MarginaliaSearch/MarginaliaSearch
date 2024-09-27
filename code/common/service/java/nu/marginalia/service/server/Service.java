@@ -1,16 +1,11 @@
 package nu.marginalia.service.server;
 
-import io.grpc.*;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
-import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
-import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.prometheus.client.Counter;
 import lombok.SneakyThrows;
-import nu.marginalia.mq.inbox.*;
-import nu.marginalia.util.NamedExecutorFactory;
+import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.service.client.ServiceNotAvailableException;
-import nu.marginalia.service.discovery.property.*;
-import nu.marginalia.service.ServiceId;
+import nu.marginalia.service.discovery.property.ServiceKey;
+import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +15,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Optional;
 
 public class Service {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -55,7 +48,7 @@ public class Service {
     public Service(BaseServiceParams params,
                    Runnable configureStaticFiles,
                    ServicePartition partition,
-                   List<BindableService> grpcServices) {
+                   List<DiscoverableService> grpcServices) {
 
         this.initialization = params.initialization;
         var config = params.configuration;
@@ -137,7 +130,7 @@ public class Service {
 
     public Service(BaseServiceParams params,
                    ServicePartition partition,
-                   List<BindableService> grpcServices) {
+                   List<DiscoverableService> grpcServices) {
         this(params,
                 Service::defaultSparkConfig,
                 partition,

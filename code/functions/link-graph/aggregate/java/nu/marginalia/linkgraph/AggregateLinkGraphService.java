@@ -3,9 +3,8 @@ package nu.marginalia.linkgraph;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.linkgraph.*;
-import nu.marginalia.api.linkgraph.PartitionLinkGraphClient;
-import nu.marginalia.api.linkgraph.LinkGraphApiGrpc;
 import nu.marginalia.api.linkgraph.LinkGraphApiGrpc.LinkGraphApiBlockingStub;
+import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +13,10 @@ import java.util.List;
 /** This class is responsible for aggregating the link graph data from the partitioned link graph
  * services.
  */
-public class AggregateLinkGraphService extends LinkGraphApiGrpc.LinkGraphApiImplBase {
+public class AggregateLinkGraphService
+        extends LinkGraphApiGrpc.LinkGraphApiImplBase
+        implements DiscoverableService
+{
     private static final Logger logger = LoggerFactory.getLogger(AggregateLinkGraphService.class);
     private final PartitionLinkGraphClient client;
 

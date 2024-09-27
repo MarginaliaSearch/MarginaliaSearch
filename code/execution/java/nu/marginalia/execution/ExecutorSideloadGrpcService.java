@@ -6,8 +6,12 @@ import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.ConvertActor;
 import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.service.server.DiscoverableService;
 
-public class ExecutorSideloadGrpcService extends ExecutorSideloadApiGrpc.ExecutorSideloadApiImplBase {
+public class ExecutorSideloadGrpcService
+        extends ExecutorSideloadApiGrpc.ExecutorSideloadApiImplBase
+        implements DiscoverableService
+{
     private final ExecutorActorControlService actorControlService;
 
     @Inject

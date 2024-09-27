@@ -96,7 +96,7 @@ public class ScreenshotCaptureToolMain {
     private static byte[] fetchDomain(HttpClient client, EdgeDomain domain) {
         try {
             Map<String, Object> requestData = Map.of(
-                    "url", domain.toRootUrl().toString(),
+                    "url", domain.toRootUrlHttps().toString(),
                     "options",
                     Map.of("fullPage", false,
                             "type", "png"),

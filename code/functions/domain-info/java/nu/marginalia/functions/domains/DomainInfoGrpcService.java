@@ -3,8 +3,12 @@ package nu.marginalia.functions.domains;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.domains.*;
+import nu.marginalia.service.server.DiscoverableService;
 
-public class DomainInfoGrpcService extends DomainInfoAPIGrpc.DomainInfoAPIImplBase {
+public class DomainInfoGrpcService
+        extends DomainInfoAPIGrpc.DomainInfoAPIImplBase
+        implements DiscoverableService
+{
 
     private final DomainInformationService domainInformationService;
     private final SimilarDomainsService similarDomainsService;

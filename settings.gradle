@@ -25,6 +25,9 @@ include 'code:functions:link-graph:api'
 include 'code:functions:search-query'
 include 'code:functions:search-query:api'
 
+include 'code:functions:live-capture'
+include 'code:functions:live-capture:api'
+
 include 'code:execution'
 include 'code:execution:api'
 

@@ -11,13 +11,17 @@ import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.index.api.IndexClient;
+import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Singleton
-public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
+public class QueryGRPCService
+        extends QueryApiGrpc.QueryApiImplBase
+        implements DiscoverableService
+{
 
     private final Logger logger = LoggerFactory.getLogger(QueryGRPCService.class);
 
