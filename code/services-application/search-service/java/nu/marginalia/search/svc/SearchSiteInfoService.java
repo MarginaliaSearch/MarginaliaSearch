@@ -187,11 +187,16 @@ public class SearchSiteInfoService {
 
     /** Request missing screenshots for the given site info */
     private void requestMissingScreenshots(SiteInfoWithContext result) {
-        int requests = 0;
-        if (!result.hasScreenshot()) {
-            liveCaptureClient.requestScreengrab((int) result.domainId());
-            requests++;
-        }
+
+        // Always request the main site screenshot, even if we already have it
+        // as this will make the live-capture do a staleness check and update
+        // as needed.
+        liveCaptureClient.requestScreengrab(result.domainId());
+
+        int requests = 1;
+
+        // Request screenshots for similar and linking domains only if they are absent
+        // also throttle the requests to at most 5 per view.
 
         if (result.similar() != null) {
             for (var similar : result.similar()) {
