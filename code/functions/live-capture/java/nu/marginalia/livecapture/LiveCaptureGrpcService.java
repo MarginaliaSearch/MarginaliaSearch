@@ -70,14 +70,9 @@ public class LiveCaptureGrpcService
     {
         if (serviceEnabled) {
             try (var conn = dataSource.getConnection()) {
-                logger.info("Received request for domain {}", request.getDomainId());
                 if (ScreenshotDbOperations.isEligibleForScreengrab(conn, request.getDomainId())) {
-                    logger.info("Domain {} is eligible for a screenshot", request.getDomainId());
                     // may fail, we don't care about it
                     requestedScreenshots.offer(new ScheduledScreenshot(request.getDomainId()));
-                }
-                else {
-                    logger.info("Domain {} is not eligible for a screenshot", request.getDomainId());
                 }
             }
             catch (SQLException ex) {
@@ -134,7 +129,6 @@ public class LiveCaptureGrpcService
                     String domainNameStr = domain.toString();
 
                     if (!isValidDomainForCapture(domain)) {
-                        logger.error("Invalid domain name {}", domainNameStr);
                         ScreenshotDbOperations.flagDomainAsFetched(conn, domain);
                     }
                     else {

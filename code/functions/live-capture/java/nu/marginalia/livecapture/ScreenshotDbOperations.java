@@ -46,6 +46,9 @@ public class ScreenshotDbOperations {
     }
 
     public static boolean isEligibleForScreengrab(Connection conn, int domainId) {
+        if (domainId <= 0) // Invalid domain ID
+            return false;
+
         try (var stmt = conn.prepareStatement("""
                 SELECT 1 FROM DATA_DOMAIN_HISTORY
                 INNER JOIN WMSA_prod.EC_DOMAIN ON DATA_DOMAIN_HISTORY.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME
