@@ -20,6 +20,7 @@ public class ExportTermFreqActor extends RecordActorPrototype {
     private final ExporterIf exporter;
     public record Export(FileStorageId crawlId) implements ActorStep {}
     public record Run(FileStorageId crawlId, FileStorageId destId) implements ActorStep {}
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {

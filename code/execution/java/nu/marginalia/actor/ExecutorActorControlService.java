@@ -3,7 +3,7 @@ package nu.marginalia.actor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
-import nu.marginalia.actor.monitor.*;
+import nu.marginalia.actor.monitor.FileStorageMonitorActor;
 import nu.marginalia.actor.proc.*;
 import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
@@ -51,6 +51,7 @@ public class ExecutorActorControlService {
                                        ExportTermFreqActor exportTermFrequenciesActor,
                                        ExportSegmentationModelActor exportSegmentationModelActor,
                                        DownloadSampleActor downloadSampleActor,
+                                       ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -84,6 +85,8 @@ public class ExecutorActorControlService {
         register(ExecutorActor.EXPORT_SEGMENTATION_MODEL, exportSegmentationModelActor);
 
         register(ExecutorActor.DOWNLOAD_SAMPLE, downloadSampleActor);
+
+        register(ExecutorActor.SCRAPE_FEEDS, scrapeFeedsActor);
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {

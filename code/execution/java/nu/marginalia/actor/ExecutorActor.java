@@ -21,7 +21,8 @@ public enum ExecutorActor {
     CONVERT,
     RESTORE_BACKUP,
     EXPORT_SAMPLE_DATA,
-    DOWNLOAD_SAMPLE;
+    DOWNLOAD_SAMPLE,
+    SCRAPE_FEEDS;
 
     public String id() {
         return "fsm:" + name().toLowerCase();
