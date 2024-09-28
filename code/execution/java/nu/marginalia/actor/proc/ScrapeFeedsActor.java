@@ -27,9 +27,10 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Singleton
 public class ScrapeFeedsActor extends RecordActorPrototype {
@@ -115,7 +116,7 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
                 eventLog.logEvent("ScrapeFeedsActor", "Failed to fetch domains from " + domainsUrl + " - no content type");
             }
 
-            List<EdgeDomain> validDomains = new ArrayList<>();
+            Set<EdgeDomain> validDomains = new HashSet<>();
 
             for (Element e : Jsoup.parse(result.body()).select("a")) {
                 String s = e.attr("href");
@@ -141,7 +142,7 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
     }
 
     /** Insert the given domains into the database, updating the node affinity if the domain already exists */
-    private void insertDomains(List<EdgeDomain> domains, int node) throws SQLException {
+    private void insertDomains(Collection<EdgeDomain> domains, int node) throws SQLException {
 
         // Insert the domains into the database, updating the node affinity if the domain already exists and the affinity is not already set to a node
         try (var conn = dataSource.getConnection();
