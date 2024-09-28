@@ -26,6 +26,7 @@ public class DecoratedSearchResults {
     private final SearchFilters filters;
 
     private final List<Page> resultPages;
+    public boolean isMultipage() { return resultPages.size() > 1; }
 
     public record Page(int number, boolean current, String href) {}
 
