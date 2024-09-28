@@ -14,6 +14,8 @@ import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,6 +33,8 @@ import java.util.Optional;
 
 @Singleton
 public class ScrapeFeedsActor extends RecordActorPrototype {
+    private static final Logger logger = LoggerFactory.getLogger(ScrapeFeedsActor.class);
+
     private final Duration pollInterval = Duration.ofHours(6);
 
     private final ServiceEventLog eventLog;
@@ -148,12 +152,18 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
                         """))
         {
             for (var domain : domains) {
+                logger.info("Inserting domain {} into the database", domain);
+
                 stmt.setString(1, domain.toString());
                 stmt.setString(2, domain.getTopDomain());
                 stmt.setInt(3, node);
                 stmt.addBatch();
             }
             stmt.executeBatch();
+
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
         }
     }
 
