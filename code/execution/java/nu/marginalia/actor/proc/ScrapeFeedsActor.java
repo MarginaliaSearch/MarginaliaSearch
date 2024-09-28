@@ -11,6 +11,7 @@ import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.service.control.ServiceEventLog;
+import nu.marginalia.service.module.ServiceConfiguration;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
@@ -34,6 +35,7 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
 
     private final ServiceEventLog eventLog;
     private final HikariDataSource dataSource;
+    private final int nodeId;
 
     private final Path feedPath = WmsaHome.getHomePath().resolve("data/scrape-urls.txt");
 
@@ -46,7 +48,14 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
-            case Initial() -> new Wait(LocalDateTime.now().toString());
+            case Initial() -> {
+                if (nodeId > 1) {
+                    yield new End();
+                }
+                else {
+                    yield new Wait(LocalDateTime.now().toString());
+                }
+            }
             case Wait(String untilTs) -> {
                 var until = LocalDateTime.parse(untilTs);
                 var now = LocalDateTime.now();
@@ -156,11 +165,13 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
     @Inject
     public ScrapeFeedsActor(Gson gson,
                             ServiceEventLog eventLog,
+                            ServiceConfiguration configuration,
                             HikariDataSource dataSource)
     {
         super(gson);
         this.eventLog = eventLog;
         this.dataSource = dataSource;
+        this.nodeId = configuration.node();
     }
 
 }
