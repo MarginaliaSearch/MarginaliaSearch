@@ -6,8 +6,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,7 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class PrioDocIdsTransformerTest {
 
@@ -52,6 +51,15 @@ class PrioDocIdsTransformerTest {
             buffer.putLong(UrlIdCodec.encodeId(4, 51) | 0x7000_0000_0000_0000L);
 
             writeChannel.write(buffer.flip());
+
+            buffer.clear();
+
+            buffer.putLong(UrlIdCodec.encodeId(0, 0));
+            buffer.putLong(UrlIdCodec.encodeId(0, 1));
+            buffer.putLong(UrlIdCodec.encodeId(1, 0));
+            buffer.putLong(UrlIdCodec.encodeId(4, 51) | 0x7000_0000_0000_0000L);
+
+            writeChannel.write(buffer.flip());
         }
 
         try (var writeChannel = (FileChannel) Files.newByteChannel(outputFile, StandardOpenOption.WRITE);
@@ -60,7 +68,12 @@ class PrioDocIdsTransformerTest {
         {
             // Transform two segments of the input file and write them to the output file with prefixed sizes
 
-            transformer.transform(0, 4);
+            long pos1 = transformer.transform(0, 4);
+            long pos2 = transformer.transform(1, 8);
+
+            // The functions return the positions in the output file, which should be non-zero for all but the first segment
+            assertEquals(0, pos1);
+            assertNotEquals(0, pos2);
         }
 
         byte[] bytes = Files.readAllBytes(outputFile);

@@ -35,7 +35,7 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
     public long transform(long pos, long endL) throws IOException {
 
         final int sizeL = (int) ((endL - startL));
-        final long startOffsetB = writeOffsetB;
+        final long startOffsetB = writeOffsetB + writeBuffer.position();
 
         if (sizeL == 0)
             throw new IllegalStateException("Empty range");
