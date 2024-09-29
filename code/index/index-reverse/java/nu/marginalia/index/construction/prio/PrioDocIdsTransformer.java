@@ -142,8 +142,10 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
     @Override
     public void close() throws IOException {
         writeBuffer.flip();
-        int written = writeChannel.write(writeBuffer, writeOffsetB);
-        writeOffsetB += written;
+        while (writeBuffer.hasRemaining()) {
+            int written = writeChannel.write(writeBuffer, writeOffsetB);
+            writeOffsetB += written;
+        }
         writeBuffer.clear();
     }
 }
