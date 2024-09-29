@@ -23,8 +23,6 @@ public class BitWriter {
         this.bitPosition = 0;
         this.currentValue = 0;
         this.totalMeaningfulBytes = 0;
-
-        underlying.clear();
     }
 
     public void putBit(boolean value) {

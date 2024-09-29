@@ -149,6 +149,8 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
      * or equal to zero.
      */
     public static ByteBuffer encode(ByteBuffer workArea, IntList sequence) {
+        workArea.clear();
+
         var writer = new BitWriter(workArea);
 
         writer.putGamma(sequence.size() + 1);
