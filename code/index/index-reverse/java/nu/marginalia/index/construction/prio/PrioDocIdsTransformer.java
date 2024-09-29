@@ -57,6 +57,13 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
             readChannel.read(readBuffer);
             readBuffer.flip();
 
+            if (writeBuffer.remaining() < 32) {
+                writeBuffer.flip();
+                int written = writeChannel.write(writeBuffer, writeOffsetB);
+                writeOffsetB += written;
+                writeBuffer.clear();
+            }
+
             if (!wroteHeader) {
                 // write 11b header
                 bitWriter.putBits(3, 2);
@@ -78,7 +85,7 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
             }
 
             while (readBuffer.hasRemaining()) {
-                if (writeBuffer.remaining() < 16) {
+                if (writeBuffer.remaining() < 32) {
                     writeBuffer.flip();
                     int written = writeChannel.write(writeBuffer, writeOffsetB);
                     writeOffsetB += written;
