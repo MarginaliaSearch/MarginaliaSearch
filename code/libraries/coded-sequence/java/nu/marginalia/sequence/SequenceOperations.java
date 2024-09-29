@@ -138,7 +138,7 @@ public class SequenceOperations {
     }
 
     /** Given each set of positions, one from each list, find the set with the smallest distance between them
-     * and return that distance.  If any of the lists are empty, return 0.
+     * and return that distance.  If any of the lists are empty, return Integer.MAX_VALUE.
      *
      * @param positions the positions lists to compare - each list must be sorted in ascending order
      * @param offsets the offsets to apply to each position
@@ -151,10 +151,13 @@ public class SequenceOperations {
         int[] indexes = new int[positions.length];
 
         for (int i = 0; i < positions.length; i++) {
-            if (indexes[i] < positions[i].size())
-                values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
-            else
-                return 0;
+            // if any of the lists are empty, return MAX_VALUE
+
+            if (positions[i].isEmpty()) {
+                return Integer.MAX_VALUE;
+            }
+
+            values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
         }
 
         int minDist = Integer.MAX_VALUE;
@@ -175,7 +178,7 @@ public class SequenceOperations {
             for (int idx = 0; idx < positions.length - 1; idx++) {
                 int i = (maxI + idx) % positions.length;
 
-                // Update values[i] until it is the largest value smaller than maxVal
+                // Update values[i] to the largest value smaller than maxVal
 
                 int len = positions[i].size();
                 int offset = offsets[i];
