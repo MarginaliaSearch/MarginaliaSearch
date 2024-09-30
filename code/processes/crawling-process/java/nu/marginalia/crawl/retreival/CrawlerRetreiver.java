@@ -321,6 +321,9 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         long probeStart = System.currentTimeMillis();
 
+        /*
+        probing is on probation for now while we evaluate how much the added delays slows down the crawler
+
         if (probeType == HttpFetcher.ProbeType.FULL) {
             for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
                 try {
@@ -348,9 +351,10 @@ public class CrawlerRetreiver implements AutoCloseable {
                     return new HttpFetchResult.ResultException(ex);
                 }
             }
-        }
 
         timer.waitFetchDelay(System.currentTimeMillis() - probeStart);
+        }*/
+
 
         for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
             try {
