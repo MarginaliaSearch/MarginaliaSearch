@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import gnu.trove.set.hash.TLongHashSet;
 import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
-import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawldata.CrawledDocument;

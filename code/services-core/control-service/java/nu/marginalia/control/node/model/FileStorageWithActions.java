@@ -10,9 +10,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public record FileStorageWithActions(FileStorage storage) {
-    public boolean isCrawlable() {
-        return storage.type() == FileStorageType.CRAWL_SPEC;
-    }
     public boolean isStatusNew() {
         return storage.state() == FileStorageState.NEW;
     }

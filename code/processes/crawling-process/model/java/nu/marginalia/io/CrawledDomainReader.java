@@ -1,4 +1,4 @@
-package nu.marginalia.io.crawldata;
+package nu.marginalia.io;
 
 import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
 import org.slf4j.Logger;

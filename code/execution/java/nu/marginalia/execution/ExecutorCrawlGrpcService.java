@@ -4,7 +4,10 @@ import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
-import nu.marginalia.actor.task.*;
+import nu.marginalia.actor.task.ConvertActor;
+import nu.marginalia.actor.task.ConvertAndLoadActor;
+import nu.marginalia.actor.task.CrawlActor;
+import nu.marginalia.actor.task.RecrawlSingleDomainActor;
 import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.service.server.DiscoverableService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -27,21 +30,7 @@ public class ExecutorCrawlGrpcService
     public void triggerCrawl(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
             actorControlService.startFrom(ExecutorActor.CRAWL,
-                    new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId())));
-
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
-        }
-        catch (Exception e) {
-            responseObserver.onError(e);
-        }
-    }
-
-    @Override
-    public void triggerRecrawl(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
-        try {
-            actorControlService.startFrom(ExecutorActor.RECRAWL,
-                    new RecrawlActor.Initial(FileStorageId.of(request.getFileStorageId()), false));
+                    new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId()), false));
 
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
@@ -103,23 +92,6 @@ public class ExecutorCrawlGrpcService
                             .stream()
                             .map(FileStorageId::of)
                             .collect(Collectors.toList()))
-            );
-
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
-        }
-        catch (Exception e) {
-            responseObserver.onError(e);
-        }
-    }
-
-    @Override
-    public void createCrawlSpecFromDownload(RpcCrawlSpecFromDownload request, StreamObserver<Empty> responseObserver) {
-        try {
-            actorControlService.startFrom(ExecutorActor.CRAWL_JOB_EXTRACTOR,
-                    new CrawlJobExtractorActor.CreateFromUrl(
-                            request.getDescription(),
-                            request.getUrl())
             );
 
             responseObserver.onNext(Empty.getDefaultInstance());

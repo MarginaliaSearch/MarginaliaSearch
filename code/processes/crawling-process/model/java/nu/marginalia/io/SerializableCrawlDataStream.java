@@ -1,4 +1,4 @@
-package nu.marginalia.io.crawldata;
+package nu.marginalia.io;
 
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import org.jetbrains.annotations.Nullable;

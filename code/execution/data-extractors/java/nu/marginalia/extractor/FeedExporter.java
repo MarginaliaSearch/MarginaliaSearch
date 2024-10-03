@@ -2,8 +2,8 @@ package nu.marginalia.extractor;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.io.crawldata.CrawledDomainReader;
-import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
+import nu.marginalia.io.CrawledDomainReader;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;

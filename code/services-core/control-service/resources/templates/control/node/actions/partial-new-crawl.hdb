@@ -1,56 +1,52 @@
 <h1 class="my-3">New Crawl</h1>
 
-{{#unless allCrawlSpecs}}
-    No crawling specifications have been created.  You must create a crawl spec before you can crawl.
-    <a href="?view=new-crawl-specs">Create a crawl spec</a>.
-{{/unless}}
-
-{{#if allCrawlSpecs}}
-    <div class="my-3 p-3 border bg-light">
-    This will perform a new crawl on node {{node.id}} based on the crawl spec you select below.
-    Additional specifications can be created <a href="?view=new-crawl-specs">with this form</a>.
-    </div>
-    <div class="my-3 p-3 border">
-        <p><em class="text-danger">IMPORTANT!</em>  Be sure you've read and understood the
-            <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/crawling.md">crawling documentation</a>
-        before you begin a crawl.  You will be accessing real servers from your connection, and you may end up on IP greylists
-        that temporarily block your access to those servers for up to a few weeks; on rare occasions permanently.  The crawler
-        is generally polite and well-behaved, but it is still a crawler, and it will be accessing a lot of pages.
-    </p>
+<div class="my-3 p-3 border bg-light">
     <p>
-        You run the risk of getting in trouble with your ISP, the law, your partner, your landlord, and/or your parents;
-        depending on terms of service, jurisdiction, marital status, living conditions and age.
-    <p>
+    This will crawl on node {{node.id}}.
+    </p><p>
+    If existing crawl data is provided, the crawler may perform a smart crawl that uses the existing data
+    as a starting point.  It will use the existing crawl data to perform conditional GETs on the domains in the
+    crawl spec.  If the document has changed, it will be re-crawled.  If it has not changed, it will be skipped,
+    and the previous data will be retained.  This is both faster and easier on the target server.
     </p>
-        This action is performed at your own risk.
-    </p>
-    </div>
+    <p><span class="text-danger">Warning</span> Ensure <a href="?view=download-sample-data">downloaded sample data</a>
+        has not been loaded onto this instance before performing this action, otherwise those domains will also be crawled!</p>
+    <p>Use the <a href="/domain">Domains</a> view to inspect and manage known domains. </p>
+</div>
 
-    <form method="post" action="actions/new-crawl">
-    <table class="table">
-        <tr>
-            <th>Use</th>
-            <th>Path</th>
-            <th>Description</th>
-            <th>Details</th>
-        </tr>
+<form method="post" action="actions/new-crawl">
+<p>Select the crawl data to use:</p>
+<table class="table">
+    <tr>
+        <th>Use</th>
+        <th>Path</th>
+        <th>Description</th>
+        <th>Details</th>
+    </tr>
+{{#each allCrawlData}}
+    <tr>
+        <td><input {{#if active}}checked{{/if}}  {{#if new}}disabled{{/if}} {{#if delete}}disabled{{/if}}  class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
+        <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
+        <td>{{description}}
+            <span class="text-danger">{{#if new}}[CREATING]{{/if}}</span>
+            <span class="text-danger">{{#if delete}}[DELETING]{{/if}}</span>
+        </td>
+        <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
+    </tr>
+{{/each}}
+    <tr>
+        <td>
+            <input class="form-check-input" type="radio" name="source" id="-1" value="-1">
+        </td>
+        <td colspan="3">
+            <label for="-1" class="form-check-label"><em>Crawl without referencing existing crawl data, using the <a href="/domain">domains in the database</a>.</em></label>
+        </td>
+    </tr>
+</table>
 
-        {{#each allCrawlSpecs}}
-            <tr>
-                <td><input {{#if active}}checked{{/if}} {{#if new}}disabled{{/if}} {{#if delete}}disabled{{/if}} class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
-                <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
-                <td>{{description}}
-                    <span class="text-danger">{{#if new}}[CREATING]{{/if}}</span>
-                    <span class="text-danger">{{#if delete}}[DELETING]{{/if}}</span>
-                </td>
-                <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
-            </tr>
-        {{/each}}
-    </table>
-        <button
-                class="btn btn-primary me-md-2"
-                onclick="return confirm('Confirm crawling on node {{node.id}}');"
-                type="submit">
-            Trigger New  Crawl</button>
-    </form>
-{{/if}}
+    <button
+            class="btn btn-primary me-md-2"
+            onclick="return confirm('Confirm recrawl of  the selected data on node {{node.id}}');"
+            type="submit">
+        Trigger Recrawl</button>
+</form>

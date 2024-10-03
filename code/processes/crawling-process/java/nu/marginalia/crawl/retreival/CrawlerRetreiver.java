@@ -11,12 +11,12 @@ import nu.marginalia.crawl.logic.LinkFilterSelector;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
 import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
+import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
-import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -55,16 +54,16 @@ public class CrawlerRetreiver implements AutoCloseable {
 
     public CrawlerRetreiver(HttpFetcher fetcher,
                             DomainProber domainProber,
-                            CrawlSpecRecord specs,
+                            CrawlSpecProvider.CrawlSpecRecord specs,
                             WarcRecorder warcRecorder)
     {
         this.warcRecorder = warcRecorder;
         this.fetcher = fetcher;
         this.domainProber = domainProber;
 
-        domain = specs.domain;
+        domain = specs.domain();
 
-        crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), Objects.requireNonNullElse(specs.urls, List.of()), specs.crawlDepth);
+        crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), specs.urls(), specs.crawlDepth());
         crawlerRevisitor = new CrawlerRevisitor(crawlFrontier, this, warcRecorder);
         sitemapFetcher = new SitemapFetcher(crawlFrontier, fetcher.createSitemapRetriever());
 

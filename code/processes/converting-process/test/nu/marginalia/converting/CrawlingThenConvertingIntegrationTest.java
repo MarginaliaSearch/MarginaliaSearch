@@ -12,13 +12,13 @@ import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
+import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
-import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -77,11 +77,7 @@ public class CrawlingThenConvertingIntegrationTest {
     @Test
     public void testInvalidDomain() throws IOException {
         // Attempt to fetch an invalid domain
-        var specs = CrawlSpecRecord.builder()
-                .domain("invalid.invalid.invalid")
-                .crawlDepth(10)
-                .urls(List.of()) // add specific URLs to crawl here
-                .build();
+        var specs = new CrawlSpecProvider.CrawlSpecRecord("invalid.invalid.invalid", 10);
 
         CrawledDomain crawlData = crawl(specs);
 
@@ -97,11 +93,7 @@ public class CrawlingThenConvertingIntegrationTest {
     @Test
     public void testRedirectingDomain() throws IOException {
         // Attempt to fetch an invalid domain
-        var specs = CrawlSpecRecord.builder()
-                .domain("memex.marginalia.nu")
-                .crawlDepth(10)
-                .urls(List.of()) // add specific URLs to crawl here
-                .build();
+        var specs = new CrawlSpecProvider.CrawlSpecRecord("memex.marginalia.nu", 10);
 
         CrawledDomain crawlData = crawl(specs);
 
@@ -120,11 +112,7 @@ public class CrawlingThenConvertingIntegrationTest {
     @Test
     public void testBlockedDomain() throws IOException {
         // Attempt to fetch an invalid domain
-        var specs = CrawlSpecRecord.builder()
-                .domain("search.marginalia.nu")
-                .crawlDepth(10)
-                .urls(List.of()) // add specific URLs to crawl here
-                .build();
+        var specs = new CrawlSpecProvider.CrawlSpecRecord("search.marginalia.nu", 10);
 
         CrawledDomain crawlData = crawl(specs, d->false); // simulate blocking by blacklisting everything
 
@@ -140,11 +128,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlSunnyDay() throws IOException {
-        var specs = CrawlSpecRecord.builder()
-                .domain("www.marginalia.nu")
-                .crawlDepth(10)
-                .urls(List.of()) // add specific URLs to crawl here
-                .build();
+        var specs = new CrawlSpecProvider.CrawlSpecRecord("www.marginalia.nu", 10);
 
         CrawledDomain domain = crawl(specs);
         assertFalse(domain.doc.isEmpty());
@@ -177,14 +161,12 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlContentTypes() throws IOException {
-        var specs = CrawlSpecRecord.builder()
-                .domain("www.marginalia.nu")
-                .crawlDepth(5)
-                .urls(List.of(
+        var specs = new CrawlSpecProvider.CrawlSpecRecord("www.marginalia.nu", 10,
+                List.of(
                         "https://www.marginalia.nu/sanic.png",
                         "https://www.marginalia.nu/invalid"
-                ))
-                .build();
+                )
+        );
 
         CrawledDomain domain = crawl(specs);
         assertFalse(domain.doc.isEmpty());
@@ -217,13 +199,9 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlRobotsTxt() throws IOException {
-        var specs = CrawlSpecRecord.builder()
-                .domain("search.marginalia.nu")
-                .crawlDepth(5)
-                .urls(List.of(
-                        "https://search.marginalia.nu/search?q=hello+world"
-                ))
-                .build();
+        var specs = new CrawlSpecProvider.CrawlSpecRecord("search.marginalia.nu", 5,
+                        List.of("https://search.marginalia.nu/search?q=hello+world")
+        );
 
         CrawledDomain domain = crawl(specs);
         assertFalse(domain.doc.isEmpty());
@@ -260,18 +238,18 @@ public class CrawlingThenConvertingIntegrationTest {
             return null; // unreachable
         }
     }
-    private CrawledDomain crawl(CrawlSpecRecord specs) throws IOException {
+    private CrawledDomain crawl(CrawlSpecProvider.CrawlSpecRecord specs) throws IOException {
         return crawl(specs, domain -> true);
     }
 
-    private CrawledDomain crawl(CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws IOException {
+    private CrawledDomain crawl(CrawlSpecProvider.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws IOException {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder(fileName)) {
             new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, recorder).crawlDomain();
         }
 
-        CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain,
+        CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain(),
                 new UserAgent("test", "test"),
                 fileName, fileName2);
 

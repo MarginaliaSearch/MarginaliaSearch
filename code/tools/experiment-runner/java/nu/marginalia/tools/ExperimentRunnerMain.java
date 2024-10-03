@@ -3,7 +3,7 @@ package nu.marginalia.tools;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.converting.ConverterModule;
-import nu.marginalia.io.crawldata.CrawledDomainReader;
+import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.tools.experiments.*;

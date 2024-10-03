@@ -12,9 +12,6 @@
         <a href="backup" {{#unless view.backup}}class="nav-link"{{/unless}}   {{#if view.backup}}aria-current="page" class="active nav-link"{{/if}}>Backups</a>
     </li>
     <li class="nav-item">
-        <a href="specs" {{#unless view.specs}}class="nav-link"{{/unless}} {{#if view.specs}}aria-current="page" class="active nav-link"{{/if}}>Specs</a>
-    </li>
-    <li class="nav-item">
         <a href="exports" {{#unless view.exports}}class="nav-link"{{/unless}} {{#if view.exports}}aria-current="page" class="active nav-link"{{/if}}>Exports</a>
     </li>
 </nav>

@@ -17,15 +17,11 @@ import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
-import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
-import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
 import nu.marginalia.crawl.warc.WarcArchiverFactory;
 import nu.marginalia.crawl.warc.WarcArchiverIf;
-import nu.marginalia.crawlspec.CrawlSpecFileNames;
-import nu.marginalia.io.crawldata.CrawledDomainReader;
-import nu.marginalia.io.crawldata.CrawlerOutputFile;
+import nu.marginalia.io.CrawledDomainReader;
+import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -66,7 +62,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final MessageQueueFactory messageQueueFactory;
     private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
-    private final DbCrawlSpecProvider dbCrawlSpecProvider;
+    private final CrawlSpecProvider crawlSpecProvider;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final WarcArchiverFactory warcArchiverFactory;
     private final Gson gson;
@@ -89,7 +85,7 @@ public class CrawlerMain extends ProcessMainClass {
                        MessageQueueFactory messageQueueFactory, DomainProber domainProber,
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
-                       DbCrawlSpecProvider dbCrawlSpecProvider,
+                       CrawlSpecProvider crawlSpecProvider,
                        AnchorTagsSourceFactory anchorTagsSourceFactory,
                        WarcArchiverFactory warcArchiverFactory,
                        Gson gson) {
@@ -98,7 +94,7 @@ public class CrawlerMain extends ProcessMainClass {
         this.messageQueueFactory = messageQueueFactory;
         this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
-        this.dbCrawlSpecProvider = dbCrawlSpecProvider;
+        this.crawlSpecProvider = crawlSpecProvider;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.warcArchiverFactory = warcArchiverFactory;
         this.gson = gson;
@@ -148,7 +144,7 @@ public class CrawlerMain extends ProcessMainClass {
                     crawler.runForSingleDomain(instructions.targetDomainName, instructions.outputDir);
                 }
                 else {
-                    crawler.run(instructions.specProvider, instructions.outputDir);
+                    crawler.run(instructions.outputDir);
                 }
                 instructions.ok();
             } catch (Exception ex) {
@@ -164,12 +160,12 @@ public class CrawlerMain extends ProcessMainClass {
         System.exit(0);
     }
 
-    public void run(CrawlSpecProvider specProvider, Path outputDir) throws Exception {
+    public void run(Path outputDir) throws Exception {
 
         heartbeat.start();
 
         // First a validation run to ensure the file is all good to parse
-        totalTasks = specProvider.totalCount();
+        totalTasks = crawlSpecProvider.totalCount();
         if (totalTasks == 0) {
             // This is an error state, and we should make noise about it
             throw new IllegalStateException("No crawl tasks found, refusing to continue");
@@ -178,18 +174,18 @@ public class CrawlerMain extends ProcessMainClass {
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
-             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
+             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(crawlSpecProvider.getDomains())
         ) {
             // Set the number of tasks done to the number of tasks that are already finished,
             // (this happens when the process is restarted after a crash or a shutdown)
             tasksDone.set(workLog.countFinishedJobs());
 
             // Process the crawl tasks
-            try (var specStream = specProvider.stream()) {
+            try (var specStream = crawlSpecProvider.stream()) {
                 specStream
                         .takeWhile((e) -> abortMonitor.isAlive())
-                        .filter(e -> !workLog.isJobFinished(e.domain))
-                        .filter(e -> processingIds.put(e.domain, "") == null)
+                        .filter(e -> !workLog.isJobFinished(e.domain()))
+                        .filter(e -> processingIds.put(e.domain(), "") == null)
                         .map(e -> new CrawlTask(e, anchorTagsSource, outputDir, warcArchiver, workLog))
                         .forEach(pool::submitQuietly);
             }
@@ -226,7 +222,7 @@ public class CrawlerMain extends ProcessMainClass {
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
         ) {
-            var spec = new CrawlSpecRecord(targetDomainName, 1000, null);
+            var spec = new CrawlSpecProvider.CrawlSpecRecord(targetDomainName, 1000, null);
             var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, workLog);
             task.run();
         }
@@ -240,7 +236,7 @@ public class CrawlerMain extends ProcessMainClass {
 
     class CrawlTask implements SimpleBlockingThreadPool.Task {
 
-        private final CrawlSpecRecord specification;
+        private final CrawlSpecProvider.CrawlSpecRecord specification;
 
         private final String domain;
         private final String id;
@@ -250,7 +246,7 @@ public class CrawlerMain extends ProcessMainClass {
         private final WarcArchiverIf warcArchiver;
         private final WorkLog workLog;
 
-        CrawlTask(CrawlSpecRecord specification,
+        CrawlTask(CrawlSpecProvider.CrawlSpecRecord specification,
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WarcArchiverIf warcArchiver,
@@ -262,7 +258,7 @@ public class CrawlerMain extends ProcessMainClass {
             this.warcArchiver = warcArchiver;
             this.workLog = workLog;
 
-            this.domain = specification.domain;
+            this.domain = specification.domain();
             this.id = Integer.toHexString(domain.hashCode());
         }
 
@@ -280,7 +276,7 @@ public class CrawlerMain extends ProcessMainClass {
                 Files.deleteIfExists(tempFile);
             }
 
-            var domainLock = domainLocks.getSemaphore(new EdgeDomain(specification.domain));
+            var domainLock = domainLocks.getSemaphore(new EdgeDomain(specification.domain()));
 
             try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
                  var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
@@ -336,7 +332,7 @@ public class CrawlerMain extends ProcessMainClass {
             try {
                 return new CrawlDataReference(CrawledDomainReader.createDataStream(outputDir, domain, id));
             } catch (IOException e) {
-                logger.debug("Failed to read previous crawl data for {}", specification.domain);
+                logger.debug("Failed to read previous crawl data for {}", specification.domain());
                 return new CrawlDataReference();
             }
         }
@@ -346,22 +342,19 @@ public class CrawlerMain extends ProcessMainClass {
 
 
     private static class CrawlRequest {
-        private final CrawlSpecProvider specProvider;
         private final Path outputDir;
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
         private final String targetDomainName;
 
-        CrawlRequest(CrawlSpecProvider specProvider,
-                     String targetDomainName,
+        CrawlRequest(String targetDomainName,
                      Path outputDir,
                      MqMessage message,
                      MqSingleShotInbox inbox)
         {
             this.message = message;
             this.inbox = inbox;
-            this.specProvider = specProvider;
             this.outputDir = outputDir;
             this.targetDomainName = targetDomainName;
         }
@@ -387,26 +380,9 @@ public class CrawlerMain extends ProcessMainClass {
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.crawling.CrawlRequest.class);
 
-        CrawlSpecProvider specProvider;
-
-        if (request.specStorage != null) {
-            var specData = fileStorageService.getStorage(request.specStorage);
-            var parquetProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));
-
-            // Ensure the parquet domains are loaded into the database to avoid
-            // rare data-loss scenarios
-            dbCrawlSpecProvider.ensureParquetDomainsLoaded(parquetProvider);
-
-            specProvider = parquetProvider;
-        }
-        else {
-            specProvider = dbCrawlSpecProvider;
-        }
-
         var crawlData = fileStorageService.getStorage(request.crawlStorage);
 
         return new CrawlRequest(
-                specProvider,
                 request.targetDomainName,
                 crawlData.asPath(),
                 msg,

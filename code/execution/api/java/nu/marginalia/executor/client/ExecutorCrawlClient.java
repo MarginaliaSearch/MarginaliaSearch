@@ -10,9 +10,10 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
-import static nu.marginalia.functions.execution.api.ExecutorCrawlApiGrpc.*;
+import static nu.marginalia.functions.execution.api.ExecutorCrawlApiGrpc.ExecutorCrawlApiBlockingStub;
 
 @Singleton
 public class ExecutorCrawlClient {
@@ -30,14 +31,6 @@ public class ExecutorCrawlClient {
 
     public void triggerCrawl(int node, FileStorageId fid) {
         channelPool.call(ExecutorCrawlApiBlockingStub::triggerCrawl)
-                .forNode(node)
-                .run(RpcFileStorageId.newBuilder()
-                        .setFileStorageId(fid.id())
-                        .build());
-    }
-
-    public void triggerRecrawl(int node, FileStorageId fid) {
-        channelPool.call(ExecutorCrawlApiBlockingStub::triggerRecrawl)
                 .forNode(node)
                 .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(fid.id())

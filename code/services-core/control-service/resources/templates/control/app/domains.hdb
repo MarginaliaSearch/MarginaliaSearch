@@ -8,7 +8,10 @@
 {{> control/partials/nav}}
 <div class="container">
     <h1 class="my-3">Domains</h1>
-
+    <div class="my-3 p-3 border bg-light">
+        This is a listing of all domains known by the search engine.  Additional domains can be added via the
+        <a href="/domain/new">Add Domains</a> utility.
+    </div>
     <table class="table">
         <form method="get">
             <tr>

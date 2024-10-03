@@ -33,7 +33,6 @@ public class ExecutorActorControlService {
                                        ConvertActor convertActor,
                                        ConvertAndLoadActor convertAndLoadActor,
                                        CrawlActor crawlActor,
-                                       RecrawlActor recrawlActor,
                                        RecrawlSingleDomainActor recrawlSingleDomainActor,
                                        RestoreBackupActor restoreBackupActor,
                                        ConverterMonitorActor converterMonitorFSM,
@@ -43,7 +42,6 @@ public class ExecutorActorControlService {
                                        FileStorageMonitorActor fileStorageMonitorActor,
                                        IndexConstructorMonitorActor indexConstructorMonitorActor,
                                        TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
-                                       CrawlJobExtractorActor crawlJobExtractorActor,
                                        ExportDataActor exportDataActor,
                                        ExportAtagsActor exportAtagsActor,
                                        ExportFeedsActor exportFeedsActor,
@@ -59,7 +57,6 @@ public class ExecutorActorControlService {
         this.node = baseServiceParams.configuration.node();
 
         register(ExecutorActor.CRAWL, crawlActor);
-        register(ExecutorActor.RECRAWL, recrawlActor);
         register(ExecutorActor.RECRAWL_SINGLE_DOMAIN, recrawlSingleDomainActor);
 
         register(ExecutorActor.CONVERT, convertActor);
@@ -75,7 +72,6 @@ public class ExecutorActorControlService {
         register(ExecutorActor.MONITOR_FILE_STORAGE, fileStorageMonitorActor);
 
         register(ExecutorActor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
-        register(ExecutorActor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
 
         register(ExecutorActor.EXPORT_DATA, exportDataActor);
         register(ExecutorActor.EXPORT_ATAGS, exportAtagsActor);

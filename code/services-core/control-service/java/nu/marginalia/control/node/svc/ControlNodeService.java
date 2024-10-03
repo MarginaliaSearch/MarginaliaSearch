@@ -175,9 +175,7 @@ public class ControlNodeService {
                 "allCrawlData",
                         fileStorageService.getEachFileStorage(nodeId, FileStorageType.CRAWL_DATA),
                 "allProcessedData",
-                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.PROCESSED_DATA),
-                "allCrawlSpecs",
-                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.CRAWL_SPEC)
+                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.PROCESSED_DATA)
         );
     }
 
@@ -201,7 +199,6 @@ public class ControlNodeService {
             case "backup" -> FileStorageType.BACKUP;
             case "crawl" -> FileStorageType.CRAWL_DATA;
             case "processed" -> FileStorageType.PROCESSED_DATA;
-            case "specs" -> FileStorageType.CRAWL_SPEC;
             case "exports" -> FileStorageType.EXPORT;
             default -> throw new IllegalArgumentException(view);
         };

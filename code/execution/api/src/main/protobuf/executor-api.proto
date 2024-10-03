@@ -21,7 +21,6 @@ service ExecutorApi {
 
 service ExecutorCrawlApi {
   rpc triggerCrawl(RpcFileStorageId) returns (Empty) {}
-  rpc triggerRecrawl(RpcFileStorageId) returns (Empty) {}
   rpc triggerSingleDomainRecrawl(RpcFileStorageIdWithDomainName) returns (Empty) {}
   rpc triggerConvert(RpcFileStorageId) returns (Empty) {}
   rpc triggerConvertAndLoad(RpcFileStorageId) returns (Empty) {}

@@ -1,4 +1,4 @@
-package nu.marginalia.io.crawldata;
+package nu.marginalia.io;
 
 import org.apache.logging.log4j.util.Strings;
 

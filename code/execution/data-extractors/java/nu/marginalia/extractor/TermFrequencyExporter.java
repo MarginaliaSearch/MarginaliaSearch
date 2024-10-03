@@ -5,7 +5,7 @@ import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
-import nu.marginalia.io.crawldata.CrawledDomainReader;
+import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.SentenceExtractor;

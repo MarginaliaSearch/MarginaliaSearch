@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.hash.MurmurHash3_128;
-import nu.marginalia.io.crawldata.SerializableCrawlDataStream;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawldata.*;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecord;

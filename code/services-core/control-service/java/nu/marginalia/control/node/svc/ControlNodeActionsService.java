@@ -83,11 +83,8 @@ public class ControlNodeActionsService {
         Spark.post("/nodes/:node/actions/download-sample-data", this::downloadSampleData,
                 redirectControl.renderRedirectAcknowledgement("Downloading", "..")
         );
-        Spark.post("/nodes/:id/actions/new-crawl", this::triggerNewCrawl,
+        Spark.post("/nodes/:id/actions/new-crawl", this::triggerCrawl,
                 redirectControl.renderRedirectAcknowledgement("Crawling", "..")
-        );
-        Spark.post("/nodes/:id/actions/recrawl", this::triggerAutoRecrawl,
-                redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
         );
         Spark.post("/nodes/:id/actions/recrawl-single-domain", this::triggerSingleDomainRecrawl,
                 redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
@@ -100,9 +97,6 @@ public class ControlNodeActionsService {
         );
         Spark.post("/nodes/:id/actions/restore-backup", this::triggerRestoreBackup,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
-        );
-        Spark.post("/nodes/:id/actions/new-crawl-specs", this::createNewSpecsAction,
-                redirectControl.renderRedirectAcknowledgement("Creating", "../actions?view=new-crawl")
         );
         Spark.post("/nodes/:id/actions/export-db-data", this::exportDbData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
@@ -205,14 +199,14 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object triggerAutoRecrawl(Request request, Response response) throws SQLException {
+    private Object triggerCrawl(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
         var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_DATA, toCrawl);
 
-        crawlClient.triggerRecrawl(
+        crawlClient.triggerCrawl(
                 nodeId,
                 toCrawl
         );
@@ -231,18 +225,6 @@ public class ControlNodeActionsService {
                 toCrawl,
                 targetDomainName
         );
-
-        return "";
-    }
-
-    private Object triggerNewCrawl(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
-
-        changeActiveStorage(nodeId, FileStorageType.CRAWL_SPEC, toCrawl);
-
-        crawlClient.triggerCrawl(nodeId, toCrawl);
 
         return "";
     }
@@ -306,21 +288,6 @@ public class ControlNodeActionsService {
         for (var id : newActiveStorage) {
             fileStorageService.setFileStorageState(id, FileStorageState.ACTIVE);
         }
-    }
-
-
-    private Object createNewSpecsAction(Request request, Response response) {
-        final String description = request.queryParams("description");
-        final String url = request.queryParams("url");
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        if (url == null || url.isBlank()) {
-            throw new ControlValidationError("No url specified", "A url must be specified", "..");
-        }
-
-        crawlClient.createCrawlSpecFromDownload(nodeId, description, url);
-
-        return "";
     }
 
     private Object exportDbData(Request req, Response rsp) {
