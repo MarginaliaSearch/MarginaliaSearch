@@ -141,13 +141,6 @@ public class DownloadSampleActor extends RecordActorPrototype {
         };
     }
 
-    enum States {
-        DOWNLOADING,
-        EXTRACTING,
-        CLEANUP,
-        END
-    }
-
     private void transferBytes(InputStream inputStream, OutputStream outputStream, byte[] buffer, long size)
             throws IOException
     {
