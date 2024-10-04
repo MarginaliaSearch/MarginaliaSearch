@@ -36,6 +36,9 @@ public class ServiceEventLog {
         logEvent("SVC-START", serviceName);
     }
 
+    public void logEvent(Class<?> type, String message) {
+        logEvent(type.getSimpleName(), message);
+    }
     public void logEvent(String type, String message) {
 
         try (var conn = dataSource.getConnection();
