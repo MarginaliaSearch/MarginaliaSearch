@@ -222,7 +222,7 @@ public class CrawlerMain extends ProcessMainClass {
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
         ) {
-            var spec = new CrawlSpecProvider.CrawlSpecRecord(targetDomainName, 1000, null);
+            var spec = new CrawlSpecProvider.CrawlSpecRecord(targetDomainName, 1000, List.of());
             var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, workLog);
             task.run();
         }
