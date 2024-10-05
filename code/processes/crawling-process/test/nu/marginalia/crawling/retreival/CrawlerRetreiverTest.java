@@ -116,6 +116,48 @@ class CrawlerRetreiverTest {
         }
     }
 
+    @Test
+    public void testWarcOutputNoKnownUrls() throws IOException {
+        var specs = CrawlSpecProvider.CrawlSpecRecord
+                .builder()
+                .crawlDepth(5)
+                .domain("www.marginalia.nu")
+                .urls(List.of())
+                .build();
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("crawling-process", "warc");
+
+            doCrawl(tempFile, specs);
+
+            Set<String> requests = new HashSet<>();
+            Set<String> responses = new HashSet<>();
+
+            try (var reader = new WarcReader(tempFile)) {
+                reader.forEach(record -> {
+                    if (record instanceof WarcRequest req) {
+                        requests.add(req.target());
+                        System.out.println(req.type() + ":" + req.target());
+                    }
+                    else if (record instanceof WarcResponse rsp) {
+                        responses.add(rsp.target());
+                        System.out.println(rsp.type() + ":" + rsp.target());
+                    }
+                    else {
+                        System.out.println(record.type());
+                    }
+                });
+            }
+
+            assertTrue(responses.size() > 5, "Should have fetched more than 5 URLs");
+            assertEquals(requests, responses);
+        }
+        finally {
+            if (tempFile != null)
+                Files.deleteIfExists(tempFile);
+        }
+    }
+
     @SneakyThrows
     @Test
     public void testResync() throws IOException {
