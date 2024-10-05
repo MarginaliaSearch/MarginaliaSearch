@@ -217,6 +217,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             // Sniff the software based on the sample document
             var doc = optDoc.get();
             crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
+            crawlFrontier.enqueueLinksFromDocument(url, doc);
 
             EdgeUrl faviconUrl = url.withPathAndParam("/favicon.ico", null);
             Optional<EdgeUrl> sitemapUrl = Optional.empty();
