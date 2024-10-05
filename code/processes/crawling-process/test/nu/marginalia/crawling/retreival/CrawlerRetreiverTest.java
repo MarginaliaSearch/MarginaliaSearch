@@ -75,48 +75,6 @@ class CrawlerRetreiverTest {
     }
 
     @Test
-    public void testWtf() throws IOException {
-        var specs = CrawlSpecProvider.CrawlSpecRecord
-                .builder()
-                .crawlDepth(5)
-                .domain("indigo.re")
-                .urls(List.of("https://indigo.re/"))
-                .build();
-        Path tempFile = null;
-        try {
-            tempFile = Files.createTempFile("crawling-process", "warc");
-
-            doCrawl(tempFile, specs);
-
-            Set<String> requests = new HashSet<>();
-            Set<String> responses = new HashSet<>();
-
-            try (var reader = new WarcReader(tempFile)) {
-                reader.forEach(record -> {
-                    if (record instanceof WarcRequest req) {
-                        requests.add(req.target());
-                        System.out.println(req.type() + ":" + req.target());
-                    }
-                    else if (record instanceof WarcResponse rsp) {
-                        responses.add(rsp.target());
-                        System.out.println(rsp.type() + ":" + rsp.target());
-                    }
-                    else {
-                        System.out.println(record.type());
-                    }
-                });
-            }
-
-            assertTrue(requests.contains("https://www.marginalia.nu/misc/debian-laptop-install-log/"));
-            assertEquals(requests, responses);
-        }
-        finally {
-            if (tempFile != null)
-                Files.deleteIfExists(tempFile);
-        }
-    }
-
-    @Test
     public void testWarcOutput() throws IOException {
         var specs = CrawlSpecProvider.CrawlSpecRecord
                 .builder()
