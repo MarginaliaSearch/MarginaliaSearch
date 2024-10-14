@@ -54,6 +54,9 @@ public class IndexResultRankingService {
                                               ResultRankingContext rankingContext,
                                               CombinedDocIdList resultIds)
     {
+        if (resultIds.isEmpty())
+            return List.of();
+
         IndexResultScoreCalculator resultRanker = new IndexResultScoreCalculator(statefulIndex, rankingContext, params);
 
         List<SearchResultItem> results = new ArrayList<>(resultIds.size());

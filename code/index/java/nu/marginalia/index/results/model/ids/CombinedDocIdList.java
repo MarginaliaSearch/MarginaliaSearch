@@ -1,7 +1,6 @@
 package nu.marginalia.index.results.model.ids;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongIterators;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import java.util.Arrays;
@@ -31,6 +30,9 @@ public final class CombinedDocIdList {
 
     public int size() {
         return data.length;
+    }
+    public boolean isEmpty() {
+        return data.length == 0;
     }
     public long at(int i) { return data[i]; }
 
