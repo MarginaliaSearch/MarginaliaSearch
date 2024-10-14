@@ -160,78 +160,65 @@ public class QueryFactoryTest {
 
     @Test
     public void testExpansion() {
-
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("elden ring mechanical keyboard slackware linux duke nukem 3d").query;
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery.compiledQuery);
-
     }
 
     @Test
     public void testExpansion2() {
-
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("need for speed").query;
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
 
     }
 
     @Test
     public void testExpansion3() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("buy rimonabant buy acomplia");
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
 
     @Test
     public void testExpansion4() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("The Vietnam of computer science");
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
 
     @Test
     public void testExpansion5() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("The");
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
 
     @Test
     public void testExpansion6() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("burning the nerves in the neck");
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
 
     @Test
     public void testExpansion7() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("amazing work being done");
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
 
     @Test
     public void testExpansion8() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("success often consists of");
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
         System.out.println(subquery);
     }
 
     @Test
     public void testParsing() {
-        long start = System.currentTimeMillis();
         var subquery = parseAndGetSpecs("strlen()");
         assertEquals("strlen", subquery.query.compiledQuery);
-        System.out.println("Time: " + (System.currentTimeMillis() - start));
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testAdvice() {
+        var subquery = parseAndGetSpecs("mmap (strlen)");
+        assertEquals("mmap", subquery.query.compiledQuery);
+        assertEquals(List.of("strlen"), subquery.query.searchTermsAdvice);
         System.out.println(subquery);
     }
 }

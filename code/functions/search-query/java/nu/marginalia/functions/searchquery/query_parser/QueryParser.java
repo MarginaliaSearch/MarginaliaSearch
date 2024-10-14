@@ -83,8 +83,9 @@ public class QueryParser {
 
                     // special case to deal with possible RPAREN token at the end,
                     // but we don't want to break if it's likely part of the search term
-                    if (c == '(' && prevC != ')' && parenDepth > 0)
+                    if (c == ')' && prevC != '(' && parenDepth > 0) {
                         break;
+                    }
                 }
 
                 String displayStr = query.substring(i, end);
