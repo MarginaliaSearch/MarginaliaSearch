@@ -1,7 +1,5 @@
 package nu.marginalia.crawl.retreival;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.lsh.EasyLSH;
 import nu.marginalia.model.crawldata.CrawledDocument;
@@ -87,9 +85,12 @@ public class CrawlDataReference implements AutoCloseable {
         return hash.get();
     }
 
-    private static final HashFunction hashFunction = Hashing.murmur3_128();
-    private static int hashInt(int v) {
-        return hashFunction.hashInt(v).asInt();
+    // https://stackoverflow.com/a/12996028
+    private static int hashInt(int x) {
+        x = (((x >>> 16) ^ x) * 0x45d9f3b);
+        x = (((x >>> 16) ^ x) * 0x45d9f3b);
+        x = (x >>> 16) ^ x;
+        return x;
     }
 
     @Override
