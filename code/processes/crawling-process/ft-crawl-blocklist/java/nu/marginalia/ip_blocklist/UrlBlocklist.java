@@ -1,7 +1,7 @@
 package nu.marginalia.ip_blocklist;
 
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.gregex.GuardedRegexFactory;
+import nu.marginalia.model.EdgeUrl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +15,8 @@ public class UrlBlocklist {
     private final Set<String> badDomains = Set.of("t.co", "facebook.com",
             "instagram.com", "youtube.com",
             "youtu.be", "amzn.to");
+
+    private static final boolean BLOCK_MAILING_LISTS = Boolean.getBoolean("links.block_mailing_lists");
 
     public UrlBlocklist() {
         // Don't deep-crawl git repos
@@ -92,6 +94,10 @@ public class UrlBlocklist {
     }
 
     public boolean isMailingListLink(EdgeUrl linkUrl) {
+        if (!BLOCK_MAILING_LISTS) {
+            return false;
+        }
+
         var path = linkUrl.path;
         if (path.startsWith("/lists/")) {
             return true;
