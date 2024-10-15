@@ -46,9 +46,9 @@ public class DomainCrawlFrontier {
         this.urlBlocklist = new UrlBlocklist();
         this.depth = depth;
 
-        queue = new ArrayDeque<>(10 + (int) (urls.size()*1.2));
-        visited = new LongOpenHashSet(10 + (int)(urls.size() * 1.5));
-        known = new LongOpenHashSet(10 + urls.size() * 2);
+        queue = new ArrayDeque<>(depth);
+        visited = new LongOpenHashSet(depth);
+        known = new LongOpenHashSet(depth);
 
         for (String urlStr : urls) {
             EdgeUrl.parse(urlStr).ifPresent(this::addToQueue);
@@ -63,7 +63,6 @@ public class DomainCrawlFrontier {
                               int maxDepthIncreaseAbsolute
                               ) {
         int base = Math.max(visited.size(), depth);
-
         int scaledUp = (int)(base * depthIncreaseFactor);
 
         depth = Math.min(base + maxDepthIncreaseAbsolute, scaledUp);
@@ -142,7 +141,7 @@ public class DomainCrawlFrontier {
             return;
 
         // reduce memory usage by not growing queue huge when crawling large sites
-        if (queue.size() + visited.size() >= depth + 200)
+        if (queue.size() + visited.size() >= depth + 10_000)
             return;
 
         if (isVisited(url))
