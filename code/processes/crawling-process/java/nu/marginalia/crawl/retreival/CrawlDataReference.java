@@ -36,6 +36,10 @@ public class CrawlDataReference implements AutoCloseable {
         }
     }
 
+    /** Get the next document from the crawl data,
+     * returning null when there are no more documents
+     * available
+     */
     @Nullable
     public CrawledDocument nextDocument() {
         try {
@@ -52,7 +56,7 @@ public class CrawlDataReference implements AutoCloseable {
         return null;
     }
 
-    public boolean isContentBodySame(String one, String other) {
+    public static boolean isContentBodySame(String one, String other) {
 
         final long contentHashOne = contentHash(one);
         final long contentHashOther = contentHash(other);
@@ -60,7 +64,7 @@ public class CrawlDataReference implements AutoCloseable {
         return EasyLSH.hammingDistance(contentHashOne, contentHashOther) < 4;
     }
 
-    private long contentHash(String content) {
+    private static long contentHash(String content) {
         EasyLSH hash = new EasyLSH();
         int next = 0;
 
@@ -83,8 +87,8 @@ public class CrawlDataReference implements AutoCloseable {
         return hash.get();
     }
 
-    private final HashFunction hashFunction = Hashing.murmur3_128();
-    private int hashInt(int v) {
+    private static final HashFunction hashFunction = Hashing.murmur3_128();
+    private static int hashInt(int v) {
         return hashFunction.hashInt(v).asInt();
     }
 

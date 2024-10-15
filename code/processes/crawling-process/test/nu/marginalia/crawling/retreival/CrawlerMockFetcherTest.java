@@ -2,6 +2,7 @@ package nu.marginalia.crawling.retreival;
 
 import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
+import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -9,7 +10,6 @@ import nu.marginalia.crawl.fetcher.SitemapRetriever;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
@@ -68,7 +68,7 @@ public class CrawlerMockFetcherTest {
 
     }
 
-    void crawl(CrawlSpecProvider.CrawlSpecRecord spec)  throws IOException {
+    void crawl(CrawlerMain.CrawlSpecRecord spec)  throws IOException {
         try (var recorder = new WarcRecorder()) {
             new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, recorder)
                     .crawlDomain();
@@ -83,7 +83,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/c/startrek"), "mock-crawl-data/lemmy/c_startrek.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
-        crawl(new CrawlSpecProvider.CrawlSpecRecord("startrek.website", 10, new ArrayList<>()));
+        crawl(new CrawlerMain.CrawlSpecRecord("startrek.website", 10, new ArrayList<>()));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class CrawlerMockFetcherTest {
 
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
-        crawl(new CrawlSpecProvider.CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()));
+        crawl(new CrawlerMain.CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()));
     }
 
     @Test
@@ -103,7 +103,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/telegram-channel-to-idle-on/3501"), "mock-crawl-data/discourse/telegram.html");
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
-        crawl(new CrawlSpecProvider.CrawlSpecRecord("community.tt-rss.org", 10, new ArrayList<>()));
+        crawl(new CrawlerMain.CrawlSpecRecord("community.tt-rss.org", 10, new ArrayList<>()));
     }
 
     class MockFetcher implements HttpFetcher {

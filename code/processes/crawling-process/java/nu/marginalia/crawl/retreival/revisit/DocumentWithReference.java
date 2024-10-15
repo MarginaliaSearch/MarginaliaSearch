@@ -42,7 +42,7 @@ public record DocumentWithReference(
             return false;
         }
 
-        return reference.isContentBodySame(doc.documentBody, bodyOk.body());
+        return CrawlDataReference.isContentBodySame(doc.documentBody, bodyOk.body());
     }
 
     public ContentTags getContentTags() {

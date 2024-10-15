@@ -7,12 +7,12 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
+import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -77,7 +77,7 @@ public class CrawlingThenConvertingIntegrationTest {
     @Test
     public void testInvalidDomain() throws IOException {
         // Attempt to fetch an invalid domain
-        var specs = new CrawlSpecProvider.CrawlSpecRecord("invalid.invalid.invalid", 10);
+        var specs = new CrawlerMain.CrawlSpecRecord("invalid.invalid.invalid", 10);
 
         CrawledDomain crawlData = crawl(specs);
 
@@ -93,7 +93,7 @@ public class CrawlingThenConvertingIntegrationTest {
     @Test
     public void testRedirectingDomain() throws IOException {
         // Attempt to fetch an invalid domain
-        var specs = new CrawlSpecProvider.CrawlSpecRecord("memex.marginalia.nu", 10);
+        var specs = new CrawlerMain.CrawlSpecRecord("memex.marginalia.nu", 10);
 
         CrawledDomain crawlData = crawl(specs);
 
@@ -112,7 +112,7 @@ public class CrawlingThenConvertingIntegrationTest {
     @Test
     public void testBlockedDomain() throws IOException {
         // Attempt to fetch an invalid domain
-        var specs = new CrawlSpecProvider.CrawlSpecRecord("search.marginalia.nu", 10);
+        var specs = new CrawlerMain.CrawlSpecRecord("search.marginalia.nu", 10);
 
         CrawledDomain crawlData = crawl(specs, d->false); // simulate blocking by blacklisting everything
 
@@ -128,7 +128,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlSunnyDay() throws IOException {
-        var specs = new CrawlSpecProvider.CrawlSpecRecord("www.marginalia.nu", 10);
+        var specs = new CrawlerMain.CrawlSpecRecord("www.marginalia.nu", 10);
 
         CrawledDomain domain = crawl(specs);
         assertFalse(domain.doc.isEmpty());
@@ -161,7 +161,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlContentTypes() throws IOException {
-        var specs = new CrawlSpecProvider.CrawlSpecRecord("www.marginalia.nu", 10,
+        var specs = new CrawlerMain.CrawlSpecRecord("www.marginalia.nu", 10,
                 List.of(
                         "https://www.marginalia.nu/sanic.png",
                         "https://www.marginalia.nu/invalid"
@@ -199,7 +199,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlRobotsTxt() throws IOException {
-        var specs = new CrawlSpecProvider.CrawlSpecRecord("search.marginalia.nu", 5,
+        var specs = new CrawlerMain.CrawlSpecRecord("search.marginalia.nu", 5,
                         List.of("https://search.marginalia.nu/search?q=hello+world")
         );
 
@@ -238,11 +238,11 @@ public class CrawlingThenConvertingIntegrationTest {
             return null; // unreachable
         }
     }
-    private CrawledDomain crawl(CrawlSpecProvider.CrawlSpecRecord specs) throws IOException {
+    private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs) throws IOException {
         return crawl(specs, domain -> true);
     }
 
-    private CrawledDomain crawl(CrawlSpecProvider.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws IOException {
+    private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws IOException {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder(fileName)) {

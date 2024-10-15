@@ -3,6 +3,7 @@ package nu.marginalia.crawl.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentType;
+import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -11,7 +12,6 @@ import nu.marginalia.crawl.logic.LinkFilterSelector;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
 import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
-import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
@@ -54,7 +54,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
     public CrawlerRetreiver(HttpFetcher fetcher,
                             DomainProber domainProber,
-                            CrawlSpecProvider.CrawlSpecRecord specs,
+                            CrawlerMain.CrawlSpecRecord specs,
                             WarcRecorder warcRecorder)
     {
         this.warcRecorder = warcRecorder;
@@ -117,9 +117,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         sniffRootDocument(rootUrl, delayTimer);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
-        int fetchedCount = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
-
-        if (fetchedCount > 0) {
+        if (crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer) > 0) {
             // If we have reference data, we will always grow the crawl depth a bit
             crawlFrontier.increaseDepth(1.5, 2500);
         }
@@ -162,9 +160,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                 continue;
 
             try {
-                if (fetchContentWithReference(top, delayTimer, DocumentWithReference.empty()).isOk()) {
-                    fetchedCount++;
-                }
+                fetchContentWithReference(top, delayTimer, DocumentWithReference.empty());
             }
             catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
@@ -172,7 +168,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             }
         }
 
-        return fetchedCount;
+        return crawlFrontier.visitedSize();
     }
 
     public void syncAbortedRun(Path warcFile) {

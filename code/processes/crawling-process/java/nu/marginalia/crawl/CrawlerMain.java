@@ -4,10 +4,13 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.zaxxer.hikari.HikariDataSource;
+import lombok.Builder;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -16,9 +19,9 @@ import nu.marginalia.crawl.logic.DomainLocks;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.warc.WarcArchiverFactory;
 import nu.marginalia.crawl.warc.WarcArchiverIf;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
@@ -35,6 +38,7 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,22 +63,28 @@ public class CrawlerMain extends ProcessMainClass {
     private final MessageQueueFactory messageQueueFactory;
     private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
-    private final CrawlSpecProvider crawlSpecProvider;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final WarcArchiverFactory warcArchiverFactory;
+    private final HikariDataSource dataSource;
+    private final DomainBlacklist blacklist;
     private final Gson gson;
     private final int node;
     private final SimpleBlockingThreadPool pool;
 
     private final DomainLocks domainLocks = new DomainLocks();
 
-    private final Map<String, String> processingIds = new ConcurrentHashMap<>();
+    private final Map<String, CrawlTask> pendingCrawlTasks = new ConcurrentHashMap<>();
 
-    private final AbortMonitor abortMonitor = AbortMonitor.getInstance();
     private final AtomicInteger tasksDone = new AtomicInteger(0);
     private final HttpFetcherImpl fetcher;
 
-    private volatile int totalTasks;
+    private int totalTasks = 1;
+
+    private static final double URL_GROWTH_FACTOR = Double.parseDouble(System.getProperty("crawler.crawlSetGrowthFactor", "1.25"));
+    private static final int MIN_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 100);
+    private static final int MID_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 2_000);
+    private static final int MAX_URLS_PER_DOMAIN = Integer.getInteger("crawler.maxUrlsPerDomain", 10_000);
+
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
@@ -85,18 +92,20 @@ public class CrawlerMain extends ProcessMainClass {
                        MessageQueueFactory messageQueueFactory, DomainProber domainProber,
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
-                       CrawlSpecProvider crawlSpecProvider,
                        AnchorTagsSourceFactory anchorTagsSourceFactory,
                        WarcArchiverFactory warcArchiverFactory,
-                       Gson gson) {
+                       HikariDataSource dataSource,
+                       DomainBlacklist blacklist,
+                       Gson gson) throws InterruptedException {
         this.userAgent = userAgent;
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
-        this.crawlSpecProvider = crawlSpecProvider;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.warcArchiverFactory = warcArchiverFactory;
+        this.dataSource = dataSource;
+        this.blacklist = blacklist;
         this.gson = gson;
         this.node = processConfiguration.node();
 
@@ -108,14 +117,12 @@ public class CrawlerMain extends ProcessMainClass {
                 new Dispatcher(),
                 new ConnectionPool(5, 10, TimeUnit.SECONDS)
         );
+
+        // Wait for the blacklist to be loaded before starting the crawl
+        blacklist.waitUntilLoaded();
     }
 
     public static void main(String... args) throws Exception {
-
-        if (!AbortMonitor.getInstance().isAlive()) {
-            System.err.println("Remove abort file first");
-            return;
-        }
 
         // Prevent Java from caching DNS lookups forever (filling up the system RAM as a result)
         Security.setProperty("networkaddress.cache.ttl" , "3600");
@@ -144,7 +151,7 @@ public class CrawlerMain extends ProcessMainClass {
                     crawler.runForSingleDomain(instructions.targetDomainName, instructions.outputDir);
                 }
                 else {
-                    crawler.run(instructions.outputDir);
+                    crawler.runForDatabaseDomains(instructions.outputDir);
                 }
                 instructions.ok();
             } catch (Exception ex) {
@@ -160,34 +167,99 @@ public class CrawlerMain extends ProcessMainClass {
         System.exit(0);
     }
 
-    public void run(Path outputDir) throws Exception {
+    public void runForDatabaseDomains(Path outputDir) throws Exception {
 
         heartbeat.start();
 
+        logger.info("Loading domains to be crawled");
+
+        final List<CrawlSpecRecord> crawlSpecRecords = new ArrayList<>();
+        final List<EdgeDomain> domainsToCrawl = new ArrayList<>();
+
+        // Assign any domains with node_affinity=0 to this node, and then fetch all domains assigned to this node
+        // to be crawled.
+
+        try (var conn = dataSource.getConnection()) {
+            try (var assignFreeDomains = conn.prepareStatement(
+                    """
+                        UPDATE EC_DOMAIN
+                        SET NODE_AFFINITY=?
+                        WHERE NODE_AFFINITY=0
+                        """))
+            {
+                // Assign any domains with node_affinity=0 to this node.  We must do this now, before we start crawling
+                // to avoid race conditions with other crawl runs.  We don't want multiple crawlers to crawl the same domain.
+                assignFreeDomains.setInt(1, node);
+                assignFreeDomains.executeUpdate();
+            }
+
+            try (var query = conn.prepareStatement("""
+                     SELECT DOMAIN_NAME, COALESCE(VISITED_URLS, 0), EC_DOMAIN.ID
+                     FROM EC_DOMAIN
+                     LEFT JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
+                     WHERE NODE_AFFINITY=?
+                     """)) {
+                // Fetch the domains to be crawled
+                query.setInt(1, node);
+                query.setFetchSize(10_000);
+                var rs = query.executeQuery();
+
+                while (rs.next()) {
+                    // Skip blacklisted domains
+                    int domainId = rs.getInt(3);
+                    if (blacklist.isBlacklisted(domainId))
+                        continue;
+
+                    int existingUrls = rs.getInt(2);
+                    String domainName = rs.getString(1);
+
+                    domainsToCrawl.add(new EdgeDomain(domainName));
+                    crawlSpecRecords.add(CrawlSpecRecord.growExistingDomain(domainName, existingUrls));
+                    totalTasks++;
+                }
+            }
+        }
+
+        logger.info("Loaded {} domains", crawlSpecRecords.size());
+
+        // Shuffle the domains to ensure we get a good mix of domains in each crawl,
+        // so that e.g. the big domains don't get all crawled at once, or we end up
+        // crawling the same server in parallel from different subdomains...
+        Collections.shuffle(crawlSpecRecords);
+
         // First a validation run to ensure the file is all good to parse
-        totalTasks = crawlSpecProvider.totalCount();
-        if (totalTasks == 0) {
+        if (crawlSpecRecords.isEmpty()) {
             // This is an error state, and we should make noise about it
             throw new IllegalStateException("No crawl tasks found, refusing to continue");
         }
-        logger.info("Queued {} crawl tasks, let's go", totalTasks);
+        else {
+            logger.info("Queued {} crawl tasks, let's go", crawlSpecRecords.size());
+        }
 
+        // Set up the work log and the warc archiver so we can keep track of what we've done
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
-             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(crawlSpecProvider.getDomains())
+             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(domainsToCrawl)
         ) {
             // Set the number of tasks done to the number of tasks that are already finished,
             // (this happens when the process is restarted after a crash or a shutdown)
             tasksDone.set(workLog.countFinishedJobs());
 
-            // Process the crawl tasks
-            try (var specStream = crawlSpecProvider.stream()) {
-                specStream
-                        .takeWhile((e) -> abortMonitor.isAlive())
-                        .filter(e -> !workLog.isJobFinished(e.domain()))
-                        .filter(e -> processingIds.put(e.domain(), "") == null)
-                        .map(e -> new CrawlTask(e, anchorTagsSource, outputDir, warcArchiver, workLog))
-                        .forEach(pool::submitQuietly);
+            // Create crawl tasks and submit them to the pool for execution
+            for (CrawlSpecRecord crawlSpec : crawlSpecRecords) {
+                if (workLog.isJobFinished(crawlSpec.domain()))
+                    continue;
+
+                var task = new CrawlTask(
+                        crawlSpec,
+                        anchorTagsSource,
+                        outputDir,
+                        warcArchiver,
+                        workLog);
+
+                if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) == null) {
+                    pool.submitQuietly(task);
+                }
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
@@ -222,7 +294,7 @@ public class CrawlerMain extends ProcessMainClass {
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
         ) {
-            var spec = new CrawlSpecProvider.CrawlSpecRecord(targetDomainName, 1000, List.of());
+            var spec = new CrawlSpecRecord(targetDomainName, 1000, List.of());
             var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, workLog);
             task.run();
         }
@@ -234,9 +306,9 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
-    class CrawlTask implements SimpleBlockingThreadPool.Task {
+    private class CrawlTask implements SimpleBlockingThreadPool.Task {
 
-        private final CrawlSpecProvider.CrawlSpecRecord specification;
+        private final CrawlSpecRecord specification;
 
         private final String domain;
         private final String id;
@@ -246,7 +318,7 @@ public class CrawlerMain extends ProcessMainClass {
         private final WarcArchiverIf warcArchiver;
         private final WorkLog workLog;
 
-        CrawlTask(CrawlSpecProvider.CrawlSpecRecord specification,
+        CrawlTask(CrawlSpecRecord specification,
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WarcArchiverIf warcArchiver,
@@ -269,6 +341,8 @@ public class CrawlerMain extends ProcessMainClass {
             Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
             Path parquetFile = CrawlerOutputFile.createParquetPath(outputDir, id, domain);
 
+            // Move the WARC file to a temp file if it exists, so we can resume the crawl using the old data
+            // while writing to the same file name as before
             if (Files.exists(newWarcFile)) {
                 Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -276,31 +350,29 @@ public class CrawlerMain extends ProcessMainClass {
                 Files.deleteIfExists(tempFile);
             }
 
-            var domainLock = domainLocks.getSemaphore(new EdgeDomain(specification.domain()));
-
             try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
                  var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
-                 CrawlDataReference reference = getReference())
+                 CrawlDataReference reference = getReference();
+                 )
             {
-                // acquire the domain lock to prevent other threads from crawling the same domain,
-                // we release it at the end of the task to let them go ahead
-                Thread.currentThread().setName("crawling:" + domain + " [await domain lock]");
-                domainLock.acquire();
-                Thread.currentThread().setName("crawling:" + domain);
-
-                var domainLinks = anchorTagsSource.getAnchorTags(domain);
-
+                // Resume the crawl if it was aborted
                 if (Files.exists(tempFile)) {
                     retriever.syncAbortedRun(tempFile);
                     Files.delete(tempFile);
                 }
 
-                int size = retriever.crawlDomain(domainLinks, reference);
+                DomainLinks domainLinks = anchorTagsSource.getAnchorTags(domain);
+
+                int size;
+                try (var lock = domainLocks.lockDomain(new EdgeDomain(domain))) {
+                    size = retriever.crawlDomain(domainLinks, reference);
+                }
 
                 // Delete the reference crawl data if it's not the same as the new one
                 // (mostly a case when migrating from legacy->warc)
                 reference.delete();
 
+                // Convert the WARC file to Parquet
                 CrawledDocumentParquetRecordFileWriter
                         .convertWarc(domain, userAgent, newWarcFile, parquetFile);
 
@@ -308,7 +380,10 @@ public class CrawlerMain extends ProcessMainClass {
                 // otherwise delete it:
                 warcArchiver.consumeWarc(newWarcFile, domain);
 
+                // Mark the domain as finished in the work log
                 workLog.setJobToFinished(domain, parquetFile.toString(), size);
+
+                // Update the progress bar
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
                 logger.info("Fetched {}", domain);
@@ -316,11 +391,8 @@ public class CrawlerMain extends ProcessMainClass {
                 logger.error("Error fetching domain " + domain, e);
             }
             finally {
-                // release the domain lock to permit other threads to crawl subdomains of this domain
-                domainLock.release();
-
                 // We don't need to double-count these; it's also kept int he workLog
-                processingIds.remove(domain);
+                pendingCrawlTasks.remove(domain);
                 Thread.currentThread().setName("[idle]");
 
                 Files.deleteIfExists(newWarcFile);
@@ -379,12 +451,11 @@ public class CrawlerMain extends ProcessMainClass {
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.crawling.CrawlRequest.class);
-
-        var crawlData = fileStorageService.getStorage(request.crawlStorage);
+        var crawlStorage = fileStorageService.getStorage(request.crawlStorage);
 
         return new CrawlRequest(
                 request.targetDomainName,
-                crawlData.asPath(),
+                crawlStorage.asPath(),
                 msg,
                 inbox);
     }
@@ -404,4 +475,25 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
+    @Builder
+    public record CrawlSpecRecord(@NotNull String domain, int crawlDepth, @NotNull List<String> urls) {
+
+        public CrawlSpecRecord(String domain, int crawlDepth) {
+            this(domain, crawlDepth, List.of());
+        }
+
+        public static CrawlSpecRecord growExistingDomain(String domain, int visitedUrls) {
+            // Calculate the number of URLs to fetch for this domain, based on the number of URLs
+            // already fetched, and a growth factor that gets a bonus for small domains
+            return new CrawlSpecRecord(domain,
+                    (int) Math.clamp(
+                    (visitedUrls * (visitedUrls < MID_URLS_PER_DOMAIN
+                            ? Math.max(2.5, URL_GROWTH_FACTOR)
+                            : URL_GROWTH_FACTOR)
+                    ),
+                    MIN_URLS_PER_DOMAIN,
+                    MAX_URLS_PER_DOMAIN));
+        }
+
+    }
 }

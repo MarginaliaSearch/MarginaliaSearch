@@ -4,11 +4,11 @@ import lombok.SneakyThrows;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
+import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.*;
-import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
@@ -76,7 +76,7 @@ class CrawlerRetreiverTest {
 
     @Test
     public void testWarcOutput() throws IOException {
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
@@ -118,7 +118,7 @@ class CrawlerRetreiverTest {
 
     @Test
     public void testWarcOutputNoKnownUrls() throws IOException {
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
@@ -161,7 +161,7 @@ class CrawlerRetreiverTest {
     @SneakyThrows
     @Test
     public void testResync() throws IOException {
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
@@ -210,7 +210,7 @@ class CrawlerRetreiverTest {
 
     @Test
     public void testWithKnownDomains() throws IOException {
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
@@ -254,7 +254,7 @@ class CrawlerRetreiverTest {
 
     @Test
     public void testRedirect() throws IOException, URISyntaxException {
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(3)
                 .domain("www.marginalia.nu")
@@ -312,7 +312,7 @@ class CrawlerRetreiverTest {
     @Test
     public void testEmptySet() throws IOException {
 
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
@@ -360,7 +360,7 @@ class CrawlerRetreiverTest {
     @Test
     public void testRecrawl() throws IOException {
 
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(12)
                 .domain("www.marginalia.nu")
@@ -420,7 +420,7 @@ class CrawlerRetreiverTest {
     @Test
     public void testRecrawlWithResync() throws IOException {
 
-        var specs = CrawlSpecProvider.CrawlSpecRecord
+        var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(12)
                 .domain("www.marginalia.nu")
@@ -508,7 +508,7 @@ class CrawlerRetreiverTest {
         }
     }
 
-    private void doCrawlWithReferenceStream(CrawlSpecProvider.CrawlSpecRecord specs, SerializableCrawlDataStream stream) {
+    private void doCrawlWithReferenceStream(CrawlerMain.CrawlSpecRecord specs, SerializableCrawlDataStream stream) {
         try (var recorder = new WarcRecorder(tempFileWarc2)) {
             new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).crawlDomain(new DomainLinks(),
                     new CrawlDataReference(stream));
@@ -519,7 +519,7 @@ class CrawlerRetreiverTest {
     }
 
     @NotNull
-    private DomainCrawlFrontier doCrawl(Path tempFileWarc1, CrawlSpecProvider.CrawlSpecRecord specs) {
+    private DomainCrawlFrontier doCrawl(Path tempFileWarc1, CrawlerMain.CrawlSpecRecord specs) {
         try (var recorder = new WarcRecorder(tempFileWarc1)) {
             var crawler = new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder);
             crawler.crawlDomain();

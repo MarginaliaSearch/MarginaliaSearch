@@ -165,7 +165,7 @@ public class DomainCrawlFrontier {
     public int queueSize() {
         return queue.size();
     }
-
+    public int visitedSize() { return visited.size(); }
 
     public void enqueueLinksFromDocument(EdgeUrl baseUrl, Document parsed) {
         baseUrl = linkParser.getBaseLink(parsed, baseUrl);

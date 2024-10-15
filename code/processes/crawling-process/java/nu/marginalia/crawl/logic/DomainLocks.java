@@ -18,8 +18,9 @@ public class DomainLocks {
     /** Returns a lock object corresponding to the given domain.  The object is returned as-is,
      * and may be held by another thread.  The caller is responsible for locking and  releasing the lock.
      */
-    public Semaphore getSemaphore(EdgeDomain domain) {
-        return locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits);
+    public DomainLock lockDomain(EdgeDomain domain) throws InterruptedException {
+        return new DomainLock(domain.toString(),
+                locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits));
     }
 
     private Semaphore defaultPermits(String topDomain) {
@@ -41,5 +42,25 @@ public class DomainLocks {
         }
 
         return new Semaphore(2);
+    }
+
+    public static class DomainLock implements AutoCloseable {
+        private final String domainName;
+        private final Semaphore semaphore;
+
+        DomainLock(String domainName, Semaphore semaphore) throws InterruptedException {
+            this.domainName = domainName;
+            this.semaphore = semaphore;
+
+            Thread.currentThread().setName("crawling:" + domainName + " [await domain lock]");
+            semaphore.acquire();
+            Thread.currentThread().setName("crawling:" + domainName);
+        }
+
+        @Override
+        public void close() throws Exception {
+            semaphore.release();
+            Thread.currentThread().setName("crawling:" + domainName + " [wrapping up]");
+        }
     }
 }
