@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+// FIXME:  This design is a vestige from when there were multiple sources of crawl data.  It should be simplified and probably merged with CrawlerMain.
 public class CrawlSpecProvider {
     private final HikariDataSource dataSource;
     private final ProcessConfiguration processConfiguration;
@@ -48,15 +49,13 @@ public class CrawlSpecProvider {
 
         blacklist.waitUntilLoaded();
 
-        List<Integer> domainIds = new ArrayList<>(10_000);
-
         try (var conn = dataSource.getConnection();
              var assignFreeDomains = conn.prepareStatement("UPDATE EC_DOMAIN SET NODE_AFFINITY=? WHERE NODE_AFFINITY=0");
              var query = conn.prepareStatement("""
-                     SELECT DOMAIN_NAME, COALESCE(KNOWN_URLS, 0), EC_DOMAIN.ID
+                     SELECT DOMAIN_NAME, COALESCE(VISITED_URLS, 0), EC_DOMAIN.ID
                      FROM EC_DOMAIN
                      LEFT JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
-                     WHERE NODE_AFFINITY=? OR NODE_AFFINITY=0
+                     WHERE NODE_AFFINITY=?
                      """)
              )
         {
@@ -76,17 +75,12 @@ public class CrawlSpecProvider {
                 int id = rs.getInt(3);
                 if (blacklist.isBlacklisted(id))
                     continue;
-                domainIds.add(id);
 
                 int urls = rs.getInt(2);
-                double growthFactor;
 
-                if (urls < MID_URLS_PER_DOMAIN) {
-                    growthFactor =  Math.max(2.5, URL_GROWTH_FACTOR);
-                }
-                else {
-                    growthFactor = URL_GROWTH_FACTOR;
-                }
+                double growthFactor = urls < MID_URLS_PER_DOMAIN
+                        ? Math.max(2.5, URL_GROWTH_FACTOR)
+                        : URL_GROWTH_FACTOR;
 
                 int urlsToFetch = Math.clamp((int) (growthFactor * rs.getInt(2)), MIN_URLS_PER_DOMAIN, MAX_URLS_PER_DOMAIN);
 
