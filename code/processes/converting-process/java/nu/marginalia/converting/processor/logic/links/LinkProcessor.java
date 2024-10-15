@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+/** Processes links found in a document */
 public class LinkProcessor {
     private final ProcessedDocumentDetails ret;
     private final EdgeUrl baseUrl;
@@ -19,9 +20,13 @@ public class LinkProcessor {
     private final Set<EdgeUrl> seenUrls = new HashSet<>();
     private final Set<EdgeDomain> foreignDomains = new HashSet<>();
 
-    private static final int MAX_INTERNAL_LINK = 250;
-    private static final int MAX_EXTERNAL_LINK = 100;
+    private static final int MAX_INTERNAL_LINK = 500;
+    private static final int MAX_EXTERNAL_LINK = 250;
+    private static final Set<String> permittedSchemas = Set.of("http", "https");
+
+
     private static final UrlBlocklist urlBlocklist = new UrlBlocklist();
+
 
     public LinkProcessor(ProcessedDocumentDetails documentDetails, EdgeUrl baseUrl) {
         this.ret = documentDetails;
@@ -44,6 +49,7 @@ public class LinkProcessor {
         return nonIndexable;
     }
 
+    /** Accepts a link as an internal or external link */
     public void accept(EdgeUrl link) {
         if (!isLinkPermitted(link)) {
             return;
@@ -66,6 +72,7 @@ public class LinkProcessor {
         }
     }
 
+    /** Accepts a link as a feed link */
     public void acceptFeed(EdgeUrl link) {
         if (!isLinkPermitted(link)) {
             return;
@@ -79,7 +86,7 @@ public class LinkProcessor {
     }
 
     private boolean isLinkPermitted(EdgeUrl link) {
-        if (!isProtoSupported(link.proto)) {
+        if (!permittedSchemas.contains(link.proto.toLowerCase())) {
             return false;
         }
 
@@ -92,11 +99,6 @@ public class LinkProcessor {
         }
 
         return true;
-    }
-
-    private boolean isProtoSupported(String proto) {
-        return proto.equalsIgnoreCase("http")
-            || proto.equalsIgnoreCase("https");
     }
 
     public void acceptNonIndexable(EdgeUrl edgeUrl) {
