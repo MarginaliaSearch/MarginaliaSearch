@@ -72,16 +72,4 @@ download_model model/segments.bin https://downloads.marginalia.nu/model/segments
 download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/tfreq-new-algo3.bin a38f0809f983723001dfc784d88ebb6d
 download_model model/lid.176.ftz https://downloads.marginalia.nu/model/lid.176.ftz 340156704bb8c8e50c4abf35a7ec2569
 
-download_model data/IP2LOCATION-LITE-DB1.CSV.ZIP https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP
-unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP
-
-download_model data/asn-data-raw-table https://thyme.apnic.net/current/data-raw-table
-download_model data/asn-used-autnums https://thyme.apnic.net/current/data-used-autnums
-
-download_model data/adblock.txt https://downloads.marginalia.nu/data/adblock.txt
-if [ ! -f data/suggestions.txt ]; then
-  download_model data/suggestions.txt.gz https://downloads.marginalia.nu/data/suggestions.txt.gz
-  gunzip data/suggestions.txt.gz
-fi
-
 popd
