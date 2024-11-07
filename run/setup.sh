@@ -31,7 +31,7 @@ function download_model {
 
   if [ ! -f $model ]; then
     echo "** $model absent, downloading $url"
-    curl -s -o $model.tmp $url
+    curl -L --progress-bar -o  $model.tmp $url
     mv $model.tmp $model
   fi
 }
