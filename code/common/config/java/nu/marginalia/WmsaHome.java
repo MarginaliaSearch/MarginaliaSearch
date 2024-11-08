@@ -75,6 +75,10 @@ public class WmsaHome {
         return ret;
     }
 
+    public static Path getDataPath() {
+        return getHomePath().resolve("data");
+    }
+
     public static Path getAdsDefinition() {
         return getHomePath().resolve("data").resolve("adblock.txt");
     }

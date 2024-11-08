@@ -31,7 +31,7 @@ function download_model {
 
   if [ ! -f $model ]; then
     echo "** $model absent, downloading $url"
-    curl -s -o $model.tmp $url
+    curl -L --progress-bar -o  $model.tmp $url
     mv $model.tmp $model
   fi
 }
@@ -64,24 +64,14 @@ else
   mkdir -p {node-1,node-2}/{work,index,backup,samples/export,uploads}
 fi
 
-download_model model/English.DICT https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.DICT
-download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.RDR
-download_model model/opennlp-sentence.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin
-download_model model/opennlp-tokens.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin
-download_model model/segments.bin https://downloads.marginalia.nu/model/segments.bin a2650796c77968b1bd9db0d7c01e3150
-download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/tfreq-new-algo3.bin a38f0809f983723001dfc784d88ebb6d
-download_model model/lid.176.ftz https://downloads.marginalia.nu/model/lid.176.ftz 340156704bb8c8e50c4abf35a7ec2569
+download_model model/English.DICT https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/e0fa60db14eae90b66dc67691f0f519eb19e3e66/Models/POS/English.DICT 356d96a8832b62eb5e0ddac6f0301ada
+download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/e0fa60db14eae90b66dc67691f0f519eb19e3e66/Models/POS/English.RDR bec40a1160e12c33a1dd0563677104e4
 
-download_model data/IP2LOCATION-LITE-DB1.CSV.ZIP https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP
-unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP
+download_model model/opennlp-sentence.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin 5965ada99a2ca77beb8632bb47741b7a
+download_model model/opennlp-tokens.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin f097e14bce9edb3f558f6aaf2c3f7622
 
-download_model data/asn-data-raw-table https://thyme.apnic.net/current/data-raw-table
-download_model data/asn-used-autnums https://thyme.apnic.net/current/data-used-autnums
-
-download_model data/adblock.txt https://downloads.marginalia.nu/data/adblock.txt
-if [ ! -f data/suggestions.txt ]; then
-  download_model data/suggestions.txt.gz https://downloads.marginalia.nu/data/suggestions.txt.gz
-  gunzip data/suggestions.txt.gz
-fi
+download_model model/segments.bin https://huggingface.co/MarginaliaNu/MarginaliaModelData/resolve/c9339e4224f1dfad7f628809c32687e748198ae3/segments.bin?download=true a2650796c77968b1bd9db0d7c01e3150
+download_model model/tfreq-new-algo3.bin https://huggingface.co/MarginaliaNu/MarginaliaModelData/resolve/c9339e4224f1dfad7f628809c32687e748198ae3/tfreq-new-algo3.bin?download=true a38f0809f983723001dfc784d88ebb6d
+download_model model/lid.176.ftz https://huggingface.co/MarginaliaNu/MarginaliaModelData/resolve/c9339e4224f1dfad7f628809c32687e748198ae3/lid.176.ftz?download=true 340156704bb8c8e50c4abf35a7ec2569
 
 popd
