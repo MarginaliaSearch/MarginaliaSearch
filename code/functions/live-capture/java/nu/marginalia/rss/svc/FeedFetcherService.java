@@ -14,6 +14,7 @@ import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageType;
+import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +22,14 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
@@ -35,7 +39,12 @@ public class FeedFetcherService {
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
     private final RssReader rssReader = new RssReader(
-            HttpClient.newBuilder().executor(Executors.newWorkStealingPool(16)).build()
+            HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .executor(Executors.newCachedThreadPool())
+                    .followRedirects(HttpClient.Redirect.NORMAL)
+                    .version(HttpClient.Version.HTTP_2)
+                    .build()
     );
 
     private final FeedDb feedDb;
@@ -77,20 +86,30 @@ public class FeedFetcherService {
 
             logger.info("Found {} feed definitions", definitions.size());
 
-            int updated = 0;
-            for (var feed: definitions) {
+            AtomicInteger updated = new AtomicInteger(0);
 
-                var items = fetchFeed(feed);
-                if (!items.isEmpty()) {
-                    writer.saveFeed(items);
-                }
+            SimpleBlockingThreadPool executor = new SimpleBlockingThreadPool("FeedFetcher", 64, 4);
 
-                heartbeat.progress("Updated " + updated + " feeds", ++updated, definitions.size());
+            for (var feed : definitions) {
+                executor.submitQuietly(() -> {
+                    var items = fetchFeed(feed);
+                    if (!items.isEmpty()) {
+                        writer.saveFeed(items);
+                    }
+
+                    if ((updated.incrementAndGet() % 10_000) == 0) {
+                        // Update the progress every 10k feeds, to avoid hammering the database and flooding the logs
+                        heartbeat.progress("Updated " + updated + "/" + definitions.size() + " feeds", updated.get(), definitions.size());
+                    }
+                });
             }
+
+            executor.shutDown();
+            executor.awaitTermination(1, TimeUnit.DAYS);
 
             feedDb.switchDb(writer);
 
-        } catch (SQLException e) {
+        } catch (SQLException|InterruptedException e) {
             logger.error("Error updating feeds", e);
         }
         finally {
