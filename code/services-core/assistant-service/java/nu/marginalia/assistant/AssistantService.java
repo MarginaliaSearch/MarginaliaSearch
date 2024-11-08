@@ -8,6 +8,7 @@ import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
 import nu.marginalia.livecapture.LiveCaptureGrpcService;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.rss.svc.FeedsGrpcService;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -31,10 +32,15 @@ public class AssistantService extends Service {
                             ScreenshotService screenshotService,
                             DomainInfoGrpcService domainInfoGrpcService,
                             LiveCaptureGrpcService liveCaptureGrpcService,
+                            FeedsGrpcService feedsGrpcService,
                             MathGrpcService mathGrpcService,
                             Suggestions suggestions)
     {
-        super(params, ServicePartition.any(), List.of(domainInfoGrpcService, mathGrpcService, liveCaptureGrpcService));
+        super(params, ServicePartition.any(),
+                List.of(domainInfoGrpcService,
+                        mathGrpcService,
+                        liveCaptureGrpcService,
+                        feedsGrpcService));
 
         this.suggestions = suggestions;
 

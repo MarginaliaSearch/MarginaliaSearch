@@ -21,6 +21,12 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
 
+    implementation project(':code:execution:api')
+
+    implementation libs.jsoup
+    implementation libs.rssreader
+    implementation libs.opencsv
+    implementation libs.sqlite
     implementation libs.bundles.slf4j
     implementation libs.commons.lang3
 

@@ -4,10 +4,11 @@ import com.google.inject.Inject;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
+import nu.marginalia.api.feeds.FeedsClient;
+import nu.marginalia.api.feeds.RpcFeed;
+import nu.marginalia.api.feeds.RpcFeedItem;
 import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.feedlot.FeedlotClient;
-import nu.marginalia.feedlot.model.FeedItems;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
@@ -37,7 +38,7 @@ public class SearchSiteInfoService {
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
-    private final FeedlotClient feedlotClient;
+    private final FeedsClient feedsClient;
     private final LiveCaptureClient liveCaptureClient;
     private final ScreenshotService screenshotService;
 
@@ -47,7 +48,7 @@ public class SearchSiteInfoService {
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries,
-                                 FeedlotClient feedlotClient,
+                                 FeedsClient feedsClient,
                                  LiveCaptureClient liveCaptureClient,
                                  ScreenshotService screenshotService) throws IOException
     {
@@ -58,7 +59,7 @@ public class SearchSiteInfoService {
 
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
 
-        this.feedlotClient = feedlotClient;
+        this.feedsClient = feedsClient;
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
     }
@@ -135,38 +136,34 @@ public class SearchSiteInfoService {
         final Future<DomainInformation> domainInfoFuture;
         final Future<List<SimilarDomain>> similarSetFuture;
         final Future<List<SimilarDomain>> linkingDomainsFuture;
-
+        final CompletableFuture<RpcFeed> feedItemsFuture;
         String url = "https://" + domainName + "/";
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
 
-        var feedItemsFuture = feedlotClient.getFeedItems(domainName);
+
         if (domainId < 0) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
+            feedItemsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
         }
         else if (!domainInfoClient.isAccepting()) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
+            feedItemsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
         }
         else {
             domainInfoFuture = domainInfoClient.domainInformation(domainId);
             similarSetFuture = domainInfoClient.similarDomains(domainId, 25);
             linkingDomainsFuture = domainInfoClient.linkedDomains(domainId, 25);
+            feedItemsFuture = feedsClient.getFeed(domainId);
         }
 
         List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, domainId,5);
         if (!sampleResults.isEmpty()) {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
-        }
-
-        FeedItems feedItems = null;
-        try {
-            feedItems = feedItemsFuture.get();
-        } catch (Exception e) {
-            logger.debug("Failed to get feed items for {}: {}", domainName, e.getMessage());
         }
 
         var result = new SiteInfoWithContext(domainName,
@@ -176,7 +173,7 @@ public class SearchSiteInfoService {
                 waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
                 waitForFuture(similarSetFuture, List::of),
                 waitForFuture(linkingDomainsFuture, List::of),
-                feedItems,
+                waitForFuture(feedItemsFuture.thenApply(FeedItems::new), () -> FeedItems.dummyValue(domainName)),
                 sampleResults
         );
 
@@ -353,6 +350,43 @@ public class SearchSiteInfoService {
 
         public boolean isKnown() {
             return domainId > 0;
+        }
+    }
+
+    public record FeedItem(String title, String date, String description, String url) {
+
+        public FeedItem(RpcFeedItem rpcFeedItem) {
+            this(rpcFeedItem.getTitle(),
+                    rpcFeedItem.getDate(),
+                    rpcFeedItem.getDescription(),
+                    rpcFeedItem.getUrl());
+        }
+
+        public String pubDay() { // Extract the date from an ISO style date string
+            if (date.length() > 10) {
+                return date.substring(0, 10);
+            }
+            return date;
+        }
+
+        public String descriptionSafe() {
+            return description
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;");
+        }
+    }
+
+    public record FeedItems(String domain, String feedUrl, String updated, List<FeedItem> items) {
+
+        public static FeedItems dummyValue(String domain) {
+            return new FeedItems(domain, "", "", List.of());
+        }
+
+        public FeedItems(RpcFeed rpcFeedItems) {
+            this(rpcFeedItems.getDomain(),
+                    rpcFeedItems.getFeedUrl(),
+                    rpcFeedItems.getUpdated(),
+                    rpcFeedItems.getItemsList().stream().map(FeedItem::new).toList());
         }
     }
 

@@ -4,15 +4,12 @@ package nu.marginalia.api.livecapture;
 option java_package="nu.marginalia.api.livecapture";
 option java_multiple_files=true;
 
-service LiveCaptureApi {
-  rpc requestScreengrab(RpcDomainId) returns (Empty) {}
-}
-
-message Void {
-}
-
 message RpcDomainId {
   int32 domainId = 1;
+}
+
+service LiveCaptureApi {
+  rpc requestScreengrab(RpcDomainId) returns (Empty) {}
 }
 
 message Empty {}

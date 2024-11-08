@@ -54,6 +54,11 @@ public class ServiceHeartbeatImpl implements ServiceHeartbeat {
         return new ServiceTaskHeartbeatImpl<>(steps, configuration, processName, eventLog, dataSource);
     }
 
+    @Override
+    public ServiceAdHocTaskHeartbeat createServiceAdHocTaskHeartbeat(String taskName) {
+        return new ServiceAdHocTaskHeartbeatImpl(configuration, taskName, dataSource);
+    }
+
 
     public void start() {
         if (!running) {

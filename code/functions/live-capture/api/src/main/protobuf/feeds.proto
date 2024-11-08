@@ -1,0 +1,32 @@
+syntax="proto3";
+package nu.marginalia.api.feeds;
+
+option java_package="nu.marginalia.api.feeds";
+option java_multiple_files=true;
+
+
+service FeedApi {
+  rpc getFeed(RpcDomainId) returns (RpcFeed) {}
+  rpc updateFeeds(Empty) returns (Empty) {}
+}
+
+message RpcDomainId {
+  int32 domainId = 1;
+}
+
+message RpcFeed {
+  int32 domainId = 1;
+  string domain = 2;
+  string feedUrl = 3;
+  string updated = 4;
+  repeated RpcFeedItem items = 5;
+}
+
+message RpcFeedItem {
+  string title = 1;
+  string date = 2;
+  string description = 3;
+  string url = 4;
+}
+
+message Empty {}

@@ -9,23 +9,25 @@ import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.executor.upload.UploadDirItem;
 import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.service.ServiceId;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.*;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static nu.marginalia.functions.execution.api.ExecutorApiGrpc.*;
+import static nu.marginalia.functions.execution.api.ExecutorApiGrpc.ExecutorApiBlockingStub;
 
 @Singleton
 public class ExecutorClient {
@@ -163,8 +165,8 @@ public class ExecutorClient {
      * The endpoint is compatible with range requests.
      * */
     public URL remoteFileURL(FileStorage fileStorage, String path) {
-        String uriPath = STR."/transfer/file/\{fileStorage.id()}";
-        String uriQuery = STR."path=\{URLEncoder.encode(path, StandardCharsets.UTF_8)}";
+        String uriPath = "/transfer/file/" + fileStorage.id();
+        String uriQuery = "path=" + URLEncoder.encode(path, StandardCharsets.UTF_8);
 
         var endpoints = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, fileStorage.node()));
         if (endpoints.isEmpty()) {
