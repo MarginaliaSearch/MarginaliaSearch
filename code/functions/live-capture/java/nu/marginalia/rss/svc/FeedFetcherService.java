@@ -69,17 +69,23 @@ public class FeedFetcherService {
             return;
         }
 
-        try (var writer = feedDb.createWriter()) {
+        try (var writer = feedDb.createWriter();
+            var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
+        ) {
             updating = true;
             var definitions = readDefinitions();
 
             logger.info("Found {} feed definitions", definitions.size());
 
+            int updated = 0;
             for (var feed: definitions) {
+
                 var items = fetchFeed(feed);
                 if (!items.isEmpty()) {
                     writer.saveFeed(items);
                 }
+
+                heartbeat.progress("Updated " + updated + " feeds", ++updated, definitions.size());
             }
 
             feedDb.switchDb(writer);
@@ -96,29 +102,22 @@ public class FeedFetcherService {
         Collection<FileStorage> storages = getLatestFeedStorages();
         List<FeedDefinition> feedDefinitionList = new ArrayList<>();
 
-        // Download and parse feeds.csv.gz from each relevant storage
-        int updated = 0;
-        try (var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")) {
-            for (var storage : storages) {
-                var url = executorClient.remoteFileURL(storage, "feeds.csv.gz");
+        for (var storage : storages) {
+            var url = executorClient.remoteFileURL(storage, "feeds.csv.gz");
 
-                heartbeat.progress("Fetch RSS/Atom feeds", 0, storages.size());
+            try (var feedStream = new GZIPInputStream(url.openStream())) {
+                CSVReader reader = new CSVReader(new java.io.InputStreamReader(feedStream));
 
-                try (var feedStream = new GZIPInputStream(url.openStream())) {
-                    CSVReader reader = new CSVReader(new java.io.InputStreamReader(feedStream));
-
-                    for (String[] row : reader) {
-                        if (row.length < 3) {
-                            continue;
-                        }
-                        var domain = row[0].trim();
-                        var feedUrl = row[2].trim();
-
-                        feedDefinitionList.add(new FeedDefinition(domain, feedUrl));
+                for (String[] row : reader) {
+                    if (row.length < 3) {
+                        continue;
                     }
+                    var domain = row[0].trim();
+                    var feedUrl = row[2].trim();
 
-                    heartbeat.progress("Fetch RSS/Atom feeds", ++updated, storages.size());
+                    feedDefinitionList.add(new FeedDefinition(domain, feedUrl));
                 }
+
             }
         }
 
