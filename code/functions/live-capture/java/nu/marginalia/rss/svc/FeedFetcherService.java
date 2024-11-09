@@ -237,8 +237,6 @@ public class FeedFetcherService {
                     items);
 
         } catch (Exception e) {
-            logger.warn("Failed to read feed {}: {}", definition.feedUrl(), e.getMessage());
-
             logger.debug("Exception", e);
             return FeedItems.none();
         }
