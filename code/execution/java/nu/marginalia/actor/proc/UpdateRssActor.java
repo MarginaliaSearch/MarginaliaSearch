@@ -18,7 +18,7 @@ public class UpdateRssActor extends RecordActorPrototype {
     private final int nodeId;
 
     private final Duration initialDelay = Duration.ofMinutes(5);
-    private final Duration updateInterval = Duration.ofHours(35);
+    private final Duration updateInterval = Duration.ofHours(24);
 
     @Inject
     public UpdateRssActor(Gson gson, FeedsClient feedsClient, ServiceConfiguration serviceConfiguration) {
