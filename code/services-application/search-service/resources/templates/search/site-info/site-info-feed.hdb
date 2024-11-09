@@ -1,5 +1,6 @@
+{{#if feed.items}}
 {{#with feed}}
-<h2><a title="Atom/RSS feed" target="external" href="{{feedUrl}}"><img width="16" height="16" src="/rss.svg"></a> Feed (Experimental)</h2>
+<h2><a title="Atom/RSS feed" target="external" href="{{feedUrl}}"><img width="16" height="16" src="/rss.svg"></a> Feed</h2>
 
 <dl>
     {{#each items}}
@@ -8,8 +9,9 @@
     {{/each}}
 </dl>
 {{/with}}
+{{/if}}
 
-{{#unless feed}}{{#if samples}}
+{{#unless feed.items}}{{#if samples}}
 <h2>Sample</h2>
 <dl>
 {{#each samples}}
