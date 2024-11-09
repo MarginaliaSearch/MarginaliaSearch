@@ -31,13 +31,6 @@ public class FeedDbWriter implements AutoCloseable {
         connection = DriverManager.getConnection(dbUrl);
 
         try (var stmt = connection.createStatement()) {
-            // Disable synchronous writes for speed.  We don't care about recovery.
-            //
-            // If this operation fails we just retry the entire operation from scratch
-            // with a new db file.
-
-            stmt.execute("PRAGMA synchronous = OFF");
-
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS feed (domain TEXT PRIMARY KEY, feed JSON)");
         }
 

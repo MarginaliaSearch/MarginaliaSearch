@@ -41,12 +41,16 @@ public class FeedDbReader implements AutoCloseable {
             var rs = stmt.executeQuery("""
                 select
                     json_extract(feed, '$.domain') as domain,
-                    json_extract(feed, '$.feedUrl') as url
+                    json_extract(feed, '$.feedUrl') as url,
+                    json_extract(feed, '$.updated') as updated
                 from feed
                 """);
 
             while (rs.next()) {
-                ret.add(new FeedDefinition(rs.getString("domain"), rs.getString("url")));
+                ret.add(new FeedDefinition(
+                        rs.getString("domain"),
+                        rs.getString("url"),
+                        rs.getString("updated")));
             }
 
         } catch (SQLException e) {
