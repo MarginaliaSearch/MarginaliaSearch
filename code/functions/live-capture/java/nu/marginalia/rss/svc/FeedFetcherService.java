@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -89,7 +90,12 @@ public class FeedFetcherService {
             // RSS exports instead
 
             Collection<FeedDefinition> definitions = feedDb.getAllFeeds();
-            if (definitions == null) {
+
+            // If we didn't get any definitions, or approximately every other month, read them from the system
+            // to get the latest feeds.  As the feeds known by the system have a lot of dead links, we don't
+            // want to do this too often.
+            final LocalDate today = LocalDate.now();
+            if (definitions == null || (today.getDayOfMonth() == 1 && (today.getMonthValue() % 2) == 0)) {
                 definitions = readDefinitionsFromSystem();
             }
 
