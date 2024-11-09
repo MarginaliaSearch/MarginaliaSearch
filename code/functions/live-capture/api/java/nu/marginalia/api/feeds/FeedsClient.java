@@ -36,10 +36,10 @@ public class FeedsClient {
         }
     }
 
-    public void updateFeeds() {
+    public void updateFeeds(RpcFeedUpdateMode mode) {
         try {
             channelPool.call(FeedApiGrpc.FeedApiBlockingStub::updateFeeds)
-                    .run(Empty.getDefaultInstance());
+                    .run(RpcUpdateRequest.newBuilder().setMode(mode).build());
         }
         catch (Exception e) {
             logger.error("API Exception", e);

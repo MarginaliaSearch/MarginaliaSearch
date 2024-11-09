@@ -2,10 +2,7 @@ package nu.marginalia.rss.svc;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
-import nu.marginalia.api.feeds.Empty;
-import nu.marginalia.api.feeds.FeedApiGrpc;
-import nu.marginalia.api.feeds.RpcDomainId;
-import nu.marginalia.api.feeds.RpcFeed;
+import nu.marginalia.api.feeds.*;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.rss.db.FeedDb;
@@ -40,12 +37,18 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
     }
 
     @Override
-    public void updateFeeds(Empty request,
-                             StreamObserver<Empty> responseObserver)
+    public void updateFeeds(RpcUpdateRequest request,
+                            StreamObserver<Empty> responseObserver)
     {
+        FeedFetcherService.UpdateMode updateMode = switch(request.getMode()) {
+            case CLEAN -> FeedFetcherService.UpdateMode.CLEAN;
+            case REFRESH -> FeedFetcherService.UpdateMode.REFRESH;
+            default -> throw new IllegalStateException("Unexpected value: " + request.getMode());
+        };
+
         Thread.ofPlatform().start(() -> {
             try {
-                feedFetcherService.updateFeeds();
+                feedFetcherService.updateFeeds(updateMode);
             } catch (IOException e) {
                 logger.error("Failed to update feeds", e);
             }

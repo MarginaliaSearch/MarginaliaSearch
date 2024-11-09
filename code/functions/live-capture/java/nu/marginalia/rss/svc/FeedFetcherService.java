@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -74,7 +73,12 @@ public class FeedFetcherService {
         rssReader.addHeader("User-Agent", WmsaHome.getUserAgent().uaIdentifier() + "  RSS Feed Fetcher");
     }
 
-    public void updateFeeds() throws IOException {
+    public enum UpdateMode {
+        CLEAN,
+        REFRESH
+    };
+
+    public void updateFeeds(UpdateMode updateMode) throws IOException {
         if (updating) // Prevent concurrent updates
         {
             logger.error("Already updating feeds, refusing to start another update");
@@ -91,11 +95,9 @@ public class FeedFetcherService {
 
             Collection<FeedDefinition> definitions = feedDb.getAllFeeds();
 
-            // If we didn't get any definitions, or approximately every other month, read them from the system
-            // to get the latest feeds.  As the feeds known by the system have a lot of dead links, we don't
-            // want to do this too often.
-            final LocalDate today = LocalDate.now();
-            if (definitions == null || (today.getDayOfMonth() == 1 && (today.getMonthValue() % 2) == 0)) {
+            // If we didn't get any definitions, or a clean update is requested, read the definitions from the system
+            // instead
+            if (definitions == null || updateMode == UpdateMode.CLEAN) {
                 definitions = readDefinitionsFromSystem();
             }
 

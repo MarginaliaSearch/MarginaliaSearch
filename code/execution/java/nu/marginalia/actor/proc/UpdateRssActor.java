@@ -7,6 +7,7 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.api.feeds.FeedsClient;
+import nu.marginalia.api.feeds.RpcFeedUpdateMode;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 import java.time.Duration;
@@ -19,6 +20,7 @@ public class UpdateRssActor extends RecordActorPrototype {
 
     private final Duration initialDelay = Duration.ofMinutes(5);
     private final Duration updateInterval = Duration.ofHours(24);
+    private final int cleanInterval = 60;
 
     @Inject
     public UpdateRssActor(Gson gson, FeedsClient feedsClient, ServiceConfiguration serviceConfiguration) {
@@ -29,10 +31,11 @@ public class UpdateRssActor extends RecordActorPrototype {
 
     public record Initial() implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Wait(String ts) implements ActorStep {}
+    public record Wait(String ts, int refreshCount) implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RESTART)
-    public record Update() implements ActorStep {}
-
+    public record UpdateRefresh(int refreshCount) implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RESTART)
+    public record UpdateClean() implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
@@ -44,10 +47,10 @@ public class UpdateRssActor extends RecordActorPrototype {
                 }
                 else {
                     // Wait for 5 minutes before starting the first update, to give the system time to start up properly
-                    yield new Wait(LocalDateTime.now().plus(initialDelay).toString());
+                    yield new Wait(LocalDateTime.now().plus(initialDelay).toString(), 0);
                 }
             }
-            case Wait(String untilTs) -> {
+            case Wait(String untilTs, int count) -> {
                 var until = LocalDateTime.parse(untilTs);
                 var now = LocalDateTime.now();
 
@@ -55,15 +58,32 @@ public class UpdateRssActor extends RecordActorPrototype {
 
                 if (remaining > 0) {
                     Thread.sleep(remaining);
-                    yield new Wait(untilTs);
+                    yield new Wait(untilTs, count);
                 }
                 else {
-                    yield new Update();
+
+                    // Once every `cleanInterval` updates, do a clean update;
+                    // otherwise do a refresh update
+                    if (count > cleanInterval) {
+                        yield new UpdateClean();
+                    }
+                    else {
+                        yield new UpdateRefresh(count);
+                    }
+
                 }
             }
-            case Update() -> {
-                feedsClient.updateFeeds();
-                yield new Wait(LocalDateTime.now().plus(updateInterval).toString());
+            case UpdateRefresh(int count) -> {
+                feedsClient.updateFeeds(RpcFeedUpdateMode.REFRESH);
+
+                // Increment the refresh count and schedule the next update
+                yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), count + 1);
+            }
+            case UpdateClean() -> {
+                feedsClient.updateFeeds(RpcFeedUpdateMode.CLEAN);
+
+                // Reset the refresh count after a clean update
+                yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), 0);
             }
             default -> new Error("Unknown actor step: " + self);
         };
