@@ -81,8 +81,7 @@ public class FeedFetcherService {
     public void updateFeeds(UpdateMode updateMode) throws IOException {
         if (updating) // Prevent concurrent updates
         {
-            logger.error("Already updating feeds, refusing to start another update");
-            return;
+            throw new IllegalStateException("Already updating feeds, refusing to start another update");
         }
 
         try (var writer = feedDb.createWriter();

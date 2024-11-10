@@ -21,6 +21,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:libraries:blocking-thread-pool')
+    implementation project(':code:libraries:message-queue')
 
     implementation project(':code:execution:api')
 

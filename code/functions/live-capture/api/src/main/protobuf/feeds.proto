@@ -16,6 +16,8 @@ message RpcDomainId {
 
 message RpcUpdateRequest {
   RpcFeedUpdateMode mode = 1;
+  int64 msgId = 2; // Id for a message on the message queue, will be replied to with a dummy response when the task is done,
+                   // if the message id is not positive, no response will be attempted to be sent.
 }
 
 enum RpcFeedUpdateMode {

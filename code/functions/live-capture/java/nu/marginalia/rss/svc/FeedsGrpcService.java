@@ -5,18 +5,21 @@ import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.feeds.*;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.mq.task.MqLongRunningTask;
+import nu.marginalia.mq.task.MqTaskResult;
 import nu.marginalia.rss.db.FeedDb;
 import nu.marginalia.rss.model.FeedItems;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements DiscoverableService  {
     private final FeedDb feedDb;
     private final DbDomainQueries domainQueries;
+    private final MqPersistence mqPersistence;
     private final FeedFetcherService feedFetcherService;
 
     private static final Logger logger = LoggerFactory.getLogger(FeedsGrpcService.class);
@@ -24,9 +27,11 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
     @Inject
     public FeedsGrpcService(FeedDb feedDb,
                             DbDomainQueries domainQueries,
+                            MqPersistence mqPersistence,
                             FeedFetcherService feedFetcherService) {
         this.feedDb = feedDb;
         this.domainQueries = domainQueries;
+        this.mqPersistence = mqPersistence;
         this.feedFetcherService = feedFetcherService;
     }
 
@@ -46,13 +51,14 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
             default -> throw new IllegalStateException("Unexpected value: " + request.getMode());
         };
 
-        Thread.ofPlatform().start(() -> {
-            try {
-                feedFetcherService.updateFeeds(updateMode);
-            } catch (IOException e) {
-                logger.error("Failed to update feeds", e);
-            }
-        });
+        // Start a long-running task to update the feeds
+        MqLongRunningTask
+                .of(request.getMsgId(), "updateFeeds", mqPersistence)
+                .asThread(() -> {
+                            feedFetcherService.updateFeeds(updateMode);
+                            return new MqTaskResult.Success();
+                        })
+                .start();
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();

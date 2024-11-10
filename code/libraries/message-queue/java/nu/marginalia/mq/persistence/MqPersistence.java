@@ -5,8 +5,10 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.MqMessageState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
@@ -23,6 +25,8 @@ import static nu.marginalia.mq.MqMessageState.NEW;
 public class MqPersistence {
     private final HikariDataSource dataSource;
     private final Gson gson;
+
+    private static final Logger logger = LoggerFactory.getLogger(MqPersistence.class);
 
     public MqPersistence(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -194,6 +198,20 @@ public class MqPersistence {
             } finally {
                 conn.setAutoCommit(true);
             }
+        }
+    }
+
+    /** Sends an error response to the message with the given id, this is a convenience wrapper for
+     * sendResponse() that send a generic error message.  The message will be marked as 'ERR'.
+     * <p></p>
+     * If an exception is thrown while sending the response, it will be logged, but not rethrown
+     * to avoid creating exception handling pyramids.  At this point, we've already given it a college try.
+     * */
+    public void sendErrorResponse(long msgId, String message, Throwable e) {
+        try {
+            sendResponse(msgId, MqMessageState.ERR, message + ": " + e.getMessage());
+        } catch (SQLException ex) {
+            logger.error("Failed to send error response", ex);
         }
     }
 
