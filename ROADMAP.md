@@ -49,12 +49,14 @@ associated with each language added, at least a models file or two, as well as s
 
 It would be very helpful to find a speaker of a large language other than English to help in the fine tuning.
 
-## Finalize RSS support
+## Finalize RSS support (COMPLETED 2024-11)
 
 Marginalia has experimental RSS preview support for a few domains.  This works well and
 it should be extended to all domains.  It would also be interesting to offer search of the
 RSS data itself, or use the RSS set to feed a special live index that updates faster than the
 main dataset. 
+
+Completed with PR [#122](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/122) 
 
 ## Support for binary formats like PDF
 
