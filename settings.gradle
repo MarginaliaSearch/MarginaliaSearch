@@ -56,7 +56,6 @@ include 'code:libraries:message-queue'
 
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
-include 'code:features-search:feedlot-client'
 
 include 'code:processes:converting-process:ft-anchor-keywords'
 include 'code:execution:data-extractors'
@@ -154,6 +153,8 @@ dependencyResolutionManagement {
             library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
             library('prometheus-server', 'io.prometheus', 'simpleclient_httpserver').version('0.16.0')
             library('prometheus-hotspot', 'io.prometheus', 'simpleclient_hotspot').version('0.16.0')
+
+            library('rssreader', 'com.apptasticsoftware', 'rssreader').version('3.5.0')
 
             library('slf4j.api', 'org.slf4j', 'slf4j-api').version('1.7.36')
             library('slf4j.jdk14', 'org.slf4j', 'slf4j-jdk14').version('2.0.3')

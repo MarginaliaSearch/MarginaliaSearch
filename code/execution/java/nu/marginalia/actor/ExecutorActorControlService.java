@@ -50,7 +50,8 @@ public class ExecutorActorControlService {
                                        ExportSegmentationModelActor exportSegmentationModelActor,
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
-                                       ExecutorActorStateMachines stateMachines) {
+                                       ExecutorActorStateMachines stateMachines,
+                                       UpdateRssActor updateRssActor) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
         this.stateMachines = stateMachines;
@@ -83,6 +84,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.DOWNLOAD_SAMPLE, downloadSampleActor);
 
         register(ExecutorActor.SCRAPE_FEEDS, scrapeFeedsActor);
+        register(ExecutorActor.UPDATE_RSS, updateRssActor);
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {

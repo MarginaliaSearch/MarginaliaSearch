@@ -22,7 +22,8 @@ public enum ExecutorActor {
     RESTORE_BACKUP,
     EXPORT_SAMPLE_DATA,
     DOWNLOAD_SAMPLE,
-    SCRAPE_FEEDS;
+    SCRAPE_FEEDS,
+    UPDATE_RSS;
 
     public String id() {
         return "fsm:" + name().toLowerCase();

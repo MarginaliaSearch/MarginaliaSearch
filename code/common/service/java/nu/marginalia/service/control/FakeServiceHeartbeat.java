@@ -11,4 +11,14 @@ public class FakeServiceHeartbeat implements ServiceHeartbeat {
             public void close() {}
         };
     }
+
+    @Override
+    public ServiceAdHocTaskHeartbeat createServiceAdHocTaskHeartbeat(String taskName) {
+        return new ServiceAdHocTaskHeartbeat() {
+            @Override
+            public void progress(String step, int stepProgress, int stepCount) {}
+            @Override
+            public void close() {}
+        };
+    }
 }

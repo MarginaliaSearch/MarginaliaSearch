@@ -35,6 +35,7 @@ dependencies {
     implementation project(':code:libraries:term-frequency-dict')
 
     implementation project(':code:functions:link-graph:api')
+    implementation project(':code:functions:live-capture:api')
     implementation project(':code:functions:search-query')
     implementation project(':code:execution:api')
 

@@ -5,8 +5,10 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.MqMessageState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
@@ -23,6 +25,8 @@ import static nu.marginalia.mq.MqMessageState.NEW;
 public class MqPersistence {
     private final HikariDataSource dataSource;
     private final Gson gson;
+
+    private static final Logger logger = LoggerFactory.getLogger(MqPersistence.class);
 
     public MqPersistence(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -145,6 +149,35 @@ public class MqPersistence {
         }
     }
 
+    /** Blocks until a message reaches a terminal state or the timeout passes.
+     * <p>
+     * @param msgId The id of the message to wait for
+     * @param pollInterval The interval to poll the database for updates
+     * @param timeout The maximum time to wait for the message to reach a terminal state
+     * @return The message if it reaches a terminal state, or null if the timeout passes
+     */
+    @Nullable
+    public MqMessage waitForMessageTerminalState(long msgId, Duration pollInterval, Duration timeout) throws InterruptedException, SQLException {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+
+        do {
+            var message = getMessage(msgId);
+            if (message.state().isTerminal()) {
+                return message;
+            }
+
+            long timeLeft = deadline - System.currentTimeMillis();
+            if (timeLeft <= 0) {
+                continue;
+            }
+            long sleepTime = Math.min(pollInterval.toMillis(), timeLeft);
+
+            Thread.sleep(sleepTime);
+        } while (System.currentTimeMillis() < deadline);
+
+        return null;
+    }
+
     /** Creates a new message in the queue referencing as a reply to an existing message
      *  This message will have it's RELATED_ID set to the original message's ID.
      */
@@ -196,7 +229,6 @@ public class MqPersistence {
             }
         }
     }
-
 
     /** Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns the number of messages marked.  This is an atomic operation that

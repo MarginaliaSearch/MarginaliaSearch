@@ -93,14 +93,14 @@ public class MqOutbox {
     }
 
     /** Send a message and wait for a response. */
-    public MqMessage send(String function, String payload) throws Exception {
+    public MqMessage sendBlocking(String function, String payload) throws Exception {
         final long id = sendAsync(function, payload);
 
         return waitResponse(id);
     }
 
     /** Send a message and wait for a response */
-    public MqMessage send(Object object) throws Exception {
+    public MqMessage sendBlocking(Object object) throws Exception {
         final long id = sendAsync(object);
 
         return waitResponse(id);

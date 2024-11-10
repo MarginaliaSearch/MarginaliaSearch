@@ -1,0 +1,43 @@
+syntax="proto3";
+package nu.marginalia.api.feeds;
+
+option java_package="nu.marginalia.api.feeds";
+option java_multiple_files=true;
+
+
+service FeedApi {
+  rpc getFeed(RpcDomainId) returns (RpcFeed) {}
+  rpc updateFeeds(RpcUpdateRequest) returns (Empty) {}
+}
+
+message RpcDomainId {
+  int32 domainId = 1;
+}
+
+message RpcUpdateRequest {
+  RpcFeedUpdateMode mode = 1;
+  int64 msgId = 2; // Id for a message on the message queue, will be replied to with a dummy response when the task is done,
+                   // if the message id is not positive, no response will be attempted to be sent.
+}
+
+enum RpcFeedUpdateMode {
+  CLEAN = 0; // Start over with a new database from system rss exports
+  REFRESH = 1; // Refresh known feeds
+}
+
+message RpcFeed {
+  int32 domainId = 1;
+  string domain = 2;
+  string feedUrl = 3;
+  string updated = 4;
+  repeated RpcFeedItem items = 5;
+}
+
+message RpcFeedItem {
+  string title = 1;
+  string date = 2;
+  string description = 3;
+  string url = 4;
+}
+
+message Empty {}
