@@ -110,9 +110,9 @@ public class MqOutboxTest {
     }
 
     @Test
-    public void testSend() throws Exception {
+    public void testSendBlocking() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
-        Executors.newSingleThreadExecutor().submit(() -> outbox.send("test", "Hello World"));
+        Executors.newSingleThreadExecutor().submit(() -> outbox.sendBlocking("test", "Hello World"));
 
         TimeUnit.MILLISECONDS.sleep(100);
 
@@ -125,14 +125,14 @@ public class MqOutboxTest {
 
 
     @Test
-    public void testSendAndRespondAsyncInbox() throws Exception {
+    public void testSendBlockingAndRespondAsyncInbox() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
         var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(justRespond("Alright then"));
         inbox.start();
 
-        var rsp = outbox.send("test", "Hello World");
+        var rsp = outbox.sendBlocking("test", "Hello World");
 
         assertEquals(MqMessageState.OK, rsp.state());
         assertEquals("Alright then", rsp.payload());
@@ -146,14 +146,14 @@ public class MqOutboxTest {
     }
 
     @Test
-    public void testSendAndRespondSyncInbox() throws Exception {
+    public void testSendBlockingAndRespondSyncInbox() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
         var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(justRespond("Alright then"));
         inbox.start();
 
-        var rsp = outbox.send("test", "Hello World");
+        var rsp = outbox.sendBlocking("test", "Hello World");
 
         assertEquals(MqMessageState.OK, rsp.state());
         assertEquals("Alright then", rsp.payload());
@@ -167,17 +167,17 @@ public class MqOutboxTest {
     }
 
     @Test
-    public void testSendMultipleAsyncInbox() throws Exception {
+    public void testSendBlockingMultipleAsyncInbox() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
         var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(echo());
         inbox.start();
 
-        var rsp1 = outbox.send("test", "one");
-        var rsp2 = outbox.send("test", "two");
-        var rsp3 = outbox.send("test", "three");
-        var rsp4 = outbox.send("test", "four");
+        var rsp1 = outbox.sendBlocking("test", "one");
+        var rsp2 = outbox.sendBlocking("test", "two");
+        var rsp3 = outbox.sendBlocking("test", "three");
+        var rsp4 = outbox.sendBlocking("test", "four");
 
         Thread.sleep(500);
 
@@ -201,17 +201,17 @@ public class MqOutboxTest {
     }
 
     @Test
-    public void testSendMultipleSyncInbox() throws Exception {
+    public void testSendBlockingMultipleSyncInbox() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
         var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(echo());
         inbox.start();
 
-        var rsp1 = outbox.send("test", "one");
-        var rsp2 = outbox.send("test", "two");
-        var rsp3 = outbox.send("test", "three");
-        var rsp4 = outbox.send("test", "four");
+        var rsp1 = outbox.sendBlocking("test", "one");
+        var rsp2 = outbox.sendBlocking("test", "two");
+        var rsp3 = outbox.sendBlocking("test", "three");
+        var rsp4 = outbox.sendBlocking("test", "four");
 
         Thread.sleep(500);
 
@@ -235,13 +235,13 @@ public class MqOutboxTest {
     }
 
     @Test
-    public void testSendAndRespondWithErrorHandlerAsyncInbox() throws Exception {
+    public void testSendBlockingAndRespondWithErrorHandlerAsyncInbox() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
         var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
 
         inbox.start();
 
-        var rsp = outbox.send("test", "Hello World");
+        var rsp = outbox.sendBlocking("test", "Hello World");
 
         assertEquals(MqMessageState.ERR, rsp.state());
 
@@ -254,13 +254,13 @@ public class MqOutboxTest {
     }
 
     @Test
-    public void testSendAndRespondWithErrorHandlerSyncInbox() throws Exception {
+    public void testSendBlockingAndRespondWithErrorHandlerSyncInbox() throws Exception {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
         var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
 
         inbox.start();
 
-        var rsp = outbox.send("test", "Hello World");
+        var rsp = outbox.sendBlocking("test", "Hello World");
 
         assertEquals(MqMessageState.ERR, rsp.state());
 

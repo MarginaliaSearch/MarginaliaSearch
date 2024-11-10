@@ -8,31 +8,31 @@ import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.api.feeds.RpcFeedUpdateMode;
+import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 public class UpdateRssActor extends RecordActorPrototype {
 
     private final FeedsClient feedsClient;
     private final int nodeId;
 
-    private final MqOutbox updateTaskOutbox;
-
     private final Duration initialDelay = Duration.ofMinutes(5);
     private final Duration updateInterval = Duration.ofHours(24);
     private final int cleanInterval = 60;
 
+    private final MqPersistence persistence;
+
     @Inject
-    public UpdateRssActor(Gson gson, FeedsClient feedsClient, ServiceConfiguration serviceConfiguration) {
+    public UpdateRssActor(Gson gson, FeedsClient feedsClient, ServiceConfiguration serviceConfiguration, MqPersistence persistence) {
         super(gson);
         this.feedsClient = feedsClient;
         this.nodeId = serviceConfiguration.node();
-        this.updateTaskOutbox = feedsClient.createOutbox("update-rss-actor", nodeId);
+        this.persistence = persistence;
     }
 
     public record Initial() implements ActorStep {}
@@ -88,32 +88,35 @@ public class UpdateRssActor extends RecordActorPrototype {
                 }
             }
             case UpdateRefresh(int count, long msgId) when msgId < 0 -> {
-                long messageId =  updateTaskOutbox.sendAsync("UpdateRefresh", "");
-                feedsClient.updateFeeds(RpcFeedUpdateMode.REFRESH, messageId);
+                long messageId = feedsClient.updateFeeds(RpcFeedUpdateMode.REFRESH);
                 yield new UpdateRefresh(count, messageId);
             }
             case UpdateRefresh(int count, long msgId) -> {
-                var rsp = updateTaskOutbox.waitResponse(msgId, 12, TimeUnit.HOURS);
-                if (rsp.state() != MqMessageState.OK) {
+                MqMessage msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(10), Duration.ofHours(12));
+                if (msg == null) {
                     // Retry the update
-                    yield new Error("Failed to update feeds: " + rsp.state());
+                    yield new Error("Failed to update feeds: message not found");
+                } else if (msg.state() != MqMessageState.OK) {
+                    // Retry the update
+                    yield new Error("Failed to update feeds: " + msg.state());
                 }
                 else {
-                    // Reset the refresh count after a successful update
+                    // Increment the refresh count
                     yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), count + 1);
                 }
             }
             case UpdateClean(long msgId) when msgId < 0 -> {
-                long messageId =  updateTaskOutbox.sendAsync("UpdateClean", "");
-                feedsClient.updateFeeds(RpcFeedUpdateMode.CLEAN, messageId);
-
+                long messageId = feedsClient.updateFeeds(RpcFeedUpdateMode.CLEAN);
                 yield new UpdateClean(messageId);
             }
             case UpdateClean(long msgId) -> {
-                var rsp = updateTaskOutbox.waitResponse(msgId, 12, TimeUnit.HOURS);
-                if (rsp.state() != MqMessageState.OK) {
+                MqMessage msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(10), Duration.ofHours(12));
+                if (msg == null) {
                     // Retry the update
-                    yield new Error("Failed to clean feeds: " + rsp.state());
+                    yield new Error("Failed to update feeds: message not found");
+                } else if (msg.state() != MqMessageState.OK) {
+                    // Retry the update
+                    yield new Error("Failed to update feeds: " + msg.state());
                 }
                 else {
                     // Reset the refresh count after a successful update

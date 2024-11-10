@@ -149,6 +149,35 @@ public class MqPersistence {
         }
     }
 
+    /** Blocks until a message reaches a terminal state or the timeout passes.
+     * <p>
+     * @param msgId The id of the message to wait for
+     * @param pollInterval The interval to poll the database for updates
+     * @param timeout The maximum time to wait for the message to reach a terminal state
+     * @return The message if it reaches a terminal state, or null if the timeout passes
+     */
+    @Nullable
+    public MqMessage waitForMessageTerminalState(long msgId, Duration pollInterval, Duration timeout) throws InterruptedException, SQLException {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+
+        do {
+            var message = getMessage(msgId);
+            if (message.state().isTerminal()) {
+                return message;
+            }
+
+            long timeLeft = deadline - System.currentTimeMillis();
+            if (timeLeft <= 0) {
+                continue;
+            }
+            long sleepTime = Math.min(pollInterval.toMillis(), timeLeft);
+
+            Thread.sleep(sleepTime);
+        } while (System.currentTimeMillis() < deadline);
+
+        return null;
+    }
+
     /** Creates a new message in the queue referencing as a reply to an existing message
      *  This message will have it's RELATED_ID set to the original message's ID.
      */
@@ -200,21 +229,6 @@ public class MqPersistence {
             }
         }
     }
-
-    /** Sends an error response to the message with the given id, this is a convenience wrapper for
-     * sendResponse() that send a generic error message.  The message will be marked as 'ERR'.
-     * <p></p>
-     * If an exception is thrown while sending the response, it will be logged, but not rethrown
-     * to avoid creating exception handling pyramids.  At this point, we've already given it a college try.
-     * */
-    public void sendErrorResponse(long msgId, String message, Throwable e) {
-        try {
-            sendResponse(msgId, MqMessageState.ERR, message + ": " + e.getMessage());
-        } catch (SQLException ex) {
-            logger.error("Failed to send error response", ex);
-        }
-    }
-
 
     /** Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns the number of messages marked.  This is an atomic operation that

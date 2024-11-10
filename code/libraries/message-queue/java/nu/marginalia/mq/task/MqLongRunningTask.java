@@ -2,6 +2,8 @@ package nu.marginalia.mq.task;
 
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -14,9 +16,10 @@ import java.util.concurrent.Future;
  * <p></p>
  * The gRPC service will spin off a thread and return immediately, while the task is executed
  * in the background.  The task can then report back to the message queue with the result
- * of the task as it completes.
+ * of the task as it completes, by updating the message's state.
  * */
 public abstract class MqLongRunningTask implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(MqLongRunningTask.class);
 
     /** Create a new task with the given message id, name, and persistence.  If the msgId is
      * not positive, a dummy implementation is provided that does not report to the message queue.
@@ -32,7 +35,7 @@ public abstract class MqLongRunningTask implements Runnable {
 
     /** Creates a thread that will execute the task.  The thread is not started automatically */
     public Thread asThread(MqTaskFunction r) {
-        return Thread.ofPlatform().name(name()).start(() -> runNow(r));
+        return new Thread(() -> runNow(r), name());
     }
 
     /** Creates a future that will execute the task on the provided ExecutorService. */
@@ -45,23 +48,22 @@ public abstract class MqLongRunningTask implements Runnable {
         try {
             switch (r.run()) {
                 case MqTaskResult.Success success -> {
-                    finish(success.message());
+                    finish();
                     return true;
                 }
-                case MqTaskResult.Failure failure -> fail(failure.message());
+                case MqTaskResult.Failure failure -> fail();
             }
         }
         catch (Exception e) {
-            fail(e);
+            logger.error("Task failed", e);
+            fail();
         }
         return false;
     }
 
     abstract void finish();
-    abstract void finish(String message);
 
-    abstract void fail(String message);
-    abstract void fail(Throwable e);
+    abstract void fail();
 
     public abstract String name();
 }
@@ -77,13 +79,7 @@ class MqLongRunningTaskDummyImpl extends MqLongRunningTask {
     public void finish() {}
 
     @Override
-    public void finish(String message) {}
-
-    @Override
-    public void fail(String message) {}
-
-    @Override
-    public void fail(Throwable e) {}
+    public void fail() {}
 
     @Override
     public void run() {}
@@ -115,7 +111,7 @@ class MqLongRunningTaskImpl extends MqLongRunningTask {
     @Override
     public void finish() {
         try {
-            persistence.sendResponse(msgId, MqMessageState.OK, "Success");
+            persistence.updateMessageState(msgId, MqMessageState.OK);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -123,32 +119,12 @@ class MqLongRunningTaskImpl extends MqLongRunningTask {
     }
 
     @Override
-    public void finish(String message) {
+    public void fail() {
         try {
-            persistence.sendResponse(msgId, MqMessageState.OK, message);
+            persistence.updateMessageState(msgId, MqMessageState.ERR);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void fail(String message) {
-        try {
-            persistence.sendResponse(msgId, MqMessageState.ERR, message);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void fail(Throwable e) {
-        try {
-            persistence.sendResponse(msgId, MqMessageState.ERR, e.getMessage());
-        }
-        catch (Exception e2) {
-            throw new RuntimeException(e2);
         }
     }
 
