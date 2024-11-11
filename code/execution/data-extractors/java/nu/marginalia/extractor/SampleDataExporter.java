@@ -6,6 +6,8 @@ import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,9 +19,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 
 public class SampleDataExporter {
     private final FileStorageService storageService;
@@ -57,16 +56,13 @@ public class SampleDataExporter {
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
         try (var bw = Files.newBufferedWriter(newCrawlerLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             for (var item : entriesAll) {
-                bw.write(STR."\{item.id()} \{item.ts()} \{item.relPath()} \{item.cnt()}\n");
+                bw.write(item.id() + " " + item.ts() + " " + item.relPath() + " " + item.cnt() + "\n");
             }
         }
 
         Path newManifestJsonFile = Files.createTempFile(destStorage.asPath(), "manifest", ".json",
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
-        Files.writeString(newManifestJsonFile, STR."""
-            { "description": "\{name.replace("[\"\\]", "_")}",
-              "type": "CRAWL_DATA" }
-        """);
+        Files.writeString(newManifestJsonFile, " { \"description\": \"" + name.replace("[\"\\]", "_") + "\",\n      \"type\": \"CRAWL_DATA\" }\n");
 
         var tmpTarFile = Files.createTempFile(destStorage.asPath(), "data", ".tar",
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));

@@ -40,7 +40,7 @@ public class EdgeUrl implements Serializable {
             return new URI(urlencodeFixer(url));
         }
         catch (URISyntaxException ex) {
-            throw new URISyntaxException(STR."Failed to parse URI '\{url}'", ex.getMessage());
+            throw new URISyntaxException("Failed to parse URI '" + url + "'", ex.getMessage());
         }
     }
 

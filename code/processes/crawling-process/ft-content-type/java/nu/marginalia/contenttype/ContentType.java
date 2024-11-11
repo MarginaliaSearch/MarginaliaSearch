@@ -26,6 +26,6 @@ public record ContentType(String contentType, String charset) {
         if (charset == null || charset.isBlank())
             return contentType;
 
-        return STR."\{contentType}; charset=\{charset}";
+        return contentType + "; charset=" + charset;
     }
 }

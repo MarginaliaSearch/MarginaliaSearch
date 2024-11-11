@@ -8,6 +8,9 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.encyclopedia.EncyclopediaConverter;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.sideload.RedditSideloadHelper;
@@ -17,9 +20,6 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
-import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqapi.converting.ConvertRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,7 +140,7 @@ public class ConvertActor extends RecordActorPrototype {
                     // To avoid re-converting the same file, we'll assign the file a name based on its hash
                     // and the original filename. This way, if we're fed the same file again, we'll be able to just
                     // re-use the predigested database file.
-                    yield new PredigestEncyclopedia(source, STR."\{source}.\{hash}.db", baseUrl);
+                    yield new PredigestEncyclopedia(source, source + "." + hash + ".db", baseUrl);
                 } else if (!source.endsWith(".db")) {
                     yield new Error("Source path must be a ZIM or pre-digested sqlite database file (.db)");
                 }

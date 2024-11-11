@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -112,7 +114,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
                 }
             }
             catch (Exception e) {
-                logger.error(STR."Failed to get channel for \{address}", e);
+                logger.error("Failed to get channel for " + address, e);
                 return null;
             }
         }

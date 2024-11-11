@@ -38,7 +38,7 @@ public sealed interface ServiceKey<P extends ServicePartition> {
 
     record Rest(String name) implements ServiceKey<ServicePartition.None> {
         public String toPath() {
-            return STR."/services/rest/\{name}";
+            return "/services/rest/" + name;
         }
 
         @Override
@@ -51,10 +51,10 @@ public sealed interface ServiceKey<P extends ServicePartition> {
     }
     record Grpc<P extends ServicePartition>(String name, P partition) implements ServiceKey<P> {
         public String baseName() {
-            return STR."/services/grpc/\{name}";
+            return "/services/grpc/" + name;
         }
         public String toPath() {
-            return STR."/services/grpc/\{name}/\{partition.identifier()}";
+            return "/services/grpc/" + name + "/" + partition.identifier();
         }
 
         @Override

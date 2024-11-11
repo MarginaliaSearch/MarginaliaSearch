@@ -24,7 +24,7 @@ public class NamedExecutorFactory {
 
         @Override
         public Thread newThread(@NotNull Runnable r) {
-            var thread = new Thread(r, STR."\{name}[\{threadNumber.getAndIncrement()}]");
+            var thread = new Thread(r, name + "[" + threadNumber.getAndIncrement() + "]");
             thread.setDaemon(true);
             return thread;
         }

@@ -19,7 +19,7 @@ public class RedditDb {
     {
         Files.deleteIfExists(dbFile);
 
-        try (var connection = DriverManager.getConnection(STR."jdbc:sqlite:\{dbFile}");
+        try (var connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
              var stream = ClassLoader.getSystemResourceAsStream("db/reddit.sql");
              var updateStmt = connection.createStatement()
         ) {
@@ -91,12 +91,12 @@ public class RedditDb {
     }
 
     public static SubmissionIterator getSubmissions(Path file) throws SQLException {
-        var connection = DriverManager.getConnection(STR."jdbc:sqlite:\{file}");
+        var connection = DriverManager.getConnection("jdbc:sqlite:" + file);
 
         return new SubmissionIterator(connection);
     }
     public static CommentIterator getComments(Path file) throws SQLException {
-        var connection = DriverManager.getConnection(STR."jdbc:sqlite:\{file}");
+        var connection = DriverManager.getConnection("jdbc:sqlite:" + file);
 
         return new CommentIterator(connection);
     }

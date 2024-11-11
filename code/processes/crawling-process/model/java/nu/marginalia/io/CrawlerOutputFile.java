@@ -32,7 +32,7 @@ public class CrawlerOutputFile {
         if (!Files.exists(destDir)) {
             Files.createDirectories(destDir);
         }
-        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}-\{version.suffix}.warc.gz");
+        return destDir.resolve(id + "-" + filesystemSafeName(domain) + "-" + version.suffix + ".warc.gz");
     }
 
     public static Path createParquetPath(Path basePath, String id, String domain) throws IOException {
@@ -45,7 +45,7 @@ public class CrawlerOutputFile {
         if (!Files.exists(destDir)) {
             Files.createDirectories(destDir);
         }
-        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}.parquet");
+        return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".parquet");
     }
     public static Path getParquetPath(Path basePath, String id, String domain) {
         id = padId(id);
@@ -54,7 +54,7 @@ public class CrawlerOutputFile {
         String second = id.substring(2, 4);
 
         Path destDir = basePath.resolve(first).resolve(second);
-        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}.parquet");
+        return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".parquet");
     }
     public static Path getWarcPath(Path basePath, String id, String domain, WarcFileVersion version) {
         id = padId(id);
@@ -63,7 +63,7 @@ public class CrawlerOutputFile {
         String second = id.substring(2, 4);
 
         Path destDir = basePath.resolve(first).resolve(second);
-        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}.warc\{version.suffix}");
+        return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".warc" + version.suffix);
     }
 
     /**

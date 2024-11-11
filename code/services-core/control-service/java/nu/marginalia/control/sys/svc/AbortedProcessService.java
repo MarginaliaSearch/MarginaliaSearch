@@ -83,15 +83,11 @@ public class AbortedProcessService {
 
         // Generate all possible values for process-related inboxes
         String inboxes = Stream.of("converter", "loader", "crawler")
-                .flatMap(s -> allNodeIds.stream().map(i -> STR."'\{s}:\{i}'"))
+                .flatMap(s -> allNodeIds.stream().map(i -> "'" + s + ":" + i + "'"))
                 .collect(Collectors.joining(",", "(", ")"));
 
         try (var conn = dataSource.getConnection()) {
-            var stmt = conn.prepareStatement(STR."""
-                SELECT ID, RECIPIENT_INBOX, CREATED_TIME, UPDATED_TIME, PAYLOAD FROM MESSAGE_QUEUE
-                WHERE STATE = 'DEAD'
-                AND RECIPIENT_INBOX IN \{inboxes}
-                """); // SQL injection safe, string is not user input
+            var stmt = conn.prepareStatement("SELECT ID, RECIPIENT_INBOX, CREATED_TIME, UPDATED_TIME, PAYLOAD FROM MESSAGE_QUEUE\nWHERE STATE = 'DEAD'\nAND RECIPIENT_INBOX IN " + inboxes + "\n"); // SQL injection safe, string is not user input
             var rs = stmt.executeQuery();
 
             List<AbortedProcess> abortedProcesses = new ArrayList<>();

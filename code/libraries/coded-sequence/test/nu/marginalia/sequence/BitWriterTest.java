@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BitWriterTest {
 
@@ -52,7 +52,7 @@ class BitWriterTest {
         byte actual = out.get(0);
         byte expected = (byte) 0b1011_1110;
 
-        assertEquals(expected, actual, STR."was \{Integer.toBinaryString(actual & 0xFF)}");
+        assertEquals(expected, actual, "was " + Integer.toBinaryString(actual & 0xFF));
         assertEquals(1, out.limit());
     }
 
@@ -84,8 +84,8 @@ class BitWriterTest {
         byte expected1 = (byte) 0b1011_1110;
         byte expected2 = (byte) 0b1100_0000;
 
-        assertEquals(expected1, actual1, STR."was \{Integer.toBinaryString(actual1 & 0xFF)}");
-        assertEquals(expected2, actual2, STR."was \{Integer.toBinaryString(actual2 & 0xFF)}");
+        assertEquals(expected1, actual1, "was " + Integer.toBinaryString(actual1 & 0xFF));
+        assertEquals(expected2, actual2, "was " + Integer.toBinaryString(actual2 & 0xFF));
 
     }
 
@@ -118,13 +118,13 @@ class BitWriterTest {
             byte actual1 = out.get(i);
             byte expected1 = (byte) 0b1011_1110;
 
-            assertEquals(expected1, actual1, STR."was \{Integer.toBinaryString(actual1 & 0xFF)}");
+            assertEquals(expected1, actual1, "was " + Integer.toBinaryString(actual1 & 0xFF));
         }
 
         byte actual2 = out.get(4);
         byte expected2 = (byte) 0b1100_0000;
 
-        assertEquals(expected2, actual2, STR."was \{Integer.toBinaryString(actual2 & 0xFF)}");
+        assertEquals(expected2, actual2, "was " + Integer.toBinaryString(actual2 & 0xFF));
 
     }
 

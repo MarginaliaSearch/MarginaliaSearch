@@ -48,7 +48,7 @@ public record QWord(
     }
 
     public String toString() {
-        return STR."q{\{word}}";
+        return "q{" + word + "}";
     }
 
     @Override

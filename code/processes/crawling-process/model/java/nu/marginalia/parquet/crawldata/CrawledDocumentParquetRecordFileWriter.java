@@ -181,7 +181,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
 
     private CrawledDocumentParquetRecord forDomainRedirect(String domain, Instant date, String redirectDomain) {
         return new CrawledDocumentParquetRecord(domain,
-                STR."https://\{redirectDomain}/",
+                "https://" + redirectDomain + "/",
                 "",
                 false,
                 0,
@@ -195,7 +195,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
     }
     private CrawledDocumentParquetRecord forDomainError(String domain, Instant date, String ip, String errorStatus) {
         return new CrawledDocumentParquetRecord(domain,
-                STR."https://\{domain}/",
+                "https://" + domain + "/",
                 ip,
                 false,
                 0,

@@ -57,12 +57,7 @@ public class SingleService {
             int httpPort = Integer.parseInt(bindParts[1]);
             int grpcPort = Integer.parseInt(bindParts[2]);
 
-            System.out.println(STR."""
-                Configuring service with bind address: \{bindAddress}
-                                         http port: \{httpPort}
-                                         grpc port: \{grpcPort}
-                                         announce address: \{announceAddress}
-                """);
+            System.out.println("Configuring service with bind address: " + bindAddress + "\n                         http port: " + httpPort + "\n                         grpc port: " + grpcPort + "\n                         announce address: " + announceAddress + "\n");
 
             System.setProperty("service.bind-address", bindAddress);
             System.setProperty("service.http-port", Integer.toString(httpPort));
