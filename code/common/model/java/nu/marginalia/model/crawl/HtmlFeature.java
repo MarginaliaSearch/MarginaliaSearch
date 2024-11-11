@@ -16,6 +16,9 @@ public enum HtmlFeature {
     KEBAB_CASE_URL("special:kcurl"), // https://www.example.com/urls-that-look-like-this/
     LONG_URL("special:longurl"),
 
+    CLOUDFLARE_FEATURE("special:cloudflare"),
+    CDN_FEATURE("special:cdn"),
+
     VIEWPORT("special:viewport"),
 
     COOKIES("special:cookies"),
@@ -59,6 +62,8 @@ public enum HtmlFeature {
     ROBOTS_NOYDIR("robots:noydir"),
     DOFOLLOW_LINK("special:dofollow"),
     APPLE_TOUCH_ICON("special:appleicon"),
+
+    S3_FEATURE("special:s3"),
 
     UNKNOWN("special:uncategorized");
 

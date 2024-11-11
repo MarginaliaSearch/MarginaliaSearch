@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.plugin.specialization;
 
+import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.test.CommonTestData;
@@ -34,7 +35,7 @@ class JavadocSpecializationTest {
 
     @Test
     void generatorExtraction() {
-        var gen = generatorExtractor.detectGenerator(Jsoup.parse(thread), "");
+        var gen = generatorExtractor.detectGenerator(Jsoup.parse(thread), new DocumentHeaders(""));
 
         System.out.println(gen);
     }

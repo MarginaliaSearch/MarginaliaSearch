@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.logic;
 
+import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.model.GeneratorType;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
@@ -12,7 +13,7 @@ import java.util.List;
 public class DocumentGeneratorExtractor {
     private static final String defaultValue = "unset";
 
-    public DocumentGenerator detectGenerator(Document doc, String responseHeaders) {
+    public DocumentGenerator detectGenerator(Document doc, DocumentHeaders responseHeaders) {
 
         var tags = doc.select("meta[name=generator]");
 
@@ -76,7 +77,7 @@ public class DocumentGeneratorExtractor {
     }
 
     // Fallback logic when there is no meta tag
-    private DocumentGenerator fingerprintServerTech(Document doc, String responseHeaders) {
+    private DocumentGenerator fingerprintServerTech(Document doc, DocumentHeaders responseHeaders) {
 
         for (var comment : doc.getElementsByTag("head").comments()) {
             String data = comment.getData();
@@ -149,8 +150,7 @@ public class DocumentGeneratorExtractor {
             return DocumentGenerator.of("gatsby");
         }
 
-        String[] headers = responseHeaders.toLowerCase().split("\n+");
-        for (var header : headers) {
+        for (var header : responseHeaders.eachLineLowercase()) {
             if (header.contains("x-drupal-cache")) {
                 return DocumentGenerator.of("drupal");
             }
@@ -169,7 +169,7 @@ public class DocumentGeneratorExtractor {
         }
 
         // These should be all the way down as they are the most generic
-        for (var header : headers) {
+        for (var header : responseHeaders.eachLineLowercase()) {
             if (header.contains("server: mastodon")) {
                 return DocumentGenerator.of("mastodon");
             }

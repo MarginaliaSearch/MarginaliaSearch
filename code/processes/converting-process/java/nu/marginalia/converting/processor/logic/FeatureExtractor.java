@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.logic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.classifier.adblock.AdblockSimulator;
 import nu.marginalia.converting.processor.classifier.adblock.GoogleAnwersSpamDetector;
 import nu.marginalia.converting.processor.classifier.topic.RecipeDetector;
@@ -84,7 +85,7 @@ public class FeatureExtractor {
         this.googleAnwersSpamDetector = googleAnwersSpamDetector;
     }
 
-    public Set<HtmlFeature> getFeatures(EdgeUrl url, Document doc, DocumentLanguageData dld) {
+    public Set<HtmlFeature> getFeatures(EdgeUrl url, Document doc, DocumentHeaders headers, DocumentLanguageData dld) {
         final Set<HtmlFeature> features = new HashSet<>();
 
         final Elements scriptTags = doc.getElementsByTag("script");
@@ -311,6 +312,30 @@ public class FeatureExtractor {
                 features.add(HtmlFeature.AFFILIATE_LINK);
                 break;
             }
+        }
+
+        // check for cloudflare headers
+        if (headers.contains("Cf-Ray") || headers.containsIgnoreCase("server", "Cloudflare"))
+        {
+            features.add(HtmlFeature.CLOUDFLARE_FEATURE);
+            features.add(HtmlFeature.CDN_FEATURE);
+        }
+
+        // check for amazon cloudfront headers
+        if (headers.contains("X-Amz-Cf-Id"))
+        {
+            features.add(HtmlFeature.CDN_FEATURE);
+        }
+
+        // check for fastly headers
+        if (headers.contains("x-fastly-request-id"))
+        {
+            features.add(HtmlFeature.CDN_FEATURE);
+        }
+
+        // check for s3 hosting
+        if (headers.containsIgnoreCase("server", "AmazonS3")) {
+            features.add(HtmlFeature.S3_FEATURE);
         }
 
         if (recipeDetector.testP(dld) > 0.5)

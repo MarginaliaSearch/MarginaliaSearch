@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.pubdate.heuristic;
 
+import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.pubdate.PubDateEffortLevel;
 import nu.marginalia.converting.processor.pubdate.PubDateHeuristic;
 import nu.marginalia.converting.processor.pubdate.PubDateParser;
@@ -17,7 +18,7 @@ public class PubDateHeuristicUrlPatternPass2 implements PubDateHeuristic {
     private static final Pattern yearUrlPattern = Pattern.compile("/\\d{4}/");
 
     @Override
-    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, String headers, EdgeUrl url,
+    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url,
                                    Document document, HtmlStandard htmlStandard) {
         final String urlString = url.path;
 

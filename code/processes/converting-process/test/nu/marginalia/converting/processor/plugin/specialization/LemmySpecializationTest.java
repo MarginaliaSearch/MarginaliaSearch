@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.plugin.specialization;
 
+import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.test.CommonTestData;
@@ -37,8 +38,8 @@ class LemmySpecializationTest {
 
     @Test
     void generatorExtraction() {
-        var generatorIndex = generatorExtractor.detectGenerator(Jsoup.parse(lemmyIndexHtml), "");
-        var generatorPost = generatorExtractor.detectGenerator(Jsoup.parse(lemmyPost), "");
+        var generatorIndex = generatorExtractor.detectGenerator(Jsoup.parse(lemmyIndexHtml), new DocumentHeaders(""));
+        var generatorPost = generatorExtractor.detectGenerator(Jsoup.parse(lemmyPost), new DocumentHeaders(""));
 
         System.out.println(generatorIndex);
         System.out.println(generatorPost);

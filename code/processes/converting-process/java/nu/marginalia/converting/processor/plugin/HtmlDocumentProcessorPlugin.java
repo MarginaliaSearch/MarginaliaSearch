@@ -3,6 +3,7 @@ package nu.marginalia.converting.processor.plugin;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.model.DisqualifiedException;
+import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
@@ -39,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import static nu.marginalia.converting.model.DisqualifiedException.DisqualificationReason;
@@ -127,10 +127,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
+        final DocumentHeaders documentHeaders = new DocumentHeaders(crawledDocument.headers);
 
-        final var generatorParts = documentGeneratorExtractor.detectGenerator(doc,
-                Objects.requireNonNullElse(crawledDocument.headers, "")
-        );
+        final var generatorParts = documentGeneratorExtractor.detectGenerator(doc, documentHeaders);
 
         final var specialization = htmlProcessorSpecializations.select(generatorParts, url);
 
@@ -155,7 +154,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
 
-        final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, dld);
+        final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
 
         ret.features = features;
         ret.quality = documentValuator.adjustQuality(quality, features);
@@ -165,12 +164,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
-        PubDate pubDate = pubDateSniffer.getPubDate(
-                Objects.requireNonNullElse(crawledDocument.headers, ""),
-                url,
-                doc,
-                standard,
-                true);
+        PubDate pubDate = pubDateSniffer.getPubDate(documentHeaders, url, doc, standard, true);
 
         EnumSet<DocumentFlags> documentFlags = documentFlags(features, generatorParts.type());
 
