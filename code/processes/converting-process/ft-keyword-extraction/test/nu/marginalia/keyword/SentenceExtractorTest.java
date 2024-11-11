@@ -1,6 +1,5 @@
 package nu.marginalia.keyword;
 
-import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -25,8 +25,7 @@ class SentenceExtractorTest {
 
     static SentenceExtractor se = new SentenceExtractor(lm);
 
-    @SneakyThrows
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) throws IOException, URISyntaxException {
         final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
         var data = WmsaHome.getHomePath().resolve("test-data/");

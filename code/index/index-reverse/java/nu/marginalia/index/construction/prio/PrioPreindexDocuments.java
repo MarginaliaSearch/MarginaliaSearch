@@ -1,6 +1,5 @@
 package nu.marginalia.index.construction.prio;
 
-import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.construction.DocIdRewriter;
@@ -97,7 +96,6 @@ public class PrioPreindexDocuments {
         }
     }
 
-    @SneakyThrows
     private static void sortDocsFile(LongArray docsFileMap, PrioPreindexWordSegments segments) {
 
         var iter = segments.iterator(RECORD_SIZE_LONGS);

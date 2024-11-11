@@ -1,6 +1,5 @@
 package nu.marginalia.crawling.retreival;
 
-import lombok.SneakyThrows;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
@@ -48,7 +47,6 @@ class CrawlerRetreiverTest {
 
     }
 
-    @SneakyThrows
     @BeforeAll
     public static void setUpAll() {
         // this must be done to avoid java inserting its own user agent for the sitemap requests
@@ -158,9 +156,8 @@ class CrawlerRetreiverTest {
         }
     }
 
-    @SneakyThrows
     @Test
-    public void testResync() throws IOException {
+    public void testResync() throws Exception {
         var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
@@ -416,9 +413,8 @@ class CrawlerRetreiverTest {
     }
 
 
-    @SneakyThrows
     @Test
-    public void testRecrawlWithResync() throws IOException {
+    public void testRecrawlWithResync() throws Exception {
 
         var specs = CrawlerMain.CrawlSpecRecord
                 .builder()

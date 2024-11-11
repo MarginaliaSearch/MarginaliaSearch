@@ -1,6 +1,5 @@
 package nu.marginalia.index.construction.full;
 
-import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.construction.DocIdRewriter;
@@ -113,7 +112,6 @@ public class FullPreindexDocuments {
         }
     }
 
-    @SneakyThrows
     private static void sortDocsFile(LongArray docsFileMap, FullPreindexWordSegments segments) {
 
         var iter = segments.iterator(RECORD_SIZE_LONGS);

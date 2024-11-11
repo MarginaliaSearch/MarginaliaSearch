@@ -1,7 +1,6 @@
 package nu.marginalia.integration.reddit.db;
 
 import com.google.common.base.Strings;
-import lombok.SneakyThrows;
 import nu.marginalia.integration.reddit.RedditEntryReader;
 import nu.marginalia.integration.reddit.model.ProcessableRedditComment;
 import nu.marginalia.integration.reddit.model.ProcessableRedditSubmission;
@@ -175,28 +174,35 @@ public class RedditDb {
             stmt.close();
         }
 
-        @SneakyThrows
         @Override
         public boolean hasNext() {
             if (hasNext != null)
                 return hasNext;
 
-            hasNext = resultSet.next();
+            try {
+                hasNext = resultSet.next();
+            }
+            catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
 
             return hasNext;
         }
 
         abstract T nextFromResultSet(ResultSet resultSet) throws SQLException;
 
-        @SneakyThrows
         @Override
         public T next() {
             if (!hasNext())
                 throw new IllegalStateException();
             else hasNext = null;
 
-            return nextFromResultSet(resultSet);
-
+            try {
+                return nextFromResultSet(resultSet);
+            }
+            catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 

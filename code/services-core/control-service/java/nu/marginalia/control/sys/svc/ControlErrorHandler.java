@@ -7,13 +7,14 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class ControlErrorHandler {
     private final ControlRendererFactory.Renderer renderer;
 
     @Inject
-    public ControlErrorHandler(ControlRendererFactory rendererFactory) {
+    public ControlErrorHandler(ControlRendererFactory rendererFactory) throws IOException {
         this.renderer = rendererFactory.renderer("control/error");
     }
 

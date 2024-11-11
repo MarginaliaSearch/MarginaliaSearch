@@ -532,8 +532,9 @@ public class IndexQueryServiceIntegrationTest {
         }
 
         void load() throws IOException, SQLException, URISyntaxException {
-            allData.forEach((doc, words) -> {
-
+            for (Map.Entry<Long, List<MockDataKeyword>> entry : allData.entrySet()) {
+                Long doc = entry.getKey();
+                List<MockDataKeyword> words = entry.getValue();
                 var meta = metaByDoc.get(doc);
 
                 List<String> keywords = words.stream().map(w -> w.keyword).toList();
@@ -561,7 +562,7 @@ public class IndexQueryServiceIntegrationTest {
                                 new byte[0],
                                 List.of()
                         ));
-            });
+            }
 
             var linkdbWriter = new DocumentDbWriter(
                     IndexLocations.getLinkdbLivePath(fileStorageService).resolve(DOCDB_FILE_NAME)

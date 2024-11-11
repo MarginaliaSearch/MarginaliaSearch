@@ -2,7 +2,6 @@ package nu.marginalia.api.svc;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
@@ -12,7 +11,7 @@ import spark.HaltException;
 
 import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("slow")
 @Testcontainers
@@ -113,7 +112,6 @@ class LicenseServiceTest {
 
     }
 
-    @SneakyThrows
     public static HikariDataSource getConnection(String connString) {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(connString);

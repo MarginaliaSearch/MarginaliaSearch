@@ -1,6 +1,5 @@
 package nu.marginalia.model.processed;
 
-import lombok.Builder;
 import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
@@ -52,7 +51,6 @@ public record SlopDocumentRecord(
             throw new IllegalArgumentException("Metas, words and positions must have the same length");
     }
 
-    @Builder
     public record KeywordsProjection(
             String domain,
             int ordinal,
@@ -63,8 +61,11 @@ public record SlopDocumentRecord(
             byte[] metas,
             List<VarintCodedSequence> positions,
             byte[] spanCodes,
-            List<VarintCodedSequence> spans)
-    {
+            List<VarintCodedSequence> spans) {
+        public static KeywordsProjectionBuilder builder() {
+            return new KeywordsProjectionBuilder();
+        }
+
         // Override the equals method since records don't generate default equals that deal with array fields properly
         @Override
         public boolean equals(Object o) {
@@ -87,6 +88,80 @@ public record SlopDocumentRecord(
             result = 31 * result + Arrays.hashCode(spanCodes);
             result = 31 * result + Objects.hashCode(spans);
             return result;
+        }
+
+        public static class KeywordsProjectionBuilder {
+            private String domain;
+            private int ordinal;
+            private int htmlFeatures;
+            private long documentMetadata;
+            private int length;
+            private List<String> words;
+            private byte[] metas;
+            private List<VarintCodedSequence> positions;
+            private byte[] spanCodes;
+            private List<VarintCodedSequence> spans;
+
+            KeywordsProjectionBuilder() {
+            }
+
+            public KeywordsProjectionBuilder domain(String domain) {
+                this.domain = domain;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder ordinal(int ordinal) {
+                this.ordinal = ordinal;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder htmlFeatures(int htmlFeatures) {
+                this.htmlFeatures = htmlFeatures;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder documentMetadata(long documentMetadata) {
+                this.documentMetadata = documentMetadata;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder length(int length) {
+                this.length = length;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder words(List<String> words) {
+                this.words = words;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder metas(byte[] metas) {
+                this.metas = metas;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder positions(List<VarintCodedSequence> positions) {
+                this.positions = positions;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder spanCodes(byte[] spanCodes) {
+                this.spanCodes = spanCodes;
+                return this;
+            }
+
+            public KeywordsProjectionBuilder spans(List<VarintCodedSequence> spans) {
+                this.spans = spans;
+                return this;
+            }
+
+            public KeywordsProjection build() {
+                return new KeywordsProjection(this.domain, this.ordinal, this.htmlFeatures, this.documentMetadata, this.length, this.words, this.metas, this.positions, this.spanCodes, this.spans);
+            }
+
+            public String toString() {
+                return "SlopDocumentRecord.KeywordsProjection.KeywordsProjectionBuilder(domain=" + this.domain + ", ordinal=" + this.ordinal + ", htmlFeatures=" + this.htmlFeatures + ", documentMetadata=" + this.documentMetadata + ", length=" + this.length + ", words=" + this.words + ", metas=" + Arrays.toString(this.metas) + ", positions=" + this.positions + ", spanCodes=" + Arrays.toString(this.spanCodes) + ", spans=" + this.spans + ")";
+            }
         }
     }
 

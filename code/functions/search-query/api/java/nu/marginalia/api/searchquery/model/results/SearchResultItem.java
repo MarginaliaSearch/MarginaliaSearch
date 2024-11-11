@@ -1,7 +1,5 @@
 package nu.marginalia.api.searchquery.model.results;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.jetbrains.annotations.NotNull;
@@ -9,21 +7,30 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Represents a document matching a search query */
-@AllArgsConstructor @Getter
+/**
+ * Represents a document matching a search query
+ */
 public class SearchResultItem implements Comparable<SearchResultItem> {
-    /** Encoded ID that contains both the URL id and its ranking.  This is
-     * probably not what you want, use getDocumentId() instead */
+    /**
+     * Encoded ID that contains both the URL id and its ranking.  This is
+     * probably not what you want, use getDocumentId() instead
+     */
     public final long combinedId;
 
-    /** Encoded document metadata */
+    /**
+     * Encoded document metadata
+     */
     public final long encodedDocMetadata;
 
-    /** Encoded html features of document */
+    /**
+     * Encoded html features of document
+     */
 
     public final int htmlFeatures;
 
-    /** How did the subqueries match against the document ? */
+    /**
+     * How did the subqueries match against the document ?
+     */
     public final List<SearchResultKeywordScore> keywordScores;
 
     public boolean hasPrioTerm;
@@ -45,6 +52,17 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
         this.scoreValue = score;
     }
 
+    public SearchResultItem(long combinedId, long encodedDocMetadata, int htmlFeatures, List<SearchResultKeywordScore> keywordScores, boolean hasPrioTerm, long bestPositions, DebugRankingFactors debugRankingFactors, double scoreValue) {
+        this.combinedId = combinedId;
+        this.encodedDocMetadata = encodedDocMetadata;
+        this.htmlFeatures = htmlFeatures;
+        this.keywordScores = keywordScores;
+        this.hasPrioTerm = hasPrioTerm;
+        this.bestPositions = bestPositions;
+        this.debugRankingFactors = debugRankingFactors;
+        this.scoreValue = scoreValue;
+    }
+
 
     public long getDocumentId() {
         return UrlIdCodec.removeRank(combinedId);
@@ -56,9 +74,11 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
 
     /* Used for evaluation */
     private transient double scoreValue = Double.MAX_VALUE;
+
     public void setScore(double score) {
         scoreValue = score;
     }
+
     public double getScore() {
         return scoreValue;
     }
@@ -81,7 +101,7 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
         if (other == this)
             return true;
         if (other instanceof SearchResultItem o) {
-            return o.getDocumentId()  == getDocumentId();
+            return o.getDocumentId() == getDocumentId();
         }
         return false;
     }
@@ -96,4 +116,35 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     }
 
 
+    public long getCombinedId() {
+        return this.combinedId;
+    }
+
+    public long getEncodedDocMetadata() {
+        return this.encodedDocMetadata;
+    }
+
+    public int getHtmlFeatures() {
+        return this.htmlFeatures;
+    }
+
+    public List<SearchResultKeywordScore> getKeywordScores() {
+        return this.keywordScores;
+    }
+
+    public boolean isHasPrioTerm() {
+        return this.hasPrioTerm;
+    }
+
+    public long getBestPositions() {
+        return this.bestPositions;
+    }
+
+    public DebugRankingFactors getDebugRankingFactors() {
+        return this.debugRankingFactors;
+    }
+
+    public double getScoreValue() {
+        return this.scoreValue;
+    }
 }

@@ -2,7 +2,6 @@ package nu.marginalia.language.sentence;
 
 import com.github.datquocnguyen.RDRPOSTagger;
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
@@ -46,7 +45,7 @@ public class SentenceExtractor {
     static final int MAX_SENTENCE_LENGTH = 250;
     static final int MAX_SENTENCE_COUNT = 1000;
 
-    @SneakyThrows @Inject
+    @Inject
     public SentenceExtractor(LanguageModels models)
     {
         try (InputStream modelIn = new FileInputStream(models.openNLPSentenceDetectionData.toFile())) {

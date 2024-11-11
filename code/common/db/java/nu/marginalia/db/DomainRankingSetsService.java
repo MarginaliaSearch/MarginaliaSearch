@@ -2,7 +2,6 @@ package nu.marginalia.db;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.With;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,23 +114,23 @@ public class DomainRankingSetsService {
         }
     }
 
-    /** Defines a domain ranking set, parameters for the ranking algorithms.
+    /**
+     * Defines a domain ranking set, parameters for the ranking algorithms.
      *
-     * @param name Key and name of the set
+     * @param name        Key and name of the set
      * @param description Human-readable description
-     * @param depth Depth of the algorithm
-     * @param definition Definition of the set, typically a list of domains or globs for domain-names
-    * */
-    @With
+     * @param depth       Depth of the algorithm
+     * @param definition  Definition of the set, typically a list of domains or globs for domain-names
+     */
     public record DomainRankingSet(String name,
                                    String description,
                                    int depth,
-                                   String definition)
-    {
+                                   String definition) {
 
         public Path fileName(Path base) {
             return base.resolve(name().toLowerCase() + ".dat");
         }
+
         public String[] domains() {
             return Arrays.stream(definition().split("\n+"))
                     .map(String::trim)
@@ -144,5 +143,20 @@ public class DomainRankingSetsService {
             return name().equals("BLOGS") || name().equals("NONE") || name().equals("RANK");
         }
 
+        public DomainRankingSet withName(String name) {
+            return this.name == name ? this : new DomainRankingSet(name, description, depth, definition);
+        }
+
+        public DomainRankingSet withDescription(String description) {
+            return this.description == description ? this : new DomainRankingSet(name, description, depth, definition);
+        }
+
+        public DomainRankingSet withDepth(int depth) {
+            return this.depth == depth ? this : new DomainRankingSet(name, description, depth, definition);
+        }
+
+        public DomainRankingSet withDefinition(String definition) {
+            return this.definition == definition ? this : new DomainRankingSet(name, description, depth, definition);
+        }
     }
 }

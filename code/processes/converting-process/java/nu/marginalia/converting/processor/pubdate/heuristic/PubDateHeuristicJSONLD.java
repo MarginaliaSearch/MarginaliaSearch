@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
-import lombok.ToString;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.pubdate.PubDateEffortLevel;
 import nu.marginalia.converting.processor.pubdate.PubDateHeuristic;
@@ -77,7 +76,6 @@ class JsonModel {
     List<JsonModelGraphItem> graph;
 }
 
-@ToString
 class JsonModelGraphItem {
     @SerializedName("@type")
     public String type;
@@ -87,6 +85,10 @@ class JsonModelGraphItem {
     public boolean isRelevant() {
         return "NewsArticle".equalsIgnoreCase(type)
                 || "Article".equalsIgnoreCase(type);
+    }
+
+    public String toString() {
+        return "JsonModelGraphItem(type=" + this.type + ", datePublished=" + this.datePublished + ")";
     }
 }
 

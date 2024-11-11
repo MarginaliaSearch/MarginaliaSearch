@@ -1,6 +1,5 @@
 package nu.marginalia.mq.inbox;
 
-import lombok.SneakyThrows;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
@@ -67,8 +66,7 @@ public class MqSingleShotInbox {
      *  @param predicate A predicate that must be true for the message to be stolen
      *  @return The stolen message, or empty if no message was stolen
      */
-    @SneakyThrows
-    public Optional<MqMessage> stealMessage(Predicate<MqMessage> predicate) {
+    public Optional<MqMessage> stealMessage(Predicate<MqMessage> predicate) throws SQLException {
         for (var message : persistence.eavesdrop(inboxName, 5)) {
             if (predicate.test(message)) {
                 persistence.changeOwner(message.msgId(), instanceUUID, -1);

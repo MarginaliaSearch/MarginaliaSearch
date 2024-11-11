@@ -5,14 +5,12 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import org.flywaydb.core.Flyway;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,14 +69,12 @@ public class DatabaseModule extends AbstractModule {
 
     }
 
-    @SneakyThrows
     @Singleton
     @Provides
     public HikariDataSource provideConnection() {
         return getMariaDB();
     }
 
-    @SneakyThrows
     private HikariDataSource getMariaDB() {
         var connStr = System.getProperty("db.overrideJdbc", dbProperties.getProperty(DB_CONN_KEY));
 

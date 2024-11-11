@@ -1,6 +1,5 @@
 package nu.marginalia.converting.sideload.dirtree;
 
-import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
@@ -13,6 +12,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -72,24 +72,28 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
         return name.endsWith(".html") || name.endsWith(".htm");
     }
 
-    @SneakyThrows
     private ProcessedDocument process(Path path) {
-        String body = Files.readString(path);
-        String url = urlBase + dirBase.relativize(path);
+        try {
+            String body = Files.readString(path);
+            String url = urlBase + dirBase.relativize(path);
 
-        // We trim "/index.html"-suffixes from the index if they are present,
-        // since this is typically an artifact from document retrieval
-        if (url.endsWith("/index.html")) {
-            url = url.substring(0, url.length() - "index.html".length());
+            // We trim "/index.html"-suffixes from the index if they are present,
+            // since this is typically an artifact from document retrieval
+            if (url.endsWith("/index.html")) {
+                url = url.substring(0, url.length() - "index.html".length());
+            }
+
+            return sideloaderProcessing
+                    .processDocument(url, body, extraKeywords, new DomainLinks(),
+                            GeneratorType.DOCS,
+                            DocumentClass.NORMAL,
+                            new LinkTexts(),
+                            LocalDate.now().getYear(),
+                            10_000);
         }
-
-        return sideloaderProcessing
-                .processDocument(url, body, extraKeywords, new DomainLinks(),
-                        GeneratorType.DOCS,
-                        DocumentClass.NORMAL,
-                        new LinkTexts(),
-                        LocalDate.now().getYear(),
-                        10_000);
+        catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

@@ -2,7 +2,6 @@ package nu.marginalia.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
@@ -101,7 +100,7 @@ public class SearchOperator {
         return getResultsFromQuery(queryResponse);
     }
 
-    public DecoratedSearchResults doSearch(SearchParameters userParams) {
+    public DecoratedSearchResults doSearch(SearchParameters userParams) throws InterruptedException {
         // The full user-facing search query does additional work to try to evaluate the query
         // e.g. as a unit conversion query. This is done in parallel with the regular search.
 
@@ -213,8 +212,7 @@ public class SearchOperator {
         return url;
     }
 
-    @SneakyThrows
-    private List<String> getProblems(String evalResult, List<UrlDetails> queryResults, QueryResponse response) {
+    private List<String> getProblems(String evalResult, List<UrlDetails> queryResults, QueryResponse response) throws InterruptedException {
 
         // We don't debug the query if it's a site search
         if (response.domain() == null)

@@ -18,7 +18,10 @@ import java.io.InputStreamReader;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /** Service for inspecting crawl data within the control service.
@@ -59,9 +62,9 @@ public class ControlCrawlDataService {
         String path = request.queryParams("path");
 
         int after = Integer.parseInt(request.queryParamOrDefault("page", "0"));
-        String urlGlob = request.queryParamOrDefault("urlGlob", "");
-        String selectedContentType = request.queryParamOrDefault("contentType", "ALL");
-        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL");
+        String urlGlob = request.queryParamOrDefault("urlGlob", "").replace("'", "''");
+        String selectedContentType = request.queryParamOrDefault("contentType", "ALL").replace("'", "''");
+        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL").replace("'", "''");
 
         var url = executorClient.remoteFileURL(fileStorageService.getStorage(fsid), path).toString();
 
@@ -77,14 +80,15 @@ public class ControlCrawlDataService {
 
             // Summarize by status code
 
-            rs = stmt.executeQuery(DUCKDB."SELECT domain FROM \{url} LIMIT 1");
+            rs = stmt.executeQuery("SELECT domain FROM '%s' LIMIT 1".formatted(url));
             domain = rs.next() ? rs.getString(1) : "NO DOMAIN";
 
-            rs = stmt.executeQuery(DUCKDB."""
-                                       SELECT httpStatus, COUNT(*) as cnt FROM \{url}
+            rs = stmt.executeQuery("""
+                                       SELECT httpStatus, COUNT(*) as cnt FROM '%s'
                                        GROUP BY httpStatus
                                        ORDER BY httpStatus
-                                       """);
+                                       """
+                    .formatted(url));
             while (rs.next()) {
                 final boolean isCurrentFilter = selectedHttpStatus.equals(rs.getString("httpStatus"));
                 final int status = rs.getInt("httpStatus");
@@ -95,12 +99,13 @@ public class ControlCrawlDataService {
 
             // Summarize by content type
 
-            rs = stmt.executeQuery(DUCKDB."""
+            rs = stmt.executeQuery("""
                                         SELECT contentType, COUNT(*) as cnt
-                                        FROM \{url}
+                                        FROM '%s'
                                         GROUP BY contentType
                                         ORDER BY contentType
-                                        """);
+                                        """
+                                    .formatted(url));
             while (rs.next()) {
                 final boolean isCurrentFilter = selectedContentType.equals(rs.getString("contentType"));
                 final String contentType = rs.getString("contentType");
@@ -111,14 +116,14 @@ public class ControlCrawlDataService {
 
             // Extract the document data
 
-            var query = DUCKDB."SELECT url, contentType, httpStatus, body != '' as bodied, etagHeader, lastModifiedHeader FROM \{url} WHERE 1=1";
+            var query = "SELECT url, contentType, httpStatus, body != '' as bodied, etagHeader, lastModifiedHeader FROM '%s' WHERE 1=1".formatted(url);
             if (!urlGlob.isBlank())
-                query += DUCKDB." AND url LIKE \{urlGlob.replace('*', '%')}";
+                query += " AND url LIKE '%s'".formatted(urlGlob.replace('*', '%'));
             if (!selectedContentType.equals("ALL"))
-                query += DUCKDB." AND contentType = \{selectedContentType}";
+                query += " AND contentType = '%s'".formatted(selectedContentType);
             if (!selectedHttpStatus.equals("ALL"))
-                query += DUCKDB." AND httpStatus = \{selectedHttpStatus}";
-            query += DUCKDB." LIMIT 10 OFFSET \{after}";
+                query += " AND httpStatus = '%s'".formatted(selectedHttpStatus);
+            query += " LIMIT 10 OFFSET %d".formatted(after);
 
             rs = stmt.executeQuery(query);
             while (rs.next()) {
@@ -229,28 +234,5 @@ public class ControlCrawlDataService {
             return files.getLast().domain();
         }
     }
-
-    // DuckDB template processor that deals with quoting and escaping values
-    // in the SQL query; this offers a very basic protection against accidental SQL injection
-    @SuppressWarnings("preview")
-    static StringTemplate.Processor<String, IllegalArgumentException> DUCKDB = st -> {
-        StringBuilder sb = new StringBuilder();
-        Iterator<String> fragmentsIter = st.fragments().iterator();
-
-        for (Object value : st.values()) {
-            sb.append(fragmentsIter.next());
-
-            if (value instanceof Number) { // don't quote numbers
-                sb.append(value);
-            } else {
-                String valueStr = value.toString().replace("'", "''");
-                sb.append("'").append(valueStr).append("'");
-            }
-        }
-
-        sb.append(fragmentsIter.next());
-
-        return sb.toString();
-    };
 
 }

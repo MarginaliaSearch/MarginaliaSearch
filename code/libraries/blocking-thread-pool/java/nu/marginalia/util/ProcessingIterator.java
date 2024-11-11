@@ -1,12 +1,12 @@
 package nu.marginalia.util;
 
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -23,12 +23,16 @@ public class ProcessingIterator<T> implements Iterator<T> {
 
     private T next = null;
 
-    @SneakyThrows
     ProcessingIterator(SimpleBlockingThreadPool pool, int queueSize, ProcessingJob<T> task) {
         queue = new LinkedBlockingQueue<>(queueSize);
         this.pool = pool;
 
-        pool.submit(() -> executeJob(task));
+        try {
+            pool.submit(() -> executeJob(task));
+        }
+        catch (Exception e) {
+            logger.warn("Exception while processing", e);
+        }
     }
 
     public static Factory factory(int queueSize, int parallelism) {
@@ -45,15 +49,19 @@ public class ProcessingIterator<T> implements Iterator<T> {
         }
     }
 
-    @SneakyThrows
     private void executeTask(Task<T> task) {
-        pool.submit(() -> {
-            try {
-                queue.put(task.get());
-            } catch (Exception e) {
-                logger.warn("Exception while processing", e);
-            }
-        });
+        try {
+            pool.submit(() -> {
+                try {
+                    queue.put(task.get());
+                } catch (Exception e) {
+                    logger.warn("Exception while processing", e);
+                }
+            });
+        }
+        catch (Exception e) {
+            logger.warn("Exception while processing", e);
+        }
     }
 
     /** Returns true if there are more documents to be processed.
@@ -63,17 +71,21 @@ public class ProcessingIterator<T> implements Iterator<T> {
      * (or synchronize between the two)
      */
     @Override
-    @SneakyThrows
     public boolean hasNext() {
         if (next != null)
             return true;
 
-        do {
-            next = queue.poll(50, TimeUnit.MILLISECONDS);
-            if (next != null) {
-                return true;
-            }
-        } while (expectMore());
+        try {
+            do {
+                next = queue.poll(50, TimeUnit.MILLISECONDS);
+                if (next != null) {
+                    return true;
+                }
+            } while (expectMore());
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         return false;
     }
@@ -96,7 +108,6 @@ public class ProcessingIterator<T> implements Iterator<T> {
      * <p>
      * If this is run after hasNext() returns false, a NoSuchElementException is thrown.
      */
-    @SneakyThrows
     @Override
     public T next() {
         if (!hasNext()) {

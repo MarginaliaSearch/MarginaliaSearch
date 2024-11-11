@@ -2,7 +2,6 @@ package nu.marginalia.service.discovery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -40,18 +39,22 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     private final List<String> livenessPaths = new ArrayList<>();
 
     @Inject
-    @SneakyThrows
     public ZkServiceRegistry(CuratorFramework curatorFramework) {
-        this.curatorFramework = curatorFramework;
+        try {
+            this.curatorFramework = curatorFramework;
 
-        curatorFramework.start();
-        if (!curatorFramework.blockUntilConnected(30, TimeUnit.SECONDS)) {
-            throw new IllegalStateException("Failed to connect to zookeeper after 30s");
+            curatorFramework.start();
+            if (!curatorFramework.blockUntilConnected(30, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Failed to connect to zookeeper after 30s");
+            }
+
+            Runtime.getRuntime().addShutdownHook(
+                    new Thread(this::shutDown, "ZkServiceRegistry shutdown hook")
+            );
         }
-
-        Runtime.getRuntime().addShutdownHook(
-                new Thread(this::shutDown, "ZkServiceRegistry shutdown hook")
-        );
+        catch (Exception ex) {
+            throw new RuntimeException("Failed to start ZkServiceRegistry", ex);
+        }
     }
 
     @Override
@@ -75,14 +78,18 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
         return endpoint;
     }
 
-    @SneakyThrows
     @Override
     public void declareFirstBoot() {
         if (!isFirstBoot()) {
-            curatorFramework.create()
-                    .creatingParentsIfNeeded()
-                    .withMode(CreateMode.PERSISTENT)
-                    .forPath("/first-boot");
+            try {
+                curatorFramework.create()
+                        .creatingParentsIfNeeded()
+                        .withMode(CreateMode.PERSISTENT)
+                        .forPath("/first-boot");
+            }
+            catch (Exception ex) {
+                logger.error("Failed to declare first-boot", ex);
+            }
         }
     }
 

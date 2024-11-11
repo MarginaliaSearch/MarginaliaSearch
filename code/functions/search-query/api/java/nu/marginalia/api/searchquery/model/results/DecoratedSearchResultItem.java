@@ -1,7 +1,5 @@
 package nu.marginalia.api.searchquery.model.results;
 
-import lombok.Getter;
-import lombok.ToString;
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
 import nu.marginalia.model.EdgeUrl;
 import org.jetbrains.annotations.NotNull;
@@ -9,8 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-@Getter
-@ToString
 public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResultItem> {
     public final SearchResultItem rawIndexResult;
 
@@ -24,7 +20,9 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     @NotNull
     public final String format;
 
-    /** Document features bitmask, see HtmlFeature */
+    /**
+     * Document features bitmask, see HtmlFeature
+     */
     public final int features;
 
     @Nullable
@@ -42,6 +40,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     public long documentId() {
         return rawIndexResult.getDocumentId();
     }
+
     public int domainId() {
         return rawIndexResult.getDomainId();
     }
@@ -74,8 +73,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
                                      int resultsFromDomain,
                                      @Nullable
                                      ResultRankingDetails rankingDetails
-                                     )
-    {
+    ) {
         this.rawIndexResult = rawIndexResult;
         this.url = url;
         this.title = title;
@@ -94,11 +92,73 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
 
     @Override
     public int compareTo(@NotNull DecoratedSearchResultItem o) {
-        int diff =  Double.compare(rankingScore, o.rankingScore);
+        int diff = Double.compare(rankingScore, o.rankingScore);
 
         if (diff == 0)
             diff = Long.compare(documentId(), o.documentId());
 
         return diff;
+    }
+
+    public SearchResultItem getRawIndexResult() {
+        return this.rawIndexResult;
+    }
+
+    public @NotNull EdgeUrl getUrl() {
+        return this.url;
+    }
+
+    public @NotNull String getTitle() {
+        return this.title;
+    }
+
+    public @NotNull String getDescription() {
+        return this.description;
+    }
+
+    public double getUrlQuality() {
+        return this.urlQuality;
+    }
+
+    public @NotNull String getFormat() {
+        return this.format;
+    }
+
+    public int getFeatures() {
+        return this.features;
+    }
+
+    @Nullable
+    public Integer getPubYear() {
+        return this.pubYear;
+    }
+
+    public long getDataHash() {
+        return this.dataHash;
+    }
+
+    public int getWordsTotal() {
+        return this.wordsTotal;
+    }
+
+    public long getBestPositions() {
+        return this.bestPositions;
+    }
+
+    public double getRankingScore() {
+        return this.rankingScore;
+    }
+
+    public int getResultsFromDomain() {
+        return this.resultsFromDomain;
+    }
+
+    @Nullable
+    public ResultRankingDetails getRankingDetails() {
+        return this.rankingDetails;
+    }
+
+    public String toString() {
+        return "DecoratedSearchResultItem(rawIndexResult=" + this.getRawIndexResult() + ", url=" + this.getUrl() + ", title=" + this.getTitle() + ", description=" + this.getDescription() + ", urlQuality=" + this.getUrlQuality() + ", format=" + this.getFormat() + ", features=" + this.getFeatures() + ", pubYear=" + this.getPubYear() + ", dataHash=" + this.getDataHash() + ", wordsTotal=" + this.getWordsTotal() + ", bestPositions=" + this.getBestPositions() + ", rankingScore=" + this.getRankingScore() + ", resultsFromDomain=" + this.getResultsFromDomain() + ", rankingDetails=" + this.getRankingDetails() + ")";
     }
 }

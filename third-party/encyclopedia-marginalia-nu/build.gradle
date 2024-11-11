@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'io.freefair.lombok'
 }
 
 java {
@@ -15,12 +14,6 @@ dependencies {
     implementation libs.bundles.gson
     implementation libs.zstd
     implementation libs.bundles.slf4j
-
-    implementation libs.lombok
-    testImplementation libs.lombok
-    annotationProcessor libs.lombok
-
-    lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
 
     implementation project(':code:libraries:blocking-thread-pool')
 

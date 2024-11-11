@@ -2,7 +2,6 @@ package nu.marginalia.loading.links;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.linkgraph.io.DomainLinksWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
@@ -43,7 +42,10 @@ public class DomainLinksLoaderService {
 
                 try (var domainLinkReader = new SlopDomainLinkRecord.Reader(pageRef))
                 {
-                    domainLinkReader.forEach(linkLoader::accept);
+                    while (domainLinkReader.hasMore()) {
+                        var link = domainLinkReader.next();
+                        linkLoader.accept(link.source(), link.dest());
+                    }
                 }
             }
 
@@ -66,8 +68,7 @@ public class DomainLinksLoaderService {
             this.domainIdRegistry = domainIdRegistry;
         }
 
-        @SneakyThrows
-        void accept(String source, String dest) {
+        void accept(String source, String dest) throws IOException {
             domainLinkDbWriter.write(
                     domainIdRegistry.getDomainId(source),
                     domainIdRegistry.getDomainId(dest)

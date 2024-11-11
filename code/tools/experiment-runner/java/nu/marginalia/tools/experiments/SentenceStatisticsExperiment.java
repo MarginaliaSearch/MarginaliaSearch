@@ -1,7 +1,6 @@
 package nu.marginalia.tools.experiments;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -39,7 +38,7 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
     private void logLine(String message) {
         System.out.printf("\u001b[2K\r%s", message);
     }
-    @SneakyThrows
+
     @Override
     public boolean process(CrawledDomain domain) {
         if (domain.doc == null) return true;
@@ -55,7 +54,7 @@ public class SentenceStatisticsExperiment extends LegacyExperiment {
             parsed.body().filter(new DomPruningFilter(0.5));
 
             var dld = se.extractSentences(parsed);
-            var keywords = documentKeywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(doc.url));
+            var keywords = documentKeywordExtractor.extractKeywords(dld, new LinkTexts(), EdgeUrl.parse(doc.url).orElseThrow());
 
             keywords.build(workArea);
         }

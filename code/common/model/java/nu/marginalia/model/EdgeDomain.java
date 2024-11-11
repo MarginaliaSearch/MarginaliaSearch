@@ -1,15 +1,11 @@
 package nu.marginalia.model;
 
-import lombok.*;
-
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-@AllArgsConstructor
-@Getter @Setter @Builder
 public class EdgeDomain implements Serializable {
 
     @Nonnull
@@ -17,7 +13,6 @@ public class EdgeDomain implements Serializable {
     @Nonnull
     public final String topDomain;
 
-    @SneakyThrows
     public EdgeDomain(String host) {
         Objects.requireNonNull(host, "domain name must not be null");
 
@@ -34,28 +29,23 @@ public class EdgeDomain implements Serializable {
         if (dot < 0 || looksLikeAnIp(host)) { // IPV6 >.>
             subDomain = "";
             topDomain = host;
-        }
-        else {
+        } else {
             int dot2 = host.substring(0, dot).lastIndexOf('.');
             if (dot2 < 0) {
                 subDomain = "";
                 topDomain = host;
-            }
-            else {
-                if (looksLikeGovTld(host))
-                { // Capture .ac.jp, .co.uk
+            } else {
+                if (looksLikeGovTld(host)) { // Capture .ac.jp, .co.uk
                     int dot3 = host.substring(0, dot2).lastIndexOf('.');
                     if (dot3 >= 0) {
                         dot2 = dot3;
                         subDomain = host.substring(0, dot2);
                         topDomain = host.substring(dot2 + 1);
-                    }
-                    else {
+                    } else {
                         subDomain = "";
                         topDomain = host;
                     }
-                }
-                else {
+                } else {
                     subDomain = host.substring(0, dot2);
                     topDomain = host.substring(dot2 + 1);
                 }
@@ -64,6 +54,16 @@ public class EdgeDomain implements Serializable {
     }
 
     private static final Predicate<String> govListTest = Pattern.compile(".*\\.(id|ac|co|org|gov|edu|com)\\.[a-z]{2}").asMatchPredicate();
+
+    public EdgeDomain(@Nonnull String subDomain, @Nonnull String topDomain) {
+        this.subDomain = subDomain;
+        this.topDomain = topDomain;
+    }
+
+    public static EdgeDomainBuilder builder() {
+        return new EdgeDomainBuilder();
+    }
+
     private boolean looksLikeGovTld(String host) {
         if (host.length() < 8)
             return false;
@@ -91,11 +91,11 @@ public class EdgeDomain implements Serializable {
     }
 
 
-
     public EdgeUrl toRootUrlHttp() {
         // Set default protocol to http, as most https websites redirect http->https, but few http websites redirect https->http
         return new EdgeUrl("http", this, null, "/", null);
     }
+
     public EdgeUrl toRootUrlHttps() {
         return new EdgeUrl("https", this, null, "/", null);
     }
@@ -125,8 +125,7 @@ public class EdgeDomain implements Serializable {
         int cutPoint = topDomain.indexOf('.');
         if (cutPoint < 0) {
             ret.append(topDomain);
-        }
-        else {
+        } else {
             ret.append(topDomain, 0, cutPoint);
         }
 
@@ -155,16 +154,14 @@ public class EdgeDomain implements Serializable {
 
         if (govListTest.test(topDomain)) {
             dot = topDomain.indexOf('.', Math.max(0, length - ".edu.uk".length()));
-        }
-        else {
+        } else {
             dot = topDomain.lastIndexOf('.');
         }
 
 
         if (dot < 0 || dot == topDomain.length() - 1) {
             return "-";
-        }
-        else {
+        } else {
             return topDomain.substring(dot + 1);
         }
     }
@@ -174,10 +171,10 @@ public class EdgeDomain implements Serializable {
         if (!(o instanceof EdgeDomain other)) return false;
         final String this$subDomain = this.getSubDomain();
         final String other$subDomain = other.getSubDomain();
-        if (!Objects.equals(this$subDomain,other$subDomain)) return false;
+        if (!Objects.equals(this$subDomain, other$subDomain)) return false;
         final String this$domain = this.getTopDomain();
         final String other$domain = other.getTopDomain();
-        if (!Objects.equals(this$domain,other$domain)) return false;
+        if (!Objects.equals(this$domain, other$domain)) return false;
         return true;
     }
 
@@ -191,4 +188,39 @@ public class EdgeDomain implements Serializable {
         return result;
     }
 
+    @Nonnull
+    public String getSubDomain() {
+        return this.subDomain;
+    }
+
+    @Nonnull
+    public String getTopDomain() {
+        return this.topDomain;
+    }
+
+    public static class EdgeDomainBuilder {
+        private String subDomain;
+        private String topDomain;
+
+        EdgeDomainBuilder() {
+        }
+
+        public EdgeDomainBuilder subDomain(String subDomain) {
+            this.subDomain = subDomain;
+            return this;
+        }
+
+        public EdgeDomainBuilder topDomain(String topDomain) {
+            this.topDomain = topDomain;
+            return this;
+        }
+
+        public EdgeDomain build() {
+            return new EdgeDomain(this.subDomain, this.topDomain);
+        }
+
+        public String toString() {
+            return "EdgeDomain.EdgeDomainBuilder(subDomain=" + this.subDomain + ", topDomain=" + this.topDomain + ")";
+        }
+    }
 }

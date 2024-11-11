@@ -3,9 +3,6 @@ package nu.marginalia.actor.task;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.With;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
@@ -40,7 +37,6 @@ import java.util.List;
 public class ConvertAndLoadActor extends RecordActorPrototype {
 
     // STATES
-
     public static final String RERANK = "RERANK";
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
@@ -53,15 +49,6 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
 
     private final int nodeId;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
-
-    @AllArgsConstructor @With @NoArgsConstructor
-    public static class Message {
-        public FileStorageId crawlStorageId = null;
-        public List<FileStorageId> processedStorageId = null;
-        public long converterMsgId = 0L;
-        public long loaderMsgId = 0L;
-    }
 
     public record Initial(FileStorageId fid) implements ActorStep {}
 

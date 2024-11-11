@@ -1,9 +1,8 @@
 package nu.marginalia.query;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
-import nu.marginalia.linkgraph.AggregateLinkGraphService;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
+import nu.marginalia.linkgraph.AggregateLinkGraphService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
@@ -18,12 +17,12 @@ public class QueryService extends Service {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-    @SneakyThrows
     @Inject
     public QueryService(BaseServiceParams params,
                         AggregateLinkGraphService domainLinksService,
                         QueryGRPCService queryGRPCService,
                         QueryBasicInterface queryBasicInterface)
+            throws Exception
     {
         super(params,
                 () -> Spark.staticFileLocation("/static/"),

@@ -1,6 +1,5 @@
 package nu.marginalia.index.journal;
 
-import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
@@ -53,8 +52,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         spansWriter = IndexJournalPage.spans.create(this);
     }
 
-    @SneakyThrows
-    public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection) {
+    public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection) throws IOException {
 
         combinedIdWriter.put(combinedId);
         featuresWriter.put(keywordsProjection.htmlFeatures());

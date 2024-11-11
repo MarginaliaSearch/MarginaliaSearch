@@ -1,7 +1,6 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
@@ -164,57 +163,62 @@ public class DomainProcessor {
     }
 
 
-    @SneakyThrows
     @Nullable
     public ProcessedDomain fullProcessing(SerializableCrawlDataStream dataStream) {
-        if (!dataStream.hasNext()) {
-            return null;
-        }
+        try {
+            if (!dataStream.hasNext()) {
+                return null;
+            }
 
-        List<ProcessedDocument> docs = new ArrayList<>();
-        Set<String> processedUrls = new HashSet<>();
+            List<ProcessedDocument> docs = new ArrayList<>();
+            Set<String> processedUrls = new HashSet<>();
 
-        if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
-            throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
-        }
+            if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
+                throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
+            }
 
-        DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
-        DocumentDecorator documentDecorator = new DocumentDecorator();
+            DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
+            DocumentDecorator documentDecorator = new DocumentDecorator();
 
-        // Process Domain Record
+            // Process Domain Record
 
-        ProcessedDomain ret = new ProcessedDomain();
-        processDomain(crawledDomain, ret, documentDecorator);
-        ret.documents = docs;
+            ProcessedDomain ret = new ProcessedDomain();
+            processDomain(crawledDomain, ret, documentDecorator);
+            ret.documents = docs;
 
-        // Process Documents
+            // Process Documents
 
-        try (var deduplicator = new LshDocumentDeduplicator()) {
-            while (dataStream.hasNext()) {
-                if (!(dataStream.next() instanceof CrawledDocument doc))
-                    continue;
-                if (doc.url == null)
-                    continue;
-                if (doc.documentBody.isBlank())
-                    continue;
-                if (!processedUrls.add(doc.url))
-                    continue;
+            try (var deduplicator = new LshDocumentDeduplicator()) {
+                while (dataStream.hasNext()) {
+                    if (!(dataStream.next() instanceof CrawledDocument doc))
+                        continue;
+                    if (doc.url == null)
+                        continue;
+                    if (doc.documentBody.isBlank())
+                        continue;
+                    if (!processedUrls.add(doc.url))
+                        continue;
 
-                try {
-                    var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
-                    deduplicator.markIfDuplicate(processedDoc);
-                    docs.add(processedDoc);
-                } catch (Exception ex) {
-                    logger.warn("Failed to process " + doc.url, ex);
+                    try {
+                        var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
+                        deduplicator.markIfDuplicate(processedDoc);
+                        docs.add(processedDoc);
+                    } catch (Exception ex) {
+                        logger.warn("Failed to process " + doc.url, ex);
+                    }
                 }
             }
+
+            // Add late keywords and features from domain-level information
+
+            calculateStatistics(ret, externalDomainLinks);
+
+            return ret;
         }
-
-        // Add late keywords and features from domain-level information
-
-        calculateStatistics(ret, externalDomainLinks);
-
-        return ret;
+        catch (Exception ex) {
+            logger.warn("Failed to process domain", ex);
+            return null;
+        }
     }
 
     private void processDomain(CrawledDomain crawledDomain,

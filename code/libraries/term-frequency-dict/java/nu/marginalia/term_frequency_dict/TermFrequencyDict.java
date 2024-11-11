@@ -1,8 +1,9 @@
 package nu.marginalia.term_frequency_dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
@@ -11,9 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -29,13 +28,11 @@ public class TermFrequencyDict {
     public static final long DOC_COUNT_KEY = ~0L;
 
     @Inject
-    public TermFrequencyDict(@NotNull LanguageModels models) {
+    public TermFrequencyDict(@NotNull LanguageModels models) throws IOException {
         this(models.termFrequencies);
     }
 
-    @SneakyThrows
-    public TermFrequencyDict(Path file) {
-
+    public TermFrequencyDict(Path file) throws IOException {
         wordRates = load(file);
         logger.info("Read {} N-grams frequencies", wordRates.size());
     }

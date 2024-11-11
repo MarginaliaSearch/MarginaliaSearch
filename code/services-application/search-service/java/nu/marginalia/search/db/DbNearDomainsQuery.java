@@ -2,7 +2,6 @@ package nu.marginalia.search.db;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -18,7 +17,6 @@ public class DbNearDomainsQuery {
         this.dataSource = dataSource;
     }
 
-    @SneakyThrows
     public List<Integer> getRelatedDomains(String term, Consumer<String> onProblem) {
         List<Integer> ret = new ArrayList<>();
         try (var conn = dataSource.getConnection();
@@ -53,6 +51,9 @@ public class DbNearDomainsQuery {
                 }
             }
 
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         if (ret.isEmpty()) {

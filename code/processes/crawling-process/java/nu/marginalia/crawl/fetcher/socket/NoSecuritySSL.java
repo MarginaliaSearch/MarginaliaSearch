@@ -1,7 +1,5 @@
 package nu.marginalia.crawl.fetcher.socket;
 
-import lombok.SneakyThrows;
-
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 
@@ -29,20 +27,24 @@ public class NoSecuritySSL {
             }
     };
 
-    @SneakyThrows
     public static SSLSocketFactory buildSocketFactory() {
-        // Install the all-trusting trust manager
-        final SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        try {
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
 
-        var clientSessionContext = sslContext.getClientSessionContext();
+            var clientSessionContext = sslContext.getClientSessionContext();
 
-        // The default value for this is very high and will use a crapload of memory
-        // since the crawler will be making a lot of requests to various hosts
-        clientSessionContext.setSessionCacheSize(2048);
+            // The default value for this is very high and will use a crapload of memory
+            // since the crawler will be making a lot of requests to various hosts
+            clientSessionContext.setSessionCacheSize(2048);
 
-        // Create a ssl socket factory with our all-trusting manager
-        return sslContext.getSocketFactory();
+            // Create a ssl socket factory with our all-trusting manager
+            return sslContext.getSocketFactory();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static HostnameVerifier buildHostnameVerifyer() {

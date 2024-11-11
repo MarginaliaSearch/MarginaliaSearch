@@ -1,8 +1,7 @@
 package nu.marginalia.service.server;
 
-import com.google.inject.name.Named;
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
+import com.google.inject.name.Named;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.storage.FileStorageService;
@@ -81,10 +80,14 @@ public class NodeStatusWatcher {
         }
     }
 
-    @SneakyThrows
     private boolean isConfigured() {
-        var configuration = configurationService.get(nodeId);
-        return configuration != null;
+        try {
+            var configuration = configurationService.get(nodeId);
+            return configuration != null;
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /** Look for changes in the configuration and kill the service if the corresponding

@@ -1,6 +1,5 @@
 package nu.marginalia.io.crawldata.format;
 
-import lombok.SneakyThrows;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.hash.MurmurHash3_128;
@@ -53,16 +52,15 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
     }
 
     @Override
-    @SneakyThrows
     public boolean hasNext() {
         while (backingIterator.hasNext() && nextQ.isEmpty()) {
-            var nextRecord = backingIterator.next();
-            if (!wroteDomainRecord) {
-                createDomainRecord(nextRecord);
-                wroteDomainRecord = true;
-            }
-
             try {
+                var nextRecord = backingIterator.next();
+                if (!wroteDomainRecord) {
+                    createDomainRecord(nextRecord);
+                    wroteDomainRecord = true;
+                }
+
                 createDocumentRecord(nextRecord);
             }
             catch (Exception ex) {

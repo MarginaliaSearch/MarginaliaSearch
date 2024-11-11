@@ -31,8 +31,13 @@ public class DocumentKeywordExtractor {
 
     // for tests
     public DocumentKeywordExtractor() {
-        this.dict = new TermFrequencyDict(WmsaHome.getLanguageModels());
-        this.keywordExtractor = new KeywordExtractor();
+        try {
+            this.dict = new TermFrequencyDict(WmsaHome.getLanguageModels());
+            this.keywordExtractor = new KeywordExtractor();
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
 

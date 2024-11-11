@@ -1,6 +1,5 @@
 package nu.marginalia.converting.sideload.warc;
 
-import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentTypeParser;
 import nu.marginalia.contenttype.DocumentBodyToString;
@@ -38,17 +37,20 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
     private final EdgeDomain domain;
 
 
-    @SneakyThrows
     public WarcSideloader(Path warcFile,
                           SideloaderProcessing sideloaderProcessing)
     {
-        this.sideloaderProcessing = sideloaderProcessing;
-        this.reader = new WarcReader(warcFile);
-        this.domain = sniffDomainFromWarc()
-                .orElseThrow(() -> new IOException("Could not identify domain from warc file"));
+        try {
+            this.sideloaderProcessing = sideloaderProcessing;
+            this.reader = new WarcReader(warcFile);
+            this.domain = sniffDomainFromWarc()
+                    .orElseThrow(() -> new IOException("Could not identify domain from warc file"));
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     @Override
     public ProcessedDomain getDomain() {
         var ret = new ProcessedDomain();
@@ -81,7 +83,6 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
         return Optional.empty();
     }
 
-    @SneakyThrows
     @Override
     public Iterator<ProcessedDocument> getDocumentsStream() {
         return reader.records()
@@ -111,13 +112,12 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
 
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Failed to process response", e);
         }
 
         return false;
     }
 
-    @SneakyThrows
     private Optional<ProcessedDocument> process(WarcResponse response) {
         Optional<String> body = getBody(response);
         String url = response.target();
@@ -132,33 +132,46 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
             return Optional.empty();
         }
 
-        return Optional.of(sideloaderProcessing
-                .processDocument(url,
-                        body.get(),
-                        List.of(),
-                        new DomainLinks(),
-                        GeneratorType.DOCS,
-                        DocumentClass.SIDELOAD,
-                        new LinkTexts(),
-                        LocalDate.now().getYear(), // TODO: This should be the actual year of the document
-                        10_000));
+        try {
+            return Optional.of(sideloaderProcessing
+                    .processDocument(url,
+                            body.get(),
+                            List.of(),
+                            new DomainLinks(),
+                            GeneratorType.DOCS,
+                            DocumentClass.SIDELOAD,
+                            new LinkTexts(),
+                            LocalDate.now().getYear(), // TODO: This should be the actual year of the document
+                            10_000));
+        }
+        catch (Exception e) {
+            logger.warn("Failed to process document", e);
+            return Optional.empty();
+        }
     }
 
-    @SneakyThrows
     private Optional<String> getBody(WarcResponse response) {
-        var http = response.http();
 
-        // TODO: We should support additional encodings here
-        try (var body = http.body()) {
-            String contentType = http.headers().first("Content-Type").orElse(null);
-            byte[] bytes = body.stream().readAllBytes();
+        try {
+            var http = response.http();
 
-            var ct = ContentTypeParser.parseContentType(contentType, bytes);
-            return Optional.of(DocumentBodyToString.getStringData(ct, bytes));
+
+            // TODO: We should support additional encodings here
+            try (var body = http.body()) {
+                String contentType = http.headers().first("Content-Type").orElse(null);
+                byte[] bytes = body.stream().readAllBytes();
+
+                var ct = ContentTypeParser.parseContentType(contentType, bytes);
+                return Optional.of(DocumentBodyToString.getStringData(ct, bytes));
+            }
+            catch (Exception ex) {
+                logger.info("Failed to parse body", ex);
+            }
         }
-        catch (Exception ex) {
-            logger.info("Failed to parse body", ex);
+        catch (Exception e) {
+            logger.warn("Failed to process response", e);
         }
+
         return Optional.empty();
     }
 

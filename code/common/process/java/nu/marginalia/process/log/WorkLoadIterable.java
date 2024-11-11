@@ -1,8 +1,8 @@
 package nu.marginalia.process.log;
 
-import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -21,32 +21,36 @@ class WorkLoadIterable<T> implements Iterable<T> {
 
     @NotNull
     @Override
-    @SneakyThrows
     public Iterator<T> iterator() {
-        var stream = Files.lines(logFile);
-        return new Iterator<>() {
-            final Iterator<T> iter = stream
-                    .filter(WorkLogEntry::isJobId)
-                    .map(WorkLogEntry::parse)
-                    .map(mapper)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .iterator();
+        try {
+            var stream = Files.lines(logFile);
+            return new Iterator<>() {
+                final Iterator<T> iter = stream
+                        .filter(WorkLogEntry::isJobId)
+                        .map(WorkLogEntry::parse)
+                        .map(mapper)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .iterator();
 
-            @Override
-            public boolean hasNext() {
-                if (iter.hasNext()) {
-                    return true;
-                } else {
-                    stream.close();
-                    return false;
+                @Override
+                public boolean hasNext() {
+                    if (iter.hasNext()) {
+                        return true;
+                    } else {
+                        stream.close();
+                        return false;
+                    }
                 }
-            }
 
-            @Override
-            public T next() {
-                return iter.next();
-            }
-        };
+                @Override
+                public T next() {
+                    return iter.next();
+                }
+            };
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

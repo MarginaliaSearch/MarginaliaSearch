@@ -2,7 +2,6 @@ package nu.marginalia.extractor;
 
 import com.google.inject.Inject;
 import gnu.trove.set.hash.TLongHashSet;
-import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
@@ -101,10 +100,14 @@ public class AtagExporter implements ExporterIf {
                     continue;
                 }
 
-                var linkOpt = linkParser.parseLinkPermissive(baseUrl, atag);
-                linkOpt
-                        .filter(url -> linkFilter.isEligible(url, baseUrl, linkText))
-                        .ifPresent(url -> exporter.accept(url, baseUrl.domain, linkText));
+                var linkOpt = linkParser
+                        .parseLinkPermissive(baseUrl, atag)
+                        .filter(url -> linkFilter.isEligible(url, baseUrl, linkText));
+
+                if (linkOpt.isPresent()) {
+                    var url = linkOpt.get();
+                    exporter.accept(url, baseUrl.domain, linkText);
+                }
             }
         }
 
@@ -167,8 +170,7 @@ public class AtagExporter implements ExporterIf {
             this.writer = writer;
         }
 
-        @SneakyThrows
-        public void accept(EdgeUrl url, EdgeDomain sourceDomain, String linkText) {
+        public void accept(EdgeUrl url, EdgeDomain sourceDomain, String linkText) throws IOException {
             final String urlString = urlWithNoSchema(url);
 
             writer.write(String.format("\"%s\",\"%s\",\"%s\"\n",

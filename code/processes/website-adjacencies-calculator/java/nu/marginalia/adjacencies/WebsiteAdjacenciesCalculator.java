@@ -2,7 +2,6 @@ package nu.marginalia.adjacencies;
 
 import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.db.DbDomainQueries;
@@ -10,8 +9,8 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.service.ProcessMainClass;
-import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.service.module.ServiceDiscoveryModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import static nu.marginalia.adjacencies.SparseBitVector.*;
+import static nu.marginalia.adjacencies.SparseBitVector.andCardinality;
+import static nu.marginalia.adjacencies.SparseBitVector.weightedProduct;
 
 public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
     private final HikariDataSource dataSource;
@@ -40,7 +40,6 @@ public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
         weights = adjacenciesData.getWeights();
     }
 
-    @SneakyThrows
     public void tryDomains(String... domainName) {
         var dataStoreDao = new DbDomainQueries(dataSource);
 
@@ -64,8 +63,7 @@ public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
         return String.format("%2.2f%%", 100. * val);
     }
 
-    @SneakyThrows
-    public void loadAll(ProcessHeartbeat processHeartbeat) {
+    public void loadAll(ProcessHeartbeat processHeartbeat) throws InterruptedException {
         AdjacenciesLoader loader = new AdjacenciesLoader(dataSource);
         var executor = Executors.newFixedThreadPool(16);
 
@@ -102,7 +100,6 @@ public class WebsiteAdjacenciesCalculator extends ProcessMainClass {
 
     public record DomainSimilarity(int domainId, double value) {}
 
-    @SneakyThrows
     private void findAdjacentDtoS(int domainId, Consumer<DomainSimilarities> andThen) {
         var vector = adjacenciesData.getVector(domainId);
 

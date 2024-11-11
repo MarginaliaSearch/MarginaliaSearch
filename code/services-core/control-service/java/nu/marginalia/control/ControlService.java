@@ -20,7 +20,6 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.io.IOException;
 import java.util.Map;
 
 public class ControlService extends Service {
@@ -60,7 +59,7 @@ public class ControlService extends Service {
                           AbortedProcessService abortedProcessService,
                           DomainsManagementService domainsManagementService,
                           ControlErrorHandler errorHandler
-                      ) throws IOException {
+                      ) throws Exception {
 
         super(params);
 

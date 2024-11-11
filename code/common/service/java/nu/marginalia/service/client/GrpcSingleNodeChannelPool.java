@@ -2,7 +2,6 @@ package nu.marginalia.service.client;
 
 import com.google.common.collect.Sets;
 import io.grpc.ManagedChannel;
-import lombok.SneakyThrows;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
 import nu.marginalia.service.discovery.property.PartitionTraits;
@@ -34,11 +33,12 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Function<ManagedChannel, STUB> stubConstructor;
 
 
-    @SneakyThrows
     public GrpcSingleNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                      ServiceKey<? extends PartitionTraits.Unicast> serviceKey,
                                      Function<InstanceAddress, ManagedChannel> channelConstructor,
-                                     Function<ManagedChannel, STUB> stubConstructor) {
+                                     Function<ManagedChannel, STUB> stubConstructor)
+            throws Exception
+    {
         super(serviceKey);
 
         this.serviceRegistryIf = serviceRegistryIf;

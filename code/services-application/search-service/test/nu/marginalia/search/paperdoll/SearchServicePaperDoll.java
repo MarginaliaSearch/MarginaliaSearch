@@ -5,7 +5,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
@@ -80,7 +79,6 @@ public class SearchServicePaperDoll extends AbstractModule {
     private static QueryResponse searchResponse;
     private static final Gson gson = GsonFactory.get();
 
-    @SneakyThrows
     void registerSearchResult(
             String url,
             String title,
@@ -90,22 +88,27 @@ public class SearchServicePaperDoll extends AbstractModule {
             double score,
             long positions)
     {
-        results.add(new DecoratedSearchResultItem(
-                new SearchResultItem(url.hashCode(), 2, 3, score, 0),
-                new EdgeUrl(url),
-                title,
-                description,
-                quality,
-                "HTML5",
-                HtmlFeature.encode(features),
-                null,
-                url.hashCode(),
-                400,
-                positions,
-                score,
-                4,
-                null)
-        );
+        try {
+            results.add(new DecoratedSearchResultItem(
+                    new SearchResultItem(url.hashCode(), 2, 3, score, 0),
+                    new EdgeUrl(url),
+                    title,
+                    description,
+                    quality,
+                    "HTML5",
+                    HtmlFeature.encode(features),
+                    null,
+                    url.hashCode(),
+                    400,
+                    positions,
+                    score,
+                    4,
+                    null)
+            );
+        }
+        catch (Exception e) {
+            throw new RuntimeException();
+        }
     }
 
     @BeforeAll
@@ -210,9 +213,8 @@ public class SearchServicePaperDoll extends AbstractModule {
         );
     }
 
-    @SneakyThrows
     @Test
-    public void run() {
+    public void run() throws Exception {
         if (!Boolean.getBoolean("runPaperDoll")) {
             return;
         }
@@ -269,6 +271,7 @@ public class SearchServicePaperDoll extends AbstractModule {
 
 
 
+
         dummyLinks.add(new SimilarDomain(
                 new EdgeUrl("https://www.example.com/foo"),
                 1,
@@ -304,49 +307,53 @@ public class SearchServicePaperDoll extends AbstractModule {
         for (;;);
     }
 
-    @SneakyThrows
     public void configure() {
-        var serviceRegistry = Mockito.mock(ServiceRegistryIf.class);
-        when(serviceRegistry.registerService(any(), any(), any())).thenReturn(new ServiceEndpoint("localhost", 9999));
+        try {
+            var serviceRegistry = Mockito.mock(ServiceRegistryIf.class);
+            when(serviceRegistry.registerService(any(), any(), any())).thenReturn(new ServiceEndpoint("localhost", 9999));
 
-        bind(ServiceRegistryIf.class).toInstance(serviceRegistry);
-        bind(HikariDataSource.class).toInstance(dataSource);
+            bind(ServiceRegistryIf.class).toInstance(serviceRegistry);
+            bind(HikariDataSource.class).toInstance(dataSource);
 
-        var qsMock = Mockito.mock(QueryClient.class);
-        when(qsMock.search(any())).thenReturn(searchResponse);
-        bind(QueryClient.class).toInstance(qsMock);
+            var qsMock = Mockito.mock(QueryClient.class);
+            when(qsMock.search(any())).thenReturn(searchResponse);
+            bind(QueryClient.class).toInstance(qsMock);
 
-        var asMock = Mockito.mock(DomainInfoClient.class);
+            var asMock = Mockito.mock(DomainInfoClient.class);
 
-        when(asMock.isAccepting()).thenReturn(true);
-        when(asMock.linkedDomains(anyInt(), anyInt())).thenReturn(CompletableFuture.completedFuture(dummyLinks));
-        when(asMock.similarDomains(anyInt(), anyInt())).thenReturn(CompletableFuture.completedFuture(dummyLinks));
-        when(asMock.domainInformation(anyInt())).thenReturn(CompletableFuture.completedFuture(
-                new DomainInformation(new EdgeDomain("www.example.com"),
-                        false,
-                        123,
-                        123,
-                        123,
-                        123,
-                        123,
-                        1,
-                        0.5,
-                        false,
-                        false,
-                        false,
-                        "127.0.0.1",
-                        1,
-                        "ACME",
-                        "CA",
-                        "CA",
-                        "Exemplary")
-        ));
+            when(asMock.isAccepting()).thenReturn(true);
+            when(asMock.linkedDomains(anyInt(), anyInt())).thenReturn(CompletableFuture.completedFuture(dummyLinks));
+            when(asMock.similarDomains(anyInt(), anyInt())).thenReturn(CompletableFuture.completedFuture(dummyLinks));
+            when(asMock.domainInformation(anyInt())).thenReturn(CompletableFuture.completedFuture(
+                    new DomainInformation(new EdgeDomain("www.example.com"),
+                            false,
+                            123,
+                            123,
+                            123,
+                            123,
+                            123,
+                            1,
+                            0.5,
+                            false,
+                            false,
+                            false,
+                            "127.0.0.1",
+                            1,
+                            "ACME",
+                            "CA",
+                            "CA",
+                            "Exemplary")
+            ));
 
-        bind(DomainInfoClient.class).toInstance(asMock);
+            bind(DomainInfoClient.class).toInstance(asMock);
 
-        var sss = Mockito.mock(ScreenshotService.class);
-        when(sss.hasScreenshot(anyInt())).thenReturn(true);
-        bind(ScreenshotService.class).toInstance(sss);
+            var sss = Mockito.mock(ScreenshotService.class);
+            when(sss.hasScreenshot(anyInt())).thenReturn(true);
+            bind(ScreenshotService.class).toInstance(sss);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

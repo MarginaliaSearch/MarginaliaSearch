@@ -1,7 +1,6 @@
 package nu.marginalia.service.server;
 
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +58,17 @@ public class Initialization {
         }
     }
 
-    @SneakyThrows
     public boolean waitReady() {
-        synchronized (this) {
-            while (!initialized) {
-                wait();
+        try {
+            synchronized (this) {
+                while (!initialized) {
+                    wait();
+                }
+                return true;
             }
-            return true;
+        }
+        catch (InterruptedException ex) {
+            throw new RuntimeException("Interrupted while waiting for initialization", ex);
         }
     }
 }

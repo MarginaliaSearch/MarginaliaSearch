@@ -2,7 +2,6 @@ package nu.marginalia.loading;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
@@ -45,8 +44,7 @@ public class LoaderIndexJournalWriter {
         currentWriter = new IndexJournalSlopWriter(journalPath, page++);
     }
 
-    @SneakyThrows
-    public void putWords(long header, SlopDocumentRecord.KeywordsProjection data)
+    public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
     {
         if (++recordsWritten > 200_000) {
             recordsWritten = 0;

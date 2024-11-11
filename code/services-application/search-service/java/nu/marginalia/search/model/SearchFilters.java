@@ -1,6 +1,5 @@
 package nu.marginalia.search.model;
 
-import lombok.Getter;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.*;
 
@@ -10,23 +9,42 @@ import java.util.List;
 public class SearchFilters {
     private final WebsiteUrl url;
 
-    @Getter
     public final String currentFilter;
 
     // These are necessary for the renderer to access the data
-    @Getter
     public final RemoveJsOption removeJsOption;
-    @Getter
     public final ReduceAdtechOption reduceAdtechOption;
-    @Getter
     public final ShowRecentOption showRecentOption;
-    @Getter
     public final SearchTitleOption searchTitleOption;
 
-    @Getter
     public final List<List<Filter>> filterGroups;
 
+    // Getters are for the renderer to access the data
 
+
+    public String getCurrentFilter() {
+        return currentFilter;
+    }
+
+    public RemoveJsOption getRemoveJsOption() {
+        return removeJsOption;
+    }
+
+    public ReduceAdtechOption getReduceAdtechOption() {
+        return reduceAdtechOption;
+    }
+
+    public ShowRecentOption getShowRecentOption() {
+        return showRecentOption;
+    }
+
+    public SearchTitleOption getSearchTitleOption() {
+        return searchTitleOption;
+    }
+
+    public List<List<Filter>> getFilterGroups() {
+        return filterGroups;
+    }
 
     public SearchFilters(WebsiteUrl url, SearchParameters parameters) {
         this.url = url;
@@ -66,8 +84,10 @@ public class SearchFilters {
     public class RemoveJsOption {
         private final SearchJsParameter value;
 
-        @Getter
         public final String url;
+        public String getUrl() {
+            return url;
+        }
 
         public boolean isSet() {
             return value.equals(SearchJsParameter.DENY_JS);
@@ -92,8 +112,10 @@ public class SearchFilters {
     public class ReduceAdtechOption {
         private final SearchAdtechParameter value;
 
-        @Getter
         public final String url;
+        public String getUrl() {
+            return url;
+        }
 
         public boolean isSet() {
             return value.equals(SearchAdtechParameter.REDUCE);
@@ -118,8 +140,10 @@ public class SearchFilters {
     public class ShowRecentOption {
         private final SearchRecentParameter value;
 
-        @Getter
         public final String url;
+        public String getUrl() {
+            return url;
+        }
 
         public boolean isSet() {
             return value.equals(SearchRecentParameter.RECENT);
@@ -144,8 +168,10 @@ public class SearchFilters {
     public class SearchTitleOption {
         private final SearchTitleParameter value;
 
-        @Getter
         public final String url;
+        public String getUrl() {
+            return url;
+        }
 
         public boolean isSet() {
             return value.equals(SearchTitleParameter.TITLE);
@@ -168,14 +194,10 @@ public class SearchFilters {
     }
 
     public class Filter {
-        @Getter
-        public final String displayName;
-
         public final SearchProfile profile;
 
-        @Getter
+        public final String displayName;
         public final boolean current;
-        @Getter
         public final String url;
 
         public Filter(String displayName, SearchProfile profile, SearchParameters parameters) {
@@ -186,5 +208,16 @@ public class SearchFilters {
             this.url = parameters.withProfile(profile).renderUrl(SearchFilters.this.url);
         }
 
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public boolean isCurrent() {
+            return current;
+        }
+
+        public String getUrl() {
+            return url;
+        }
     }
 }

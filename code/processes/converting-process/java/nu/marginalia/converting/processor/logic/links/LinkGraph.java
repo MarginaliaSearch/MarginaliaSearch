@@ -1,13 +1,11 @@
 package nu.marginalia.converting.processor.logic.links;
 
-import lombok.Getter;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 
-@Getter
 public class LinkGraph {
     private final Map<EdgeUrl, Set<EdgeUrl>> graph = new HashMap<>(1000);
 

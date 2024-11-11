@@ -1,7 +1,6 @@
 package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.actor.ControlActor;
@@ -11,8 +10,8 @@ import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.ServiceId;
+import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageType;
 import spark.Request;
@@ -60,41 +59,48 @@ public class ControlSysActionsService {
         return mqFactory.createOutbox(inboxName, 0, outboxName, 0, UUID.randomUUID());
     }
 
-    @SneakyThrows
     public void register() {
-        var actionsView = rendererFactory.renderer("control/sys/sys-actions");
+        try {
+            var actionsView = rendererFactory.renderer("control/sys/sys-actions");
 
-        Spark.get("/actions", this::actionsModel, actionsView::render);
-        Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
-        Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
-        Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
-        Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
-        Spark.post("/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
-        Spark.post("/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
+            Spark.get("/actions", this::actionsModel, actionsView::render);
+            Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
+            Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
+            Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
+            Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
+            Spark.post("/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
+            Spark.post("/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     private Object actionsModel(Request request, Response response) {
+        try {
+            List<Map<String, Object>> eligibleNodes = new ArrayList<>();
+            for (var node : nodeConfigurationService.getAll()) {
+                if (!node.includeInPrecession()) {
+                    continue;
+                }
 
-        List<Map<String, Object>> eligibleNodes = new ArrayList<>();
-        for (var node : nodeConfigurationService.getAll()) {
-            if (!node.includeInPrecession()) {
-                continue;
+                Map<String, Object> properties = new HashMap<>();
+                properties.put("node", node);
+                properties.put("include", node.includeInPrecession());
+
+                var storageIdMaybe = fileStorageService.getActiveFileStorages(node.node(), FileStorageType.CRAWL_DATA).stream().findFirst();
+                if (storageIdMaybe.isPresent()) {
+                    properties.put("storage", fileStorageService.getStorage(storageIdMaybe.get()));
+                }
+
+                eligibleNodes.add(properties);
             }
 
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("node", node);
-            properties.put("include", node.includeInPrecession());
-
-            var storageIdMaybe = fileStorageService.getActiveFileStorages(node.node(), FileStorageType.CRAWL_DATA).stream().findFirst();
-            if(storageIdMaybe.isPresent()) {
-                properties.put("storage", fileStorageService.getStorage(storageIdMaybe.get()));
-            }
-
-            eligibleNodes.add(properties);
+            return Map.of("precessionNodes", eligibleNodes);
         }
-
-        return Map.of("precessionNodes", eligibleNodes);
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Object reloadBlogsList(Request request, Response response) throws Exception {

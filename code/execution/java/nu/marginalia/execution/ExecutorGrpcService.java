@@ -2,7 +2,6 @@ package nu.marginalia.execution;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
-import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.actor.ActorApi;
 import nu.marginalia.actor.ExecutorActor;
@@ -228,13 +227,17 @@ public class ExecutorGrpcService
         }
     }
 
-    @SneakyThrows
     private RpcFileStorageEntry createFileModel(Path path) {
-        return RpcFileStorageEntry.newBuilder()
-                .setName(path.toFile().getName())
-                .setSize(Files.size(path))
-                .setLastModifiedTime(Files.getLastModifiedTime(path).toInstant().toString())
-                .build();
+        try {
+            return RpcFileStorageEntry.newBuilder()
+                    .setName(path.toFile().getName())
+                    .setSize(Files.size(path))
+                    .setLastModifiedTime(Files.getLastModifiedTime(path).toInstant().toString())
+                    .build();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

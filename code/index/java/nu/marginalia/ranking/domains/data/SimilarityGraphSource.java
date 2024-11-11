@@ -2,7 +2,6 @@ package nu.marginalia.ranking.domains.data;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -35,14 +34,13 @@ public class SimilarityGraphSource extends AbstractGraphSource {
         }
     }
 
-    @SneakyThrows
     @Override
     public Graph<Integer, ?> getGraph() {
         Graph<Integer, ?> graph = new DefaultUndirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
-        addVertices(graph);
-
         try (var conn = dataSource.getConnection()) {
+            addVertices(graph);
+
             try (var stmt = conn.prepareStatement("""
                 SELECT DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS
                 FROM EC_DOMAIN_NEIGHBORS_2
@@ -66,6 +64,9 @@ public class SimilarityGraphSource extends AbstractGraphSource {
                     graph.setEdgeWeight(src, dest, weight);
                 }
             }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
 
         return graph;

@@ -1,10 +1,7 @@
 package nu.marginalia.functions.math.eval;
 
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.ToString;
-
 import com.google.inject.Singleton;
+
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -44,7 +41,6 @@ public class MathParser {
         }
     }
 
-    @SneakyThrows
     public double eval(String inputExpression) throws ParseException {
         if (isTrivial.test(inputExpression)) {
             return Double.parseDouble(inputExpression);
@@ -243,9 +239,12 @@ public class MathParser {
     }
 }
 
-@AllArgsConstructor  @ToString
 class Token {
     public final char tokenType;
+
+    public Token(char tokenType) {
+        this.tokenType = tokenType;
+    }
 
     public double evaluate() {
         throw new IllegalArgumentException("Can't evaluate" + this);
@@ -254,9 +253,12 @@ class Token {
     public void transform(Function<List<Token>, List<Token>> mapper) {
 
     }
+
+    public String toString() {
+        return "Token(tokenType=" + this.tokenType + ")";
+    }
 }
 
-@ToString
 class StringToken extends Token {
     public final String value;
 
@@ -273,6 +275,10 @@ class StringToken extends Token {
         }
 
         return Double.parseDouble(value);
+    }
+
+    public String toString() {
+        return "StringToken(value=" + this.value + ")";
     }
 }
 
@@ -302,7 +308,6 @@ class UniExpression extends Token {
     }
 }
 
-@ToString
 class GroupExpression extends Token {
     public List<Token> argument;
 
@@ -322,6 +327,10 @@ class GroupExpression extends Token {
 
     public void transform(Function<List<Token>, List<Token>> mapper) {
         argument = mapper.apply(argument);
+    }
+
+    public String toString() {
+        return "GroupExpression(argument=" + this.argument + ")";
     }
 }
 

@@ -2,7 +2,6 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.DomainComplaintCategory;
@@ -63,22 +62,28 @@ public class DomainComplaintService {
         return Map.of("complaintsNew", unreviewed, "complaintsReviewed", reviewed);
     }
 
-    @SneakyThrows
     private Object reviewComplaint(Request request, Response response) {
         var domain = new EdgeDomain(request.params("domain"));
         String action = request.queryParams("action");
 
         logger.info("Reviewing complaint for domain {} with action {}", domain, action);
 
-        switch (action) {
-            case "noop" -> reviewNoAction(domain);
-            case "appeal" -> approveAppealBlacklisting(domain);
-            case "no-random" -> removeFromRandomDomains(domain);
-            case "blacklist" -> blacklistDomain(domain);
-            default -> throw new UnsupportedOperationException();
-        }
+        try {
+            switch (action) {
+                case "noop" -> reviewNoAction(domain);
+                case "appeal" -> approveAppealBlacklisting(domain);
+                case "no-random" -> removeFromRandomDomains(domain);
+                case "blacklist" -> blacklistDomain(domain);
+                default -> throw new UnsupportedOperationException();
+            }
 
-        return "";
+            return "";
+        }
+        catch (Exception ex) {
+            logger.error("Error reviewing complaint for domain " + domain, ex);
+            Spark.halt(500);
+            return "";
+        }
     }
 
     public List<DomainComplaintModel> getComplaints() {

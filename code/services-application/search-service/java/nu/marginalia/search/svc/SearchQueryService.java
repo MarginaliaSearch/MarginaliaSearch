@@ -1,7 +1,6 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.CommandEvaluator;
 import nu.marginalia.search.command.SearchParameters;
@@ -28,7 +27,6 @@ public class SearchQueryService {
         this.searchCommandEvaulator = searchCommandEvaulator;
     }
 
-    @SneakyThrows
     public Object pathSearch(Request request, Response response) {
         try {
             return searchCommandEvaulator.eval(response, parseParameters(request));

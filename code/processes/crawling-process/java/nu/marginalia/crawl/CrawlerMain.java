@@ -5,7 +5,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.Builder;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.UserAgent;
@@ -475,7 +474,6 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
-    @Builder
     public record CrawlSpecRecord(@NotNull String domain, int crawlDepth, @NotNull List<String> urls) {
 
         public CrawlSpecRecord(String domain, int crawlDepth) {
@@ -487,13 +485,48 @@ public class CrawlerMain extends ProcessMainClass {
             // already fetched, and a growth factor that gets a bonus for small domains
             return new CrawlSpecRecord(domain,
                     (int) Math.clamp(
-                    (visitedUrls * (visitedUrls < MID_URLS_PER_DOMAIN
-                            ? Math.max(2.5, URL_GROWTH_FACTOR)
-                            : URL_GROWTH_FACTOR)
-                    ),
-                    MIN_URLS_PER_DOMAIN,
-                    MAX_URLS_PER_DOMAIN));
+                            (visitedUrls * (visitedUrls < MID_URLS_PER_DOMAIN
+                                    ? Math.max(2.5, URL_GROWTH_FACTOR)
+                                    : URL_GROWTH_FACTOR)
+                            ),
+                            MIN_URLS_PER_DOMAIN,
+                            MAX_URLS_PER_DOMAIN));
         }
 
+        public static CrawlSpecRecordBuilder builder() {
+            return new CrawlSpecRecordBuilder();
+        }
+
+        public static class CrawlSpecRecordBuilder {
+            private @NotNull String domain;
+            private int crawlDepth;
+            private @NotNull List<String> urls;
+
+            CrawlSpecRecordBuilder() {
+            }
+
+            public CrawlSpecRecordBuilder domain(@NotNull String domain) {
+                this.domain = domain;
+                return this;
+            }
+
+            public CrawlSpecRecordBuilder crawlDepth(int crawlDepth) {
+                this.crawlDepth = crawlDepth;
+                return this;
+            }
+
+            public CrawlSpecRecordBuilder urls(@NotNull List<String> urls) {
+                this.urls = urls;
+                return this;
+            }
+
+            public CrawlSpecRecord build() {
+                return new CrawlSpecRecord(this.domain, this.crawlDepth, this.urls);
+            }
+
+            public String toString() {
+                return "CrawlerMain.CrawlSpecRecord.CrawlSpecRecordBuilder(domain=" + this.domain + ", crawlDepth=" + this.crawlDepth + ", urls=" + this.urls + ")";
+            }
+        }
     }
 }

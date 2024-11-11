@@ -21,6 +21,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,7 +58,7 @@ public class AbortedProcessService {
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
-    public void register() {
+    public void register() throws IOException {
         var abortedProcessesRenderer = rendererFactory.renderer("control/sys/aborted-processes");
 
         Spark.get("/aborted-processes", this::abortedProcessesModel, abortedProcessesRenderer::render);

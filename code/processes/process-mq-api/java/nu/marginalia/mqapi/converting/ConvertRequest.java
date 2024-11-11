@@ -1,17 +1,23 @@
 package nu.marginalia.mqapi.converting;
 
-import lombok.AllArgsConstructor;
 import nu.marginalia.storage.model.FileStorageId;
 
 import java.nio.file.Path;
 
-@AllArgsConstructor
 public class ConvertRequest {
     public final ConvertAction action;
     public final String inputSource;
     public final FileStorageId crawlStorage;
     public final FileStorageId processedDataStorage;
     public final String baseUrl;
+
+    public ConvertRequest(ConvertAction action, String inputSource, FileStorageId crawlStorage, FileStorageId processedDataStorage, String baseUrl) {
+        this.action = action;
+        this.inputSource = inputSource;
+        this.crawlStorage = crawlStorage;
+        this.processedDataStorage = processedDataStorage;
+        this.baseUrl = baseUrl;
+    }
 
     public Path getInputPath() {
         if (inputSource == null)
@@ -45,6 +51,7 @@ public class ConvertRequest {
                 destId,
                 null);
     }
+
     public static ConvertRequest forWarc(Path sourcePath, FileStorageId destId) {
         return new ConvertRequest(ConvertAction.SideloadWarc,
                 sourcePath.toString(),
@@ -52,6 +59,7 @@ public class ConvertRequest {
                 destId,
                 null);
     }
+
     public static ConvertRequest forReddit(Path sourcePath, FileStorageId destId) {
         return new ConvertRequest(ConvertAction.SideloadReddit,
                 sourcePath.toString(),
@@ -59,6 +67,7 @@ public class ConvertRequest {
                 destId,
                 null);
     }
+
     public static ConvertRequest forStackexchange(Path sourcePath, FileStorageId destId) {
         return new ConvertRequest(ConvertAction.SideloadStackexchange,
                 sourcePath.toString(),

@@ -3,7 +3,6 @@ package nu.marginalia.integration.stackexchange.sqlite;
 import com.github.luben.zstd.Zstd;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
-import lombok.SneakyThrows;
 import nu.marginalia.integration.stackexchange.xml.StackExchangeXmlPostReader;
 
 import javax.xml.stream.XMLStreamException;
@@ -15,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -32,10 +32,9 @@ import java.util.function.Predicate;
 public class StackExchangePostsDb {
 
     /** Construct a SQLIte file containing the Posts in the stack exchange-style 7z file */
-    @SneakyThrows
     public static void create(String domain,
                               Path sqliteFile,
-                              Path stackExchange7zFile) {
+                              Path stackExchange7zFile) throws IOException {
         Files.deleteIfExists(sqliteFile);
 
         String connStr = "jdbc:sqlite:" + sqliteFile;
@@ -115,7 +114,6 @@ public class StackExchangePostsDb {
      * necessary as stackexchange's entry count exceeds the ~67 million entries that UrlIdCodec can encode
      * for a single domain, despite having less than 67 million 'threads'.
      * */
-    @SneakyThrows
     public static void forEachPost(
             Path sqliteFile,
             Predicate<CombinedPostModel> consumer) {
@@ -189,8 +187,8 @@ public class StackExchangePostsDb {
             }
 
         }
-        catch (SQLException ex) {
-            ex.printStackTrace();
+        catch (SQLException | InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ex);
         }
 
     }

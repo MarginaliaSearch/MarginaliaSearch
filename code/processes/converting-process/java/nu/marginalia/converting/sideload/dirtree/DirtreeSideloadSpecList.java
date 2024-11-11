@@ -1,14 +1,22 @@
 package nu.marginalia.converting.sideload.dirtree;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.List;
 
-@AllArgsConstructor @NoArgsConstructor
-@Setter @Getter
 class DirtreeSideloadSpecList {
     public List<DirtreeSideloadSpec> sources;
+
+    public DirtreeSideloadSpecList(List<DirtreeSideloadSpec> sources) {
+        this.sources = sources;
+    }
+
+    public DirtreeSideloadSpecList() {
+    }
+
+    public List<DirtreeSideloadSpec> getSources() {
+        return this.sources;
+    }
+
+    public void setSources(List<DirtreeSideloadSpec> sources) {
+        this.sources = sources;
+    }
 }

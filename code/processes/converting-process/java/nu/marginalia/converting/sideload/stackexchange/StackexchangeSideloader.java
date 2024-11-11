@@ -1,6 +1,5 @@
 package nu.marginalia.converting.sideload.stackexchange;
 
-import lombok.SneakyThrows;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
@@ -39,15 +38,19 @@ public class StackexchangeSideloader implements SideloadSource {
 
     private final Path dbFile;
 
-    @SneakyThrows
     public StackexchangeSideloader(Path pathToDbFile,
                                    ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                    DocumentKeywordExtractor keywordExtractor
     ) {
-        this.dbFile = pathToDbFile;
-        this.domainName = StackExchangePostsDb.getDomainName(pathToDbFile);
-        this.sentenceExtractorProvider = sentenceExtractorProvider;
-        this.keywordExtractor = keywordExtractor;
+        try {
+            this.dbFile = pathToDbFile;
+            this.domainName = StackExchangePostsDb.getDomainName(pathToDbFile);
+            this.sentenceExtractorProvider = sentenceExtractorProvider;
+            this.keywordExtractor = keywordExtractor;
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -80,12 +83,16 @@ public class StackexchangeSideloader implements SideloadSource {
 
             ProcessedDocument nextModel = null;
 
-            @SneakyThrows
             @Override
             public boolean hasNext() {
                 if (nextModel != null)
                     return true;
-                nextModel = postsReader.next();
+                try {
+                    nextModel = postsReader.next();
+                }
+                catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
 
                 return nextModel != null;
             }
@@ -103,7 +110,6 @@ public class StackexchangeSideloader implements SideloadSource {
         };
     }
 
-    @SneakyThrows
     private ProcessedDocument convert(StackExchangePostsDb.CombinedPostModel post) {
         String fullUrl = "https://" + domainName + "/questions/" + post.threadId();
 
@@ -163,7 +169,7 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.stateReason = "SIDELOAD";
         }
         catch (Exception e) {
-            ret.url = new EdgeUrl(fullUrl);
+            ret.url = EdgeUrl.parse(fullUrl).orElseThrow();
             ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = "SIDELOAD";
         }
@@ -186,9 +192,14 @@ public class StackexchangeSideloader implements SideloadSource {
             }
         }
 
-        @SneakyThrows
         private boolean enqueue(StackExchangePostsDb.CombinedPostModel model) {
-            pool.submit(() -> results.put(convert(model)));
+            try {
+                pool.submit(() -> results.put(convert(model)));
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
 
             return true;
         }

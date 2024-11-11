@@ -1,8 +1,5 @@
 package nu.marginalia.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 import nu.marginalia.util.QueryParams;
 
 import javax.annotation.Nullable;
@@ -15,7 +12,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-@Getter @Setter @Builder
 public class EdgeUrl implements Serializable {
     public final String proto;
     public final EdgeDomain domain;
@@ -38,8 +34,7 @@ public class EdgeUrl implements Serializable {
     private static URI parseURI(String url) throws URISyntaxException {
         try {
             return new URI(urlencodeFixer(url));
-        }
-        catch (URISyntaxException ex) {
+        } catch (URISyntaxException ex) {
             throw new URISyntaxException("Failed to parse URI '" + url + "'", ex.getMessage());
         }
     }
@@ -83,20 +78,17 @@ public class EdgeUrl implements Serializable {
         for (int i = pathIdx; i < end; i++) {
             int c = url.charAt(i);
 
-            if (goodChars.indexOf(c) >= 0 || (c >= 'A' && c <='Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            if (goodChars.indexOf(c) >= 0 || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
                 s.appendCodePoint(c);
-            }
-            else if (c == '%' && i+2<end) {
-                int cn = url.charAt(i+1);
-                int cnn = url.charAt(i+2);
+            } else if (c == '%' && i + 2 < end) {
+                int cn = url.charAt(i + 1);
+                int cnn = url.charAt(i + 2);
                 if (hexChars.indexOf(cn) >= 0 && hexChars.indexOf(cnn) >= 0) {
                     s.appendCodePoint(c);
-                }
-                else {
+                } else {
                     s.append("%25");
                 }
-            }
-            else {
+            } else {
                 s.append(String.format("%%%02X", c));
             }
         }
@@ -109,7 +101,7 @@ public class EdgeUrl implements Serializable {
         if (colonIdx < 0 || colonIdx + 2 >= url.length()) {
             throw new URISyntaxException(url, "Lacking protocol");
         }
-        return url.indexOf('/', colonIdx+2);
+        return url.indexOf('/', colonIdx + 2);
     }
 
     public EdgeUrl(URI URI) {
@@ -125,8 +117,7 @@ public class EdgeUrl implements Serializable {
             this.proto = URI.getScheme().toLowerCase();
             this.port = port(URI.getPort(), proto);
             this.param = QueryParams.queryParamsSanitizer(this.path, URI.getQuery());
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.err.println("Failed to parse " + URI);
             throw ex;
         }
@@ -145,8 +136,7 @@ public class EdgeUrl implements Serializable {
             this.proto = URL.getProtocol().toLowerCase();
             this.port = port(URL.getPort(), proto);
             this.param = QueryParams.queryParamsSanitizer(this.path, URL.getQuery());
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.err.println("Failed to parse " + URL);
             throw ex;
         }
@@ -158,11 +148,14 @@ public class EdgeUrl implements Serializable {
         }
         if (protocol.equals("http") && port == 80) {
             return null;
-        }
-        else if (protocol.equals("https") && port == 443) {
+        } else if (protocol.equals("https") && port == 443) {
             return null;
         }
         return port;
+    }
+
+    public static EdgeUrlBuilder builder() {
+        return new EdgeUrlBuilder();
     }
 
     public String toString() {
@@ -190,12 +183,13 @@ public class EdgeUrl implements Serializable {
     public String dir() {
         return path.replaceAll("/[^/]+$", "/");
     }
+
     public String fileName() {
         return path.replaceAll(".*/", "");
     }
 
     public int depth() {
-        return (int) path.chars().filter(c -> c=='/').count();
+        return (int) path.chars().filter(c -> c == '/').count();
     }
 
     public EdgeUrl withPathAndParam(String path, String param) {
@@ -207,8 +201,8 @@ public class EdgeUrl implements Serializable {
         if (other == this) return true;
         if (other instanceof EdgeUrl e) {
             return Objects.equals(e.domain, domain)
-                && Objects.equals(e.path, path)
-                && Objects.equals(e.param, param);
+                    && Objects.equals(e.path, path)
+                    && Objects.equals(e.param, param);
         }
 
         return true;
@@ -235,8 +229,7 @@ public class EdgeUrl implements Serializable {
     public URL asURL() throws MalformedURLException {
         try {
             return asURI().toURL();
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw new MalformedURLException(e.getMessage());
         }
     }
@@ -247,5 +240,69 @@ public class EdgeUrl implements Serializable {
         }
 
         return new URI(this.proto, this.domain.toString(), this.path, this.param, null);
+    }
+
+    public String getProto() {
+        return this.proto;
+    }
+
+    public EdgeDomain getDomain() {
+        return this.domain;
+    }
+
+    public Integer getPort() {
+        return this.port;
+    }
+
+    public String getPath() {
+        return this.path;
+    }
+
+    public String getParam() {
+        return this.param;
+    }
+
+    public static class EdgeUrlBuilder {
+        private String proto;
+        private EdgeDomain domain;
+        private Integer port;
+        private String path;
+        private String param;
+
+        EdgeUrlBuilder() {
+        }
+
+        public EdgeUrlBuilder proto(String proto) {
+            this.proto = proto;
+            return this;
+        }
+
+        public EdgeUrlBuilder domain(EdgeDomain domain) {
+            this.domain = domain;
+            return this;
+        }
+
+        public EdgeUrlBuilder port(Integer port) {
+            this.port = port;
+            return this;
+        }
+
+        public EdgeUrlBuilder path(String path) {
+            this.path = path;
+            return this;
+        }
+
+        public EdgeUrlBuilder param(String param) {
+            this.param = param;
+            return this;
+        }
+
+        public EdgeUrl build() {
+            return new EdgeUrl(this.proto, this.domain, this.port, this.path, this.param);
+        }
+
+        public String toString() {
+            return "EdgeUrl.EdgeUrlBuilder(proto=" + this.proto + ", domain=" + this.domain + ", port=" + this.port + ", path=" + this.path + ", param=" + this.param + ")";
+        }
     }
 }

@@ -1,11 +1,9 @@
 package nu.marginalia.api.searchquery.model.results;
 
-import lombok.ToString;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 
 import java.util.BitSet;
 
-@ToString
 public class ResultRankingContext {
     private final int docCount;
     public final ResultRankingParameters params;
@@ -43,4 +41,15 @@ public class ResultRankingContext {
         return docCount;
     }
 
+    @Override
+    public String toString() {
+        return "ResultRankingContext{" +
+                "docCount=" + docCount +
+                ", params=" + params +
+                ", regularMask=" + regularMask +
+                ", ngramsMask=" + ngramsMask +
+                ", fullCounts=" + fullCounts +
+                ", priorityCounts=" + priorityCounts +
+                '}';
+    }
 }

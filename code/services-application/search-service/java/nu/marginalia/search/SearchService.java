@@ -3,10 +3,11 @@ package nu.marginalia.search;
 import com.google.inject.Inject;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
-import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.svc.*;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -35,7 +36,6 @@ public class SearchService extends Service {
             .help("Search service error count")
             .register();
 
-    @SneakyThrows
     @Inject
     public SearchService(BaseServiceParams params,
                          WebsiteUrl websiteUrl,
@@ -45,8 +45,9 @@ public class SearchService extends Service {
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchSiteInfoService siteInfoService,
                          SearchCrosstalkService crosstalkService,
-                         SearchQueryService searchQueryService
-                             ) {
+                         SearchQueryService searchQueryService)
+    throws Exception
+    {
         super(params);
 
         this.websiteUrl = websiteUrl;

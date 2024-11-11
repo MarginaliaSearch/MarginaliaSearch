@@ -1,12 +1,9 @@
 package nu.marginalia.language.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-@AllArgsConstructor @Getter
 public class WordRep implements Comparable<WordRep> {
 
     public WordRep(DocumentSentence sent, WordSpan span) {
@@ -21,6 +18,13 @@ public class WordRep implements Comparable<WordRep> {
     public final String word;
     public final String stemmed;
     private final int hashCode;
+
+    public WordRep(int length, String word, String stemmed, int hashCode) {
+        this.length = length;
+        this.word = word;
+        this.stemmed = stemmed;
+        this.hashCode = hashCode;
+    }
 
     @Override
     public int compareTo(@NotNull WordRep o) {
@@ -42,5 +46,21 @@ public class WordRep implements Comparable<WordRep> {
             return Objects.equals(wr.word, word);
         }
         return false;
+    }
+
+    public int getLength() {
+        return this.length;
+    }
+
+    public String getWord() {
+        return this.word;
+    }
+
+    public String getStemmed() {
+        return this.stemmed;
+    }
+
+    public int getHashCode() {
+        return this.hashCode;
     }
 }

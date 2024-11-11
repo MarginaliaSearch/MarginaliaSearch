@@ -2,7 +2,6 @@ package nu.marginalia.converting;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import lombok.SneakyThrows;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.ProcessedDomain;
@@ -48,16 +47,14 @@ public class CrawlingThenConvertingIntegrationTest {
     private Path fileName;
     private Path fileName2;
 
-    @SneakyThrows
     @BeforeAll
     public static void setUpAll() {
         // this must be done to avoid java inserting its own user agent for the sitemap requests
         System.setProperty("http.agent", WmsaHome.getUserAgent().uaString());
     }
 
-    @SneakyThrows
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws IOException {
         Injector injector = Guice.createInjector(
                 new ConvertingIntegrationTestModule()
         );

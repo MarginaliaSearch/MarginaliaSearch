@@ -2,7 +2,6 @@ package nu.marginalia.control.node.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.storage.FileStorageService;
@@ -41,12 +40,14 @@ public class ControlFileStorageService {
 
     }
 
-    @SneakyThrows
     public String redirectToOverview(int nodeId) {
-        return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
+        try {
+            return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public String redirectToOverview(Request request) {
         return redirectToOverview(Integer.parseInt(request.params("id")));
     }

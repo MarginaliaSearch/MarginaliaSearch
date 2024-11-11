@@ -1,9 +1,9 @@
 package nu.marginalia.api.domains;
 
-import lombok.SneakyThrows;
+import nu.marginalia.api.domains.model.DomainInformation;
+import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.api.domains.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +28,22 @@ public class DomainsProtobufCodec {
             return ret;
         }
 
-        @SneakyThrows
         private static SimilarDomain convertResponseEntry(RpcSimilarDomain sd) {
-            return new SimilarDomain(
-                    new EdgeUrl(sd.getUrl()),
-                    sd.getDomainId(),
-                    sd.getRelatedness(),
-                    sd.getRank(),
-                    sd.getIndexed(),
-                    sd.getActive(),
-                    sd.getScreenshot(),
-                    SimilarDomain.LinkType.valueOf(sd.getLinkType().name())
-            );
+            try {
+                return new SimilarDomain(
+                        new EdgeUrl(sd.getUrl()),
+                        sd.getDomainId(),
+                        sd.getRelatedness(),
+                        sd.getRank(),
+                        sd.getIndexed(),
+                        sd.getActive(),
+                        sd.getScreenshot(),
+                        SimilarDomain.LinkType.valueOf(sd.getLinkType().name())
+                );
+            }
+            catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
