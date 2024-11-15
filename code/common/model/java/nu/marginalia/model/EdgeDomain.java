@@ -60,10 +60,6 @@ public class EdgeDomain implements Serializable {
         this.topDomain = topDomain;
     }
 
-    public static EdgeDomainBuilder builder() {
-        return new EdgeDomainBuilder();
-    }
-
     private boolean looksLikeGovTld(String host) {
         if (host.length() < 8)
             return false;
@@ -196,31 +192,5 @@ public class EdgeDomain implements Serializable {
     @Nonnull
     public String getTopDomain() {
         return this.topDomain;
-    }
-
-    public static class EdgeDomainBuilder {
-        private String subDomain;
-        private String topDomain;
-
-        EdgeDomainBuilder() {
-        }
-
-        public EdgeDomainBuilder subDomain(String subDomain) {
-            this.subDomain = subDomain;
-            return this;
-        }
-
-        public EdgeDomainBuilder topDomain(String topDomain) {
-            this.topDomain = topDomain;
-            return this;
-        }
-
-        public EdgeDomain build() {
-            return new EdgeDomain(this.subDomain, this.topDomain);
-        }
-
-        public String toString() {
-            return "EdgeDomain.EdgeDomainBuilder(subDomain=" + this.subDomain + ", topDomain=" + this.topDomain + ")";
-        }
     }
 }

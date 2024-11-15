@@ -1,5 +1,7 @@
 package nu.marginalia.api.searchquery.model.results;
 
+import java.util.Objects;
+
 public class ResultRankingParameters {
 
     /**
@@ -141,66 +143,30 @@ public class ResultRankingParameters {
         return this.exportDebugData;
     }
 
-    public boolean equals(final Object o) {
-        if (o == this) return true;
-        if (!(o instanceof ResultRankingParameters)) return false;
-        final ResultRankingParameters other = (ResultRankingParameters) o;
-        if (!other.canEqual((Object) this)) return false;
-        final Object this$bm25Params = this.getBm25Params();
-        final Object other$bm25Params = other.getBm25Params();
-        if (this$bm25Params == null ? other$bm25Params != null : !this$bm25Params.equals(other$bm25Params))
-            return false;
-        if (this.getShortDocumentThreshold() != other.getShortDocumentThreshold()) return false;
-        if (Double.compare(this.getShortDocumentPenalty(), other.getShortDocumentPenalty()) != 0) return false;
-        if (Double.compare(this.getDomainRankBonus(), other.getDomainRankBonus()) != 0) return false;
-        if (Double.compare(this.getQualityPenalty(), other.getQualityPenalty()) != 0) return false;
-        if (this.getShortSentenceThreshold() != other.getShortSentenceThreshold()) return false;
-        if (Double.compare(this.getShortSentencePenalty(), other.getShortSentencePenalty()) != 0) return false;
-        if (Double.compare(this.getBm25Weight(), other.getBm25Weight()) != 0) return false;
-        if (Double.compare(this.getTcfFirstPosition(), other.getTcfFirstPosition()) != 0) return false;
-        if (Double.compare(this.getTcfVerbatim(), other.getTcfVerbatim()) != 0) return false;
-        if (Double.compare(this.getTcfProximity(), other.getTcfProximity()) != 0) return false;
-        final Object this$temporalBias = this.getTemporalBias();
-        final Object other$temporalBias = other.getTemporalBias();
-        if (this$temporalBias == null ? other$temporalBias != null : !this$temporalBias.equals(other$temporalBias))
-            return false;
-        if (Double.compare(this.getTemporalBiasWeight(), other.getTemporalBiasWeight()) != 0) return false;
-        if (this.isExportDebugData() != other.isExportDebugData()) return false;
-        return true;
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ResultRankingParameters that)) return false;
+
+        return shortDocumentThreshold == that.shortDocumentThreshold && Double.compare(shortDocumentPenalty, that.shortDocumentPenalty) == 0 && Double.compare(domainRankBonus, that.domainRankBonus) == 0 && Double.compare(qualityPenalty, that.qualityPenalty) == 0 && shortSentenceThreshold == that.shortSentenceThreshold && Double.compare(shortSentencePenalty, that.shortSentencePenalty) == 0 && Double.compare(bm25Weight, that.bm25Weight) == 0 && Double.compare(tcfFirstPosition, that.tcfFirstPosition) == 0 && Double.compare(tcfVerbatim, that.tcfVerbatim) == 0 && Double.compare(tcfProximity, that.tcfProximity) == 0 && Double.compare(temporalBiasWeight, that.temporalBiasWeight) == 0 && exportDebugData == that.exportDebugData && Objects.equals(bm25Params, that.bm25Params) && temporalBias == that.temporalBias;
     }
 
-    protected boolean canEqual(final Object other) {
-        return other instanceof ResultRankingParameters;
-    }
-
+    @Override
     public int hashCode() {
-        final int PRIME = 59;
-        int result = 1;
-        final Object $bm25Params = this.getBm25Params();
-        result = result * PRIME + ($bm25Params == null ? 43 : $bm25Params.hashCode());
-        result = result * PRIME + this.getShortDocumentThreshold();
-        final long $shortDocumentPenalty = Double.doubleToLongBits(this.getShortDocumentPenalty());
-        result = result * PRIME + (int) ($shortDocumentPenalty >>> 32 ^ $shortDocumentPenalty);
-        final long $domainRankBonus = Double.doubleToLongBits(this.getDomainRankBonus());
-        result = result * PRIME + (int) ($domainRankBonus >>> 32 ^ $domainRankBonus);
-        final long $qualityPenalty = Double.doubleToLongBits(this.getQualityPenalty());
-        result = result * PRIME + (int) ($qualityPenalty >>> 32 ^ $qualityPenalty);
-        result = result * PRIME + this.getShortSentenceThreshold();
-        final long $shortSentencePenalty = Double.doubleToLongBits(this.getShortSentencePenalty());
-        result = result * PRIME + (int) ($shortSentencePenalty >>> 32 ^ $shortSentencePenalty);
-        final long $bm25Weight = Double.doubleToLongBits(this.getBm25Weight());
-        result = result * PRIME + (int) ($bm25Weight >>> 32 ^ $bm25Weight);
-        final long $tcfFirstPosition = Double.doubleToLongBits(this.getTcfFirstPosition());
-        result = result * PRIME + (int) ($tcfFirstPosition >>> 32 ^ $tcfFirstPosition);
-        final long $tcfVerbatim = Double.doubleToLongBits(this.getTcfVerbatim());
-        result = result * PRIME + (int) ($tcfVerbatim >>> 32 ^ $tcfVerbatim);
-        final long $tcfProximity = Double.doubleToLongBits(this.getTcfProximity());
-        result = result * PRIME + (int) ($tcfProximity >>> 32 ^ $tcfProximity);
-        final Object $temporalBias = this.getTemporalBias();
-        result = result * PRIME + ($temporalBias == null ? 43 : $temporalBias.hashCode());
-        final long $temporalBiasWeight = Double.doubleToLongBits(this.getTemporalBiasWeight());
-        result = result * PRIME + (int) ($temporalBiasWeight >>> 32 ^ $temporalBiasWeight);
-        result = result * PRIME + (this.isExportDebugData() ? 79 : 97);
+        int result = Objects.hashCode(bm25Params);
+        result = 31 * result + shortDocumentThreshold;
+        result = 31 * result + Double.hashCode(shortDocumentPenalty);
+        result = 31 * result + Double.hashCode(domainRankBonus);
+        result = 31 * result + Double.hashCode(qualityPenalty);
+        result = 31 * result + shortSentenceThreshold;
+        result = 31 * result + Double.hashCode(shortSentencePenalty);
+        result = 31 * result + Double.hashCode(bm25Weight);
+        result = 31 * result + Double.hashCode(tcfFirstPosition);
+        result = 31 * result + Double.hashCode(tcfVerbatim);
+        result = 31 * result + Double.hashCode(tcfProximity);
+        result = 31 * result + Objects.hashCode(temporalBias);
+        result = 31 * result + Double.hashCode(temporalBiasWeight);
+        result = 31 * result + Boolean.hashCode(exportDebugData);
         return result;
     }
 

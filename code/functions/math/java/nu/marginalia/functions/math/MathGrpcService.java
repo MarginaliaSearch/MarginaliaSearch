@@ -39,12 +39,12 @@ public class MathGrpcService
                 .newBuilder()
                 .setWord(request.getWord());
 
-        for (var def : definition.entries) {
+        for (var def : definition.entries()) {
             responseBuilder.addEntries(
                     RpcDictionaryEntry.newBuilder()
-                            .setWord(def.word)
-                            .setDefinition(def.definition)
-                            .setType(def.type)
+                            .setWord(def.word())
+                            .setDefinition(def.definition())
+                            .setType(def.type())
             );
         }
 

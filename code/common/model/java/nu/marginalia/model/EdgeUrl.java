@@ -154,10 +154,6 @@ public class EdgeUrl implements Serializable {
         return port;
     }
 
-    public static EdgeUrlBuilder builder() {
-        return new EdgeUrlBuilder();
-    }
-
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
 
@@ -242,67 +238,8 @@ public class EdgeUrl implements Serializable {
         return new URI(this.proto, this.domain.toString(), this.path, this.param, null);
     }
 
-    public String getProto() {
-        return this.proto;
-    }
-
     public EdgeDomain getDomain() {
         return this.domain;
     }
 
-    public Integer getPort() {
-        return this.port;
-    }
-
-    public String getPath() {
-        return this.path;
-    }
-
-    public String getParam() {
-        return this.param;
-    }
-
-    public static class EdgeUrlBuilder {
-        private String proto;
-        private EdgeDomain domain;
-        private Integer port;
-        private String path;
-        private String param;
-
-        EdgeUrlBuilder() {
-        }
-
-        public EdgeUrlBuilder proto(String proto) {
-            this.proto = proto;
-            return this;
-        }
-
-        public EdgeUrlBuilder domain(EdgeDomain domain) {
-            this.domain = domain;
-            return this;
-        }
-
-        public EdgeUrlBuilder port(Integer port) {
-            this.port = port;
-            return this;
-        }
-
-        public EdgeUrlBuilder path(String path) {
-            this.path = path;
-            return this;
-        }
-
-        public EdgeUrlBuilder param(String param) {
-            this.param = param;
-            return this;
-        }
-
-        public EdgeUrl build() {
-            return new EdgeUrl(this.proto, this.domain, this.port, this.path, this.param);
-        }
-
-        public String toString() {
-            return "EdgeUrl.EdgeUrlBuilder(proto=" + this.proto + ", domain=" + this.domain + ", port=" + this.port + ", path=" + this.path + ", param=" + this.param + ")";
-        }
-    }
 }

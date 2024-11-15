@@ -8,7 +8,8 @@ import nu.marginalia.api.math.model.DictionaryResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Singleton
 public class DictionaryService {
@@ -25,8 +26,7 @@ public class DictionaryService {
     }
 
     public DictionaryResponse define(String word) {
-        DictionaryResponse response = new DictionaryResponse();
-        response.entries = new ArrayList<>();
+        List<DictionaryEntry> entries = new ArrayList<>();
 
         try (var connection = dataSource.getConnection()) {
             var stmt = connection.prepareStatement("SELECT TYPE,WORD,DEFINITION FROM REF_DICTIONARY WHERE WORD=?");
@@ -34,14 +34,14 @@ public class DictionaryService {
 
             var rsp = stmt.executeQuery();
             while (rsp.next()) {
-                response.entries.add(new DictionaryEntry(rsp.getString(1), rsp.getString(2), rsp.getString(3)));
+                entries.add(new DictionaryEntry(rsp.getString(1), rsp.getString(2), rsp.getString(3)));
             }
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
 
-        return response;
+        return new DictionaryResponse(word, entries);
     }
 
     public List<String> spellCheck(String word) {

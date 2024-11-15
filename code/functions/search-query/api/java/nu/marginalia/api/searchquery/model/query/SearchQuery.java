@@ -2,6 +2,7 @@ package nu.marginalia.api.searchquery.model.query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SearchQuery {
@@ -35,17 +36,13 @@ public class SearchQuery {
      */
     public final List<SearchPhraseConstraint> phraseConstraints;
 
-    @Deprecated // why does this exist?
-    private double value = 0;
-
-    public SearchQuery(String compiledQuery, List<String> searchTermsInclude, List<String> searchTermsExclude, List<String> searchTermsAdvice, List<String> searchTermsPriority, List<SearchPhraseConstraint> phraseConstraints, double value) {
+    public SearchQuery(String compiledQuery, List<String> searchTermsInclude, List<String> searchTermsExclude, List<String> searchTermsAdvice, List<String> searchTermsPriority, List<SearchPhraseConstraint> phraseConstraints) {
         this.compiledQuery = compiledQuery;
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.searchTermsAdvice = searchTermsAdvice;
         this.searchTermsPriority = searchTermsPriority;
         this.phraseConstraints = phraseConstraints;
-        this.value = value;
     }
 
     public static SearchQueryBuilder builder() {
@@ -59,30 +56,6 @@ public class SearchQuery {
         this.searchTermsAdvice = new ArrayList<>();
         this.searchTermsPriority = new ArrayList<>();
         this.phraseConstraints = new ArrayList<>();
-    }
-
-    public SearchQuery(String compiledQuery,
-                       List<String> searchTermsInclude,
-                       List<String> searchTermsExclude,
-                       List<String> searchTermsAdvice,
-                       List<String> searchTermsPriority,
-                       List<SearchPhraseConstraint> phraseConstraints) {
-        this.compiledQuery = compiledQuery;
-        this.searchTermsInclude = searchTermsInclude;
-        this.searchTermsExclude = searchTermsExclude;
-        this.searchTermsAdvice = searchTermsAdvice;
-        this.searchTermsPriority = searchTermsPriority;
-        this.phraseConstraints = phraseConstraints;
-    }
-
-    @Deprecated // why does this exist?
-    public SearchQuery setValue(double value) {
-        if (Double.isInfinite(value) || Double.isNaN(value)) {
-            this.value = Double.MAX_VALUE;
-        } else {
-            this.value = value;
-        }
-        return this;
     }
 
     @Override
@@ -125,94 +98,28 @@ public class SearchQuery {
         return this.phraseConstraints;
     }
 
-    @Deprecated
-    public double getValue() {
-        return this.value;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SearchQuery that)) return false;
+
+        return Objects.equals(compiledQuery, that.compiledQuery)
+                && Objects.equals(searchTermsInclude, that.searchTermsInclude)
+                && Objects.equals(searchTermsExclude, that.searchTermsExclude)
+                && Objects.equals(searchTermsAdvice, that.searchTermsAdvice)
+                && Objects.equals(searchTermsPriority, that.searchTermsPriority)
+                && Objects.equals(phraseConstraints, that.phraseConstraints);
     }
 
-    public SearchQuery withCompiledQuery(String compiledQuery) {
-        return this.compiledQuery == compiledQuery ? this : new SearchQuery(compiledQuery, this.searchTermsInclude, this.searchTermsExclude, this.searchTermsAdvice, this.searchTermsPriority, this.phraseConstraints, this.value);
-    }
-
-    public SearchQuery withSearchTermsInclude(List<String> searchTermsInclude) {
-        return this.searchTermsInclude == searchTermsInclude ? this : new SearchQuery(this.compiledQuery, searchTermsInclude, this.searchTermsExclude, this.searchTermsAdvice, this.searchTermsPriority, this.phraseConstraints, this.value);
-    }
-
-    public SearchQuery withSearchTermsExclude(List<String> searchTermsExclude) {
-        return this.searchTermsExclude == searchTermsExclude ? this : new SearchQuery(this.compiledQuery, this.searchTermsInclude, searchTermsExclude, this.searchTermsAdvice, this.searchTermsPriority, this.phraseConstraints, this.value);
-    }
-
-    public SearchQuery withSearchTermsAdvice(List<String> searchTermsAdvice) {
-        return this.searchTermsAdvice == searchTermsAdvice ? this : new SearchQuery(this.compiledQuery, this.searchTermsInclude, this.searchTermsExclude, searchTermsAdvice, this.searchTermsPriority, this.phraseConstraints, this.value);
-    }
-
-    public SearchQuery withSearchTermsPriority(List<String> searchTermsPriority) {
-        return this.searchTermsPriority == searchTermsPriority ? this : new SearchQuery(this.compiledQuery, this.searchTermsInclude, this.searchTermsExclude, this.searchTermsAdvice, searchTermsPriority, this.phraseConstraints, this.value);
-    }
-
-    public SearchQuery withPhraseConstraints(List<SearchPhraseConstraint> phraseConstraints) {
-        return this.phraseConstraints == phraseConstraints ? this : new SearchQuery(this.compiledQuery, this.searchTermsInclude, this.searchTermsExclude, this.searchTermsAdvice, this.searchTermsPriority, phraseConstraints, this.value);
-    }
-
-    public SearchQuery withValue(double value) {
-        return this.value == value ? this : new SearchQuery(this.compiledQuery, this.searchTermsInclude, this.searchTermsExclude, this.searchTermsAdvice, this.searchTermsPriority, this.phraseConstraints, value);
-    }
-
-    public boolean equals(final Object o) {
-        if (o == this) return true;
-        if (!(o instanceof SearchQuery)) return false;
-        final SearchQuery other = (SearchQuery) o;
-        if (!other.canEqual((Object) this)) return false;
-        final Object this$compiledQuery = this.getCompiledQuery();
-        final Object other$compiledQuery = other.getCompiledQuery();
-        if (this$compiledQuery == null ? other$compiledQuery != null : !this$compiledQuery.equals(other$compiledQuery))
-            return false;
-        final Object this$searchTermsInclude = this.getSearchTermsInclude();
-        final Object other$searchTermsInclude = other.getSearchTermsInclude();
-        if (this$searchTermsInclude == null ? other$searchTermsInclude != null : !this$searchTermsInclude.equals(other$searchTermsInclude))
-            return false;
-        final Object this$searchTermsExclude = this.getSearchTermsExclude();
-        final Object other$searchTermsExclude = other.getSearchTermsExclude();
-        if (this$searchTermsExclude == null ? other$searchTermsExclude != null : !this$searchTermsExclude.equals(other$searchTermsExclude))
-            return false;
-        final Object this$searchTermsAdvice = this.getSearchTermsAdvice();
-        final Object other$searchTermsAdvice = other.getSearchTermsAdvice();
-        if (this$searchTermsAdvice == null ? other$searchTermsAdvice != null : !this$searchTermsAdvice.equals(other$searchTermsAdvice))
-            return false;
-        final Object this$searchTermsPriority = this.getSearchTermsPriority();
-        final Object other$searchTermsPriority = other.getSearchTermsPriority();
-        if (this$searchTermsPriority == null ? other$searchTermsPriority != null : !this$searchTermsPriority.equals(other$searchTermsPriority))
-            return false;
-        final Object this$phraseConstraints = this.getPhraseConstraints();
-        final Object other$phraseConstraints = other.getPhraseConstraints();
-        if (this$phraseConstraints == null ? other$phraseConstraints != null : !this$phraseConstraints.equals(other$phraseConstraints))
-            return false;
-        if (Double.compare(this.getValue(), other.getValue()) != 0) return false;
-        return true;
-    }
-
-    protected boolean canEqual(final Object other) {
-        return other instanceof SearchQuery;
-    }
-
+    @Override
     public int hashCode() {
-        final int PRIME = 59;
-        int result = 1;
-        final Object $compiledQuery = this.getCompiledQuery();
-        result = result * PRIME + ($compiledQuery == null ? 43 : $compiledQuery.hashCode());
-        final Object $searchTermsInclude = this.getSearchTermsInclude();
-        result = result * PRIME + ($searchTermsInclude == null ? 43 : $searchTermsInclude.hashCode());
-        final Object $searchTermsExclude = this.getSearchTermsExclude();
-        result = result * PRIME + ($searchTermsExclude == null ? 43 : $searchTermsExclude.hashCode());
-        final Object $searchTermsAdvice = this.getSearchTermsAdvice();
-        result = result * PRIME + ($searchTermsAdvice == null ? 43 : $searchTermsAdvice.hashCode());
-        final Object $searchTermsPriority = this.getSearchTermsPriority();
-        result = result * PRIME + ($searchTermsPriority == null ? 43 : $searchTermsPriority.hashCode());
-        final Object $phraseConstraints = this.getPhraseConstraints();
-        result = result * PRIME + ($phraseConstraints == null ? 43 : $phraseConstraints.hashCode());
-        final long $value = Double.doubleToLongBits(this.getValue());
-        result = result * PRIME + (int) ($value >>> 32 ^ $value);
-        return result;
+        return Objects.hash(compiledQuery,
+                                searchTermsInclude,
+                                searchTermsExclude,
+                                searchTermsAdvice,
+                                searchTermsPriority,
+                                phraseConstraints);
     }
 
     public static class SearchQueryBuilder {
