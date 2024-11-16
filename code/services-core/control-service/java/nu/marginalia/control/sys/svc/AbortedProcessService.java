@@ -21,6 +21,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,7 +58,7 @@ public class AbortedProcessService {
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
-    public void register() {
+    public void register() throws IOException {
         var abortedProcessesRenderer = rendererFactory.renderer("control/sys/aborted-processes");
 
         Spark.get("/aborted-processes", this::abortedProcessesModel, abortedProcessesRenderer::render);
@@ -83,15 +84,11 @@ public class AbortedProcessService {
 
         // Generate all possible values for process-related inboxes
         String inboxes = Stream.of("converter", "loader", "crawler")
-                .flatMap(s -> allNodeIds.stream().map(i -> STR."'\{s}:\{i}'"))
+                .flatMap(s -> allNodeIds.stream().map(i -> "'" + s + ":" + i + "'"))
                 .collect(Collectors.joining(",", "(", ")"));
 
         try (var conn = dataSource.getConnection()) {
-            var stmt = conn.prepareStatement(STR."""
-                SELECT ID, RECIPIENT_INBOX, CREATED_TIME, UPDATED_TIME, PAYLOAD FROM MESSAGE_QUEUE
-                WHERE STATE = 'DEAD'
-                AND RECIPIENT_INBOX IN \{inboxes}
-                """); // SQL injection safe, string is not user input
+            var stmt = conn.prepareStatement("SELECT ID, RECIPIENT_INBOX, CREATED_TIME, UPDATED_TIME, PAYLOAD FROM MESSAGE_QUEUE\nWHERE STATE = 'DEAD'\nAND RECIPIENT_INBOX IN " + inboxes + "\n"); // SQL injection safe, string is not user input
             var rs = stmt.executeQuery();
 
             List<AbortedProcess> abortedProcesses = new ArrayList<>();

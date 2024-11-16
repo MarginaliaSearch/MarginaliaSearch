@@ -116,21 +116,7 @@ public class RedditSideloader implements SideloadSource {
                 .ofInstant(Instant.ofEpochSecond(createdUtc), ZoneOffset.UTC)
                 .getYear();
 
-        String fullHtml = STR."""
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>\{title}</title>
-              <script src="https://www.example.com/dummy.js" type="text/javascript"></script>
-            </head>
-            <body>
-              <h1>\{title}</h1>
-              <article>
-                <p>\{body}</p>
-              </article>
-            </body>
-            </html>
-            """;
+        String fullHtml = "<!DOCTYPE html>\n<html>\n<head>\n  <title>" + title + "</title>\n  <script src=\"https://www.example.com/dummy.js\" type=\"text/javascript\"></script>\n</head>\n<body>\n  <h1>" + title + "</h1>\n  <article>\n    <p>" + body + "</p>\n  </article>\n</body>\n</html>\n";
 
         List<String> extraKeywords = new ArrayList<>();
 

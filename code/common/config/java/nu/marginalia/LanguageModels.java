@@ -1,10 +1,7 @@
 package nu.marginalia;
 
-import lombok.Builder;
-
 import java.nio.file.Path;
 
-@Builder
 public class LanguageModels {
     public final Path termFrequencies;
 
@@ -29,5 +26,65 @@ public class LanguageModels {
         this.openNLPTokenData = openNLPTokenData;
         this.fasttextLanguageModel = fasttextLanguageModel;
         this.segments = segments;
+    }
+
+    public static LanguageModelsBuilder builder() {
+        return new LanguageModelsBuilder();
+    }
+
+    public static class LanguageModelsBuilder {
+        private Path termFrequencies;
+        private Path openNLPSentenceDetectionData;
+        private Path posRules;
+        private Path posDict;
+        private Path openNLPTokenData;
+        private Path fasttextLanguageModel;
+        private Path segments;
+
+        LanguageModelsBuilder() {
+        }
+
+        public LanguageModelsBuilder termFrequencies(Path termFrequencies) {
+            this.termFrequencies = termFrequencies;
+            return this;
+        }
+
+        public LanguageModelsBuilder openNLPSentenceDetectionData(Path openNLPSentenceDetectionData) {
+            this.openNLPSentenceDetectionData = openNLPSentenceDetectionData;
+            return this;
+        }
+
+        public LanguageModelsBuilder posRules(Path posRules) {
+            this.posRules = posRules;
+            return this;
+        }
+
+        public LanguageModelsBuilder posDict(Path posDict) {
+            this.posDict = posDict;
+            return this;
+        }
+
+        public LanguageModelsBuilder openNLPTokenData(Path openNLPTokenData) {
+            this.openNLPTokenData = openNLPTokenData;
+            return this;
+        }
+
+        public LanguageModelsBuilder fasttextLanguageModel(Path fasttextLanguageModel) {
+            this.fasttextLanguageModel = fasttextLanguageModel;
+            return this;
+        }
+
+        public LanguageModelsBuilder segments(Path segments) {
+            this.segments = segments;
+            return this;
+        }
+
+        public LanguageModels build() {
+            return new LanguageModels(this.termFrequencies, this.openNLPSentenceDetectionData, this.posRules, this.posDict, this.openNLPTokenData, this.fasttextLanguageModel, this.segments);
+        }
+
+        public String toString() {
+            return "LanguageModels.LanguageModelsBuilder(termFrequencies=" + this.termFrequencies + ", openNLPSentenceDetectionData=" + this.openNLPSentenceDetectionData + ", posRules=" + this.posRules + ", posDict=" + this.posDict + ", openNLPTokenData=" + this.openNLPTokenData + ", fasttextLanguageModel=" + this.fasttextLanguageModel + ", segments=" + this.segments + ")";
+        }
     }
 }

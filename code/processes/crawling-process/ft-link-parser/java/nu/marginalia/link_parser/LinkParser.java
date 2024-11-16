@@ -2,7 +2,6 @@ package nu.marginalia.link_parser;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
-import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.util.QueryParams;
 import org.jetbrains.annotations.Contract;
@@ -122,14 +121,19 @@ public class LinkParser {
         return Optional.ofNullable(matcher.group(1));
     }
 
-    @SneakyThrows
     private URI renormalize(URI uri) {
-        if (uri.getPath() == null) {
-            return renormalize(new URI(uri.getScheme(), uri.getHost(), "/", uri.getQuery(), uri.getFragment()));
+        try {
+            if (uri.getPath() == null) {
+                return renormalize(new URI(uri.getScheme(), uri.getHost(), "/", uri.getQuery(), uri.getFragment()));
+            }
+            if (uri.getPath().startsWith("/../")) {
+                return renormalize(new URI(uri.getScheme(), uri.getHost(), uri.getPath().substring(3), uri.getQuery(), uri.getFragment()));
+            }
         }
-        if (uri.getPath().startsWith("/../")) {
-            return renormalize(new URI(uri.getScheme(), uri.getHost(), uri.getPath().substring(3), uri.getQuery(), uri.getFragment()));
+        catch (URISyntaxException e) {
+            logger.warn("Bad URI {}", uri);
         }
+
         return uri;
     }
 
@@ -146,7 +150,6 @@ public class LinkParser {
     private static final Pattern spaceRegex = Pattern.compile(" ");
     private static final Pattern paramSeparatorPattern = Pattern.compile("\\?");
 
-    @SneakyThrows
     private String resolveRelativeUrl(EdgeUrl baseUrl, String s) {
 
         // url looks like http://www.marginalia.nu/

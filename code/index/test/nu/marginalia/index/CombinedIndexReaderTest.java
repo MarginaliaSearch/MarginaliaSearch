@@ -311,7 +311,9 @@ public class CombinedIndexReaderTest {
         }
 
         void load() throws IOException, SQLException, URISyntaxException {
-            allData.forEach((doc, words) -> {
+            for (Map.Entry<Long, List<MockDataKeyword>> entry : allData.entrySet()) {
+                final Long doc = entry.getKey();
+                final List<MockDataKeyword> words = entry.getValue();
 
                 var meta = metaByDoc.get(doc);
 
@@ -320,7 +322,7 @@ public class CombinedIndexReaderTest {
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = words.get(i).termMetadata;
                 }
-                var positions = words.stream().map(w -> w.positions).map(pos ->  VarintCodedSequence.generate(pos.toIntArray())).toList();
+                var positions = words.stream().map(w -> w.positions).map(pos -> VarintCodedSequence.generate(pos.toIntArray())).toList();
 
                 indexJournalWriter.put(doc,
                         new SlopDocumentRecord.KeywordsProjection(
@@ -335,7 +337,7 @@ public class CombinedIndexReaderTest {
                                 new byte[0],
                                 List.of()
                         ));
-            });
+            }
 
             var linkdbWriter = new DocumentDbWriter(
                     IndexLocations.getLinkdbLivePath(fileStorageService).resolve(DOCDB_FILE_NAME)

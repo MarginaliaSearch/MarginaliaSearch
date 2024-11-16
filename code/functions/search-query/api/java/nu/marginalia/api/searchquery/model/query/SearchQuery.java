@@ -1,40 +1,49 @@
 package nu.marginalia.api.searchquery.model.query;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.With;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Getter
-@AllArgsConstructor
-@With
-@EqualsAndHashCode
 public class SearchQuery {
-
-    /** An infix style expression that encodes the required terms in the query */
+    /**
+     * An infix style expression that encodes the required terms in the query
+     */
     public final String compiledQuery;
 
-    /** All terms that appear in {@see compiledQuery} */
+    /**
+     * All terms that appear in {@see compiledQuery}
+     */
     public final List<String> searchTermsInclude;
 
-    /** These terms must be absent from the document */
+    /**
+     * These terms must be absent from the document
+     */
     public final List<String> searchTermsExclude;
 
-    /** These terms must be present in the document, but are not used in ranking */
+    /**
+     * These terms must be present in the document, but are not used in ranking
+     */
     public final List<String> searchTermsAdvice;
 
-    /** If these optional terms are present in the document, rank it highly */
+    /**
+     * If these optional terms are present in the document, rank it highly
+     */
     public final List<String> searchTermsPriority;
 
-    /** Terms that we require to be in the same sentence */
+    /**
+     * Terms that we require to be in the same sentence
+     */
     public final List<SearchPhraseConstraint> phraseConstraints;
 
-    @Deprecated // why does this exist?
-    private double value = 0;
+    public SearchQuery(String compiledQuery, List<String> searchTermsInclude, List<String> searchTermsExclude, List<String> searchTermsAdvice, List<String> searchTermsPriority, List<SearchPhraseConstraint> phraseConstraints) {
+        this.compiledQuery = compiledQuery;
+        this.searchTermsInclude = searchTermsInclude;
+        this.searchTermsExclude = searchTermsExclude;
+        this.searchTermsAdvice = searchTermsAdvice;
+        this.searchTermsPriority = searchTermsPriority;
+        this.phraseConstraints = phraseConstraints;
+    }
 
     public static SearchQueryBuilder builder() {
         return new SearchQueryBuilder();
@@ -49,40 +58,68 @@ public class SearchQuery {
         this.phraseConstraints = new ArrayList<>();
     }
 
-    public SearchQuery(String compiledQuery,
-                       List<String> searchTermsInclude,
-                       List<String> searchTermsExclude,
-                       List<String> searchTermsAdvice,
-                       List<String> searchTermsPriority,
-                       List<SearchPhraseConstraint> phraseConstraints) {
-        this.compiledQuery = compiledQuery;
-        this.searchTermsInclude = searchTermsInclude;
-        this.searchTermsExclude = searchTermsExclude;
-        this.searchTermsAdvice = searchTermsAdvice;
-        this.searchTermsPriority = searchTermsPriority;
-        this.phraseConstraints = phraseConstraints;
-    }
-
-    @Deprecated // why does this exist?
-    public SearchQuery setValue(double value) {
-        if (Double.isInfinite(value) || Double.isNaN(value)) {
-            this.value = Double.MAX_VALUE;
-        } else {
-            this.value = value;
-        }
-        return this;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (!compiledQuery.isEmpty()) sb.append("compiledQuery=").append(compiledQuery).append(", ");
-        if (!searchTermsExclude.isEmpty()) sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
-        if (!searchTermsAdvice.isEmpty()) sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
-        if (!searchTermsPriority.isEmpty()) sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));
-        if (!phraseConstraints.isEmpty()) sb.append("phraseConstraints=").append(phraseConstraints.stream().map(coh->coh.terms().stream().collect(Collectors.joining(",", "[", "] "))).collect(Collectors.joining(", ")));
+        if (!searchTermsExclude.isEmpty())
+            sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!searchTermsAdvice.isEmpty())
+            sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!searchTermsPriority.isEmpty())
+            sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!phraseConstraints.isEmpty())
+            sb.append("phraseConstraints=").append(phraseConstraints.stream().map(coh -> coh.terms().stream().collect(Collectors.joining(",", "[", "] "))).collect(Collectors.joining(", ")));
 
         return sb.toString();
+    }
+
+    public String getCompiledQuery() {
+        return this.compiledQuery;
+    }
+
+    public List<String> getSearchTermsInclude() {
+        return this.searchTermsInclude;
+    }
+
+    public List<String> getSearchTermsExclude() {
+        return this.searchTermsExclude;
+    }
+
+    public List<String> getSearchTermsAdvice() {
+        return this.searchTermsAdvice;
+    }
+
+    public List<String> getSearchTermsPriority() {
+        return this.searchTermsPriority;
+    }
+
+    public List<SearchPhraseConstraint> getPhraseConstraints() {
+        return this.phraseConstraints;
+    }
+
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SearchQuery that)) return false;
+
+        return Objects.equals(compiledQuery, that.compiledQuery)
+                && Objects.equals(searchTermsInclude, that.searchTermsInclude)
+                && Objects.equals(searchTermsExclude, that.searchTermsExclude)
+                && Objects.equals(searchTermsAdvice, that.searchTermsAdvice)
+                && Objects.equals(searchTermsPriority, that.searchTermsPriority)
+                && Objects.equals(phraseConstraints, that.phraseConstraints);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(compiledQuery,
+                                searchTermsInclude,
+                                searchTermsExclude,
+                                searchTermsAdvice,
+                                searchTermsPriority,
+                                phraseConstraints);
     }
 
     public static class SearchQueryBuilder {
@@ -130,7 +167,9 @@ public class SearchQuery {
             return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchPhraseConstraints);
         }
 
-        /** If there are no ranking terms, promote the advice terms to ranking terms */
+        /**
+         * If there are no ranking terms, promote the advice terms to ranking terms
+         */
         public void promoteNonRankingTerms() {
             if (searchTermsInclude.isEmpty() && !searchTermsAdvice.isEmpty()) {
                 searchTermsInclude.addAll(searchTermsAdvice);

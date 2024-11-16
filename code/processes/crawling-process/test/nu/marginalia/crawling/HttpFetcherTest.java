@@ -1,6 +1,5 @@
 package nu.marginalia.crawling;
 
-import lombok.SneakyThrows;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -12,14 +11,10 @@ import nu.marginalia.model.body.DocumentBodyResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 class HttpFetcherTest {
 
-    @SneakyThrows
     @Test
-    void testUrlPattern() {
+    void testUrlPattern() throws Exception {
         ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
         Assertions.assertFalse(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.txt")));
@@ -32,7 +27,7 @@ class HttpFetcherTest {
     }
 
     @Test
-    void fetchUTF8() throws URISyntaxException, HttpFetcherImpl.RateLimitException, IOException {
+    void fetchUTF8() throws Exception {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
         try (var recorder = new WarcRecorder()) {
             var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty(), HttpFetcher.ProbeType.FULL);
@@ -43,7 +38,7 @@ class HttpFetcherTest {
     }
 
     @Test
-    void fetchText() throws URISyntaxException, HttpFetcherImpl.RateLimitException, IOException {
+    void fetchText() throws Exception {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
 
         try (var recorder = new WarcRecorder()) {

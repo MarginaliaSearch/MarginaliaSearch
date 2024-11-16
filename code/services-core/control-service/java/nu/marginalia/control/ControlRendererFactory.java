@@ -1,10 +1,10 @@
 package nu.marginalia.control;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.renderer.RendererFactory;
 
+import java.io.IOException;
 import java.util.Map;
 
 /** Wrapper for the renderer factory that adds global context
@@ -22,8 +22,7 @@ public class ControlRendererFactory {
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
-    @SneakyThrows
-    public Renderer renderer(String template) {
+    public Renderer renderer(String template) throws IOException {
 
         var baseRenderer = rendererFactory.renderer(template);
 

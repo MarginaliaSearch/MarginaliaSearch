@@ -2,7 +2,6 @@ package nu.marginalia.loading.documents;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.loading.LoaderInputData;
@@ -74,7 +73,6 @@ public class DocumentLoaderService {
             this.domainIdRegistry = domainIdRegistry;
         }
 
-        @SneakyThrows
         public void accept(SlopDocumentRecord.MetadataProjection projection)
         {
 
@@ -89,22 +87,27 @@ public class DocumentLoaderService {
                 return;
             }
 
-            documentDbWriter.add(new DocdbUrlDetail(
-                    urlId,
-                    parsedUrl.get(),
-                    projection.title(),
-                    projection.description(),
-                    projection.quality(),
-                    projection.htmlStandard(),
-                    projection.htmlFeatures(),
-                    projection.pubYear(),
-                    projection.hash(),
-                    projection.length()
-            ));
+            try {
+                documentDbWriter.add(new DocdbUrlDetail(
+                        urlId,
+                        parsedUrl.get(),
+                        projection.title(),
+                        projection.description(),
+                        projection.quality(),
+                        projection.htmlStandard(),
+                        projection.htmlFeatures(),
+                        projection.pubYear(),
+                        projection.hash(),
+                        projection.length()
+                ));
 
-            if (details.size() > 100) {
-                documentDbWriter.add(details);
-                details.clear();
+                if (details.size() > 100) {
+                    documentDbWriter.add(details);
+                    details.clear();
+                }
+            }
+            catch (Exception e) {
+                logger.error("Failed to add document", e);
             }
 
         }

@@ -1,7 +1,6 @@
 package nu.marginalia.extractor;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.link_parser.FeedExtractor;
@@ -115,12 +114,16 @@ public class FeedExporter implements ExporterIf {
             this.writer = writer;
         }
 
-        @SneakyThrows
         public void accept(EdgeDomain domain, int size, EdgeUrl path) {
-            writer.write(String.format("\"%s\",\"%s\",\"%s\"\n",
-                    csvify(domain),
-                    csvify(size),
-                    csvify(path)));
+            try {
+                writer.write(String.format("\"%s\",\"%s\",\"%s\"\n",
+                        csvify(domain),
+                        csvify(size),
+                        csvify(path)));
+            }
+            catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
 
         private static String csvify(Object field) {

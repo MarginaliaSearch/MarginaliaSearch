@@ -1,7 +1,6 @@
 package nu.marginalia.crawling.retreival;
 
 import crawlercommons.robots.SimpleRobotRules;
-import lombok.SneakyThrows;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
@@ -54,7 +53,6 @@ public class CrawlerMockFetcherTest {
                 .build());
     }
 
-    @SneakyThrows
     private void registerUrlClasspathData(EdgeUrl url, String path) {
 
         mockData.put(url, CrawledDocument.builder()
@@ -129,21 +127,26 @@ public class CrawlerMockFetcherTest {
             return new HttpFetcher.ContentTypeProbeResult.Ok(url);
         }
 
-        @SneakyThrows
         @Override
         public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags, ProbeType probeType) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 byte[] bodyBytes = mockData.get(url).documentBody.getBytes();
-                return new HttpFetchResult.ResultOk(
-                        url.asURI(),
-                        200,
-                        new Headers.Builder().build(),
-                        "127.0.0.1",
-                        bodyBytes,
-                        0,
-                        bodyBytes.length
-                );
+
+                try {
+                    return new HttpFetchResult.ResultOk(
+                            url.asURI(),
+                            200,
+                            new Headers.Builder().build(),
+                            "127.0.0.1",
+                            bodyBytes,
+                            0,
+                            bodyBytes.length
+                    );
+                }
+                catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             return new HttpFetchResult.ResultNone();

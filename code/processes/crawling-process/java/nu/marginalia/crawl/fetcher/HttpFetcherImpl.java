@@ -3,7 +3,6 @@ package nu.marginalia.crawl.fetcher;
 import com.google.inject.Inject;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
-import lombok.SneakyThrows;
 import nu.marginalia.UserAgent;
 import nu.marginalia.crawl.fetcher.socket.FastTerminatingSocketFactory;
 import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
@@ -50,7 +49,6 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private static final FastTerminatingSocketFactory ftSocketFactory = new FastTerminatingSocketFactory();
 
-    @SneakyThrows
     private OkHttpClient createClient(Dispatcher dispatcher, ConnectionPool pool) {
         var builder = new OkHttpClient.Builder();
         if (dispatcher != null) {
@@ -111,7 +109,6 @@ public class HttpFetcherImpl implements HttpFetcher {
      * @return The result of the probe, indicating the state and the URL.
      */
     @Override
-    @SneakyThrows
     public DomainProbeResult probeDomain(EdgeUrl url) {
         var head = new Request.Builder().head().addHeader("User-agent", userAgentString)
                 .url(url.toString())
@@ -207,11 +204,11 @@ public class HttpFetcherImpl implements HttpFetcher {
      * the outcome of the fetch.
      */
     @Override
-    @SneakyThrows
     public HttpFetchResult fetchContent(EdgeUrl url,
                                            WarcRecorder warcRecorder,
                                            ContentTags contentTags,
                                            ProbeType probeType)
+        throws Exception
     {
         var getBuilder = new Request.Builder().get();
 

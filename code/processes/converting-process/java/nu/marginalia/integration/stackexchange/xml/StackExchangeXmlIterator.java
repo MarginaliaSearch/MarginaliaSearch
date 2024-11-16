@@ -1,7 +1,5 @@
 package nu.marginalia.integration.stackexchange.xml;
 
-import lombok.SneakyThrows;
-
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.XMLEvent;
 import java.util.Iterator;
@@ -22,25 +20,29 @@ class StackExchangeXmlIterator<T> implements Iterator<T> {
         this.parser = parser;
     }
 
-    @SneakyThrows
     @Override
     public boolean hasNext() {
         if (next != null)
             return true;
 
-        while (xmlReader.hasNext()) {
-            XMLEvent event = xmlReader.nextEvent();
+        try {
+            while (xmlReader.hasNext()) {
+                XMLEvent event = xmlReader.nextEvent();
 
-            if (!event.isStartElement())
-                continue;
+                if (!event.isStartElement())
+                    continue;
 
-            next = parser.apply(event);
+                next = parser.apply(event);
 
-            if (next != null)
-                return true;
+                if (next != null)
+                    return true;
+            }
+
+            readerSource.close();
         }
-
-        readerSource.close();
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
 
         return false;
     }

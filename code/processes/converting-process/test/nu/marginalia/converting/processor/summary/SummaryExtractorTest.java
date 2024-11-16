@@ -1,6 +1,5 @@
 package nu.marginalia.converting.processor.summary;
 
-import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.summary.heuristic.*;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -36,8 +35,7 @@ class SummaryExtractorTest {
                 new FallbackHeuristic());
     }
 
-    @SneakyThrows
-    Set<String> getImportantWords(Document doc) {
+    Set<String> getImportantWords(Document doc) throws URISyntaxException {
         var dld = setenceExtractor.extractSentences(doc);
         var keywords = keywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(
                 "https://www.marginalia.nu/"
@@ -92,7 +90,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extractSurrey() throws IOException {
+    void extractSurrey() throws IOException, URISyntaxException {
         String html = readClassPathFile("html/summarization/surrey.html");
         var doc = Jsoup.parse(html);
         String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
@@ -104,7 +102,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extractSurrey1() throws IOException {
+    void extractSurrey1() throws IOException, URISyntaxException {
         String html = readClassPathFile("html/summarization/surrey.html.1");
         var doc = Jsoup.parse(html);
         String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
@@ -115,7 +113,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extract187() throws IOException {
+    void extract187() throws IOException, URISyntaxException {
         String html = readClassPathFile("html/summarization/187.shtml");
         var doc = Jsoup.parse(html);
         String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
@@ -126,7 +124,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extractMonadnock() throws IOException {
+    void extractMonadnock() throws IOException, URISyntaxException {
         String html = readClassPathFile("html/monadnock.html");
 
         var doc = Jsoup.parse(html);
@@ -138,13 +136,16 @@ class SummaryExtractorTest {
     }
 
     @Test
-    public void testWorkSet() throws IOException {
+    public void testWorkSet() throws IOException, URISyntaxException {
         var workSet = readWorkSet();
-        workSet.forEach((path, str) -> {
+        for (Map.Entry<Path, String> entry : workSet.entrySet()) {
+            final Path path = entry.getKey();
+            final String str = entry.getValue();
+
             var doc = Jsoup.parse(str);
             String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
             System.out.println(path + ": " + summary);
-        });
+        }
     }
     private String readClassPathFile(String s) throws IOException {
         return new String(Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(s)).readAllBytes());

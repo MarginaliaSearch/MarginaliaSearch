@@ -2,7 +2,6 @@ package nu.marginalia.language.filter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.encoding.UnicodeRanges;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -45,7 +44,6 @@ public class LanguageFilter {
     }
 
     @Inject
-    @SneakyThrows
     public LanguageFilter(LanguageModels lm) {
         try {
             languagePredictionModel1 = new UngaBungaLanguagePredictionModel();

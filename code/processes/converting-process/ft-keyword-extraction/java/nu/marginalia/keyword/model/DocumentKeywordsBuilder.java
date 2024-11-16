@@ -4,7 +4,6 @@ import gnu.trove.list.array.TByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ByteOpenHashMap;
-import lombok.Getter;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.idx.CodedWordSpan;
 import nu.marginalia.model.idx.WordFlags;
@@ -15,13 +14,14 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-@Getter
 public class DocumentKeywordsBuilder {
     public final Object2ByteOpenHashMap<String> wordToMeta;
     public final HashMap<String, IntList> wordToPos;
     public final Map<Character, List<DocumentWordSpan>> wordSpans = new HashMap<>();
 
-    /** These ware keywords that had signals of high relevance */
+    /**
+     * These ware keywords that had signals of high relevance
+     */
     public final Set<String> importantWords = new HashSet<>();
 
     // |------64 letters is this long-------------------------------|
@@ -64,7 +64,7 @@ public class DocumentKeywordsBuilder {
         wordSpans.forEach((tag, spansForTag) -> {
             spansForTag.sort(Comparator.comparingInt(DocumentWordSpan::start));
 
-            var positionsForTag = new IntArrayList(spansForTag.size()*2);
+            var positionsForTag = new IntArrayList(spansForTag.size() * 2);
             for (var span : spansForTag) {
                 positionsForTag.add(span.start());
                 positionsForTag.add(span.end());
@@ -77,7 +77,7 @@ public class DocumentKeywordsBuilder {
     }
 
     public DocumentKeywordsBuilder(int capacity) {
-        wordToMeta  = new Object2ByteOpenHashMap<>(capacity);
+        wordToMeta = new Object2ByteOpenHashMap<>(capacity);
         wordToPos = new HashMap<>(capacity);
     }
 
@@ -101,7 +101,7 @@ public class DocumentKeywordsBuilder {
 
     public void setFlagOnMetadataForWords(WordFlags flag, Collection<String> flagWords) {
         flagWords.forEach(word ->
-            wordToMeta.mergeByte(word, flag.asBit(), (a, b) -> (byte)(a|b))
+                wordToMeta.mergeByte(word, flag.asBit(), (a, b) -> (byte) (a | b))
         );
     }
 
@@ -116,7 +116,7 @@ public class DocumentKeywordsBuilder {
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 
-        for (var iter = wordToMeta.object2ByteEntrySet().fastIterator(); iter.hasNext();) {
+        for (var iter = wordToMeta.object2ByteEntrySet().fastIterator(); iter.hasNext(); ) {
             var entry = iter.next();
             if ((flags & entry.getByteValue()) != 0) {
                 ret.add(entry.getKey());
@@ -157,6 +157,30 @@ public class DocumentKeywordsBuilder {
                     .append(' ');
         });
         return sb.append(']').toString();
+    }
+
+    public Object2ByteOpenHashMap<String> getWordToMeta() {
+        return this.wordToMeta;
+    }
+
+    public HashMap<String, IntList> getWordToPos() {
+        return this.wordToPos;
+    }
+
+    public Map<Character, List<DocumentWordSpan>> getWordSpans() {
+        return this.wordSpans;
+    }
+
+    public Set<String> getImportantWords() {
+        return this.importantWords;
+    }
+
+    public int getMAX_WORD_LENGTH() {
+        return this.MAX_WORD_LENGTH;
+    }
+
+    public int getMAX_POSITIONS_PER_WORD() {
+        return this.MAX_POSITIONS_PER_WORD;
     }
 
     public record DocumentWordSpan(HtmlTag tag, int start, int end) {

@@ -1,6 +1,5 @@
 package nu.marginalia.index.forward;
 
-import lombok.SneakyThrows;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
@@ -40,9 +39,9 @@ class ForwardIndexConverterTest {
     private Path docsSpanData;
 
     int workSetSize = 512;
+
     @BeforeEach
-    @SneakyThrows
-    void setUp() {
+    void setUp() throws Exception {
 
         workDir = Files.createTempDirectory(getClass().getSimpleName());
 
@@ -75,7 +74,7 @@ class ForwardIndexConverterTest {
         return UrlIdCodec.encodeId((int) domain, (int) url);
     }
 
-    public void createEntry(IndexJournalSlopWriter writer, int id) {
+    public void createEntry(IndexJournalSlopWriter writer, int id) throws IOException {
         writer.put(
                 createId(id, id/20),
                 new SlopDocumentRecord.KeywordsProjection(

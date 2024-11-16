@@ -4,12 +4,12 @@ import com.github.jknack.handlebars.*;
 import com.github.jknack.handlebars.helper.ConditionalHelpers;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
-import lombok.SneakyThrows;
 import nu.marginalia.renderer.config.HandlebarsConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -42,22 +42,35 @@ public class MustacheRenderer<T> {
         }
     }
 
-    @SneakyThrows
     public String render(T model) {
-        return template.apply(model);
+        try {
+            return template.apply(model);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to render template", ex);
+        }
     }
 
-    @SneakyThrows
     public <T2> String render(T model, String name, List<T2> children) {
         Context ctx = Context.newBuilder(model).combine(name, children).build();
 
-        return template.apply(ctx);
+        try {
+            return template.apply(ctx);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to render template", ex);
+        }
     }
 
-    @SneakyThrows
     public String render(T model, Map<String, ?> children) {
         Context ctx = Context.newBuilder(model).combine(children).build();
-        return template.apply(ctx);
+
+        try {
+            return template.apply(ctx);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to render template", ex);
+        }
     }
 
 }

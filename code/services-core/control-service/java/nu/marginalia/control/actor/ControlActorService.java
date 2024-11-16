@@ -3,7 +3,6 @@ package nu.marginalia.control.actor;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.actor.ActorStateMachine;
 import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
@@ -105,7 +104,7 @@ public class ControlActorService {
 
         stateMachines.get(process).init(json);
     }
-    @SneakyThrows
+
     public void stop(ControlActor process) {
         eventLog.logEvent("FSM-STOP", process.id());
 

@@ -1,6 +1,5 @@
 package nu.marginalia.search.model;
 
-import lombok.Getter;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.idx.WordFlags;
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +9,12 @@ import java.util.*;
 /** A class to hold a list of UrlDetails, grouped by domain, where the first one is the main result
  * and the rest are additional results, for summary display. */
 public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
+
+    @NotNull
+    public final UrlDetails first;
+
+    @NotNull
+    public final List<UrlDetails> rest;
 
     /** Create a new ClusteredUrlDetails from a collection of UrlDetails,
      * with the best result as "first", and the others, in descending order
@@ -61,13 +66,16 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
         this.rest = Collections.emptyList();
     }
 
-    @NotNull
-    @Getter
-    public final UrlDetails first;
+    // For renderer use, do not remove
+    public @NotNull UrlDetails getFirst() {
+        return first;
+    }
 
-    @NotNull
-    @Getter
-    public final List<UrlDetails> rest;
+    // For renderer use, do not remove
+    public @NotNull List<UrlDetails> getRest() {
+        return rest;
+    }
+
 
     public EdgeDomain getDomain() {
         return first.url.getDomain();

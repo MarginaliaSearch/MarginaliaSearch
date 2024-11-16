@@ -2,7 +2,6 @@ package nu.marginalia.service.client;
 
 import com.google.common.collect.Sets;
 import io.grpc.ManagedChannel;
-import lombok.SneakyThrows;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
 import nu.marginalia.service.discovery.property.PartitionTraits;
@@ -14,7 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -32,11 +33,12 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Function<ManagedChannel, STUB> stubConstructor;
 
 
-    @SneakyThrows
     public GrpcSingleNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                      ServiceKey<? extends PartitionTraits.Unicast> serviceKey,
                                      Function<InstanceAddress, ManagedChannel> channelConstructor,
-                                     Function<ManagedChannel, STUB> stubConstructor) {
+                                     Function<ManagedChannel, STUB> stubConstructor)
+            throws Exception
+    {
         super(serviceKey);
 
         this.serviceRegistryIf = serviceRegistryIf;
@@ -112,7 +114,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
                 }
             }
             catch (Exception e) {
-                logger.error(STR."Failed to get channel for \{address}", e);
+                logger.error("Failed to get channel for " + address, e);
                 return null;
             }
         }

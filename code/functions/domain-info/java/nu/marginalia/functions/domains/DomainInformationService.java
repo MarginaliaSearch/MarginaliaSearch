@@ -56,10 +56,7 @@ public class DomainInformationService {
 
             ResultSet rs;
 
-            rs = stmt.executeQuery(STR."""
-                    SELECT IP, NODE_AFFINITY, DOMAIN_NAME, STATE, IFNULL(RANK, 1) AS RANK
-                           FROM EC_DOMAIN WHERE ID=\{domainId}
-                       """);
+            rs = stmt.executeQuery("SELECT IP, NODE_AFFINITY, DOMAIN_NAME, STATE, IFNULL(RANK, 1) AS RANK\n       FROM EC_DOMAIN WHERE ID=" + domainId + "\n   ");
             if (rs.next()) {
                 String ip = rs.getString("IP");
 
@@ -77,20 +74,14 @@ public class DomainInformationService {
                 builder.setState(rs.getString("STATE"));
                 builder.setRanking(Math.round(100.0*(1.0-rs.getDouble("RANK"))));
             }
-            rs = stmt.executeQuery(STR."""
-                    SELECT 1 FROM CRAWL_QUEUE
-                    INNER JOIN EC_DOMAIN ON CRAWL_QUEUE.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME
-                    WHERE EC_DOMAIN.ID=\{domainId}
-                       """);
+            rs = stmt.executeQuery("SELECT 1 FROM CRAWL_QUEUE\nINNER JOIN EC_DOMAIN ON CRAWL_QUEUE.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME\nWHERE EC_DOMAIN.ID=" + domainId + "\n   ");
             inCrawlQueue = rs.next();
             builder.setInCrawlQueue(inCrawlQueue);
 
             builder.setIncomingLinks(linkGraphClient.countLinksToDomain(domainId));
             builder.setOutboundLinks(linkGraphClient.countLinksFromDomain(domainId));
 
-            rs = stmt.executeQuery(STR."""
-                    SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=\{domainId}
-                       """);
+            rs = stmt.executeQuery("SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=" + domainId + "\n   ");
             if (rs.next()) {
                 pagesVisited = rs.getInt("VISITED_URLS");
 

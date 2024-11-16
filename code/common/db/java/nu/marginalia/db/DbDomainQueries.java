@@ -7,12 +7,13 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
 
+import java.sql.SQLException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutionException;
 
 @Singleton
 public class DbDomainQueries {
@@ -27,7 +28,6 @@ public class DbDomainQueries {
     }
 
 
-    @SneakyThrows
     public Integer getDomainId(EdgeDomain domain) {
         try (var connection = dataSource.getConnection()) {
 
@@ -42,12 +42,14 @@ public class DbDomainQueries {
                 throw new NoSuchElementException();
             });
         }
-        catch (UncheckedExecutionException ex) {
-            throw ex.getCause();
+        catch (ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
-    @SneakyThrows
     public OptionalInt tryGetDomainId(EdgeDomain domain) {
 
         Integer maybeId = domainIdCache.getIfPresent(domain);
@@ -70,11 +72,13 @@ public class DbDomainQueries {
             return OptionalInt.empty();
         }
         catch (UncheckedExecutionException ex) {
-            return OptionalInt.empty();
+            throw new RuntimeException(ex.getCause());
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
-    @SneakyThrows
     public Optional<EdgeDomain> getDomain(int id) {
         try (var connection = dataSource.getConnection()) {
 
@@ -86,6 +90,12 @@ public class DbDomainQueries {
                 }
                 return Optional.empty();
             }
+        }
+        catch (UncheckedExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

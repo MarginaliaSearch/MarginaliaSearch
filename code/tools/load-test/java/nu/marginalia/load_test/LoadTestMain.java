@@ -50,9 +50,8 @@ public class LoadTestMain {
         }
     }
 
-    private static List<String> loadCommonWords() {
+    private static List<String> loadCommonWords() throws IOException {
         var dict = new TermFrequencyDict(WmsaHome.getLanguageModels());
-
 
         try (var lines = Files.lines(Path.of("/usr/share/dict/american-english"))) {
             return lines.map(String::toLowerCase).filter(term -> dict.getTermFreq(term) > 100000).collect(Collectors.toList());

@@ -10,7 +10,8 @@ import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
 import nu.marginalia.api.svc.ResponseCache;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.Service;
 import nu.marginalia.service.server.mq.MqRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,9 @@ public class ApiService extends Service {
                       ResponseCache responseCache,
                       LicenseService licenseService,
                       RateLimiterService rateLimiterService,
-                      ApiSearchOperator searchOperator
-                      ) {
+                      ApiSearchOperator searchOperator)
+    throws Exception
+    {
 
         super(params);
 

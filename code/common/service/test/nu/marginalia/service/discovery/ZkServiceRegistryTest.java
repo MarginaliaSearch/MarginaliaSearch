@@ -1,9 +1,9 @@
 package nu.marginalia.service.discovery;
 
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import nu.marginalia.service.ServiceId;
 import nu.marginalia.test.TestApiGrpc;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -33,7 +33,7 @@ class ZkServiceRegistryTest {
     @BeforeEach
     public void setUp() {
         zookeeper.start();
-        connectString = STR."\{zookeeper.getHost()}:\{zookeeper.getMappedPort(ZOOKEEPER_PORT)}";
+        connectString = zookeeper.getHost() + ":" + zookeeper.getMappedPort(ZOOKEEPER_PORT);
     }
 
     @AfterEach

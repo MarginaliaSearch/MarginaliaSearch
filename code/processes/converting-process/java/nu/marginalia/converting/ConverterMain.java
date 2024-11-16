@@ -363,7 +363,7 @@ public class ConverterMain extends ProcessMainClass {
             };
         }
         catch (Exception ex) {
-            inbox.sendResponse(msg, MqInboxResponse.err(STR."\{ex.getClass().getSimpleName()}: \{ex.getMessage()}"));
+            inbox.sendResponse(msg, MqInboxResponse.err(ex.getClass().getSimpleName() + ": " + ex.getMessage()));
 
             throw ex;
         }

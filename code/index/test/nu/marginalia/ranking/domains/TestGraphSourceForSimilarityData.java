@@ -1,12 +1,12 @@
 package nu.marginalia.ranking.domains;
 
-import lombok.SneakyThrows;
 import nu.marginalia.ranking.domains.data.GraphSource;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +33,6 @@ public class TestGraphSourceForSimilarityData implements GraphSource {
         return idToName.get(id);
     }
 
-    @SneakyThrows
     @Override
     public Graph<Integer, ?> getGraph() {
         Graph<Integer, ?> graph = new DefaultUndirectedWeightedGraph<>(DefaultWeightedEdge.class);
@@ -55,6 +54,9 @@ public class TestGraphSourceForSimilarityData implements GraphSource {
                     })
                     .forEach(graph::addVertex);
         }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         try (var stream = Files
                 .lines(similarityDataPath)) {
@@ -70,6 +72,9 @@ public class TestGraphSourceForSimilarityData implements GraphSource {
                             graph.setEdgeWeight(src, dest, weight);
                         }
                     });
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         return graph;

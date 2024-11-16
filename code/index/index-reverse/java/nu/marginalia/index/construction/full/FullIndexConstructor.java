@@ -1,6 +1,5 @@
 package nu.marginalia.index.construction.full;
 
-import lombok.SneakyThrows;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.IndexJournal;
@@ -78,35 +77,48 @@ public class FullIndexConstructor {
         }
     }
 
-    @SneakyThrows
     private FullPreindexReference construct(IndexJournalPage journalInstance, PositionsFileConstructor positionsFileConstructor) {
-        return FullPreindex
-                .constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, tmpDir)
-                .closeToReference();
-    }
-
-    @SneakyThrows
-    private FullPreindexReference merge(FullPreindexReference leftR, FullPreindexReference rightR) {
-
-        var left = leftR.open();
-        var right = rightR.open();
-
         try {
-            return FullPreindex.merge(tmpDir, left, right).closeToReference();
+            return FullPreindex
+                    .constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, tmpDir)
+                    .closeToReference();
         }
-        finally {
-            left.delete();
-            right.delete();
+        catch (IOException e) {
+            logger.error("Error constructing preindex", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private FullPreindexReference merge(FullPreindexReference leftR, FullPreindexReference rightR) {
+        try {
+            var left = leftR.open();
+            var right = rightR.open();
+
+            try {
+                return FullPreindex.merge(tmpDir, left, right).closeToReference();
+            } finally {
+                left.delete();
+                right.delete();
+            }
+        }
+        catch (IOException e) {
+            logger.error("Error merging preindex", e);
+            throw new RuntimeException(e);
         }
 
 
     }
 
-    @SneakyThrows
     private void finalizeIndex(FullPreindexReference finalPR) {
-        var finalP = finalPR.open();
-        finalP.finalizeIndex(outputFileDocs, outputFileWords);
-        finalP.delete();
+        try {
+            var finalP = finalPR.open();
+            finalP.finalizeIndex(outputFileDocs, outputFileWords);
+            finalP.delete();
+        }
+        catch (IOException e) {
+            logger.error("Error finalizing index", e);
+            throw new RuntimeException(e);
+        }
     }
 
 

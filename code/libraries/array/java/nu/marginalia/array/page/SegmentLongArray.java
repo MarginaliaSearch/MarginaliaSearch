@@ -148,7 +148,7 @@ public class SegmentLongArray implements LongArray {
         final int stride = 1024*1024*128; // Copy 1 GB at a time 'cause byte buffers are 'a byte buffering
 
         if (source.size() / 8 < sourceStart + (arrayEnd - arrayStart)) {
-            throw new IndexOutOfBoundsException(STR."Source channel too small: \{source.size()} < \{sourceStart + (arrayEnd - arrayStart)}");
+            throw new IndexOutOfBoundsException("Source channel too small: " + source.size() + " < " + (sourceStart + (arrayEnd - arrayStart)));
         }
 
         long ss = sourceStart;

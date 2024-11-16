@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import nu.marginalia.util.NamedExecutorFactory;
 import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.PartitionTraits;
 import nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
+import nu.marginalia.util.NamedExecutorFactory;
 
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -48,7 +48,12 @@ public class GrpcChannelPoolFactory {
     public <STUB> GrpcSingleNodeChannelPool<STUB> createSingle(ServiceKey<? extends PartitionTraits.Unicast> key,
                                                              Function<ManagedChannel, STUB> stubConstructor)
     {
-        return new GrpcSingleNodeChannelPool<>(serviceRegistryIf, key, this::createChannel, stubConstructor);
+        try {
+            return new GrpcSingleNodeChannelPool<>(serviceRegistryIf, key, this::createChannel, stubConstructor);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private ManagedChannel createChannel(InstanceAddress route) {

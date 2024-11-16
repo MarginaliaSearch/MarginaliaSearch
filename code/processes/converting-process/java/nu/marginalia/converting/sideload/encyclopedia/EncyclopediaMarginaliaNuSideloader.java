@@ -3,7 +3,6 @@ package nu.marginalia.converting.sideload.encyclopedia;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
-import lombok.SneakyThrows;
 import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
@@ -78,7 +77,6 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         return ret;
     }
 
-    @SneakyThrows
     @Override
     public Iterator<ProcessedDocument> getDocumentsStream() {
         // This leaks a thread pool, but it doesn't matter since this is a one-off process

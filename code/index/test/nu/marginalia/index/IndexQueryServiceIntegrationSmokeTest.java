@@ -2,7 +2,6 @@ package nu.marginalia.index;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
@@ -378,8 +377,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         return UrlIdCodec.encodeId((32 - (id % 32)), id);
     }
 
-    @SneakyThrows
-    public void loadData(DocumentDbWriter ldbw, int id) {
+    public void loadData(DocumentDbWriter ldbw, int id) throws Exception {
         int[] factors = IntStream
                 .rangeClosed(1, id)
                 .filter(v -> (id % v) == 0)
@@ -423,8 +421,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
     }
 
-    @SneakyThrows
-    public void loadDataWithDomain(DocumentDbWriter ldbw, int domain, int id) {
+    public void loadDataWithDomain(DocumentDbWriter ldbw, int domain, int id) throws Exception {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
         long fullId = UrlIdCodec.encodeId(domain, id);
 

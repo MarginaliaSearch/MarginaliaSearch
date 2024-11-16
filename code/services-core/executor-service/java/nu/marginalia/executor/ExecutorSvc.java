@@ -25,8 +25,7 @@ public class ExecutorSvc extends Service {
                        ExecutorSideloadGrpcService executorSideloadGrpcService,
                        ExecutorExportGrpcService executorExportGrpcService,
                        ExecutionInit executionInit,
-                       ExecutorFileTransferService fileTransferService)
-    {
+                       ExecutorFileTransferService fileTransferService) throws Exception {
         super(params,
                 ServicePartition.partition(params.configuration.node()),
                 List.of(executorGrpcService,

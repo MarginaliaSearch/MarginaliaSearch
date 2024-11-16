@@ -1,6 +1,5 @@
 package nu.marginalia.api.searchquery;
 
-import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
@@ -128,24 +127,28 @@ public class QueryProtobufCodec {
         );
     }
 
-    @SneakyThrows
     private static DecoratedSearchResultItem convertDecoratedResult(RpcDecoratedResultItem results) {
-        return new DecoratedSearchResultItem(
-                convertRawResult(results.getRawItem()),
-                new EdgeUrl(results.getUrl()),
-                results.getTitle(),
-                results.getDescription(),
-                results.getUrlQuality(),
-                results.getFormat(),
-                results.getFeatures(),
-                results.getPubYear(), // ??,
-                results.getDataHash(),
-                results.getWordsTotal(),
-                results.getBestPositions(),
-                results.getRankingScore(),
-                results.getResultsFromDomain(),
-                convertRankingDetails(results.getRankingDetails())
-        );
+        try {
+            return new DecoratedSearchResultItem(
+                    convertRawResult(results.getRawItem()),
+                    new EdgeUrl(results.getUrl()),
+                    results.getTitle(),
+                    results.getDescription(),
+                    results.getUrlQuality(),
+                    results.getFormat(),
+                    results.getFeatures(),
+                    results.getPubYear(), // ??,
+                    results.getDataHash(),
+                    results.getWordsTotal(),
+                    results.getBestPositions(),
+                    results.getRankingScore(),
+                    results.getResultsFromDomain(),
+                    convertRankingDetails(results.getRankingDetails())
+            );
+        }
+        catch (Exception ex) {
+            throw new RuntimeException("Failed to convert result", ex);
+        }
     }
 
     private static ResultRankingDetails convertRankingDetails(RpcResultRankingDetails rankingDetails) {
@@ -325,24 +328,28 @@ public class QueryProtobufCodec {
         return builder.build();
     }
 
-    @SneakyThrows
     public static DecoratedSearchResultItem convertQueryResult(RpcDecoratedResultItem rpcDecoratedResultItem) {
-        return new DecoratedSearchResultItem(
-                convertRawResult(rpcDecoratedResultItem.getRawItem()),
-                new EdgeUrl(rpcDecoratedResultItem.getUrl()),
-                rpcDecoratedResultItem.getTitle(),
-                rpcDecoratedResultItem.getDescription(),
-                rpcDecoratedResultItem.getUrlQuality(),
-                rpcDecoratedResultItem.getFormat(),
-                rpcDecoratedResultItem.getFeatures(),
-                rpcDecoratedResultItem.getPubYear(),
-                rpcDecoratedResultItem.getDataHash(),
-                rpcDecoratedResultItem.getWordsTotal(),
-                rpcDecoratedResultItem.getBestPositions(),
-                rpcDecoratedResultItem.getRankingScore(),
-                rpcDecoratedResultItem.getResultsFromDomain(),
-                convertRankingDetails(rpcDecoratedResultItem.getRankingDetails())
-        );
+        try {
+            return new DecoratedSearchResultItem(
+                    convertRawResult(rpcDecoratedResultItem.getRawItem()),
+                    new EdgeUrl(rpcDecoratedResultItem.getUrl()),
+                    rpcDecoratedResultItem.getTitle(),
+                    rpcDecoratedResultItem.getDescription(),
+                    rpcDecoratedResultItem.getUrlQuality(),
+                    rpcDecoratedResultItem.getFormat(),
+                    rpcDecoratedResultItem.getFeatures(),
+                    rpcDecoratedResultItem.getPubYear(),
+                    rpcDecoratedResultItem.getDataHash(),
+                    rpcDecoratedResultItem.getWordsTotal(),
+                    rpcDecoratedResultItem.getBestPositions(),
+                    rpcDecoratedResultItem.getRankingScore(),
+                    rpcDecoratedResultItem.getResultsFromDomain(),
+                    convertRankingDetails(rpcDecoratedResultItem.getRankingDetails())
+            );
+        }
+        catch (Exception ex) {
+            throw new RuntimeException("Failed to convert result", ex);
+        }
     }
 
 }

@@ -2,11 +2,8 @@ package nu.marginalia.service.discovery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
-import nu.marginalia.service.discovery.monitor.*;
+import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
-import static nu.marginalia.service.discovery.property.ServiceEndpoint.*;
-
 import nu.marginalia.service.discovery.property.ServiceKey;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -16,8 +13,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 
 /** A versatile service registry that uses ZooKeeper to store service endpoints.
  * It is used to register services and to look up the endpoints of other services.
@@ -37,18 +39,22 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     private final List<String> livenessPaths = new ArrayList<>();
 
     @Inject
-    @SneakyThrows
     public ZkServiceRegistry(CuratorFramework curatorFramework) {
-        this.curatorFramework = curatorFramework;
+        try {
+            this.curatorFramework = curatorFramework;
 
-        curatorFramework.start();
-        if (!curatorFramework.blockUntilConnected(30, TimeUnit.SECONDS)) {
-            throw new IllegalStateException("Failed to connect to zookeeper after 30s");
+            curatorFramework.start();
+            if (!curatorFramework.blockUntilConnected(30, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Failed to connect to zookeeper after 30s");
+            }
+
+            Runtime.getRuntime().addShutdownHook(
+                    new Thread(this::shutDown, "ZkServiceRegistry shutdown hook")
+            );
         }
-
-        Runtime.getRuntime().addShutdownHook(
-                new Thread(this::shutDown, "ZkServiceRegistry shutdown hook")
-        );
+        catch (Exception ex) {
+            throw new RuntimeException("Failed to start ZkServiceRegistry", ex);
+        }
     }
 
     @Override
@@ -59,8 +65,8 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     {
         var endpoint = new ServiceEndpoint(externalAddress, requestPort(externalAddress, key));
 
-        String path = STR."\{key.toPath()}/\{instanceUUID.toString()}";
-        byte[] payload = STR."\{endpoint.host()}:\{endpoint.port()}".getBytes(StandardCharsets.UTF_8);
+        String path = key.toPath() + "/" + instanceUUID.toString();
+        byte[] payload = (endpoint.host() + ":" + endpoint.port()).getBytes(StandardCharsets.UTF_8);
 
         logger.info("Registering {} -> {}", path, endpoint);
 
@@ -72,14 +78,18 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
         return endpoint;
     }
 
-    @SneakyThrows
     @Override
     public void declareFirstBoot() {
         if (!isFirstBoot()) {
-            curatorFramework.create()
-                    .creatingParentsIfNeeded()
-                    .withMode(CreateMode.PERSISTENT)
-                    .forPath("/first-boot");
+            try {
+                curatorFramework.create()
+                        .creatingParentsIfNeeded()
+                        .withMode(CreateMode.PERSISTENT)
+                        .forPath("/first-boot");
+            }
+            catch (Exception ex) {
+                logger.error("Failed to declare first-boot", ex);
+            }
         }
     }
 
@@ -109,7 +119,7 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     @Override
     public void announceInstance(UUID instanceUUID) {
         try {
-            String serviceRoot = STR."/running-instances/\{instanceUUID.toString()}";
+            String serviceRoot = "/running-instances/" + instanceUUID.toString();
 
             livenessPaths.add(serviceRoot);
 
@@ -128,7 +138,7 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
      */
     public boolean isInstanceRunning(UUID instanceUUID) {
         try {
-            String serviceRoot = STR."/running-instances/\{instanceUUID.toString()}";
+            String serviceRoot = "/running-instances/" + instanceUUID.toString();
             return null != curatorFramework.checkExists().forPath(serviceRoot);
         }
         catch (Exception ex) {
@@ -165,11 +175,11 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                 curatorFramework.create()
                         .creatingParentsIfNeeded()
                         .withMode(CreateMode.EPHEMERAL)
-                        .forPath(STR."/port-registry/\{externalHost}/\{port}", payload);
+                        .forPath("/port-registry/" + externalHost + "/" + port, payload);
                 return port;
             }
             catch (Exception ex) {
-                logger.error(STR."Still negotiating port for \{identifier}");
+                logger.error("Still negotiating port for " + identifier);
             }
         }
 

@@ -2,10 +2,11 @@ package nu.marginalia.explorer;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.StaticResources;
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -36,13 +37,14 @@ public class ExplorerService extends Service {
 
     record SearchResults(String query, String message, String aliasDomain, List<SearchResult> resultList) { }
 
-    @SneakyThrows
     @Inject
     public ExplorerService(BaseServiceParams params,
                            RendererFactory rendererFactory,
                            HikariDataSource dataSource,
                            StaticResources staticResources
-                           ) {
+                           ) throws Exception
+
+    {
 
         super(params);
 

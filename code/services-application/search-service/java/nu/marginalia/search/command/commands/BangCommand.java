@@ -55,7 +55,7 @@ public class BangCommand implements SearchCommandInterface {
             String prefix = bm.prefix().trim();
             String suffix = bm.suffix(bangKey.length()).trim();
 
-            String ret = STR."\{prefix} \{suffix}".trim();
+            String ret = (prefix + " " + suffix).trim();
 
             return Optional.of(ret)
                     .filter(s -> !s.isBlank());

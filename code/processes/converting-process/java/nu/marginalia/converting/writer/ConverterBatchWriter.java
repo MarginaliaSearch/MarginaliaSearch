@@ -1,6 +1,5 @@
 package nu.marginalia.converting.writer;
 
-import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -61,7 +60,6 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     }
 
     @Override
-    @SneakyThrows
     public void writeProcessedDomain(ProcessedDomain domain) {
         try {
             if (domain.documents != null) {

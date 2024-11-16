@@ -7,6 +7,7 @@ import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ class SubjectLikeKeywordsTest {
            """;
 
     @Test
-    public void test() {
+    public void test() throws IOException {
         var lm = TestLanguageModels.getLanguageModels();
         var dict = new TermFrequencyDict(lm);
 

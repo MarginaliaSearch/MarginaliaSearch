@@ -2,7 +2,6 @@ package nu.marginalia.index.api;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
@@ -51,7 +50,6 @@ public class IndexClient {
                                      ) {}
 
     /** Execute a query on the index partitions and return the combined results. */
-    @SneakyThrows
     public AggregateQueryResponse executeQueries(RpcIndexQuery indexRequest, Pagination pagination) {
         List<CompletableFuture<Iterator<RpcDecoratedResultItem>>> futures =
                 channelPool.call(IndexApiGrpc.IndexApiBlockingStub::query)

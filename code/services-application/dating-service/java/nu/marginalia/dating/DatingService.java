@@ -1,7 +1,6 @@
 package nu.marginalia.dating;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
 import nu.marginalia.browse.model.BrowseResult;
@@ -9,7 +8,8 @@ import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
-import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.Service;
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -25,7 +25,7 @@ public class DatingService extends Service {
     private final MustacheRenderer<BrowseResult> datingRenderer;
     private final ScreenshotService screenshotService;
     private final String SESSION_OBJECT_NAME = "so";
-    @SneakyThrows
+
     @Inject
     public DatingService(BaseServiceParams params,
                          RendererFactory rendererFactory,
@@ -33,6 +33,7 @@ public class DatingService extends Service {
                          DbBrowseDomainsSimilarCosine browseSimilarCosine,
                          DbBrowseDomainsRandom browseRandom,
                          ScreenshotService screenshotService)
+            throws Exception
     {
 
         super(params);

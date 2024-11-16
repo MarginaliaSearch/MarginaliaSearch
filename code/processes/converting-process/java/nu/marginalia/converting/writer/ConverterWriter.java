@@ -1,6 +1,5 @@
 package nu.marginalia.converting.writer;
 
-import lombok.SneakyThrows;
 import nu.marginalia.worklog.BatchingWorkLog;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -40,48 +39,55 @@ public class ConverterWriter implements AutoCloseable {
         workerThread.start();
     }
 
-    @SneakyThrows
     public void accept(@Nullable ConverterBatchWritableIf domain) {
         if (null == domain)
             return;
 
-        domainData.put(domain);
-    }
-
-    @SneakyThrows
-    private void writerThread() {
-        IntervalAction switcher = new IntervalAction(this::switchBatch, switchInterval);
-
-        currentWriter = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
-
-        while (running || !domainData.isEmpty()) {
-            // poll with a timeout so we have an
-            // opportunity to check the running condition
-            // ... we could interrupt the thread as well, but
-            // as we enter third party code it's difficult to guarantee it will deal
-            // well with being interrupted
-            var data = domainData.poll(1, TimeUnit.SECONDS);
-
-            if (data == null)
-                continue;
-
-            String id = data.id();
-
-            if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
-                logger.warn("Skipping already logged item {}", id);
-                data.close();
-                continue;
-            }
-
-            currentWriter.write(data);
-
-            workLog.logItem(id);
-
-            switcher.tick();
+        try {
+            domainData.put(domain);
+        }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    @SneakyThrows
+    private void writerThread() {
+        try {
+            IntervalAction switcher = new IntervalAction(this::switchBatch, switchInterval);
+
+            currentWriter = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
+
+            while (running || !domainData.isEmpty()) {
+                // poll with a timeout so we have an
+                // opportunity to check the running condition
+                // ... we could interrupt the thread as well, but
+                // as we enter third party code it's difficult to guarantee it will deal
+                // well with being interrupted
+                var data = domainData.poll(1, TimeUnit.SECONDS);
+
+                if (data == null)
+                    continue;
+
+                String id = data.id();
+
+                if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
+                    logger.warn("Skipping already logged item {}", id);
+                    data.close();
+                    continue;
+                }
+
+                currentWriter.write(data);
+
+                workLog.logItem(id);
+
+                switcher.tick();
+            }
+        }
+        catch (Exception ex) {
+            logger.error("Writer thread failed", ex);
+        }
+    }
+
     public boolean switchBatch() {
         if (workLog.isCurrentBatchEmpty()) {
             // Nothing to commit
@@ -89,13 +95,18 @@ public class ConverterWriter implements AutoCloseable {
         }
 
 
-        // order matters here
-        currentWriter.close();
-        workLog.logFinishedBatch();
-        logger.info("Switching to batch {}", workLog.getBatchNumber());
-        currentWriter = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
+        try {
+            // order matters here
+            currentWriter.close();
+            workLog.logFinishedBatch();
+            logger.info("Switching to batch {}", workLog.getBatchNumber());
+            currentWriter = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
 
-        return true;
+            return true;
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

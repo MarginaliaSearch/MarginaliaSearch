@@ -1,7 +1,6 @@
 package nu.marginalia.service.server;
 
 import io.prometheus.client.Counter;
-import lombok.SneakyThrows;
 import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -44,11 +43,10 @@ public class Service {
     private final int node;
     private GrpcServer grpcServer;
 
-    @SneakyThrows
     public Service(BaseServiceParams params,
                    Runnable configureStaticFiles,
                    ServicePartition partition,
-                   List<DiscoverableService> grpcServices) {
+                   List<DiscoverableService> grpcServices) throws Exception {
 
         this.initialization = params.initialization;
         var config = params.configuration;
@@ -130,14 +128,14 @@ public class Service {
 
     public Service(BaseServiceParams params,
                    ServicePartition partition,
-                   List<DiscoverableService> grpcServices) {
+                   List<DiscoverableService> grpcServices) throws Exception {
         this(params,
                 Service::defaultSparkConfig,
                 partition,
                 grpcServices);
     }
 
-    public Service(BaseServiceParams params) {
+    public Service(BaseServiceParams params) throws Exception {
         this(params,
                 Service::defaultSparkConfig,
                 ServicePartition.any(),

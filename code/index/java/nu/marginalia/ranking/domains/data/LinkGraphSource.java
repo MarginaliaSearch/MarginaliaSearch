@@ -2,7 +2,6 @@ package nu.marginalia.ranking.domains.data;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -18,26 +17,31 @@ public class LinkGraphSource extends AbstractGraphSource {
         this.graphClient = graphClient;
     }
 
-    @SneakyThrows
     @Override
     public Graph<Integer, ?> getGraph() {
-        Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        try {
+            Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
-        addVertices(graph);
+            addVertices(graph);
 
-        var allLinks = graphClient.getAllDomainLinks();
-        var iter = allLinks.iterator();
-        while (iter.advance()) {
-            if (!graph.containsVertex(iter.dest())) {
-                continue;
+            var allLinks = graphClient.getAllDomainLinks();
+            var iter = allLinks.iterator();
+            while (iter.advance()) {
+                if (!graph.containsVertex(iter.dest())) {
+                    continue;
+                }
+                if (!graph.containsVertex(iter.source())) {
+                    continue;
+                }
+
+                graph.addEdge(iter.source(), iter.dest());
             }
-            if (!graph.containsVertex(iter.source())) {
-                continue;
-            }
 
-            graph.addEdge(iter.source(), iter.dest());
+            return graph;
+
         }
-
-        return graph;
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

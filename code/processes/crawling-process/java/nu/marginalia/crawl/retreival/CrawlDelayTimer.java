@@ -1,6 +1,5 @@
 package nu.marginalia.crawl.retreival;
 
-import lombok.SneakyThrows;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 
 import java.time.Duration;
@@ -42,34 +41,38 @@ public class CrawlDelayTimer {
         Thread.sleep(delay.toMillis());
     }
 
-    @SneakyThrows
     public void waitFetchDelay(long spentTime) {
         long sleepTime = delayTime;
 
-        if (sleepTime >= 1) {
-            if (spentTime > sleepTime)
-                return;
+        try {
+            if (sleepTime >= 1) {
+                if (spentTime > sleepTime)
+                    return;
 
-            Thread.sleep(min(sleepTime - spentTime, 5000));
+                Thread.sleep(min(sleepTime - spentTime, 5000));
+            } else {
+                // When no crawl delay is specified, lean toward twice the fetch+process time,
+                // within sane limits. This means slower servers get slower crawling, and faster
+                // servers get faster crawling.
+
+                sleepTime = spentTime * 2;
+                sleepTime = min(sleepTime, DEFAULT_CRAWL_DELAY_MAX_MS);
+                sleepTime = max(sleepTime, DEFAULT_CRAWL_DELAY_MIN_MS);
+
+                if (spentTime > sleepTime)
+                    return;
+
+                Thread.sleep(sleepTime - spentTime);
+            }
+
+            if (slowDown) {
+                // Additional delay when the server is signalling it wants slower requests
+                Thread.sleep(DEFAULT_CRAWL_DELAY_MIN_MS);
+            }
         }
-        else {
-            // When no crawl delay is specified, lean toward twice the fetch+process time,
-            // within sane limits. This means slower servers get slower crawling, and faster
-            // servers get faster crawling.
-
-            sleepTime = spentTime * 2;
-            sleepTime = min(sleepTime, DEFAULT_CRAWL_DELAY_MAX_MS);
-            sleepTime = max(sleepTime, DEFAULT_CRAWL_DELAY_MIN_MS);
-
-            if (spentTime > sleepTime)
-                return;
-
-            Thread.sleep(sleepTime - spentTime);
-        }
-
-        if (slowDown) {
-            // Additional delay when the server is signalling it wants slower requests
-            Thread.sleep( DEFAULT_CRAWL_DELAY_MIN_MS);
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException();
         }
     }
 }

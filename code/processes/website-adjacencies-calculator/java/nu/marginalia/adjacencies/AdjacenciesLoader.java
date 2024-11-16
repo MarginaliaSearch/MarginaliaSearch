@@ -1,7 +1,6 @@
 package nu.marginalia.adjacencies;
 
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +24,12 @@ public class AdjacenciesLoader {
         loaderThread = Thread.ofPlatform().name("Adjacencies Loader Thread").start(this::insertThreadRun);
     }
 
-    @SneakyThrows
     public void load(WebsiteAdjacenciesCalculator.DomainSimilarities similarities) {
-        similaritiesLinkedBlockingDeque.putLast(similarities);
+        try {
+            similaritiesLinkedBlockingDeque.putLast(similarities);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void insertThreadRun() {

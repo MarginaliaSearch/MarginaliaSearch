@@ -2,7 +2,6 @@ package nu.marginalia.service;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,6 @@ public class NodeConfigurationWatcher {
         watcherThread.start();
     }
 
-    @SneakyThrows
     private void pollConfiguration() {
         for (;;) {
             List<Integer> goodNodes = new ArrayList<>();
@@ -34,7 +32,7 @@ public class NodeConfigurationWatcher {
             try (var conn = dataSource.getConnection()) {
                 var stmt = conn.prepareStatement("""
                     SELECT ID FROM NODE_CONFIGURATION
-                    WHERE ACCEPT_QUERIES AND NOT DISABLED 
+                    WHERE ACCEPT_QUERIES AND NOT DISABLED
                     """);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
@@ -47,7 +45,12 @@ public class NodeConfigurationWatcher {
 
             queryNodes = goodNodes;
 
-            TimeUnit.SECONDS.sleep(10);
+            try {
+                TimeUnit.SECONDS.sleep(10);
+            }
+            catch (InterruptedException ex) {
+                return;
+            }
         }
     }
 

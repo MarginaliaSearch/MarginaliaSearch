@@ -1,6 +1,5 @@
 package nu.marginalia.keyword;
 
-import lombok.Builder;
 import nu.marginalia.keyword.extractors.NameLikeKeywords;
 import nu.marginalia.keyword.extractors.SubjectLikeKeywords;
 import nu.marginalia.keyword.extractors.TitleKeywords;
@@ -14,17 +13,19 @@ class KeywordMetadata {
     private final SubjectLikeKeywords subjectLikeKeywords;
     private final UrlKeywords urlKeywords;
 
-    @Builder
     public KeywordMetadata(
             TitleKeywords titleKeywords,
             NameLikeKeywords nameLikeKeywords,
             SubjectLikeKeywords subjectLikeKeywords,
-            UrlKeywords urlKeywords)
-    {
+            UrlKeywords urlKeywords) {
         this.titleKeywords = titleKeywords;
         this.nameLikeKeywords = nameLikeKeywords;
         this.subjectLikeKeywords = subjectLikeKeywords;
         this.urlKeywords = urlKeywords;
+    }
+
+    public static KeywordMetadataBuilder builder() {
+        return new KeywordMetadataBuilder();
     }
 
     public byte getMetadataForWord(String stemmed) {
@@ -54,4 +55,41 @@ class KeywordMetadata {
         return flags;
     }
 
+    public static class KeywordMetadataBuilder {
+        private TitleKeywords titleKeywords;
+        private NameLikeKeywords nameLikeKeywords;
+        private SubjectLikeKeywords subjectLikeKeywords;
+        private UrlKeywords urlKeywords;
+
+        KeywordMetadataBuilder() {
+        }
+
+        public KeywordMetadataBuilder titleKeywords(TitleKeywords titleKeywords) {
+            this.titleKeywords = titleKeywords;
+            return this;
+        }
+
+        public KeywordMetadataBuilder nameLikeKeywords(NameLikeKeywords nameLikeKeywords) {
+            this.nameLikeKeywords = nameLikeKeywords;
+            return this;
+        }
+
+        public KeywordMetadataBuilder subjectLikeKeywords(SubjectLikeKeywords subjectLikeKeywords) {
+            this.subjectLikeKeywords = subjectLikeKeywords;
+            return this;
+        }
+
+        public KeywordMetadataBuilder urlKeywords(UrlKeywords urlKeywords) {
+            this.urlKeywords = urlKeywords;
+            return this;
+        }
+
+        public KeywordMetadata build() {
+            return new KeywordMetadata(this.titleKeywords, this.nameLikeKeywords, this.subjectLikeKeywords, this.urlKeywords);
+        }
+
+        public String toString() {
+            return "KeywordMetadata.KeywordMetadataBuilder(titleKeywords=" + this.titleKeywords + ", nameLikeKeywords=" + this.nameLikeKeywords + ", subjectLikeKeywords=" + this.subjectLikeKeywords + ", urlKeywords=" + this.urlKeywords + ")";
+        }
+    }
 }

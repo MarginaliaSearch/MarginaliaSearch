@@ -1,6 +1,5 @@
 package nu.marginalia.encyclopedia.cleaner;
 
-import lombok.Builder;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -10,7 +9,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-@Builder
 public class CleanerFilter implements NodeFilter {
     final Set<String> badTags;
     final Set<String> badIds;
@@ -19,6 +17,17 @@ public class CleanerFilter implements NodeFilter {
     final Set<Predicate<Element>> predicates;
 
     private static final Pattern spacePattern = Pattern.compile("\\s+");
+
+    CleanerFilter(Set<String> badTags, Set<String> badIds, Set<String> badClasses, Set<Predicate<Element>> predicates) {
+        this.badTags = badTags;
+        this.badIds = badIds;
+        this.badClasses = badClasses;
+        this.predicates = predicates;
+    }
+
+    public static CleanerFilterBuilder builder() {
+        return new CleanerFilterBuilder();
+    }
 
     @Override
     public FilterResult head(Node node, int depth) {
@@ -37,8 +46,7 @@ public class CleanerFilter implements NodeFilter {
                         if (badClasses.contains(c))
                             return FilterResult.REMOVE;
                     }
-                }
-                else if (badClasses.contains(className)) {
+                } else if (badClasses.contains(className)) {
                     return FilterResult.REMOVE;
                 }
             }
@@ -56,5 +64,43 @@ public class CleanerFilter implements NodeFilter {
         }
 
         return FilterResult.CONTINUE;
+    }
+
+    public static class CleanerFilterBuilder {
+        private Set<String> badTags;
+        private Set<String> badIds;
+        private Set<String> badClasses;
+        private Set<Predicate<Element>> predicates;
+
+        CleanerFilterBuilder() {
+        }
+
+        public CleanerFilterBuilder badTags(Set<String> badTags) {
+            this.badTags = badTags;
+            return this;
+        }
+
+        public CleanerFilterBuilder badIds(Set<String> badIds) {
+            this.badIds = badIds;
+            return this;
+        }
+
+        public CleanerFilterBuilder badClasses(Set<String> badClasses) {
+            this.badClasses = badClasses;
+            return this;
+        }
+
+        public CleanerFilterBuilder predicates(Set<Predicate<Element>> predicates) {
+            this.predicates = predicates;
+            return this;
+        }
+
+        public CleanerFilter build() {
+            return new CleanerFilter(this.badTags, this.badIds, this.badClasses, this.predicates);
+        }
+
+        public String toString() {
+            return "CleanerFilter.CleanerFilterBuilder(badTags=" + this.badTags + ", badIds=" + this.badIds + ", badClasses=" + this.badClasses + ", predicates=" + this.predicates + ")";
+        }
     }
 }

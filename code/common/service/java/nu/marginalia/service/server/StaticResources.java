@@ -1,20 +1,18 @@
 package nu.marginalia.service.server;
 
-import lombok.SneakyThrows;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 import spark.resource.ClassPathResource;
 import spark.staticfiles.MimeType;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 public class StaticResources {
     private final long startTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
-    @SneakyThrows
     public void serveStatic(String domain, String path, Request req, Response rsp) {
         try {
             if (path.startsWith("..") || domain.startsWith("..")) {
@@ -28,7 +26,7 @@ public class StaticResources {
 
             resource.getInputStream().transferTo(rsp.raw().getOutputStream());
         }
-        catch (IllegalArgumentException | FileNotFoundException ex) {
+        catch (IllegalArgumentException | IOException ex) {
             Spark.halt(404);
         }
     }
@@ -57,7 +55,6 @@ public class StaticResources {
         return "application/octet-stream";
     }
 
-    @SneakyThrows
     private void handleEtagStatic(ClassPathResource resource, Request req, Response rsp) {
         rsp.header("Cache-Control", "public,max-age=3600");
         rsp.type(MimeType.fromResource(resource));

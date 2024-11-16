@@ -238,7 +238,7 @@ public class QWordGraph implements Iterable<QWord> {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph {\n");
         for (var link : links) {
-            sb.append(STR."\"\{link.from().word()}\" -> \"\{link.to.word()}\";\n");
+            sb.append("\"" + link.from().word() + "\" -> \"" + link.to.word() + "\";\n");
         }
         sb.append("}\n");
         return sb.toString();

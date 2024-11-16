@@ -7,7 +7,6 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import lombok.SneakyThrows;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
@@ -109,7 +108,6 @@ public class IndexGrpcService
     }
 
     // GRPC endpoint
-    @SneakyThrows
     public void query(RpcIndexQuery request,
                       StreamObserver<RpcDecoratedResultItem> responseObserver) {
 
@@ -157,9 +155,14 @@ public class IndexGrpcService
 
 
     // exists for test access
-    @SneakyThrows
     List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
-        return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
+        try {
+            return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
+        }
+        catch (Exception ex) {
+            logger.error("Error in handling request", ex);
+            return List.of();
+        }
     }
 
     private SearchSet getSearchSet(SearchSpecification specsSet) {

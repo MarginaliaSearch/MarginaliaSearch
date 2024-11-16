@@ -4,6 +4,6 @@ import nu.marginalia.service.discovery.property.ServiceKey;
 
 public class ServiceNotAvailableException extends RuntimeException {
     public ServiceNotAvailableException(ServiceKey<?> key) {
-        super(STR."Service \{key} not available");
+        super("Service " + key + " not available");
     }
 }

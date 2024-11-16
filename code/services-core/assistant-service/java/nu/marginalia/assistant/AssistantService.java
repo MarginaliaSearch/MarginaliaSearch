@@ -2,7 +2,6 @@ package nu.marginalia.assistant;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.assistant.suggest.Suggestions;
 import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
@@ -26,7 +25,6 @@ public class AssistantService extends Service {
     private final Gson gson = GsonFactory.get();
     private final Suggestions suggestions;
 
-    @SneakyThrows
     @Inject
     public AssistantService(BaseServiceParams params,
                             ScreenshotService screenshotService,
@@ -35,6 +33,7 @@ public class AssistantService extends Service {
                             FeedsGrpcService feedsGrpcService,
                             MathGrpcService mathGrpcService,
                             Suggestions suggestions)
+            throws Exception
     {
         super(params, ServicePartition.any(),
                 List.of(domainInfoGrpcService,

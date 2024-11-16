@@ -63,6 +63,6 @@ public class QWordPath {
 
     @Override
     public String toString() {
-        return STR."WordPath{nodes=\{nodes}\{'}'}";
+        return "WordPath{nodes=" + nodes + '}';
     }
 }

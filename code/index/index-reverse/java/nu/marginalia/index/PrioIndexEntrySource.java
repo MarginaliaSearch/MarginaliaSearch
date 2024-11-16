@@ -1,10 +1,9 @@
 package nu.marginalia.index;
 
-import lombok.SneakyThrows;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.query.EntrySource;
-import nu.marginalia.sequence.io.BitReader;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.sequence.io.BitReader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -62,7 +61,6 @@ public class PrioIndexEntrySource implements EntrySource {
     }
 
     @Override
-    @SneakyThrows
     @SuppressWarnings("preview")
     public void read(LongQueryBuffer buffer) {
         var outputBuffer = buffer.asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);

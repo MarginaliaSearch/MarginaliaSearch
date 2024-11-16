@@ -1,7 +1,6 @@
 package nu.marginalia.tools.experiments;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.classifier.topic.AdHocDetector;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
@@ -10,6 +9,7 @@ import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -20,10 +20,13 @@ public class TopicExperiment extends LegacyExperiment {
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
     Path filename = null;
 
-    @SneakyThrows
     public void args(String... args) {
         filename = Path.of(args[0]);
-        detector = new AdHocDetector(Files.readAllLines(filename));
+        try {
+            detector = new AdHocDetector(Files.readAllLines(filename));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Inject

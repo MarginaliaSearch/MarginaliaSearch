@@ -1,7 +1,6 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import org.slf4j.Logger;
@@ -22,7 +21,6 @@ public class SiteRedirectCommand implements SearchCommandInterface {
     public SiteRedirectCommand() {
     }
 
-    @SneakyThrows
     @Override
     public Optional<Object> process(Response response, SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {

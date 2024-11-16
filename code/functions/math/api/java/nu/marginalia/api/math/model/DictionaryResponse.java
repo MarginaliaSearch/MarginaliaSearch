@@ -1,14 +1,10 @@
 package nu.marginalia.api.math.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.util.List;
 
-@ToString @Getter @AllArgsConstructor @NoArgsConstructor
-public class DictionaryResponse {
-    public String word;
-    public List<DictionaryEntry> entries;
+public record DictionaryResponse(String word, List<DictionaryEntry> entries) {
+    public DictionaryResponse(String word, List<DictionaryEntry> entries) {
+        this.word = word;
+        this.entries = entries.stream().toList(); // Make an immutable copy
+    }
 }

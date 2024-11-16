@@ -5,15 +5,6 @@
  * when applied to subprojects from the root project, this has to be done in each subproject.
  * */
 apply plugin: 'java'
-apply plugin: 'io.freefair.lombok'
-
-dependencies {
-    implementation libs.lombok
-    testImplementation libs.lombok
-    annotationProcessor libs.lombok
-
-    lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
-}
 
 test {
     maxHeapSize = "8G"

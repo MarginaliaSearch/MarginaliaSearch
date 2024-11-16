@@ -2,7 +2,6 @@ package nu.marginalia.control.node.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
@@ -142,12 +141,14 @@ public class ControlNodeService {
         return "";
     }
 
-    @SneakyThrows
     public String redirectToOverview(int nodeId) {
-        return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
+        try {
+            return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public String redirectToOverview(Request request) {
         return redirectToOverview(Integer.parseInt(request.params("id")));
     }
@@ -332,7 +333,6 @@ public class ControlNodeService {
         return events;
     }
 
-    @SneakyThrows
     public List<IndexNodeStatus> getNodeStatusList() {
         return nodeConfigurationService
                 .getAll()
@@ -342,7 +342,6 @@ public class ControlNodeService {
                 .toList();
     }
 
-    @SneakyThrows
     public IndexNodeStatus getStatus(NodeConfiguration config) {
         return new IndexNodeStatus(config,
                 monitors.isServiceUp(ServiceId.Index, config.node()),

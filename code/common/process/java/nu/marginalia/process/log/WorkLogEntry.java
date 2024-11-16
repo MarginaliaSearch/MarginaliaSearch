@@ -33,6 +33,6 @@ public record WorkLogEntry(String id, String ts, String path, int cnt) {
 
         String relPath = fileName();
 
-        return STR."\{relPath.substring(0, 2)}/\{relPath.substring(2, 4)}/\{relPath}";
+        return relPath.substring(0, 2) + "/" + relPath.substring(2, 4) + "/" + relPath;
     }
 }

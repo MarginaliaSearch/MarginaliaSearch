@@ -3,7 +3,6 @@ package nu.marginalia.screenshot;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.SneakyThrows;
 import nu.marginalia.db.DbDomainQueries;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -11,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 import static java.lang.Integer.parseInt;
@@ -48,7 +48,6 @@ public class ScreenshotService {
         return false;
     }
 
-    @SneakyThrows
     public Object serveScreenshotRequest(Request request, Response response) {
         if (Strings.isNullOrEmpty(request.params("id"))) {
             response.redirect("https://search.marginalia.nu/");
@@ -74,6 +73,9 @@ public class ScreenshotService {
                 IOUtils.copy(rsp.getBlob(2).getBinaryStream(), response.raw().getOutputStream());
                 return "";
             }
+        }
+        catch (IOException ex) {
+            logger.warn("IO error", ex);
         }
         catch (SQLException ex) {
             logger.warn("SQL error", ex);

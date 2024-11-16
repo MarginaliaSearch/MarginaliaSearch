@@ -1,6 +1,5 @@
 package nu.marginalia.converting.model;
 
-import lombok.ToString;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.model.EdgeDomain;
@@ -11,8 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-@ToString
-public class ProcessedDomain implements ConverterBatchWritableIf  {
+public class ProcessedDomain implements ConverterBatchWritableIf {
     public EdgeDomain domain;
 
     public List<ProcessedDocument> documents;
@@ -21,8 +19,10 @@ public class ProcessedDomain implements ConverterBatchWritableIf  {
     public String ip;
 
 
-    /** Used by the sideloader to give advice on how many documents are crawled
-     * without actually having to count (which would take forever) */
+    /**
+     * Used by the sideloader to give advice on how many documents are crawled
+     * without actually having to count (which would take forever)
+     */
     @Nullable
     public Integer sizeloadSizeAdvice;
 
@@ -41,5 +41,10 @@ public class ProcessedDomain implements ConverterBatchWritableIf  {
     }
 
     @Override
-    public void close() {}
+    public void close() {
+    }
+
+    public String toString() {
+        return "ProcessedDomain(domain=" + this.domain + ", documents=" + this.documents + ", state=" + this.state + ", redirect=" + this.redirect + ", ip=" + this.ip + ", sizeloadSizeAdvice=" + this.sizeloadSizeAdvice + ")";
+    }
 }

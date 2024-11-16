@@ -83,7 +83,7 @@ public class StackExchangeSideloadHelper {
         String fileName = sourcePath.toFile().getName();
         String hash = SideloadHelper.getCrc32FileHash(sourcePath);
 
-        return sourcePath.getParent().resolve(STR."\{fileName}.\{hash}.db");
+        return sourcePath.getParent().resolve(fileName + "." + hash + ".db");
     }
 
     private static Optional<String> getStackexchangeDomainFromFilename(String fileName) {

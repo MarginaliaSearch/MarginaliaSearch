@@ -27,7 +27,7 @@ public interface HttpFetcher {
     HttpFetchResult fetchContent(EdgeUrl url,
                                  WarcRecorder recorder,
                                  ContentTags tags,
-                                 ProbeType probeType) throws HttpFetcherImpl.RateLimitException;
+                                 ProbeType probeType) throws HttpFetcherImpl.RateLimitException, Exception;
 
     SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder);
 

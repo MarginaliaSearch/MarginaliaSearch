@@ -2,7 +2,6 @@ package nu.marginalia.actor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.SneakyThrows;
 import nu.marginalia.actor.monitor.FileStorageMonitorActor;
 import nu.marginalia.actor.proc.*;
 import nu.marginalia.actor.prototype.ActorPrototype;
@@ -13,6 +12,8 @@ import nu.marginalia.actor.task.*;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class ExecutorActorControlService {
     private final ExecutorActorStateMachines stateMachines;
     public Map<ExecutorActor, ActorPrototype> actorDefinitions = new HashMap<>();
     private final int node;
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public ExecutorActorControlService(MessageQueueFactory messageQueueFactory,
@@ -119,11 +122,15 @@ public class ExecutorActorControlService {
         stateMachines.startFromJSON(process, state, json);
     }
 
-    @SneakyThrows
     public void stop(ExecutorActor process) {
         eventLog.logEvent("FSM-STOP", process.id());
 
-        stateMachines.stop(process);
+        try {
+            stateMachines.stop(process);
+        }
+        catch (Exception e) {
+            logger.error("Failed to stop FSM", e);
+        }
     }
 
     public Map<ExecutorActor, ActorStateInstance> getActorStates() {

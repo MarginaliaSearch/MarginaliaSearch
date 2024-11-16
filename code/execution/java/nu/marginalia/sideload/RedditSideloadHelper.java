@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -97,7 +98,7 @@ public class RedditSideloadHelper {
 
     private static Path getRedditDbPath(RedditFilePair pair) throws IOException {
         String hash = SideloadHelper.getCrc32FileHash(pair.commentsPath());
-        return pair.rootDir().resolve(STR."\{pair.fileNameBase}.\{hash}.db");
+        return pair.rootDir().resolve(pair.fileNameBase + "." + hash + ".db");
     }
 
 }

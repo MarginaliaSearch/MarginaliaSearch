@@ -1,6 +1,9 @@
 package nu.marginalia.actor;
 
 import nu.marginalia.actor.prototype.ActorPrototype;
+import nu.marginalia.actor.state.ActorResumeBehavior;
+import nu.marginalia.actor.state.ActorStateInstance;
+import nu.marginalia.actor.state.ActorStateTransition;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
@@ -8,7 +11,6 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.inbox.MqSynchronousInbox;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.actor.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -305,33 +307,38 @@ public class ActorStateMachine {
         return state;
     }
 
-    public void abortExecution() throws Exception {
-        // Create a fake message to abort the execution
-        // This helps make sense of the queue when debugging
-        // and also permits the real termination message to have an
-        // unique expected ID
+    public void abortExecution() {
+        try {
+            // Create a fake message to abort the execution
+            // This helps make sense of the queue when debugging
+            // and also permits the real termination message to have an
+            // unique expected ID
 
-        long abortMsgId = smOutbox.sendNotice(expectedMessage.id, "ABORT", "Aborting execution");
+            long abortMsgId = smOutbox.sendNotice(expectedMessage.id, "ABORT", "Aborting execution");
 
-        // Set it as dead to clean up the queue from mystery ACK messages
-        smOutbox.flagAsDead(abortMsgId);
+            // Set it as dead to clean up the queue from mystery ACK messages
+            smOutbox.flagAsDead(abortMsgId);
 
-        // Set the expected message to the abort message,
-        // technically there's a slight chance of a race condition here,
-        // which will cause this message to be ERR'd and the process to
-        // continue, but it's very unlikely and the worst that can happen
-        // is you have to abort twice.
+            // Set the expected message to the abort message,
+            // technically there's a slight chance of a race condition here,
+            // which will cause this message to be ERR'd and the process to
+            // continue, but it's very unlikely and the worst that can happen
+            // is you have to abort twice.
 
-        expectedMessage = ExpectedMessage.expectId(abortMsgId);
+            expectedMessage = ExpectedMessage.expectId(abortMsgId);
 
-        // Add a state transition to the monitor state, causing it to reset the state machine to the initial state
-        // (or if no monitor state is defined, set it to the final state)
-        smOutbox.sendNotice(abortMsgId, finalState.name(), "");
+            // Add a state transition to the monitor state, causing it to reset the state machine to the initial state
+            // (or if no monitor state is defined, set it to the final state)
+            smOutbox.sendNotice(abortMsgId, finalState.name(), "");
 
-        // Dislodge the current task with an interrupt.
-        // It's actually fine if we accidentally interrupt the wrong thread
-        // (i.e. the abort task), since it shouldn't be doing anything interruptable
-        smInbox.abortCurrentTask();
+            // Dislodge the current task with an interrupt.
+            // It's actually fine if we accidentally interrupt the wrong thread
+            // (i.e. the abort task), since it shouldn't be doing anything interruptable
+            smInbox.abortCurrentTask();
+        }
+        catch (Exception e) {
+            logger.error("Failed to abort execution", e);
+        }
     }
 
     /** Returns true if there is an INITIAL state that requires no parameters */

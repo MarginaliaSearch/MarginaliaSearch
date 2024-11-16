@@ -29,7 +29,7 @@ public class ExportSampleDataActor extends RecordActorPrototype {
             case Export(FileStorageId crawlId, int size, String name) -> {
                 var storage = storageService.allocateStorage(FileStorageType.EXPORT,
                         "crawl-sample-export",
-                        STR."Crawl Data Sample \{name}/\{size} \{LocalDateTime.now()}"
+                        "Crawl Data Sample " + name + "/" + size + " " + LocalDateTime.now()
                 );
 
                 if (storage == null) yield new Error("Bad storage id");

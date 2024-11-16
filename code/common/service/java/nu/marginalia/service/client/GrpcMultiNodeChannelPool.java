@@ -1,7 +1,6 @@
 package nu.marginalia.service.client;
 
 import io.grpc.ManagedChannel;
-import lombok.SneakyThrows;
 import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.PartitionTraits;
@@ -12,7 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -29,7 +31,6 @@ public class GrpcMultiNodeChannelPool<STUB> {
     private final Function<ManagedChannel, STUB> stubConstructor;
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
 
-    @SneakyThrows
     public GrpcMultiNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                     ServiceKey<ServicePartition.Multi> serviceKey,
                                     Function<ServiceEndpoint.InstanceAddress, ManagedChannel> channelConstructor,
@@ -52,11 +53,16 @@ public class GrpcMultiNodeChannelPool<STUB> {
     }
 
     private GrpcSingleNodeChannelPool<STUB> newSingleChannelPool(int node) {
-        return new GrpcSingleNodeChannelPool<>(
-                serviceRegistryIf,
-                serviceKey.forPartition(ServicePartition.partition(node)),
-                channelConstructor,
-                stubConstructor);
+        try {
+            return new GrpcSingleNodeChannelPool<>(
+                    serviceRegistryIf,
+                    serviceKey.forPartition(ServicePartition.partition(node)),
+                    channelConstructor,
+                    stubConstructor);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Get the list of nodes that are eligible for broadcast-style requests */

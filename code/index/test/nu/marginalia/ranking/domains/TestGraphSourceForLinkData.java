@@ -1,6 +1,5 @@
 package nu.marginalia.ranking.domains;
 
-import lombok.SneakyThrows;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ranking.domains.data.GraphSource;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +43,6 @@ public class TestGraphSourceForLinkData implements GraphSource {
         return idToName.get(id);
     }
 
-    @SneakyThrows
     @Override
     public Graph<Integer, ?> getGraph() {
         Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
@@ -66,6 +64,9 @@ public class TestGraphSourceForLinkData implements GraphSource {
                     })
                     .forEach(graph::addVertex);
         }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         for (var path : linksDataPaths) {
             try (var data = LongArrayFactory.mmapForReadingConfined(path)) {
@@ -81,7 +82,11 @@ public class TestGraphSourceForLinkData implements GraphSource {
                     }
                 });
             }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+
 
         return graph;
     }

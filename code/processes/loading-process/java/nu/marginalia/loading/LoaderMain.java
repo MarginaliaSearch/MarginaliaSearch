@@ -4,8 +4,6 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import lombok.Getter;
-import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
@@ -68,7 +66,7 @@ public class LoaderMain extends ProcessMainClass {
             logger.info("Instructions received");
             instance.run(instructions);
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
             logger.error("Error running loader", ex);
         }
     }
@@ -99,9 +97,8 @@ public class LoaderMain extends ProcessMainClass {
         heartbeat.start();
     }
 
-    @SneakyThrows
-    void run(LoadRequest instructions) {
-        LoaderInputData inputData = instructions.getInputData();
+    void run(LoadRequest instructions) throws Throwable {
+        LoaderInputData inputData = instructions.inputData;
 
         DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(heartbeat, inputData);
 
@@ -138,7 +135,6 @@ public class LoaderMain extends ProcessMainClass {
     }
 
     private static class LoadRequest {
-        @Getter
         private final LoaderInputData inputData;
         private final MqMessage message;
         private final MqSingleShotInbox inbox;

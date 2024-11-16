@@ -127,7 +127,7 @@ public class QWordPathsRenderer {
                         // Recurse into the branches:
                         String branchPart = render(e.getValue(), reachability);
 
-                        return STR."\{commonWord} \{branchPart}";
+                        return commonWord + " " + branchPart;
                     })
                     .collect(Collectors.joining(" | ", " ( ", " ) "));
 
