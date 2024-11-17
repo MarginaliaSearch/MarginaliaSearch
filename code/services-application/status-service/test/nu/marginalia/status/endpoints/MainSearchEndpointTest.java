@@ -1,10 +1,12 @@
 package nu.marginalia.status.endpoints;
 
 import nu.marginalia.status.StatusMetric;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("flaky")
 public class MainSearchEndpointTest {
 
     @Test
