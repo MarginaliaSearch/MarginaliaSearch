@@ -55,7 +55,7 @@ public class StatusMetricDb {
         try (var stmt = connection.prepareStatement(
                 """
                     DELETE FROM measurements
-                    WHERE timestamp < datetime('now', '-14 days')
+                    WHERE datetime(timestamp/1000, 'unixepoch') < datetime('now', '-14 days')
                     """
         )) {
             stmt.executeUpdate();
