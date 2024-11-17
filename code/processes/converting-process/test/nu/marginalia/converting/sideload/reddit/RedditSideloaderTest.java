@@ -7,6 +7,7 @@ import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 
+@Tag("slow")
 class RedditSideloaderTest extends AbstractModule {
     /* This test case exists for debugging, to get deep into the Reddit sideloader and see if it can read the files.
     *  Update the path to the Reddit database in the dbPath variable.

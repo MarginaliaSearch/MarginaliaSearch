@@ -3,10 +3,12 @@ package nu.marginalia.api.svc;
 import nu.marginalia.api.model.ApiLicense;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("flaky")
 class RateLimiterServiceTest {
 
     RateLimiterService rateLimiterService;

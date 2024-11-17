@@ -1,9 +1,8 @@
 package nu.marginalia.functions.searchquery.query_parser.model;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Comparator;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -101,7 +100,7 @@ class QWordGraphTest {
         assertEquals("q b ( c | d )", graph.compileToQuery());
     }
 
-    @Disabled // flaky, the order of the variants is not guaranteed
+    @Tag("flaky") // flaky, the order of the variants is not guaranteed
     @Test
     void testCompile5() {
         // Construct a graph like

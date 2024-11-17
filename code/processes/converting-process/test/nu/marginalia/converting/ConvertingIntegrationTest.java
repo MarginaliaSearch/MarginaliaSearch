@@ -15,6 +15,7 @@ import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.model.html.HtmlStandard;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("slow")
 public class ConvertingIntegrationTest {
 
     private DomainProcessor domainProcessor;

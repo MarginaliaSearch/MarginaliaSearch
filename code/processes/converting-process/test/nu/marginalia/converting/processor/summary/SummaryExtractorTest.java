@@ -10,6 +10,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.*;
 
+@Tag("slow")
 class SummaryExtractorTest {
     private SummaryExtractor summaryExtractor;
     private DocumentKeywordExtractor keywordExtractor;

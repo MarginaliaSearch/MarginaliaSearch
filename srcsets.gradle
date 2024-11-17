@@ -15,6 +15,7 @@ tasks.register('fastTests', Test) {
     maxHeapSize = "8G"
     useJUnitPlatform {
         excludeTags "slow"
+        excludeTags "flaky"
     }
 }
 
