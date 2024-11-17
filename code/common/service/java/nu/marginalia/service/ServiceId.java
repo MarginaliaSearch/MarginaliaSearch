@@ -12,6 +12,7 @@ public enum ServiceId {
     Control("control-service"),
 
     Dating("dating-service"),
+    Status("setatus-service"),
     Explorer("explorer-service");
 
     public final String serviceName;

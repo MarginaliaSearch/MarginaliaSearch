@@ -11,6 +11,7 @@ include 'code:services-application:search-service'
 include 'code:services-application:api-service'
 include 'code:services-application:dating-service'
 include 'code:services-application:explorer-service'
+include 'code:services-application:status-service'
 
 include 'code:functions:math'
 include 'code:functions:math:api'

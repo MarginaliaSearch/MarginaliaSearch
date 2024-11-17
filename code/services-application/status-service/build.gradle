@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'jvm-test-suite'
+    id 'com.google.cloud.tools.jib' version '3.4.3'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.status.StatusMain'
+    applicationName = 'status-service'
+}
+
+tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/docker.gradle"
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation libs.bundles.gson
+
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+    implementation project(':code:common:service')
+    implementation project(':code:common:config')
+    implementation project(':code:common:renderer')
+    implementation project(':code:libraries:message-queue')
+
+    implementation libs.bundles.slf4j
+    implementation libs.prometheus
+
+    implementation libs.notnull
+    implementation libs.sqlite
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation libs.handlebars
+    implementation libs.duckdb
+    implementation libs.jsoup
+
+    implementation dependencies.create(libs.spark.get()) {
+        exclude group: 'org.eclipse.jetty'
+    }
+    implementation libs.bundles.jetty
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}
+
+

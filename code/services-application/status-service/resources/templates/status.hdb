@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <title>Marginalia Search Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <h1>Marginalia Search Status</h1>
+
+  {{#each measurements}}
+      <h2>{{name}}</h2>
+
+      {{#if isOnline}}
+          <p>Online: &check;</p>
+          <p>Request time: {{requestTimeMs}}</p>
+          <p>Avg request time: {{avgRequestTimeMs}}</p>
+          <p>Time since last outage: {{getTimeSinceLastOffline}} </p>
+      {{/if}}
+      {{#unless isOnline}}
+          <p>Online: &cross;</p>
+          <p>Time since last online: {{getTimeSinceLastOnline}} </p>
+      {{/unless}}
+
+      <p>Percent online: {{percentOnline}}% </p>
+      <p>Num failures: {{numFailures}}</p>
+      <p>Num successes: {{numSuccesses}}</p>
+  {{/each}}
+
+</body>
