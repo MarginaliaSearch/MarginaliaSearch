@@ -28,6 +28,7 @@ public class StatusMetricDb {
         String connectionUrl = "jdbc:sqlite:" + statusDbPath;
 
         connection = DriverManager.getConnection(connectionUrl);
+        connection.setAutoCommit(true);
 
         try (var stmt = connection.createStatement()) {
             stmt.execute(
