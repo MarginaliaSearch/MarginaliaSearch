@@ -250,6 +250,10 @@ public class StatusMetricDb {
             return prettyPrintDuration(Duration.between(lastOffline, Instant.now())) + " ago";
         }
 
+        public String getPercentOnlineStr() {
+            return String.format("%.4f%%", percentOnline);
+        }
+
         private String prettyPrintDuration(Duration duration) {
             if (duration.compareTo(Duration.ofSeconds(60)) < 0) {
                 return duration.toSeconds() + "s";

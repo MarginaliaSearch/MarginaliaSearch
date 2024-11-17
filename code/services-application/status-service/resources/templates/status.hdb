@@ -8,23 +8,25 @@
 <body>
   <h1>Marginalia Search Status</h1>
 
+  <p>This page polls the status of each public endpoint every 15 seconds, and keeps statistics for 14 days.</p>
+
+  <table>
   {{#each measurements}}
-      <h2>{{name}}</h2>
+      <tr><th colspan="2">{{name}}</th></tr>
 
       {{#if isOnline}}
-          <p>Online: &check;</p>
-          <p>Request time: {{requestTimeMs}}</p>
-          <p>Avg request time: {{avgRequestTimeMs}}</p>
-          <p>Time since last outage: {{getTimeSinceLastOffline}} </p>
+          <tr><td>Online</td><td>Yes &#128526;</td></tr>
+          <tr><td>Request time</td><td>{{requestTimeMs}} ms</td></tr>
+          <tr><td>Avg request time</td><td>{{avgRequestTimeMs}} ms</td></tr>
+          <tr><td>Last error</td><td>{{timeSinceLastOffline}}</td></tr>
       {{/if}}
       {{#unless isOnline}}
-          <p>Online: &cross;</p>
-          <p>Time since last online: {{getTimeSinceLastOnline}} </p>
+            <tr><td>Online</td><td>No &#128293;</td></tr>
+            <tr><td>Last seen</td><td>{{timeSinceLastOnline}}</td></tr>
       {{/unless}}
-
-      <p>Percent online: {{percentOnline}}% </p>
-      <p>Num failures: {{numFailures}}</p>
-      <p>Num successes: {{numSuccesses}}</p>
+        <tr><td># failures</td><td>{{numFailures}}</td></tr>
+        <tr><td># successes</td><td>{{numSuccesses}}</td></tr>
+        <tr><td>Percent online</td><td>{{percentOnlineStr}}</td></tr>
   {{/each}}
-
+  </table>
 </body>
