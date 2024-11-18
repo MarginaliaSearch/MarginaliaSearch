@@ -11,10 +11,15 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 import javax.annotation.CheckReturnValue;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 @Singleton
 public class FeedsClient {
@@ -46,17 +51,23 @@ public class FeedsClient {
         }
     }
 
+    public void getUpdatedDomains(Instant since, Consumer<UpdatedDomain> consumer) throws ExecutionException, InterruptedException {
+        channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getUpdatedLinks)
+                .run(RpcUpdatedLinksRequest.newBuilder().setSinceEpochMillis(since.toEpochMilli()).build())
+                .forEachRemaining(rsp -> consumer.accept(new UpdatedDomain(rsp)));
+    }
+
+    public record UpdatedDomain(String domain, List<String> urls) {
+        public UpdatedDomain(RpcUpdatedLinksResponse rsp) {
+            this(rsp.getDomain(), new ArrayList<>(rsp.getUrlList()));
+        }
+    }
+
     /** Get the hash of the feed data, for identifying when the data has been updated */
-    public CompletableFuture<String> getFeedDataHash() {
-        try {
-            return channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getFeedDataHash)
-                    .async(executorService)
-                    .run(Empty.getDefaultInstance())
-                    .thenApply(RpcFeedDataHash::getHash);
-        }
-        catch (Exception e) {
-            return CompletableFuture.failedFuture(e);
-        }
+    public String getFeedDataHash() {
+        return channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getFeedDataHash)
+                .run(Empty.getDefaultInstance())
+                .getHash();
     }
 
     /** Update the feeds, return a message ID for the update */

@@ -16,9 +16,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 @Singleton
 public class FeedDb {
@@ -170,5 +172,20 @@ public class FeedDb {
         }
 
         return Base64.getEncoder().encodeToString(digest.digest());
+    }
+
+    public void getLinksUpdatedSince(Instant since, BiConsumer<String, List<String>> consumer) throws Exception {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        if (reader == null) {
+            throw new NullPointerException("Reader is not available");
+        }
+
+        reader.getLinksUpdatedSince(since, consumer);
     }
 }

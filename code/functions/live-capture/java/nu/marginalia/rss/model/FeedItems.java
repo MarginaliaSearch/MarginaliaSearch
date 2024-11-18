@@ -1,7 +1,6 @@
 package nu.marginalia.rss.model;
 
 import java.util.List;
-import java.util.Optional;
 
 public record FeedItems(String domain,
                         String feedUrl,
@@ -16,18 +15,5 @@ public record FeedItems(String domain,
 
     public boolean isEmpty() {
         return items.isEmpty();
-    }
-
-    public Optional<FeedItem> getLatest() {
-        if (items.isEmpty())
-            return Optional.empty();
-
-        return Optional.of(
-                items.getFirst()
-        );
-    }
-
-    public Optional<String> getLatestDate() {
-        return getLatest().map(FeedItem::date);
     }
 }

@@ -14,6 +14,8 @@ import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements DiscoverableService  {
@@ -78,6 +80,27 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
         }
         catch (Exception e) {
             logger.error("Error getting feed data hash", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void getUpdatedLinks(RpcUpdatedLinksRequest request, StreamObserver<RpcUpdatedLinksResponse> responseObserver) {
+        Instant since = Instant.ofEpochMilli(request.getSinceEpochMillis());
+
+        try {
+            feedDb.getLinksUpdatedSince(since, (String domain, List<String> urls) -> {
+                RpcUpdatedLinksResponse rsp = RpcUpdatedLinksResponse.newBuilder()
+                        .setDomain(domain)
+                        .addAllUrl(urls)
+                        .build();
+                responseObserver.onNext(rsp);
+            });
+
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            logger.error("Error getting updated links", e);
             responseObserver.onError(e);
         }
     }
