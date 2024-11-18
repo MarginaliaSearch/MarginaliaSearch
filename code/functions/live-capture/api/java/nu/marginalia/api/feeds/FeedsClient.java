@@ -46,6 +46,19 @@ public class FeedsClient {
         }
     }
 
+    /** Get the hash of the feed data, for identifying when the data has been updated */
+    public CompletableFuture<String> getFeedDataHash() {
+        try {
+            return channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getFeedDataHash)
+                    .async(executorService)
+                    .run(Empty.getDefaultInstance())
+                    .thenApply(RpcFeedDataHash::getHash);
+        }
+        catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
     /** Update the feeds, return a message ID for the update */
     @CheckReturnValue
     public long updateFeeds(RpcFeedUpdateMode mode) throws Exception {

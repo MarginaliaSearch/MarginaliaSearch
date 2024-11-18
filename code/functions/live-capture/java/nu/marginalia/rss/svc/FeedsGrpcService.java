@@ -65,6 +65,24 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
     }
 
     @Override
+    public void getFeedDataHash(Empty request, StreamObserver<RpcFeedDataHash> responseObserver) {
+        if (!feedDb.isEnabled()) {
+            responseObserver.onError(new IllegalStateException("Feed database is disabled on this node"));
+            return;
+        }
+
+        try {
+            String hash = feedDb.getDataHash();
+            responseObserver.onNext(RpcFeedDataHash.newBuilder().setHash(hash).build());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            logger.error("Error getting feed data hash", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void getFeed(RpcDomainId request,
                         StreamObserver<RpcFeed> responseObserver)
     {
