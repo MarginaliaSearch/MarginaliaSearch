@@ -36,10 +36,12 @@ public class ExecutorActorControlService {
                                        ConvertActor convertActor,
                                        ConvertAndLoadActor convertAndLoadActor,
                                        CrawlActor crawlActor,
+                                       LiveCrawlActor liveCrawlActor,
                                        RecrawlSingleDomainActor recrawlSingleDomainActor,
                                        RestoreBackupActor restoreBackupActor,
                                        ConverterMonitorActor converterMonitorFSM,
                                        CrawlerMonitorActor crawlerMonitorActor,
+                                       LiveCrawlerMonitorActor liveCrawlerMonitorActor,
                                        LoaderMonitorActor loaderMonitor,
                                        ProcessLivenessMonitorActor processMonitorFSM,
                                        FileStorageMonitorActor fileStorageMonitorActor,
@@ -61,6 +63,7 @@ public class ExecutorActorControlService {
         this.node = baseServiceParams.configuration.node();
 
         register(ExecutorActor.CRAWL, crawlActor);
+        register(ExecutorActor.LIVE_CRAWL, liveCrawlActor);
         register(ExecutorActor.RECRAWL_SINGLE_DOMAIN, recrawlSingleDomainActor);
 
         register(ExecutorActor.CONVERT, convertActor);
@@ -71,6 +74,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.PROC_CONVERTER_SPAWNER, converterMonitorFSM);
         register(ExecutorActor.PROC_LOADER_SPAWNER, loaderMonitor);
         register(ExecutorActor.PROC_CRAWLER_SPAWNER, crawlerMonitorActor);
+        register(ExecutorActor.PROC_LIVE_CRAWL_SPAWNER, liveCrawlerMonitorActor);
 
         register(ExecutorActor.MONITOR_PROCESS_LIVENESS, processMonitorFSM);
         register(ExecutorActor.MONITOR_FILE_STORAGE, fileStorageMonitorActor);

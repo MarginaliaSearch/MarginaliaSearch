@@ -52,7 +52,7 @@ public class DomainLoaderService {
             throws IOException, SQLException
     {
         Set<String> domainNamesAll = new HashSet<>(100_000);
-        DomainIdRegistry ret = new DomainIdRegistry();
+        DomainIdRegistry ret = new CachingDomainIdRegistry();
 
         try (var conn = dataSource.getConnection();
              var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS"))

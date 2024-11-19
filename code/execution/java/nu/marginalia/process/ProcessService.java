@@ -7,6 +7,7 @@ import nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator;
 import nu.marginalia.converting.ConverterMain;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.index.IndexConstructorMain;
+import nu.marginalia.livecrawler.LiveCrawlerMain;
 import nu.marginalia.loading.LoaderMain;
 import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -50,6 +51,7 @@ public class ProcessService {
 
     public enum ProcessId {
         CRAWLER(CrawlerMain.class),
+        LIVE_CRAWLER(LiveCrawlerMain.class),
         CONVERTER(ConverterMain.class),
         LOADER(LoaderMain.class),
         INDEX_CONSTRUCTOR(IndexConstructorMain.class),
@@ -64,6 +66,7 @@ public class ProcessService {
         List<String> envOpts() {
             String variable = switch (this) {
                 case CRAWLER -> "CRAWLER_PROCESS_OPTS";
+                case LIVE_CRAWLER -> "LIVE_CRAWLER_PROCESS_OPTS";
                 case CONVERTER -> "CONVERTER_PROCESS_OPTS";
                 case LOADER -> "LOADER_PROCESS_OPTS";
                 case INDEX_CONSTRUCTOR -> "INDEX_CONSTRUCTION_PROCESS_OPTS";

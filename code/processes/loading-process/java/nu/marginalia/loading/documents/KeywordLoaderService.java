@@ -27,7 +27,8 @@ public class KeywordLoaderService {
 
     public boolean loadKeywords(DomainIdRegistry domainIdRegistry,
                              ProcessHeartbeat heartbeat,
-                             LoaderInputData inputData) throws IOException {
+                             LoaderInputData inputData) throws IOException
+    {
         try (var task = heartbeat.createAdHocTaskHeartbeat("KEYWORDS")) {
 
             Collection<SlopTable.Ref<SlopDocumentRecord>> documentFiles = inputData.listDocumentFiles();

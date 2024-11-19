@@ -13,7 +13,10 @@ public enum ServiceId {
 
     Dating("dating-service"),
     Status("setatus-service"),
-    Explorer("explorer-service");
+    Explorer("explorer-service"),
+
+    NOT_A_SERVICE("NOT_A_SERVICE")
+    ;
 
     public final String serviceName;
 

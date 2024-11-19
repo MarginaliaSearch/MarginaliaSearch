@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 @Singleton
 public class FeedsClient {
@@ -28,7 +28,9 @@ public class FeedsClient {
     private final MqOutbox updateFeedsOutbox;
 
     @Inject
-    public FeedsClient(GrpcChannelPoolFactory factory, MqPersistence mqPersistence, ServiceConfiguration serviceConfiguration) {
+    public FeedsClient(GrpcChannelPoolFactory factory,
+                       MqPersistence mqPersistence,
+                       ServiceConfiguration serviceConfiguration) {
 
         // The client is only interested in the primary node
         var key = ServiceKey.forGrpcApi(FeedApiGrpc.class, ServicePartition.any());
@@ -51,10 +53,10 @@ public class FeedsClient {
         }
     }
 
-    public void getUpdatedDomains(Instant since, Consumer<UpdatedDomain> consumer) throws ExecutionException, InterruptedException {
+    public void getUpdatedDomains(Instant since, BiConsumer<String, List<String>> consumer) throws ExecutionException, InterruptedException {
         channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getUpdatedLinks)
                 .run(RpcUpdatedLinksRequest.newBuilder().setSinceEpochMillis(since.toEpochMilli()).build())
-                .forEachRemaining(rsp -> consumer.accept(new UpdatedDomain(rsp)));
+                .forEachRemaining(rsp -> consumer.accept(rsp.getDomain(), new ArrayList<>(rsp.getUrlList())));
     }
 
     public record UpdatedDomain(String domain, List<String> urls) {

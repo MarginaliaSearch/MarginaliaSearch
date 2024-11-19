@@ -1,7 +1,6 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
-import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
@@ -37,7 +36,6 @@ public class DomainProcessor {
     private final DocumentProcessor documentProcessor;
     private final SiteWords siteWords;
     private final AnchorTagsSource anchorTagsSource;
-    private final AnchorTextKeywords anchorTextKeywords;
     private final GeoIpDictionary geoIpDictionary;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -46,12 +44,10 @@ public class DomainProcessor {
     public DomainProcessor(DocumentProcessor documentProcessor,
                            SiteWords siteWords,
                            AnchorTagsSourceFactory anchorTagsSourceFactory,
-                           AnchorTextKeywords anchorTextKeywords,
                            GeoIpDictionary geoIpDictionary) throws SQLException
     {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
-        this.anchorTextKeywords = anchorTextKeywords;
         this.anchorTagsSource = anchorTagsSourceFactory.create();
         this.geoIpDictionary = geoIpDictionary;
 

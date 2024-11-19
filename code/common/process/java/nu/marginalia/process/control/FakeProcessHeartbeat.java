@@ -3,6 +3,8 @@ package nu.marginalia.process.control;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+
 /** Dummy implementation of ProcessHeartbeat that does nothing */
 public class FakeProcessHeartbeat implements ProcessHeartbeat {
     private static final Logger logger = LoggerFactory.getLogger(FakeProcessHeartbeat.class);
@@ -28,6 +30,11 @@ public class FakeProcessHeartbeat implements ProcessHeartbeat {
             @Override
             public void progress(String step, int progress, int total) {
                 logger.info("Progress: {}, {}/{}", step, progress, total);
+            }
+
+            @Override
+            public <T> Iterable<T> wrap(String step, Collection<T> collection) {
+                return collection;
             }
 
             @Override

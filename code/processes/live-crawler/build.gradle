@@ -1,0 +1,78 @@
+plugins {
+    id 'java'
+
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.livecrawler.LiveCrawlerMain'
+    applicationName = 'live-crawler-process'
+}
+
+tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:process')
+
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+    implementation project(':code:common:config')
+    implementation project(':code:common:service')
+    implementation project(':code:common:linkdb')
+    implementation project(':code:functions:live-capture:api')
+    implementation project(':code:libraries:blocking-thread-pool')
+    implementation project(':code:index:api')
+    implementation project(':code:processes:process-mq-api')
+    implementation project(':code:libraries:message-queue')
+    implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:easy-lsh')
+    implementation project(':code:processes:crawling-process')
+    implementation project(':code:processes:crawling-process:model')
+    implementation project(':code:processes:converting-process')
+    implementation project(':code:processes:loading-process')
+
+
+    implementation project(':code:processes:crawling-process:ft-crawl-blocklist')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+    implementation project(':code:processes:crawling-process:ft-content-type')
+    implementation project(':third-party:commons-codec')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.notnull
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation libs.gson
+    implementation libs.zstd
+    implementation libs.jwarc
+    implementation libs.crawlercommons
+    implementation libs.okhttp3
+    implementation libs.jsoup
+    implementation libs.opencsv
+    implementation libs.fastutil
+    implementation libs.sqlite
+
+    implementation libs.bundles.mariadb
+
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation libs.commons.codec
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
+}
+

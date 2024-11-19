@@ -19,7 +19,12 @@ public class CrawlDelayTimer {
     private final long delayTime;
 
     public CrawlDelayTimer(long delayTime) {
-        this.delayTime = delayTime;
+        if (delayTime <= 0) {
+            this.delayTime = DEFAULT_CRAWL_DELAY_MIN_MS;
+        }
+        else {
+            this.delayTime = delayTime;
+        }
     }
 
     /** Call when we've gotten an HTTP 429 response.  This will wait a moment, and then
@@ -39,6 +44,10 @@ public class CrawlDelayTimer {
         }
 
         Thread.sleep(delay.toMillis());
+    }
+
+    public void waitFetchDelay() {
+        waitFetchDelay(0);
     }
 
     public void waitFetchDelay(long spentTime) {

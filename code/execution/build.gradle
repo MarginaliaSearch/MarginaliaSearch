@@ -17,6 +17,7 @@ dependencies {
 
     implementation project(':code:processes:website-adjacencies-calculator')
     implementation project(':code:processes:crawling-process')
+    implementation project(':code:processes:live-crawler')
     implementation project(':code:processes:loading-process')
     implementation project(':code:processes:converting-process')
     implementation project(':code:processes:index-constructor-process')
