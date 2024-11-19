@@ -102,6 +102,9 @@ public class LiveCrawlDataSet implements AutoCloseable {
         }
     }
 
+    /** Get the data in the database as a list of SerializableCrawlDataStream's, the
+     * format expected by the converter code.
+     */
     public Collection<SerializableCrawlDataStream> getDataStreams() throws SQLException {
         List<Integer> domainIds = new ArrayList<>();
 
@@ -114,20 +117,26 @@ public class LiveCrawlDataSet implements AutoCloseable {
 
         List<SerializableCrawlDataStream> streams = new ArrayList<>();
         for (var domainId : domainIds) {
-            streams.add(new DataStream(domainId));
+            streams.add(new WrappedDataStream(domainId));
         }
         return streams;
     }
 
-    class DataStream implements SerializableCrawlDataStream {
+    /** Wraps the data in the database as a SerializableCrawlDataStream.
+     * <p></p>
+     * This is a bit clunky as the interface is built intending the data
+     * to be a stream of objects being read from Parquet.
+     * */
+    private class WrappedDataStream implements SerializableCrawlDataStream {
         private final int domainId;
-        private ArrayList<SerializableCrawlData> data;
+        private ArrayList<SerializableCrawlData> dataStack;
 
-        DataStream(int domainId) {
+        WrappedDataStream(int domainId) {
             this.domainId = domainId;
-            this.data = null;
+            this.dataStack = null;
         }
 
+        /** Lazy initialization for the data being iterated over */
         private void query() {
             try (var stmt = connection.prepareStatement("""
                                                 SELECT url, body, headers, ip, timestamp
@@ -136,13 +145,13 @@ public class LiveCrawlDataSet implements AutoCloseable {
                                                 """)) {
                 stmt.setInt(1, domainId);
                 var rs = stmt.executeQuery();
-                data = new ArrayList<>();
+                dataStack = new ArrayList<>();
                 while (rs.next()) {
                     String url = rs.getString("url");
                     String body = decompress(rs.getBytes("body"));
                     String headers = decompress(rs.getBytes("headers"));
 
-                    data.add(new CrawledDocument(
+                    dataStack.add(new CrawledDocument(
                             "LIVE",
                             url,
                             "text/html",
@@ -161,7 +170,7 @@ public class LiveCrawlDataSet implements AutoCloseable {
                             ""
                     ));
                 }
-                var last = data.getLast();
+                var last = dataStack.getLast();
                 var domain = new CrawledDomain(
                         last.getDomain(),
                         null,
@@ -174,7 +183,7 @@ public class LiveCrawlDataSet implements AutoCloseable {
 
                 // Add the domain as the last element, which will be the first
                 // element popped from the list
-                data.addLast(domain);
+                dataStack.addLast(domain);
             }
             catch (SQLException ex) {
                 throw new RuntimeException(ex);
@@ -183,23 +192,23 @@ public class LiveCrawlDataSet implements AutoCloseable {
 
         @Override
         public SerializableCrawlData next() throws IOException {
-            if (data == null)
+            if (dataStack == null)
                 query();
 
-            return data.removeLast();
+            return dataStack.removeLast();
         }
 
         @Override
         public boolean hasNext() throws IOException {
-            if (data == null) {
+            if (dataStack == null) {
                 query();
             }
-            return !data.isEmpty();
+            return !dataStack.isEmpty();
         }
 
         @Override
         public void close() throws Exception {
-            data.clear();
+            dataStack.clear();
         }
     }
 

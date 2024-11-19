@@ -30,7 +30,6 @@ import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -119,8 +118,8 @@ public class LiveCrawlerMain extends ProcessMainClass {
             var crawler = injector.getInstance(LiveCrawlerMain.class);
             LiveCrawlInstructions instructions = crawler.fetchInstructions();
 
-            try (var dataset = crawler.openDataSet(instructions.liveDataFileStorageId)) {
-                crawler.run(dataset);
+            try{
+                crawler.run(instructions.liveDataFileStorageId);
                 instructions.ok();
             } catch (Exception e) {
                 instructions.err();
@@ -145,28 +144,30 @@ public class LiveCrawlerMain extends ProcessMainClass {
         DONE
     }
 
-    private LiveCrawlDataSet openDataSet(FileStorageId storageId) throws SQLException {
-        FileStorage storage = fileStorageService.getStorage(storageId);
-        return new LiveCrawlDataSet(storage.asPath());
+    private void run(FileStorageId storageId) throws Exception {
+        Path basePath = fileStorageService.getStorage(storageId).asPath();
+        run(basePath);
     }
 
-    private void run(LiveCrawlDataSet dataSet) throws Exception {
-        try (var state = heartbeat.createProcessTaskHeartbeat(LiveCrawlState.class, "LiveCrawler")) {
+    private void run(Path basePath) throws Exception {
+        try (var processHeartbeat = heartbeat.createProcessTaskHeartbeat(LiveCrawlState.class, "LiveCrawler");
+             LiveCrawlDataSet dataSet = new LiveCrawlDataSet(basePath))
+        {
             final Instant cutoff = Instant.now().minus(60, ChronoUnit.DAYS);
 
-            state.progress(LiveCrawlState.FETCH_LINKS);
+            processHeartbeat.progress(LiveCrawlState.FETCH_LINKS);
 
             Map<String, List<String>> urlsPerDomain = new HashMap<>(10_000);
             feedsClient.getUpdatedDomains(cutoff, urlsPerDomain::put);
 
             logger.info("Fetched data for {} domains", urlsPerDomain.size());
 
-            state.progress(LiveCrawlState.PRUNE_DB);
+            processHeartbeat.progress(LiveCrawlState.PRUNE_DB);
 
             // Remove data that is too old
             dataSet.prune(cutoff);
 
-            state.progress(LiveCrawlState.CRAWLING);
+            processHeartbeat.progress(LiveCrawlState.CRAWLING);
 
             try (SimpleLinkScraper fetcher = new SimpleLinkScraper(dataSet, domainQueries, domainBlacklist);
                  var hb = heartbeat.createAdHocTaskHeartbeat("Live Crawling"))
@@ -182,7 +183,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
             Path tempPath = dataSet.createWorkDir();
 
             try {
-                state.progress(LiveCrawlState.PROCESSING);
+                processHeartbeat.progress(LiveCrawlState.PROCESSING);
 
                 try (var hb = heartbeat.createAdHocTaskHeartbeat("Processing");
                      var writer = new ConverterBatchWriter(tempPath, 0)
@@ -192,7 +193,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
                     }
                 }
 
-                state.progress(LiveCrawlState.LOADING);
+                processHeartbeat.progress(LiveCrawlState.LOADING);
 
                 LoaderInputData lid = new LoaderInputData(tempPath, 1);
 
@@ -209,7 +210,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
 
             // Construct the index
 
-            state.progress(LiveCrawlState.DONE);
+            processHeartbeat.progress(LiveCrawlState.DONE);
         }
     }
 
