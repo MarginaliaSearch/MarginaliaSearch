@@ -10,11 +10,14 @@ import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.task.*;
 import nu.marginalia.mq.MessageQueueFactory;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,10 +31,13 @@ public class ExecutorActorControlService {
     public Map<ExecutorActor, ActorPrototype> actorDefinitions = new HashMap<>();
     private final int node;
 
+    private final NodeConfiguration nodeConfiguration;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public ExecutorActorControlService(MessageQueueFactory messageQueueFactory,
+                                       NodeConfigurationService configurationService,
                                        BaseServiceParams baseServiceParams,
                                        ConvertActor convertActor,
                                        ConvertAndLoadActor convertAndLoadActor,
@@ -56,11 +62,13 @@ public class ExecutorActorControlService {
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines,
-                                       UpdateRssActor updateRssActor) {
+                                       UpdateRssActor updateRssActor) throws SQLException {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
         this.stateMachines = stateMachines;
         this.node = baseServiceParams.configuration.node();
+
+        this.nodeConfiguration = configurationService.get(node);
 
         register(ExecutorActor.CRAWL, crawlActor);
         register(ExecutorActor.LIVE_CRAWL, liveCrawlActor);
@@ -95,6 +103,11 @@ public class ExecutorActorControlService {
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {
+
+        if (!process.profileSet.contains(nodeConfiguration.profile())) {
+            return;
+        }
+
         var sm = new ActorStateMachine(messageQueueFactory, process.id(), node, UUID.randomUUID(), graph);
         sm.listen((function, param) -> logStateChange(process, function));
 

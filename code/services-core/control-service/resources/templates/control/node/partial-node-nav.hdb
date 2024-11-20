@@ -1,5 +1,5 @@
 
-<h1 class="my-3">Index Node {{node.id}}</h1>
+<h1 class="my-3">Index Node {{node.id}}: {{node.profile}}</h1>
 {{#if node.disabled}}
     <small class="text-danger">This index node is disabled!</small>
 {{/if}}
@@ -10,8 +10,10 @@
     <li class="nav-item">
         <a class="nav-link {{#if tab.overview}}active{{/if}}" href="/nodes/{{node.id}}/">Overview</a>
     </li>
+    {{#unless node.profile.realtime}}
     <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle {{#if tab.actions}}active{{/if}}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Actions</a>
+        {{#if node.profile.permitBatchCrawl}}
         <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=new-crawl">New Crawl</a></li>
             <li><hr class="dropdown-divider"></li>
@@ -19,11 +21,6 @@
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=load">Load Processed Data</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=repartition">Repartition Index</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-encyclopedia">Sideload Encyclopedia</a></li>
-            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-stackexchange">Sideload Stackexchange</a></li>
-            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-warc">Sideload WARC Files</a></li>
-            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-dirtree">Sideload Dirtree</a></li>
-            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-reddit">Sideload Reddit</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=download-sample-data">Download Sample Crawl Data</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-db-data">Export Database Data</a></li>
@@ -33,14 +30,32 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=restore-backup">Restore Index Backup</a></li>
         </ul>
+        {{/if}}
+        {{#if node.profile.permitSideload}}
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-encyclopedia">Sideload Encyclopedia</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-stackexchange">Sideload Stackexchange</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-warc">Sideload WARC Files</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-dirtree">Sideload Dirtree</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-reddit">Sideload Reddit</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=load">Load Processed Data</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=restore-backup">Restore Index Backup</a></li>
+        </ul>
+        {{/if}}
     </li>
+    {{/unless}}
     <li class="nav-item">
         <a class="nav-link {{#if tab.actors}}active{{/if}}" href="/nodes/{{node.id}}/actors">Actors</a>
     </li>
+    {{#unless node.profile.realtime}}
     <li class="nav-item">
         <a class="nav-link {{#if tab.storage}}active{{/if}}" href="/nodes/{{node.id}}/storage/">Storage</a>
     </li>
+    {{/unless}}
     <li class="nav-item">
         <a class="nav-link {{#if tab.config}}active{{/if}}" href="/nodes/{{node.id}}/configuration">Configuration</a>
     </li>
+
+
 </nav>

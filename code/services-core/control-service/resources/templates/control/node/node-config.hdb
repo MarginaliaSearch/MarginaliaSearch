@@ -21,6 +21,35 @@
                 <input class="form-control" type="text" name="description" value="{{config.description}}"/>
             </div>
 
+
+            <div class="mb-5">
+                <label for="profile" class="form-label">Profile</label>
+                <select class="form-select" name="profile" id="profile">
+                    <option value="BATCH_CRAWL" {{#if node.profile.batchCrawl}}selected{{/if}}>Batch Crawl</option>
+                    <option value="SIDELOAD" {{#if node.profile.sideload}}selected{{/if}}>Sideload</option>
+                    <option value="REALTIME" {{#if node.profile.realtime}}selected{{/if}}>Real Time</option>
+                    <option value="MIXED" {{#if node.profile.mixed}}selected{{/if}}>Mixed Use</option>
+                </select>
+
+                <div class="form-text">The node profile configures which actors are available.
+                    <ul class="my-1">
+                        <li>
+                            <strong>Batch Crawl</strong> - This node is configured for batch crawling.  It will not have the sideload actors available.
+                        </li>
+                        <li>
+                            <strong>Sideload</strong> - This node is configured for sideloading.  It will not have the batch crawl actors available.
+                        </li>
+                        <li>
+                            <strong>Real Time</strong> - This node is configured for real time processing.
+                            It will not have the batch crawl or sideload actors available, but have actors for real time (daily) crawling.
+                        </li>
+                        <li>
+                            <strong>Mixed Use</strong> - This node is configured for both batch crawling and sideloading.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" name="acceptQueries" {{#if config.acceptQueries}}checked{{/if}}>
                 <label class="form-check-label" for="acceptQueries">Accept queries</label>

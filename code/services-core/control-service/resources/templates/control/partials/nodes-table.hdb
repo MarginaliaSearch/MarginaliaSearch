@@ -2,12 +2,15 @@
 <h2>Nodes</h2>
 <table class="table">
     <tr>
-        <th>Node</th><th>Queries</th><th>Enabled</th><th>Index</th><th>Executor</th>
+        <th>Node</th><th>Profile</th><th>Queries</th><th>Enabled</th><th>Index</th><th>Executor</th>
     </tr>
     {{#each .}}
         <tr>
             <td>
                 <a href="/nodes/{{id}}">node-{{id}}</a>
+            </td>
+            <td>
+                {{configuration.profile}}
             </td>
             <td>
                 {{#if configuration.acceptQueries}}

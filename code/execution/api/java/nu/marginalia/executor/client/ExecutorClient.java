@@ -182,4 +182,10 @@ public class ExecutorClient {
         }
     }
 
+    public void restartExecutorService(int node) {
+        channelPool.call(ExecutorApiBlockingStub::restartExecutorService)
+                .forNode(node)
+                .run(Empty.getDefaultInstance());
+    }
+
 }

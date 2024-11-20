@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import org.slf4j.Logger;
@@ -56,7 +57,9 @@ public class NodeStatusWatcher {
 
     private void setupNode() {
         try {
-            configurationService.create(nodeId, "Node " + nodeId, true, false);
+            NodeProfile profile = NodeProfile.MIXED;
+
+            configurationService.create(nodeId, "Node " + nodeId, true, false, profile);
 
             fileStorageService.createStorageBase("Index Data", Path.of("/idx"), nodeId, FileStorageBaseType.CURRENT);
             fileStorageService.createStorageBase("Index Backups", Path.of("/backup"), nodeId, FileStorageBaseType.BACKUP);

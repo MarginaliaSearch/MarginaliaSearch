@@ -6,6 +6,7 @@ public record NodeConfiguration(int node,
                                 boolean autoClean,
                                 boolean includeInPrecession,
                                 boolean keepWarcs,
+                                NodeProfile profile,
                                 boolean disabled
                                 )
 {

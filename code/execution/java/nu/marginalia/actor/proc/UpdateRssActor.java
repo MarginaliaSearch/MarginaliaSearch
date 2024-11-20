@@ -11,6 +11,8 @@ import nu.marginalia.api.feeds.RpcFeedUpdateMode;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 import java.time.Duration;
@@ -25,13 +27,19 @@ public class UpdateRssActor extends RecordActorPrototype {
     private final Duration updateInterval = Duration.ofHours(24);
     private final int cleanInterval = 60;
 
+    private final NodeConfigurationService nodeConfigurationService;
     private final MqPersistence persistence;
 
     @Inject
-    public UpdateRssActor(Gson gson, FeedsClient feedsClient, ServiceConfiguration serviceConfiguration, MqPersistence persistence) {
+    public UpdateRssActor(Gson gson,
+                          FeedsClient feedsClient,
+                          ServiceConfiguration serviceConfiguration,
+                          NodeConfigurationService nodeConfigurationService,
+                          MqPersistence persistence) {
         super(gson);
         this.feedsClient = feedsClient;
         this.nodeId = serviceConfiguration.node();
+        this.nodeConfigurationService = nodeConfigurationService;
         this.persistence = persistence;
     }
 
@@ -55,9 +63,8 @@ public class UpdateRssActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial() -> {
-                if (nodeId > 1) {
-                    // Only run on the first node
-                    yield new End();
+                if (nodeConfigurationService.get(nodeId).profile() != NodeProfile.REALTIME) {
+                    yield new Error("Invalid node profile for RSS update");
                 }
                 else {
                     // Wait for 5 minutes before starting the first update, to give the system time to start up properly
