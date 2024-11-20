@@ -27,6 +27,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     private final SlopDomainLinkRecord.Writer domainLinkWriter;
     private final SlopDocumentRecord.Writer documentWriter;
 
+    private int ordinalOffset = 0;
+
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
     public ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
@@ -44,6 +46,11 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
             Files.createDirectory(ProcessedDataFileNames.documentFileName(basePath));
         }
         documentWriter = new SlopDocumentRecord.Writer(ProcessedDataFileNames.documentFileName(basePath), batchNumber);
+    }
+
+    /** Sets the lowest ordinal value for the documents in this batch */
+    public void setOrdinalOffset(int ordinalOffset) {
+        this.ordinalOffset = ordinalOffset;
     }
 
     @Override
@@ -79,7 +86,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
             throws IOException
     {
 
-        int ordinal = 0;
+        int ordinal = ordinalOffset;
 
         String domainName = domain.toString();
 

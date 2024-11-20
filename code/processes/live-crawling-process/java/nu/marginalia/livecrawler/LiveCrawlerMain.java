@@ -194,6 +194,11 @@ public class LiveCrawlerMain extends ProcessMainClass {
                 try (var hb = heartbeat.createAdHocTaskHeartbeat("Processing");
                      var writer = new ConverterBatchWriter(tempPath, 0)
                 ) {
+                    // Offset the documents' ordinals toward the upper range, to avoid an ID collisions with the
+                    // main indexes (the maximum permissible for doc ordinal is  value is 67_108_863, so this
+                    // leaves us with a lot of headroom still)
+                    writer.setOrdinalOffset(67_000_000);
+
                     for (SerializableCrawlDataStream stream : hb.wrap("Processing", dataSet.getDataStreams())) {
                         writer.write(domainProcessor.sideloadProcessing(stream, 0));
                     }
