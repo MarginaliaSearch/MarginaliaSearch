@@ -64,7 +64,7 @@ include 'code:execution:data-extractors'
 include 'code:processes:crawling-process:ft-crawl-blocklist'
 include 'code:processes:crawling-process:ft-link-parser'
 include 'code:processes:crawling-process:ft-content-type'
-include 'code:processes:live-crawler'
+include 'code:processes:live-crawling-process'
 
 include 'code:processes:process-mq-api'
 
