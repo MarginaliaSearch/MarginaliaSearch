@@ -3,25 +3,21 @@ package nu.marginalia.actor.task;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.IndexLocations;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorStateMachines;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.LiveCrawlRequest;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
-import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageId;
-import nu.marginalia.storage.model.FileStorageType;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
-import java.util.List;
+import java.time.Duration;
+import java.util.Objects;
 
 @Singleton
 public class LiveCrawlActor extends RecordActorPrototype {
@@ -29,14 +25,14 @@ public class LiveCrawlActor extends RecordActorPrototype {
     // STATES
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqLiveCrawlerOutbox;
-    private final FileStorageService storageService;
     private final ExecutorActorStateMachines executorActorStateMachines;
-
+    private final FeedsClient feedsClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public record Initial() implements ActorStep {}
-    public record LiveCrawl(FileStorageId id, long msgId) implements ActorStep {
-        public LiveCrawl(FileStorageId id) { this(id, -1); }
+    public record Monitor(String feedsHash) implements ActorStep {}
+    public record LiveCrawl(String feedsHash, long msgId) implements ActorStep {
+        public LiveCrawl(String feedsHash) { this(feedsHash, -1); }
     }
 
     @Override
@@ -44,43 +40,32 @@ public class LiveCrawlActor extends RecordActorPrototype {
         logger.info("{}", self);
         return switch (self) {
             case Initial() -> {
-                // clear the output directory of the loader from any debris from partial jobs that have been aborted
-                Files.list(IndexLocations.getIndexConstructionArea(storageService)).forEach(path -> {
-                    try {
-                        if (Files.isDirectory(path)) {
-                            FileUtils.deleteDirectory(path.toFile());
-                        }
-                        else if (Files.isRegularFile(path)) {
-                            Files.delete(path);
-                        }
-                    } catch (Exception e) {
-                        logger.error("Error clearing staging area", e);
+                yield new Monitor("-");
+            }
+            case Monitor(String feedsHash) -> {
+                for (;;) {
+                    String currentHash = feedsClient.getFeedDataHash();
+                    if (!Objects.equals(currentHash, feedsHash)) {
+                        yield new LiveCrawl(currentHash);
                     }
-                });
-
-
-                List<FileStorageId> activeCrawlData = storageService.getActiveFileStorages(FileStorageType.CRAWL_DATA);
-                if (activeCrawlData.isEmpty()) {
-                    var storage = storageService.allocateStorage(FileStorageType.CRAWL_DATA, "crawl-data", "Crawl data");
-                    yield new LiveCrawl(storage.id());
-                } else {
-                    yield new LiveCrawl(activeCrawlData.getFirst());
+                    Thread.sleep(Duration.ofMinutes(15));
                 }
             }
-            case LiveCrawl(FileStorageId storageId, long msgId) when msgId < 0 -> {
-                long id = mqLiveCrawlerOutbox.sendAsync(new LiveCrawlRequest(storageId));
-                yield new LiveCrawl(storageId, id);
+            case LiveCrawl(String feedsHash, long msgId) when msgId < 0 -> {
+                long id = mqLiveCrawlerOutbox.sendAsync(new LiveCrawlRequest());
+                yield new LiveCrawl(feedsHash, id);
             }
-            case LiveCrawl(FileStorageId storageId, long msgId) -> {
+            case LiveCrawl(String feedsHash, long msgId) -> {
                 var rsp = processWatcher.waitResponse(mqLiveCrawlerOutbox, ProcessService.ProcessId.LIVE_CRAWLER, msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Crawler failed");
                 }
 
+                // Build the index
                 executorActorStateMachines.initFrom(ExecutorActor.CONVERT_AND_LOAD, new ConvertAndLoadActor.Rerank());
 
-                yield new End();
+                yield new Monitor(feedsHash);
             }
             default -> new Error("Unknown state");
         };
@@ -88,22 +73,21 @@ public class LiveCrawlActor extends RecordActorPrototype {
 
     @Override
     public String describe() {
-        return "Process a set of crawl data and then load it into the database.";
+        return "Actor that polls the feeds database for changes, and triggers the live crawler when needed";
     }
 
     @Inject
     public LiveCrawlActor(ActorProcessWatcher processWatcher,
                           ProcessOutboxes processOutboxes,
-                          FileStorageService storageService,
+                          FeedsClient feedsClient,
                           Gson gson,
                           ExecutorActorStateMachines executorActorStateMachines)
     {
         super(gson);
         this.processWatcher = processWatcher;
         this.mqLiveCrawlerOutbox = processOutboxes.getLiveCrawlerOutbox();
-        this.storageService = storageService;
         this.executorActorStateMachines = executorActorStateMachines;
-
+        this.feedsClient = feedsClient;
     }
 
 

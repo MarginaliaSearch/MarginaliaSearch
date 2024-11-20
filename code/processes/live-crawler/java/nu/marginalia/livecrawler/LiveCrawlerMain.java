@@ -30,11 +30,12 @@ import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Security;
 import java.sql.SQLException;
@@ -119,7 +120,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
             LiveCrawlInstructions instructions = crawler.fetchInstructions();
 
             try{
-                crawler.run(instructions.liveDataFileStorageId);
+                crawler.run();
                 instructions.ok();
             } catch (Exception e) {
                 instructions.err();
@@ -144,8 +145,13 @@ public class LiveCrawlerMain extends ProcessMainClass {
         DONE
     }
 
-    private void run(FileStorageId storageId) throws Exception {
-        Path basePath = fileStorageService.getStorage(storageId).asPath();
+    private void run() throws Exception {
+        Path basePath = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE).asPath().resolve("live-crawl-data");
+
+        if (!Files.isDirectory(basePath)) {
+            Files.createDirectories(basePath);
+        }
+
         run(basePath);
     }
 
@@ -226,7 +232,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
         // for live crawl, request is empty for now
         LiveCrawlRequest request = gson.fromJson(msg.payload(), LiveCrawlRequest.class);
 
-        return new LiveCrawlInstructions(msg, inbox, request.liveDataFileStorageId);
+        return new LiveCrawlInstructions(msg, inbox);
     }
 
 
@@ -250,15 +256,11 @@ public class LiveCrawlerMain extends ProcessMainClass {
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
-        public final FileStorageId liveDataFileStorageId;
-
         LiveCrawlInstructions(MqMessage message,
-                              MqSingleShotInbox inbox,
-                              FileStorageId liveDataFileStorageId)
+                              MqSingleShotInbox inbox)
         {
             this.message = message;
             this.inbox = inbox;
-            this.liveDataFileStorageId = liveDataFileStorageId;
         }
 
 
