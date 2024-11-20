@@ -144,10 +144,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 "",
                 nextRecord.headers,
                 bodyString,
-                Long.toHexString(hash.hashNearlyASCII(bodyString)), // this field isn't actually used, maybe we can skip calculating it?
-                nextRecord.url,
-                null,
-                "",
+                // this field isn't actually used, maybe we can skip calculating it?
                 nextRecord.cookies,
                 lastModified,
                 etag));

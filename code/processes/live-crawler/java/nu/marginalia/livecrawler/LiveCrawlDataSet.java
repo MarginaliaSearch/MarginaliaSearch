@@ -161,10 +161,6 @@ public class LiveCrawlDataSet implements AutoCloseable {
                             "",
                             headers,
                             body,
-                            body,
-                            Integer.toString(body.hashCode()),
-                            null,
-                            "LIVE",
                             false,
                             "",
                             ""
