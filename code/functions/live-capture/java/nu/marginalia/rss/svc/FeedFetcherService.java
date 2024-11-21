@@ -70,7 +70,7 @@ public class FeedFetcherService {
         this.serviceHeartbeat = serviceHeartbeat;
         this.executorClient = executorClient;
 
-        rssReader.addHeader("User-Agent", WmsaHome.getUserAgent().uaIdentifier() + "  RSS Feed Fetcher");
+        rssReader.addHeader("User-Agent", WmsaHome.getUserAgent().uaIdentifier());
     }
 
     public enum UpdateMode {
