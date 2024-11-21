@@ -242,4 +242,8 @@ public class EdgeUrl implements Serializable {
         return this.domain;
     }
 
+    public String getProto() {
+        return this.proto;
+    }
+
 }
