@@ -2,7 +2,7 @@ package nu.marginalia.process.control;
 
 
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

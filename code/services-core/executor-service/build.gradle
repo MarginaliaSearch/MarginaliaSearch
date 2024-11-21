@@ -25,7 +25,6 @@ dependencies {
     // These look weird but they're needed to be able to spawn the processes
     // from the executor service
 
-    implementation project(':code:processes:website-adjacencies-calculator')
     implementation project(':code:processes:crawling-process')
     implementation project(':code:processes:loading-process')
     implementation project(':code:processes:converting-process')
@@ -33,7 +32,6 @@ dependencies {
 
     implementation project(':code:common:config')
     implementation project(':code:common:model')
-    implementation project(':code:common:process')
     implementation project(':code:common:db')
     implementation project(':code:common:linkdb')
 
@@ -48,7 +46,6 @@ dependencies {
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:ft-link-parser')
-    implementation project(':code:execution:data-extractors')
     implementation project(':code:index:index-journal')
     implementation project(':code:index:api')
     implementation project(':code:processes:process-mq-api')

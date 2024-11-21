@@ -59,7 +59,6 @@ include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
 
 include 'code:processes:converting-process:ft-anchor-keywords'
-include 'code:execution:data-extractors'
 
 include 'code:processes:crawling-process:ft-crawl-blocklist'
 include 'code:processes:crawling-process:ft-link-parser'
@@ -74,7 +73,6 @@ include 'code:common:service'
 include 'code:common:config'
 include 'code:common:model'
 include 'code:common:renderer'
-include 'code:common:process'
 
 include 'code:processes:converting-process'
 include 'code:processes:converting-process:model'
@@ -86,7 +84,8 @@ include 'code:processes:crawling-process:model'
 include 'code:processes:loading-process'
 include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
-include 'code:processes:website-adjacencies-calculator'
+
+include 'code:processes:export-task-process'
 
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'

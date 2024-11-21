@@ -1,11 +1,8 @@
 package nu.marginalia.index;
 
-import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
 import nu.marginalia.index.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.domainrankings.DomainRankings;
@@ -15,13 +12,11 @@ import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mq.MqMessage;
-import nu.marginalia.mq.inbox.MqInboxResponse;
-import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
-import nu.marginalia.mqapi.index.IndexName;
+import nu.marginalia.process.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfigurationModule;
+import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
@@ -31,8 +26,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX;
@@ -40,15 +33,12 @@ import static nu.marginalia.mqapi.ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX;
 public class IndexConstructorMain extends ProcessMainClass {
     private final FileStorageService fileStorageService;
     private final ProcessHeartbeatImpl heartbeat;
-    private final MessageQueueFactory messageQueueFactory;
     private final DomainRankings domainRankings;
-    private final int node;
 
     private static final Logger logger = LoggerFactory.getLogger(IndexConstructorMain.class);
-    private final Gson gson = GsonFactory.get();
-    public static void main(String[] args) throws Exception {
-        CreateIndexInstructions instructions = null;
 
+    public static void main(String[] args) throws Exception {
+        Instructions<CreateIndexRequest> instructions = null;
         try {
             new org.mariadb.jdbc.Driver();
 
@@ -58,9 +48,8 @@ public class IndexConstructorMain extends ProcessMainClass {
                             new DatabaseModule(false))
                     .getInstance(IndexConstructorMain.class);
 
-            instructions = main.fetchInstructions();
-
-            main.run(instructions);
+            instructions = main.fetchInstructions(CreateIndexRequest.class);
+            main.run(instructions.value());
             instructions.ok();
         }
         catch (Exception ex) {
@@ -85,17 +74,17 @@ public class IndexConstructorMain extends ProcessMainClass {
                                 ProcessConfiguration processConfiguration,
                                 DomainRankings domainRankings) {
 
+        super(messageQueueFactory, processConfiguration, GsonFactory.get(), INDEX_CONSTRUCTOR_INBOX);
+
         this.fileStorageService = fileStorageService;
         this.heartbeat = heartbeat;
-        this.messageQueueFactory = messageQueueFactory;
         this.domainRankings = domainRankings;
-        this.node = processConfiguration.node();
     }
 
-    private void run(CreateIndexInstructions instructions) throws SQLException, IOException {
+    private void run(CreateIndexRequest instructions) throws SQLException, IOException {
         heartbeat.start();
 
-        switch (instructions.name) {
+        switch (instructions.indexName()) {
             case FORWARD      -> createForwardIndex();
             case REVERSE_FULL -> createFullReverseIndex();
             case REVERSE_PRIO -> createPrioReverseIndex();
@@ -171,52 +160,4 @@ public class IndexConstructorMain extends ProcessMainClass {
                 docId);
     }
 
-    private static class CreateIndexInstructions {
-
-        public final IndexName name;
-        private final MqSingleShotInbox inbox;
-        private final MqMessage message;
-
-        private CreateIndexInstructions(IndexName name, MqSingleShotInbox inbox, MqMessage message) {
-            this.name = name;
-            this.inbox = inbox;
-            this.message = message;
-        }
-
-        public void ok() {
-            inbox.sendResponse(message, MqInboxResponse.ok());
-        }
-        public void err() {
-            inbox.sendResponse(message, MqInboxResponse.err());
-        }
-    }
-
-    private CreateIndexInstructions fetchInstructions() throws Exception {
-
-        var inbox = messageQueueFactory.createSingleShotInbox(INDEX_CONSTRUCTOR_INBOX, node, UUID.randomUUID());
-
-        logger.info("Waiting for instructions");
-        var msgOpt = getMessage(inbox, CreateIndexRequest.class.getSimpleName());
-        var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
-
-        var payload = gson.fromJson(msg.payload(), CreateIndexRequest.class);
-        var name = payload.indexName();
-
-        return new CreateIndexInstructions(name, inbox, msg);
-    }
-
-    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
-        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
-        if (opt.isPresent()) {
-            if (!opt.get().function().equals(expectedFunction)) {
-                throw new RuntimeException("Unexpected function: " + opt.get().function());
-            }
-            return opt;
-        }
-        else {
-            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
-            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
-            return stolenMessage;
-        }
-    }
 }

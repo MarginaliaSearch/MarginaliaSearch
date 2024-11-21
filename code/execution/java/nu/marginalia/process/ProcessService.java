@@ -3,15 +3,14 @@ package nu.marginalia.process;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator;
 import nu.marginalia.converting.ConverterMain;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.index.IndexConstructorMain;
 import nu.marginalia.livecrawler.LiveCrawlerMain;
 import nu.marginalia.loading.LoaderMain;
-import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.task.ExportTasksMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -38,13 +37,13 @@ public class ProcessService {
     private final int node;
 
 
-    public static ProcessService.ProcessId translateExternalIdBase(String id) {
+    public static ProcessId translateExternalIdBase(String id) {
         return switch (id) {
-            case "converter" -> ProcessService.ProcessId.CONVERTER;
-            case "crawler" -> ProcessService.ProcessId.CRAWLER;
-            case "loader" -> ProcessService.ProcessId.LOADER;
-            case "website-adjacencies-calculator" -> ProcessService.ProcessId.ADJACENCIES_CALCULATOR;
-            case "index-constructor" -> ProcessService.ProcessId.INDEX_CONSTRUCTOR;
+            case "converter" -> ProcessId.CONVERTER;
+            case "crawler" -> ProcessId.CRAWLER;
+            case "loader" -> ProcessId.LOADER;
+            case "export-tasks" -> ProcessId.EXPORT_TASKS;
+            case "index-constructor" -> ProcessId.INDEX_CONSTRUCTOR;
             default -> null;
         };
     }
@@ -55,7 +54,7 @@ public class ProcessService {
         CONVERTER(ConverterMain.class),
         LOADER(LoaderMain.class),
         INDEX_CONSTRUCTOR(IndexConstructorMain.class),
-        ADJACENCIES_CALCULATOR(WebsiteAdjacenciesCalculator.class)
+        EXPORT_TASKS(ExportTasksMain.class),
         ;
 
         public final String mainClass;
@@ -70,7 +69,7 @@ public class ProcessService {
                 case CONVERTER -> "CONVERTER_PROCESS_OPTS";
                 case LOADER -> "LOADER_PROCESS_OPTS";
                 case INDEX_CONSTRUCTOR -> "INDEX_CONSTRUCTION_PROCESS_OPTS";
-                case ADJACENCIES_CALCULATOR -> "ADJACENCIES_CALCULATOR_PROCESS_OPTS";
+                case EXPORT_TASKS -> "EXPORT_TASKS_PROCESS_OPTS";
             };
             String value = System.getenv(variable);
 

@@ -8,4 +8,3 @@ Externally the service is available at [https://explore2.marginalia.nu/](https:/
 
 * [features-search/screenshots](../../features-search/screenshots)
 * [features-search/random-websites](../../features-search/random-websites)
-* [processes/website-adjacencies-calculator](../../processes/website-adjacencies-calculator)

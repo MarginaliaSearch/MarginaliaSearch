@@ -4,8 +4,6 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
@@ -13,26 +11,21 @@ import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.loading.domains.DomainLoaderService;
 import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mq.MqMessage;
-import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.inbox.MqInboxResponse;
-import nu.marginalia.mq.inbox.MqSingleShotInbox;
+import nu.marginalia.mqapi.loading.LoadRequest;
+import nu.marginalia.process.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfigurationModule;
+import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
 
@@ -40,15 +33,12 @@ public class LoaderMain extends ProcessMainClass {
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
 
     private final ProcessHeartbeatImpl heartbeat;
-    private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final DocumentDbWriter documentDbWriter;
     private final DomainLoaderService domainService;
     private final DomainLinksLoaderService linksService;
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
-    private final int node;
-    private final Gson gson;
 
     public static void main(String... args) {
         try {
@@ -62,7 +52,7 @@ public class LoaderMain extends ProcessMainClass {
 
             var instance = injector.getInstance(LoaderMain.class);
 
-            var instructions = instance.fetchInstructions();
+            var instructions = instance.fetchInstructions(LoadRequest.class);
             logger.info("Instructions received");
             instance.run(instructions);
         }
@@ -83,22 +73,27 @@ public class LoaderMain extends ProcessMainClass {
                       ProcessConfiguration processConfiguration,
                       Gson gson
                       ) {
-        this.node = processConfiguration.node();
+
+        super(messageQueueFactory, processConfiguration, gson, LOADER_INBOX);
+
         this.heartbeat = heartbeat;
-        this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.documentDbWriter = documentDbWriter;
         this.domainService = domainService;
         this.linksService = linksService;
         this.keywordLoaderService = keywordLoaderService;
         this.documentLoaderService = documentLoaderService;
-        this.gson = gson;
 
         heartbeat.start();
     }
 
-    void run(LoadRequest instructions) throws Throwable {
-        LoaderInputData inputData = instructions.inputData;
+    void run(Instructions<LoadRequest> instructions) throws Throwable {
+
+        List<Path> inputSources = new ArrayList<>();
+        for (var storageId : instructions.value().inputProcessDataStorageIds) {
+            inputSources.add(fileStorageService.getStorage(storageId).asPath());
+        }
+        var inputData = new LoaderInputData(inputSources);
 
         DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(heartbeat, inputData);
 
@@ -134,67 +129,5 @@ public class LoaderMain extends ProcessMainClass {
         System.exit(0);
     }
 
-    private static class LoadRequest {
-        private final LoaderInputData inputData;
-        private final MqMessage message;
-        private final MqSingleShotInbox inbox;
-
-        LoadRequest(LoaderInputData inputData, MqMessage message, MqSingleShotInbox inbox) {
-            this.inputData = inputData;
-            this.message = message;
-            this.inbox = inbox;
-        }
-
-        public void ok() {
-            inbox.sendResponse(message, MqInboxResponse.ok());
-        }
-        public void err() {
-            inbox.sendResponse(message, MqInboxResponse.err());
-        }
-    }
-
-    private LoadRequest fetchInstructions() throws Exception {
-
-        var inbox = messageQueueFactory.createSingleShotInbox(LOADER_INBOX, node, UUID.randomUUID());
-
-        var msgOpt = getMessage(inbox, nu.marginalia.mqapi.loading.LoadRequest.class.getSimpleName());
-        if (msgOpt.isEmpty())
-            throw new RuntimeException("No instruction received in inbox");
-        var msg = msgOpt.get();
-
-        if (!nu.marginalia.mqapi.loading.LoadRequest.class.getSimpleName().equals(msg.function())) {
-            throw new RuntimeException("Unexpected message in inbox: " + msg);
-        }
-
-        try {
-            var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.loading.LoadRequest.class);
-
-            List<Path> inputSources = new ArrayList<>();
-            for (var storageId : request.inputProcessDataStorageIds) {
-                inputSources.add(fileStorageService.getStorage(storageId).asPath());
-            }
-
-            return new LoadRequest(new LoaderInputData(inputSources), msg, inbox);
-        }
-        catch (Exception ex) {
-            inbox.sendResponse(msg, new MqInboxResponse("FAILED", MqMessageState.ERR));
-            throw ex;
-        }
-    }
-
-    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
-        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
-        if (opt.isPresent()) {
-            if (!opt.get().function().equals(expectedFunction)) {
-                throw new RuntimeException("Unexpected function: " + opt.get().function());
-            }
-            return opt;
-        }
-        else {
-            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
-            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
-            return stolenMessage;
-        }
-    }
 
 }

@@ -4,8 +4,6 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.converting.ConverterModule;
@@ -21,12 +19,11 @@ import nu.marginalia.loading.domains.DbDomainIdRegistry;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mq.MqMessage;
-import nu.marginalia.mq.inbox.MqInboxResponse;
-import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.mqapi.crawling.LiveCrawlRequest;
+import nu.marginalia.process.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfigurationModule;
+import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.storage.FileStorageService;
@@ -38,11 +35,11 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Security;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LIVE_CRAWLER_INBOX;
 
@@ -52,16 +49,13 @@ public class LiveCrawlerMain extends ProcessMainClass {
             LoggerFactory.getLogger(LiveCrawlerMain.class);
 
     private final FeedsClient feedsClient;
-    private final Gson gson;
     private final ProcessHeartbeat heartbeat;
     private final DbDomainQueries domainQueries;
     private final DomainBlacklist domainBlacklist;
-    private final MessageQueueFactory messageQueueFactory;
     private final DomainProcessor domainProcessor;
     private final FileStorageService fileStorageService;
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
-    private final int node;
 
     @Inject
     public LiveCrawlerMain(FeedsClient feedsClient,
@@ -77,13 +71,12 @@ public class LiveCrawlerMain extends ProcessMainClass {
                            DocumentLoaderService documentLoaderService)
             throws Exception
     {
+        super(messageQueueFactory, config, gson, LIVE_CRAWLER_INBOX);
+
         this.feedsClient = feedsClient;
-        this.gson = gson;
         this.heartbeat = heartbeat;
         this.domainQueries = domainQueries;
         this.domainBlacklist = domainBlacklist;
-        this.messageQueueFactory = messageQueueFactory;
-        this.node = config.node();
         this.domainProcessor = domainProcessor;
         this.fileStorageService = fileStorageService;
         this.keywordLoaderService = keywordLoaderService;
@@ -117,7 +110,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
             );
 
             var crawler = injector.getInstance(LiveCrawlerMain.class);
-            LiveCrawlInstructions instructions = crawler.fetchInstructions();
+            Instructions<LiveCrawlRequest> instructions = crawler.fetchInstructions(LiveCrawlRequest.class);
 
             try{
                 crawler.run();
@@ -223,59 +216,6 @@ public class LiveCrawlerMain extends ProcessMainClass {
 
             processHeartbeat.progress(LiveCrawlState.DONE);
         }
-    }
-
-    private LiveCrawlInstructions fetchInstructions() throws Exception {
-
-        var inbox = messageQueueFactory.createSingleShotInbox(LIVE_CRAWLER_INBOX, node, UUID.randomUUID());
-
-        logger.info("Waiting for instructions");
-
-        var msgOpt = getMessage(inbox, LiveCrawlRequest.class.getSimpleName());
-        var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
-
-        // for live crawl, request is empty for now
-        LiveCrawlRequest request = gson.fromJson(msg.payload(), LiveCrawlRequest.class);
-
-        return new LiveCrawlInstructions(msg, inbox);
-    }
-
-
-    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
-        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
-        if (opt.isPresent()) {
-            if (!opt.get().function().equals(expectedFunction)) {
-                throw new RuntimeException("Unexpected function: " + opt.get().function());
-            }
-            return opt;
-        }
-        else {
-            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
-            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
-            return stolenMessage;
-        }
-    }
-
-
-    private static class LiveCrawlInstructions {
-        private final MqMessage message;
-        private final MqSingleShotInbox inbox;
-
-        LiveCrawlInstructions(MqMessage message,
-                              MqSingleShotInbox inbox)
-        {
-            this.message = message;
-            this.inbox = inbox;
-        }
-
-
-        public void ok() {
-            inbox.sendResponse(message, MqInboxResponse.ok());
-        }
-        public void err() {
-            inbox.sendResponse(message, MqInboxResponse.err());
-        }
-
     }
 
 }

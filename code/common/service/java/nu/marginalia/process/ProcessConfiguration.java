@@ -1,4 +1,4 @@
-package nu.marginalia;
+package nu.marginalia.process;
 
 import java.util.UUID;
 

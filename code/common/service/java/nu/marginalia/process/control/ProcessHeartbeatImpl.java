@@ -4,17 +4,18 @@ package nu.marginalia.process.control;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 /** This service sends a heartbeat to the database every 5 seconds.
  */
 @Singleton
-public class ProcessHeartbeatImpl implements ProcessHeartbeat {
+public class ProcessHeartbeatImpl implements ProcessHeartbeat, Closeable {
     private final Logger logger = LoggerFactory.getLogger(ProcessHeartbeatImpl.class);
     private final String processName;
     private final String processBase;
@@ -168,6 +169,10 @@ public class ProcessHeartbeatImpl implements ProcessHeartbeat {
                 stmt.executeUpdate();
             }
         }
+    }
+
+    public void close() {
+        shutDown();
     }
 }
 

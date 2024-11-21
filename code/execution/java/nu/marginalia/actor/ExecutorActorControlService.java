@@ -59,6 +59,7 @@ public class ExecutorActorControlService {
                                        ExportSampleDataActor exportSampleDataActor,
                                        ExportTermFreqActor exportTermFrequenciesActor,
                                        ExportSegmentationModelActor exportSegmentationModelActor,
+                                       ExportTaskMonitorActor exportTasksMonitorActor,
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines,
@@ -83,6 +84,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.PROC_LOADER_SPAWNER, loaderMonitor);
         register(ExecutorActor.PROC_CRAWLER_SPAWNER, crawlerMonitorActor);
         register(ExecutorActor.PROC_LIVE_CRAWL_SPAWNER, liveCrawlerMonitorActor);
+        register(ExecutorActor.PROC_EXPORT_TASKS_SPAWNER, exportTasksMonitorActor);
 
         register(ExecutorActor.MONITOR_PROCESS_LIVENESS, processMonitorFSM);
         register(ExecutorActor.MONITOR_FILE_STORAGE, fileStorageMonitorActor);

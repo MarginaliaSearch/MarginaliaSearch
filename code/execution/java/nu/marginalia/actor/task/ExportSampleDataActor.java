@@ -5,7 +5,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
-import nu.marginalia.extractor.SampleDataExporter;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mqapi.tasks.ExportTaskRequest;
+import nu.marginalia.process.ProcessOutboxes;
+import nu.marginalia.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
@@ -18,11 +22,17 @@ import java.time.LocalDateTime;
 @Singleton
 public class ExportSampleDataActor extends RecordActorPrototype {
     private final FileStorageService storageService;
+    private final ActorProcessWatcher processWatcher;
+    private final MqOutbox exportTasksOutbox;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SampleDataExporter dataExporter;
     public record Export(FileStorageId crawlId, int size, String name) implements ActorStep {}
-    public record Run(FileStorageId crawlId, FileStorageId destId, int size, String name) implements ActorStep {}
+    public record Run(FileStorageId crawlId, FileStorageId destId, int size, String name, long msgId) implements ActorStep {
+        public Run(FileStorageId crawlId, FileStorageId destId, int size, String name) {
+            this(crawlId, destId, size, name, -1);
+        }
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
@@ -35,27 +45,28 @@ public class ExportSampleDataActor extends RecordActorPrototype {
                 if (storage == null) yield new Error("Bad storage id");
                 yield new Run(crawlId, storage.id(), size, name);
             }
-            case Run(FileStorageId crawlId, FileStorageId destId, int size, String name) -> {
+            case Run(FileStorageId crawlId, FileStorageId destId, int size, String name, long msgId) when msgId < 0 -> {
                 storageService.setFileStorageState(destId, FileStorageState.NEW);
 
-                try {
-                    dataExporter.export(crawlId, destId, size, name);
-                    storageService.setFileStorageState(destId, FileStorageState.UNSET);
-                }
-                catch (Exception ex) {
-                    storageService.setFileStorageState(destId, FileStorageState.DELETE);
-
-                    logger.error("Failed to export data", ex);
-
-                    yield new Error("Failed to export data");
-                }
-
-                yield new End();
+                long newMsgId = exportTasksOutbox.sendAsync(ExportTaskRequest.sampleData(crawlId, destId, size, name));
+                yield new Run(crawlId, destId, size, name, newMsgId);
             }
+            case Run(_, FileStorageId destId, _, _, long msgId) -> {
+                var rsp = processWatcher.waitResponse(exportTasksOutbox, ProcessService.ProcessId.EXPORT_TASKS, msgId);
+
+                if (rsp.state() != MqMessageState.OK) {
+                    storageService.flagFileForDeletion(destId);
+                    yield new Error("Exporter failed");
+                }
+                else {
+                    storageService.setFileStorageState(destId, FileStorageState.UNSET);
+                    yield new End();
+                }
+            }
+
             default -> new Error();
         };
     }
-
 
     @Override
     public String describe() {
@@ -65,11 +76,13 @@ public class ExportSampleDataActor extends RecordActorPrototype {
     @Inject
     public ExportSampleDataActor(Gson gson,
                                  FileStorageService storageService,
-                                 SampleDataExporter dataExporter)
+                                 ProcessOutboxes processOutboxes,
+                                 ActorProcessWatcher processWatcher)
     {
         super(gson);
         this.storageService = storageService;
-        this.dataExporter = dataExporter;
+        this.processWatcher = processWatcher;
+        this.exportTasksOutbox = processOutboxes.getExportTasksOutbox();
     }
 
 }

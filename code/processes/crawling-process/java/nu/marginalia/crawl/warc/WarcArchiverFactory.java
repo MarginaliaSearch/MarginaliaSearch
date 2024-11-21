@@ -1,8 +1,8 @@
 package nu.marginalia.crawl.warc;
 
 import com.google.inject.Inject;
-import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.process.ProcessConfiguration;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;

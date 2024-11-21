@@ -67,7 +67,6 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
     testImplementation libs.commons.lang3
-    testImplementation project(':code:common:process')
     testImplementation project(':code:libraries:array')
 
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')

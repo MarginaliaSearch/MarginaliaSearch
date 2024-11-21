@@ -2,6 +2,7 @@ package nu.marginalia.nodecfg;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -46,8 +47,8 @@ public class NodeConfigurationServiceTest {
 
     @Test
     public void test() throws SQLException {
-        var a = nodeConfigurationService.create(1, "Test", false, false);
-        var b = nodeConfigurationService.create(2, "Foo", true, false);
+        var a = nodeConfigurationService.create(1, "Test", false, false, NodeProfile.MIXED);
+        var b = nodeConfigurationService.create(2, "Foo", true, false, NodeProfile.MIXED);
 
         assertEquals(1, a.node());
         assertEquals("Test", a.description());

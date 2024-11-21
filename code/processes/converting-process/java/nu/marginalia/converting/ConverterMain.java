@@ -4,8 +4,6 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.converting.model.CrawlPlan;
 import nu.marginalia.converting.model.WorkDir;
 import nu.marginalia.converting.processor.DomainProcessor;
@@ -17,14 +15,14 @@ import nu.marginalia.converting.writer.ConverterWriter;
 import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mq.MqMessage;
-import nu.marginalia.mq.inbox.MqInboxResponse;
-import nu.marginalia.mq.inbox.MqSingleShotInbox;
+import nu.marginalia.mqapi.converting.ConvertRequest;
+import nu.marginalia.process.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfigurationModule;
+import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.process.log.WorkLogEntry;
-import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.util.SimpleBlockingThreadPool;
@@ -34,13 +32,13 @@ import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -50,12 +48,9 @@ import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 public class ConverterMain extends ProcessMainClass {
     private static final Logger logger = LoggerFactory.getLogger(ConverterMain.class);
     private final DomainProcessor processor;
-    private final Gson gson;
     private final ProcessHeartbeat heartbeat;
-    private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
-    private final int node;
 
     public static void main(String... args) throws Exception {
 
@@ -70,8 +65,9 @@ public class ConverterMain extends ProcessMainClass {
 
             logger.info("Starting pipe");
 
-            converter
-                    .fetchInstructions()
+            Instructions<ConvertRequest> instructions = converter.fetchInstructions(ConvertRequest.class);
+
+            converter.createAction(instructions)
                     .execute(converter);
 
             logger.info("Finished");
@@ -81,6 +77,65 @@ public class ConverterMain extends ProcessMainClass {
         }
 
         System.exit(0);
+    }
+
+    private Action createAction(Instructions<ConvertRequest> instructions) throws SQLException, IOException {
+        var request = instructions.value();
+        final Path inputPath = request.getInputPath();
+
+        return switch (request.action) {
+            case ConvertCrawlData -> {
+                var crawlData = fileStorageService.getStorage(request.crawlStorage);
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                var plan = new CrawlPlan(null,
+                        new WorkDir(crawlData.asPath().toString(), "crawler.log"),
+                        new WorkDir(processData.asPath().toString(), "processor.log")
+                );
+
+                yield new ConvertCrawlDataAction(plan, instructions);
+            }
+            case SideloadEncyclopedia -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(inputPath, request.baseUrl),
+                        processData.asPath(),
+                        instructions);
+            }
+            case SideloadDirtree -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadDirtree(inputPath),
+                        processData.asPath(),
+                        instructions);
+            }
+            case SideloadWarc -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadWarc(inputPath),
+                        processData.asPath(),
+                        instructions);
+            }
+            case SideloadReddit -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadReddit(inputPath),
+                        processData.asPath(),
+                        instructions);
+            }
+            case SideloadStackexchange -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadStackexchange(inputPath),
+                        processData.asPath(),
+                        instructions);
+            }
+        };
     }
 
     @Inject
@@ -94,13 +149,12 @@ public class ConverterMain extends ProcessMainClass {
             ProcessConfiguration processConfiguration
             )
     {
+        super(messageQueueFactory, processConfiguration, gson, CONVERTER_INBOX);
+
         this.processor = processor;
-        this.gson = gson;
         this.heartbeat = heartbeat;
-        this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.sideloadSourceFactory = sideloadSourceFactory;
-        this.node = processConfiguration.node();
 
         heartbeat.start();
     }
@@ -220,45 +274,44 @@ public class ConverterMain extends ProcessMainClass {
         }
     }
 
-    private abstract static class ConvertRequest {
-        private final MqMessage message;
-        private final MqSingleShotInbox inbox;
+    private abstract static class Action {
+        final Instructions<?> instructions;
 
-        private ConvertRequest(MqMessage message, MqSingleShotInbox inbox) {
-            this.message = message;
-            this.inbox = inbox;
+        public Action(Instructions<?> instructions) {
+            this.instructions = instructions;
         }
 
         public abstract void execute(ConverterMain converterMain) throws Exception;
 
         public void ok() {
-            inbox.sendResponse(message, MqInboxResponse.ok());
+            instructions.ok();
         }
         public void err() {
-            inbox.sendResponse(message, MqInboxResponse.err());
+            instructions.err();
         }
     }
 
-    private static class SideloadAction extends ConvertRequest {
+    private static class SideloadAction extends Action {
 
         private final Collection<? extends SideloadSource> sideloadSources;
         private final Path workDir;
 
         SideloadAction(SideloadSource sideloadSource,
                        Path workDir,
-                       MqMessage message, MqSingleShotInbox inbox) {
-            super(message, inbox);
+                       Instructions<?> instructions) {
+            super(instructions);
             this.sideloadSources = List.of(sideloadSource);
             this.workDir = workDir;
         }
 
         SideloadAction(Collection<? extends SideloadSource> sideloadSources,
                        Path workDir,
-                       MqMessage message, MqSingleShotInbox inbox) {
-            super(message, inbox);
+                       Instructions<?> instructions) {
+            super(instructions);
             this.sideloadSources = sideloadSources;
             this.workDir = workDir;
         }
+
         @Override
         public void execute(ConverterMain converterMain) throws Exception {
             try {
@@ -272,11 +325,12 @@ public class ConverterMain extends ProcessMainClass {
         }
     }
 
-    private static class ConvertCrawlDataAction extends ConvertRequest {
+    private static class ConvertCrawlDataAction extends Action {
         private final CrawlPlan plan;
 
-        private ConvertCrawlDataAction(CrawlPlan plan, MqMessage message, MqSingleShotInbox inbox) {
-            super(message, inbox);
+        private ConvertCrawlDataAction(CrawlPlan plan,
+                                       Instructions<?> instructions) {
+            super(instructions);
             this.plan = plan;
         }
 
@@ -291,96 +345,6 @@ public class ConverterMain extends ProcessMainClass {
 
                 err();
             }
-        }
-    }
-
-
-    private ConvertRequest fetchInstructions() throws Exception {
-
-        var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, node, UUID.randomUUID());
-
-        var msgOpt = getMessage(inbox, nu.marginalia.mqapi.converting.ConvertRequest.class.getSimpleName());
-        var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
-
-        try {
-            var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
-
-            // will be null on ConvertCrawlData
-            final Path inputPath = request.getInputPath();
-
-            return switch (request.action) {
-                case ConvertCrawlData -> {
-                    var crawlData = fileStorageService.getStorage(request.crawlStorage);
-                    var processData = fileStorageService.getStorage(request.processedDataStorage);
-
-                    var plan = new CrawlPlan(null,
-                            new WorkDir(crawlData.asPath().toString(), "crawler.log"),
-                            new WorkDir(processData.asPath().toString(), "processor.log")
-                    );
-
-                    yield new ConvertCrawlDataAction(plan, msg, inbox);
-                }
-                case SideloadEncyclopedia -> {
-                    var processData = fileStorageService.getStorage(request.processedDataStorage);
-
-                    yield new SideloadAction(
-                            sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(inputPath, request.baseUrl),
-                            processData.asPath(),
-                            msg, inbox);
-                }
-                case SideloadDirtree -> {
-                    var processData = fileStorageService.getStorage(request.processedDataStorage);
-
-                    yield new SideloadAction(
-                            sideloadSourceFactory.sideloadDirtree(inputPath),
-                            processData.asPath(),
-                            msg, inbox);
-                }
-                case SideloadWarc -> {
-                    var processData = fileStorageService.getStorage(request.processedDataStorage);
-
-                    yield new SideloadAction(
-                            sideloadSourceFactory.sideloadWarc(inputPath),
-                            processData.asPath(),
-                            msg, inbox);
-                }
-                case SideloadReddit -> {
-                    var processData = fileStorageService.getStorage(request.processedDataStorage);
-
-                    yield new SideloadAction(
-                            sideloadSourceFactory.sideloadReddit(inputPath),
-                            processData.asPath(),
-                            msg, inbox);
-                }
-                case SideloadStackexchange -> {
-                    var processData = fileStorageService.getStorage(request.processedDataStorage);
-
-                    yield new SideloadAction(
-                            sideloadSourceFactory.sideloadStackexchange(inputPath),
-                            processData.asPath(),
-                            msg, inbox);
-                }
-            };
-        }
-        catch (Exception ex) {
-            inbox.sendResponse(msg, MqInboxResponse.err(ex.getClass().getSimpleName() + ": " + ex.getMessage()));
-
-            throw ex;
-        }
-    }
-
-    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
-        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
-        if (opt.isPresent()) {
-            if (!opt.get().function().equals(expectedFunction)) {
-                throw new RuntimeException("Unexpected function: " + opt.get().function());
-            }
-            return opt;
-        }
-        else {
-            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
-            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
-            return stolenMessage;
         }
     }
 

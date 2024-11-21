@@ -1,4 +1,4 @@
-package nu.marginalia;
+package nu.marginalia.process;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;

@@ -3,9 +3,9 @@ package nu.marginalia.converting;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
+import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
 
