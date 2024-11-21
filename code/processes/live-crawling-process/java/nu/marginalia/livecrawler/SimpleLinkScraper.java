@@ -11,6 +11,8 @@ import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.util.SimpleBlockingThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -21,12 +23,15 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /** A simple link scraper that fetches URLs and stores them in a database,
  * with no concept of a crawl frontier, WARC output, or other advanced features
  */
 public class SimpleLinkScraper implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(SimpleLinkScraper.class);
+
     private final SimpleBlockingThreadPool pool = new SimpleBlockingThreadPool("LiveCrawler", 32, 10);
     private final LinkParser lp = new LinkParser();
     private final LiveCrawlDataSet dataSet;
@@ -81,7 +86,24 @@ public class SimpleLinkScraper implements AutoCloseable {
                     continue;
                 }
 
-                fetchUrl(domainId, parsedUrl, timer, client);
+                switch (fetchUrl(domainId, parsedUrl, timer, client)) {
+                    case FetchResult.Success(int id, EdgeUrl docUrl, String body, String headers)
+                            -> dataSet.saveDocument(id, docUrl, body, headers, "");
+                    case FetchResult.Error(EdgeUrl docUrl) ->
+                    {
+                        // To give bad URLs a chance to be re-fetched, we only flag them as bad
+                        // with a 20% probability.  This will prevent the same bad URL being
+                        // re-fetched over and over again for several months, but still allow
+                        // us to *mostly* re-fetch it if it was just a transient error.
+
+                        // There's of course the chance we immediately flag it as bad on an
+                        // unlucky roll, but you know, that's xcom baby
+                        if (ThreadLocalRandom.current().nextDouble(0, 1) < 0.2) {
+                            dataSet.flagAsBad(docUrl);
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -107,36 +129,56 @@ public class SimpleLinkScraper implements AutoCloseable {
         return rules;
     }
 
-    private void fetchUrl(int domainId, EdgeUrl parsedUrl, CrawlDelayTimer timer, HttpClient client) throws Exception {
+    /** Fetch a URL and store it in the database
+     */
+    private FetchResult fetchUrl(int domainId, EdgeUrl parsedUrl, CrawlDelayTimer timer, HttpClient client) throws Exception {
 
         timer.waitFetchDelay();
 
-        // Loop for HTTP 429 retries
-        for (int i = 0; i < 2; i++) {
-            HttpRequest request = HttpRequest.newBuilder(parsedUrl.asURI())
-                    .GET()
-                    .header("User-Agent", WmsaHome.getUserAgent().uaString())
-                    .header("Accept", "text/html")
-                    .timeout(readTimeout)
-                    .build();
+        HttpRequest request = HttpRequest.newBuilder(parsedUrl.asURI())
+                .GET()
+                .header("User-Agent", WmsaHome.getUserAgent().uaString())
+                .header("Accept", "text/html")
+                .timeout(readTimeout)
+                .build();
 
+        try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+            // Handle rate limiting by waiting and retrying once
             if (response.statusCode() == 429) {
                 timer.waitRetryDelay(new HttpFetcherImpl.RateLimitException(
                         response.headers().firstValue("Retry-After").orElse("5")
                 ));
-                continue;
+                response = client.send(request, HttpResponse.BodyHandlers.ofString());
             }
 
             String contentType = response.headers().firstValue("Content-Type").orElse("").toLowerCase();
 
-            if (response.statusCode() == 200 && contentType.startsWith("text/html")) {
-                dataSet.saveDocument(domainId, parsedUrl, response.body(), headersToString(response.headers()), "");
-            }
+            if (response.statusCode() == 200) {
+                if (!contentType.toLowerCase().startsWith("text/html")) {
+                    return new FetchResult.Error(parsedUrl);
+                }
 
-            break;
+                String body = response.body();
+                if (body.length() > 1024 * 1024) {
+                    return new FetchResult.Error(parsedUrl);
+                }
+
+                return new FetchResult.Success(domainId, parsedUrl, body, headersToString(response.headers()));
+            }
         }
+        catch (IOException ex) {
+            // We don't want a full stack trace on every error, as it's quite common and very noisy
+            logger.error("Error fetching URL {}: {} {}", parsedUrl, ex.getClass().getSimpleName(), ex.getMessage());
+        }
+
+        return new FetchResult.Error(parsedUrl);
+    }
+
+    sealed interface FetchResult {
+        record Success(int domainId, EdgeUrl url, String body, String headers) implements FetchResult {}
+        record Error(EdgeUrl url) implements FetchResult {}
     }
 
     private String headersToString(HttpHeaders headers) {

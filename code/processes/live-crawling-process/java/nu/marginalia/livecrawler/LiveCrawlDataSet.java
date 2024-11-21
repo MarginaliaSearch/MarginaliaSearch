@@ -34,6 +34,7 @@ public class LiveCrawlDataSet implements AutoCloseable {
         try (var stmt = connection.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS urls (url TEXT PRIMARY KEY, domainId LONG, body BLOB, headers BLOB, ip TEXT, timestamp long)");
             stmt.execute("CREATE INDEX IF NOT EXISTS domainIdIndex ON urls (domainId)");
+            stmt.execute("CREATE TABLE IF NOT EXISTS badUrls (url TEXT PRIMARY KEY, timestamp long)");
         }
     }
 
@@ -47,12 +48,24 @@ public class LiveCrawlDataSet implements AutoCloseable {
             stmt.setLong(1, cutoff.toEpochMilli());
             stmt.executeUpdate();
         }
+
+        try (var stmt = connection.prepareStatement("DELETE FROM badUrls WHERE timestamp < ?")) {
+            stmt.setLong(1, cutoff.toEpochMilli());
+            stmt.executeUpdate();
+        }
     }
 
     /** Check if the given URL is already in the database */
     public boolean hasUrl(String url) throws SQLException {
-        try (var stmt = connection.prepareStatement("SELECT 1 FROM urls WHERE url = ?")) {
+        try (var stmt = connection.prepareStatement("""
+                SELECT 1 FROM urls WHERE urls.url = ?
+                UNION
+                SELECT 1 FROM badUrls WHERE badUrls.url = ?
+                """);
+        ) {
             stmt.setString(1, url);
+            stmt.setString(2, url);
+
             return stmt.executeQuery().next();
         }
     }
@@ -76,6 +89,22 @@ public class LiveCrawlDataSet implements AutoCloseable {
             stmt.setString(5, ip);
             stmt.setLong(6, Instant.now().toEpochMilli());
             stmt.executeUpdate();
+        }
+    }
+
+    /** Flag a URL as bad, i.e. it should not be revisited */
+    public void flagAsBad(EdgeUrl url) {
+        try (var stmt = connection.prepareStatement("""
+                INSERT OR IGNORE INTO badUrls (url, timestamp)
+                VALUES (?, ?)
+                """))
+        {
+            stmt.setString(1, url.toString());
+            stmt.setLong(2, Instant.now().toEpochMilli());
+            stmt.executeUpdate();
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

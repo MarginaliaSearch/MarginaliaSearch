@@ -18,8 +18,7 @@ public class LiveCrawlDataSetTest {
     @Test
     public void testGetDataSet() throws Exception {
         Path tempDir = Files.createTempDirectory("live-crawl-data-set-test");
-        try {
-            LiveCrawlDataSet dataSet = new LiveCrawlDataSet(tempDir);
+        try (LiveCrawlDataSet dataSet = new LiveCrawlDataSet(tempDir)) {
 
             Assertions.assertFalse(dataSet.hasUrl("https://www.example.com/"));
             dataSet.saveDocument(
@@ -59,6 +58,31 @@ public class LiveCrawlDataSetTest {
 
             Assertions.assertEquals(1, dataCount);
             Assertions.assertEquals(1, domainCount);
+        }
+        finally {
+            FileUtils.deleteDirectory(tempDir.toFile());
+        }
+    }
+
+    @Test
+    public void testHasUrl() throws Exception {
+        Path tempDir = Files.createTempDirectory("live-crawl-data-set-test");
+        try (LiveCrawlDataSet dataSet = new LiveCrawlDataSet(tempDir)) {
+            Assertions.assertFalse(dataSet.hasUrl("https://www.example.com/"));
+            dataSet.saveDocument(
+                    1,
+                    new EdgeUrl("https://www.example.com/saved"),
+                    "test",
+                    "test",
+                    "test"
+            );
+            Assertions.assertTrue(dataSet.hasUrl("https://www.example.com/saved"));
+
+            dataSet.flagAsBad(new EdgeUrl("https://www.example.com/bad"));
+
+            Assertions.assertTrue(dataSet.hasUrl("https://www.example.com/bad"));
+
+            Assertions.assertFalse(dataSet.hasUrl("https://www.example.com/notPresent"));
         }
         finally {
             FileUtils.deleteDirectory(tempDir.toFile());
