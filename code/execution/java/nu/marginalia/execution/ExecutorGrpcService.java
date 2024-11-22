@@ -15,9 +15,12 @@ import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +34,8 @@ public class ExecutorGrpcService
     private final FileStorageService fileStorageService;
     private final ServiceConfiguration serviceConfiguration;
     private final ExecutorActorControlService actorControlService;
+
+    private static final Logger logger = LoggerFactory.getLogger(ExecutorGrpcService.class);
 
     @Inject
     public ExecutorGrpcService(ActorApi actorApi,
@@ -240,5 +245,22 @@ public class ExecutorGrpcService
         }
     }
 
+    @Override
+    public void restartExecutorService(Empty request, StreamObserver<Empty> responseObserver) {
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+
+        logger.info("Restarting executor service on node {}", serviceConfiguration.node());
+
+        try {
+            // Wait for the response to be sent before restarting
+            Thread.sleep(Duration.ofSeconds(5));
+        }
+        catch (InterruptedException e) {
+            logger.warn("Interrupted while waiting for restart", e);
+        }
+
+        System.exit(0);
+    }
 
 }

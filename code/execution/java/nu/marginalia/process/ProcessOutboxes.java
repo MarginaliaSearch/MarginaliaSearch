@@ -13,6 +13,8 @@ public class ProcessOutboxes {
     private final MqOutbox loaderOutbox;
     private final MqOutbox crawlerOutbox;
     private final MqOutbox indexConstructorOutbox;
+    private final MqOutbox liveCrawlerOutbox;
+    private final MqOutbox exportTasksOutbox;
 
     @Inject
     public ProcessOutboxes(BaseServiceParams params, MqPersistence persistence) {
@@ -44,6 +46,22 @@ public class ProcessOutboxes {
                 params.configuration.node(),
                 params.configuration.instanceUuid()
         );
+
+        liveCrawlerOutbox = new MqOutbox(persistence,
+                ProcessInboxNames.LIVE_CRAWLER_INBOX,
+                params.configuration.node(),
+                params.configuration.serviceName(),
+                params.configuration.node(),
+                params.configuration.instanceUuid()
+        );
+
+        exportTasksOutbox = new MqOutbox(persistence,
+                ProcessInboxNames.EXPORT_TASK_INBOX,
+                params.configuration.node(),
+                params.configuration.serviceName(),
+                params.configuration.node(),
+                params.configuration.instanceUuid()
+        );
     }
 
 
@@ -60,4 +78,8 @@ public class ProcessOutboxes {
     }
 
     public MqOutbox getIndexConstructorOutbox() { return indexConstructorOutbox; }
+
+    public MqOutbox getLiveCrawlerOutbox() { return liveCrawlerOutbox; }
+
+    public MqOutbox getExportTasksOutbox() { return exportTasksOutbox; }
 }

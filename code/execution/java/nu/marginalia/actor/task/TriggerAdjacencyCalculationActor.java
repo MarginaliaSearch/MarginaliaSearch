@@ -5,53 +5,59 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mqapi.tasks.ExportTaskRequest;
+import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 @Singleton
 public class TriggerAdjacencyCalculationActor extends RecordActorPrototype {
 
+    private final ActorProcessWatcher processWatcher;
+    private final MqOutbox exportTasksOutbox;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ProcessService processService;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public record Run() implements ActorStep {}
+    public record Run(long msgId) implements ActorStep {
+        public Run() {
+            this(-1);
+        }
+    }
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
-        return switch (self) {
-            case Run() -> {
-                AtomicBoolean hasError = new AtomicBoolean(false);
-                var future = executor.submit(() -> {
-                    try {
-                        processService.trigger(ProcessService.ProcessId.ADJACENCIES_CALCULATOR, "load");
-                    }
-                    catch (Exception ex) {
-                        logger.warn("Error triggering adjacency calculation", ex);
-                        hasError.set(true);
-                    }
-                });
-                future.get();
-
-                if (hasError.get()) {
-                    yield new Error("Error triggering adjacency calculation");
-                }
-                yield new End();
+        return switch(self) {
+            case Run(long msgId) when msgId < 0 -> {
+                long newMsgId = exportTasksOutbox.sendAsync(ExportTaskRequest.adjacencies());
+                yield new Run(newMsgId);
             }
+            case Run(long msgId) -> {
+                var rsp = processWatcher.waitResponse(exportTasksOutbox, ProcessService.ProcessId.EXPORT_TASKS, msgId);
+
+                if (rsp.state() != MqMessageState.OK) {
+                    yield new Error("Exporter failed");
+                }
+                else {
+                    yield new End();
+                }
+            }
+
             default -> new Error();
         };
     }
 
+
     @Inject
     public TriggerAdjacencyCalculationActor(Gson gson,
-                                            ProcessService processService) {
+                                            ProcessOutboxes processOutboxes,
+                                            ActorProcessWatcher processWatcher) {
         super(gson);
-        this.processService = processService;
+
+        this.exportTasksOutbox = processOutboxes.getExportTasksOutbox();
+        this.processWatcher = processWatcher;
+
     }
 
     @Override

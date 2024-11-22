@@ -17,6 +17,8 @@ service ExecutorApi {
   rpc downloadSampleData(RpcDownloadSampleData) returns (Empty) {}
   rpc calculateAdjacencies(Empty) returns (Empty) {}
   rpc restoreBackup(RpcFileStorageId) returns (Empty) {}
+
+  rpc restartExecutorService(Empty) returns (Empty) {}
 }
 
 service ExecutorCrawlApi {

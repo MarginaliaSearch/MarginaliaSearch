@@ -12,6 +12,7 @@ import nu.marginalia.control.sys.svc.HeartbeatService;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.ServiceMonitors;
 import nu.marginalia.storage.FileStorageService;
@@ -52,7 +53,8 @@ public class ControlNodeService {
             HikariDataSource dataSource,
             ServiceMonitors monitors,
             RedirectControl redirectControl,
-            NodeConfigurationService nodeConfigurationService, ControlCrawlDataService crawlDataService)
+            NodeConfigurationService nodeConfigurationService,
+            ControlCrawlDataService crawlDataService)
     {
         this.fileStorageService = fileStorageService;
         this.rendererFactory = rendererFactory;
@@ -269,6 +271,8 @@ public class ControlNodeService {
         String act = request.queryParams("act");
 
         if ("config".equals(act)) {
+            var oldConfig = nodeConfigurationService.get(nodeId);
+
             var newConfig = new NodeConfiguration(
                     nodeId,
                     request.queryParams("description"),
@@ -276,10 +280,19 @@ public class ControlNodeService {
                     "on".equalsIgnoreCase(request.queryParams("autoClean")),
                     "on".equalsIgnoreCase(request.queryParams("includeInPrecession")),
                     "on".equalsIgnoreCase(request.queryParams("keepWarcs")),
+                    NodeProfile.valueOf(request.queryParams("profile")),
                     "on".equalsIgnoreCase(request.queryParams("disabled"))
             );
 
             nodeConfigurationService.save(newConfig);
+
+            if (!(Objects.equals(oldConfig.profile(), newConfig.profile()))) {
+                // Restart the executor service if the profile has changed
+                executorClient.restartExecutorService(nodeId);
+            }
+            else if (newConfig.disabled()) {
+                executorClient.restartExecutorService(nodeId);
+            }
         }
         else if ("storage".equals(act)) {
             throw new UnsupportedOperationException();

@@ -31,6 +31,7 @@ import nu.marginalia.loading.LoaderIndexJournalWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
+import nu.marginalia.loading.domains.CachingDomainIdRegistry;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.model.EdgeDomain;
@@ -166,7 +167,7 @@ public class IntegrationTest {
 
         LoaderInputData inputData = new LoaderInputData(List.of(processedDataDir));
 
-        DomainIdRegistry domainIdRegistry = Mockito.mock(DomainIdRegistry.class);
+        DomainIdRegistry domainIdRegistry = Mockito.mock(CachingDomainIdRegistry.class);
         when(domainIdRegistry.getDomainId(any())).thenReturn(1);
 
         linksService.loadLinks(domainIdRegistry, new FakeProcessHeartbeat(), inputData);

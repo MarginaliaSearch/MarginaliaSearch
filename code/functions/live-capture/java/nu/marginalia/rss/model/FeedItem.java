@@ -55,6 +55,11 @@ public record FeedItem(String title,
         return zonedDateTime.map(date -> date.format(DATE_FORMAT)).orElse("");
     }
 
+    public ZonedDateTime getUpdateTimeZD() {
+        return ZonedDateTime.parse(date, DATE_FORMAT);
+    }
+
+
     @Override
     public int compareTo(@NotNull FeedItem o) {
         return o.date.compareTo(date);

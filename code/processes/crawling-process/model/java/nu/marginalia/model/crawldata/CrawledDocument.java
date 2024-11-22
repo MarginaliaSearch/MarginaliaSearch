@@ -4,7 +4,7 @@ import nu.marginalia.model.EdgeUrl;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
-public class CrawledDocument implements SerializableCrawlData {
+public final class CrawledDocument implements SerializableCrawlData {
     public String crawlId;
 
     public String url;
@@ -21,16 +21,6 @@ public class CrawledDocument implements SerializableCrawlData {
 
     public String documentBody;
 
-    @Deprecated
-    public String documentBodyHash;
-
-    @Deprecated
-    public String canonicalUrl;
-    public String redirectUrl;
-
-    @Deprecated
-    public String recrawlState;
-
     /**
      * This is not guaranteed to be set in all versions of the format,
      * information may come in CrawledDomain instead
@@ -40,7 +30,7 @@ public class CrawledDocument implements SerializableCrawlData {
     public String lastModifiedMaybe;
     public String etagMaybe;
 
-    public CrawledDocument(String crawlId, String url, String contentType, String timestamp, int httpStatus, String crawlerStatus, String crawlerStatusDesc, @Nullable String headers, String documentBody, String documentBodyHash, String canonicalUrl, String redirectUrl, String recrawlState, Boolean hasCookies, String lastModifiedMaybe, String etagMaybe) {
+    public CrawledDocument(String crawlId, String url, String contentType, String timestamp, int httpStatus, String crawlerStatus, String crawlerStatusDesc, @Nullable String headers, String documentBody, Boolean hasCookies, String lastModifiedMaybe, String etagMaybe) {
         this.crawlId = crawlId;
         this.url = url;
         this.contentType = contentType;
@@ -50,10 +40,6 @@ public class CrawledDocument implements SerializableCrawlData {
         this.crawlerStatusDesc = crawlerStatusDesc;
         this.headers = headers;
         this.documentBody = documentBody;
-        this.documentBodyHash = documentBodyHash;
-        this.canonicalUrl = canonicalUrl;
-        this.redirectUrl = redirectUrl;
-        this.recrawlState = recrawlState;
         this.hasCookies = hasCookies;
         this.lastModifiedMaybe = lastModifiedMaybe;
         this.etagMaybe = etagMaybe;
@@ -120,7 +106,7 @@ public class CrawledDocument implements SerializableCrawlData {
     }
 
     public String toString() {
-        return "CrawledDocument(crawlId=" + this.crawlId + ", url=" + this.url + ", contentType=" + this.contentType + ", timestamp=" + this.timestamp + ", httpStatus=" + this.httpStatus + ", crawlerStatus=" + this.crawlerStatus + ", crawlerStatusDesc=" + this.crawlerStatusDesc + ", headers=" + this.headers + ", documentBody=" + this.documentBody + ", documentBodyHash=" + this.documentBodyHash + ", canonicalUrl=" + this.canonicalUrl + ", redirectUrl=" + this.redirectUrl + ", recrawlState=" + this.recrawlState + ", hasCookies=" + this.hasCookies + ", lastModifiedMaybe=" + this.lastModifiedMaybe + ", etagMaybe=" + this.etagMaybe + ")";
+        return "CrawledDocument(crawlId=" + this.crawlId + ", url=" + this.url + ", contentType=" + this.contentType + ", timestamp=" + this.timestamp + ", httpStatus=" + this.httpStatus + ", crawlerStatus=" + this.crawlerStatus + ", crawlerStatusDesc=" + this.crawlerStatusDesc + ", headers=" + this.headers + ", documentBody=" + this.documentBody + ", hasCookies=" + this.hasCookies + ", lastModifiedMaybe=" + this.lastModifiedMaybe + ", etagMaybe=" + this.etagMaybe + ")";
     }
 
     public static class CrawledDocumentBuilder {
@@ -133,9 +119,6 @@ public class CrawledDocument implements SerializableCrawlData {
         private String crawlerStatusDesc;
         private @Nullable String headers;
         private String documentBody;
-        private String documentBodyHash;
-        private String canonicalUrl;
-        private String redirectUrl;
         private String recrawlState;
         private Boolean hasCookies;
         private String lastModifiedMaybe;
@@ -190,23 +173,6 @@ public class CrawledDocument implements SerializableCrawlData {
         }
 
         @Deprecated
-        public CrawledDocumentBuilder documentBodyHash(String documentBodyHash) {
-            this.documentBodyHash = documentBodyHash;
-            return this;
-        }
-
-        @Deprecated
-        public CrawledDocumentBuilder canonicalUrl(String canonicalUrl) {
-            this.canonicalUrl = canonicalUrl;
-            return this;
-        }
-
-        public CrawledDocumentBuilder redirectUrl(String redirectUrl) {
-            this.redirectUrl = redirectUrl;
-            return this;
-        }
-
-        @Deprecated
         public CrawledDocumentBuilder recrawlState(String recrawlState) {
             this.recrawlState = recrawlState;
             return this;
@@ -228,11 +194,11 @@ public class CrawledDocument implements SerializableCrawlData {
         }
 
         public CrawledDocument build() {
-            return new CrawledDocument(this.crawlId, this.url, this.contentType, this.timestamp, this.httpStatus, this.crawlerStatus, this.crawlerStatusDesc, this.headers, this.documentBody, this.documentBodyHash, this.canonicalUrl, this.redirectUrl, this.recrawlState, this.hasCookies, this.lastModifiedMaybe, this.etagMaybe);
+            return new CrawledDocument(this.crawlId, this.url, this.contentType, this.timestamp, this.httpStatus, this.crawlerStatus, this.crawlerStatusDesc, this.headers, this.documentBody, this.hasCookies, this.lastModifiedMaybe, this.etagMaybe);
         }
 
         public String toString() {
-            return "CrawledDocument.CrawledDocumentBuilder(crawlId=" + this.crawlId + ", url=" + this.url + ", contentType=" + this.contentType + ", timestamp=" + this.timestamp + ", httpStatus=" + this.httpStatus + ", crawlerStatus=" + this.crawlerStatus + ", crawlerStatusDesc=" + this.crawlerStatusDesc + ", headers=" + this.headers + ", documentBody=" + this.documentBody + ", documentBodyHash=" + this.documentBodyHash + ", canonicalUrl=" + this.canonicalUrl + ", redirectUrl=" + this.redirectUrl + ", recrawlState=" + this.recrawlState + ", hasCookies=" + this.hasCookies + ", lastModifiedMaybe=" + this.lastModifiedMaybe + ", etagMaybe=" + this.etagMaybe + ")";
+            return "CrawledDocument.CrawledDocumentBuilder(crawlId=" + this.crawlId + ", url=" + this.url + ", contentType=" + this.contentType + ", timestamp=" + this.timestamp + ", httpStatus=" + this.httpStatus + ", crawlerStatus=" + this.crawlerStatus + ", crawlerStatusDesc=" + this.crawlerStatusDesc + ", headers=" + this.headers + ", documentBody=" + this.documentBody +  ", recrawlState=" + this.recrawlState + ", hasCookies=" + this.hasCookies + ", lastModifiedMaybe=" + this.lastModifiedMaybe + ", etagMaybe=" + this.etagMaybe + ")";
         }
     }
 }

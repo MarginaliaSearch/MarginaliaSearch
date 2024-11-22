@@ -51,10 +51,6 @@ public class SideloaderProcessing {
                 "NP",
                 "",
                 body,
-                Integer.toHexString(url.hashCode()),
-                url,
-                "",
-                "SIDELOAD",
                 false,
                 null,
                 null

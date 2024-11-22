@@ -2,10 +2,10 @@ package nu.marginalia.atags.source;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.process.ProcessConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

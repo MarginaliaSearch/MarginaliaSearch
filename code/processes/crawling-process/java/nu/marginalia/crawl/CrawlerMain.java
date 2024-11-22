@@ -5,8 +5,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.ProcessConfiguration;
-import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
@@ -25,15 +23,15 @@ import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mq.MqMessage;
-import nu.marginalia.mq.inbox.MqInboxResponse;
-import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
+import nu.marginalia.process.ProcessConfiguration;
+import nu.marginalia.process.ProcessConfigurationModule;
+import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
-import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
@@ -46,8 +44,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,14 +59,12 @@ public class CrawlerMain extends ProcessMainClass {
 
     private final UserAgent userAgent;
     private final ProcessHeartbeatImpl heartbeat;
-    private final MessageQueueFactory messageQueueFactory;
     private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final WarcArchiverFactory warcArchiverFactory;
     private final HikariDataSource dataSource;
     private final DomainBlacklist blacklist;
-    private final Gson gson;
     private final int node;
     private final SimpleBlockingThreadPool pool;
 
@@ -96,16 +94,17 @@ public class CrawlerMain extends ProcessMainClass {
                        HikariDataSource dataSource,
                        DomainBlacklist blacklist,
                        Gson gson) throws InterruptedException {
+
+        super(messageQueueFactory, processConfiguration, gson, CRAWLER_INBOX);
+
         this.userAgent = userAgent;
         this.heartbeat = heartbeat;
-        this.messageQueueFactory = messageQueueFactory;
         this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.warcArchiverFactory = warcArchiverFactory;
         this.dataSource = dataSource;
         this.blacklist = blacklist;
-        this.gson = gson;
         this.node = processConfiguration.node();
 
         pool = new SimpleBlockingThreadPool("CrawlerPool",
@@ -144,13 +143,14 @@ public class CrawlerMain extends ProcessMainClass {
             );
             var crawler = injector.getInstance(CrawlerMain.class);
 
-            var instructions = crawler.fetchInstructions();
+            var instructions = crawler.fetchInstructions(nu.marginalia.mqapi.crawling.CrawlRequest.class);
             try {
-                if (instructions.targetDomainName != null) {
-                    crawler.runForSingleDomain(instructions.targetDomainName, instructions.outputDir);
+                var req = instructions.value();
+                if (req.targetDomainName != null) {
+                    crawler.runForSingleDomain(req.targetDomainName, req.crawlStorage);
                 }
                 else {
-                    crawler.runForDatabaseDomains(instructions.outputDir);
+                    crawler.runForDatabaseDomains(req.crawlStorage);
                 }
                 instructions.ok();
             } catch (Exception ex) {
@@ -164,6 +164,10 @@ public class CrawlerMain extends ProcessMainClass {
             logger.error("Uncaught exception", ex);
         }
         System.exit(0);
+    }
+
+    public void runForDatabaseDomains(FileStorageId fileStorageId) throws Exception {
+        runForDatabaseDomains(fileStorageService.getStorage(fileStorageId).asPath());
     }
 
     public void runForDatabaseDomains(Path outputDir) throws Exception {
@@ -283,6 +287,11 @@ public class CrawlerMain extends ProcessMainClass {
         finally {
             heartbeat.shutDown();
         }
+    }
+
+
+    public void runForSingleDomain(String targetDomainName, FileStorageId fileStorageId) throws Exception {
+        runForSingleDomain(targetDomainName, fileStorageService.getStorage(fileStorageId).asPath());
     }
 
     public void runForSingleDomain(String targetDomainName, Path outputDir) throws Exception {
@@ -408,70 +417,6 @@ public class CrawlerMain extends ProcessMainClass {
             }
         }
 
-    }
-
-
-
-    private static class CrawlRequest {
-        private final Path outputDir;
-        private final MqMessage message;
-        private final MqSingleShotInbox inbox;
-
-        private final String targetDomainName;
-
-        CrawlRequest(String targetDomainName,
-                     Path outputDir,
-                     MqMessage message,
-                     MqSingleShotInbox inbox)
-        {
-            this.message = message;
-            this.inbox = inbox;
-            this.outputDir = outputDir;
-            this.targetDomainName = targetDomainName;
-        }
-
-
-        public void ok() {
-            inbox.sendResponse(message, MqInboxResponse.ok());
-        }
-        public void err() {
-            inbox.sendResponse(message, MqInboxResponse.err());
-        }
-
-    }
-
-    private CrawlRequest fetchInstructions() throws Exception {
-
-        var inbox = messageQueueFactory.createSingleShotInbox(CRAWLER_INBOX, node, UUID.randomUUID());
-
-        logger.info("Waiting for instructions");
-
-        var msgOpt = getMessage(inbox, nu.marginalia.mqapi.crawling.CrawlRequest.class.getSimpleName());
-        var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
-
-        var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.crawling.CrawlRequest.class);
-        var crawlStorage = fileStorageService.getStorage(request.crawlStorage);
-
-        return new CrawlRequest(
-                request.targetDomainName,
-                crawlStorage.asPath(),
-                msg,
-                inbox);
-    }
-
-    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
-        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
-        if (opt.isPresent()) {
-            if (!opt.get().function().equals(expectedFunction)) {
-                throw new RuntimeException("Unexpected function: " + opt.get().function());
-            }
-            return opt;
-        }
-        else {
-            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
-            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
-            return stolenMessage;
-        }
     }
 
     public record CrawlSpecRecord(@NotNull String domain, int crawlDepth, @NotNull List<String> urls) {

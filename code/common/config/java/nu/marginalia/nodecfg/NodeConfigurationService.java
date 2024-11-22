@@ -3,6 +3,7 @@ package nu.marginalia.nodecfg;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +21,10 @@ public class NodeConfigurationService {
         this.dataSource = dataSource;
     }
 
-    public NodeConfiguration create(int id, String description, boolean acceptQueries, boolean keepWarcs) throws SQLException {
+    public NodeConfiguration create(int id, String description, boolean acceptQueries, boolean keepWarcs, NodeProfile nodeProfile) throws SQLException {
         try (var conn = dataSource.getConnection();
              var is = conn.prepareStatement("""
-                     INSERT IGNORE INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES, KEEP_WARCS) VALUES(?, ?, ?, ?)
+                     INSERT IGNORE INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES, KEEP_WARCS, NODE_PROFILE) VALUES(?, ?, ?, ?, ?)
                      """)
         )
         {
@@ -31,6 +32,7 @@ public class NodeConfigurationService {
             is.setString(2, description);
             is.setBoolean(3, acceptQueries);
             is.setBoolean(4, keepWarcs);
+            is.setString(5, nodeProfile.name());
 
             if (is.executeUpdate() <= 0) {
                 throw new IllegalStateException("Failed to insert configuration");
@@ -43,7 +45,7 @@ public class NodeConfigurationService {
     public List<NodeConfiguration> getAll() {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, NODE_PROFILE, DISABLED
                      FROM NODE_CONFIGURATION
                      """)) {
             var rs = qs.executeQuery();
@@ -58,6 +60,7 @@ public class NodeConfigurationService {
                         rs.getBoolean("AUTO_CLEAN"),
                         rs.getBoolean("PRECESSION"),
                         rs.getBoolean("KEEP_WARCS"),
+                        NodeProfile.valueOf(rs.getString("NODE_PROFILE")),
                         rs.getBoolean("DISABLED")
                 ));
             }
@@ -72,7 +75,7 @@ public class NodeConfigurationService {
     public NodeConfiguration get(int nodeId) throws SQLException {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, NODE_PROFILE, DISABLED
                      FROM NODE_CONFIGURATION
                      WHERE ID=?
                      """)) {
@@ -86,6 +89,7 @@ public class NodeConfigurationService {
                         rs.getBoolean("AUTO_CLEAN"),
                         rs.getBoolean("PRECESSION"),
                         rs.getBoolean("KEEP_WARCS"),
+                        NodeProfile.valueOf(rs.getString("NODE_PROFILE")),
                         rs.getBoolean("DISABLED")
                 );
             }
@@ -98,7 +102,7 @@ public class NodeConfigurationService {
         try (var conn = dataSource.getConnection();
              var us = conn.prepareStatement("""
                      UPDATE NODE_CONFIGURATION
-                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, KEEP_WARCS=?, DISABLED=?
+                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, KEEP_WARCS=?, DISABLED=?, NODE_PROFILE=?
                      WHERE ID=?
                      """))
         {
@@ -108,7 +112,8 @@ public class NodeConfigurationService {
             us.setBoolean(4, config.includeInPrecession());
             us.setBoolean(5, config.keepWarcs());
             us.setBoolean(6, config.disabled());
-            us.setInt(7, config.node());
+            us.setString(7, config.profile().name());
+            us.setInt(8, config.node());
 
             if (us.executeUpdate() <= 0)
                 throw new IllegalStateException("Failed to update configuration");

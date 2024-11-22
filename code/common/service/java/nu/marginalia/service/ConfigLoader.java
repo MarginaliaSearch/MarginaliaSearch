@@ -9,11 +9,11 @@ import java.util.Properties;
 
 public class ConfigLoader {
 
-    static Path getConfigPath(String configName) {
+    public static Path getConfigPath(String configName) {
         return WmsaHome.getHomePath().resolve("conf/properties/" + configName + ".properties");
     }
 
-    static void loadConfig(Path configPath) {
+    public static void loadConfig(Path configPath) {
         if (!Files.exists(configPath)) {
             System.err.println("No config file found at " + configPath);
             return;

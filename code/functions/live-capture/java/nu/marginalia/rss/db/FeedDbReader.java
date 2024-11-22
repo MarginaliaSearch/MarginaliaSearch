@@ -12,9 +12,11 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 public class FeedDbReader implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(FeedDbReader.class);
@@ -99,4 +101,27 @@ public class FeedDbReader implements AutoCloseable {
     }
 
 
+    public void getLinksUpdatedSince(Instant since, BiConsumer<String, List<String>> consumer) {
+        try (var stmt = connection.prepareStatement("SELECT FEED FROM feed")) {
+            var rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                FeedItems items = deserialize(rs.getString(1));
+
+                List<String> urls = new ArrayList<>();
+                for (var item : items.items()) {
+                    if (item.getUpdateTimeZD().toInstant().isAfter(since)) {
+                        urls.add(item.url());
+                    }
+                }
+
+                if (!urls.isEmpty()) {
+                    consumer.accept(items.domain(), new ArrayList<>(urls));
+                    urls.clear();
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting updated links", e);
+        }
+    }
 }

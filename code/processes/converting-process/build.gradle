@@ -21,7 +21,6 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation project(':code:common:process')
 
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:count-min-sketch')

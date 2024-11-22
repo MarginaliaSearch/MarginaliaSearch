@@ -7,7 +7,22 @@ option java_multiple_files=true;
 
 service FeedApi {
   rpc getFeed(RpcDomainId) returns (RpcFeed) {}
+  rpc getFeedDataHash(Empty) returns (RpcFeedDataHash) {}
   rpc updateFeeds(RpcUpdateRequest) returns (Empty) {}
+  rpc getUpdatedLinks(RpcUpdatedLinksRequest) returns (stream RpcUpdatedLinksResponse) {}
+}
+
+message RpcUpdatedLinksRequest {
+  int64 sinceEpochMillis = 1;
+}
+
+message RpcUpdatedLinksResponse {
+  string domain = 1;
+  repeated string url = 2;
+}
+
+message RpcFeedDataHash {
+  string hash = 1;
 }
 
 message RpcDomainId {

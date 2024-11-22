@@ -11,11 +11,16 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 @Singleton
 public class FeedDb {
@@ -42,6 +47,18 @@ public class FeedDb {
             } catch (Exception e) {
                 reader = null;
             }
+        }
+    }
+
+    /** Constructor for testing */
+    public FeedDb(Path dbPath) {
+        feedDbEnabled = true;
+        readerDbPath = dbPath;
+
+        try {
+            reader = new FeedDbReader(readerDbPath);
+        } catch (Exception e) {
+            reader = null;
         }
     }
 
@@ -112,7 +129,7 @@ public class FeedDb {
         }
 
         try {
-            Path dbFile = Files.createTempFile(WmsaHome.getDataPath(), "rss-feeds", ".tmp.db");
+            Path dbFile = Files.createTempFile(readerDbPath.getParent(), "rss-feeds", ".tmp.db");
             return new FeedDbWriter(dbFile);
         } catch (Exception e) {
             logger.error("Error creating new database writer", e);
@@ -141,4 +158,34 @@ public class FeedDb {
         }
     }
 
+    public String getDataHash() throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+
+        byte[] buffer = new byte[4096];
+
+        try (var inputStream = new BufferedInputStream(Files.newInputStream(readerDbPath))) {
+            int rb;
+
+            while ((rb = inputStream.read(buffer)) >= 0) {
+                digest.update(buffer, 0, rb);
+            }
+        }
+
+        return Base64.getEncoder().encodeToString(digest.digest());
+    }
+
+    public void getLinksUpdatedSince(Instant since, BiConsumer<String, List<String>> consumer) throws Exception {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        if (reader == null) {
+            throw new NullPointerException("Reader is not available");
+        }
+
+        reader.getLinksUpdatedSince(since, consumer);
+    }
 }

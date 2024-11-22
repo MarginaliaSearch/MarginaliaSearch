@@ -147,10 +147,6 @@ public class ConvertingIntegrationTest {
                     "",
                     "",
                     readClassPathFile(p.toString()),
-                    Double.toString(Math.random()),
-                    "https://memex.marginalia.nu/" + file,
-                    null,
-                    "",
                     false,
                     null,
                     null

@@ -10,6 +10,8 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.jsoup.Jsoup;
@@ -39,6 +41,7 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
     private final Duration pollInterval = Duration.ofHours(6);
 
     private final ServiceEventLog eventLog;
+    private final NodeConfigurationService nodeConfigurationService;
     private final HikariDataSource dataSource;
     private final int nodeId;
 
@@ -54,8 +57,8 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Initial() -> {
-                if (nodeId > 1) {
-                    yield new End();
+                if (nodeConfigurationService.get(nodeId).profile() != NodeProfile.REALTIME) {
+                    yield new Error("Invalid node profile for RSS update");
                 }
                 else {
                     yield new Wait(LocalDateTime.now().toString());
@@ -177,10 +180,12 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
     public ScrapeFeedsActor(Gson gson,
                             ServiceEventLog eventLog,
                             ServiceConfiguration configuration,
+                            NodeConfigurationService nodeConfigurationService,
                             HikariDataSource dataSource)
     {
         super(gson);
         this.eventLog = eventLog;
+        this.nodeConfigurationService = nodeConfigurationService;
         this.dataSource = dataSource;
         this.nodeId = configuration.node();
     }

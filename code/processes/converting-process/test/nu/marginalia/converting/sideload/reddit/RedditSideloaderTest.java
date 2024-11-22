@@ -2,10 +2,10 @@ package nu.marginalia.converting.sideload.reddit;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
+import nu.marginalia.process.ProcessConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

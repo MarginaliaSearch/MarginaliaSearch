@@ -3,11 +3,11 @@ package nu.marginalia.loading.domains;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
 import nu.marginalia.model.processed.SlopDomainRecord;
+import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.slop.SlopTable;
@@ -52,7 +52,7 @@ public class DomainLoaderService {
             throws IOException, SQLException
     {
         Set<String> domainNamesAll = new HashSet<>(100_000);
-        DomainIdRegistry ret = new DomainIdRegistry();
+        DomainIdRegistry ret = new CachingDomainIdRegistry();
 
         try (var conn = dataSource.getConnection();
              var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS"))

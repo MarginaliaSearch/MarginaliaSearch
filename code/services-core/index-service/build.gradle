@@ -37,7 +37,6 @@ dependencies {
     implementation project(':code:index:api')
 
     testImplementation project(path: ':code:services-core:control-service')
-    testImplementation project(':code:common:process')
 
     implementation libs.bundles.slf4j
 

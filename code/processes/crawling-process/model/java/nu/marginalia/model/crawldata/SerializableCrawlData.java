@@ -1,5 +1,5 @@
 package nu.marginalia.model.crawldata;
 
-public interface SerializableCrawlData {
+public sealed interface SerializableCrawlData permits CrawledDocument, CrawledDomain {
     String getDomain();
 }
