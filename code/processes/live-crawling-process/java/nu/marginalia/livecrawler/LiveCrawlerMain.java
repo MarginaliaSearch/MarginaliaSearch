@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.converting.ConverterModule;
@@ -56,6 +57,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
     private final FileStorageService fileStorageService;
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
+    private final HikariDataSource dataSource;
 
     @Inject
     public LiveCrawlerMain(FeedsClient feedsClient,
@@ -68,7 +70,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
                            DomainProcessor domainProcessor,
                            FileStorageService fileStorageService,
                            KeywordLoaderService keywordLoaderService,
-                           DocumentLoaderService documentLoaderService)
+                           DocumentLoaderService documentLoaderService, HikariDataSource dataSource)
             throws Exception
     {
         super(messageQueueFactory, config, gson, LIVE_CRAWLER_INBOX);
@@ -81,6 +83,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
         this.fileStorageService = fileStorageService;
         this.keywordLoaderService = keywordLoaderService;
         this.documentLoaderService = documentLoaderService;
+        this.dataSource = dataSource;
 
         domainBlacklist.waitUntilLoaded();
     }
@@ -201,7 +204,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
 
                 LoaderInputData lid = new LoaderInputData(tempPath, 1);
 
-                DomainIdRegistry domainIdRegistry = new DbDomainIdRegistry(domainQueries);
+                DomainIdRegistry domainIdRegistry = new DbDomainIdRegistry(dataSource);
 
                 keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, lid);
                 documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, lid);
