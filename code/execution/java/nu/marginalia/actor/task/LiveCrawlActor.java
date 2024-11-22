@@ -3,6 +3,7 @@ package nu.marginalia.actor.task;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.IndexLocations;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorStateMachines;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
@@ -13,9 +14,13 @@ import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.LiveCrawlRequest;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
+import nu.marginalia.storage.FileStorageService;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
 
@@ -28,6 +33,8 @@ public class LiveCrawlActor extends RecordActorPrototype {
     private final ExecutorActorStateMachines executorActorStateMachines;
     private final FeedsClient feedsClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final FileStorageService fileStorageService;
 
     public record Initial() implements ActorStep {}
     public record Monitor(String feedsHash) implements ActorStep {}
@@ -52,6 +59,12 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 }
             }
             case LiveCrawl(String feedsHash, long msgId) when msgId < 0 -> {
+                // Clear the index journal before starting the crawl
+                Path indexJournalLocation = IndexLocations.getIndexConstructionArea(fileStorageService).resolve("index-journal");
+                if (Files.isDirectory(indexJournalLocation)) {
+                    FileUtils.deleteDirectory(indexJournalLocation.toFile());
+                }
+
                 long id = mqLiveCrawlerOutbox.sendAsync(new LiveCrawlRequest());
                 yield new LiveCrawl(feedsHash, id);
             }
@@ -81,13 +94,14 @@ public class LiveCrawlActor extends RecordActorPrototype {
                           ProcessOutboxes processOutboxes,
                           FeedsClient feedsClient,
                           Gson gson,
-                          ExecutorActorStateMachines executorActorStateMachines)
+                          ExecutorActorStateMachines executorActorStateMachines, FileStorageService fileStorageService)
     {
         super(gson);
         this.processWatcher = processWatcher;
         this.mqLiveCrawlerOutbox = processOutboxes.getLiveCrawlerOutbox();
         this.executorActorStateMachines = executorActorStateMachines;
         this.feedsClient = feedsClient;
+        this.fileStorageService = fileStorageService;
     }
 
 
