@@ -14,6 +14,7 @@ import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -70,6 +71,14 @@ public class SimpleLinkScraper implements AutoCloseable {
 
             SimpleRobotRules rules = fetchRobotsRules(rootUrl, client);
 
+            if (rules == null) { // I/O error fetching robots.txt
+                // If we can't fetch the robots.txt,
+                for (var url : urls) {
+                    lp.parseLink(rootUrl, url).ifPresent(this::maybeFlagAsBad);
+                }
+                return;
+            }
+
             CrawlDelayTimer timer = new CrawlDelayTimer(rules.getCrawlDelay());
 
             for (var url : urls) {
@@ -89,25 +98,27 @@ public class SimpleLinkScraper implements AutoCloseable {
                 switch (fetchUrl(domainId, parsedUrl, timer, client)) {
                     case FetchResult.Success(int id, EdgeUrl docUrl, String body, String headers)
                             -> dataSet.saveDocument(id, docUrl, body, headers, "");
-                    case FetchResult.Error(EdgeUrl docUrl) ->
-                    {
-                        // To give bad URLs a chance to be re-fetched, we only flag them as bad
-                        // with a 20% probability.  This will prevent the same bad URL being
-                        // re-fetched over and over again for several months, but still allow
-                        // us to *mostly* re-fetch it if it was just a transient error.
-
-                        // There's of course the chance we immediately flag it as bad on an
-                        // unlucky roll, but you know, that's xcom baby
-                        if (ThreadLocalRandom.current().nextDouble(0, 1) < 0.2) {
-                            dataSet.flagAsBad(docUrl);
-                        }
-                    }
+                    case FetchResult.Error(EdgeUrl docUrl) -> maybeFlagAsBad(docUrl);
                 }
-
             }
         }
     }
 
+    private void maybeFlagAsBad(EdgeUrl url) {
+        // To give bad URLs a chance to be re-fetched, we only flag them as bad
+        // with a 20% probability.  This will prevent the same bad URL being
+        // re-fetched over and over again for several months, but still allow
+        // us to *mostly* re-fetch it if it was just a transient error.
+
+        // There's of course the chance we immediately flag it as bad on an
+        // unlucky roll, but you know, that's xcom baby
+
+        if (ThreadLocalRandom.current().nextDouble(0, 1) < 0.2) {
+            dataSet.flagAsBad(url);
+        }
+    }
+
+    @Nullable
     private SimpleRobotRules fetchRobotsRules(EdgeUrl rootUrl, HttpClient client) throws IOException, InterruptedException, URISyntaxException {
         var robotsRequest = HttpRequest.newBuilder(rootUrl.withPathAndParam("/robots.txt", null).asURI())
                 .GET()
@@ -116,17 +127,23 @@ public class SimpleLinkScraper implements AutoCloseable {
 
         // Fetch the robots.txt
 
-        SimpleRobotRulesParser parser = new SimpleRobotRulesParser();
-        SimpleRobotRules rules = new SimpleRobotRules(SimpleRobotRules.RobotRulesMode.ALLOW_ALL);
-        HttpResponse<byte[]> robotsTxt = client.send(robotsRequest.build(), HttpResponse.BodyHandlers.ofByteArray());
-        if (robotsTxt.statusCode() == 200) {
-            rules = parser.parseContent(rootUrl.toString(),
-                    robotsTxt.body(),
-                    robotsTxt.headers().firstValue("Content-Type").orElse("text/plain"),
-                    WmsaHome.getUserAgent().uaIdentifier());
+        try {
+            SimpleRobotRulesParser parser = new SimpleRobotRulesParser();
+            HttpResponse<byte[]> robotsTxt = client.send(robotsRequest.build(), HttpResponse.BodyHandlers.ofByteArray());
+            if (robotsTxt.statusCode() == 200) {
+                return parser.parseContent(rootUrl.toString(),
+                        robotsTxt.body(),
+                        robotsTxt.headers().firstValue("Content-Type").orElse("text/plain"),
+                        WmsaHome.getUserAgent().uaIdentifier());
+            }
+            else if (robotsTxt.statusCode() == 404) {
+                return new SimpleRobotRules(SimpleRobotRules.RobotRulesMode.ALLOW_ALL);
+            }
         }
-
-        return rules;
+        catch (IOException ex) {
+            logger.error("Error fetching robots.txt for {}: {} {}", rootUrl, ex.getClass().getSimpleName(), ex.getMessage());
+        }
+        return null;
     }
 
     /** Fetch a URL and store it in the database
