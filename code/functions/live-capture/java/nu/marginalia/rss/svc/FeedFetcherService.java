@@ -1,5 +1,6 @@
 package nu.marginalia.rss.svc;
 
+import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
 import com.google.inject.Inject;
 import com.opencsv.CSVReader;
@@ -21,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -230,8 +233,12 @@ public class FeedFetcherService {
 
     public FeedItems fetchFeed(FeedDefinition definition) {
         try {
-            var items = rssReader.read(definition.feedUrl())
-                    .map(FeedItem::fromItem)
+            List<Item> rawItems = rssReader.read(definition.feedUrl()).toList();
+
+            boolean keepUriFragment = rawItems.size() < 2 || areFragmentsDisparate(rawItems);
+
+            var items = rawItems.stream()
+                    .map(item -> FeedItem.fromItem(item, keepUriFragment))
                     .filter(new IsFeedItemDateValid())
                     .sorted()
                     .limit(MAX_FEED_ITEMS)
@@ -247,6 +254,41 @@ public class FeedFetcherService {
             logger.debug("Exception", e);
             return FeedItems.none();
         }
+    }
+
+    /** Decide whether to keep URI fragments in the feed items.
+     * <p></p>
+     * We keep fragments if there are multiple different fragments in the items.
+     *
+     * @param items The items to check
+     * @return True if we should keep the fragments, false otherwise
+     */
+    private boolean areFragmentsDisparate(List<Item> items) {
+        Set<String> seenFragments = new HashSet<>();
+
+        try {
+            for (var item : items) {
+                if (item.getLink().isEmpty()) {
+                    continue;
+                }
+
+                var link = item.getLink().get();
+                if (!link.contains("#")) {
+                    continue;
+                }
+
+                var fragment = new URI(link).getFragment();
+                if (fragment != null) {
+                    seenFragments.add(fragment);
+                }
+            }
+        }
+        catch (URISyntaxException e) {
+            logger.debug("Exception", e);
+            return true; // safe default
+        }
+
+        return seenFragments.size() > 1;
     }
 
     private static class IsFeedItemDateValid implements Predicate<FeedItem> {
