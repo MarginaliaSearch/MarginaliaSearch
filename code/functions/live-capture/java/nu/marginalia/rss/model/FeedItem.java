@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 
+import java.net.URI;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -17,11 +18,27 @@ public record FeedItem(String title,
     public static final int MAX_DESC_LENGTH = 255;
     public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
-    public static FeedItem fromItem(Item item) {
+    public static FeedItem fromItem(Item item, boolean keepFragment) {
         String title = item.getTitle().orElse("");
         String date = getItemDate(item);
         String description = getItemDescription(item);
-        String url = item.getLink().orElse("");
+        String url;
+
+        if (keepFragment || item.getLink().isEmpty()) {
+            url = item.getLink().orElse("");
+        }
+        else {
+            try {
+                String link = item.getLink().get();
+                var linkUri = new URI(link);
+                var cleanUri = new URI(linkUri.getScheme(), linkUri.getAuthority(), linkUri.getPath(), linkUri.getQuery(), null);
+                url = cleanUri.toString();
+            }
+            catch (Exception e) {
+                // fallback to original link if we can't clean it, this is not a very important step
+                url = item.getLink().get();
+            }
+        }
 
         return new FeedItem(title, date, description, url);
     }
