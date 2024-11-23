@@ -92,6 +92,7 @@ public class SimpleLinkScraper implements AutoCloseable {
 
                 EdgeUrl parsedUrl = optParsedUrl.get();
                 if (!rules.isAllowed(url)) {
+                    maybeFlagAsBad(parsedUrl);
                     continue;
                 }
 
