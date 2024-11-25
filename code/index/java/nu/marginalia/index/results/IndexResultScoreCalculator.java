@@ -386,6 +386,13 @@ public class IndexResultScoreCalculator {
                 {
                     score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
                 }
+
+                var atagSpan = spans.getSpan(HtmlTag.ANCHOR);
+                if (atagSpan.length() == fullGroup.size
+                        && atagSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
+                {
+                    score += 4; // Add additional bonus if there's a single-word atag span
+                }
                 return;
             }
 
@@ -395,6 +402,13 @@ public class IndexResultScoreCalculator {
                     matches.set(tag.ordinal());
                     score += weights_full[tag.ordinal()] * fullGroup.size;
                 }
+            }
+
+            // Bonus if there's a perfect match with an atag span
+            var atagSpan = spans.getSpan(HtmlTag.ANCHOR);
+            if (atagSpan.length() == fullGroup.size && atagSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
+            {
+                score += 1;
             }
 
             // For optional groups, we scale the score by the size of the group relative to the full group

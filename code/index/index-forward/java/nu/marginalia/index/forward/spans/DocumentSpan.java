@@ -103,13 +103,44 @@ public class DocumentSpan {
 
         for (int pi = 0; pi < positions.size(); pi++) {
             int position = positions.getInt(pi);
-            if (position < start) {
-                continue;
+            if (position >= start && position + len <= end) {
+                return true;
             }
 
-            if (position + len <= end) {
+            if (sei + 2 < startsEnds.size()) {
+                start = startsEnds.getInt(sei++);
+                end = startsEnds.getInt(sei++);
+            }
+            else {
+                return false;
+            }
+
+        }
+
+        return false;
+    }
+
+    /** Returns true if for any position in the list, there exists a range
+     * (position[i], position[i]+len] that is overlapped by a span */
+    public boolean containsRangeExact(IntList positions, int len) {
+        if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
+            return false;
+        }
+
+        int sei = 0;
+
+
+        int start = startsEnds.getInt(sei++);
+        int end = startsEnds.getInt(sei++);
+
+        for (int pi = 0; pi < positions.size(); pi++) {
+            int position = positions.getInt(pi);
+
+            if (position == start && position + len == end) {
                 return true;
-            } else if (sei + 2 < startsEnds.size()) {
+            }
+
+            if (sei + 2 < startsEnds.size()) {
                 start = startsEnds.getInt(sei++);
                 end = startsEnds.getInt(sei++);
             }
