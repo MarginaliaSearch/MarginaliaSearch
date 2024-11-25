@@ -107,7 +107,7 @@ public class DocumentSpan {
                 continue;
             }
 
-            if (position + len < end) {
+            if (position + len <= end) {
                 return true;
             } else if (sei + 2 < startsEnds.size()) {
                 start = startsEnds.getInt(sei++);
@@ -198,6 +198,8 @@ public class DocumentSpan {
         var iter = startsEnds.iterator();
 
         while (iter.hasNext()) {
+            // The length of each span is b - a; but we receive them in the order a b;
+            // thus we subtract the start from the length and add the end
             len -= iter.nextInt();
             len += iter.nextInt();
         }

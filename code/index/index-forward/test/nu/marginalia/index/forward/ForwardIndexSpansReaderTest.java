@@ -1,5 +1,6 @@
 package nu.marginalia.index.forward;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
 import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
 import nu.marginalia.language.sentence.tag.HtmlTag;
@@ -37,9 +38,10 @@ class ForwardIndexSpansReaderTest {
             writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate(1, 3, 5, 8).buffer());
             offset1 = writer.endRecord();
 
-            writer.beginRecord(2);
+            writer.beginRecord(3);
             writer.writeSpan(HtmlTag.CODE.code, VarintCodedSequence.generate(2, 4, 6, 7).buffer());
             writer.writeSpan(HtmlTag.ANCHOR.code, VarintCodedSequence.generate(3, 5).buffer());
+            writer.writeSpan(HtmlTag.NAV.code, VarintCodedSequence.generate(1, 3).buffer());
             offset2 = writer.endRecord();
         }
 
@@ -59,6 +61,10 @@ class ForwardIndexSpansReaderTest {
             assertTrue(spans2.code.containsPosition(6));
             assertFalse(spans2.code.containsPosition(7));
             assertFalse(spans2.code.containsPosition(8));
+
+            assertTrue(spans2.nav.containsRange(IntList.of(1), 2));
+            assertTrue(spans2.nav.containsRange(IntList.of(2), 1));
+            assertTrue(spans2.nav.containsPosition(1));
 
             assertEquals(1, spans2.anchor.size());
 
