@@ -42,6 +42,7 @@ services:
     container_name: "index-service-1"
   executor-service-1:
     <<: *partition-1
+    restart: always
     image: "marginalia/executor-service"
     container_name: "executor-service-1"
   query-service:

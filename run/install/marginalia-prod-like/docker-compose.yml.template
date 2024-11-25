@@ -64,6 +64,7 @@ services:
     container_name: "index-service-1"
   executor-service-1:
     <<: *partition-1
+    restart: always
     image: "marginalia/executor-service"
     container_name: "executor-service-1"
   index-service-2:
@@ -72,6 +73,7 @@ services:
     container_name: "index-service-2"
   executor-service-2:
     <<: *partition-2
+    restart: always
     image: "marginalia/executor-service"
     container_name: "executor-service-2"
   query-service:
