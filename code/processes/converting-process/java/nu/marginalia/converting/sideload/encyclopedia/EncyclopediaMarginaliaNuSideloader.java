@@ -84,7 +84,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
             DomainLinks domainLinks = getDomainLinks();
 
             var stmt = connection.prepareStatement("""
-                    SELECT url,title,html FROM articles
+                    SELECT url,title,html FROM articles where url
                     """);
             stmt.setFetchSize(100);
 
@@ -111,7 +111,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     }
 
     private ProcessedDocument convertDocument(List<String> parts, String title, String url, DomainLinks domainLinks) throws URISyntaxException, DisqualifiedException {
-        String fullUrl = baseUrl.toString() + URLEncoder.encode(url, Charsets.UTF_8);
+        String fullUrl = baseUrl.toString() + URLEncoder.encode(normalizeUtf8(url), Charsets.UTF_8);
 
         StringBuilder fullHtml = new StringBuilder();
         fullHtml
@@ -140,6 +140,15 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         10_000_000);
 
         return doc;
+    }
+
+    private String normalizeUtf8(String url) {
+        // A rare number of articles have incorrectly normalized UTF-8 in their paths.
+        // This is a stopgap to fix them, as the URLs break if you urlencode the UTF-8.
+
+        return url
+                .replace('\u2013', '-')  // Replace en-dash with hyphen
+                ;
     }
 
     private <T> T fromCompressedJson(byte[] stream, Class<T> type) throws IOException {
