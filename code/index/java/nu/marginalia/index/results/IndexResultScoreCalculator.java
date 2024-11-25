@@ -375,14 +375,21 @@ public class IndexResultScoreCalculator {
         public VerbatimMatches(IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
             matches = new BitSet(HtmlTag.includedTags.length);
 
+            var fullGroup = constraints.getFullGroup();
+            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
+
             int largestOptional = constraints.getFullGroup().size;
             if (largestOptional < 2) {
+                var titleSpan = spans.getSpan(HtmlTag.TITLE);
+                if (titleSpan.length() == fullGroup.size
+                    && titleSpan.containsRange(fullGroupIntersections, fullGroup.size))
+                {
+                    score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
+                }
                 return;
             }
 
             // Capture full query matches
-            var fullGroup = constraints.getFullGroup();
-            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
             for (var tag : HtmlTag.includedTags) {
                 if (spans.getSpan(tag).containsRange(fullGroupIntersections, fullGroup.size)) {
                     matches.set(tag.ordinal());
