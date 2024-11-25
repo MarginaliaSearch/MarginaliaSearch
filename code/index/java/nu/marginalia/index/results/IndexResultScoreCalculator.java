@@ -323,7 +323,7 @@ public class IndexResultScoreCalculator {
             proximitiyFac += unorderedMatches.getObservationCount(HtmlTag.TITLE) * (2.5f + 2.f / Math.max(1, spans.title.length()));
         }
         // Give bonus proximity score if all keywords are in a heading
-        if (spans.heading.size() < 64 &&
+        if (spans.heading.length() < 64 &&
                 ! verbatimMatches.get(HtmlTag.HEADING)
                 && unorderedMatches.getObservationCount(HtmlTag.HEADING) == unorderedMatches.searchableKeywordCount)
         {
