@@ -171,9 +171,15 @@ public class DocumentSpan {
 
         IntList ret = new IntArrayList();
         var iter = startsEnds.iterator();
+
         while (iter.hasNext()) {
-            ret.add(iter.nextInt());
+            int start = iter.nextInt();
+            int end = iter.nextInt();
+            for (int i = start; i < end; i++) {
+                ret.add(i);
+            }
         }
+
         return ret;
     }
 
