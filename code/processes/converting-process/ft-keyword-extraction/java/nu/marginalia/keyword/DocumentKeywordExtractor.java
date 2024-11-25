@@ -171,6 +171,10 @@ public class DocumentKeywordExtractor {
             for (var word : linkText) {
                 pos++;
 
+                for (var recorder : spanRecorders) {
+                    recorder.update(linkText, pos);
+                }
+
                 if (word.isStopWord()) {
                     continue;
                 }
