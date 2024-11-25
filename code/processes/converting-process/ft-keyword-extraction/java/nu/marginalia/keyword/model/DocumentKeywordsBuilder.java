@@ -163,24 +163,8 @@ public class DocumentKeywordsBuilder {
         return this.wordToMeta;
     }
 
-    public HashMap<String, IntList> getWordToPos() {
-        return this.wordToPos;
-    }
-
-    public Map<Character, List<DocumentWordSpan>> getWordSpans() {
-        return this.wordSpans;
-    }
-
     public Set<String> getImportantWords() {
         return this.importantWords;
-    }
-
-    public int getMAX_WORD_LENGTH() {
-        return this.MAX_WORD_LENGTH;
-    }
-
-    public int getMAX_POSITIONS_PER_WORD() {
-        return this.MAX_POSITIONS_PER_WORD;
     }
 
     public record DocumentWordSpan(HtmlTag tag, int start, int end) {
