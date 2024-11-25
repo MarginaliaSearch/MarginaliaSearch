@@ -391,7 +391,7 @@ public class IndexResultScoreCalculator {
                 if (extLinkSpan.length() == fullGroup.size
                         && extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
                 {
-                    score += 4; // Add additional bonus if there's a single-word atag span
+                    score += 2; // Add additional bonus if there's a single-word atag span
                 }
                 return;
             }
@@ -408,7 +408,7 @@ public class IndexResultScoreCalculator {
             var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
             if (extLinkSpan.length() == fullGroup.size && extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
             {
-                score += 1;
+                score += 2;
             }
 
             // For optional groups, we scale the score by the size of the group relative to the full group
