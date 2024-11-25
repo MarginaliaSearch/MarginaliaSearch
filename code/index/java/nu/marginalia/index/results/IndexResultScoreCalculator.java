@@ -352,7 +352,7 @@ public class IndexResultScoreCalculator {
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 1.0f;
+                    case EXTERNAL_LINKTEXT -> 2.0f;
                     case BODY -> 1.0f;
                     default -> 0.0f;
                 };
@@ -365,7 +365,7 @@ public class IndexResultScoreCalculator {
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 1.0f;
+                    case EXTERNAL_LINKTEXT -> 2.0f;
                     case BODY -> 0.25f;
                     default -> 0.0f;
                 };
@@ -387,9 +387,9 @@ public class IndexResultScoreCalculator {
                     score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
                 }
 
-                var atagSpan = spans.getSpan(HtmlTag.ANCHOR);
-                if (atagSpan.length() == fullGroup.size
-                        && atagSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
+                var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
+                if (extLinkSpan.length() == fullGroup.size
+                        && extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
                 {
                     score += 4; // Add additional bonus if there's a single-word atag span
                 }
@@ -405,8 +405,8 @@ public class IndexResultScoreCalculator {
             }
 
             // Bonus if there's a perfect match with an atag span
-            var atagSpan = spans.getSpan(HtmlTag.ANCHOR);
-            if (atagSpan.length() == fullGroup.size && atagSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
+            var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
+            if (extLinkSpan.length() == fullGroup.size && extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
             {
                 score += 1;
             }
