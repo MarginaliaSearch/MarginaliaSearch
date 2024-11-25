@@ -89,6 +89,8 @@ public class AtagExporter implements ExporterIf {
                 continue;
             if (null == doc.documentBody)
                 continue;
+            if (!doc.contentType.toLowerCase().startsWith("text/html"))
+                continue;
 
             var baseUrl = new EdgeUrl(doc.url);
             var parsed = Jsoup.parse(doc.documentBody);

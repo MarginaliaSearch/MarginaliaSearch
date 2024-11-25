@@ -111,7 +111,7 @@ public class TermFrequencyExporter implements ExporterIf {
 
                 if (!(stream.next() instanceof CrawledDocument doc)) continue;
                 if (doc.documentBody == null) continue;
-                if (!doc.contentType.startsWith("text/html"))
+                if (!doc.contentType.toLowerCase().startsWith("text/html"))
                     continue;
 
                 docCount.incrementAndGet();
