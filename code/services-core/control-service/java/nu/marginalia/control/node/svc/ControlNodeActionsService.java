@@ -304,7 +304,7 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object exportFromCrawlData(Request req, Response rsp) {
+    private Object exportFromCrawlData(Request req, Response rsp) throws Exception {
         String exportType = req.queryParams("exportType");
         FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
 

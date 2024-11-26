@@ -53,6 +53,43 @@
             </div>
         </div>
 
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseCalculateExportAll"
+                        aria-expanded="false"
+                        aria-controls="collapseCalculateExportAll">
+                    Export From All Nodes
+                </button>
+            </h2>
+            <div id="collapseCalculateExportAll" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <div class="mb-3">
+                    This will trigger an export job from all nodes in succession
+                </div>
+                <form method="post" action="actions/export-all">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportFeeds" value="feeds">
+                        <label class="form-check-label" for="exportFeeds">
+                            RSS Feeds
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportAtags" value="atags">
+                        <label class="form-check-label" for="exportAtags">
+                            Anchor Tags
+                        </label>
+                    </div>
+                    
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm export');"
+                            type="submit">
+                        Export</button>
+                </form>
+            </div>
+        </div>
         <!--
         <div class="accordion-item">
             <h2 class="accordion-header">

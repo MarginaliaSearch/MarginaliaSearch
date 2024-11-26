@@ -39,15 +39,20 @@ service ExecutorSideloadApi {
 }
 
 service ExecutorExportApi {
-  rpc exportAtags(RpcFileStorageId) returns (Empty) {}
+  rpc exportAtags(RpcExportRequest) returns (Empty) {}
   rpc exportSegmentationModel(RpcExportSegmentationModel) returns (Empty) {}
   rpc exportSampleData(RpcExportSampleData) returns (Empty) {}
-  rpc exportRssFeeds(RpcFileStorageId) returns (Empty) {}
-  rpc exportTermFrequencies(RpcFileStorageId) returns (Empty) {}
+  rpc exportRssFeeds(RpcExportRequest) returns (Empty) {}
+  rpc exportTermFrequencies(RpcExportRequest) returns (Empty) {}
   rpc exportData(Empty) returns (Empty) {}
+
+  rpc exportAllAtags(Empty) returns (Empty) {}
+  rpc exportAllFeeds(Empty) returns (Empty) {}
+  rpc exportAllTfreqs(Empty) returns (Empty) {}
 }
 
 message Empty {}
+
 message RpcFsmName {
   string actorName = 1;
 }
@@ -56,6 +61,10 @@ message RpcProcessId {
 }
 message RpcFileStorageId {
   int64 fileStorageId = 1;
+}
+message RpcExportRequest {
+  int64 fileStorageId = 1;
+  int64 msgId = 2;
 }
 message RpcFileStorageIdWithDomainName {
   int64 fileStorageId = 1;

@@ -3,6 +3,7 @@ package nu.marginalia.actor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.monitor.FileStorageMonitorActor;
+import nu.marginalia.actor.precession.ExportAllPrecessionActor;
 import nu.marginalia.actor.proc.*;
 import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
@@ -13,6 +14,7 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.service.control.ServiceEventLog;
+import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.BaseServiceParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,7 @@ public class ExecutorActorControlService {
 
     @Inject
     public ExecutorActorControlService(MessageQueueFactory messageQueueFactory,
+                                       ServiceConfiguration serviceConfiguration,
                                        NodeConfigurationService configurationService,
                                        BaseServiceParams baseServiceParams,
                                        ConvertActor convertActor,
@@ -63,6 +66,7 @@ public class ExecutorActorControlService {
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines,
+                                       ExportAllPrecessionActor exportAllPrecessionActor,
                                        UpdateRssActor updateRssActor) throws SQLException {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -102,6 +106,10 @@ public class ExecutorActorControlService {
 
         register(ExecutorActor.SCRAPE_FEEDS, scrapeFeedsActor);
         register(ExecutorActor.UPDATE_RSS, updateRssActor);
+
+        if (serviceConfiguration.node() == 1) {
+            register(ExecutorActor.PREC_EXPORT_ALL, exportAllPrecessionActor);
+        }
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {

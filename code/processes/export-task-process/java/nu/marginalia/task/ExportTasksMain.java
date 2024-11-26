@@ -14,6 +14,7 @@ import nu.marginalia.mqapi.tasks.ExportTaskRequest;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ public class ExportTasksMain extends ProcessMainClass {
     private final SampleDataExporter sampleDataExporter;
     private final TermFrequencyExporter termFrequencyExporter;
     private final WebsiteAdjacenciesCalculator websiteAdjacenciesCalculator;
+    private final ProcessHeartbeat heartbeat;
 
     public static void main(String[] args) throws Exception {
 
@@ -58,7 +60,8 @@ public class ExportTasksMain extends ProcessMainClass {
                            FeedExporter feedExporter,
                            SampleDataExporter sampleDataExporter,
                            TermFrequencyExporter termFrequencyExporter,
-                           Gson gson, WebsiteAdjacenciesCalculator websiteAdjacenciesCalculator)
+                           Gson gson,
+                           WebsiteAdjacenciesCalculator websiteAdjacenciesCalculator, ProcessHeartbeat heartbeat)
     {
         super(messageQueueFactory, config, gson, ProcessInboxNames.EXPORT_TASK_INBOX);
         this.atagExporter = atagExporter;
@@ -66,15 +69,37 @@ public class ExportTasksMain extends ProcessMainClass {
         this.sampleDataExporter = sampleDataExporter;
         this.termFrequencyExporter = termFrequencyExporter;
         this.websiteAdjacenciesCalculator = websiteAdjacenciesCalculator;
+        this.heartbeat = heartbeat;
+    }
+
+    enum ProcessSteps {
+        RUN,
+        END
     }
 
     private void run(ExportTaskRequest request) throws Exception {
-        switch (request.task) {
-            case ATAGS: atagExporter.export(request.crawlId, request.destId); break;
-            case FEEDS: feedExporter.export(request.crawlId, request.destId); break;
-            case TERM_FREQ: termFrequencyExporter.export(request.crawlId, request.destId); break;
-            case SAMPLE_DATA: sampleDataExporter.export(request.crawlId, request.destId, request.size, request.name); break;
-            case ADJACENCIES: websiteAdjacenciesCalculator.export(); break;
+        try (var hb = heartbeat.createProcessTaskHeartbeat(ProcessSteps.class, request.task.toString())) {
+            hb.progress(ProcessSteps.RUN);
+
+            switch (request.task) {
+                case ATAGS:
+                    atagExporter.export(request.crawlId, request.destId);
+                    break;
+                case FEEDS:
+                    feedExporter.export(request.crawlId, request.destId);
+                    break;
+                case TERM_FREQ:
+                    termFrequencyExporter.export(request.crawlId, request.destId);
+                    break;
+                case SAMPLE_DATA:
+                    sampleDataExporter.export(request.crawlId, request.destId, request.size, request.name);
+                    break;
+                case ADJACENCIES:
+                    websiteAdjacenciesCalculator.export();
+                    break;
+            }
+
+            hb.progress(ProcessSteps.RUN);
         }
     }
 

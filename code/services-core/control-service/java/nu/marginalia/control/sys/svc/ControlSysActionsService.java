@@ -7,6 +7,7 @@ import nu.marginalia.control.actor.ControlActor;
 import nu.marginalia.control.actor.ControlActorService;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.executor.client.ExecutorClient;
+import nu.marginalia.executor.client.ExecutorExportClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.nodecfg.NodeConfigurationService;
@@ -29,6 +30,7 @@ public class ControlSysActionsService {
     private final NodeConfigurationService nodeConfigurationService;
     private final FileStorageService fileStorageService;
     private final ExecutorClient executorClient;
+    private final ExecutorExportClient exportClient;
 
     @Inject
     public ControlSysActionsService(MessageQueueFactory mqFactory,
@@ -38,7 +40,7 @@ public class ControlSysActionsService {
                                     ControlActorService controlActorService,
                                     NodeConfigurationService nodeConfigurationService,
                                     FileStorageService fileStorageService,
-                                    ExecutorClient executorClient)
+                                    ExecutorClient executorClient, ExecutorExportClient exportClient)
     {
         this.apiOutbox = createApiOutbox(mqFactory);
         this.eventLog = eventLog;
@@ -48,6 +50,7 @@ public class ControlSysActionsService {
         this.nodeConfigurationService = nodeConfigurationService;
         this.fileStorageService = fileStorageService;
         this.executorClient = executorClient;
+        this.exportClient = exportClient;
     }
 
     /** This is a hack to get around the fact that the API service is not a core service
@@ -65,6 +68,7 @@ public class ControlSysActionsService {
 
             Spark.get("/actions", this::actionsModel, actionsView::render);
             Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
+            Spark.post("/actions/export-all", this::exportAll, Redirects.redirectToOverview);
             Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
             Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
             Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
@@ -74,6 +78,23 @@ public class ControlSysActionsService {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Object exportAll(Request request, Response response) {
+        String exportType = request.queryParams("exportType");
+
+        switch (exportType) {
+            case "atags":
+                exportClient.exportAllAtags();
+                break;
+            case "feeds":
+                exportClient.exportAllFeeds();
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown export type: " + exportType);
+        }
+
+        return "";
     }
 
     private Object actionsModel(Request request, Response response) {

@@ -5,6 +5,8 @@ import nu.marginalia.nodecfg.model.NodeProfile;
 import java.util.Set;
 
 public enum ExecutorActor {
+    PREC_EXPORT_ALL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+
     CRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     RECRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     RECRAWL_SINGLE_DOMAIN(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
