@@ -84,7 +84,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
             DomainLinks domainLinks = getDomainLinks();
 
             var stmt = connection.prepareStatement("""
-                    SELECT url,title,html FROM articles where url
+                    SELECT url,title,html FROM articles
                     """);
             stmt.setFetchSize(100);
 
