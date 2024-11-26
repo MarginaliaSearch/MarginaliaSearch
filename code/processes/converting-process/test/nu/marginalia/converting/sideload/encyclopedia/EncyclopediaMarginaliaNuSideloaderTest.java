@@ -1,40 +1,166 @@
 package nu.marginalia.converting.sideload.encyclopedia;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import com.google.inject.Guice;
+import nu.marginalia.atags.AnchorTextKeywords;
+import nu.marginalia.atags.source.AnchorTagsSourceFactory;
+import nu.marginalia.converting.ConverterModule;
+import nu.marginalia.converting.sideload.SideloaderProcessing;
+import nu.marginalia.encyclopedia.cleaner.model.ArticleParts;
+import nu.marginalia.encyclopedia.model.Article;
+import nu.marginalia.encyclopedia.model.LinkList;
+import nu.marginalia.encyclopedia.store.ArticleDbProvider;
+import nu.marginalia.encyclopedia.store.ArticleStoreWriter;
+import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.process.ProcessConfigurationModule;
+import nu.marginalia.service.module.DatabaseModule;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Tag("slow")
+@Testcontainers
 class EncyclopediaMarginaliaNuSideloaderTest {
-    Path tempFile;
+    @Container
+    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+            .withDatabaseName("WMSA_prod")
+            .withUsername("wmsa")
+            .withPassword("wmsa")
+            .withNetworkAliases("mariadb");
 
-    @BeforeEach
-    public void setUp() throws IOException {
-        tempFile = Files.createTempFile(getClass().getSimpleName(), ".dat");
+    static AnchorTagsSourceFactory anchorTagsSourceFactory;
+    static AnchorTextKeywords anchorTextKeywords;
+    static SideloaderProcessing sideloaderProcessing;
+
+    @BeforeAll
+    public static void setUpAll() throws IOException {
+        System.setProperty("db.overrideJdbc", mariaDBContainer.getJdbcUrl());
+        System.setProperty("system.serviceNode", "1");
+
+        var injector = Guice.createInjector(
+                new ConverterModule(),
+                new DatabaseModule(true),
+                new ProcessConfigurationModule("test"));
+
+        anchorTagsSourceFactory = injector.getInstance(AnchorTagsSourceFactory.class);
+        anchorTextKeywords = injector.getInstance(AnchorTextKeywords.class);
+        sideloaderProcessing = injector.getInstance(SideloaderProcessing.class);
     }
 
-    @AfterEach
-    public void tearDown() throws IOException {
-        Files.deleteIfExists(tempFile);
+    @AfterAll
+    public static void tearDown() throws IOException {
     }
 
     @Test
-    public void test() {
-        System.out.printf("%64s\n", Long.toBinaryString(Long.reverseBytes(0x8fa302ffffcffebfL)));
-        System.out.printf("%64s\n", Long.toBinaryString(Long.reverseBytes(0x8fa302ffffcffebfL)));
-        System.out.printf("%64s\n", Long.toBinaryString(0xFAAFFFF7F75AA808L));
+    public void testSunnyDay() throws Exception {
 
-        System.out.printf("%64s\n", Long.toBinaryString(Long.reverseBytes(0xa00000L)));
-        System.out.printf("%64s\n", Long.toBinaryString(0x20A00000000000L));
+        Path fileName = Files.createTempFile(getClass().getSimpleName(), ".db");
+        try {
+            ArticleDbProvider dbProvider = new ArticleDbProvider(fileName);
 
-        System.out.printf("%64s\n", Long.toBinaryString(Long.reverseBytes(0x200000L)));
-        System.out.printf("%64s\n", Long.toBinaryString(0x200000000004L));
+            try (ArticleStoreWriter writer = new ArticleStoreWriter(dbProvider)) {
 
-        System.out.printf("%64s\n", Long.toBinaryString(Long.reverseBytes(0x1000000000000000L)));
-        System.out.printf("%64s\n", Long.toBinaryString(0x10L));
+                writer.add(new Article(
+                        "shoes",
+                        "Shoes",
+                        "Lorem ipsum dolor sit amet",
+                        new ArticleParts("""
+                                A shoe is an item of footwear intended to protect and comfort the human foot. Though the human foot can adapt to varied terrains and climate conditions, it is vulnerable, and shoes provide protection. Form was originally tied to function, but over time, shoes also became fashion items. Some shoes are worn as safety equipment, such as steel-toe boots, which are required footwear at industrial worksites.
+                                """),
+                        new LinkList(),
+                        new LinkList()
+                ).asData());
+            }
+
+            var sideloader = new EncyclopediaMarginaliaNuSideloader(fileName, "https://en.wikipedia.org/wiki/", GsonFactory.get(), anchorTagsSourceFactory, anchorTextKeywords, sideloaderProcessing);
+            var domain = sideloader.getDomain();
+
+            Assertions.assertEquals(new EdgeDomain("en.wikipedia.org"), domain.domain);
+
+            var documentsStream = sideloader.getDocumentsStream();
+            Assertions.assertTrue(documentsStream.hasNext());
+            var doc = documentsStream.next();
+            Assertions.assertEquals(new EdgeUrl("https://en.wikipedia.org/wiki/shoes"), doc.url);
+            Assertions.assertFalse(documentsStream.hasNext());
+        }
+        finally {
+            Files.deleteIfExists(fileName);
+        }
     }
 
+    @Test
+    public void testDashRewriting() throws Exception {
+
+        Path fileName = Files.createTempFile(getClass().getSimpleName(), ".db");
+        try {
+            ArticleDbProvider dbProvider = new ArticleDbProvider(fileName);
+
+            try (ArticleStoreWriter writer = new ArticleStoreWriter(dbProvider)) {
+
+                writer.add(new Article(
+                        "tf\u2013idf",
+                        "TF-IDF",
+                        "Lorem ipsum dolor sit amet",
+                        new ArticleParts(""),
+                        new LinkList(),
+                        new LinkList()
+                ).asData());
+            }
+
+            var sideloader = new EncyclopediaMarginaliaNuSideloader(fileName, "https://en.wikipedia.org/wiki/", GsonFactory.get(), anchorTagsSourceFactory, anchorTextKeywords, sideloaderProcessing);
+            var domain = sideloader.getDomain();
+
+            Assertions.assertEquals(new EdgeDomain("en.wikipedia.org"), domain.domain);
+
+            var documentsStream = sideloader.getDocumentsStream();
+            Assertions.assertTrue(documentsStream.hasNext());
+            var doc = documentsStream.next();
+            Assertions.assertEquals(new EdgeUrl("https://en.wikipedia.org/wiki/tf-idf"), doc.url);
+            Assertions.assertFalse(documentsStream.hasNext());
+        }
+        finally {
+            Files.deleteIfExists(fileName);
+        }
+    }
+
+    @Test
+    public void testUrlencoding() throws Exception {
+
+        Path fileName = Files.createTempFile(getClass().getSimpleName(), ".db");
+        try {
+            ArticleDbProvider dbProvider = new ArticleDbProvider(fileName);
+
+            try (ArticleStoreWriter writer = new ArticleStoreWriter(dbProvider)) {
+
+                writer.add(new Article(
+                        "any percent",
+                        "Any %",
+                        "Summoning salt go brr",
+                        new ArticleParts(""),
+                        new LinkList(),
+                        new LinkList()
+                ).asData());
+            }
+
+            var sideloader = new EncyclopediaMarginaliaNuSideloader(fileName, "https://en.wikipedia.org/wiki/", GsonFactory.get(), anchorTagsSourceFactory, anchorTextKeywords, sideloaderProcessing);
+            var domain = sideloader.getDomain();
+
+            Assertions.assertEquals(new EdgeDomain("en.wikipedia.org"), domain.domain);
+
+            var documentsStream = sideloader.getDocumentsStream();
+            Assertions.assertTrue(documentsStream.hasNext());
+            var doc = documentsStream.next();
+            Assertions.assertEquals(new EdgeUrl("https://en.wikipedia.org/wiki/any+percent"), doc.url);
+            Assertions.assertFalse(documentsStream.hasNext());
+        }
+        finally {
+            Files.deleteIfExists(fileName);
+        }
+    }
 }

@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -93,7 +92,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
             while (rs.next()) {
                 var articleParts = fromCompressedJson(rs.getBytes("html"), ArticleParts.class);
                 String title = rs.getString("title");
-                String url = URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8);
+                String url = rs.getString("url");
 
                 taskConsumer.accept(() -> convertDocument(articleParts.parts, title, url, domainLinks));
             }
@@ -147,7 +146,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         // This is a stopgap to fix them, as the URLs break if you urlencode the UTF-8.
 
         return url
-                .replace('\u2013', '-')  // Replace en-dash with hyphen
+                .replace('\u2013', '-')
                 ;
     }
 
