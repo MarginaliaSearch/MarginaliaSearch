@@ -13,7 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AnchorTagsSourceFactory {
     private final Path atagsPath;
@@ -54,7 +56,12 @@ public class AnchorTagsSourceFactory {
             return domain -> new DomainLinks();
         }
 
-        return new AnchorTagsImpl(atagsPath, relevantDomains);
+        Set<EdgeDomain> allDomains = new HashSet<>(relevantDomains);
+        for (var domain : relevantDomains) {
+            domain.aliasDomain().ifPresent(allDomains::add);
+        }
+
+        return new AnchorTagsImpl(atagsPath, allDomains);
     }
 
     // Only get domains that are assigned to this node.  This reduces the amount of data

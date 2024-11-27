@@ -3,6 +3,7 @@ package nu.marginalia.model;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -131,6 +132,18 @@ public class EdgeDomain implements Serializable {
         }
 
         return ret.toString().toLowerCase();
+    }
+
+    /** If possible, try to provide an alias domain,
+     * i.e. a domain name that is very likely to link to this one
+     * */
+    public Optional<EdgeDomain> aliasDomain() {
+        if (subDomain.equals("www")) {
+            return Optional.of(new EdgeDomain("", topDomain));
+        } else if (subDomain.isBlank()){
+            return Optional.of(new EdgeDomain("www", topDomain));
+        }
+        else return Optional.empty();
     }
 
 

@@ -12,13 +12,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class AnchorTagsImpl implements AnchorTagsSource {
     private final Connection duckdbConnection;
     private static final Logger logger = LoggerFactory.getLogger(AnchorTagsImpl.class);
+
     public AnchorTagsImpl(Path atagsPath,
-                          List<EdgeDomain> relevantDomains)
+                          Collection<EdgeDomain> relevantDomains)
             throws SQLException
     {
         duckdbConnection = DriverManager.getConnection("jdbc:duckdb:");
@@ -82,14 +85,30 @@ public class AnchorTagsImpl implements AnchorTagsSource {
             where dest = ?
             """))
         {
+            // Add links to the provided domain
             ps.setString(1, domain.toString());
             var rs = ps.executeQuery();
             while (rs.next()) {
                 links.add(new LinkWithText(rs.getString("url"), rs.getString("text"), rs.getString("source")));
             }
+
+            // Also look for links to an aliased domain, e.g. maybe the domain is marginalia.nu but the link is to www.marginalia.nu?
+            Optional<EdgeDomain> aliasDomain = domain.aliasDomain();
+            if (aliasDomain.isPresent()) {
+                ps.setString(1, aliasDomain.get().toString());
+                rs = ps.executeQuery();
+                while (rs.next()) {
+                    // Change the domain name in the URL to the alias domain
+                    String url = rs.getString("url");
+                    url = aliasDomain + url.substring(url.indexOf('/'));
+
+                    links.add(new LinkWithText(url, rs.getString("text"), rs.getString("source")));
+                }
+                return new DomainLinks(links);
+            }
             return new DomainLinks(links);
         }
-        catch (SQLException ex) {
+        catch (Exception ex) {
             logger.warn("Failed to get atags for " + domain, ex);
         }
 
