@@ -352,7 +352,7 @@ public class IndexResultScoreCalculator {
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 2.0f;
+                    case EXTERNAL_LINKTEXT -> 3.0f;
                     case BODY -> 1.0f;
                     default -> 0.0f;
                 };
@@ -454,6 +454,7 @@ public class IndexResultScoreCalculator {
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
                     case BODY -> 1.0f;
+                    case EXTERNAL_LINKTEXT -> 0.75f;
                     default -> 0.0f;
                 };
             }
