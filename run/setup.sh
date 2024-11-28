@@ -67,8 +67,8 @@ fi
 download_model model/English.DICT https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/e0fa60db14eae90b66dc67691f0f519eb19e3e66/Models/POS/English.DICT 356d96a8832b62eb5e0ddac6f0301ada
 download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/e0fa60db14eae90b66dc67691f0f519eb19e3e66/Models/POS/English.RDR bec40a1160e12c33a1dd0563677104e4
 
-download_model model/opennlp-sentence.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin 5965ada99a2ca77beb8632bb47741b7a
-download_model model/opennlp-tokens.bin https://downloads.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin f097e14bce9edb3f558f6aaf2c3f7622
+download_model model/opennlp-sentence.bin https://archive.apache.org/dist/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin 5965ada99a2ca77beb8632bb47741b7a
+download_model model/opennlp-tokens.bin https://archive.apache.org/dist/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin f097e14bce9edb3f558f6aaf2c3f7622
 
 download_model model/segments.bin https://huggingface.co/MarginaliaNu/MarginaliaModelData/resolve/c9339e4224f1dfad7f628809c32687e748198ae3/segments.bin?download=true a2650796c77968b1bd9db0d7c01e3150
 download_model model/tfreq-new-algo3.bin https://huggingface.co/MarginaliaNu/MarginaliaModelData/resolve/c9339e4224f1dfad7f628809c32687e748198ae3/tfreq-new-algo3.bin?download=true a38f0809f983723001dfc784d88ebb6d
