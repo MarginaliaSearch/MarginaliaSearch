@@ -6,6 +6,7 @@ import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -28,7 +29,7 @@ class ForwardIndexSpansReaderTest {
     }
 
     @Test
-    void testSunnyDay() throws IOException {
+    void testContainsPosition() throws IOException {
         ByteBuffer wa = ByteBuffer.allocate(32);
 
         long offset1;
@@ -70,6 +71,93 @@ class ForwardIndexSpansReaderTest {
 
             assertEquals(0, spans2.title.size());
             assertFalse(spans2.title.containsPosition(8));
+        }
+    }
+
+    @Test
+    void testContainsRange() throws IOException {
+        long offset1;
+        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+            writer.beginRecord(1);
+            writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate( 1, 2, 10, 15, 20, 25).buffer());
+            offset1 = writer.endRecord();
+        }
+
+        try (var reader = new ForwardIndexSpansReader(testFile);
+             var arena = Arena.ofConfined()
+        ) {
+            var spans1 = reader.readSpans(arena, offset1);
+
+            assertTrue(spans1.heading.containsRange(IntList.of(10), 2));
+            assertTrue(spans1.heading.containsRange(IntList.of(8, 10), 2));
+            assertTrue(spans1.heading.containsRange(IntList.of(8, 10, 14), 2));
+
+            assertTrue(spans1.heading.containsRange(IntList.of(10), 5));
+            assertTrue(spans1.heading.containsRange(IntList.of(8, 10), 5));
+            assertTrue(spans1.heading.containsRange(IntList.of(8, 10, 14), 5));
+
+            assertFalse(spans1.heading.containsRange(IntList.of(11), 5));
+            assertFalse(spans1.heading.containsRange(IntList.of(9), 5));
+        }
+    }
+
+    @Test
+    void testContainsRangeExact() throws IOException {
+        long offset1;
+        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+            writer.beginRecord(1);
+            writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate( 1, 2, 10, 15, 20, 25).buffer());
+            offset1 = writer.endRecord();
+        }
+
+        try (var reader = new ForwardIndexSpansReader(testFile);
+             var arena = Arena.ofConfined()
+        ) {
+            var spans1 = reader.readSpans(arena, offset1);
+
+            assertFalse(spans1.heading.containsRangeExact(IntList.of(10), 2));
+            assertFalse(spans1.heading.containsRangeExact(IntList.of(8, 10), 2));
+            assertFalse(spans1.heading.containsRangeExact(IntList.of(8, 10, 14), 2));
+
+            assertTrue(spans1.heading.containsRangeExact(IntList.of(10), 5));
+            assertTrue(spans1.heading.containsRangeExact(IntList.of(8, 10), 5));
+            assertTrue(spans1.heading.containsRangeExact(IntList.of(8, 10, 14), 5));
+
+            assertFalse(spans1.heading.containsRangeExact(IntList.of(11), 5));
+            assertFalse(spans1.heading.containsRangeExact(IntList.of(9), 5));
+        }
+    }
+
+    @Test
+    void testCountRangeMatches() throws IOException {
+        long offset1;
+        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+            writer.beginRecord(1);
+            writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate( 1, 2, 10, 15, 20, 25).buffer());
+            offset1 = writer.endRecord();
+        }
+
+        try (var reader = new ForwardIndexSpansReader(testFile);
+             var arena = Arena.ofConfined()
+        ) {
+            var spans1 = reader.readSpans(arena, offset1);
+
+            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(10), 2));
+            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10), 2));
+            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10, 14), 2));
+
+            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(10), 5));
+            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10), 5));
+            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10, 14), 5));
+
+            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(10, 20), 5));
+            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(8, 10, 13, 20), 5));
+            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(8, 10, 14, 20, 55), 5));
+
+            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(10, 12), 2));
+
+            Assertions.assertEquals(0, spans1.heading.countRangeMatches(IntList.of(11), 5));
+            Assertions.assertEquals(0, spans1.heading.countRangeMatches(IntList.of(9), 5));
         }
     }
 }
