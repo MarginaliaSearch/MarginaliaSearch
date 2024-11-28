@@ -398,9 +398,10 @@ public class IndexResultScoreCalculator {
 
             // Capture full query matches
             for (var tag : HtmlTag.includedTags) {
-                if (spans.getSpan(tag).containsRange(fullGroupIntersections, fullGroup.size)) {
+                int cnts =  spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
+                if (cnts > 0) {
                     matches.set(tag.ordinal());
-                    score += weights_full[tag.ordinal()] * fullGroup.size;
+                    score += (float) (weights_full[tag.ordinal()] * fullGroup.size + (1 + Math.log(2 + cnts)));
                 }
             }
 
@@ -417,9 +418,11 @@ public class IndexResultScoreCalculator {
                 float sizeScalingFactor = groupSize / (float) largestOptional;
 
                 IntList intersections = optionalGroup.findIntersections(positions);
+
                 for (var tag : HtmlTag.includedTags) {
-                    if (spans.getSpan(tag).containsRange(intersections, groupSize)) {
-                        score += weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor;
+                    int cnts =  spans.getSpan(tag).countRangeMatches(intersections, fullGroup.size);;
+                    if (cnts > 0) {
+                        score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
                     }
                 }
             }
