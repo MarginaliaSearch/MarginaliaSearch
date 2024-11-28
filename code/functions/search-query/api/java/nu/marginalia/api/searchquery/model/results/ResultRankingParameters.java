@@ -74,7 +74,7 @@ public class ResultRankingParameters {
                 .shortSentenceThreshold(2)
                 .shortSentencePenalty(5)
                 .bm25Weight(1.)
-                .tcfVerbatim(2.)
+                .tcfVerbatim(1.)
                 .tcfProximity(1.)
                 .tcfFirstPosition(5)
                 .temporalBias(TemporalBias.NONE)
