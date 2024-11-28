@@ -104,7 +104,6 @@ public class WmsaHome {
                 home.resolve("model/opennlp-sentence.bin"),
                 home.resolve("model/English.RDR"),
                 home.resolve("model/English.DICT"),
-                home.resolve("model/opennlp-tok.bin"),
                 home.resolve("model/lid.176.ftz"),
                 home.resolve("model/segments.bin")
                 );

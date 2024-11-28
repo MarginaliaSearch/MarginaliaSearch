@@ -8,7 +8,6 @@ public class LanguageModels {
     public final Path openNLPSentenceDetectionData;
     public final Path posRules;
     public final Path posDict;
-    public final Path openNLPTokenData;
     public final Path fasttextLanguageModel;
     public final Path segments;
 
@@ -16,14 +15,12 @@ public class LanguageModels {
                           Path openNLPSentenceDetectionData,
                           Path posRules,
                           Path posDict,
-                          Path openNLPTokenData,
                           Path fasttextLanguageModel,
                           Path segments) {
         this.termFrequencies = termFrequencies;
         this.openNLPSentenceDetectionData = openNLPSentenceDetectionData;
         this.posRules = posRules;
         this.posDict = posDict;
-        this.openNLPTokenData = openNLPTokenData;
         this.fasttextLanguageModel = fasttextLanguageModel;
         this.segments = segments;
     }
@@ -37,7 +34,6 @@ public class LanguageModels {
         private Path openNLPSentenceDetectionData;
         private Path posRules;
         private Path posDict;
-        private Path openNLPTokenData;
         private Path fasttextLanguageModel;
         private Path segments;
 
@@ -64,11 +60,6 @@ public class LanguageModels {
             return this;
         }
 
-        public LanguageModelsBuilder openNLPTokenData(Path openNLPTokenData) {
-            this.openNLPTokenData = openNLPTokenData;
-            return this;
-        }
-
         public LanguageModelsBuilder fasttextLanguageModel(Path fasttextLanguageModel) {
             this.fasttextLanguageModel = fasttextLanguageModel;
             return this;
@@ -80,11 +71,11 @@ public class LanguageModels {
         }
 
         public LanguageModels build() {
-            return new LanguageModels(this.termFrequencies, this.openNLPSentenceDetectionData, this.posRules, this.posDict, this.openNLPTokenData, this.fasttextLanguageModel, this.segments);
+            return new LanguageModels(this.termFrequencies, this.openNLPSentenceDetectionData, this.posRules, this.posDict, this.fasttextLanguageModel, this.segments);
         }
 
         public String toString() {
-            return "LanguageModels.LanguageModelsBuilder(termFrequencies=" + this.termFrequencies + ", openNLPSentenceDetectionData=" + this.openNLPSentenceDetectionData + ", posRules=" + this.posRules + ", posDict=" + this.posDict + ", openNLPTokenData=" + this.openNLPTokenData + ", fasttextLanguageModel=" + this.fasttextLanguageModel + ", segments=" + this.segments + ")";
+            return "LanguageModels.LanguageModelsBuilder(termFrequencies=" + this.termFrequencies + ", openNLPSentenceDetectionData=" + this.openNLPSentenceDetectionData + ", posRules=" + this.posRules + ", posDict=" + this.posDict + ", fasttextLanguageModel=" + this.fasttextLanguageModel + ", segments=" + this.segments + ")";
         }
     }
 }
