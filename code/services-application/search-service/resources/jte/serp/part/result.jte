@@ -38,17 +38,15 @@
 
             </div>
             @if (!domainSearch)
-                <div class="flex flex-col ml-5">
+                <div class="flex flex-col ml-5 content-center items-center space-y-2">
                     <a href="/site/${result.getDomain().toString()}" class="p-1.5 text-gray-600 hover:text-gray-900 rounded" title="About this domain">
                         <i class="fas fa-info text-sm"></i>
                     </a>
-                    <div class="grow"></div>
-                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded" title="Promote this domain">
-                        <i class="fas fa-thumbs-up text-sm"></i>
-                    </button>
-                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded" title="Demote this domain">
-                        <i class="fas fa-thumbs-down text-sm"></i>
-                    </button>
+                    <a href="https://web.archive.org/web/*/${result.first.url.toString()}"
+                       class="p-1.5 text-gray-600 hover:text-gray-900 rounded"
+                       title="Wayback Machine">
+                        <i class="fas fa-clock-rotate-left text-sm"></i>
+                    </a>
                 </div>
             @endif
         </div>
