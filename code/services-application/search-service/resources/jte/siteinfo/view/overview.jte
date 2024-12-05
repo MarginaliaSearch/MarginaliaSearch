@@ -8,7 +8,7 @@
 
 <div class="flex-1 p-4 space-y-4 mx-auto w-full md:w-auto">
     <div class="flex border rounded bg-white flex-col space-y-4 pb-4 overflow-hidden md:max-w-lg" >
-        <div class="flex place-items-baseline space-x-2 p-2 text-sm border-b mb-2 bg-margeblue text-white">
+        <div class="flex place-items-baseline space-x-2 p-2 text-md border-b bg-margeblue text-white">
             <i class="fa fa-globe"></i>
             <span>${siteInfo.domain()}</span>
             <div class="grow">
@@ -17,7 +17,9 @@
         </div>
 
         @if (siteInfo.hasScreenshot())
-            <a class="mx-3 " tabindex="-1" rel="nofollow noopener external" href="${siteInfo.siteUrl()}"><img src="/screenshot/${siteInfo.domainId()}" alt="Screenshot of ${siteInfo.domain()}"></a>
+            <a class="mx-3 " tabindex="-1" rel="nofollow noopener external" href="${siteInfo.siteUrl()}">
+                <img class="border shadow-inner" src="/screenshot/${siteInfo.domainId()}" alt="Screenshot of ${siteInfo.domain()}">
+            </a>
         @elseif (siteInfo.aliasDomain().isPresent() && siteInfo.domainInformation().getNodeAffinity() < 1)
             <div class="mx-3 my-3 text-xs text-slate-800">
                 The search engine is also aware of links to <a class="underline text-liteblue" href="/site/${siteInfo.aliasDomain().get()}">${siteInfo.aliasDomain().get()}</a>,

@@ -19,7 +19,7 @@
 
 @for (GroupedUrlDetails group : backlinks.results())
 <div class="border rounded bg-white flex flex-col overflow-hidden mx-4">
-    <div class="flex space-x-2 flex-row place-items-baseline bg-margeblue text-white p-2 text-sm">
+    <div class="flex space-x-2 flex-row place-items-baseline bg-margeblue text-white p-2  text-md">
         <span class="fas fa-globe"></span>
         <a href="/site/${group.domain().toString()}">${group.domain().toString()}</a>
         <span class="grow"></span>

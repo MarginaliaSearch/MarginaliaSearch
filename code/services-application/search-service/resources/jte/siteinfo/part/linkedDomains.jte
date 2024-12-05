@@ -9,7 +9,7 @@
 
     <div class="bg-white shadow-sm rounded overflow-hidden border">
         <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200">
-            <h2 class="text-xs font-semibold">${title}</h2>
+            <h2 class="text-md">${title}</h2>
         </div>
 
         <div class="overflow-x-auto">
