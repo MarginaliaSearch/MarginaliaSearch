@@ -110,7 +110,7 @@ public record SearchParameters(WebsiteUrl url,
                 page
                 );
 
-        return url.withPath(path);
+        return path;
     }
 
     public ResultRankingParameters.TemporalBias temporalBias() {
