@@ -76,6 +76,18 @@ public class SearchSiteInfoService {
     }
 
     public Object handleOverview(Request request, Response response) {
+        String domainName = request.queryParams("domain");
+        if (domainName != null) {
+            // redirect to /site/domainName
+            return """
+                <!DOCTYPE html>
+                <html lang="en">
+                <meta charset="UTF-8">
+                <title>Redirecting...</title>
+                <meta http-equiv="refresh" content="0; url=/site/%s">
+                """.formatted(domainName);
+        }
+
         List<SiteOverviewModel.DiscoveredDomain> domains = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
