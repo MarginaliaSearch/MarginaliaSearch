@@ -19,9 +19,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 ,
                 new NavbarGroup(
                     List.of(
-                        new NavbarEntry("About", "/", false),
-                        new NavbarEntry("API", "/", false),
-                        new NavbarEntry("Donate", "/", false)
+                        new NavbarEntry("About", "/", false)
                     )
                 )
             );
@@ -38,9 +36,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 ,
                 new NavbarGroup(
                         List.of(
-                                new NavbarEntry("About", "/", false),
-                                new NavbarEntry("API", "/", false),
-                                new NavbarEntry("Donate", "/", false)
+                                new NavbarEntry("About", "/", false)
                         )
                 )
             );
@@ -57,9 +53,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 ,
                 new NavbarGroup(
                         List.of(
-                                new NavbarEntry("About", "/", false),
-                                new NavbarEntry("API", "/", false),
-                                new NavbarEntry("Donate", "/", false)
+                                new NavbarEntry("About", "/", false)
                         )
                 )
             );
@@ -76,9 +70,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                     ,
                     new NavbarGroup(
                             List.of(
-                                    new NavbarEntry("About", "/", false),
-                                    new NavbarEntry("API", "/", false),
-                                    new NavbarEntry("Donate", "/", false)
+                                    new NavbarEntry("About", "/", false)
                             )
                     )
             );

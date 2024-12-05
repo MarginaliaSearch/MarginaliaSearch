@@ -24,16 +24,16 @@
                        name="domain"
                        id="domain" >
                 <button class="px-4 py-2 bg-margeblue text-white ml-2 rounded">
-                    <i class="fas fa-search text-sm mr-3"></i>  Inspect
+                    <i class="fas fa-search text-sm sm:mr-3"></i> <span class="hidden sm:inline">Inspect</span>
                 </button>
         </form>
     </div>
     <div class="mx-auto md:px-4 border bg-slate-50">
         <div class="flex md:space-x-2 max-w-[1000px] mx-auto">
-            <div class="has-[:checked]:bg-slate-200 py-1 px-2">
-                <a href="?view=info" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-xs hover:text-gray-900">
+            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
+                <a href="?view=info" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-sm hover:text-gray-900">
                     @if (model instanceof SearchSiteInfoService.SiteInfoWithContext)
-                    <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                    <input type="checkbox" class="sr-only hidden " checked readonly />
                     @else
                         <span></span>
                     @endif
@@ -44,8 +44,8 @@
                 </a>
             </div>
 
-            <div class="has-[:checked]:bg-slate-200 py-1 px-2">
-                <a href="?view=docs" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-xs hover:text-gray-900">
+            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
+                <a href="?view=docs" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-sm hover:text-gray-900">
                     @if (model instanceof SearchSiteInfoService.Docs)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -58,8 +58,8 @@
                 </a>
             </div>
 
-            <div class="has-[:checked]:bg-slate-200 py-1 px-2">
-                <a href="?view=links" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-xs hover:text-gray-900">
+            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
+                <a href="?view=links" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-sm hover:text-gray-900">
                     @if (model instanceof SearchSiteInfoService.Backlinks)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -72,8 +72,8 @@
                 </a>
             </div>
             <div class="grow"></div>
-            <div class="has-[:checked]:bg-slate-200 py-1 px-2">
-                <a href="?view=report" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 text-xs hover:text-red-600">
+            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
+                <a href="?view=report" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 text-sm hover:text-red-600">
                     @if (model instanceof SearchSiteInfoService.ReportDomain)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else

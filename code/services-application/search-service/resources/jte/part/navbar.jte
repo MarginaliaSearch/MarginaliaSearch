@@ -6,7 +6,7 @@
     <div class="max-w-[1400px] mx-auto">
         <nav>
             <div class="px-4">
-                <div class="flex flex-row  xs:text-sm text-xs gap-1 xs:gap-2">
+                <div class="flex flex-row text-sm gap-1 xs:gap-2">
                     @for (var item : navbar.first().entries())
 
                         <a href="${item.url()}" class="has-[:checked]:underline py-2 px-2 hover:text-slate-200">
