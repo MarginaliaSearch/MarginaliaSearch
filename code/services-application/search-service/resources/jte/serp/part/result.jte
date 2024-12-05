@@ -30,7 +30,7 @@
                 </div>
 
 
-                <div class="overflow-scroll flex-1">
+                <div class="overflow-auto flex-1">
                 <p class="mt-2 text-sm text-slate-900 leading-relaxed break-words">
                     $unsafe{result.first.descriptionHyphenHints()}
                 </p>
