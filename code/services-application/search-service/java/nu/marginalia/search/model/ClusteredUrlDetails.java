@@ -114,10 +114,10 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
     }
 
     public enum PostColorScheme {
-        Slate("bg-slate-100", "text-slate-950", "bg-slate-200", "text-black", "text-black"),
-        Green("bg-green-50", "text-green-950", "bg-green-50", "text-black", "text-black"),
-        Purple("bg-purple-50", "text-purple-950", "bg-purple-50", "text-black", "text-black"),
-        White("bg-white", "text-blue-950", "bg-gray-100", "text-black", "text-slate-900");
+        Slate("bg-white", "text-blue-800", "bg-blue-50", "text-black", "text-black"),
+        Green("bg-white", "text-green-800", "bg-green-50", "text-black", "text-black"),
+        Purple("bg-white", "text-purple-800", "bg-purple-50", "text-black", "text-black"),
+        White("bg-white", "text-blue-950", "bg-gray-100", "text-black", "text-black");
 
         PostColorScheme(String backgroundColor, String textColor, String backgroundColor2, String textColor2, String descColor) {
             this.backgroundColor = backgroundColor;
