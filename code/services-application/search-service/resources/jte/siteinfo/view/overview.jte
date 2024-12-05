@@ -94,7 +94,7 @@
             </div>
         @endif
 
-        @if (siteInfo.domainInformation().isSuggestForCrawling())
+        @if (siteInfo.domainInformation().isSuggestForCrawling() && siteInfo.domainInformation().getNodeAffinity() < 0)
             <form method="POST"
                   action="/site/suggest/">
                 <div class="max-w-md mx-auto p-6 bg-white shadow border border-gray-200  mx-1 flex space-y-4 flex-col">
