@@ -77,7 +77,7 @@ public class SearchOperator {
                                         int count,
                                         int page) {
 
-        var queryParams = paramFactory.forSiteSearch(domain, domainId, count);
+        var queryParams = paramFactory.forSiteSearch(domain, domainId, count, page);
         var queryResponse = queryClient.search(queryParams);
 
         return getResultsFromQuery(queryResponse);

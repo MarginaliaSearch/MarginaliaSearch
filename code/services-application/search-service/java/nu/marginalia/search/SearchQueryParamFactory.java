@@ -42,7 +42,7 @@ public class SearchQueryParamFactory {
 
     }
 
-    public QueryParams forSiteSearch(String domain, int domainId, int count) {
+    public QueryParams forSiteSearch(String domain, int domainId, int count, int page) {
         return new QueryParams("site:"+domain,
                 null,
                 List.of(),
@@ -58,7 +58,7 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
                 ResultRankingParameters.TemporalBias.NONE,
-                1
+                page
         );
     }
 
@@ -78,7 +78,7 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
                 ResultRankingParameters.TemporalBias.NONE,
-                1
+                page
         );
     }
 
