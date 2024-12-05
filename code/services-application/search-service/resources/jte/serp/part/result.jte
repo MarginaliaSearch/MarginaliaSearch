@@ -17,22 +17,24 @@
                     </div>
                     <div class="flex grow justify-between items-start">
                         <div class="flex-1">
-                            <h2 class="text-xl ${result.colorScheme.textColor} font-serif mr-4 break-words">
-                                <a href="${result.first.url.toString()}" rel="noopener noreferrer">${result.first.title}</a>
+                            <h2 class="text-md sm:text-xl ${result.colorScheme.textColor} font-serif mr-4 break-words hyphens-auto">
+                                <a href="${result.first.url.toString()}" rel="noopener noreferrer">$unsafe{result.first.titleHyphenHints()}</a>
                             </h2>
 
                             <div class="text-sm mt-1 text-gray-600">
                                 <a class="text-liteblue underline break-all" href="${result.first.url.toString()}"
-                                   rel="noopener noreferrer" tabindex="-1">${result.first.url.toString()}</a>
+                                   rel="noopener noreferrer" tabindex="-1">$unsafe{result.first.urlHyphenHints()}</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
 
-                <p class="mt-2 text-sm text-slate-900 leading-relaxed">
-                    ${result.first.description}
+                <div class="overflow-scroll flex-1">
+                <p class="mt-2 text-sm text-slate-900 leading-relaxed break-words">
+                    $unsafe{result.first.descriptionHyphenHints()}
                 </p>
+                </div>
 
             </div>
             @if (!domainSearch)

@@ -70,6 +70,8 @@ public class MockedSearchResults {
                 ),
                 new ClusteredUrlDetails(
                         mockUrlDetails("https://clustered.marginalia.nu", "Short Result", "Short")
+                ),                new ClusteredUrlDetails(
+                        mockUrlDetails("https://clustered.marginalia.nu", "Long Result", "Posted on Jun 14th 2015 at 12:00:00 PM by Posted under [img width=603 height=517]http www.techspot.com/images2/news/bigimage/2014-10-23-image-21.jpg[/img] Gamers who grew up with consoles have been lucky over the years as far as nostalgia goes. In the las")
                 ),
                 new ClusteredUrlDetails(
                         mockUrlDetails("https://clustered.marginalia.nu", "Clustered-result"),

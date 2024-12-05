@@ -87,6 +87,109 @@ public class UrlDetails implements Comparable<UrlDetails> {
         return Long.hashCode(id);
     }
 
+    /** Helper that inserts hyphenation hints and escapes
+     * semantically meaningful codepoints into entity codes */
+    public String titleHyphenHints() {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < title.length(); i++) {
+            char c = title.charAt(i);
+
+            if (c == '<') {
+                sb.append("&lt;");
+            }
+            else if (c == '>') {
+                sb.append("&gt;");
+            }
+            else if (c == '&') {
+                sb.append("&amp;");
+            }
+            else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
+                sb.append(c);
+                sb.append("&shy;");
+            }
+            else {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /** Helper that inserts hyphenation hints and escapes
+     * semantically meaningful codepoints into entity codes */
+    public String descriptionHyphenHints() {
+        StringBuilder sb = new StringBuilder();
+
+        int distSinceSpace = 0;
+        for (int i = 0; i < description.length(); i++) {
+            char c = description.charAt(i);
+            if (Character.isSpaceChar(c)) {
+                distSinceSpace = 0;
+            }
+            else {
+                distSinceSpace ++;
+            }
+
+            if (c == '<') {
+                sb.append("&lt;");
+            }
+            else if (c == '>') {
+                sb.append("&gt;");
+            }
+            else if (c == '&') {
+                sb.append("&amp;");
+            }
+            else if (!Character.isAlphabetic(c) && distSinceSpace > 24) {
+                sb.append(c);
+                sb.append("&shy;");
+                distSinceSpace = 0;
+            }
+            else {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /** Helper that inserts hyphenation hints and escapes
+     * semantically meaningful codepoints into entity codes */
+    public String urlHyphenHints() {
+        StringBuilder sb = new StringBuilder();
+        String urlStr = url.toString();
+        int distSinceSpace = 0;
+        for (int i = 0; i < urlStr.length(); i++) {
+            char c = urlStr.charAt(i);
+            if (Character.isSpaceChar(c)) {
+                distSinceSpace = 0;
+            }
+            else {
+                distSinceSpace ++;
+            }
+
+            if (c == '<') {
+                sb.append("&lt;");
+            }
+            else if (c == '>') {
+                sb.append("&gt;");
+            }
+            else if (c == '&') {
+                sb.append("&amp;");
+            }
+            else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
+                sb.append(c);
+                sb.append("&shy;");
+                distSinceSpace = 0;
+            }
+            else {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
     @Override
     public int compareTo(UrlDetails other) {
         int result = Double.compare(getTermScore(), other.getTermScore());

@@ -37,7 +37,7 @@
     </div>
     <div class="flex space-y-4 flex-col flex-1">
         <p class="text-base"><i class="fas fa-code mr-2 text-margeblue"></i>Special Keywords</p>
-        <table>
+        <table class="overflow-scroll">
             <thead>
             <tr><th>Keyword</th><th>Meaning</th></tr>
             </thead>
