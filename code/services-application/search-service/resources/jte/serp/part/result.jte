@@ -54,12 +54,12 @@
         </div>
         @if (result.hasMultiple() &&  !domainSearch)
             <div class="flex mt-2 text-sm flex flex-col space-y-2">
-                <p class="${result.colorScheme.textColor2} ${result.colorScheme.backgroundColor2}  p-1 rounded">Also from ${result.getDomain().toString()}:</p>
+                <p class="${result.colorScheme.textColor2} ${result.colorScheme.backgroundColor2}  p-1 rounded break-words hyphens-auto">Also from ${result.getDomain().toString()}:</p>
 
                 <ul class="pl-2 mt-2 underline text-liteblue">
                     @for(UrlDetails item : result.rest)
-                        <li class="-indent-4 pl-4 mb-1">
-                            <a href="${item.url.toString()}" rel="noopener noreferrer">${item.title}</a>
+                        <li class="-indent-4 pl-4 mb-1 break-words hyphens-auto">
+                            <a href="${item.url.toString()}" rel="noopener noreferrer">$unsafe{item.titleHyphenHints()}</a>
                         </li>
                     @endfor
                 </ul>
