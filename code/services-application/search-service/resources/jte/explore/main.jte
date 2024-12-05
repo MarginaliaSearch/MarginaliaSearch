@@ -44,7 +44,7 @@
                     <a href="/explore/${result.displayDomain()}" title="Show results similar to this website"><i class="fas fa-shuffle"></i></a>
                 </div>
                 <a href="${result.url().toString()}">
-                    <img class="p-2" width="800" height="600" src="/screenshot/${result.domainId()}">
+                    <img loading="lazy" class="p-2" width="800" height="600" src="/screenshot/${result.domainId()}" alt="Screenshot of ${result.displayDomain()}" />
                 </a>
             </div>
         @endfor
