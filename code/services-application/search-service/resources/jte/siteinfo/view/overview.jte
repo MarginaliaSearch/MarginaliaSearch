@@ -39,7 +39,7 @@
                 @for (SearchSiteInfoService.FeedItem item : siteInfo.feed().items())
                     <dt class="ml-2 flex space-x-4">
                         <a class="grow underline text-liteblue text-sm" rel="noopener nofollow external ugc" href="${item.url()}">${item.title()}</a>
-                        <span>${item.pubDay()}</span>
+                        <span class="whitespace-nowrap">${item.pubDay()}</span>
                     </dt>
                     <dd class="ml-6 text-sm mb-4">${item.description()}</dd>
                 @endfor
