@@ -340,6 +340,14 @@ public class SearchSiteInfoService {
             implements SiteInfoModel
     {
 
+        public boolean hasSamples() {
+            return samples != null && !samples.isEmpty();
+        }
+
+        public boolean hasFeed() {
+            return feed != null && !feed.items.isEmpty();
+        }
+
         public String query() { return "site:" + domain; }
 
         public boolean isKnown() {

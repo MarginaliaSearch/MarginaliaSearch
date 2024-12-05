@@ -25,8 +25,7 @@
             </div>
         @endif
 
-        @if (siteInfo.feed() != null && !siteInfo.feed().items().isEmpty())
-
+        @if (siteInfo.hasFeed())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 rounded">
                 <i class="fas fa-rss text-orange-500"></i>
                 <span class="grow">Feed</span>
@@ -46,7 +45,7 @@
 
         @endif
 
-        @if (siteInfo.samples() != null && !siteInfo.samples().isEmpty())
+        @if (siteInfo.hasSamples() && !siteInfo.hasFeed())
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 rounded">
                 <i class="fas fa-magnifying-glass"></i>
