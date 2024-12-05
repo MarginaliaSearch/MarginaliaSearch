@@ -14,10 +14,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.search.model.ClusteredUrlDetails;
-import nu.marginalia.search.model.DecoratedSearchResults;
-import nu.marginalia.search.model.SearchFilters;
-import nu.marginalia.search.model.UrlDetails;
+import nu.marginalia.search.model.*;
 import nu.marginalia.search.results.UrlDeduplicator;
 import nu.marginalia.search.svc.SearchQueryCountService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
@@ -75,9 +72,10 @@ public class SearchOperator {
         this.searchVisitorCount = searchVisitorCount;
     }
 
-    public List<UrlDetails> doSiteSearch(String domain,
+    public SimpleSearchResults doSiteSearch(String domain,
                                         int domainId,
-                                        int count) {
+                                        int count,
+                                        int page) {
 
         var queryParams = paramFactory.forSiteSearch(domain, domainId, count);
         var queryResponse = queryClient.search(queryParams);
@@ -85,15 +83,16 @@ public class SearchOperator {
         return getResultsFromQuery(queryResponse);
     }
 
-    public List<UrlDetails> doBacklinkSearch(String domain) {
+    public SimpleSearchResults doBacklinkSearch(String domain, int page) {
 
-        var queryParams = paramFactory.forBacklinkSearch(domain);
+        var queryParams = paramFactory.forBacklinkSearch(domain, page);
         var queryResponse = queryClient.search(queryParams);
+
 
         return getResultsFromQuery(queryResponse);
     }
 
-    public List<UrlDetails> doLinkSearch(String source, String dest) {
+    public SimpleSearchResults doLinkSearch(String source, String dest) {
         var queryParams = paramFactory.forLinkSearch(source, dest);
         var queryResponse = queryClient.search(queryParams);
 
@@ -110,7 +109,7 @@ public class SearchOperator {
 
         var queryParams = paramFactory.forRegularSearch(userParams);
         QueryResponse queryResponse = queryClient.search(queryParams);
-        var queryResults = getResultsFromQuery(queryResponse);
+        var queryResults = getResultsFromQuery(queryResponse).results;
 
         // Cluster the results based on the query response
         List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
@@ -126,17 +125,17 @@ public class SearchOperator {
         String evalResult = getFutureOrDefault(eval, "");
 
         String focusDomain = queryResponse.domain();
-        int focusDomainId = focusDomain == null
+        int focusDomainId = (focusDomain == null || focusDomain.isBlank())
                 ? -1
-                : domainQueries.tryGetDomainId(new EdgeDomain(focusDomain)).orElse(-1);
+                : domainQueries.tryGetDomainId(new EdgeDomain(focusDomain)).orElse(0);
 
         List<String> problems = getProblems(evalResult, queryResults, queryResponse);
 
-        List<DecoratedSearchResults.Page> resultPages = IntStream.rangeClosed(1, queryResponse.totalPages())
-                .mapToObj(number -> new DecoratedSearchResults.Page(
+        List<ResultsPage> resultPages = IntStream.rangeClosed(1, queryResponse.totalPages())
+                .mapToObj(number -> new ResultsPage(
                         number,
                         number == userParams.page(),
-                        userParams.withPage(number).renderUrl(websiteUrl)
+                        userParams.withPage(number).renderUrl()
                 ))
                 .toList();
 
@@ -146,7 +145,7 @@ public class SearchOperator {
                 .problems(problems)
                 .evalResult(evalResult)
                 .results(clusteredResults)
-                .filters(new SearchFilters(websiteUrl, userParams))
+                .filters(new SearchFilters(userParams))
                 .focusDomain(focusDomain)
                 .focusDomainId(focusDomainId)
                 .resultPages(resultPages)
@@ -154,18 +153,28 @@ public class SearchOperator {
     }
 
 
-    public List<UrlDetails> getResultsFromQuery(QueryResponse queryResponse) {
+    public SimpleSearchResults getResultsFromQuery(QueryResponse queryResponse) {
         final QueryLimits limits = queryResponse.specs().queryLimits;
         final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
 
         // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
 
-        return queryResponse.results().stream()
+        List<UrlDetails> details = queryResponse.results().stream()
                 .filter(deduplicator::shouldRetain)
                 .limit(limits.resultsTotal())
                 .map(SearchOperator::createDetails)
                 .toList();
+
+        List<ResultsPage> pages = IntStream.rangeClosed(1, queryResponse.totalPages())
+                .mapToObj(number -> new ResultsPage(
+                        number,
+                        number == queryResponse.currentPage(),
+                        ""
+                ))
+                .toList();
+
+        return new SimpleSearchResults(details, pages);
     }
 
     private static UrlDetails createDetails(DecoratedSearchResultItem item) {
@@ -181,6 +190,7 @@ public class SearchOperator {
                 item.rankingScore, // termScore
                 item.resultsFromDomain,
                 BrailleBlockPunchCards.printBits(item.bestPositions, 64),
+                item.bestPositions,
                 Long.bitCount(item.bestPositions),
                 item.rawIndexResult,
                 item.rawIndexResult.keywordScores

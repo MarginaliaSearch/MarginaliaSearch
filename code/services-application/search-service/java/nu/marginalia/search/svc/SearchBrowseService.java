@@ -9,12 +9,14 @@ import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.search.JteRenderer;
+import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.results.BrowseResultCleaner;
+import spark.Request;
+import spark.Response;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -26,6 +28,7 @@ public class SearchBrowseService {
     private final DbDomainQueries domainQueries;
     private final DomainBlacklist blacklist;
     private final DomainInfoClient domainInfoClient;
+    private final JteRenderer jteRenderer;
     private final BrowseResultCleaner browseResultCleaner;
 
     @Inject
@@ -33,13 +36,41 @@ public class SearchBrowseService {
                                DbDomainQueries domainQueries,
                                DomainBlacklist blacklist,
                                DomainInfoClient domainInfoClient,
+                               JteRenderer jteRenderer,
                                BrowseResultCleaner browseResultCleaner)
     {
         this.randomDomains = randomDomains;
         this.domainQueries = domainQueries;
         this.blacklist = blacklist;
         this.domainInfoClient = domainInfoClient;
+        this.jteRenderer = jteRenderer;
         this.browseResultCleaner = browseResultCleaner;
+    }
+
+    public String handleBrowseRandom(Request request, Response response) throws IOException {
+        return jteRenderer.render("explore/main.jte",
+                Map.of("navbar", NavbarModel.EXPLORE,
+                        "results", getRandomEntries(1)
+                )
+        );
+    }
+
+    public String handleBrowseSite(Request request, Response response) throws Exception {
+        String domainName = request.params("site");
+        BrowseResultSet entries;
+
+        try {
+            entries = getRelatedEntries(domainName);
+        }
+        catch (Exception ex) {
+            entries = new BrowseResultSet(List.of(), domainName);
+        }
+
+        return jteRenderer.render("explore/main.jte",
+                Map.of("navbar", NavbarModel.EXPLORE,
+                        "results", entries
+                )
+        );
     }
 
     public BrowseResultSet getRandomEntries(int set) {

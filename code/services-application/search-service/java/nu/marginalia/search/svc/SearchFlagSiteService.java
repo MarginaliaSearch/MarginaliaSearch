@@ -19,7 +19,7 @@ public class SearchFlagSiteService {
 
     private final CategoryItem unknownCategory = new CategoryItem("unknown", "Unknown");
 
-    private final List<CategoryItem> categories =
+    public static final List<CategoryItem> categories =
             List.of(
                     new CategoryItem("spam", "Spam"),
                     new CategoryItem("freebooting", "Reposting Stolen Content"),

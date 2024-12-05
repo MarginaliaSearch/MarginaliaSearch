@@ -70,6 +70,7 @@ dependencies {
     implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove
+    implementation libs.jte
     implementation libs.fastutil
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb

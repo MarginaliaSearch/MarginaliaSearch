@@ -52,12 +52,12 @@ public record SimilarDomain(EdgeUrl url,
             return NONE;
         }
 
-        public String toString() {
+        public String faIcon() {
             return switch (this) {
-                case FOWARD -> "&#8594;";
-                case BACKWARD -> "&#8592;";
-                case BIDIRECTIONAL -> "&#8646;";
-                case NONE -> "-";
+                case FOWARD -> "fa-solid fa-arrow-right";
+                case BACKWARD -> "fa-solid fa-arrow-left";
+                case BIDIRECTIONAL -> "fa-solid fa-arrow-right-arrow-left";
+                case NONE -> "";
             };
         }
 

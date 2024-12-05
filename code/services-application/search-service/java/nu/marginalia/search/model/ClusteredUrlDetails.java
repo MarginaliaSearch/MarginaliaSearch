@@ -1,6 +1,7 @@
 package nu.marginalia.search.model;
 
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.WordFlags;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,6 +16,9 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
 
     @NotNull
     public final List<UrlDetails> rest;
+
+    /** Selects color scheme in the GUI for the result */
+    public final PostColorScheme colorScheme;
 
     /** Create a new ClusteredUrlDetails from a collection of UrlDetails,
      * with the best result as "first", and the others, in descending order
@@ -32,6 +36,7 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
 
         this.first = items.removeFirst();
         this.rest = items;
+        this.colorScheme = PostColorScheme.select(first);
 
         double bestScore = first.termScore;
         double scoreLimit = Math.min(4.0, bestScore * 1.25);
@@ -64,6 +69,14 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
     public ClusteredUrlDetails(@NotNull UrlDetails onlyFirst) {
         this.first = onlyFirst;
         this.rest = Collections.emptyList();
+        this.colorScheme = PostColorScheme.select(first);
+    }
+
+    /** For tests */
+    public ClusteredUrlDetails(@NotNull UrlDetails onlyFirst, @NotNull List<UrlDetails> rest) {
+        this.first = onlyFirst;
+        this.rest = rest;
+        this.colorScheme = PostColorScheme.select(first);
     }
 
     // For renderer use, do not remove
@@ -98,5 +111,40 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
     @Override
     public int compareTo(@NotNull ClusteredUrlDetails o) {
         return Objects.compare(first, o.first, UrlDetails::compareTo);
+    }
+
+    public enum PostColorScheme {
+        Slate("bg-slate-100", "text-slate-950", "bg-slate-200", "text-black"),
+        Green("bg-green-50", "text-green-900", "bg-green-100", "text-black"),
+        Purple("bg-purple-50", "text-purple-900", "bg-purple-100", "text-black"),
+        White("bg-white", "text-blue-950", "bg-gray-100", "text-black");
+
+        PostColorScheme(String backgroundColor, String textColor, String backgroundColor2, String textColor2) {
+            this.backgroundColor = backgroundColor;
+            this.textColor = textColor;
+            this.backgroundColor2 = backgroundColor2;
+            this.textColor2 = textColor2;
+        }
+
+        public static PostColorScheme select(UrlDetails result) {
+            long encodedMetadata = result.resultItem.encodedDocMetadata;
+            if (DocumentFlags.PlainText.isPresent(encodedMetadata)) {
+                return Slate;
+            }
+            else if (DocumentFlags.GeneratorWiki.isPresent(encodedMetadata)) {
+                return Green;
+            }
+            else if (DocumentFlags.GeneratorForum.isPresent(encodedMetadata)) {
+                return Purple;
+            }
+            else {
+                return White;
+            }
+        }
+
+        public final String backgroundColor;
+        public final String textColor;
+        public final String backgroundColor2;
+        public final String textColor2;
     }
 }

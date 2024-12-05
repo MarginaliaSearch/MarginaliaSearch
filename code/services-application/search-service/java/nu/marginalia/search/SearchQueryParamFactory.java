@@ -62,7 +62,7 @@ public class SearchQueryParamFactory {
         );
     }
 
-    public QueryParams forBacklinkSearch(String domain) {
+    public QueryParams forBacklinkSearch(String domain, int page) {
         return new QueryParams("links:"+domain,
                 null,
                 List.of(),

@@ -5,6 +5,7 @@ import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.idx.DocumentMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +30,14 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
     public int resultsFromSameDomain;
 
+    public int topology;
     public String positions;
+    public long positionsMask;
     public int positionsCount;
     public SearchResultItem resultItem;
     public List<SearchResultKeywordScore> keywordScores;
 
-    public UrlDetails(long id, int domainId, EdgeUrl url, String title, String description, String format, int features, DomainIndexingState domainState, double termScore, int resultsFromSameDomain, String positions, int positionsCount, SearchResultItem resultItem, List<SearchResultKeywordScore> keywordScores) {
+    public UrlDetails(long id, int domainId, EdgeUrl url, String title, String description, String format, int features, DomainIndexingState domainState, double termScore, int resultsFromSameDomain, String positions, long positionsMask, int positionsCount, SearchResultItem resultItem, List<SearchResultKeywordScore> keywordScores) {
         this.id = id;
         this.domainId = domainId;
         this.url = url;
@@ -47,6 +50,8 @@ public class UrlDetails implements Comparable<UrlDetails> {
         this.resultsFromSameDomain = resultsFromSameDomain;
         this.positions = positions;
         this.positionsCount = positionsCount;
+        this.positionsMask = positionsMask;
+        this.topology = DocumentMetadata.decodeTopology(resultItem.encodedDocMetadata);
         this.resultItem = resultItem;
         this.keywordScores = keywordScores;
     }
@@ -227,67 +232,11 @@ public class UrlDetails implements Comparable<UrlDetails> {
         return this.keywordScores;
     }
 
-    public UrlDetails withId(long id) {
-        return this.id == id ? this : new UrlDetails(id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withDomainId(int domainId) {
-        return this.domainId == domainId ? this : new UrlDetails(this.id, domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withUrl(EdgeUrl url) {
-        return this.url == url ? this : new UrlDetails(this.id, this.domainId, url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withTitle(String title) {
-        return this.title == title ? this : new UrlDetails(this.id, this.domainId, this.url, title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withDescription(String description) {
-        return this.description == description ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withFormat(String format) {
-        return this.format == format ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withFeatures(int features) {
-        return this.features == features ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withDomainState(DomainIndexingState domainState) {
-        return this.domainState == domainState ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withTermScore(double termScore) {
-        return this.termScore == termScore ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withResultsFromSameDomain(int resultsFromSameDomain) {
-        return this.resultsFromSameDomain == resultsFromSameDomain ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withPositions(String positions) {
-        return this.positions == positions ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, positions, this.positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withPositionsCount(int positionsCount) {
-        return this.positionsCount == positionsCount ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, positionsCount, this.resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withResultItem(SearchResultItem resultItem) {
-        return this.resultItem == resultItem ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, resultItem, this.keywordScores);
-    }
-
-    public UrlDetails withKeywordScores(List<SearchResultKeywordScore> keywordScores) {
-        return this.keywordScores == keywordScores ? this : new UrlDetails(this.id, this.domainId, this.url, this.title, this.description, this.format, this.features, this.domainState, this.termScore, this.resultsFromSameDomain, this.positions, this.positionsCount, this.resultItem, keywordScores);
-    }
-
     public String toString() {
         return "UrlDetails(id=" + this.getId() + ", domainId=" + this.getDomainId() + ", url=" + this.getUrl() + ", title=" + this.getTitle() + ", description=" + this.getDescription() + ", format=" + this.getFormat() + ", features=" + this.getFeatures() + ", domainState=" + this.getDomainState() + ", termScore=" + this.getTermScore() + ", resultsFromSameDomain=" + this.getResultsFromSameDomain() + ", positions=" + this.getPositions() + ", positionsCount=" + this.getPositionsCount() + ", resultItem=" + this.getResultItem() + ", keywordScores=" + this.getKeywordScores() + ")";
     }
 
-    public static record UrlProblem(String name, String description) {
+    public record UrlProblem(String name, String description) {
 
     }
 }
