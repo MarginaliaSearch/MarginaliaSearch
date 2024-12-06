@@ -155,12 +155,9 @@ public class AtagExporter implements ExporterIf {
             }
 
             // Deduplicate by hash;  we've already checked that the strings are ASCII printable so we don't
-            // need to be concerned about using the fast ASCII hash
-            if (hashes.add(hash.hashLowerBytes(linkText) ^ hash.hashLowerBytes(urlString))) {
-                return false;
-            }
-
-            return true;
+            // need to be concerned about using the fast ASCII hash.  Note we don't consider the destination URL
+            // here, but the source domain instead.
+            return !hashes.add(hash.hashLowerBytes(linkText) ^ hash.hashLowerBytes(baseUrl.domain.toString()));
         }
     }
 
