@@ -2,12 +2,11 @@
 @import nu.marginalia.search.command.SearchParameters
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.UrlDetails
-
 @param ClusteredUrlDetails result
 @param SearchParameters parameters
 @param boolean domainSearch
 
-<div class="${result.colorScheme.backgroundColor} p-4 border border-gray-300 flex rounded">
+<div class="bg-white p-4 border border-gray-300 flex rounded">
     <div class="flex flex-col grow">
         <div class="flex">
             <div class="flex flex-col grow" >
@@ -31,7 +30,7 @@
 
 
                 <div class="overflow-auto flex-1">
-                <p class="mt-2 text-sm ${result.colorScheme.descColor} leading-relaxed break-words">
+                <p class="mt-2 text-sm text-black leading-relaxed break-words">
                     $unsafe{result.first.descriptionHyphenHints()}
                 </p>
                 </div>
@@ -52,7 +51,7 @@
         </div>
         @if (result.hasMultiple() &&  !domainSearch)
             <div class="flex mt-2 text-sm flex flex-col space-y-2">
-                <p class="${result.colorScheme.textColor2} ${result.colorScheme.backgroundColor2}  p-1 rounded break-words hyphens-auto">Also from ${result.getDomain().toString()}:</p>
+                <p class="text-black ${result.colorScheme.backgroundColor}  p-1 rounded break-words hyphens-auto">Also from ${result.getDomain().toString()}:</p>
 
                 <ul class="pl-2 mt-2 underline text-liteblue">
                     @for(UrlDetails item : result.rest)

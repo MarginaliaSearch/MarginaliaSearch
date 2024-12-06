@@ -113,19 +113,20 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
         return Objects.compare(first, o.first, UrlDetails::compareTo);
     }
 
-    public enum PostColorScheme {
-        Slate("bg-white", "text-blue-800", "bg-blue-50", "text-black", "text-black"),
-        Green("bg-white", "text-green-800", "bg-green-50", "text-black", "text-black"),
-        Purple("bg-white", "text-purple-800", "bg-purple-50", "text-black", "text-black"),
-        White("bg-white", "text-blue-950", "bg-gray-100", "text-black", "text-black");
 
-        PostColorScheme(String backgroundColor, String textColor, String backgroundColor2, String textColor2, String descColor) {
+    public enum PostColorScheme {
+        // Hack: ensure these classes are also in jte/part/warmup.jte!
+
+        Slate( "text-blue-800", "bg-blue-50"),
+        Green( "text-green-800", "bg-green-50"),
+        Purple("text-purple-800", "bg-purple-50"),
+        White("text-blue-950", "bg-gray-100");
+
+        PostColorScheme(String textColor, String backgroundColor) {
             this.backgroundColor = backgroundColor;
             this.textColor = textColor;
-            this.backgroundColor2 = backgroundColor2;
-            this.textColor2 = textColor2;
-            this.descColor = descColor;
         }
+
 
         public static PostColorScheme select(UrlDetails result) {
             long encodedMetadata = result.resultItem.encodedDocMetadata;
@@ -145,8 +146,5 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
 
         public final String backgroundColor;
         public final String textColor;
-        public final String backgroundColor2;
-        public final String textColor2;
-        public final String descColor;
     }
 }
