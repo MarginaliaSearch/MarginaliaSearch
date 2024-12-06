@@ -5,7 +5,7 @@
 <div class="flex-col mx-auto">
 <div class="max-w-2xl mx-auto bg-white border rounded overflow-auto shadow-sm my-4 space-y-4 w-full">
     <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200">
-        <h2 class="text-sm font-semibold">Report Domain Issue</h2>
+        <h2 class="text-md">Report Domain Issue</h2>
     </div>
 
     @if (reportDomain.submitted())
@@ -67,7 +67,7 @@
 @if (!reportDomain.complaints().isEmpty())
 <div class="max-w-2xl mx-auto bg-slate-50 rounded overflow-auto shadow-sm my-4 space-y-2 w-full">
     <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200">
-        <h2 class="text-sm font-semibold">Existing Complaints</h2>
+        <h2 class="text-md">Existing Complaints</h2>
     </div>
 
 

@@ -12,7 +12,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 new NavbarGroup(
                     List.of(
                         new NavbarEntry("Search", "/", false),
-                        new NavbarEntry("Domains", "/site", false),
+                        new NavbarEntry("Sites", "/site", false),
                         new NavbarEntry("Explore", "/explore", false)
                     )
                 )
@@ -29,7 +29,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 new NavbarGroup(
                         List.of(
                                 new NavbarEntry("Search", "/", true),
-                                new NavbarEntry("Domains", "/site", false),
+                                new NavbarEntry("Sites", "/site", false),
                                 new NavbarEntry("Explore", "/explore", false)
                         )
                 )
@@ -46,7 +46,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 new NavbarGroup(
                         List.of(
                                 new NavbarEntry("Search", "/", false),
-                                new NavbarEntry("Domains", "/site", true),
+                                new NavbarEntry("Sites", "/site", true),
                                 new NavbarEntry("Explore", "/explore", false)
                         )
                 )
@@ -63,7 +63,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                     new NavbarGroup(
                             List.of(
                                     new NavbarEntry("Search", "/", false),
-                                    new NavbarEntry("Domains", "/site", false),
+                                    new NavbarEntry("Sites", "/site", false),
                                     new NavbarEntry("Explore", "/explore", true)
                             )
                     )

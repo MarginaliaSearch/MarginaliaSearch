@@ -251,4 +251,11 @@ public class MockedSearchResults {
 
         return new BrowseResultSet(results);
     }
+
+    public static SearchSiteInfoService.SiteOverviewModel mockSiteInfoOverview() {
+        return new SearchSiteInfoService.SiteOverviewModel(List.of(
+                new SearchSiteInfoService.SiteOverviewModel.DiscoveredDomain("www.example.com", "2024-09-23T11:22:33"),
+                new SearchSiteInfoService.SiteOverviewModel.DiscoveredDomain("other.example.com", "2023-08-25T11:22:33")
+        ));
+    }
 }

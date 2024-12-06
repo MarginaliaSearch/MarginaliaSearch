@@ -77,7 +77,11 @@ public class JtePaperDoll {
                     else return MockedSearchResults.mockSiteInfoData();
 
                 },
-                ret -> this.render("siteinfo/main.jte", Map.of("model", ret, "navbar", NavbarModel.EXPLORE))
+                ret -> this.render("siteinfo/main.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
+        );
+        Spark.get("/site-info-start",
+                (rq, rs) -> MockedSearchResults.mockSiteInfoOverview(),
+                ret -> this.render("siteinfo/start.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
         );
         Spark.get("/screenshot/*", (rq, rsp) -> {
             rsp.type("image/svg+xml");

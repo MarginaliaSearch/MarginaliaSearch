@@ -15,18 +15,45 @@
 
 <header class="border-gray-300 bg-white  shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-4">
-        <form action="/site" class="flex items-center  space-x-2">
-            <h1 class="text-base md:text-xl mr-2 md:mr-8 font-serif">Site Information</h1>
-            <div id="suggestions-anchor" class="hidden"></div>
-                <input type="text" class="shadow-inner max-w-64 flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"
-                       value="${model.domain()}"
-                       placeholder="www.example.com"
-                       name="domain"
-                       id="domain" >
-                <button class="px-4 py-2 bg-margeblue text-white ml-2 rounded">
-                    <i class="fas fa-search text-sm sm:mr-3"></i> <span class="hidden sm:inline">Inspect</span>
-                </button>
-        </form>
+        <div class="flex place-items-baseline space-x-2">
+            <span class="text-gray-900 text-md font-mono rounded-sm block p-2.5">
+                ${model.domain()}
+            </span>
+            <span class="grow"></span>
+            @if (model instanceof SearchSiteInfoService.SiteInfoWithContext siteInfo)
+                @if (siteInfo.domainInformation().getPagesIndexed() > 0)
+                    <span
+                            class="bg-green-50 text-green-900 border-green-200 p-1 font-sm rounded"
+                            title="The search engine indexes this domain">
+                        Indexed
+                    </span>
+                @elseif (siteInfo.domainInformation().isBlacklisted())
+                    <span
+                            class="bg-red-50 text-red-900 border-red-200 p-1 font-sm rounded"
+                            title="This domain is blacklisted and will not be crawled or indexed">
+                        Blacklisted
+                    </span>
+                @elseif (siteInfo.domainInformation().getNodeAffinity() == 0)
+                    <span
+                            class="bg-blue-50 text-blue-900 border-blue-200 p-1 font-sm rounded"
+                            title="This domain will be crawled by the search engine">
+                        In Crawler Queue
+                    </span>
+                @elseif (siteInfo.domainInformation().isUnknownDomain())
+                    <span
+                            class="bg-purple-50 text-purple-900 border-purple-200 p-1 font-sm rounded"
+                            title="The search engine is not aware of this domain name">
+                        Unknown
+                    </span>
+                @elseif (siteInfo.domainInformation().isUnknownDomain())
+                    <span
+                            class="bg-yellow-50 text-yellow-900 border-yellow-200 p-1 font-sm rounded"
+                            title="The search engine is aware of this domain, but it's not slated for crawling">
+                        Known
+                    </span>
+                @endif
+            @endif
+        </div>
     </div>
     <div class="mx-auto md:px-4 border bg-slate-50">
         <div class="flex md:space-x-2 max-w-[1000px] mx-auto">

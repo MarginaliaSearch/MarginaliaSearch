@@ -18,7 +18,7 @@
 <header class="border-b border-gray-300 bg-white sm:static sticky top-0 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
-            <h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap">Marginalia Search</h1>
+            <h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1>
             <div class="fixed sm:static bottom-0 left-0 w-full p-5 sm:p-0 border sm:border-none bg-gray-50/90 backdrop-blur-sm  sm:bg-white">
                 @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters())
             </div>

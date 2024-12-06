@@ -93,6 +93,14 @@
 
                 <p>This is usually because of some form of misbehavior on the webmaster's end,
                     either annoying search engine spam, or tasteless content bad faith content.</p>
+
+                <p>Sometimes this is in error.  Blacklisting can be appealed using
+                    the <a class="underline text-liteblue" href="?view=report">Report Form</a>.
+                </p>
+                <p>In the interest of transparency, the full list of blacklisted domains is periodically
+                    published at
+                    <a class="underline text-liteblue" href="https://downloads.marginalia.nu/exports/">https://downloads.marginalia.nu/exports/</a>.
+                </p>
             </div>
         @endif
 

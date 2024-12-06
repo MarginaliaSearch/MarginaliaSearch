@@ -17,13 +17,19 @@
 <header class="border-b border-gray-300 bg-white">
     <div class="max-w-[1400px] mx-auto px-4 py-4">
         <div class="flex items-center">
-            <h1 class="hidden sm:block text-xl mr-8 font-serif">Marginalia Search</h1>
+            <h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1>
             @template.serp.part.searchform(query = "", profile = SearchProfile.NO_FILTER.filterId, filters = new SearchFilters(websiteUrl))
         </div>
     </div>
 </header>
 
-<div class="max-w-1000 mx-auto flex flex-row space-y-4 fill-w">
+<div class="max-w-1000 mx-auto flex flex-col space-y-4 fill-w">
+    <div class="border bg-white rounded p-2 m-4">
+        <div class="text-slate-700 text-sm p-4">
+        You've stumbled onto a beta version of the redesign of the search engine's UI.  Feel free to explore, but
+        beware that things may not quite be polished.
+        </div>
+    </div>
     <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2">
     <div class="flex flex-col border rounded overflow-hidden bg-white p-6 space-y-3">
         <div><i class="fas fa-sailboat mx-2 text-margeblue"></i>Explore the Web</div>
