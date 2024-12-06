@@ -27,6 +27,7 @@ sass {
     outputStyle = EXPANDED
 }
 
+
 apply from: "$rootProject.projectDir/srcsets.gradle"
 apply from: "$rootProject.projectDir/docker.gradle"
 
@@ -86,6 +87,35 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
     testImplementation project(':code:libraries:test-helpers')
 }
+
+task compileTailwind {
+    def inputFile = file('tailwind/globals.css')
+    def configFile = file('tailwind/tailwind.config.js')
+    def outputFile = file('resources/static/css/style.css')
+
+    inputs.file inputFile
+    inputs.file configFile
+    outputs.file outputFile
+
+    doLast {
+        exec {
+            workingDir projectDir
+            if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+                commandLine 'cmd', '/c', 'npx', 'tailwindcss',
+                        '-i', inputFile.toString(),
+                        '-o', outputFile.toString(),
+                        '-c', configFile.toString()
+            } else {
+                commandLine 'npx', 'tailwindcss',
+                        '-i', inputFile.toString(),
+                        '-o', outputFile.toString(),
+                        '-c', configFile.toString()
+            }
+        }
+    }
+}
+
+processResources.dependsOn(compileTailwind)
 
 tasks.register('paperDoll', Test) {
     useJUnitPlatform {
