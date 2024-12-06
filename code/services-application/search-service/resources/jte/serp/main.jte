@@ -18,7 +18,7 @@
 <header class="border-b border-gray-300 bg-white sm:static sticky top-0 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
-            <h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1>
+            <div class="md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
             <div class="fixed sm:static bottom-0 left-0 w-full p-5 sm:p-0 border sm:border-none bg-gray-50/90 backdrop-blur-sm  sm:bg-white">
                 @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters())
             </div>
@@ -80,12 +80,7 @@
 @template.serp.part.mobile-menu(filters = results.getFilters())
 
 </body>
-<script lang="javascript">
-    document.getElementById("filter-button").addEventListener("click", function() {
-        document.getElementById("mobile-menu").classList.toggle("hidden");
-    });
-    document.getElementById("hide-filter-button").addEventListener("click", function() {
-        document.getElementById("mobile-menu").classList.toggle("hidden");
-    });
-</script>
+<script lang="javascript" src="js/mobile-button.js"></script>
+<script lang="javascript" src="js/typeahead.js"></script>
+
 </html>

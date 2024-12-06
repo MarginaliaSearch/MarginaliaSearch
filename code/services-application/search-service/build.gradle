@@ -91,7 +91,7 @@ dependencies {
 task compileTailwind {
     def inputFile = file('tailwind/globals.css')
     def configFile = file('tailwind/tailwind.config.js')
-    def outputFile = file('resources/static/css/style.css')
+    def outputFile = file('resources/static/search/css/style.css')
     def jteDir = file('resources/jte')
 
     inputs.file inputFile

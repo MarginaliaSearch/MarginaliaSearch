@@ -8,7 +8,10 @@ import gg.jte.resolve.DirectoryCodeResolver;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.rendering.MockedSearchResults;
+import nu.marginalia.service.server.StaticResources;
 import org.junit.jupiter.api.Test;
+import spark.Request;
+import spark.Response;
 import spark.Spark;
 
 import java.nio.file.Path;
@@ -17,7 +20,7 @@ import java.util.Map;
 public class JtePaperDoll {
     final CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(".").toAbsolutePath().resolve("resources/jte"));
     final TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
-
+    final StaticResources staticResources = new StaticResources();
     private String render(String template, Object obj) {
         var str = new StringOutput();
         templateEngine.render(template, obj, str);
@@ -30,14 +33,26 @@ public class JtePaperDoll {
         return str.toString();
     }
 
+    private Object serveStatic(Request request, Response response) {
+        String resource = request.params("resource");
+        staticResources.serveStatic("search", resource, request, response);
+        return "";
+    }
+
     @Test
     public void searchResults() {
+        System.setProperty("test-env", "true");
         System.out.println(Path.of(".").toAbsolutePath());
 
+        Spark.staticFileLocation("static/search");
         Spark.port(9999);
 
         Spark.after((rq, rs) -> {
             rs.header("Content-Encoding", "gzip");
+        });
+        Spark.get("/suggest/", (rq, rs) -> {
+            rs.type("application/json");
+            return "[\"pla\",\"plaa\",\"plab\",\"plac\",\"pla2b\",\"pla2l\",\"plaaz\",\"plac1\",\"placa\",\"place\"]";
         });
         Spark.get("/",
                 (rq, rs) -> MockedSearchResults.mockRegularSearchResults(),
@@ -117,6 +132,7 @@ public class JtePaperDoll {
                     """;
 
         });
+
 
         Spark.init();
 
