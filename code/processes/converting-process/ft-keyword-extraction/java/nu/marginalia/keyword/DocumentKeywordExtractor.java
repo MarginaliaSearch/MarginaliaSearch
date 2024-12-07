@@ -1,6 +1,7 @@
 package nu.marginalia.keyword;
 
 import com.google.inject.Inject;
+import gnu.trove.list.TIntList;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
@@ -16,6 +17,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
+
+import static java.lang.Math.min;
+import static java.lang.Math.sqrt;
 
 public class DocumentKeywordExtractor {
 
@@ -162,40 +166,60 @@ public class DocumentKeywordExtractor {
             recorder.reset();
         }
 
+        // ---
+
         // Next add synthetic positions to the document for anchor texts
 
         pos += 2; // add some padding to the end of the document before we start adding a-tag words
 
-        for (var linkText : linkTexts) {
 
-            for (var word : linkText) {
-                pos++;
+        // Add
 
-                for (var recorder : spanRecorders) {
-                    recorder.update(linkText, pos);
+        List<DocumentSentence> sentences = linkTexts.linkTexts();
+        TIntList counts = linkTexts.counts();
+        SpanRecorder extLinkRecorder = new SpanRecorder(HtmlTag.EXTERNAL_LINKTEXT);
+
+        for (int i = 0; i < linkTexts.length(); i++) {
+
+            DocumentSentence sentence = sentences.get(i);
+
+            // We repeat a link sentence a number of times that is a function of how many times it's been spotted
+            // as a link text.  A really "big" link typically has hundreds, if not thousands of repetitions, so we
+            // attenuate that a bit with math so we don't generate a needlessly large positions list
+
+            final int repetitions = (int) min(sqrt(counts.get(i)), 12);
+
+            for (int ci = 0; ci < repetitions; ci++) {
+
+                for (var word : sentence) {
+                    pos++;
+
+                    extLinkRecorder.update(sentence, pos);
+
+                    if (word.isStopWord()) {
+                        continue;
+                    }
+
+                    String w = word.wordLowerCase();
+                    if (matchesWordPattern(w)) {
+                        /* Add information about term positions */
+                        wordsBuilder.addPos(w, pos);
+
+                        /* Add metadata for word */
+                        wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));
+                    }
+
                 }
 
-                if (word.isStopWord()) {
-                    continue;
-                }
+                // Add a break between sentences, to prevent them being registered as one long run-on sentence
+                extLinkRecorder.stop(pos + 1);
 
-                String w = word.wordLowerCase();
-                if (matchesWordPattern(w)) {
-                    /* Add information about term positions */
-                    wordsBuilder.addPos(w, pos);
-
-                    /* Add metadata for word */
-                    wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));
-                }
+                // Also add some positional padding between separate link texts so we don't match across their boundaries
+                pos += 2;
             }
-
-            // add some padding between separate link texts so we don't match across their boundaries
-            pos+=2;
         }
 
-        for (var recorder : spanRecorders) {
-            wordsBuilder.addSpans(recorder.finish(pos));
-        }
+        wordsBuilder.addSpans(extLinkRecorder.finish(pos));
     }
 
     boolean matchesWordPattern(String s) {
@@ -265,6 +289,12 @@ public class DocumentKeywordExtractor {
             }
         }
 
+        public void stop(int pos) {
+            if (start > 0) {
+                spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, pos));
+                start = 0;
+            }
+        }
         public List<DocumentKeywordsBuilder.DocumentWordSpan> finish(int length) {
             if (start > 0) {
                 spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, length));

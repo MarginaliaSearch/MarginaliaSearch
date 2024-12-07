@@ -1,6 +1,8 @@
 package nu.marginalia.atags;
 
 import com.google.inject.Inject;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.model.Link;
 import nu.marginalia.keyword.LinkTexts;
@@ -51,6 +53,7 @@ public class AnchorTextKeywords {
         List<Link> keywordsRaw = links.forUrl(url);
 
         List<DocumentSentence> ret = new ArrayList<>(keywordsRaw.size());
+        TIntList counts = new TIntArrayList(keywordsRaw.size());
 
         // Extract and count keywords from anchor text
         for (Link keyword : keywordsRaw) {
@@ -59,18 +62,20 @@ public class AnchorTextKeywords {
 
             var sentence = sentenceExtractor.extractSentence(keyword.text(), EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
             ret.add(sentence);
+            counts.add(keyword.count());
         }
 
-        return new LinkTexts(ret);
+        return new LinkTexts(ret, counts);
     }
 
     public LinkTexts getAnchorTextKeywords(DomainLinks links, List<EdgeUrl> urls) {
         List<Link> keywordsRaw = new ArrayList<>();
         for (var url : urls) {
-            links.forUrl(url);
+            keywordsRaw.addAll(links.forUrl(url));
         }
 
         List<DocumentSentence> ret = new ArrayList<>(keywordsRaw.size());
+        TIntList counts = new TIntArrayList(keywordsRaw.size());
 
         // Extract and count keywords from anchor text
         for (Link keyword : keywordsRaw) {
@@ -79,8 +84,9 @@ public class AnchorTextKeywords {
 
             var sentence = sentenceExtractor.extractSentence(keyword.text(), EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
             ret.add(sentence);
+            counts.add(keyword.count());
         }
 
-        return new LinkTexts(ret);
+        return new LinkTexts(ret, counts);
     }
 }
