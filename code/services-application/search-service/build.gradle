@@ -27,6 +27,7 @@ sass {
     outputStyle = EXPANDED
 }
 
+
 apply from: "$rootProject.projectDir/srcsets.gradle"
 apply from: "$rootProject.projectDir/docker.gradle"
 
@@ -70,6 +71,7 @@ dependencies {
     implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove
+    implementation libs.jte
     implementation libs.fastutil
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
@@ -85,6 +87,37 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
     testImplementation project(':code:libraries:test-helpers')
 }
+
+task compileTailwind {
+    def inputFile = file('tailwind/globals.css')
+    def configFile = file('tailwind/tailwind.config.js')
+    def outputFile = file('resources/static/search/css/style.css')
+    def jteDir = file('resources/jte')
+
+    inputs.file inputFile
+    inputs.file configFile
+    inputs.files fileTree(jteDir).include('**/*.jte')
+    outputs.file outputFile
+
+    doLast {
+        exec {
+            workingDir projectDir
+            if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+                commandLine 'cmd', '/c', 'npx', 'tailwindcss',
+                        '-i', inputFile.toString(),
+                        '-o', outputFile.toString(),
+                        '-c', configFile.toString()
+            } else {
+                commandLine 'npx', 'tailwindcss',
+                        '-i', inputFile.toString(),
+                        '-o', outputFile.toString(),
+                        '-c', configFile.toString()
+            }
+        }
+    }
+}
+
+processResources.dependsOn(compileTailwind)
 
 tasks.register('paperDoll', Test) {
     useJUnitPlatform {

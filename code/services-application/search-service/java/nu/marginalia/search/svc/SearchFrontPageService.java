@@ -3,9 +3,10 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.renderer.MustacheRenderer;
+import nu.marginalia.WebsiteUrl;
 import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.search.svc.SearchQueryCountService;
+import nu.marginalia.search.JteRenderer;
+import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -19,34 +20,41 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Renders the front page (index) */
 @Singleton
 public class SearchFrontPageService {
 
-    private final MustacheRenderer<IndexModel> template;
     private final HikariDataSource dataSource;
+    private final JteRenderer jteRenderer;
     private final SearchQueryCountService searchVisitorCount;
+    private final WebsiteUrl websiteUrl;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public SearchFrontPageService(RendererFactory rendererFactory,
                                   HikariDataSource dataSource,
-                                  SearchQueryCountService searchVisitorCount
-                        ) throws IOException {
-        this.template = rendererFactory.renderer("search/index/index");
+                                  JteRenderer jteRenderer,
+                                  SearchQueryCountService searchVisitorCount, WebsiteUrl websiteUrl
+    ) throws IOException {
         this.dataSource = dataSource;
+        this.jteRenderer = jteRenderer;
         this.searchVisitorCount = searchVisitorCount;
+        this.websiteUrl = websiteUrl;
     }
 
     public String render(Request request, Response response) {
         response.header("Cache-control", "public,max-age=3600");
 
-        return template.render(new IndexModel(
-                getNewsItems(),
-                searchVisitorCount.getQueriesPerMinute()
-        ));
+        return jteRenderer.render("serp/first.jte",
+                Map.of("navbar", NavbarModel.SEARCH, "websiteUrl", websiteUrl)
+                );
+//        return template.render(new IndexModel(
+//                getNewsItems(),
+//                searchVisitorCount.getQueriesPerMinute()
+//        ));
     }
 
 

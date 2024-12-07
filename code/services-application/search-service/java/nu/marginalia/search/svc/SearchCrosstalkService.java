@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.SearchOperator;
+import nu.marginalia.search.model.SimpleSearchResults;
 import nu.marginalia.search.model.UrlDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,10 +43,10 @@ public class SearchCrosstalkService {
             parts[i] = parts[i].trim();
         }
 
-        var resAtoB = searchOperator.doLinkSearch(parts[0], parts[1]);
-        var resBtoA = searchOperator.doLinkSearch(parts[1], parts[0]);
+        SimpleSearchResults resAtoB = searchOperator.doLinkSearch(parts[0], parts[1]);
+        SimpleSearchResults resBtoA = searchOperator.doLinkSearch(parts[1], parts[0]);
 
-        var model = new CrosstalkResult(parts[0], parts[1], resAtoB, resBtoA);
+        CrosstalkResult model = new CrosstalkResult(parts[0], parts[1], resAtoB.results, resBtoA.results);
 
         return renderer.render(model);
     }

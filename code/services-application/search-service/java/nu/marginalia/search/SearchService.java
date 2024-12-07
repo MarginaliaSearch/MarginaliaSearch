@@ -45,6 +45,7 @@ public class SearchService extends Service {
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchSiteInfoService siteInfoService,
                          SearchCrosstalkService crosstalkService,
+                         SearchBrowseService searchBrowseService,
                          SearchQueryService searchQueryService)
     throws Exception
     {
@@ -56,24 +57,32 @@ public class SearchService extends Service {
         Spark.staticFiles.expireTime(600);
 
         SearchServiceMetrics.get("/search", searchQueryService::pathSearch);
-
         SearchServiceMetrics.get("/", frontPageService::render);
         SearchServiceMetrics.get("/news.xml", frontPageService::renderNewsFeed);
-        SearchServiceMetrics.get("/:resource", this::serveStatic);
 
         SearchServiceMetrics.post("/site/suggest/", addToCrawlQueueService::suggestCrawling);
 
         SearchServiceMetrics.get("/site-search/:site/*", this::siteSearchRedir);
 
+        SearchServiceMetrics.get("/site", siteInfoService::handleOverview);
         SearchServiceMetrics.get("/site/:site", siteInfoService::handle);
         SearchServiceMetrics.post("/site/:site", siteInfoService::handlePost);
 
+        SearchServiceMetrics.get("/explore", searchBrowseService::handleBrowseRandom);
+        SearchServiceMetrics.get("/explore/:site", searchBrowseService::handleBrowseSite);
+
         SearchServiceMetrics.get("/crosstalk/", crosstalkService::handle);
 
+        SearchServiceMetrics.get("/:resource", this::serveStatic);
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
             wmsa_search_service_error_count.labels(p.pathInfo(), p.requestMethod()).inc();
             errorPageService.serveError(p, q);
+        });
+
+        // Add compression
+        Spark.after((rq, rs) -> {
+            rs.header("Content-Encoding", "gzip");
         });
 
         Spark.awaitInitialization();

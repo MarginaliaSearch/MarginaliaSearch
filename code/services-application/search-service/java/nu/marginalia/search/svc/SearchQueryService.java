@@ -50,7 +50,7 @@ public class SearchQueryService {
                 throw new RedirectException(websiteUrl.url());
             }
 
-            return new SearchParameters(queryParam.trim(), request);
+            return SearchParameters.forRequest(queryParam.trim(), websiteUrl, request);
         }
         catch (Exception ex) {
             // Bots keep sending bad requests, suppress the error otherwise it will

@@ -6,4 +6,8 @@ public record BrowseResultSet(Collection<BrowseResult> results, String focusDoma
     public BrowseResultSet(Collection<BrowseResult> results) {
         this(results, "");
     }
+
+    public boolean hasFocusDomain() {
+        return focusDomain != null && !focusDomain.isBlank();
+    }
 }
