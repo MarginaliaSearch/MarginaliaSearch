@@ -75,7 +75,6 @@ public class DocumentLoaderService {
 
         public void accept(SlopDocumentRecord.MetadataProjection projection)
         {
-
             long urlId = UrlIdCodec.encodeId(
                     domainIdRegistry.getDomainId(projection.domain()),
                     projection.ordinal()
@@ -88,7 +87,7 @@ public class DocumentLoaderService {
             }
 
             try {
-                documentDbWriter.add(new DocdbUrlDetail(
+                details.add(new DocdbUrlDetail(
                         urlId,
                         parsedUrl.get(),
                         projection.title(),
