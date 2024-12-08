@@ -5,13 +5,12 @@ import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.language.model.DocumentSentence;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
 import java.util.List;
 
 public record LinkTexts(
         List<DocumentSentence> linkTexts,
         TIntList counts
-) implements Iterable<DocumentSentence> {
+) {
     public LinkTexts() {
         this(List.of(), new TIntArrayList());
     }
@@ -21,8 +20,21 @@ public record LinkTexts(
     }
 
     @NotNull
-    @Override
-    public Iterator<DocumentSentence> iterator() {
-        return linkTexts.iterator();
+    public LinkTexts.Iter iterator() {
+        return new Iter();
+    }
+
+    public class Iter {
+        private int pos = -1;
+
+        public boolean next() {
+            return ++pos < length();
+        }
+        public int count() {
+            return counts.get(pos);
+        }
+        public DocumentSentence sentence() {
+            return linkTexts.get(pos);
+        }
     }
 }

@@ -6,7 +6,7 @@ import nu.marginalia.keyword.extractors.TitleKeywords;
 import nu.marginalia.keyword.extractors.UrlKeywords;
 import nu.marginalia.model.idx.WordFlags;
 
-class KeywordMetadata {
+public class KeywordMetadata {
 
     private final TitleKeywords titleKeywords;
     private final NameLikeKeywords nameLikeKeywords;
