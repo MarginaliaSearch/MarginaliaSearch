@@ -13,7 +13,7 @@
                 @for (List<SearchFilters.Filter> filterGroup : filters.getFilterGroups())
                     @for (SearchFilters.Filter filter : filterGroup)
                         <label class="flex items-center">
-                            <button title="${filter.displayName}" onclick="document.location='$unsafe{filter.url}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 hover:bg-gray-50 bg-white text-margeblue">
+                            <button title="${filter.displayName}" onclick="document.location='$unsafe{filter.url}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 hover:bg-gray-50 bg-white text-margeblue outline-1 active:outline">
                                 @if (filter.current)
                                     <input type="checkbox" checked class="sr-only" aria-checked="true" />
                                 @else
@@ -38,7 +38,7 @@
             <div class="space-y-2">
                 @for (SearchFilters.SearchOption option : filters.searchOptions())
                     <label class="flex items-center">
-                            <button title="${option.name()}" onclick="document.location='$unsafe{option.getUrl()}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 hover:bg-gray-50  bg-white text-margeblue">
+                            <button title="${option.name()}" onclick="document.location='$unsafe{option.getUrl()}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 hover:bg-gray-50  bg-white text-margeblue outline-1 active:outline">
                                 @if (option.isSet())
                                     <input type="checkbox" checked class="sr-only" aria-checked="true" />
                                 @else
