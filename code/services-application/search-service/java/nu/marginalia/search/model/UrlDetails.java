@@ -92,8 +92,20 @@ public class UrlDetails implements Comparable<UrlDetails> {
     public String displayTitle() {
         StringBuilder sb = new StringBuilder();
 
+        int distSinceBreak = 0;
+
+        char c = ' ';
+        int prevC = ' ';
         for (int i = 0; i < title.length(); i++) {
-            char c = title.charAt(i);
+            prevC = c;
+            c = title.charAt(i);
+
+            if (Character.isSpaceChar(c)) {
+                distSinceBreak = 0;
+            }
+            else {
+                distSinceBreak ++;
+            }
 
             if (c == '<') {
                 sb.append("&lt;");
@@ -105,8 +117,19 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append("&amp;");
             }
             else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
+                distSinceBreak = 0;
                 sb.append(c);
                 sb.append("&shy;");
+            }
+            else if (Character.isUpperCase(c) && Character.isLowerCase(prevC)) {
+                distSinceBreak = 0;
+                sb.append("&shy;");
+                sb.append(c);
+            }
+            else if (distSinceBreak > 16) {
+                distSinceBreak = 0;
+                sb.append("&shy;");
+                sb.append(c);
             }
             else {
                 sb.append(c);
