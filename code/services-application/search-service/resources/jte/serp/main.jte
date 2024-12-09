@@ -18,17 +18,15 @@
 <header class="border-b border-gray-300 bg-white sm:static sticky top-0 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
-            <div class="md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
-            <div class="fixed sm:static bottom-0 left-0 w-full p-5 sm:p-0 border sm:border-none bg-gray-50/90 backdrop-blur-sm  sm:bg-white">
+            <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
+            <div class="w-full p-2 border-none backdrop-blur-sm">
                 @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters())
             </div>
             <div class="grow"></div>
-            <div class="sticky top-0">
-            <button class="sm:hidden text-sm bg-margeblue text-white p-2 sm:p-3 rounded" id="filter-button">
+            <button class="fixed bottom-10 right-5 sm:hidden text-sm bg-margeblue text-white p-4 rounded-xl" id="filter-button">
                 <i class="fas fa-filter mr-3"></i>
                 Filters
             </button>
-            </div>
         </div>
     </div>
 </header>
