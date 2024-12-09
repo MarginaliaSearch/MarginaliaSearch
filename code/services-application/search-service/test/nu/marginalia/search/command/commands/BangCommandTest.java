@@ -15,7 +15,7 @@ class BangCommandTest {
     public void testG() {
         try {
             bangCommand.process(null,
-                    new SearchParameters(" !g test",
+                    new SearchParameters(null, " !g test",
                     null, null, null, null, null, false, 1)
             );
             Assertions.fail("Should have thrown RedirectException");
