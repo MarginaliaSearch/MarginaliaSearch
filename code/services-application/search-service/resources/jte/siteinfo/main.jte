@@ -124,8 +124,6 @@
         @template.siteinfo.view.reportDomain(reportDomain = reportDomain)
     @elseif (model instanceof SearchSiteInfoService.Backlinks backlinks)
         @template.siteinfo.view.backlinks(backlinks = backlinks)
-    @elseif (model instanceof SearchSiteInfoService.ReportDomain reportDomain)
-        @template.siteinfo.view.reportDomain(reportDomain = reportDomain)
     @elseif (model instanceof SearchSiteInfoService.Docs docs)
         @template.siteinfo.view.docs(docs = docs)
     @endif
