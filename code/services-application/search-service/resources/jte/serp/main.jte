@@ -38,7 +38,7 @@
     @template.serp.part.sidebar(filters = results.getFilters())
 
     <!-- Main content -->
-    <main class="flex-1 p-4 max-w-3xl space-y-4">
+    <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
 
         @if (results.hasFocusDomain())
             <div class="border rounded flex space-x-4 bg-white text-gray-600 text-sm p-4 items-center">
@@ -48,7 +48,7 @@
             </div>
         @endif
 
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
             <!-- Result items -->
             @for(ClusteredUrlDetails details : results.results)
                 @template.serp.part.result(result = details, parameters = results.getParams(), domainSearch = results.hasFocusDomain())

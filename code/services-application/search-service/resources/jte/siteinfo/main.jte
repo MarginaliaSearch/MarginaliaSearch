@@ -14,7 +14,7 @@
 @template.part.navbar(navbar = navbar)
 
 <header class="border-gray-300 bg-white  shadow-md">
-    <div class="max-w-[1400px] mx-auto px-4 py-4">
+    <div class="max-w-[1400px] mx-auto p-4">
         <div class="flex place-items-baseline space-x-2">
             <span class="text-gray-900 text-md font-mono rounded-sm block p-2.5">
                 ${model.domain()}

@@ -27,14 +27,14 @@
     </div>
     
     @for (UrlDetails details : group.urlDetails())
-        <div class="p-2 font-medium text-sm text-gray-800 mx-2 mt-2">${details.title}</div>
+        <div class="p-2 font-medium text-sm text-gray-800 mx-2 mt-2">$unsafe{details.displayTitle()}</div>
         <div class="p-2 mx-2 text-gray-700 text-sm">
-            ${details.description}
+            $unsafe{details.displayDescription()}
         </div>
         <div class="p-2 text-sm border-b pb-6">
-            <a rel="external noopener nofollow" href="${details.url.toString()}" class="mx-3 text-liteblue flex space-x-2 place-items-baseline">
+            <a rel="external noopener nofollow" href="${details.url.toString()}" class="mx-3 text-liteblue flex space-x-2 place-items-baseline hyphens-auto">
                 <i class="fa fa-link"></i>
-                <span>${details.url.toString()}</span>
+                <span class="grow break-all">$unsafe{details.displayUrl()}</span>
             </a>
         </div>
     @endfor

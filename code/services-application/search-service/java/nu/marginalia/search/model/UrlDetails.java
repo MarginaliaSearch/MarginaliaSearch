@@ -89,7 +89,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
     /** Helper that inserts hyphenation hints and escapes
      * semantically meaningful codepoints into entity codes */
-    public String titleHyphenHints() {
+    public String displayTitle() {
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < title.length(); i++) {
@@ -118,7 +118,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
     /** Helper that inserts hyphenation hints and escapes
      * semantically meaningful codepoints into entity codes */
-    public String descriptionHyphenHints() {
+    public String displayDescription() {
         StringBuilder sb = new StringBuilder();
 
         int distSinceSpace = 0;
@@ -155,18 +155,11 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
     /** Helper that inserts hyphenation hints and escapes
      * semantically meaningful codepoints into entity codes */
-    public String urlHyphenHints() {
+    public String displayUrl() {
         StringBuilder sb = new StringBuilder();
         String urlStr = url.toString();
-        int distSinceSpace = 0;
         for (int i = 0; i < urlStr.length(); i++) {
             char c = urlStr.charAt(i);
-            if (Character.isSpaceChar(c)) {
-                distSinceSpace = 0;
-            }
-            else {
-                distSinceSpace ++;
-            }
 
             if (c == '<') {
                 sb.append("&lt;");
@@ -180,7 +173,6 @@ public class UrlDetails implements Comparable<UrlDetails> {
             else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
                 sb.append(c);
                 sb.append("&shy;");
-                distSinceSpace = 0;
             }
             else {
                 sb.append(c);

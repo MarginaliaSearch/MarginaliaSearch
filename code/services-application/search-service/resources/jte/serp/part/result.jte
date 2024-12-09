@@ -8,7 +8,7 @@
 
 <div class="bg-white p-4 border border-gray-300 flex rounded">
     <div class="flex flex-col grow">
-        <div class="flex">
+        <div class="flex space-x-0">
             <div class="flex flex-col grow" >
                 <div class="flex flex-row space-x-2 place-items-center">
                     <div class="flex-0">
@@ -17,12 +17,12 @@
                     <div class="flex grow justify-between items-start">
                         <div class="flex-1">
                             <h2 class="text-md sm:text-xl ${result.colorScheme.textColor} font-serif mr-4 break-words hyphens-auto">
-                                <a href="${result.first.url.toString()}" rel="noopener noreferrer">$unsafe{result.first.titleHyphenHints()}</a>
+                                <a href="${result.first.url.toString()}" rel="noopener noreferrer">$unsafe{result.first.displayTitle()}</a>
                             </h2>
 
                             <div class="text-sm mt-1 text-gray-600">
                                 <a class="text-liteblue underline break-all" href="${result.first.url.toString()}"
-                                   rel="noopener noreferrer" tabindex="-1">$unsafe{result.first.urlHyphenHints()}</a>
+                                   rel="noopener noreferrer" tabindex="-1">$unsafe{result.first.displayUrl()}</a>
                             </div>
                         </div>
                     </div>
@@ -31,7 +31,7 @@
 
                 <div class="overflow-auto flex-1">
                 <p class="mt-2 text-sm text-black leading-relaxed break-words">
-                    $unsafe{result.first.descriptionHyphenHints()}
+                    $unsafe{result.first.displayDescription()}
                 </p>
                 </div>
 
@@ -56,7 +56,7 @@
                 <ul class="pl-2 mt-2 underline text-liteblue">
                     @for(UrlDetails item : result.rest)
                         <li class="-indent-4 pl-4 mb-1 break-words hyphens-auto">
-                            <a href="${item.url.toString()}" rel="noopener noreferrer">$unsafe{item.titleHyphenHints()}</a>
+                            <a href="${item.url.toString()}" rel="noopener noreferrer">$unsafe{item.displayTitle()}</a>
                         </li>
                     @endfor
                 </ul>
