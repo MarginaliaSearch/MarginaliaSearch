@@ -15,7 +15,7 @@
 @template.part.navbar(navbar = navbar)
 
 <div>
-<header class="border-b border-gray-300 bg-white sm:static sticky top-0 shadow-md">
+<header class="border-b border-gray-300 bg-white static top-0 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
