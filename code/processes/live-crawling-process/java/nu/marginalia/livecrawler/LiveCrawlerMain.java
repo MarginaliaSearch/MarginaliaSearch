@@ -41,6 +41,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LIVE_CRAWLER_INBOX;
 
@@ -196,7 +197,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
                     writer.setOrdinalOffset(67_000_000);
 
                     for (SerializableCrawlDataStream stream : hb.wrap("Processing", dataSet.getDataStreams())) {
-                        writer.write(domainProcessor.sideloadProcessing(stream, 0));
+                        writer.write(domainProcessor.sideloadProcessing(stream, 0, Set.of("special:live")));
                     }
                 }
 

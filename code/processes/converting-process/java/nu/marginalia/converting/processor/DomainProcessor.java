@@ -66,6 +66,16 @@ public class DomainProcessor {
         return fullProcessing(domain);
     }
 
+    public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
+        try {
+            return new SideloadProcessing(dataStream, sizeHint, extraKeywords);
+        }
+        catch (Exception ex) {
+            logger.warn("Failed to process domain sideload", ex);
+            return null;
+        }
+    }
+
     public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) {
         try {
             return new SideloadProcessing(dataStream, sizeHint);
@@ -74,7 +84,6 @@ public class DomainProcessor {
             logger.warn("Failed to process domain sideload", ex);
             return null;
         }
-
     }
 
     public class SideloadProcessing implements ConverterBatchWritableIf, SideloadSource {
@@ -89,6 +98,10 @@ public class DomainProcessor {
         );
 
         SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
+            this(dataStream, sizeHint, List.of());
+        }
+
+        SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) throws IOException {
             this.dataStream = dataStream;
 
             if (!dataStream.hasNext() || !(dataStream.next() instanceof CrawledDomain crawledDomain))
@@ -100,6 +113,7 @@ public class DomainProcessor {
             domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
 
             documentDecorator = new DocumentDecorator();
+            documentDecorator.addTerms(extraKeywords);
 
             processDomain(crawledDomain, domain, documentDecorator);
 
