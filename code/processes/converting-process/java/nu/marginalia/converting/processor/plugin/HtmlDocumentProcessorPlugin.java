@@ -129,7 +129,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
         final DocumentHeaders documentHeaders = new DocumentHeaders(crawledDocument.headers);
 
-        final var generatorParts = documentGeneratorExtractor.detectGenerator(doc, documentHeaders);
+        final var generatorParts = documentGeneratorExtractor.detectGenerator(url, doc, documentHeaders);
 
         final var specialization = htmlProcessorSpecializations.select(generatorParts, url);
 

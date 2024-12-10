@@ -3,11 +3,13 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.test.CommonTestData;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.net.URISyntaxException;
 import java.util.Set;
 
 class LemmySpecializationTest {
@@ -37,9 +39,9 @@ class LemmySpecializationTest {
     }
 
     @Test
-    void generatorExtraction() {
-        var generatorIndex = generatorExtractor.detectGenerator(Jsoup.parse(lemmyIndexHtml), new DocumentHeaders(""));
-        var generatorPost = generatorExtractor.detectGenerator(Jsoup.parse(lemmyPost), new DocumentHeaders(""));
+    void generatorExtraction() throws URISyntaxException {
+        var generatorIndex = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), Jsoup.parse(lemmyIndexHtml), new DocumentHeaders(""));
+        var generatorPost = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), Jsoup.parse(lemmyPost), new DocumentHeaders(""));
 
         System.out.println(generatorIndex);
         System.out.println(generatorPost);

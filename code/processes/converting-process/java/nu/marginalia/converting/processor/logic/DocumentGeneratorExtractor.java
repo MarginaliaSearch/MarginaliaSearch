@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.logic;
 
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.model.GeneratorType;
+import nu.marginalia.model.EdgeUrl;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 
@@ -13,7 +14,12 @@ import java.util.List;
 public class DocumentGeneratorExtractor {
     private static final String defaultValue = "unset";
 
-    public DocumentGenerator detectGenerator(Document doc, DocumentHeaders responseHeaders) {
+    public DocumentGenerator detectGenerator(EdgeUrl url, Document doc, DocumentHeaders responseHeaders) {
+
+        // Fextralife leaves no known tech fingerprint, but we know it's a wiki software of some sort
+        if (url.domain.toString().endsWith(".wiki.fextralife.com")) {
+            return DocumentGenerator.of("wiki");
+        }
 
         var tags = doc.select("meta[name=generator]");
 
@@ -68,6 +74,7 @@ public class DocumentGeneratorExtractor {
                     return DocumentGenerator.of(parts[0]);
                 }
         }
+
 
         if (parts.length > 1) {
             return DocumentGenerator.of(parts[0], parts[0] + "_" + truncVersion(parts[1]));
@@ -282,7 +289,7 @@ public class DocumentGeneratorExtractor {
                      -> GeneratorType.FORUM;
                 case "mediawiki", "dokuwiki", "wikidot", "sharepoint"
                      -> GeneratorType.WIKI;
-                case "pandoc", "mkdocs", "doxygen", "javadoc", "asciidoc", "jsdoc", "FluxGarden"
+                case "pandoc", "mkdocs", "doxygen", "javadoc", "asciidoc", "jsdoc", "FluxGarden", "wiki"
                      -> GeneratorType.DOCS;
                 case "woocommerce", "shopfactory", "prestashop", "magento", "shopify", "sitedirect", "seomatic", "osclass"
                      -> GeneratorType.ECOMMERCE_AND_SPAM;

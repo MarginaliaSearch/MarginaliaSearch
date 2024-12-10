@@ -3,11 +3,13 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.test.CommonTestData;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.net.URISyntaxException;
 import java.util.Set;
 
 class XenForoSpecializationTest {
@@ -34,8 +36,8 @@ class XenForoSpecializationTest {
     }
 
     @Test
-    void generatorExtraction() {
-        var gen = generatorExtractor.detectGenerator(Jsoup.parse(thread), new DocumentHeaders(""));
+    void generatorExtraction() throws URISyntaxException {
+        var gen = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), Jsoup.parse(thread), new DocumentHeaders(""));
 
         System.out.println(gen);
     }
