@@ -17,7 +17,7 @@ import java.util.*;
 public class DocumentKeywordsBuilder {
     public final Object2ByteOpenHashMap<String> wordToMeta;
     public final HashMap<String, IntList> wordToPos;
-    public final Map<Character, List<DocumentWordSpan>> wordSpans = new HashMap<>();
+    public final Map<HtmlTag, List<DocumentWordSpan>> wordSpans = new HashMap<>();
 
     /**
      * These ware keywords that had signals of high relevance
@@ -70,7 +70,7 @@ public class DocumentKeywordsBuilder {
                 positionsForTag.add(span.end());
             }
 
-            spans.add(new CodedWordSpan((byte) tag.charValue(), VarintCodedSequence.generate(positionsForTag)));
+            spans.add(new CodedWordSpan(tag.code, VarintCodedSequence.generate(positionsForTag)));
         });
 
         return new DocumentKeywords(wordArray, meta.toArray(), positions, spans);
@@ -128,7 +128,7 @@ public class DocumentKeywordsBuilder {
 
     public void addSpans(List<DocumentWordSpan> newSpans) {
         for (var span : newSpans) {
-            wordSpans.computeIfAbsent((char) span.tag().code, k -> new ArrayList<>()).add(span);
+            wordSpans.computeIfAbsent(span.tag(), k -> new ArrayList<>()).add(span);
         }
     }
 
