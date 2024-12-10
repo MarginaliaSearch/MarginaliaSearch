@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class BrowseCommand implements SearchCommandInterface {
+public class BrowseRedirectCommand implements SearchCommandInterface {
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^browse:[.A-Za-z\\-0-9:]+$").asPredicate();
 
     @Inject
-    public BrowseCommand()
+    public BrowseRedirectCommand()
     {
 
     }

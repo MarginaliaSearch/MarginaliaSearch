@@ -14,7 +14,7 @@ public class CommandEvaluator {
 
     @Inject
     public CommandEvaluator(
-            BrowseCommand browse,
+            BrowseRedirectCommand browse,
             ConvertCommand convert,
             DefinitionCommand define,
             BangCommand bang,

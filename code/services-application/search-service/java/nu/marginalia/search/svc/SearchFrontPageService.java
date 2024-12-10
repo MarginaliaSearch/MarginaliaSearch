@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
@@ -34,8 +33,7 @@ public class SearchFrontPageService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchFrontPageService(RendererFactory rendererFactory,
-                                  HikariDataSource dataSource,
+    public SearchFrontPageService(HikariDataSource dataSource,
                                   JteRenderer jteRenderer,
                                   SearchQueryCountService searchVisitorCount, WebsiteUrl websiteUrl
     ) throws IOException {
@@ -51,10 +49,6 @@ public class SearchFrontPageService {
         return jteRenderer.render("serp/first.jte",
                 Map.of("navbar", NavbarModel.SEARCH, "websiteUrl", websiteUrl)
                 );
-//        return template.render(new IndexModel(
-//                getNewsItems(),
-//                searchVisitorCount.getQueriesPerMinute()
-//        ));
     }
 
 

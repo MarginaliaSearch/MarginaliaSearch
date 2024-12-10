@@ -11,8 +11,6 @@ import nu.marginalia.api.feeds.RpcFeedItem;
 import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.renderer.MustacheRenderer;
-import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.SearchOperator;
@@ -26,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +38,6 @@ public class SearchSiteInfoService {
     private final DomainInfoClient domainInfoClient;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
-    private final MustacheRenderer<Object> renderer;
     private final FeedsClient feedsClient;
     private final LiveCaptureClient liveCaptureClient;
     private final ScreenshotService screenshotService;
@@ -52,21 +48,18 @@ public class SearchSiteInfoService {
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
                                  DomainInfoClient domainInfoClient,
-                                 RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries,
                                  FeedsClient feedsClient,
                                  LiveCaptureClient liveCaptureClient,
                                  ScreenshotService screenshotService,
                                  HikariDataSource dataSource,
-                                 JteRenderer jteRenderer) throws IOException
+                                 JteRenderer jteRenderer)
     {
         this.searchOperator = searchOperator;
         this.domainInfoClient = domainInfoClient;
         this.flagSiteService = flagSiteService;
         this.domainQueries = domainQueries;
-
-        this.renderer = rendererFactory.renderer("search/site-info/site-info");
 
         this.feedsClient = feedsClient;
         this.liveCaptureClient = liveCaptureClient;

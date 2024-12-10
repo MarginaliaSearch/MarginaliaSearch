@@ -1,7 +1,0 @@
-<h2>Links</h2>
-<fieldset>
-  <legend>Link Graph</legend>
-    Ranking: {{ranking}}%<br/>
-    Incoming Links: {{incomingLinks}} <br/>
-    Outbound Links: {{outboundLinks}} <br/>
-</fieldset>

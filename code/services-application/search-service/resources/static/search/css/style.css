@@ -1727,6 +1727,10 @@ video {
     display: inline;
   }
 
+  .md\:hidden {
+    display: none;
+  }
+
   .md\:w-32 {
     width: 8rem;
   }
@@ -1755,6 +1759,10 @@ video {
     place-items: start;
   }
 
+  .md\:place-items-baseline {
+    place-items: baseline;
+  }
+
   .md\:gap-8 {
     gap: 2rem;
   }
@@ -1769,6 +1777,10 @@ video {
     --tw-space-x-reverse: 0;
     margin-right: calc(2rem * var(--tw-space-x-reverse));
     margin-left: calc(2rem * calc(1 - var(--tw-space-x-reverse)));
+  }
+
+  .md\:p-4 {
+    padding: 1rem;
   }
 
   .md\:px-4 {

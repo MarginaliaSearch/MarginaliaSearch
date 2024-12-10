@@ -1,9 +1,9 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.renderer.MustacheRenderer;
-import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.SearchOperator;
+import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.model.SimpleSearchResults;
 import nu.marginalia.search.model.UrlDetails;
 import org.apache.commons.lang3.StringUtils;
@@ -15,18 +15,18 @@ import spark.Response;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public class SearchCrosstalkService {
     private static final Logger logger = LoggerFactory.getLogger(SearchCrosstalkService.class);
     private final SearchOperator searchOperator;
-    private final MustacheRenderer<CrosstalkResult> renderer;
+    private final JteRenderer renderer;
 
     @Inject
-    public SearchCrosstalkService(SearchOperator searchOperator,
-                                  RendererFactory rendererFactory) throws IOException
+    public SearchCrosstalkService(SearchOperator searchOperator, JteRenderer renderer) throws IOException
     {
         this.searchOperator = searchOperator;
-        this.renderer = rendererFactory.renderer("search/site-info/site-crosstalk");
+        this.renderer = renderer;
     }
 
     public Object handle(Request request, Response response) throws SQLException {
@@ -48,23 +48,28 @@ public class SearchCrosstalkService {
 
         CrosstalkResult model = new CrosstalkResult(parts[0], parts[1], resAtoB.results, resBtoA.results);
 
-        return renderer.render(model);
+        return renderer.render(
+                "siteinfo/crosstalk.jte",
+                Map.of("model", model,
+                        "navbar", NavbarModel.SITEINFO));
     }
 
 
 
-    private record CrosstalkResult(String domainA,
+    public record CrosstalkResult(String domainA,
                                    String domainB,
-                                   List<UrlDetails> forward,
-                                   List<UrlDetails> backward)
+                                   List<UrlDetails> aToB,
+                                   List<UrlDetails> bToA)
     {
 
-        public boolean isFocusDomain() {
-            return true; // Hack to get the search result templates behave well
-        }
         public boolean hasBoth() {
-            return !forward.isEmpty() && !backward.isEmpty();
+            return !aToB.isEmpty() && !bToA.isEmpty();
         }
-
+        public boolean hasA() {
+            return !aToB.isEmpty();
+        }
+        public boolean hasB() {
+            return !bToA.isEmpty();
+        }
     }
 }
