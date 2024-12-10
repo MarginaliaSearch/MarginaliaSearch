@@ -38,7 +38,9 @@
             <dl class="mx-3 text-gray-800">
                 @for (SearchSiteInfoService.FeedItem item : siteInfo.feed().items())
                     <dt class="ml-2 flex space-x-4">
-                        <a class="grow underline text-liteblue text-sm" rel="noopener nofollow external ugc" href="${item.url()}">${item.title()}</a>
+                        <a class="grow underline text-liteblue text-sm" rel="noopener nofollow external ugc" href="${item.url()}">
+                            ${item.title()} @if (item.title().isBlank()) [No Title] @endif
+                        </a>
                         <span class="whitespace-nowrap">${item.pubDay()}</span>
                     </dt>
                     <dd class="ml-6 text-sm mb-4">${item.description()}</dd>
