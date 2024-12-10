@@ -57,6 +57,7 @@ public class DocumentGeneratorExtractor {
             case "one.com":
             case "wix.com":
             case "wpbakery":
+            case "FluxGarden":
                 return DocumentGenerator.of(parts[0]);
             case "adobe":
             case "microsoft":
@@ -183,7 +184,7 @@ public class DocumentGeneratorExtractor {
                 return DocumentGenerator.of("apache");
             }
             if (header.contains("server: cowboy")) {
-                return DocumentGenerator.of("cowboy"); // erlang, really?!
+                return DocumentGenerator.of("cowboy"); // erlang, apparently
             }
         }
 
@@ -281,7 +282,7 @@ public class DocumentGeneratorExtractor {
                      -> GeneratorType.FORUM;
                 case "mediawiki", "dokuwiki", "wikidot", "sharepoint"
                      -> GeneratorType.WIKI;
-                case "pandoc", "mkdocs", "doxygen", "javadoc", "asciidoc", "jsdoc"
+                case "pandoc", "mkdocs", "doxygen", "javadoc", "asciidoc", "jsdoc", "FluxGarden"
                      -> GeneratorType.DOCS;
                 case "woocommerce", "shopfactory", "prestashop", "magento", "shopify", "sitedirect", "seomatic", "osclass"
                      -> GeneratorType.ECOMMERCE_AND_SPAM;
