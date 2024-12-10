@@ -11,6 +11,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.*;
+import nu.marginalia.search.svc.SearchCrosstalkService;
 import nu.marginalia.search.svc.SearchFlagSiteService;
 import nu.marginalia.search.svc.SearchSiteInfoService;
 
@@ -257,5 +258,13 @@ public class MockedSearchResults {
                 new SearchSiteInfoService.SiteOverviewModel.DiscoveredDomain("www.example.com", "2024-09-23T11:22:33"),
                 new SearchSiteInfoService.SiteOverviewModel.DiscoveredDomain("other.example.com", "2023-08-25T11:22:33")
         ));
+    }
+
+    public static Object mockCrosstalkModel() throws URISyntaxException {
+        return new SearchCrosstalkService.CrosstalkResult(
+                "www.example.com",
+                "other.example.com",
+                List.of(mockUrlDetails("https://www.example.com/some-incredibly-long-address-that-goes-on-and-on", "One document")),
+                List.of(mockUrlDetails("https://other.example.com/", "Other document")));
     }
 }

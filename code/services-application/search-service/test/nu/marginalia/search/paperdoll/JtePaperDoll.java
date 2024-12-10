@@ -98,6 +98,11 @@ public class JtePaperDoll {
                 (rq, rs) -> MockedSearchResults.mockSiteInfoOverview(),
                 ret -> this.render("siteinfo/start.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
         );
+
+        Spark.get("/site-info-crosstalk-ab",
+                (rq, rs) -> MockedSearchResults.mockCrosstalkModel(),
+                ret -> this.render("siteinfo/crosstalk.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
+        );
         Spark.get("/screenshot/*", (rq, rsp) -> {
             rsp.type("image/svg+xml");
 
