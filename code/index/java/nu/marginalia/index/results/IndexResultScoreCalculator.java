@@ -129,9 +129,9 @@ public class IndexResultScoreCalculator {
         double score = normalize(
                 score_firstPosition + score_proximity + score_verbatim
                         + score_bM25
-                        + score_bFlags
-                        + Math.max(0, documentBonus),
-                -Math.min(0, documentBonus));
+                        + score_bFlags,
+                -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
+        );
 
         if (Double.isNaN(score)) { // This should never happen but if it does, we want to know about it
             if (getClass().desiredAssertionStatus()) {
