@@ -53,7 +53,7 @@
     </div>
 </header>
 
-<div class="max-w-[1000px] mx-auto flex gap-1 flex-col md:flex-row place-items-center md:place-items-start py-4">
+<div class="max-w-[1000px] mx-auto flex gap-1 flex-col md:flex-row place-items-center md:place-items-start py-4 basis-1/2">
 
     @if (model.hasA())
     <div class="border rounded bg-white flex flex-col overflow-hidden mx-4">
