@@ -2,40 +2,41 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.WebsiteUrl;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.FormParam;
+import io.jooby.annotation.POST;
+import io.jooby.annotation.Path;
 import nu.marginalia.db.DbDomainQueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 public class SearchAddToCrawlQueueService {
 
     private final DbDomainQueries domainQueries;
-    private final WebsiteUrl websiteUrl;
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(SearchAddToCrawlQueueService.class);
 
     @Inject
     public SearchAddToCrawlQueueService(DbDomainQueries domainQueries,
-                                        WebsiteUrl websiteUrl,
                                         HikariDataSource dataSource) {
         this.domainQueries = domainQueries;
-        this.websiteUrl = websiteUrl;
         this.dataSource = dataSource;
     }
 
-    public Object suggestCrawling(Request request, Response response) throws SQLException {
-        logger.info("{}", request.queryParams());
-        int id = Integer.parseInt(request.queryParams("id"));
-        boolean nomisclick = "on".equals(request.queryParams("nomisclick"));
+    @POST
+    @Path("/site/suggest/")
+    public ModelAndView<?> suggestCrawling(
+            @FormParam int id,
+            @FormParam String nomisclick
+    ) throws SQLException {
 
         String domainName = getDomainName(id);
 
-        if (nomisclick) {
+        if ("on".equals(nomisclick)) {
             logger.info("Adding {} to crawl queue", domainName);
             addToCrawlQueue(id);
         }
@@ -43,9 +44,7 @@ public class SearchAddToCrawlQueueService {
             logger.info("Nomisclick not set, not adding {} to crawl queue", domainName);
         }
 
-        response.redirect(websiteUrl.withPath("/site/" + domainName));
-
-        return "";
+        return new MapModelAndView("/redirect.jte", Map.of("url", "/site/"+domainName));
     }
 
     private void addToCrawlQueue(int id) throws SQLException {
@@ -62,7 +61,7 @@ public class SearchAddToCrawlQueueService {
     private String getDomainName(int id) {
         var domain = domainQueries.getDomain(id);
         if (domain.isEmpty())
-            Spark.halt(404);
+            throw new IllegalArgumentException();
         return domain.get().toString();
     }
 }

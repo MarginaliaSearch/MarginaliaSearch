@@ -6,11 +6,9 @@ import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.search.model.SearchProfile;
-import spark.Request;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.StringJoiner;
 
 import static nu.marginalia.search.command.SearchRecentParameter.RECENT;
@@ -37,19 +35,6 @@ public record SearchParameters(WebsiteUrl url,
                 SearchAdtechParameter.DEFAULT,
                 false,
                 page);
-    }
-    public static SearchParameters forRequest(String queryString, WebsiteUrl url, Request request) {
-        return new SearchParameters(
-                url,
-                queryString,
-                SearchProfile.getSearchProfile(request.queryParams("profile")),
-                SearchJsParameter.parse(request.queryParams("js")),
-                SearchRecentParameter.parse(request.queryParams("recent")),
-                SearchTitleParameter.parse(request.queryParams("searchTitle")),
-                SearchAdtechParameter.parse(request.queryParams("adtech")),
-                "true".equals(request.queryParams("newfilter")),
-                Integer.parseInt(Objects.requireNonNullElse(request.queryParams("page"), "1"))
-            );
     }
 
     public String profileStr() {

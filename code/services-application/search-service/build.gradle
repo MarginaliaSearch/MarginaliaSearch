@@ -1,10 +1,8 @@
 plugins {
     id 'java'
-    id 'io.freefair.sass-base' version '8.4'
-    id 'io.freefair.sass-java' version '8.4'
     id 'application'
     id 'jvm-test-suite'
-
+    id 'gg.jte.gradle' version '3.1.15'
     id 'com.google.cloud.tools.jib' version '3.4.3'
 }
 
@@ -15,18 +13,16 @@ application {
 
 tasks.distZip.enabled = false
 
-
+jte {
+    sourceDirectory = java.nio.file.Path.of('resources/jte')
+    targetDirectory = java.nio.file.Path.of('build/classes/jte-precompiled')
+    generate()
+}
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     }
 }
-sass {
-    sourceMapEnabled = true
-    sourceMapEmbed = true
-    outputStyle = EXPANDED
-}
-
 
 apply from: "$rootProject.projectDir/srcsets.gradle"
 apply from: "$rootProject.projectDir/docker.gradle"
@@ -64,17 +60,23 @@ dependencies {
         exclude group: 'com.google.guava'
     }
     implementation libs.handlebars
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
-    implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.jte
+
+    libs.bundles.jooby.get().each {
+        implementation dependencies.create(it) {
+            // Jooby pulls in an incompatible slf4j version that breaks all logs
+            exclude group: 'org.slf4j'
+        }
+    }
+
     implementation libs.fastutil
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
     implementation libs.bundles.nlp
+
+    annotationProcessor libs.jooby.apt
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
@@ -85,12 +87,14 @@ dependencies {
     testImplementation 'org.testcontainers:mariadb:1.17.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
     testImplementation project(':code:libraries:test-helpers')
+
+    testImplementation dependencies.create(libs.spark.get())
 }
 
 task compileTailwind {
     def inputFile = file('tailwind/globals.css')
     def configFile = file('tailwind/tailwind.config.js')
-    def outputFile = file('resources/static/search/css/style.css')
+    def outputFile = file('resources/static/css/style.css')
     def jteDir = file('resources/jte')
 
     inputs.file inputFile

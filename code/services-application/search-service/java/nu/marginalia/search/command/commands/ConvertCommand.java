@@ -1,12 +1,13 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
 import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.svc.SearchUnitConversionService;
-import spark.Response;
 
 import java.util.Map;
 import java.util.Optional;
@@ -24,9 +25,10 @@ public class ConvertCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters) {
         var conversion = searchUnitConversionService.tryConversion(parameters.query());
-        return conversion.map(s -> renderer.render("serp/unit-conversion.jte", Map.of(
+        return conversion.map(s -> new MapModelAndView("serp/unit-conversion.jte",
+                Map.of(
                 "parameters", parameters,
                 "navbar", NavbarModel.SEARCH,
                 "result", s)

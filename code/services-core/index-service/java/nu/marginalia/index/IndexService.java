@@ -11,7 +11,7 @@ import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.mq.MqRequest;
 import nu.marginalia.storage.FileStorageService;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ import java.util.List;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
 
-public class IndexService extends Service {
+public class IndexService extends SparkService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @NotNull

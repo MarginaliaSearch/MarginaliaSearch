@@ -1,10 +1,12 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
-import spark.Response;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -19,7 +21,7 @@ public class BrowseRedirectCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
@@ -35,13 +37,9 @@ public class BrowseRedirectCommand implements SearchCommandInterface {
             redirectPath = "/explore/" + word;
         }
 
-        return Optional.of("""
-                <!DOCTYPE html>
-                <html lang="en">
-                <meta charset="UTF-8">
-                <title>Redirecting...</title>
-                <meta http-equiv="refresh" content="0; %s">
-                """.formatted(redirectPath));
+        return Optional.of(
+                new MapModelAndView("/redirect.jte", Map.of("url", redirectPath))
+        );
     }
 
 

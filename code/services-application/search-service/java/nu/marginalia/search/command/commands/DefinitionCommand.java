@@ -2,6 +2,8 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.math.model.DictionaryResponse;
 import nu.marginalia.search.JteRenderer;
@@ -10,7 +12,6 @@ import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,14 +36,14 @@ public class DefinitionCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
 
         DictionaryResponse result = lookupDefinition(parameters.query());
 
-        return Optional.of(renderer.render("serp/dict-lookup.jte",
+        return Optional.of(new MapModelAndView("serp/dict-lookup.jte",
                 Map.of("parameters", parameters,
                         "result", result,
                         "navbar", NavbarModel.SEARCH)

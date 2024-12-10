@@ -42,6 +42,12 @@ dependencies {
     implementation libs.bundles.curator
     implementation libs.bundles.flyway
 
+    libs.bundles.jooby.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'org.slf4j'
+        }
+    }
+
     testImplementation libs.bundles.slf4j.test
     implementation libs.bundles.mariadb
 

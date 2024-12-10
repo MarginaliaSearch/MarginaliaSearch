@@ -1,6 +1,11 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.Path;
+import io.jooby.annotation.PathParam;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
@@ -12,10 +17,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.results.BrowseResultCleaner;
-import spark.Request;
-import spark.Response;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -47,16 +49,19 @@ public class SearchBrowseService {
         this.browseResultCleaner = browseResultCleaner;
     }
 
-    public String handleBrowseRandom(Request request, Response response) throws IOException {
-        return jteRenderer.render("explore/main.jte",
+    @GET
+    @Path("/explore")
+    public ModelAndView<?> handleBrowseRandom() {
+        return new MapModelAndView("explore/main.jte",
                 Map.of("navbar", NavbarModel.EXPLORE,
                         "results", getRandomEntries(1)
                 )
         );
     }
 
-    public String handleBrowseSite(Request request, Response response) throws Exception {
-        String domainName = request.params("site");
+    @GET
+    @Path("/explore/{domainName}")
+    public ModelAndView<?> handleBrowseSite(@PathParam String domainName) throws Exception {
         BrowseResultSet entries;
 
         try {
@@ -66,7 +71,7 @@ public class SearchBrowseService {
             entries = new BrowseResultSet(List.of(), domainName);
         }
 
-        return jteRenderer.render("explore/main.jte",
+        return new MapModelAndView("explore/main.jte",
                 Map.of("navbar", NavbarModel.EXPLORE,
                         "results", entries
                 )

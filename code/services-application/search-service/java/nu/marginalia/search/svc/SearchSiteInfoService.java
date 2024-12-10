@@ -2,6 +2,9 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.*;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
@@ -21,8 +24,6 @@ import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -68,17 +69,12 @@ public class SearchSiteInfoService {
         this.jteRenderer = jteRenderer;
     }
 
-    public Object handleOverview(Request request, Response response) {
-        String domainName = request.queryParams("domain");
-        if (domainName != null) {
+    @GET
+    @Path("/site")
+    public ModelAndView<?> handleOverview(@PathParam String domain) {
+        if (domain != null) {
             // redirect to /site/domainName
-            return """
-                <!DOCTYPE html>
-                <html lang="en">
-                <meta charset="UTF-8">
-                <title>Redirecting...</title>
-                <meta http-equiv="refresh" content="0; url=/site/%s">
-                """.formatted(domainName);
+            return new MapModelAndView("/redirect.jte", Map.of("url", "/site/"+domain));
         }
 
         List<SiteOverviewModel.DiscoveredDomain> domains = new ArrayList<>();
@@ -95,7 +91,7 @@ public class SearchSiteInfoService {
             throw new RuntimeException();
         }
 
-        return jteRenderer.render("siteinfo/start.jte",
+        return new MapModelAndView("siteinfo/start.jte",
                 Map.of("navbar", NavbarModel.SITEINFO,
                         "model", new SiteOverviewModel(domains)));
     }
@@ -104,15 +100,20 @@ public class SearchSiteInfoService {
         public record DiscoveredDomain(String name, String timestamp) {}
     }
 
-    public Object handle(Request request, Response response) throws SQLException {
-        String domainName = request.params("site");
-        String view = request.queryParamOrDefault("view", "info");
+    @GET
+    @Path("/site/{domainName}")
+    public ModelAndView<?>  handle(
+            @PathParam String domainName,
+            @QueryParam String view,
+            @QueryParam Integer page
+    ) throws SQLException {
 
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
 
-        int page = Integer.parseInt(request.queryParamOrDefault("page", "1"));
+        page = Objects.requireNonNullElse(page, 1);
+        view = Objects.requireNonNullElse(view, "info");
 
         SiteInfoModel model = switch (view) {
             case "links" -> listLinks(domainName, page);
@@ -122,13 +123,20 @@ public class SearchSiteInfoService {
             default -> listInfo(domainName);
         };
 
-        return jteRenderer.render("siteinfo/main.jte",
+        return new MapModelAndView("siteinfo/main.jte",
                 Map.of("model", model, "navbar", NavbarModel.SITEINFO));
     }
 
-    public Object handlePost(Request request, Response response) throws SQLException {
-        String domainName = request.params("site");
-        String view = request.queryParamOrDefault("view", "info");
+    @POST
+    @Path("/site/{domainName}")
+    public ModelAndView<?> handleComplaint(
+            @PathParam String domainName,
+            @QueryParam String view,
+            @FormParam String category,
+            @FormParam String description,
+            @FormParam String samplequery
+
+    ) throws SQLException {
 
         if (null == domainName || domainName.isBlank()) {
             return null;
@@ -141,9 +149,9 @@ public class SearchSiteInfoService {
 
         FlagSiteFormData formData = new FlagSiteFormData(
                 domainId,
-                request.queryParams("category"),
-                request.queryParams("description"),
-                request.queryParams("sampleQuery")
+                category,
+                description,
+                samplequery
         );
         flagSiteService.insertComplaint(formData);
 
@@ -151,7 +159,7 @@ public class SearchSiteInfoService {
 
         var model = new ReportDomain(domainName, domainId, complaints, List.of(), true);
 
-        return jteRenderer.render("siteinfo/main.jte",
+        return new MapModelAndView("siteinfo/main.jte",
                 Map.of("model", model, "navbar", NavbarModel.SITEINFO));
     }
 

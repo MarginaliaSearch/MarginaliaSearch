@@ -1,41 +1,28 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
-import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.JteRenderer;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.model.SearchErrorMessageModel;
 import nu.marginalia.search.model.SearchFilters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.Map;
 
 public class SearchErrorPageService {
-    private final WebsiteUrl websiteUrl;
-    private final JteRenderer jteRenderer;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchErrorPageService(WebsiteUrl websiteUrl,
-                                  JteRenderer jteRenderer) throws IOException {
-        this.websiteUrl = websiteUrl;
-        this.jteRenderer = jteRenderer;
+    public SearchErrorPageService() throws IOException {
     }
 
-    public void serveError(Request request, Response rsp) {
+    public ModelAndView<?> serveError(SearchParameters parameters) {
 
-        var params = SearchParameters.forRequest(
-                request.queryParamOrDefault("query", ""),
-                websiteUrl,
-                request);
-
-
-        rsp.body(jteRenderer.render("serp/error.jte",
+        return new MapModelAndView("serp/error.jte",
                 Map.of("navbar", NavbarModel.LIMBO,
                         "model", new SearchErrorMessageModel(
                                 "An error occurred when communicating with the search engine index.",
@@ -44,11 +31,11 @@ public class SearchErrorPageService {
                                             an upgrade.  The index typically takes a about two or three minutes
                                             to reload from a cold restart.  Thanks for your patience.
                                             """,
-                                params,
-                                new SearchFilters(params)
+                                parameters,
+                                new SearchFilters(parameters)
                         )
                     )
-                ));
+                );
     }
 
 }

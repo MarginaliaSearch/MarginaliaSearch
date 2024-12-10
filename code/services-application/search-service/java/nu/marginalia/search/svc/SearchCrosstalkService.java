@@ -1,6 +1,11 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.Path;
+import io.jooby.annotation.QueryParam;
 import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.NavbarModel;
@@ -9,8 +14,6 @@ import nu.marginalia.search.model.UrlDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -29,15 +32,14 @@ public class SearchCrosstalkService {
         this.renderer = renderer;
     }
 
-    public Object handle(Request request, Response response) throws SQLException {
-        String domains = request.queryParams("domains");
+    @GET
+    @Path("/crosstalk")
+    public ModelAndView<?> crosstalk(@QueryParam String domains) throws SQLException {
         String[] parts = StringUtils.split(domains, ',');
 
         if (parts.length != 2) {
             throw new IllegalArgumentException("Expected exactly two domains");
         }
-
-        response.type("text/html");
 
         for (int i = 0; i < parts.length; i++) {
             parts[i] = parts[i].trim();
@@ -48,7 +50,7 @@ public class SearchCrosstalkService {
 
         CrosstalkResult model = new CrosstalkResult(parts[0], parts[1], resAtoB.results, resBtoA.results);
 
-        return renderer.render(
+        return new MapModelAndView(
                 "siteinfo/crosstalk.jte",
                 Map.of("model", model,
                         "navbar", NavbarModel.SITEINFO));

@@ -1,14 +1,17 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.Path;
+import io.jooby.annotation.QueryParam;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.CommandEvaluator;
-import nu.marginalia.search.command.SearchParameters;
-import nu.marginalia.search.exceptions.RedirectException;
+import nu.marginalia.search.command.*;
+import nu.marginalia.search.model.SearchProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
+
+import java.util.Objects;
 
 public class SearchQueryService {
 
@@ -27,36 +30,34 @@ public class SearchQueryService {
         this.searchCommandEvaulator = searchCommandEvaulator;
     }
 
-    public Object pathSearch(Request request, Response response) {
+    @GET
+    @Path("/search")
+    public ModelAndView<?> pathSearch(
+            @QueryParam String query,
+            @QueryParam String profile,
+            @QueryParam String js,
+            @QueryParam String recent,
+            @QueryParam String title,
+            @QueryParam String adtech,
+            @QueryParam Integer page
+    ) {
         try {
-            return searchCommandEvaulator.eval(response, parseParameters(request));
-        }
-        catch (RedirectException ex) {
-            response.redirect(ex.newUrl);
+            SearchParameters parameters = new SearchParameters(websiteUrl,
+                    query,
+                    SearchProfile.getSearchProfile(profile),
+                    SearchJsParameter.parse(js),
+                    SearchRecentParameter.parse(recent),
+                    SearchTitleParameter.parse(title),
+                    SearchAdtechParameter.parse(adtech),
+                    false,
+                    Objects.requireNonNullElse(page,1));
+
+            return searchCommandEvaulator.eval(parameters);
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            errorPageService.serveError(request, response);
-        }
-
-        return "";
-    }
-
-    private SearchParameters parseParameters(Request request) {
-        try {
-            final String queryParam = request.queryParams("query");
-
-            if (null == queryParam || queryParam.isBlank()) {
-                throw new RedirectException(websiteUrl.url());
-            }
-
-            return SearchParameters.forRequest(queryParam.trim(), websiteUrl, request);
-        }
-        catch (Exception ex) {
-            // Bots keep sending bad requests, suppress the error otherwise it will
-            // fill up the logs.
-
-            throw new RedirectException(websiteUrl.url());
+            return errorPageService.serveError(SearchParameters.defaultsForQuery(websiteUrl, query, page));
         }
     }
+
 }

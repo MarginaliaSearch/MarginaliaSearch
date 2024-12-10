@@ -3,30 +3,24 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.MapModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.Path;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /** Renders the front page (index) */
 @Singleton
 public class SearchFrontPageService {
 
     private final HikariDataSource dataSource;
-    private final JteRenderer jteRenderer;
     private final SearchQueryCountService searchVisitorCount;
     private final WebsiteUrl websiteUrl;
 
@@ -34,21 +28,20 @@ public class SearchFrontPageService {
 
     @Inject
     public SearchFrontPageService(HikariDataSource dataSource,
-                                  JteRenderer jteRenderer,
-                                  SearchQueryCountService searchVisitorCount, WebsiteUrl websiteUrl
-    ) throws IOException {
+                                  SearchQueryCountService searchVisitorCount,
+                                  WebsiteUrl websiteUrl
+    ) {
         this.dataSource = dataSource;
-        this.jteRenderer = jteRenderer;
         this.searchVisitorCount = searchVisitorCount;
         this.websiteUrl = websiteUrl;
     }
 
-    public String render(Request request, Response response) {
-        response.header("Cache-control", "public,max-age=3600");
-
-        return jteRenderer.render("serp/first.jte",
-                Map.of("navbar", NavbarModel.SEARCH, "websiteUrl", websiteUrl)
-                );
+    @GET
+    @Path("/")
+    public MapModelAndView render() {
+        return new MapModelAndView("serp/first.jte")
+                .put("navbar", NavbarModel.SEARCH)
+                .put("websiteUrl", websiteUrl);
     }
 
 
@@ -77,6 +70,7 @@ public class SearchFrontPageService {
         return items;
     }
 
+    /* FIXME
     public Object renderNewsFeed(Request request, Response response) {
         List<NewsItem> newsItems = getNewsItems();
 
@@ -112,7 +106,7 @@ public class SearchFrontPageService {
         response.type("application/rss+xml");
 
         return sb.toString();
-    }
+    }*/
 
     private record IndexModel(List<NewsItem> news, int searchPerMinute) { }
     private record NewsItem(String title, String url, String source, LocalDate date) {}
