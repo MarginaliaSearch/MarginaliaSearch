@@ -15,6 +15,7 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
+import nu.marginalia.model.idx.WordFlags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +118,10 @@ public class DocumentProcessor {
 
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();
+
+        if (url.path.equals("/")) {
+            ret.words.addMeta("special:root", WordFlags.Synthetic.asBit());
+        }
 
         documentDecorator.apply(ret);
 
