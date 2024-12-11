@@ -42,7 +42,8 @@ public class LinkParser {
                 .flatMap(this::createURI)
                 .map(URI::normalize)
                 .map(this::renormalize)
-                .flatMap(this::createEdgeUrl);
+                .flatMap(this::createEdgeUrl)
+                .filter(url -> !hasBinarySuffix(url.path));
     }
 
     @Contract(pure=true)
