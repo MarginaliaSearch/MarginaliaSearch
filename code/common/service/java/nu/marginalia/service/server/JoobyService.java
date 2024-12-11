@@ -16,8 +16,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.List;
 
 public class JoobyService {
@@ -106,6 +104,7 @@ public class JoobyService {
                 restEndpoint.port(),
                 config.externalAddress());
 
+        // FIXME:  This won't work outside of docker, may need to submit a PR to jooby to allow classpaths here
         jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes/jte-precompiled")));
 
         var options = new ServerOptions();
@@ -120,10 +119,6 @@ public class JoobyService {
         for (var service : joobyServices) {
             jooby.mvc(service);
         }
-
-        jooby.assets("/webfonts/*", Paths.get("/app/resources/static/webfonts"))
-                .setMaxAge(Duration.ofDays(365));
-        jooby.assets("/*", Paths.get("/app/resources/static"));
 
         jooby.before(this::auditRequestIn);
         jooby.after(this::auditRequestOut);
