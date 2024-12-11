@@ -41,7 +41,13 @@ public class DomainLinks {
     /** Returns the number of links to the given url. */
     public int countForUrl(EdgeUrl url) {
         String key = url.domain.toString() + url.path + (url.param == null ? "" : "?" + url.param);
-        return links.getOrDefault(key, List.of()).size();
+
+        int cnt = 0;
+        for (var link : links.getOrDefault(key, List.of())) {
+            cnt += link.count();
+        }
+
+        return cnt;
     }
 
     @Override

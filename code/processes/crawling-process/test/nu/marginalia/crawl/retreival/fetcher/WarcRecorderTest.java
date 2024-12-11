@@ -157,10 +157,10 @@ class WarcRecorderTest {
                 fileNameParquet);
 
         var urls = CrawledDocumentParquetRecordFileReader.stream(fileNameParquet).map(doc -> doc.url).toList();
-        assertEquals(3, urls.size());
+        assertEquals(2, urls.size());
         assertEquals("https://www.marginalia.nu/", urls.get(0));
         assertEquals("https://www.marginalia.nu/log/", urls.get(1));
-        assertEquals("https://www.marginalia.nu/sanic.png", urls.get(2));
+        // sanic.jpg gets filtered out for its bad mime type
 
     }
 

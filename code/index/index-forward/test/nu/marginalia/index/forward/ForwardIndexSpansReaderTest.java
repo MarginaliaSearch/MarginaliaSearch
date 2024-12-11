@@ -115,16 +115,16 @@ class ForwardIndexSpansReaderTest {
         ) {
             var spans1 = reader.readSpans(arena, offset1);
 
-            assertFalse(spans1.heading.containsRangeExact(IntList.of(10), 2));
-            assertFalse(spans1.heading.containsRangeExact(IntList.of(8, 10), 2));
-            assertFalse(spans1.heading.containsRangeExact(IntList.of(8, 10, 14), 2));
+            assertEquals(0, spans1.heading.containsRangeExact(IntList.of(10), 2));
+            assertEquals(0, spans1.heading.containsRangeExact(IntList.of(8, 10), 2));
+            assertEquals(0, spans1.heading.containsRangeExact(IntList.of(8, 10, 14), 2));
 
-            assertTrue(spans1.heading.containsRangeExact(IntList.of(10), 5));
-            assertTrue(spans1.heading.containsRangeExact(IntList.of(8, 10), 5));
-            assertTrue(spans1.heading.containsRangeExact(IntList.of(8, 10, 14), 5));
+            assertEquals(1, spans1.heading.containsRangeExact(IntList.of(10), 5));
+            assertEquals(1, spans1.heading.containsRangeExact(IntList.of(8, 10), 5));
+            assertEquals(1, spans1.heading.containsRangeExact(IntList.of(8, 10, 14), 5));
 
-            assertFalse(spans1.heading.containsRangeExact(IntList.of(11), 5));
-            assertFalse(spans1.heading.containsRangeExact(IntList.of(9), 5));
+            assertEquals(0, spans1.heading.containsRangeExact(IntList.of(11), 5));
+            assertEquals(0, spans1.heading.containsRangeExact(IntList.of(9), 5));
         }
     }
 

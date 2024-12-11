@@ -80,7 +80,7 @@ public class AnchorTagsImpl implements AnchorTagsSource {
             select 
                 unnest(text) as 'text', 
                 unnest(url) as 'url', 
-                unnest(source) as 'source'
+                unnest(cnt) as 'cnt'
             from atags
             where dest = ?
             """))
@@ -89,7 +89,7 @@ public class AnchorTagsImpl implements AnchorTagsSource {
             ps.setString(1, domain.toString());
             var rs = ps.executeQuery();
             while (rs.next()) {
-                links.add(new LinkWithText(rs.getString("url"), rs.getString("text"), rs.getString("source")));
+                links.add(new LinkWithText(rs.getString("url"), rs.getString("text"), rs.getInt("cnt")));
             }
 
             // Also look for links to an aliased domain, e.g. maybe the domain is marginalia.nu but the link is to www.marginalia.nu?
@@ -102,7 +102,7 @@ public class AnchorTagsImpl implements AnchorTagsSource {
                     String url = rs.getString("url");
                     url = aliasDomain + url.substring(url.indexOf('/'));
 
-                    links.add(new LinkWithText(url, rs.getString("text"), rs.getString("source")));
+                    links.add(new LinkWithText(url, rs.getString("text"), rs.getInt("cnt")));
                 }
                 return new DomainLinks(links);
             }

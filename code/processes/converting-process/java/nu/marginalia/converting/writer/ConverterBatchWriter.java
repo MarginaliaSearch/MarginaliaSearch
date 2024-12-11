@@ -12,6 +12,7 @@ import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
 import nu.marginalia.model.processed.SlopDomainRecord;
 import nu.marginalia.sequence.VarintCodedSequence;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,20 +33,26 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
     public ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
-        if (!Files.exists(ProcessedDataFileNames.domainFileName(basePath))) {
-            Files.createDirectory(ProcessedDataFileNames.domainFileName(basePath));
-        }
-        domainWriter = new SlopDomainRecord.Writer(ProcessedDataFileNames.domainFileName(basePath), batchNumber);
+        Path domainPath = initSlopDir(ProcessedDataFileNames.domainFileName(basePath));
+        Path linksPath = initSlopDir(ProcessedDataFileNames.domainLinkFileName(basePath));
+        Path docsPath = initSlopDir(ProcessedDataFileNames.documentFileName(basePath));
 
-        if (!Files.exists(ProcessedDataFileNames.domainLinkFileName(basePath))) {
-            Files.createDirectory(ProcessedDataFileNames.domainLinkFileName(basePath));
-        }
-        domainLinkWriter = new SlopDomainLinkRecord.Writer(ProcessedDataFileNames.domainLinkFileName(basePath), batchNumber);
+        domainWriter = new SlopDomainRecord.Writer(domainPath, batchNumber);
+        domainLinkWriter = new SlopDomainLinkRecord.Writer(linksPath, batchNumber);
+        documentWriter = new SlopDocumentRecord.Writer(docsPath, batchNumber);
+    }
 
-        if (!Files.exists(ProcessedDataFileNames.documentFileName(basePath))) {
-            Files.createDirectory(ProcessedDataFileNames.documentFileName(basePath));
+    private Path initSlopDir(Path p) throws IOException {
+        if (Files.isDirectory(p)) {
+            FileUtils.deleteDirectory(p.toFile());
         }
-        documentWriter = new SlopDocumentRecord.Writer(ProcessedDataFileNames.documentFileName(basePath), batchNumber);
+        else if (Files.exists(p)) {
+            Files.delete(p);
+        }
+
+        Files.createDirectories(p);
+
+        return p;
     }
 
     /** Sets the lowest ordinal value for the documents in this batch */
@@ -114,7 +121,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
             documentWriter.write(new SlopDocumentRecord(
                     domainName,
                     document.url.toString(),
-                    ordinal,
+                    ordinal++,
                     document.state.toString(),
                     document.stateReason,
                     document.details.title,
@@ -132,17 +139,15 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     spanCodes,
                     spanSequences
             ));
-
-            ordinal++;
         }
 
     }
 
-    private Object writeLinkData(ProcessedDomain domain) throws IOException {
+    private void writeLinkData(ProcessedDomain domain) throws IOException {
         String from = domain.domain.toString();
 
         if (domain.documents == null)
-            return this;
+            return;
 
         Set<EdgeDomain> seen = new HashSet<>();
 
@@ -171,10 +176,9 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
             ));
         }
 
-        return this;
     }
 
-    public Object writeDomainData(ProcessedDomain domain) throws IOException {
+    public void writeDomainData(ProcessedDomain domain) throws IOException {
         DomainMetadata metadata = DomainMetadata.from(domain);
 
         List<String> feeds = getFeedUrls(domain);
@@ -191,8 +195,6 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         feeds
                 )
         );
-
-        return this;
     }
 
     private List<String> getFeedUrls(ProcessedDomain domain) {

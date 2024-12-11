@@ -24,10 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +32,8 @@ public class StackexchangeSideloader implements SideloadSource {
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentKeywordExtractor keywordExtractor;
     private final String domainName;
+
+    private final EnumSet<HtmlFeature> applyFeatures = EnumSet.of(HtmlFeature.JS, HtmlFeature.TRACKING);
 
     private final Path dbFile;
 
@@ -133,12 +132,17 @@ public class StackexchangeSideloader implements SideloadSource {
 
             ret.url = url;
             ret.words = keywordExtractor.extractKeywords(dld, new LinkTexts(), url);
-            ret.words.addAllSyntheticTerms(List.of(
-                    "site:" + domainName,
-                    "site:" + url.domain.topDomain,
-                    url.domain.topDomain,
-                    domainName
-            ));
+
+            List<String> syntheticTerms = new ArrayList<>(
+                    List.of("site:" + domainName,
+                            "site:" + url.domain.topDomain,
+                            url.domain.topDomain,
+                            domainName)
+            );
+            for (HtmlFeature feature : applyFeatures) {
+                syntheticTerms.add(feature.getKeyword());
+            }
+            ret.words.addAllSyntheticTerms(syntheticTerms);
 
             if (!post.tags().isBlank()) {
                 List<String> subjects = Arrays.asList(post.tags().split(","));
@@ -152,7 +156,7 @@ public class StackexchangeSideloader implements SideloadSource {
                     PubDate.toYearByte(ret.details.pubYear),
                     (int) -ret.details.quality,
                     EnumSet.of(DocumentFlags.GeneratorDocs));
-            ret.details.features = EnumSet.of(HtmlFeature.JS, HtmlFeature.TRACKING);
+            ret.details.features = applyFeatures;
 
             ret.details.metadata.withSizeAndTopology(10000, 0);
 

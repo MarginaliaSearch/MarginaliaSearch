@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor;
 
 import nu.marginalia.converting.model.ProcessedDocument;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,6 +14,9 @@ public class DocumentDecorator {
 
     public void addTerm(String term) {
         extraSearchTerms.add(term);
+    }
+    public void addTerms(Collection<String> terms) {
+        extraSearchTerms.addAll(terms);
     }
 
     public void apply(ProcessedDocument doc) {

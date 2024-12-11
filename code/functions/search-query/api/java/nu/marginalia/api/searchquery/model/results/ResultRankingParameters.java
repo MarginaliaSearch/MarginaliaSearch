@@ -69,7 +69,7 @@ public class ResultRankingParameters {
                 .bm25Params(new Bm25Parameters(1.2, 0.5))
                 .shortDocumentThreshold(2000)
                 .shortDocumentPenalty(2.)
-                .domainRankBonus(1 / 25.)
+                .domainRankBonus(1 / 100.)
                 .qualityPenalty(1 / 15.)
                 .shortSentenceThreshold(2)
                 .shortSentencePenalty(5)

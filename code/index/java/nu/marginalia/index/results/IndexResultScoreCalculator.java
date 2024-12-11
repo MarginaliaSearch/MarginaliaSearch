@@ -129,9 +129,9 @@ public class IndexResultScoreCalculator {
         double score = normalize(
                 score_firstPosition + score_proximity + score_verbatim
                         + score_bM25
-                        + score_bFlags
-                        + Math.max(0, documentBonus),
-                -Math.min(0, documentBonus));
+                        + score_bFlags,
+                -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
+        );
 
         if (Double.isNaN(score)) { // This should never happen but if it does, we want to know about it
             if (getClass().desiredAssertionStatus()) {
@@ -388,11 +388,13 @@ public class IndexResultScoreCalculator {
                 }
 
                 var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
-                if (extLinkSpan.length() == fullGroup.size
-                        && extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
-                {
-                    score += 2; // Add additional bonus if there's a single-word atag span
+                if (extLinkSpan.length() >= fullGroup.size) {
+                    int cnt = extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size);
+                    if (cnt > 0) {
+                        score += 2 * cnt;
+                    }
                 }
+
                 return;
             }
 
@@ -407,9 +409,9 @@ public class IndexResultScoreCalculator {
 
             // Bonus if there's a perfect match with an atag span
             var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
-            if (extLinkSpan.length() == fullGroup.size && extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size))
-            {
-                score += 2;
+            if (extLinkSpan.length() >= fullGroup.size) {
+                int cnt = extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size);
+                score += 2*cnt;
             }
 
             // For optional groups, we scale the score by the size of the group relative to the full group
@@ -420,7 +422,7 @@ public class IndexResultScoreCalculator {
                 IntList intersections = optionalGroup.findIntersections(positions);
 
                 for (var tag : HtmlTag.includedTags) {
-                    int cnts =  spans.getSpan(tag).countRangeMatches(intersections, fullGroup.size);;
+                    int cnts =  spans.getSpan(tag).countRangeMatches(intersections, fullGroup.size);
                     if (cnts > 0) {
                         score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
                     }
@@ -452,12 +454,12 @@ public class IndexResultScoreCalculator {
             for (int i = 0; i < weights.length; i++) {
                 weights[i] = switch(HtmlTag.includedTags[i]) {
                     case TITLE -> 2.5f;
-                    case HEADING -> 2.5f;
+                    case HEADING -> 1.25f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
                     case BODY -> 1.0f;
-                    case EXTERNAL_LINKTEXT -> 0.75f;
+                    case EXTERNAL_LINKTEXT -> 1.5f;
                     default -> 0.0f;
                 };
             }
