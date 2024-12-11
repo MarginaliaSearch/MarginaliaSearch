@@ -2,7 +2,6 @@ package nu.marginalia.converting.sideload.reddit;
 
 import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
-import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
@@ -13,7 +12,7 @@ import nu.marginalia.integration.reddit.db.RedditDb;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.model.idx.WordFlags;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 
@@ -30,16 +29,13 @@ public class RedditSideloader implements SideloadSource {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RedditSideloader.class);
 
     private final List<Path> dbFiles;
-    private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final AnchorTextKeywords anchorTextKeywords;
     private final SideloaderProcessing sideloaderProcessing;
 
     public RedditSideloader(List<Path> listToDbFiles,
-                            AnchorTagsSourceFactory anchorTagsSourceFactory,
                             AnchorTextKeywords anchorTextKeywords,
                             SideloaderProcessing sideloaderProcessing) {
         this.dbFiles = listToDbFiles;
-        this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.anchorTextKeywords = anchorTextKeywords;
         this.sideloaderProcessing = sideloaderProcessing;
     }
@@ -116,13 +112,24 @@ public class RedditSideloader implements SideloadSource {
                 .ofInstant(Instant.ofEpochSecond(createdUtc), ZoneOffset.UTC)
                 .getYear();
 
-        String fullHtml = "<!DOCTYPE html>\n<html>\n<head>\n  <title>" + title + "</title>\n  <script src=\"https://www.example.com/dummy.js\" type=\"text/javascript\"></script>\n</head>\n<body>\n  <h1>" + title + "</h1>\n  <article>\n    <p>" + body + "</p>\n  </article>\n</body>\n</html>\n";
+        String fullHtml = """
+            <!DOCTYPE html>
+                <html>
+                <head>
+                <title>%s</title>
+                <script src="https://www.example.com/dummy.js" type="text/javascript"></script>
+                </head>
+                <body>
+                  <h1>%s</h1>
+                  <h2>reddit r/%s %s</h2>
+                  <article>
+                    <p>%s</p>
+                  </article>
+                  </body>
+                </html>
+            """.formatted(title, title, subreddit, subreddit, body);
 
         List<String> extraKeywords = new ArrayList<>();
-
-        extraKeywords.add("reddit");
-        extraKeywords.add(subreddit);
-        extraKeywords.add("r/" + subreddit);
 
         if (!StringUtils.isBlank(author) && !author.equals("[deleted]")) {
             extraKeywords.add(author);
@@ -147,12 +154,18 @@ public class RedditSideloader implements SideloadSource {
 
 
         if (doc.isProcessedFully()) {
-             for (var keyword : extraKeywords) {
-                doc.words.addMeta(keyword, WordFlags.Subjects.asBit());
+            // Insert topology information
+            if (doc.details != null) {
+                doc.details.metadata.withSizeAndTopology(50_000_000, score);
             }
 
-            // Insert topology information
-            doc.details.metadata.withSizeAndTopology(50_000_000, score);
+            if (doc.words != null) {
+                doc.words.addAllSyntheticTerms(List.of("generator:forum",
+                        HtmlFeature.COOKIES.getKeyword(),
+                        HtmlFeature.JS.getKeyword(),
+                        HtmlFeature.TRACKING_ADTECH.getKeyword()
+                ));
+            }
         }
 
 
