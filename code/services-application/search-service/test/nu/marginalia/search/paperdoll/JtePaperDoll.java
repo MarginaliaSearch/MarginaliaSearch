@@ -68,7 +68,7 @@ public class JtePaperDoll {
         );
         Spark.get("/first",
                 (rq, rs) ->  new Object(),
-                ret -> this.render("serp/first.jte", Map.of( "navbar", NavbarModel.SEARCH,
+                ret -> this.render("serp/start.jte", Map.of( "navbar", NavbarModel.SEARCH,
                                                                              "websiteUrl", new WebsiteUrl("https://localhost:9999/")
                         ))
         );

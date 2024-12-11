@@ -26,11 +26,13 @@
     </div>
 </header>
 
-<div class="max-w-1000 mx-auto flex flex-col space-y-4 fill-w">
-    <div class="border bg-white rounded p-2 m-4">
+<div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">
+    <div class="border bg-white rounded p-2 m-4 ">
         <div class="text-slate-700 text-sm p-4">
         You've stumbled onto a beta version of the redesign of the search engine's UI.  Feel free to explore, but
         beware that things may not quite be polished.
+        If you have any feedback, I'd love to hear it.  Please reach me at
+        <a href="mailto:kontakt@marginalia.nu" class="underline text-liteblue">kontakt@marginalia.nu</a>.
         </div>
     </div>
     <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2">
@@ -46,9 +48,9 @@
     <div class="flex flex-col border rounded overflow-hidden bg-white p-6  space-y-3 ">
         <div><i class="fas fa-hand-holding-hand mx-2 text-margeblue"></i>Open Source</div>
         <ul class="list-disc ml-6 text-slate-700 text-xs leading-5">
+           <li>Custom index and crawler software</li>
+           <li>Simple technology -- no AI or cloud</li>
            <li>AGPL license</li>
-           <li>Custom index software</li>
-           <li>Custom crawler software</li>
         </ul>
         <div class="text-xs text-liteblue pt-4">
             <i class="fas fa-link"></i>
@@ -68,6 +70,7 @@
             <a href="#" class="underline">Privacy Statement</a> <!-- TODO -->
         </div>
     </div>
+
     </div>
 
 </div>

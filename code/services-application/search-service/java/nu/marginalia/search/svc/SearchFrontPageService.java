@@ -39,7 +39,7 @@ public class SearchFrontPageService {
     @GET
     @Path("/")
     public MapModelAndView render() {
-        return new MapModelAndView("serp/first.jte")
+        return new MapModelAndView("serp/start.jte")
                 .put("navbar", NavbarModel.SEARCH)
                 .put("websiteUrl", websiteUrl);
     }
