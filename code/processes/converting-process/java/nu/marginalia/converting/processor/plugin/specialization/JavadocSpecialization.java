@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
@@ -15,8 +16,8 @@ public class JavadocSpecialization extends DefaultSpecialization {
     private static final Logger logger = LoggerFactory.getLogger(JavadocSpecialization.class);
 
     @Inject
-    public JavadocSpecialization(SummaryExtractor summaryExtractor) {
-        super(summaryExtractor);
+    public JavadocSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
+        super(summaryExtractor, titleExtractor);
     }
 
     @Override

@@ -2,8 +2,12 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 
 import java.util.ArrayList;
@@ -14,10 +18,12 @@ import java.util.Set;
 public class DefaultSpecialization implements HtmlProcessorSpecializations.HtmlProcessorSpecializationIf {
 
     private final SummaryExtractor summaryExtractor;
+    private final TitleExtractor titleExtractor;
 
     @Inject
-    public DefaultSpecialization(SummaryExtractor summaryExtractor) {
+    public DefaultSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
         this.summaryExtractor = summaryExtractor;
+        this.titleExtractor = titleExtractor;
     }
 
     @Override
@@ -46,4 +52,14 @@ public class DefaultSpecialization implements HtmlProcessorSpecializations.HtmlP
 
         return summaryExtractor.extractSummary(doc, cleanedWords);
     }
+
+    @Override
+    public String getTitle(Document original, DocumentLanguageData dld, String url) {
+        return titleExtractor.getTitleAbbreviated(original, dld, url);
+    }
+
+    public boolean shouldIndex(EdgeUrl url) { return true; }
+    public double lengthModifier() { return 1.0; }
+
+    public void amendWords(Document doc, DocumentKeywordsBuilder words) {}
 }

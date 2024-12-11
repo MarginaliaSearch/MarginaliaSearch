@@ -150,7 +150,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         ret.length = length;
         ret.standard = standard;
-        ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
+        ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
 
         documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
 
