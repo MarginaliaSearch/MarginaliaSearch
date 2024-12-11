@@ -2,9 +2,10 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.logic.TitleExtractor;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -15,8 +16,8 @@ import java.util.Set;
 public class WikiSpecialization extends DefaultSpecialization {
 
     @Inject
-    public WikiSpecialization(SummaryExtractor summaryExtractor) {
-        super(summaryExtractor);
+    public WikiSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
+        super(summaryExtractor, titleExtractor);
     }
 
     @Override

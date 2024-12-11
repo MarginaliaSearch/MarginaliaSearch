@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
+import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.test.CommonTestData;
@@ -29,7 +30,8 @@ class LemmySpecializationTest {
                         null,
                         null,
                         null,
-                        null));
+                        null),
+                new TitleExtractor(128));
     }
 
     @Test

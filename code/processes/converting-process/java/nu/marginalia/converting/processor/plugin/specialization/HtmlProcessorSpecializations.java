@@ -6,6 +6,7 @@ import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 
@@ -19,8 +20,10 @@ public class HtmlProcessorSpecializations {
     private final PhpBBSpecialization phpBBSpecialization;
     private final JavadocSpecialization javadocSpecialization;
     private final MariadbKbSpecialization mariadbKbSpecialization;
+    private final SteamStoreSpecialization steamStoreSpecialization;
     private final WikiSpecialization wikiSpecialization;
     private final BlogSpecialization blogSpecialization;
+    private final GogStoreSpecialization gogStoreSpecialization;
     private final DefaultSpecialization defaultSpecialization;
 
     @Inject
@@ -30,8 +33,10 @@ public class HtmlProcessorSpecializations {
                                         PhpBBSpecialization phpBBSpecialization,
                                         JavadocSpecialization javadocSpecialization,
                                         MariadbKbSpecialization mariadbKbSpecialization,
+                                        SteamStoreSpecialization steamStoreSpecialization,
                                         WikiSpecialization wikiSpecialization,
                                         BlogSpecialization blogSpecialization,
+                                        GogStoreSpecialization gogStoreSpecialization,
                                         DefaultSpecialization defaultSpecialization) {
         this.domainTypes = domainTypes;
         this.lemmySpecialization = lemmySpecialization;
@@ -39,8 +44,10 @@ public class HtmlProcessorSpecializations {
         this.phpBBSpecialization = phpBBSpecialization;
         this.javadocSpecialization = javadocSpecialization;
         this.mariadbKbSpecialization = mariadbKbSpecialization;
+        this.steamStoreSpecialization = steamStoreSpecialization;
         this.wikiSpecialization = wikiSpecialization;
         this.blogSpecialization = blogSpecialization;
+        this.gogStoreSpecialization = gogStoreSpecialization;
         this.defaultSpecialization = defaultSpecialization;
     }
 
@@ -57,6 +64,14 @@ public class HtmlProcessorSpecializations {
         if (url.domain.getTopDomain().equals("mariadb.com")
                 && url.path.startsWith("/kb")) {
             return mariadbKbSpecialization;
+        }
+
+        if (url.domain.toString().equals("store.steampowered.com")) {
+            return steamStoreSpecialization;
+        }
+
+        if (url.domain.toString().equals("www.gog.com") && url.path.contains("/game/")) {
+            return gogStoreSpecialization;
         }
 
         if (generator.keywords().contains("lemmy")) {
@@ -86,11 +101,11 @@ public class HtmlProcessorSpecializations {
         Document prune(Document original);
         String getSummary(Document original,
                           Set<String> importantWords);
+        String getTitle(Document original, DocumentLanguageData dld, String url);
 
-        default boolean shouldIndex(EdgeUrl url) { return true; }
-        default double lengthModifier() { return 1.0; }
-
-        default void amendWords(Document doc, DocumentKeywordsBuilder words) {}
+        boolean shouldIndex(EdgeUrl url);
+        double lengthModifier();
+        void amendWords(Document doc, DocumentKeywordsBuilder words);
 
     }
 }

@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.plugin.specialization;
 
+import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.test.CommonTestData;
 import org.jsoup.Jsoup;
@@ -23,7 +24,9 @@ class WikiSpecializationTest {
                         null,
                         null,
                         null,
-                        null));
+                        null),
+                new TitleExtractor(128)
+                );
     }
 
     @Test

@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -11,12 +12,13 @@ import java.util.Set;
 
 /** This class is used to specify how to process a website running Lemmy */
 @Singleton
-public class LemmySpecialization implements HtmlProcessorSpecializations.HtmlProcessorSpecializationIf {
+public class LemmySpecialization extends DefaultSpecialization {
     private static final Logger logger = LoggerFactory.getLogger(LemmySpecialization.class);
     private final SummaryExtractor summaryExtractor;
 
     @Inject
-    public LemmySpecialization(SummaryExtractor summaryExtractor) {
+    public LemmySpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
+        super(summaryExtractor, titleExtractor);
         this.summaryExtractor = summaryExtractor;
     }
 

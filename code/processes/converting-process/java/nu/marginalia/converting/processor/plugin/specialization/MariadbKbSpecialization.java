@@ -2,22 +2,25 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.logic.TitleExtractor;
+import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class MariadbKbSpecialization extends DefaultSpecialization {
     private static final Logger logger = LoggerFactory.getLogger(MariadbKbSpecialization.class);
 
     @Inject
-    public MariadbKbSpecialization(SummaryExtractor summaryExtractor) {
-        super(summaryExtractor);
+    public MariadbKbSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
+        super(summaryExtractor, titleExtractor);
     }
 
     @Override

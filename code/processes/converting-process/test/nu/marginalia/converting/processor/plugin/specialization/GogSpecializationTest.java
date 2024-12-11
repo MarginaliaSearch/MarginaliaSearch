@@ -10,19 +10,18 @@ import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.net.URISyntaxException;
 import java.util.Set;
 
-class XenForoSpecializationTest {
+class GogSpecializationTest {
 
-    static XenForoSpecialization specialization;
+    static GogStoreSpecialization specialization;
     static DocumentGeneratorExtractor generatorExtractor = new DocumentGeneratorExtractor();
 
-    String thread = CommonTestData.loadTestData("mock-crawl-data/xenforo/thread.html");
+    String storePage = CommonTestData.loadTestData("html/gog-store.html");
 
     @BeforeAll
     public static void setUpAll() {
-        specialization = new XenForoSpecialization(
+        specialization = new GogStoreSpecialization(
                 new SummaryExtractor(255,
                         null,
                         null,
@@ -35,19 +34,19 @@ class XenForoSpecializationTest {
 
     @Test
     void prune() {
-        System.out.println(specialization.prune(Jsoup.parse(thread)));
+        System.out.println(specialization.prune(Jsoup.parse(storePage)));
     }
 
     @Test
-    void generatorExtraction() throws URISyntaxException {
-        var gen = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), Jsoup.parse(thread), new DocumentHeaders(""));
+    void generatorExtraction() throws Exception {
+        var gen = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), Jsoup.parse(storePage), new DocumentHeaders(""));
 
         System.out.println(gen);
     }
 
     @Test
     void getSummary() {
-        String summary = specialization.getSummary(Jsoup.parse(thread), Set.of(""));
+        String summary = specialization.getSummary(Jsoup.parse(storePage), Set.of(""));
 
         System.out.println(summary);
     }
