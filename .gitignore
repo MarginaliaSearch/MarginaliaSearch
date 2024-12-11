@@ -7,3 +7,4 @@ build/
 lombok.config
 Dockerfile
 run
+jte-classes

@@ -48,6 +48,7 @@ ext {
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
     jibVersion = '3.4.3'
+
 }
 
 idea {

@@ -3,20 +3,16 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.renderer.MustacheRenderer;
-import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.search.svc.SearchQueryCountService;
+import io.jooby.MapModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.Path;
+import nu.marginalia.WebsiteUrl;
+import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,29 +20,28 @@ import java.util.List;
 @Singleton
 public class SearchFrontPageService {
 
-    private final MustacheRenderer<IndexModel> template;
     private final HikariDataSource dataSource;
     private final SearchQueryCountService searchVisitorCount;
+    private final WebsiteUrl websiteUrl;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchFrontPageService(RendererFactory rendererFactory,
-                                  HikariDataSource dataSource,
-                                  SearchQueryCountService searchVisitorCount
-                        ) throws IOException {
-        this.template = rendererFactory.renderer("search/index/index");
+    public SearchFrontPageService(HikariDataSource dataSource,
+                                  SearchQueryCountService searchVisitorCount,
+                                  WebsiteUrl websiteUrl
+    ) {
         this.dataSource = dataSource;
         this.searchVisitorCount = searchVisitorCount;
+        this.websiteUrl = websiteUrl;
     }
 
-    public String render(Request request, Response response) {
-        response.header("Cache-control", "public,max-age=3600");
-
-        return template.render(new IndexModel(
-                getNewsItems(),
-                searchVisitorCount.getQueriesPerMinute()
-        ));
+    @GET
+    @Path("/")
+    public MapModelAndView render() {
+        return new MapModelAndView("serp/start.jte")
+                .put("navbar", NavbarModel.SEARCH)
+                .put("websiteUrl", websiteUrl);
     }
 
 
@@ -75,6 +70,7 @@ public class SearchFrontPageService {
         return items;
     }
 
+    /* FIXME
     public Object renderNewsFeed(Request request, Response response) {
         List<NewsItem> newsItems = getNewsItems();
 
@@ -110,7 +106,7 @@ public class SearchFrontPageService {
         response.type("application/rss+xml");
 
         return sb.toString();
-    }
+    }*/
 
     private record IndexModel(List<NewsItem> news, int searchPerMinute) { }
     private record NewsItem(String title, String url, String source, LocalDate date) {}
