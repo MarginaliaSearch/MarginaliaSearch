@@ -454,7 +454,7 @@ public class IndexResultScoreCalculator {
             for (int i = 0; i < weights.length; i++) {
                 weights[i] = switch(HtmlTag.includedTags[i]) {
                     case TITLE -> 2.5f;
-                    case HEADING -> 2.5f;
+                    case HEADING -> 1.25f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
