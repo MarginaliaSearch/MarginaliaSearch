@@ -1,5 +1,6 @@
 package nu.marginalia.crawl.retreival;
 
+import nu.marginalia.ContentTypes;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.lsh.EasyLSH;
 import nu.marginalia.model.crawldata.CrawledDocument;
@@ -43,6 +44,9 @@ public class CrawlDataReference implements AutoCloseable {
         try {
             while (data.hasNext()) {
                 if (data.next() instanceof CrawledDocument doc) {
+                    if (!ContentTypes.isAccepted(doc.contentType))
+                        continue;
+
                     return doc;
                 }
             }

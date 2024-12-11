@@ -1,6 +1,7 @@
 package nu.marginalia.parquet.crawldata;
 
 import blue.strategic.parquet.ParquetWriter;
+import nu.marginalia.ContentTypes;
 import nu.marginalia.UserAgent;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.DocumentBodyResult;
@@ -62,6 +63,8 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
         }
     }
 
+
+
     /** Return true if the WarcResponse should be excluded from conversion */
     private static boolean filterResponse(String uaString, WarcResponse response) throws IOException {
 
@@ -74,13 +77,24 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             return false;
         }
 
-        var robotsTags = response.http().headers().all("X-Robots-Tag");
+        var headers = response.http().headers();
+        var robotsTags = headers.all("X-Robots-Tag");
+
         if (!isXRobotsTagsPermitted(robotsTags, uaString)) {
+            return false;
+        }
+
+        // Strip out responses with content types we aren't interested in
+        // (though ideally we wouldn't download these at all)
+        String contentType = headers.first("Content-Type").orElse("text/plain").toLowerCase();
+
+        if (!ContentTypes.isAccepted(contentType)) {
             return false;
         }
 
         return true;
     }
+
 
     private void write(String domain, WarcXEntityRefused refused) throws IOException {
         URI profile = refused.profile();

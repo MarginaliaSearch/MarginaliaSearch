@@ -317,26 +317,24 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         long probeStart = System.currentTimeMillis();
 
-        /*
-        probing is on probation for now while we evaluate how much the added delays slows down the crawler
-
         if (probeType == HttpFetcher.ProbeType.FULL) {
+            retryLoop:
             for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
                 try {
                     var probeResult = fetcher.probeContentType(url, warcRecorder, contentTags);
 
-                    if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.Ok ok) {
-                        url = ok.resolvedUrl(); // If we were redirected while probing, use the final URL for fetching
-                        break;
-                    } else if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.BadContentType badContentType) {
-                        return new HttpFetchResult.ResultNone();
-                    } else if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.BadContentType.Timeout timeout) {
-                        return new HttpFetchResult.ResultException(timeout.ex());
-                    } else if (probeResult instanceof HttpFetcher.ContentTypeProbeResult.Exception exception) {
-                        return new HttpFetchResult.ResultException(exception.ex());
-                    }
-                    else { // should be unreachable
-                        throw new IllegalStateException("Unknown probe result");
+                    switch (probeResult) {
+                        case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
+                            url = resolvedUrl; // If we were redirected while probing, use the final URL for fetching
+                            break retryLoop;
+                        case HttpFetcher.ContentTypeProbeResult.BadContentType badContentType:
+                            return new HttpFetchResult.ResultNone();
+                        case HttpFetcher.ContentTypeProbeResult.BadContentType.Timeout timeout:
+                            return new HttpFetchResult.ResultException(timeout.ex());
+                        case HttpFetcher.ContentTypeProbeResult.Exception exception:
+                            return new HttpFetchResult.ResultException(exception.ex());
+                        default:  // should be unreachable
+                            throw new IllegalStateException("Unknown probe result");
                     }
                 }
                 catch (HttpFetcherImpl.RateLimitException ex) {
@@ -348,8 +346,8 @@ public class CrawlerRetreiver implements AutoCloseable {
                 }
             }
 
-        timer.waitFetchDelay(System.currentTimeMillis() - probeStart);
-        }*/
+            timer.waitFetchDelay(System.currentTimeMillis() - probeStart);
+        }
 
 
         for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
