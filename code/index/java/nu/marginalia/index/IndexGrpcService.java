@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.sql.SQLException;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -184,7 +183,7 @@ public class IndexGrpcService
     }
 
     // accessible for tests
-    public List<RpcDecoratedResultItem> executeSearch(SearchParameters params) throws SQLException, InterruptedException {
+    public List<RpcDecoratedResultItem> executeSearch(SearchParameters params) throws Exception {
 
         if (!statefulIndex.isLoaded()) {
             // Short-circuit if the index is not loaded, as we trivially know that there can be no results
