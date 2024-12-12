@@ -256,7 +256,7 @@ public class IndexGrpcService
         /** The queue where the results from the index lookup threads are placed,
          * pending ranking by the result ranker threads */
         private final ArrayBlockingQueue<CombinedDocIdList> resultCandidateQueue
-                = new ArrayBlockingQueue<>(8);
+                = new ArrayBlockingQueue<>(64);
         private final ResultPriorityQueue resultHeap;
 
         private final ResultRankingContext resultRankingContext;
@@ -342,7 +342,7 @@ public class IndexGrpcService
             }
 
             private void executeSearch() {
-                final LongArrayList results = new LongArrayList(4096);
+                final LongArrayList results = new LongArrayList(16);
 
                 // These queries are different indices for one subquery
                 final LongQueryBuffer buffer = new LongQueryBuffer(4096);
@@ -352,31 +352,16 @@ public class IndexGrpcService
                     buffer.reset();
                     query.getMoreResults(buffer);
 
-                    for (int i = 0; i < buffer.end; i++) {
-                        results.add(buffer.data.get(i));
-                    }
-
-                    if (!results.isEmpty()) {
-                        int stride = 16;
-                        for (int start = 0; start < results.size(); start+=stride) {
-                            int end = Math.min(results.size(), start + stride);
-                            if (end > start) {
-                                long[] data = new long[end-start];
-                                for (int i = 0; i < data.length; i++) {
-                                    data[i] = results.getLong(start + i);
-                                }
-                                enqueueResults(new CombinedDocIdList(data));
-                            }
+                    for (int i = 0; i < buffer.end; i+=16) {
+                        for (int j = 0; j < Math.min(buffer.end - i, 16); j++) {
+                            results.add(buffer.data.get(i+j));
                         }
+                        enqueueResults(new CombinedDocIdList(results));
                         results.clear();
                     }
                 }
 
                 buffer.dispose();
-
-                if (!results.isEmpty()) {
-                    enqueueResults(new CombinedDocIdList(results));
-                }
             }
 
             private void enqueueResults(CombinedDocIdList resultIds) {

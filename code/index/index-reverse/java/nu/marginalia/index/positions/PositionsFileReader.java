@@ -5,16 +5,22 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 public class PositionsFileReader implements AutoCloseable {
-    private final FileChannel positions;
+    private final Arena arena;
+    private final MemorySegment positionsSegment;
     private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
-        this.positions = FileChannel.open(positionsFile, StandardOpenOption.READ);
+        arena = Arena.ofShared();
+
+        try (var channel = FileChannel.open(positionsFile, StandardOpenOption.READ)) {
+            positionsSegment = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size(), arena);
+        }
     }
 
     /** Get the positions for a term in the index, as pointed out by the encoded offset;
@@ -24,20 +30,15 @@ public class PositionsFileReader implements AutoCloseable {
         long offset = PositionCodec.decodeOffset(sizeEncodedOffset);
 
         var segment = arena.allocate(length);
-        var buffer = segment.asByteBuffer();
 
-        try {
-            positions.read(buffer, offset);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        MemorySegment.copy(positionsSegment, offset, segment, 0, length);
 
-        return new TermData(buffer);
+        return new TermData(segment.asByteBuffer());
     }
 
     @Override
     public void close() throws IOException {
-        positions.close();
+        arena.close();
     }
 
 }
