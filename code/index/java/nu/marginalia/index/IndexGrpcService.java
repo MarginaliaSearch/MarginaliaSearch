@@ -154,7 +154,7 @@ public class IndexGrpcService
 
 
     // exists for test access
-    List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
+    public List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
         try {
             return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
         }
@@ -251,7 +251,7 @@ public class IndexGrpcService
      */
     private class QueryExecution {
 
-        private static final Executor workerPool = Executors.newWorkStealingPool(indexValuationThreads*4);
+        private static final Executor workerPool = Executors.newCachedThreadPool();
 
         /** The queue where the results from the index lookup threads are placed,
          * pending ranking by the result ranker threads */
@@ -357,8 +357,9 @@ public class IndexGrpcService
                     }
 
                     if (!results.isEmpty()) {
-                        for (int start = 0; start < results.size() / 16; start++) {
-                            int end = Math.min(results.size(), start + 16);
+                        int stride = 16;
+                        for (int start = 0; start < results.size(); start+=stride) {
+                            int end = Math.min(results.size(), start + stride);
                             if (end > start) {
                                 long[] data = new long[end-start];
                                 for (int i = 0; i < data.length; i++) {
