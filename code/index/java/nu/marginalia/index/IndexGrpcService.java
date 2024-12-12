@@ -92,7 +92,7 @@ public class IndexGrpcService
 
     private final String nodeName;
 
-    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
+    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
@@ -282,7 +282,7 @@ public class IndexGrpcService
         }
 
         /** Execute a search query */
-        public List<RpcDecoratedResultItem> run(SearchParameters parameters) throws SQLException, InterruptedException {
+        public List<RpcDecoratedResultItem> run(SearchParameters parameters) throws Exception {
 
             var terms = new SearchTerms(parameters.query, parameters.compiledQueryIds);
 
@@ -343,10 +343,10 @@ public class IndexGrpcService
             }
 
             private void executeSearch() {
-                final LongArrayList results = new LongArrayList(64);
+                final LongArrayList results = new LongArrayList(4096);
 
                 // These queries are different indices for one subquery
-                final LongQueryBuffer buffer = new LongQueryBuffer(64);
+                final LongQueryBuffer buffer = new LongQueryBuffer(4096);
 
                 while (query.hasMore() && budget.hasTimeLeft())
                 {
@@ -357,8 +357,17 @@ public class IndexGrpcService
                         results.add(buffer.data.get(i));
                     }
 
-                    if (results.size() >= 64) {
-                        enqueueResults(new CombinedDocIdList(results));
+                    if (!results.isEmpty()) {
+                        for (int start = 0; start < results.size() / 16; start++) {
+                            int end = Math.min(results.size(), start + 16);
+                            if (end > start) {
+                                long[] data = new long[end-start];
+                                for (int i = 0; i < data.length; i++) {
+                                    data[i] = results.getLong(start + i);
+                                }
+                                enqueueResults(new CombinedDocIdList(data));
+                            }
+                        }
                         results.clear();
                     }
                 }
@@ -405,6 +414,9 @@ public class IndexGrpcService
                 catch (InterruptedException e) {
                     logger.warn("Interrupted while waiting to poll resultIds from queue", e);
                 }
+                catch (Exception e) {
+                    logger.error("Exception while ranking results", e);
+                }
                 finally {
                     synchronized (remainingValuationTasks) {
                         if (remainingValuationTasks.decrementAndGet() == 0)
@@ -413,7 +425,7 @@ public class IndexGrpcService
                 }
             }
 
-            private boolean execute() throws InterruptedException {
+            private boolean execute() throws Exception {
                 long start = System.currentTimeMillis();
 
                 // Do a relatively short poll to ensure we terminate in a timely manner
