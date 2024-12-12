@@ -4,7 +4,6 @@ import nu.marginalia.sequence.VarintCodedSequence;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -13,15 +12,10 @@ import java.nio.file.StandardOpenOption;
 
 @SuppressWarnings("preview")
 public class ForwardIndexSpansReader implements AutoCloseable {
-    private final Arena arena;
-    private final MemorySegment spansSegment;
+    private final FileChannel spansFileChannel;
 
     public ForwardIndexSpansReader(Path spansFile) throws IOException {
-        arena = Arena.ofShared();
-
-        try (var channel = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ)) {
-            spansSegment = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size(), arena);
-        }
+        this.spansFileChannel = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
     }
 
     public DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException {
@@ -29,9 +23,13 @@ public class ForwardIndexSpansReader implements AutoCloseable {
         long size = SpansCodec.decodeSize(encodedOffset);
         long offset = SpansCodec.decodeStartOffset(encodedOffset);
 
-        var segment = spansSegment.asSlice(offset, size);
-
-        ByteBuffer buffer = segment.asByteBuffer();
+        // Allocate a buffer from the arena
+        var buffer = arena.allocate(size).asByteBuffer();
+        buffer.clear();
+        while (buffer.hasRemaining()) {
+            spansFileChannel.read(buffer, offset + buffer.position());
+        }
+        buffer.flip();
 
         // Read the number of spans in the document
         int count = buffer.get();
@@ -55,7 +53,7 @@ public class ForwardIndexSpansReader implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        arena.close();
+        spansFileChannel.close();
     }
 
 }
