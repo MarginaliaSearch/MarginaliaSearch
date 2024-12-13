@@ -35,7 +35,7 @@
                         </td>
                          <td class="px-3 py-3 whitespace-nowrap">
                             <div class="flex items-center">
-                                <span title="${item.rank()}%" class="text-sm text-gray-600">
+                                <span title="${item.rank()}%" class="text-sm text-gray-600 dark:text-yellow-200">
                                   $unsafe{item.getRankSymbols()}
                                 </span>
                             </div>
@@ -51,8 +51,8 @@
 
                         <td class="px-3 py-3">
                             <div class="w-16">
-                                <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
-                                    <div class="bg-margeblue h-2 rounded-full"
+                                <div class="dark:bg-gray-600 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-margeblue dark:bg-blue-400 h-2 rounded-full"
                                          aria-valuenow="${item.relatedness()}"
                                          aria-valuemin="0"
                                          aria-valuemax="100"
