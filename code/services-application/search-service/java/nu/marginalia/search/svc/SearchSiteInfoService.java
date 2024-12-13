@@ -71,7 +71,7 @@ public class SearchSiteInfoService {
 
     @GET
     @Path("/site")
-    public ModelAndView<?> handleOverview(@PathParam String domain) {
+    public ModelAndView<?> handleOverview(@QueryParam String domain) {
         if (domain != null) {
             // redirect to /site/domainName
             return new MapModelAndView("/redirect.jte", Map.of("url", "/site/"+domain));
