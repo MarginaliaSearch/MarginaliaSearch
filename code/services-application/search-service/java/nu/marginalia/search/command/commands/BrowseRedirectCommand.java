@@ -38,7 +38,7 @@ public class BrowseRedirectCommand implements SearchCommandInterface {
         }
 
         return Optional.of(
-                new MapModelAndView("/redirect.jte", Map.of("url", redirectPath))
+                new MapModelAndView("redirect.jte", Map.of("url", redirectPath))
         );
     }
 

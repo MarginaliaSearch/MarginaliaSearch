@@ -44,7 +44,7 @@ public class SearchAddToCrawlQueueService {
             logger.info("Nomisclick not set, not adding {} to crawl queue", domainName);
         }
 
-        return new MapModelAndView("/redirect.jte", Map.of("url", "/site/"+domainName));
+        return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domainName));
     }
 
     private void addToCrawlQueue(int id) throws SQLException {

@@ -40,7 +40,7 @@ public class SiteRedirectCommand implements SearchCommandInterface {
         };
 
         String url = "/site/%s?view=%s".formatted(domain, view);
-        return Optional.of(new MapModelAndView("/redirect.jte", Map.of("url", url)));
+        return Optional.of(new MapModelAndView("redirect.jte", Map.of("url", url)));
     }
 
 }
