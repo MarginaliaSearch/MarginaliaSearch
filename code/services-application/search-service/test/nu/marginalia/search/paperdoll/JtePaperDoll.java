@@ -44,7 +44,7 @@ public class JtePaperDoll {
         System.setProperty("test-env", "true");
         System.out.println(Path.of(".").toAbsolutePath());
 
-        Spark.staticFileLocation("static/search");
+        Spark.staticFileLocation("static");
         Spark.port(9999);
 
         Spark.after((rq, rs) -> {

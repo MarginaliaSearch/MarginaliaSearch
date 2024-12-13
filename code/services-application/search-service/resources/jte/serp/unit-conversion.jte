@@ -13,11 +13,11 @@
 
 @template.part.head(title = "Marginalia Search - " +  parameters.query())
 
-<body class="min-h-screen bg-slate-100 font-sans" >
+<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)
 
 <div>
-<header class="border-b border-gray-300 bg-white static top-0 shadow-md">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
@@ -39,9 +39,9 @@
 
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
-        <div class="border rounded p-4 bg-white">
+        <div class="border dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800 dark:text-white">
             <div class="mb-4">
-                <i class="fas fa-calculator text-margeblue mx-2"></i> ${parameters.query()}
+                <i class="fas fa-calculator text-margeblue dark:text-slate-200 mx-2"></i> ${parameters.query()}
             </div>
             <div>
                 ${result}

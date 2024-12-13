@@ -11,11 +11,11 @@
 
 @template.part.head(title = "Marginalia Search", allowIndexing = true)
 
-<body class="min-h-screen bg-slate-100 font-sans" >
+<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
 
 @template.part.navbar(navbar = navbar)
 
-<header class="border-b border-gray-300 bg-white">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
@@ -27,45 +27,45 @@
 </header>
 
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">
-    <div class="border bg-white rounded p-2 m-4 ">
-        <div class="text-slate-700 text-sm p-4">
+    <div class="border dark:border-gray-600 dark:bg-gray-800 bg-white rounded p-2 m-4 ">
+        <div class="text-slate-700 dark:text-white text-sm p-4">
         You've stumbled onto a beta version of the redesign of the search engine's UI.  Feel free to explore, but
         beware that things may not quite be polished.
         If you have any feedback, I'd love to hear it.  Please reach me at
-        <a href="mailto:kontakt@marginalia.nu" class="underline text-liteblue">kontakt@marginalia.nu</a>.
+        <a href="mailto:kontakt@marginalia.nu" class="underline text-liteblue dark:text-blue-200">kontakt@marginalia.nu</a>.
         </div>
     </div>
     <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2">
-    <div class="flex flex-col border rounded overflow-hidden bg-white p-6 space-y-3">
-        <div><i class="fas fa-sailboat mx-2 text-margeblue"></i>Explore the Web</div>
-        <ul class="list-disc ml-6 text-slate-700 text-xs leading-5">
+    <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6 space-y-3">
+        <div><i class="fas fa-sailboat mx-2 text-margeblue dark:text-slate-200"></i>Explore the Web</div>
+        <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
             <li>Prioritizes non-commercial content</li>
             <li>Tools for both search and discovery</li>
             <li>Find lost old websites</li>
         </ul>
     </div>
 
-    <div class="flex flex-col border rounded overflow-hidden bg-white p-6  space-y-3 ">
-        <div><i class="fas fa-hand-holding-hand mx-2 text-margeblue"></i>Open Source</div>
-        <ul class="list-disc ml-6 text-slate-700 text-xs leading-5">
+    <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
+        <div><i class="fas fa-hand-holding-hand mx-2 text-slate-100"></i>Open Source</div>
+        <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
            <li>Custom index and crawler software</li>
            <li>Simple technology -- no AI or cloud</li>
            <li>AGPL license</li>
         </ul>
-        <div class="text-xs text-liteblue pt-4">
+        <div class="text-xs text-liteblue dark:text-blue-200 pt-4">
             <i class="fas fa-link"></i>
             <a href="https://git.marginalia.nu/" class="underline">Git Repository</a>
         </div>
     </div>
 
-    <div class="flex flex-col border rounded overflow-hidden bg-white p-6  space-y-3 ">
-        <div><i class="fas fa-lock mx-2 text-margeblue"></i> Privacy by default</div>
-        <ul class="list-disc ml-6 text-slate-700 text-xs leading-5">
+    <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
+        <div><i class="fas fa-lock mx-2 text-margeblue dark:text-slate-200"></i> Privacy by default</div>
+        <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
             <li>Filter out tracking and adtech</li>
             <li>No user or search data shared with 3rd parties</li>
             <li>No long-term retention of queries or IP addresses</li>
         </ul>
-        <div class="text-xs text-liteblue pt-4">
+        <div class="text-xs text-liteblue dark:text-blue-200 pt-4">
             <i class="fas fa-link"></i>
             <a href="#" class="underline">Privacy Statement</a> <!-- TODO -->
         </div>

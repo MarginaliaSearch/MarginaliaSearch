@@ -14,8 +14,8 @@ application {
 tasks.distZip.enabled = false
 
 jte {
-    sourceDirectory = java.nio.file.Path.of('resources/jte')
-    targetDirectory = java.nio.file.Path.of('build/classes/jte-precompiled')
+    sourceDirectory = file('resources/jte').toPath()
+    targetDirectory = file('build/classes/jte-precompiled').toPath()
     generate()
 }
 java {

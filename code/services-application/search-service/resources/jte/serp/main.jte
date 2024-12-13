@@ -11,11 +11,11 @@
 
 @template.part.head(title = "Marginalia Search - " +  results.getQuery())
 
-<body class="min-h-screen bg-slate-100 font-sans" >
+<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)
 
 <div>
-<header class="border-b border-gray-300 bg-white static top-0 shadow-md">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
@@ -39,8 +39,8 @@
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
 
         @if (results.hasFocusDomain())
-            <div class="border rounded flex space-x-4 bg-white text-gray-600 text-sm p-4 items-center">
-                <div>Showing results from <a class="underline text-liteblue" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a></div>
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white text-gray-600 text-sm p-4 items-center">
+                <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a></div>
                 <div class="grow"></div>
                 <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove"></a>
             </div>
@@ -58,9 +58,9 @@
             <div class="mt-8 flex justify-center space-x-2 font-mono text-sm">
                 @for(ResultsPage page : results.getResultPages())
                     @if (page.current())
-                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 border border-gray-300 bg-gray-100">${page.number()}</a>
+                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 border dark:border-gray-600 border-gray-300 bg-gray-100 dark:bg-gray-900">${page.number()}</a>
                     @else
-                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 bg-white border border-gray-300 hover:bg-gray-100">${page.number()}</a>
+                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">${page.number()}</a>
                     @endif
                 @endfor
             </div>

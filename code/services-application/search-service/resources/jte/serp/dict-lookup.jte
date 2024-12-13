@@ -15,11 +15,11 @@
 
 @template.part.head(title = "Marginalia Search - " +  parameters.query())
 
-<body class="min-h-screen bg-slate-100 font-sans" >
+<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)
 
 <div>
-<header class="border-b border-gray-300 bg-white static top-0 shadow-md">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
@@ -41,20 +41,20 @@
 
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
-        <div class="border rounded p-4 bg-white">
+        <div class="border dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800">
             <div class="mb-4">
-                <i class="fas fa-book text-margeblue mx-2"></i> ${result.word()}
+                <i class="fas fa-book text-margeblue dark:text-slate-200 mx-2"></i> ${result.word()}
             </div>
 
             @if (result.hasEntries())
-            <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead>
-                <tr class="bg-gray-50">
-                    <th scope="col" class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Definition</th>
+                <tr class="bg-gray-700">
+                    <th scope="col" class="px-2 py-1 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Type</th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Definition</th>
                 </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-xs">
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
                 @for (DictionaryEntry entry : result.entries())
                     <tr>
                         <td class="px-3 py-3 whitespace-nowrap">${entry.type()}</td>

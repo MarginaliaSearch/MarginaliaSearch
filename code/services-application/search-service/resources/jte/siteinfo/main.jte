@@ -9,45 +9,45 @@
 
 @template.part.head(title = "Marginalia Search - " + model.domain())
 
-<body class="min-h-screen bg-slate-100 font-sans" >
+<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
 
 @template.part.navbar(navbar = navbar)
 
-<header class="border-gray-300 bg-white  shadow-md">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto p-4">
         <div class="flex place-items-baseline space-x-2">
-            <span class="text-gray-900 text-md font-mono rounded-sm block p-2.5">
+            <span class="text-gray-900 dark:text-white text-md font-mono rounded-sm block p-2.5">
                 ${model.domain()}
             </span>
             <span class="grow"></span>
             @if (model instanceof SearchSiteInfoService.SiteInfoWithContext siteInfo)
                 @if (siteInfo.domainInformation().getPagesIndexed() > 0)
                     <span
-                            class="bg-green-50 text-green-900 border-green-200 p-1 font-sm rounded"
+                            class="bg-green-50 text-green-900 border-green-200 dark:bg-black dark:text-green-100 border p-1 font-sm rounded"
                             title="The search engine indexes this domain">
                         Indexed
                     </span>
                 @elseif (siteInfo.domainInformation().isBlacklisted())
                     <span
-                            class="bg-red-50 text-red-900 border-red-200 p-1 font-sm rounded"
+                            class="bg-red-50 text-red-900 border-red-200 dark:bg-black dark:text-red-100 border  p-1 font-sm rounded"
                             title="This domain is blacklisted and will not be crawled or indexed">
                         Blacklisted
                     </span>
                 @elseif (siteInfo.domainInformation().getNodeAffinity() == 0)
                     <span
-                            class="bg-blue-50 text-blue-900 border-blue-200 p-1 font-sm rounded"
+                            class="bg-blue-50 text-blue-900 border-blue-200 dark:bg-black dark:text-blue-100 border p-1 font-sm rounded"
                             title="This domain will be crawled by the search engine">
                         In Crawler Queue
                     </span>
                 @elseif (siteInfo.domainInformation().isUnknownDomain())
                     <span
-                            class="bg-purple-50 text-purple-900 border-purple-200 p-1 font-sm rounded"
+                            class="bg-purple-50 text-purple-900 border-purple-200 dark:bg-black dark:text-purple-100 border  p-1 font-sm rounded"
                             title="The search engine is not aware of this domain name">
                         Unknown
                     </span>
                 @elseif (siteInfo.domainInformation().isUnknownDomain())
                     <span
-                            class="bg-yellow-50 text-yellow-900 border-yellow-200 p-1 font-sm rounded"
+                            class="bg-yellow-50 text-yellow-900 border-yellow-200 dark:bg-black dark:text-yellow-100 border p-1 font-sm rounded"
                             title="The search engine is aware of this domain, but it's not slated for crawling">
                         Known
                     </span>
@@ -55,10 +55,10 @@
             @endif
         </div>
     </div>
-    <div class="mx-auto md:px-4 border bg-slate-50">
+    <div class="mx-auto md:px-4 border dark:border-gray-600 bg-slate-50 dark:bg-gray-600">
         <div class="flex md:space-x-2 max-w-[1000px] mx-auto">
-            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
-                <a href="?view=info" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-sm hover:text-gray-900">
+            <div class="has-[:checked]:bg-slate-200 has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
+                <a href="?view=info" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-400">
                     @if (model instanceof SearchSiteInfoService.SiteInfoWithContext)
                     <input type="checkbox" class="sr-only hidden " checked readonly />
                     @else
@@ -71,8 +71,8 @@
                 </a>
             </div>
 
-            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
-                <a href="?view=docs" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-sm hover:text-gray-900">
+            <div class="has-[:checked]:bg-slate-200 has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
+                <a href="?view=docs" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-400">
                     @if (model instanceof SearchSiteInfoService.Docs)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -85,8 +85,8 @@
                 </a>
             </div>
 
-            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
-                <a href="?view=links" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 text-sm hover:text-gray-900">
+            <div class="has-[:checked]:bg-slate-200 has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
+                <a href="?view=links" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-400">
                     @if (model instanceof SearchSiteInfoService.Backlinks)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -99,8 +99,8 @@
                 </a>
             </div>
             <div class="grow"></div>
-            <div class="has-[:checked]:bg-slate-200 py-1 sm:px-2 px-1">
-                <a href="?view=report" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 text-sm hover:text-red-600">
+            <div class="has-[:checked]:bg-slate-200 has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
+                <a href="?view=report" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 dark:text-red-200 text-sm hover:text-red-600 dark:hover:text-red-300">
                     @if (model instanceof SearchSiteInfoService.ReportDomain)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else

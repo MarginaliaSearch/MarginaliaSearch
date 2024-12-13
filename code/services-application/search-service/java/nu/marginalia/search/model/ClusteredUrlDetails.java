@@ -117,10 +117,10 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
     public enum PostColorScheme {
         // Hack: ensure these classes are also in jte/part/warmup.jte!
 
-        Slate( "text-blue-800", "bg-blue-50"),
-        Green( "text-green-800", "bg-green-50"),
-        Purple("text-purple-800", "bg-purple-50"),
-        White("text-blue-950", "bg-gray-100");
+        Slate( "text-blue-800 dark:text-blue-200", "bg-blue-50 dark:bg-blue-950"),
+        Green( "text-green-800 dark:text-green-200", "bg-green-50 dark:bg-green-950"),
+        Purple("text-purple-800 dark:text-purple-200", "bg-purple-50 dark:bg-purple-950"),
+        White("text-blue-950 dark:text-blue-50", "bg-gray-100 dark:bg-gray-900");
 
         PostColorScheme(String textColor, String backgroundColor) {
             this.backgroundColor = backgroundColor;

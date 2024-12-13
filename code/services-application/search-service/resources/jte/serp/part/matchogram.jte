@@ -8,7 +8,7 @@
             cy="18"
             r="16"
             fill="none"
-            stroke="#E5E7EB"
+            stroke="#eee"
             stroke-width="2"
     />
 @for (int bit : IntStream.range(0, 56).filter(bit -> (mask & (1L << bit)) != 0).toArray())
@@ -17,7 +17,7 @@
                     y1="${18 - 15*Math.cos(2 * Math.PI * bit / 56.)}"
                     x2="${18 + 17*Math.sin(2 * Math.PI * bit / 56.)}"
                     y2="${18 - 17*Math.cos(2 * Math.PI * bit / 56.)}"
-                    stroke="#3B82F6"
+                    stroke="#444"
                     stroke-width="2"
             />
 @endfor

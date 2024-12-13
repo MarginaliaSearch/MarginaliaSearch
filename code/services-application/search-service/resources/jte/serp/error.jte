@@ -9,11 +9,11 @@
 
 @template.part.head(title = "Marginalia Search - Error")
 
-<body class="min-h-screen bg-gray-50 font-sans" >
+<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
 
 @template.part.navbar(navbar = navbar)
 
-<header class="border-b border-gray-300 bg-white">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-4">
         <div class="flex items-center">
             <h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1>
@@ -26,13 +26,13 @@
 
     <!-- Main content -->
     <main class="flex-1 p-4 max-w-2xl space-y-4">
-        <div class="border rounded bg-white text-black text-m p-4">
+        <div class="border dark:border-gray-600 rounded bg-white text-black dark:bg-gray-800 dark:text-white text-m p-4">
             <div class="flex space-x-3  place-items-baseline">
                 <i class="fa fa-circle-exclamation text-red-800"></i>
                 <div class="grow">${model.errorTitle()}</div>
             </div>
             @if (!model.errorRest().isBlank())
-            <p class="pt-5 text-gray-800 text-sm">
+            <p class="pt-5 text-gray-800 dark:text-gray-200 text-sm">
                 ${model.errorRest()}
             </p>
             @endif

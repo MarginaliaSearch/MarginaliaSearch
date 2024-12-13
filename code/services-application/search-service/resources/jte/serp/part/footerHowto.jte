@@ -1,6 +1,6 @@
-<footer class="max-w-[1400px] mx-auto text-slate-900 bg-white p-5 text-sm border-gray-300 border rounded flex my-5 md:space-x-8 space-y-4 md:flex-row flex-col leading-6">
+<footer class="max-w-[1400px] mx-auto text-slate-900 dark:text-slate-100 bg-white dark:bg-gray-800 p-5 text-sm border-gray-300 border dark:border-gray-600 rounded flex my-5 md:space-x-8 space-y-4 md:flex-row flex-col leading-6">
     <div class="flex space-y-4 flex-col flex-1">
-        <p class="text-base"><i class="fas fa-book mr-2 text-margeblue"></i>Syntax</p>
+        <p class="text-base"><i class="fas fa-book mr-2 text-margeblue dark:text-slate-200"></i>Syntax</p>
         <p>This is a keyword-based search engine. When entering multiple search terms, the search engine will attempt to match them against documents where the terms occur in close proximity.</p>
         <p>Search terms can be excluded with a hyphen.</p>
         <p>While the search engine at present does not allow full text search, quotes can be used to specifically search for names or terms in the title. Using quotes will also cause the search engine to be as literal as possible in interpreting the query.</p>
@@ -8,35 +8,52 @@
 
         <p>Samples</p>
         <dl>
-            <dt class="font-mono text-red-800">soup -chicken</dt>
-            <dd class="ml-4">Look for keywords that contain <span class="font-mono text-red-800">soup</span>, but not
-                <span class="font-mono text-red-800">chicken</span>.</dd>
-            <dt class="font-mono text-red-800">"keyboard"</dt>
+            <dt class="font-mono text-red-800 dark:text-red-200">soup -chicken</dt>
+            <dd class="ml-4">Look for keywords that contain <span class="font-mono text-red-800 dark:text-red-200">soup</span>, but not
+                <span class="font-mono text-red-800 dark:text-red-200">chicken</span>.</dd>
+            <dt class="font-mono text-red-800 dark:text-red-200">"keyboard"</dt>
             <dd class="ml-4">Look for pages containing the exact word
-                <span class="font-mono text-red-800">keyboard</span>, not <span class="font-mono text-red-800">keyboards</span> or the like.</dd>
-            <dt class="font-mono text-red-800">"steve mcqueen"</dt>
-            <dd class="ml-4">Look for pages containing the exact words <span class="font-mono text-red-800">steve mcqueen</span>
+                <span class="font-mono text-red-800 dark:text-red-200">keyboard</span>, not <span class="font-mono text-red-800 dark:text-red-200">keyboards</span> or the like.</dd>
+            <dt class="font-mono text-red-800 dark:text-red-200">"steve mcqueen"</dt>
+            <dd class="ml-4">Look for pages containing the exact words <span class="font-mono text-red-800 dark:text-red-200">steve mcqueen</span>
                 in that order, with no words in between.</dd>
-            <dt class="font-mono text-red-800">apology (plato)</dt>
-            <dd class="ml-4">Look for pages containing <span class="font-mono text-red-800">apology</span> and <span class="font-mono text-slate-900">plato</span>, but only rank them
-                based on their relevance to <span class="font-mono text-red-800">apology</span></dd>
+            <dt class="font-mono text-red-800 dark:text-red-200">apology (plato)</dt>
+            <dd class="ml-4">Look for pages containing <span class="font-mono text-red-800 dark:text-red-200">apology</span> and <span class="font-mono text-red-800 dark:text-red-200">plato</span>, but only rank them
+                based on their relevance to <span class="font-mono text-red-800 dark:text-red-200">apology</span></dd>
         </dl>
-        <p class="text-base"><i class="fas fa-flag mr-2 text-margeblue"></i>Language Limitations</p>
+        <p class="text-base"><i class="fas fa-coffee mr-2 text-margeblue dark:text-slate-200"></i>Match Indicator</p>
+        <p>The "coffee stain" indicator next to the search results illustrates the locations in a document the keywords appear.
+            It operates a bit like a clock, starting at the top and working its way around clockwise.</p>
+
+        <div class="flex gap-4 place-items-middle">
+            @template.serp.part.matchogram(mask = 90)
+            <div>This is by the beginning</div>
+        </div>
+        <div class="flex gap-4 place-items-middle">
+            @template.serp.part.matchogram(mask = 90L<<26)
+            <div>This is in the middle</div>
+        </div>
+        <div class="flex gap-4 place-items-middle">
+            @template.serp.part.matchogram(mask = 5L<<48)
+            <div>This is toward the end</div>
+        </div>
+
+        <p class="text-base"><i class="fas fa-flag mr-2 text-margeblue dark:text-slate-200"></i>Language Limitations</p>
         <p>The search engine currently does not support any languages other than English. </p>
         <p> Support for other languages is planned,
             but not available right now.  Adding support for additional languages and making it work well is somewhat time-consuming,
             meanwhile having bad support for a language won't make anyone happy.
         </p>
-        <p class="text-base"><i class="fas fa-server mr-2 text-margeblue"></i>Webmaster Information</p>
-        <p>If you wish to add your website to the index, follow the instructions in this <a class="underline text-liteblue"  href="https://github.com/MarginaliaSearch/submit-site-to-marginalia-search">git repository</a>,
-            if you do not want to mess with git, you can also email <a class="underline text-liteblue" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a> with the domain name.</p>
-        <p>The search engine's crawler uses the user-agent string <span class="font-mono text-red-800">search.marginalia.nu</span>, and requests come from the IPs indicated in
-            <a class="underline text-liteblue" href="https://search.marginalia.nu/crawler-ips.txt">https://search.marginalia.nu/crawler-ips.txt</a>.</p>
-        <p>If you do not want your website to be crawled, the search engine respects robots.txt.  In case of questions, bug reports or concerns, email <a class="underline text-liteblue" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+        <p class="text-base"><i class="fas fa-server mr-2 text-margeblue dark:text-slate-200"></i>Webmaster Information</p>
+        <p>If you wish to add your website to the index, follow the instructions in this <a class="underline text-liteblue dark:text-blue-200"  href="https://github.com/MarginaliaSearch/submit-site-to-marginalia-search">git repository</a>,
+            if you do not want to mess with git, you can also email <a class="underline text-liteblue dark:text-blue-200" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a> with the domain name.</p>
+        <p>The search engine's crawler uses the user-agent string <span class="font-mono text-red-800 dark:text-red-200">search.marginalia.nu</span>, and requests come from the IPs indicated in
+            <a class="underline text-liteblue dark:text-blue-200" href="https://search.marginalia.nu/crawler-ips.txt">https://search.marginalia.nu/crawler-ips.txt</a>.</p>
+        <p>If you do not want your website to be crawled, the search engine respects robots.txt.  In case of questions, bug reports or concerns, email <a class="underline text-liteblue dark:text-blue-200" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
         </p>
     </div>
     <div class="flex space-y-4 flex-col flex-1">
-        <p class="text-base"><i class="fas fa-code mr-2 text-margeblue"></i>Special Keywords</p>
+        <p class="text-base"><i class="fas fa-code mr-2 text-margeblue dark:text-slate-200"></i>Special Keywords</p>
         <table class="overflow-scroll">
             <thead>
             <tr><th>Keyword</th><th>Meaning</th></tr>

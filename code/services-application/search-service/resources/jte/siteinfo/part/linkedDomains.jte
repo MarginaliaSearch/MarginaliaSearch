@@ -7,44 +7,44 @@
 
 @if (!list.isEmpty())
 
-    <div class="bg-white shadow-sm rounded overflow-hidden border">
-        <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded overflow-hidden border dark:border-gray-600">
+        <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200 dark:border-gray-600">
             <h2 class="text-md">${title}</h2>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead>
-                <tr class="bg-gray-50">
-                    <th scope="col" class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link</th>
-                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
-                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Similarity</th>
+                <tr class="bg-gray-50 dark:bg-gray-700">
+                    <th scope="col" class="px-2 py-1 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Link</th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Rank</th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Domain</th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Similarity</th>
                 </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-xs">
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
                 @for(SimilarDomain item : list)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 hover:bg-gray-700">
                         <td class="px-3 py-3 whitespace-nowrap">
                             @if(item.linkType().isLinked())
                                 <a href="/crosstalk/?domains=${domainName},${item.url().getDomain().toString()}"
-                                   class="text-liteblue ${item.linkType().faIcon()}"
+                                   class="text-liteblue dark:text-blue-200 ${item.linkType().faIcon()}"
                                    title="${item.linkType().getDescription()}">
                                 </a>
                             @endif
                         </td>
                          <td class="px-3 py-3 whitespace-nowrap">
                             <div class="flex items-center">
-                <span title="${item.rank()}%" class="text-sm text-gray-600">
-                  $unsafe{item.getRankSymbols()}
-                </span>
+                                <span title="${item.rank()}%" class="text-sm text-gray-600">
+                                  $unsafe{item.getRankSymbols()}
+                                </span>
                             </div>
                         </td>
 
                         <td class="px-3 py-3 whitespace-nowrap">
                             <a href="/site/${item.url().getDomain().toString()}?view=similar"
                                rel="external noopener nofollow"
-                               class="text-liteblue hover:text-liteblue">
+                               class="text-liteblue dark:text-blue-200 dark:text-blue-200">
                                 ${item.url().getDomain().toString()}
                             </a>
                         </td>
@@ -53,6 +53,10 @@
                             <div class="w-16">
                                 <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
                                     <div class="bg-margeblue h-2 rounded-full"
+                                         aria-valuenow="${item.relatedness()}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100"
+                                         aria-roledescription="meter"
                                          style="width: ${item.relatedness()}%">
                                     </div>
                                 </div>
