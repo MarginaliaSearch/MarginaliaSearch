@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -34,6 +35,16 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         Path domainPath = ProcessedDataFileNames.domainFileName(basePath);
         Path linksPath = ProcessedDataFileNames.domainLinkFileName(basePath);
         Path docsPath = ProcessedDataFileNames.documentFileName(basePath);
+
+        if (!Files.exists(domainPath)) {
+            Files.createDirectory(domainPath);
+        }
+        if (!Files.exists(linksPath)) {
+            Files.createDirectory(linksPath);
+        }
+        if (!Files.exists(docsPath)) {
+            Files.createDirectory(docsPath);
+        }
 
         domainWriter = new SlopDomainRecord.Writer(domainPath, batchNumber);
         domainLinkWriter = new SlopDomainLinkRecord.Writer(linksPath, batchNumber);
