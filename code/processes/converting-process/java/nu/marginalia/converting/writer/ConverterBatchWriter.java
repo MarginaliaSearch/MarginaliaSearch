@@ -12,13 +12,11 @@ import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
 import nu.marginalia.model.processed.SlopDomainRecord;
 import nu.marginalia.sequence.VarintCodedSequence;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -33,27 +31,15 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
     public ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
-        Path domainPath = initSlopDir(ProcessedDataFileNames.domainFileName(basePath));
-        Path linksPath = initSlopDir(ProcessedDataFileNames.domainLinkFileName(basePath));
-        Path docsPath = initSlopDir(ProcessedDataFileNames.documentFileName(basePath));
+        Path domainPath = ProcessedDataFileNames.domainFileName(basePath);
+        Path linksPath = ProcessedDataFileNames.domainLinkFileName(basePath);
+        Path docsPath = ProcessedDataFileNames.documentFileName(basePath);
 
         domainWriter = new SlopDomainRecord.Writer(domainPath, batchNumber);
         domainLinkWriter = new SlopDomainLinkRecord.Writer(linksPath, batchNumber);
         documentWriter = new SlopDocumentRecord.Writer(docsPath, batchNumber);
     }
 
-    private Path initSlopDir(Path p) throws IOException {
-        if (Files.isDirectory(p)) {
-            FileUtils.deleteDirectory(p.toFile());
-        }
-        else if (Files.exists(p)) {
-            Files.delete(p);
-        }
-
-        Files.createDirectories(p);
-
-        return p;
-    }
 
     /** Sets the lowest ordinal value for the documents in this batch */
     public void setOrdinalOffset(int ordinalOffset) {
