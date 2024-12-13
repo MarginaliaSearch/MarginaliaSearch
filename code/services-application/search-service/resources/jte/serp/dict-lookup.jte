@@ -57,8 +57,8 @@
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
                 @for (DictionaryEntry entry : result.entries())
                     <tr>
-                        <td class="px-3 py-3 whitespace-nowrap">${entry.type()}</td>
-                        <td class="px-3 py-3 whitespace-nowrap">${entry.definition()}</td>
+                        <td class="px-3 py-3">${entry.type()}</td>
+                        <td class="px-3 py-3">${entry.definition()}</td>
                     </tr>
                 @endfor
                 </tbody>
