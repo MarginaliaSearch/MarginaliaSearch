@@ -1127,11 +1127,6 @@ video {
   background-color: rgb(55 65 81 / var(--tw-bg-opacity, 1));
 }
 
-.bg-gray-800 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));
-}
-
 .bg-green-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(240 253 244 / var(--tw-bg-opacity, 1));
@@ -1644,11 +1639,6 @@ video {
   background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
 }
 
-.has-\[\:checked\]\:bg-slate-800:has(:checked) {
-  --tw-bg-opacity: 1;
-  background-color: rgb(30 41 59 / var(--tw-bg-opacity, 1));
-}
-
 .has-\[\:checked\]\:text-slate-900:has(:checked) {
   --tw-text-opacity: 1;
   color: rgb(15 23 42 / var(--tw-text-opacity, 1));
@@ -2038,6 +2028,11 @@ video {
     background-color: rgb(62 95 111 / var(--tw-bg-opacity, 1));
   }
 
+  .dark\:hover\:text-gray-200:hover {
+    --tw-text-opacity: 1;
+    color: rgb(229 231 235 / var(--tw-text-opacity, 1));
+  }
+
   .dark\:hover\:text-gray-400:hover {
     --tw-text-opacity: 1;
     color: rgb(156 163 175 / var(--tw-text-opacity, 1));
@@ -2056,6 +2051,11 @@ video {
   .dark\:has-\[\:checked\]\:bg-gray-950:has(:checked) {
     --tw-bg-opacity: 1;
     background-color: rgb(3 7 18 / var(--tw-bg-opacity, 1));
+  }
+
+  .dark\:has-\[\:checked\]\:bg-slate-800:has(:checked) {
+    --tw-bg-opacity: 1;
+    background-color: rgb(30 41 59 / var(--tw-bg-opacity, 1));
   }
 
   .dark\:has-\[\:checked\]\:text-slate-100:has(:checked) {

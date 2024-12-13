@@ -13,7 +13,7 @@
 
 @template.part.navbar(navbar = navbar)
 
-<header class="border-b border-gray-300 dark:border-gray-600 bg-gray-800 dark:bg-gray-800 shadow-md">
+<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-4">
         <h1 class="text-base md:text-xl mr-2 md:mr-8 font-serif">View Site Information</h1>
     </div>
@@ -22,7 +22,7 @@
 <div class="max-w-[1000px] mx-auto flex gap-4 flex-col md:flex-row place-items-center md:place-items-start p-4">
 
 
-    <div class="border dark:border-gray-600 rounded md:my-4 overflow-hidden bg-gray-800 flex flex-col space-y-2 flex-1">
+    <div class="border dark:border-gray-600 rounded md:my-4 overflow-hidden bg-white dark:bg-gray-800 flex flex-col space-y-2 flex-1">
         <div class="bg-margeblue text-white p-2 text-sm mb-2">View Site Information</div>
 
         <p class="mx-4">This utility lets you explore what the search engine knows about the web,
@@ -48,17 +48,17 @@
         <div class="bg-margeblue text-white p-2 text-sm">Recently Discovered Domains</div>
 
 
-        <div class="bg-gray-800">
+        <div class="bg-gray-100 dark:bg-gray-800">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead>
-                <tr class="hover:bg-gray-50 hover:bg-gray-700">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Domain Name</th>
                     <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Discover Time</th>
                 </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
                     @for (DiscoveredDomain domain : model.domains())
-                    <tr class="hover:bg-gray-50 hover:bg-gray-700">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-3 py-3 whitespace-nowrap">
                             <a class="text-liteblue dark:text-blue-200 underline" href="site/${domain.name()}">${domain.name()}</a>
                         </td>

@@ -24,7 +24,7 @@
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
                 @for(SimilarDomain item : list)
-                    <tr class="hover:bg-gray-50 hover:bg-gray-700">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-3 py-3 whitespace-nowrap">
                             @if(item.linkType().isLinked())
                                 <a href="/crosstalk/?domains=${domainName},${item.url().getDomain().toString()}"
