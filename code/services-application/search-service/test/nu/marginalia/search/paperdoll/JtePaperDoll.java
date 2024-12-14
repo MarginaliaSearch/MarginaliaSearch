@@ -9,6 +9,7 @@ import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.rendering.MockedSearchResults;
 import nu.marginalia.service.server.StaticResources;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import spark.Request;
 import spark.Response;
@@ -17,6 +18,7 @@ import spark.Spark;
 import java.nio.file.Path;
 import java.util.Map;
 
+@Tag("paperdoll")
 public class JtePaperDoll {
     final CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(".").toAbsolutePath().resolve("resources/jte"));
     final TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
@@ -41,6 +43,10 @@ public class JtePaperDoll {
 
     @Test
     public void searchResults() {
+        if (!Boolean.getBoolean("runPaperDoll")) {
+            return;
+        }
+
         System.setProperty("test-env", "true");
         System.out.println(Path.of(".").toAbsolutePath());
 
