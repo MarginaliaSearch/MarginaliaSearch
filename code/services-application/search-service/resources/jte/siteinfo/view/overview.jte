@@ -142,7 +142,7 @@
                 <span>Crawl Statistics</span>
             </div>
 
-            <div class="mx-3 grid grid-cols-2 md:grid-cols-3 gap-4 mx-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm text-gray-500 dark:text-gray-300">Pages Known</h3>
                     <p class="text-xl font-medium">${siteInfo.domainInformation().getPagesKnown()}</p>
@@ -182,7 +182,7 @@
                 <span>Network Details</span>
             </div>
 
-            <div class="mx-3 grid grid-cols-2 grid-cols-2 gap-2 mx-8">
+            <div class="grid grid-cols-2 grid-cols-2 gap-2 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">IP Address</h3>
                     <p class="text-lg font-mono">${siteInfo.domainInformation().getIp()}</p>
