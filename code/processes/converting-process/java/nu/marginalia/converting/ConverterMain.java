@@ -12,8 +12,6 @@ import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
-import nu.marginalia.io.CrawledDomainReader;
-import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.process.ProcessConfiguration;
@@ -228,7 +226,7 @@ public class ConverterMain extends ProcessMainClass {
         }
     }
 
-    private static class CrawlDataLocator implements Function<WorkLogEntry, Optional<SerializableCrawlDataStream>> {
+    private static class CrawlDataLocator implements Function<WorkLogEntry, Optional<Path>> {
 
         private final Path crawlRootDir;
         private final BatchingWorkLog batchingWorkLog;
@@ -239,7 +237,7 @@ public class ConverterMain extends ProcessMainClass {
         }
 
         @Override
-        public Optional<SerializableCrawlDataStream> apply(WorkLogEntry entry) {
+        public Optional<Path> apply(WorkLogEntry entry) {
             if (batchingWorkLog.isItemProcessed(entry.id())) {
                 return Optional.empty();
             }
@@ -252,7 +250,7 @@ public class ConverterMain extends ProcessMainClass {
             }
 
             try {
-                return Optional.of(CrawledDomainReader.createDataStream(path));
+                return Optional.of(path);
             }
             catch (Exception ex) {
                 return Optional.empty();

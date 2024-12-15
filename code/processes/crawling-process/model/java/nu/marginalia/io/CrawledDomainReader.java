@@ -1,6 +1,7 @@
 package nu.marginalia.io;
 
 import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
+import nu.marginalia.io.crawldata.format.SlopSerializableCrawlDataStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,16 @@ public class CrawledDomainReader {
                 logger.error("Error reading domain data from " + fullPath, ex);
                 return SerializableCrawlDataStream.empty();
             }
-        } else {
+        }
+        else if (fileName.endsWith(".slop.zip")) {
+            try {
+                return new SlopSerializableCrawlDataStream(fullPath);
+            } catch (Exception ex) {
+                logger.error("Error reading domain data from " + fullPath, ex);
+                return SerializableCrawlDataStream.empty();
+            }
+        }
+        else {
             logger.error("Unknown file type: {}", fullPath);
             return SerializableCrawlDataStream.empty();
         }

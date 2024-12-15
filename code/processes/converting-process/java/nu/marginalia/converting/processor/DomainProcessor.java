@@ -14,6 +14,7 @@ import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.geoip.sources.AsnTable;
+import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -54,16 +56,19 @@ public class DomainProcessor {
         geoIpDictionary.waitReady();
     }
 
-    public ConverterBatchWritableIf createWritable(SerializableCrawlDataStream domain) {
-        final int sizeHint = domain.sizeHint();
+    public ConverterBatchWritableIf createWritable(Path path) throws IOException {
+
+        var dataStream = CrawledDomainReader.createDataStream(path);
+
+        final int sizeHint = dataStream.sizeHint();
 
         if (sizeHint > SIDELOAD_THRESHOLD) {
             // If the file is too big, we run a processing mode that doesn't
             // require loading the entire dataset into RAM
-            return sideloadProcessing(domain, sizeHint);
+            return sideloadProcessing(dataStream, sizeHint);
         }
 
-        return fullProcessing(domain);
+        return fullProcessing(dataStream);
     }
 
     public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
