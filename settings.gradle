@@ -230,7 +230,7 @@ dependencyResolutionManagement {
             library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
 
-            library('slop', 'nu.marginalia', 'slop').version('0.0.8-SNAPSHOT')
+            library('slop', 'nu.marginalia', 'slop').version('0.0.9-org-2-SNAPSHOT')
 
             bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 

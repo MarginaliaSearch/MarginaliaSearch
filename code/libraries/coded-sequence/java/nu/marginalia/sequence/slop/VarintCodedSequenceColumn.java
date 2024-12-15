@@ -44,6 +44,11 @@ public class VarintCodedSequenceColumn extends AbstractObjectColumn<VarintCodedS
         );
     }
 
+    @Override
+    public int alignmentSize() {
+        return 1;
+    }
+
     public Reader openUnregistered(URI uri, int page) throws IOException {
         return new Reader(
                 Storage.reader(uri, this, page, false),
@@ -99,6 +104,11 @@ public class VarintCodedSequenceColumn extends AbstractObjectColumn<VarintCodedS
         @Override
         public AbstractColumn<?, ?> columnDesc() {
             return VarintCodedSequenceColumn.this;
+        }
+
+        @Override
+        public boolean isDirect() {
+            return storage.isDirect();
         }
 
         @Override

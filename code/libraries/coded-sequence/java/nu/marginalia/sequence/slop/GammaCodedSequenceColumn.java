@@ -44,6 +44,11 @@ public class GammaCodedSequenceColumn extends AbstractObjectColumn<GammaCodedSeq
         );
     }
 
+    @Override
+    public int alignmentSize() {
+        return 1;
+    }
+
     public Reader openUnregistered(URI uri, int page) throws IOException {
         return new Reader(
                 Storage.reader(uri, this, page, false),
@@ -94,6 +99,11 @@ public class GammaCodedSequenceColumn extends AbstractObjectColumn<GammaCodedSeq
         Reader(StorageReader reader, VarintColumn.Reader indexReader) throws IOException {
             this.storage = reader;
             this.indexReader = indexReader;
+        }
+
+        @Override
+        public boolean isDirect() {
+            return storage.isDirect();
         }
 
         @Override
