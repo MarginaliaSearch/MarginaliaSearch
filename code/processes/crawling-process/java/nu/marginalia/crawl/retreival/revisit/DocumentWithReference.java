@@ -2,8 +2,6 @@ package nu.marginalia.crawl.retreival.revisit;
 
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
-import nu.marginalia.model.body.DocumentBodyExtractor;
-import nu.marginalia.model.body.DocumentBodyResult;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawledDocument;
 
@@ -35,21 +33,17 @@ public record DocumentWithReference(
             return false;
         if (doc == null)
             return false;
-        if (doc.documentBody == null)
+        if (doc.documentBodyBytes.length == 0)
             return false;
 
-        if (!(DocumentBodyExtractor.asString(resultOk) instanceof DocumentBodyResult.Ok<String> bodyOk)) {
-            return false;
-        }
-
-        return CrawlDataReference.isContentBodySame(doc.documentBody, bodyOk.body());
+        return CrawlDataReference.isContentBodySame(doc.documentBodyBytes, resultOk.bytesRaw());
     }
 
     public ContentTags getContentTags() {
         if (null == doc)
             return ContentTags.empty();
 
-        if (doc.documentBody == null || doc.httpStatus != 200)
+        if (doc.documentBodyBytes.length == 0 || doc.httpStatus != 200)
             return ContentTags.empty();
 
         String lastmod = doc.getLastModified();

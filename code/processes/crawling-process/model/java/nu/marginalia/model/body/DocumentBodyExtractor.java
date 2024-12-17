@@ -18,7 +18,7 @@ public class DocumentBodyExtractor {
             return asBytes(fetchOk);
         }
         else if (result instanceof HttpFetchResult.Result304ReplacedWithReference retained) {
-            return new DocumentBodyResult.Ok<>(retained.contentType(), retained.body().getBytes());
+            return new DocumentBodyResult.Ok<>(retained.contentType(), retained.body());
         }
 
         return new DocumentBodyResult.Error<>(CrawlerDocumentStatus.ERROR, "Fetch Result Not Ok");

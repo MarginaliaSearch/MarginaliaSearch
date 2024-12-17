@@ -6,7 +6,6 @@ import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
-import nu.marginalia.tools.experiments.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,13 +15,6 @@ import java.util.Map;
 public class ExperimentRunnerMain {
 
     private static Map<String, Class<? extends Experiment>> experiments = Map.of(
-            "test", TestExperiment.class,
-            "adblock", AdblockExperiment.class,
-            "topic", TopicExperiment.class,
-            "sentence-statistics", SentenceStatisticsExperiment.class,
-            "site-statistics", SiteStatisticsExperiment.class,
-            "export-atags", ExportExternalLinksExperiment.class,
-            "debug-converter", DebugConverterExperiment.class
     );
 
     public static void main(String... args) throws IOException {

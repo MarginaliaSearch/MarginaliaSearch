@@ -80,7 +80,7 @@ class WarcRecorderTest {
             recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
-                    "<?doctype html><html><body>test</body></html>",
+                    "<?doctype html><html><body>test</body></html>".getBytes(),
                     null,
                     ContentTags.empty());
         }
@@ -116,7 +116,7 @@ class WarcRecorderTest {
             recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
-                    "<?doctype html><html><body>test</body></html>",
+                    "<?doctype html><html><body>test</body></html>".getBytes(),
                     null, ContentTags.empty());
         }
 

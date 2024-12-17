@@ -14,7 +14,6 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +51,9 @@ public class AtagExporter implements ExporterIf {
 
         try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
         {
-            Path crawlerLogFile = inputDir.resolve("crawler.log");
-
             var tagWriter = new ATagCsvWriter(bw);
 
-            for (var item : WorkLog.iterable(crawlerLogFile)) {
+            for (var item : WorkLog.iterable(inputDir.resolve("crawler.log"))) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
@@ -89,15 +86,19 @@ public class AtagExporter implements ExporterIf {
         while (stream.hasNext()) {
             if (!(stream.next() instanceof CrawledDocument doc))
                 continue;
-            if (null == doc.documentBody)
+            if (!doc.hasBody())
                 continue;
             if (!doc.contentType.toLowerCase().startsWith("text/html"))
                 continue;
 
             var baseUrl = new EdgeUrl(doc.url);
-            var parsed = Jsoup.parse(doc.documentBody);
+            var parsed = doc.parseBody();
 
             for (var atag : parsed.getElementsByTag("a")) {
+                if (!atag.hasAttr("href")) {
+                    continue;
+                }
+
                 String linkText = atag.text();
 
                 if (!linkFilter.isLinkTextEligible(linkText)) {

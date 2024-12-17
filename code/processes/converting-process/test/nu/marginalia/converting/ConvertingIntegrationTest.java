@@ -98,7 +98,7 @@ public class ConvertingIntegrationTest {
 
     @Test
     public void testMemexMarginaliaNuSideloadProcessing() throws IOException {
-        var ret = domainProcessor.sideloadProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()), 100);
+        var ret = domainProcessor.simpleProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()), 100);
         assertNotNull(ret);
         assertEquals("memex.marginalia.nu", ret.id());
 
@@ -146,7 +146,7 @@ public class ConvertingIntegrationTest {
                     "OK",
                     "",
                     "",
-                    readClassPathFile(p.toString()),
+                    readClassPathFile(p.toString()).getBytes(),
                     false,
                     null,
                     null

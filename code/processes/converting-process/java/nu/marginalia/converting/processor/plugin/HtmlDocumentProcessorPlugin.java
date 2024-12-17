@@ -6,6 +6,7 @@ import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
+import nu.marginalia.converting.processor.AcceptableAds;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.*;
@@ -32,11 +33,11 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -51,7 +52,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final double minDocumentQuality;
 
     private final FeatureExtractor featureExtractor;
-    private final TitleExtractor titleExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
     private final PubDateSniffer pubDateSniffer;
 
@@ -74,7 +74,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             @Named("min-document-quality") Double minDocumentQuality,
             LanguageFilter languageFilter,
             FeatureExtractor featureExtractor,
-            TitleExtractor titleExtractor,
             DocumentKeywordExtractor keywordExtractor,
             PubDateSniffer pubDateSniffer,
             DocumentLengthLogic documentLengthLogic,
@@ -89,7 +88,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         this.minDocumentQuality = minDocumentQuality;
         this.featureExtractor = featureExtractor;
 
-        this.titleExtractor = titleExtractor;
         this.keywordExtractor = keywordExtractor;
         this.pubDateSniffer = pubDateSniffer;
         this.metaRobotsTag = metaRobotsTag;
@@ -108,19 +106,17 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
                                           DocumentClass documentClass)
-            throws DisqualifiedException, URISyntaxException {
+            throws DisqualifiedException, URISyntaxException, IOException {
 
-        String documentBody = crawledDocument.documentBody;
-
-        if (languageFilter.isBlockedUnicodeRange(documentBody)) {
+        if (languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
         }
 
-        if (documentBody.length() > MAX_DOCUMENT_LENGTH_BYTES) { // 128kb
-            documentBody = documentBody.substring(0, MAX_DOCUMENT_LENGTH_BYTES);
-        }
+        Document doc = crawledDocument.parseBody();
 
-        Document doc = Jsoup.parse(documentBody);
+        if (AcceptableAds.hasAcceptableAdsTag(doc)) {
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.ACCEPTABLE_ADS);
+        }
 
         if (!metaRobotsTag.allowIndexingByMetaTag(doc)) {
             throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
@@ -138,31 +134,32 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         var prunedDoc = specialization.prune(doc);
-        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(prunedDoc);
 
-        checkDocumentLanguage(dld);
-
-        var ret = new ProcessedDocumentDetails();
 
         final int length = getLength(doc);
         final HtmlStandard standard = getHtmlStandard(doc);
         final double quality = documentValuator.getQuality(crawledDocument, standard, doc, length);
 
+        if (isDisqualified(documentClass, url, quality, doc.title())) {
+            throw new DisqualifiedException(DisqualificationReason.QUALITY);
+        }
+
+        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(prunedDoc);
+
+        checkDocumentLanguage(dld);
+        documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
+
+        var ret = new ProcessedDocumentDetails();
+
         ret.length = length;
         ret.standard = standard;
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
-
-        documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
 
         ret.features = features;
         ret.quality = documentValuator.adjustQuality(quality, features);
         ret.hashCode = dld.localitySensitiveHashCode();
-
-        if (isDisqualified(documentClass, url, quality, ret.title)) {
-            throw new DisqualifiedException(DisqualificationReason.QUALITY);
-        }
 
         PubDate pubDate = pubDateSniffer.getPubDate(documentHeaders, url, doc, standard, true);
 

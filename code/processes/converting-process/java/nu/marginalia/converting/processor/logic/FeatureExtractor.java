@@ -218,7 +218,10 @@ public class FeatureExtractor {
             }
         }
 
-        if (features.contains(HtmlFeature.JS) && adblockSimulator.hasAds(doc.clone())) {
+        if (features.contains(HtmlFeature.JS)
+            // remove while disabled to get rid of expensive clone() call:
+            // adblockSimulator.hasAds(doc.clone())
+            ) {
             features.add(HtmlFeature.ADVERTISEMENT);
         }
 
