@@ -2,10 +2,14 @@ package nu.marginalia.io;
 
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Function;
 
 /** Closable iterator exceptional over serialized crawl data
  * The data may appear in any order, and the iterator must be closed.
@@ -13,7 +17,7 @@ import java.util.Iterator;
  * @see CrawledDomainReader
  * */
 public interface SerializableCrawlDataStream extends AutoCloseable {
-
+    Logger logger = LoggerFactory.getLogger(SerializableCrawlDataStream.class);
 
     SerializableCrawlData next() throws IOException;
 
@@ -25,6 +29,41 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
 
     @Nullable
     default Path path() { return null; }
+
+    default <T>  Iterator<T> map(Function<SerializableCrawlData, Optional<T>> mapper) {
+        return new Iterator<>() {
+            T next = null;
+
+            public boolean hasNext() {
+                if (next != null)
+                    return true;
+                try {
+                    while (SerializableCrawlDataStream.this.hasNext()) {
+                        var val = mapper.apply(SerializableCrawlDataStream.this.next());
+                        if (val.isPresent()) {
+                            next = val.get();
+                            return true;
+                        }
+                    }
+                }
+                catch (IOException ex) {
+                    logger.error("Error during stream", ex);
+                }
+
+                return false;
+            }
+
+            public T next() {
+                if (next == null && !hasNext())
+                    throw new IllegalStateException("No more data to read");
+
+                T ret = next;
+                next = null;
+                return ret;
+            }
+        };
+
+    }
 
     // Dummy iterator over nothing
     static SerializableCrawlDataStream empty() {
@@ -46,7 +85,6 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
             public boolean hasNext() { return iterator.hasNext(); }
             public void close() {}
         };
-
     }
 
 }

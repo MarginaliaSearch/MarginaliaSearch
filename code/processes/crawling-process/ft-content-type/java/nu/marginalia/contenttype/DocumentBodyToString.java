@@ -1,9 +1,12 @@
 package nu.marginalia.contenttype;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,24 +26,25 @@ public class DocumentBodyToString {
         return new String(data, charset);
     }
 
+    public static Document getParsedData(ContentType type, byte[] data, String url) throws IOException {
+        final Charset charset;
+
+        if (type.charset() == null || type.charset().isBlank()) {
+            charset = StandardCharsets.UTF_8;
+        } else {
+            charset = charsetMap.computeIfAbsent(type, DocumentBodyToString::computeCharset);
+        }
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+
+        return Jsoup.parse(bais, charset.name(), url);
+    }
+
     private static Charset computeCharset(ContentType type) {
-        try {
-            if (type.charset() == null || type.charset().isBlank())
-                return StandardCharsets.UTF_8;
-            else {
-                return Charset.forName(type.charset());
-            }
-        }
-        catch (IllegalCharsetNameException ex) {
-            // Fall back to UTF-8 if we don't understand what this is.  It's *probably* fine? Maybe?
+        if (type.charset() == null || type.charset().isBlank())
             return StandardCharsets.UTF_8;
-        }
-        catch (UnsupportedCharsetException ex) {
-            // This is usually like Macintosh Latin
-            // (https://en.wikipedia.org/wiki/Macintosh_Latin_encoding)
-            //
-            // It's close enough to 8859-1 to serve
-            return StandardCharsets.ISO_8859_1;
+        else {
+            return type.asCharset();
         }
     }
 }

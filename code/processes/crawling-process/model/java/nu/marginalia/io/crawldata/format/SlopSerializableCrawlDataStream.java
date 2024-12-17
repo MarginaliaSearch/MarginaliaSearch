@@ -1,7 +1,6 @@
 package nu.marginalia.io.crawldata.format;
 
 import nu.marginalia.contenttype.ContentType;
-import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawldata.*;
@@ -36,7 +35,14 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
         reader = new SlopCrawlDataRecord.FilteringReader(file) {
             @Override
             public boolean filter(String url, int status, String contentType) {
-                return contentType.toLowerCase().startsWith("text/");
+                String ctLc = contentType.toLowerCase();
+
+                if (ctLc.startsWith("text/"))
+                    return true;
+                else if (ctLc.startsWith("x-marginalia/"))
+                    return true;
+
+                return false;
             }
         };
     }
@@ -121,7 +127,6 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
     }
 
     private void createDocumentRecord(SlopCrawlDataRecord nextRecord) {
-        String bodyString = "";
         CrawlerDocumentStatus status = CrawlerDocumentStatus.OK;
 
         if (nextRecord.contentType().startsWith("x-marginalia/advisory;state=content-type-failed-probe")) {
@@ -136,9 +141,7 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
         }
         else if (nextRecord.body() != null) {
             try {
-                bodyString = DocumentBodyToString.getStringData(
-                        ContentType.parse(nextRecord.contentType()),
-                        nextRecord.body());
+                ContentType.parse(nextRecord.contentType());
             } catch (Exception ex) {
                 logger.error("Failed to convert body to string", ex);
                 status = CrawlerDocumentStatus.BAD_CHARSET;
@@ -156,7 +159,7 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
                 status.toString(),
                 "",
                 nextRecord.headers(),
-                bodyString,
+                nextRecord.body(),
                 // this field isn't actually used, maybe we can skip calculating it?
                 nextRecord.cookies(),
                 null,

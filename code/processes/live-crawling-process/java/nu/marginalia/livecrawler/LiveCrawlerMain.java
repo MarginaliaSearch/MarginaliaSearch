@@ -197,7 +197,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
                     writer.setOrdinalOffset(67_000_000);
 
                     for (SerializableCrawlDataStream stream : hb.wrap("Processing", dataSet.getDataStreams())) {
-                        writer.write(domainProcessor.sideloadProcessing(stream, 0, Set.of("special:live")));
+                        writer.write(domainProcessor.simpleProcessing(stream, 0, Set.of("special:live")));
                     }
                 }
 

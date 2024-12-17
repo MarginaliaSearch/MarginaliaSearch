@@ -51,7 +51,7 @@ public class LiveCrawlDataSetTest {
                     case CrawledDocument document -> {
                         dataCount++;
                         Assertions.assertEquals("https://www.example.com/", document.url);
-                        Assertions.assertEquals("test", document.documentBody);
+                        Assertions.assertEquals("test", document.documentBody());
                     }
                 }
             }

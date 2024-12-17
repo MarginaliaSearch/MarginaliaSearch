@@ -65,15 +65,15 @@ public class DomainProcessor {
         if (sizeHint > SIDELOAD_THRESHOLD) {
             // If the file is too big, we run a processing mode that doesn't
             // require loading the entire dataset into RAM
-            return sideloadProcessing(dataStream, sizeHint);
+            return simpleProcessing(dataStream, sizeHint);
         }
 
         return fullProcessing(dataStream);
     }
 
-    public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
+    public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
         try {
-            return new SideloadProcessing(dataStream, sizeHint, extraKeywords);
+            return new SimpleProcessing(dataStream, sizeHint, extraKeywords);
         }
         catch (Exception ex) {
             logger.warn("Failed to process domain sideload", ex);
@@ -81,102 +81,15 @@ public class DomainProcessor {
         }
     }
 
-    public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) {
+    public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint) {
         try {
-            return new SideloadProcessing(dataStream, sizeHint);
+            return new SimpleProcessing(dataStream, sizeHint);
         }
         catch (Exception ex) {
             logger.warn("Failed to process domain sideload", ex);
             return null;
         }
     }
-
-    public class SideloadProcessing implements ConverterBatchWritableIf, SideloadSource {
-        private final SerializableCrawlDataStream dataStream;
-        private final ProcessedDomain domain;
-        private final DocumentDecorator documentDecorator;
-        private final Set<String> processedUrls = new HashSet<>();
-        private final DomainLinks externalDomainLinks;
-        private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
-        private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
-                Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
-        );
-
-        SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
-            this(dataStream, sizeHint, List.of());
-        }
-
-        SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) throws IOException {
-            this.dataStream = dataStream;
-
-            if (!dataStream.hasNext() || !(dataStream.next() instanceof CrawledDomain crawledDomain))
-            {
-                throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
-            }
-
-            domain = new ProcessedDomain();
-            domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
-
-            documentDecorator = new DocumentDecorator();
-            documentDecorator.addTerms(extraKeywords);
-
-            processDomain(crawledDomain, domain, documentDecorator);
-
-            externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
-        }
-
-        @Override
-        public ProcessedDomain getDomain() {
-            return domain;
-        }
-
-        @Override
-        public Iterator<ProcessedDocument> getDocumentsStream() {
-            return iteratorFactory.create((taskConsumer) -> {
-                while (dataStream.hasNext())
-                {
-                    if (!(dataStream.next() instanceof CrawledDocument doc))
-                        continue;
-                    if (doc.url == null || !processedUrls.add(doc.url))
-                        continue;
-
-
-                    taskConsumer.accept(() -> {
-                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, documentDecorator);
-
-                        synchronized (deduplicator) {
-                            deduplicator.markIfDuplicate(processedDoc);
-                        }
-
-                        if (processedDoc.isProcessedFully()) {
-                            // This is a bit sketchy, but we need to set the size and topology to something
-                            processedDoc.details.metadata = processedDoc.details.metadata.withSizeAndTopology(
-                                    10_000, externalDomainLinks.countForUrl(processedDoc.url));
-                        }
-
-                        return processedDoc;
-                    });
-                }
-            });
-        }
-
-        @Override
-        public void write(ConverterBatchWriter writer) throws IOException {
-            writer.writeSideloadSource(this);
-        }
-
-        @Override
-        public String id() {
-            return domain.domain.toString();
-        }
-
-        @Override
-        public void close() throws Exception {
-            dataStream.close();
-            deduplicator.close();
-        }
-    }
-
 
     @Nullable
     public ProcessedDomain fullProcessing(SerializableCrawlDataStream dataStream) {
@@ -209,7 +122,7 @@ public class DomainProcessor {
                         continue;
                     if (doc.url == null)
                         continue;
-                    if (doc.documentBody.isBlank())
+                    if (doc.documentBodyBytes.length == 0)
                         continue;
                     if (!processedUrls.add(doc.url))
                         continue;
@@ -233,6 +146,90 @@ public class DomainProcessor {
         catch (Exception ex) {
             logger.warn("Failed to process domain", ex);
             return null;
+        }
+    }
+
+    /** The simple processing track processes documents individually, and does not perform any domain-level analysis.
+     *  This is needed to process extremely large domains, which would otherwise eat up too much RAM.
+     */
+    public class SimpleProcessing implements ConverterBatchWritableIf, SideloadSource {
+        private final SerializableCrawlDataStream dataStream;
+        private final ProcessedDomain domain;
+        private final DocumentDecorator documentDecorator;
+        private final Set<String> processedUrls = new HashSet<>();
+        private final DomainLinks externalDomainLinks;
+        private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
+        private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
+                Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
+        );
+
+        SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
+            this(dataStream, sizeHint, List.of());
+        }
+
+        SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) throws IOException {
+            this.dataStream = dataStream;
+
+            if (!dataStream.hasNext() || !(dataStream.next() instanceof CrawledDomain crawledDomain))
+            {
+                throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
+            }
+
+            domain = new ProcessedDomain();
+            domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
+
+            documentDecorator = new DocumentDecorator();
+            documentDecorator.addTerms(extraKeywords);
+
+            processDomain(crawledDomain, domain, documentDecorator);
+
+            externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
+        }
+
+        @Override
+        public ProcessedDomain getDomain() {
+            return domain;
+        }
+
+        @Override
+        public Iterator<ProcessedDocument> getDocumentsStream() {
+            return dataStream.map((next) -> {
+                if (!(next instanceof CrawledDocument doc))
+                    return Optional.empty();
+
+                if (doc.url == null || !processedUrls.add(doc.url))
+                    return Optional.empty();
+
+                var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, documentDecorator);
+
+                synchronized (deduplicator) {
+                    deduplicator.markIfDuplicate(processedDoc);
+                }
+
+                if (processedDoc.isProcessedFully()) {
+                    // This is a bit sketchy, but we need to set the size and topology to something
+                    processedDoc.details.metadata = processedDoc.details.metadata.withSizeAndTopology(
+                            10_000, externalDomainLinks.countForUrl(processedDoc.url));
+                }
+
+                return Optional.of(processedDoc);
+            });
+        }
+
+        @Override
+        public void write(ConverterBatchWriter writer) throws IOException {
+            writer.writeSideloadSource(this);
+        }
+
+        @Override
+        public String id() {
+            return domain.domain.toString();
+        }
+
+        @Override
+        public void close() throws Exception {
+            dataStream.close();
+            deduplicator.close();
         }
     }
 

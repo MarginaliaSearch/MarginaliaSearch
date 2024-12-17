@@ -1,6 +1,5 @@
 package nu.marginalia.crawl.retreival.revisit;
 
-import com.google.common.base.Strings;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -11,7 +10,8 @@ import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import org.jsoup.Jsoup;
+
+import java.io.IOException;
 
 /** This class encapsulates the logic for re-visiting a domain that has already been crawled.
  *  We may use information from the previous crawl to inform the next crawl, specifically the
@@ -70,7 +70,7 @@ public class CrawlerRevisitor {
             // unlikely to produce anything meaningful for us.
             if (doc.httpStatus != 200)
                 continue;
-            if (Strings.isNullOrEmpty(doc.documentBody))
+            if (!doc.hasBody())
                 continue;
 
             if (!crawlFrontier.filterLink(url))
@@ -117,14 +117,19 @@ public class CrawlerRevisitor {
                 // fashion to make sure we eventually catch changes over time
                 // and ensure we discover new links
 
-                // Hoover up any links from the document
-                crawlFrontier.enqueueLinksFromDocument(url, Jsoup.parse(doc.documentBody));
+                try {
+                    // Hoover up any links from the document
+                    crawlFrontier.enqueueLinksFromDocument(url, doc.parseBody());
 
+                }
+                catch (IOException ex) {
+                    //
+                }
                 // Add a WARC record so we don't repeat this
                 warcRecorder.writeReferenceCopy(url,
                         doc.contentType,
                         doc.httpStatus,
-                        doc.documentBody,
+                        doc.documentBodyBytes,
                         doc.headers,
                         new ContentTags(doc.etagMaybe, doc.lastModifiedMaybe)
                 );

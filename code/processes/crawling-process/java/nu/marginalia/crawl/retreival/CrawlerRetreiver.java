@@ -17,7 +17,6 @@ import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
-import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -283,14 +282,14 @@ public class CrawlerRetreiver implements AutoCloseable {
             else if (fetchedDoc instanceof HttpFetchResult.Result304Raw && reference.doc() != null) {
                 var doc = reference.doc();
 
-                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody, doc.headers, contentTags);
+                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBodyBytes, doc.headers, contentTags);
 
                 fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
                         new ContentType(doc.contentType, "UTF-8"),
-                        doc.documentBody);
+                        doc.documentBodyBytes);
 
-                if (doc.documentBody != null) {
-                    var parsed = Jsoup.parse(doc.documentBody);
+                if (doc.documentBodyBytes != null) {
+                    var parsed = doc.parseBody();
 
                     crawlFrontier.enqueueLinksFromDocument(top, parsed);
                     crawlFrontier.addVisited(top);
