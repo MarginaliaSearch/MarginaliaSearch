@@ -33,6 +33,31 @@ public final class CrawledDocument implements SerializableCrawlData {
                 documentBodyBytes);
     }
 
+    /** Attempt to parse the first sampleSize bytes of the document body into a string */
+    public String documentBody(int sampleSize) {
+        if (sampleSize >= documentBodyBytes.length) {
+            return documentBody();
+        }
+
+        // Truncating the string at an unlucky point *may* lead to a parsing error
+        // ... so we try again with a longer length
+        for (int i = 0; i <= 3 && sampleSize + i < documentBodyBytes.length; i++) {
+            try {
+                byte[] bytes = new byte[sampleSize + i];
+                System.arraycopy(documentBodyBytes, 0, bytes, 0, bytes.length);
+
+                return DocumentBodyToString.getStringData(
+                        ContentType.parse(contentType),
+                        bytes);
+            }
+            catch (RuntimeException ex) {
+                // Try again with i + 1
+            }
+        }
+
+        throw new IllegalArgumentException("Failed to parse substring");
+    }
+
     public Document parseBody() throws IOException {
         return DocumentBodyToString.getParsedData(
                 ContentType.parse(contentType),
@@ -42,19 +67,6 @@ public final class CrawledDocument implements SerializableCrawlData {
 
     public boolean hasBody() {
         return documentBodyBytes.length > 0;
-    }
-
-    public String documentBody(int sampleSize) {
-        if (sampleSize >= documentBodyBytes.length) {
-            return documentBody();
-        }
-
-        byte[] bytes = new byte[sampleSize];
-        System.arraycopy(documentBodyBytes, 0, bytes, 0, sampleSize);
-
-        return DocumentBodyToString.getStringData(
-                ContentType.parse(contentType),
-                bytes);
     }
 
     public byte[] documentBodyBytes;
