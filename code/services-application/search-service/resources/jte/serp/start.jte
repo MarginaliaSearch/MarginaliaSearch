@@ -2,9 +2,12 @@
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.SearchFilters
 @import nu.marginalia.search.model.SearchProfile
+@import nu.marginalia.search.svc.SearchFrontPageService.IndexModel
+@import nu.marginalia.search.svc.SearchFrontPageService.NewsItem
 
 @param NavbarModel navbar
 @param WebsiteUrl websiteUrl
+@param IndexModel model
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,6 +29,7 @@
     </div>
 </header>
 
+@if (model.news().isEmpty())
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">
     <div class="border dark:border-gray-600 dark:bg-gray-800 bg-white rounded p-2 m-4 ">
         <div class="text-slate-700 dark:text-white text-sm p-4">
@@ -74,6 +78,28 @@
     </div>
 
 </div>
+@else
+<div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w m-4">
+    <div class="my-4 text-black dark:text-white font-serif text-xl mx-8">Subscriptions</div>
+    @for (NewsItem item : model.news())
+        <div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex flex-col overflow-hidden mx-4 p-4 space-y-2">
+            <div class="text-black dark:text-white flex place-items-middle">
+                <div class="flex flex-col flex-col space-y-1">
+                    <a class="text-l text-liteblue dark:text-blue-200" href="${item.url()}" rel="ugc external nofollow">${item.title()}</a>
+                    <a class="text-xs text-gray-800 dark:text-gray-100" href="/site/${item.domain()}">
+                        <i class="fas fa-globe"></i> ${item.domain()}
+                    </a>
+                </div>
+                <div class="grow"></div>
+                <div class="flex text-xs">
+                    ${item.date().substring(0, 10)}
+                </div>
+            </div>
+            <div class="text-sm text-gray-800 dark:text-gray-100">$unsafe{item.description()}</div>
+        </div>
+    @endfor
+</div>
+@endif
 
 @template.part.footerLegal()
 <script lang="javascript" src="js/typeahead.js"></script>

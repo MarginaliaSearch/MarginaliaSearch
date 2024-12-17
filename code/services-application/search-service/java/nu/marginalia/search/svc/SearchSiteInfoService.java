@@ -2,6 +2,7 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import io.jooby.annotation.*;
@@ -15,7 +16,6 @@ import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.screenshot.ScreenshotService;
-import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.GroupedUrlDetails;
 import nu.marginalia.search.model.NavbarModel;
@@ -44,7 +44,7 @@ public class SearchSiteInfoService {
     private final ScreenshotService screenshotService;
 
     private final HikariDataSource dataSource;
-    private final JteRenderer jteRenderer;
+    private final SearchSiteSubscriptionService searchSiteSubscriptions;
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
@@ -55,7 +55,7 @@ public class SearchSiteInfoService {
                                  LiveCaptureClient liveCaptureClient,
                                  ScreenshotService screenshotService,
                                  HikariDataSource dataSource,
-                                 JteRenderer jteRenderer)
+                                 SearchSiteSubscriptionService searchSiteSubscriptions)
     {
         this.searchOperator = searchOperator;
         this.domainInfoClient = domainInfoClient;
@@ -66,7 +66,7 @@ public class SearchSiteInfoService {
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
         this.dataSource = dataSource;
-        this.jteRenderer = jteRenderer;
+        this.searchSiteSubscriptions = searchSiteSubscriptions;
     }
 
     @GET
@@ -103,6 +103,7 @@ public class SearchSiteInfoService {
     @GET
     @Path("/site/{domainName}")
     public ModelAndView<?>  handle(
+            Context context,
             @PathParam String domainName,
             @QueryParam String view,
             @QueryParam Integer page
@@ -118,13 +119,21 @@ public class SearchSiteInfoService {
         SiteInfoModel model = switch (view) {
             case "links" -> listLinks(domainName, page);
             case "docs" -> listDocs(domainName, page);
-            case "info" -> listInfo(domainName);
+            case "info" -> listInfo(context, domainName);
             case "report" -> reportSite(domainName);
-            default -> listInfo(domainName);
+            default -> listInfo(context, domainName);
         };
 
         return new MapModelAndView("siteinfo/main.jte",
                 Map.of("model", model, "navbar", NavbarModel.SITEINFO));
+    }
+
+    @POST
+    @Path("/site/{domainName}/subscribe")
+    public ModelAndView<?> toggleSubscription(Context context, @PathParam String domainName) throws SQLException {
+        searchSiteSubscriptions.toggleSubscription(context, new EdgeDomain(domainName));
+
+        return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domainName));
     }
 
     @POST
@@ -184,7 +193,7 @@ public class SearchSiteInfoService {
         );
     }
 
-    private SiteInfoWithContext listInfo(String domainName) {
+    private SiteInfoWithContext listInfo(Context context, String domainName) {
 
         var domain = new EdgeDomain(domainName);
         final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);
@@ -198,6 +207,7 @@ public class SearchSiteInfoService {
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
 
+        boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
         if (domainId < 0) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
@@ -224,6 +234,7 @@ public class SearchSiteInfoService {
         }
 
         var result = new SiteInfoWithContext(domainName,
+                isSubscribed,
                 viableAliasDomain ? domain.aliasDomain().map(EdgeDomain::toString) : Optional.empty(),
                 domainId,
                 url,
@@ -341,6 +352,7 @@ public class SearchSiteInfoService {
     }
 
     public record SiteInfoWithContext(String domain,
+                                      boolean isSubscribed,
                                       Optional<String> aliasDomain,
                                       int domainId,
                                       String siteUrl,

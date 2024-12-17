@@ -32,7 +32,19 @@
                 <i class="fas fa-rss text-orange-500"></i>
                 <span class="grow">Feed</span>
 
-                <i class="fa-regular fa-bookmark mr-2 text-gray-600 hover:text-blue-800 dark:text-gray-100 dark:hover:text-gray-400 cursor-pointer" title="Add content to this feed to the front page"></i>
+                <form method="post" action="/site/${siteInfo.domain()}/subscribe">
+                @if (siteInfo.isSubscribed())
+                    <button type="submit">
+                    <i class="fa-solid fa-bookmark mr-2 text-blue-600 hover:text-blue-800 dark:text-blue-100 dark:hover:text-blue-400 cursor-pointer"
+                        title="Unsubscribe from the front page"></i>
+                    </button>
+                @else
+                    <button type="submit">
+                        <i class="fa-regular fa-bookmark mr-2 text-gray-600 hover:text-blue-800 dark:text-gray-100 dark:hover:text-gray-400 cursor-pointer"
+                           title="Add content to this feed to the front page"></i>
+                    </button>
+                @endif
+                </form>
             </div>
 
             <dl class="mx-3 text-gray-800 dark:text-white">
