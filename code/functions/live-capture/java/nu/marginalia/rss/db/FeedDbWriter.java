@@ -19,6 +19,7 @@ public class FeedDbWriter implements AutoCloseable {
 
     private final Connection connection;
     private final PreparedStatement insertFeedStmt;
+    private final PreparedStatement insertErrorStmt;
     private final Path dbPath;
 
     private volatile boolean closed = false;
@@ -32,9 +33,11 @@ public class FeedDbWriter implements AutoCloseable {
 
         try (var stmt = connection.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS feed (domain TEXT PRIMARY KEY, feed JSON)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS errors (domain TEXT PRIMARY KEY, cnt INT DEFAULT 0)");
         }
 
         insertFeedStmt = connection.prepareStatement("INSERT INTO feed (domain, feed) VALUES (?, ?)");
+        insertErrorStmt = connection.prepareStatement("INSERT INTO errors (domain, cnt) VALUES (?, ?)");
     }
 
     public Path getDbPath() {
@@ -50,6 +53,17 @@ public class FeedDbWriter implements AutoCloseable {
         }
         catch (SQLException e) {
             logger.error("Error saving feed for " + items.domain(), e);
+        }
+    }
+
+    public synchronized void setErrorCount(String domain, int count) {
+        try {
+            insertErrorStmt.setString(1, domain);
+            insertErrorStmt.setInt(2, count);
+            insertErrorStmt.executeUpdate();
+        }
+        catch (SQLException ex) {
+            logger.error("Error saving error count " + domain, ex);
         }
     }
 

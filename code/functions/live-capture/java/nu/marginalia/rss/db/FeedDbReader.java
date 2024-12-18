@@ -13,9 +13,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class FeedDbReader implements AutoCloseable {
@@ -33,6 +31,7 @@ public class FeedDbReader implements AutoCloseable {
         // Create table if it doesn't exist to avoid errors before any feeds have been fetched
         try (var stmt = connection.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS feed (domain TEXT PRIMARY KEY, feed JSON)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS errors (domain TEXT PRIMARY KEY, cnt INT DEFAULT 0)");
         }
     }
 
@@ -74,6 +73,22 @@ public class FeedDbReader implements AutoCloseable {
             logger.error("Error getting feed for " + domain, e);
         }
         return Optional.empty();
+    }
+
+    public Map<String, Integer> getAllErrorCounts() {
+        Map<String, Integer> ret = new HashMap<>(100_000);
+
+        try (var stmt = connection.prepareStatement("SELECT domain, cnt FROM errors")) {
+
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                ret.put(rs.getString(1), rs.getInt(2));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting errors", e);
+        }
+
+        return ret;
     }
 
     public FeedItems getFeed(EdgeDomain domain) {
@@ -124,4 +139,6 @@ public class FeedDbReader implements AutoCloseable {
             logger.error("Error getting updated links", e);
         }
     }
+
+
 }

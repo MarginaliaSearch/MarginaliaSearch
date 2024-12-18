@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -84,6 +85,26 @@ public class FeedDb {
         }
         return List.of();
     }
+
+    public Map<String, Integer> getAllErrorCounts() {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        try {
+            if (reader != null) {
+                return reader.getAllErrorCounts();
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error getting all feeds", e);
+        }
+        return Map.of();
+    }
+
 
     @NotNull
     public FeedItems getFeed(EdgeDomain domain) {
