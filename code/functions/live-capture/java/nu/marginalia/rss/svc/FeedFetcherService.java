@@ -204,7 +204,6 @@ public class FeedFetcherService {
                     .GET()
                     .uri(uri)
                     .header("User-Agent", WmsaHome.getUserAgent().uaIdentifier())
-                    .header("Accept-Encoding", "gzip")
                     .header("Accept", "text/*, */*;q=0.9")
                     .timeout(Duration.ofSeconds(15))
                     .build();
