@@ -13,11 +13,9 @@ import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /** Renders the front page (index) */
 @Singleton
@@ -46,7 +44,7 @@ public class SearchFrontPageService {
     @Path("/")
     public MapModelAndView render(Context context) {
 
-        List<NewsItem> newsItems = getNewsItems(context);
+        List<NewsItemCluster> newsItems = getNewsItems(context);
 
         IndexModel model = new IndexModel(newsItems, searchVisitorCount.getQueriesPerMinute());
 
@@ -56,7 +54,7 @@ public class SearchFrontPageService {
                 .put("websiteUrl", websiteUrl);
     }
 
-    private List<NewsItem> getNewsItems(Context context) {
+    private List<NewsItemCluster> getNewsItems(Context context) {
 
         Set<Integer> subscriptions = subscriptionService.getSubscriptions(context);
 
@@ -69,7 +67,8 @@ public class SearchFrontPageService {
             feedResults.add(feedsClient.getFeed(sub));
         }
 
-        List<NewsItem> ret = new ArrayList<>();
+        List<NewsItem> itemsAll = new ArrayList<>();
+
         for (var result : feedResults) {
             try {
                 RpcFeed feed = result.get();
@@ -79,7 +78,10 @@ public class SearchFrontPageService {
                     if (title.isBlank()) {
                         title = "[Missing Title]";
                     }
-                    ret.add(new NewsItem(title, item.getUrl(), feed.getDomain(), item.getDescription(), item.getDate()));
+
+                    itemsAll.add(
+                            new NewsItem(title, item.getUrl(), feed.getDomain(), item.getDescription(), item.getDate())
+                    );
                 }
             }
             catch (Exception ex) {
@@ -87,11 +89,29 @@ public class SearchFrontPageService {
             }
         }
 
-        ret.sort(Comparator.comparing(NewsItem::date).reversed());
-        if (ret.size() > 25) {
-            ret.subList(25, ret.size()).clear();
+        Map<String, List<NewsItem>> ret =
+                itemsAll.stream()
+                .sorted(Comparator.comparing(NewsItem::date).reversed())
+                .collect(Collectors.groupingBy(NewsItem::domain));
+
+        List<NewsItemCluster> items = new ArrayList<>(ret.size());
+
+        for (var itemsForDomain : ret.values()) {
+            itemsForDomain.sort(
+                Comparator
+                    .comparing(NewsItem::date)
+                    .reversed()
+            );
+            items.add(new NewsItemCluster(itemsForDomain));
         }
-        return ret;
+
+        items.sort(Comparator.comparing((NewsItemCluster item) -> item.first().date).reversed());
+
+        // No more than 20 news item clusters on the front page
+        if (items.size() > 20) {
+            items.subList(20, items.size()).clear();
+        }
+        return items;
     }
 
 
@@ -134,6 +154,19 @@ public class SearchFrontPageService {
         return sb.toString();
     }*/
 
-    public record IndexModel(List<NewsItem> news, int searchPerMinute) { }
-    public record NewsItem(String title, String url, String domain, String description, String date) {}
+    public record IndexModel(List<NewsItemCluster> news, int searchPerMinute) { }
+    public record NewsItem(String title,
+                           String url,
+                           String domain,
+                           String description,
+                           String date
+                           ) {}
+    public record NewsItemCluster(
+            NewsItem first,
+            List<NewsItem> rest) {
+
+        public NewsItemCluster(List<NewsItem> items) {
+            this(items.getFirst(), items.subList(1, Math.min(5, items.size())));
+        }
+    }
 }

@@ -4,6 +4,7 @@
 @import nu.marginalia.search.model.SearchProfile
 @import nu.marginalia.search.svc.SearchFrontPageService.IndexModel
 @import nu.marginalia.search.svc.SearchFrontPageService.NewsItem
+@import nu.marginalia.search.svc.SearchFrontPageService.NewsItemCluster
 
 @param NavbarModel navbar
 @param WebsiteUrl websiteUrl
@@ -81,21 +82,38 @@
 @else
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w m-4">
     <div class="my-4 text-black dark:text-white font-serif text-xl mx-8">Subscriptions</div>
-    @for (NewsItem item : model.news())
-        <div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex flex-col overflow-hidden mx-4 p-4 space-y-2">
-            <div class="text-black dark:text-white flex place-items-middle">
-                <div class="flex flex-col flex-col space-y-1">
-                    <a class="text-l text-liteblue dark:text-blue-200" href="${item.url()}" rel="ugc external nofollow">${item.title()}</a>
-                    <a class="text-xs text-gray-800 dark:text-gray-100" href="/site/${item.domain()}">
-                        <i class="fas fa-globe"></i> ${item.domain()}
-                    </a>
+    @for (NewsItemCluster cluster : model.news())
+        !{NewsItem item = cluster.first();}
+
+        <div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex flex-col overflow-hidden mx-4 space-y-2">
+            <a class="flex space-x-2 flex-row place-items-baseline bg-margeblue text-white p-2 text-md" href="/site/${item.domain()}">
+                <i class="fas fa-globe mr-2"></i>
+                <span>${item.domain()}</span>
+            </a>
+
+            <div class="text-black dark:text-white flex place-items-middle  mx-2">
+                <div class="flex flex-col space-y-1">
+                    <a class="text-l text-liteblue dark:text-blue-200 visited:text-purple-800 dark:visited:text-purple-200" href="${item.url()}" rel="ugc external nofollow">${item.title()}</a>
                 </div>
                 <div class="grow"></div>
-                <div class="flex text-xs">
+                <div class="flex text-xs whitespace-nowrap">
                     ${item.date().substring(0, 10)}
                 </div>
             </div>
-            <div class="text-sm text-gray-800 dark:text-gray-100">$unsafe{item.description()}</div>
+            <div class="text-sm text-gray-800 dark:text-gray-100 mx-2">$unsafe{item.description()}</div>
+
+            @for (var remainder : cluster.rest())
+                <div class="flex flex-col space-y-1 dark:border-gray-600 border-t pt-2 mx-2">
+                    <div class="text-black dark:text-white flex place-items-middle">
+                        <a class="text-sm text-liteblue dark:text-blue-200 visited:text-purple-800 dark:visited:text-purple-200" href="${remainder.url()}" rel="ugc external nofollow">${remainder.title()}</a>
+                        <div class="grow"></div>
+                        <div class="flex text-xs whitespace-nowrap">
+                            ${remainder.date().substring(0, 10)}
+                        </div>
+                    </div>
+                </div>
+            @endfor
+            <div class="pt-2"></div>
         </div>
     @endfor
 </div>
