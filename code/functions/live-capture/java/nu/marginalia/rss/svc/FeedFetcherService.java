@@ -57,6 +57,8 @@ public class FeedFetcherService {
     private final ServiceHeartbeat serviceHeartbeat;
     private final ExecutorClient executorClient;
 
+    private final DomainLocks domainLocks = new DomainLocks();
+
     private volatile boolean updating;
     private boolean deterministic = false;
 
@@ -142,9 +144,8 @@ public class FeedFetcherService {
                         }
                     }
 
-
                     FetchResult feedData;
-                    try {
+                    try (DomainLocks.DomainLock domainLock = domainLocks.lockDomain(new EdgeDomain(feed.domain()))) {
                         feedData = fetchFeedData(feed, client);
                     }
                     catch (Exception ex) {
