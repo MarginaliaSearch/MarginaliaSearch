@@ -18,6 +18,7 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.util.SimpleBlockingThreadPool;
+import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -150,7 +152,7 @@ public class FeedFetcherService {
                     }
 
                     switch (feedData) {
-                        case FetchResult.Success(String value) -> writer.saveFeed(fetchFeed(value, feed));
+                        case FetchResult.Success(String value) -> writer.saveFeed(parseFeed(value, feed));
                         case FetchResult.TransientError() -> {
                             int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
                             writer.setErrorCount(feed.domain().toLowerCase(), ++errorCount);
@@ -296,9 +298,12 @@ public class FeedFetcherService {
         }
     }
 
-    public FeedItems fetchFeed(String feedData, FeedDefinition definition) {
+    public FeedItems parseFeed(String feedData, FeedDefinition definition) {
         try {
-            List<Item> rawItems = rssReader.read(new ByteArrayInputStream(feedData.getBytes())).toList();
+            List<Item> rawItems = rssReader.read(
+                    // Massage the data to maximize the possibility of the flaky XML parser consuming it
+                    new BOMInputStream(new ByteArrayInputStream(feedData.trim().getBytes(StandardCharsets.UTF_8)), false)
+            ).toList();
 
             boolean keepUriFragment = rawItems.size() < 2 || areFragmentsDisparate(rawItems);
 
