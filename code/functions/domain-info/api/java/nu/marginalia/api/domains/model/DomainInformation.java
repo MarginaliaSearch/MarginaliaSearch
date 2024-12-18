@@ -71,6 +71,23 @@ public class DomainInformation {
         return new String(Character.toChars(firstChar)) + new String(Character.toChars(secondChar));
     }
 
+    public String getAsnFlag() {
+        if (asnCountry == null || asnCountry.codePointCount(0, asnCountry.length()) != 2) {
+            return "";
+        }
+        String country = asnCountry;
+
+        if ("UK".equals(country)) {
+            country = "GB";
+        }
+
+        int offset = 0x1F1E6;
+        int asciiOffset = 0x41;
+        int firstChar = Character.codePointAt(country, 0) - asciiOffset + offset;
+        int secondChar = Character.codePointAt(country, 1) - asciiOffset + offset;
+        return new String(Character.toChars(firstChar)) + new String(Character.toChars(secondChar));
+    }
+
     public EdgeDomain getDomain() {
         return this.domain;
     }

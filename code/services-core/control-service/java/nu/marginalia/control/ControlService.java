@@ -12,7 +12,7 @@ import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.ServiceMonitors;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import spark.Spark;
 
 import java.util.Map;
 
-public class ControlService extends Service {
+public class ControlService extends SparkService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
