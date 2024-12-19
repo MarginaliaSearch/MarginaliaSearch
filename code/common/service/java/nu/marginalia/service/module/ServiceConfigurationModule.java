@@ -72,6 +72,17 @@ public class ServiceConfigurationModule extends AbstractModule {
             return configuredValue;
         }
 
+        if (Boolean.getBoolean("system.multiFace")) {
+            try {
+                String localNetworkIp = getLocalNetworkIP();
+                if (null != localNetworkIp) {
+                    return localNetworkIp;
+                }
+            }
+            catch (Exception ex) {
+                logger.warn("Failed to get local network IP", ex);
+            }
+        }
         // If we're in docker, we'll use the hostname
         if (Boolean.getBoolean("service.useDockerHostname")) {
             return System.getenv("HOSTNAME");
