@@ -91,11 +91,15 @@ public class ServiceConfigurationModule extends AbstractModule {
             return configuredValue;
         }
 
-        try {
-            return Objects.requireNonNullElse(getLocalNetworkIP(), "0.0.0.0");
+        if (Boolean.getBoolean("system.multiFace")) {
+            try {
+                return Objects.requireNonNullElse(getLocalNetworkIP(), "0.0.0.0");
+            } catch (Exception ex) {
+                logger.warn("Failed to get local network IP, falling back to bind to 0.0.0.0", ex);
+                return "0.0.0.0";
+            }
         }
-        catch (Exception ex) {
-            logger.warn("Failed to get local network IP, falling back to bind to 0.0.0.0", ex);
+        else {
             return "0.0.0.0";
         }
     }
