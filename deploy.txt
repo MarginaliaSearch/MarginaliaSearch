@@ -1,0 +1,5 @@
+## This is a token file for automatic deployment
+
+A master HEAD tagged with deploy-core*, deploy-executor*, or deploy-index* will trigger a commit.
+
+2024-12-19: Test deployment of executor
