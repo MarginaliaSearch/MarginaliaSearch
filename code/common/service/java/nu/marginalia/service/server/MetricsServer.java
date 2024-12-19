@@ -7,6 +7,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import java.net.InetSocketAddress;
+
 public class MetricsServer {
 
     @Inject
@@ -15,7 +17,8 @@ public class MetricsServer {
         if (configuration.metricsPort() < 0)
             return;
 
-        Server server = new Server(configuration.metricsPort());
+        Server server = new Server(new InetSocketAddress(configuration.bindAddress(), configuration.metricsPort()));
+
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         server.setHandler(context);

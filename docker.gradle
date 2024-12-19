@@ -8,7 +8,7 @@ jib {
     }
     container {
         mainClass = application.mainClass
-        jvmFlags = ['-Dservice.bind-address=0.0.0.0', '-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
+        jvmFlags = ['-Dservice.useDockerHostname=TRUE', '-Dsystem.homePath=/wmsa']
         volumes = ['/wmsa/conf', '/wmsa/model', '/wmsa/data', '/var/log/wmsa']
     }
 }

@@ -6,6 +6,9 @@ import nu.marginalia.service.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Enumeration;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -84,10 +87,37 @@ public class ServiceConfigurationModule extends AbstractModule {
     private String getBindAddress() {
         String configuredValue = System.getProperty("service.bind-address");
         if (configuredValue != null) {
+            logger.info("Using configured bind address {}", configuredValue);
             return configuredValue;
         }
 
-        return "127.0.0.1";
+        try {
+            return Objects.requireNonNullElse(getLocalNetworkIP(), "0.0.0.0");
+        }
+        catch (Exception ex) {
+            logger.warn("Failed to get local network IP, falling back to bind to 0.0.0.0", ex);
+            return "0.0.0.0";
+        }
+    }
+
+    public static String getLocalNetworkIP() throws Exception {
+        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+
+        while (nets.hasMoreElements()) {
+            NetworkInterface netif = nets.nextElement();
+            if (!netif.isUp() || netif.isLoopback()) {
+                continue;
+            }
+
+            Enumeration<InetAddress> inetAddresses = netif.getInetAddresses();
+            while (inetAddresses.hasMoreElements()) {
+                InetAddress addr = inetAddresses.nextElement();
+                if (addr.isSiteLocalAddress() && !addr.isLoopbackAddress()) {
+                    return addr.getHostAddress();
+                }
+            }
+        }
+        return null;
     }
 
 }
