@@ -156,6 +156,9 @@ def build_and_deploy(plan: DeploymentPlan, service_config: Dict[str, ServiceConf
             to_deploy.append(container)
         else:
             for instance in range(1,config.instances + 1):
+                if config.docker_name in plan.instances_to_hold:
+                    continue
+
                 container_name = f"{config.docker_name}-{instance}"
                 if container_name in plan.instances_to_hold:
                     continue
@@ -216,13 +219,13 @@ if __name__ == '__main__':
         'explorer': ServiceConfig(
             gradle_target=':code:services-application:explorer-service:docker',
             docker_name='explorer-service',
-            instances=1,
+            instances=None,
             deploy_tier=1
         ),
         'dating': ServiceConfig(
             gradle_target=':code:services-application:dating-service:docker',
             docker_name='dating-service',
-            instances=1,
+            instances=None,
             deploy_tier=1
         ),
         'index': ServiceConfig(
@@ -253,19 +256,19 @@ if __name__ == '__main__':
 
     try:
         tags = get_deployment_tag()
-        if tags == None:
-            exit
+        if tags != None:
+            print("Found deployment tags:", tags)
 
-        print(tags)
+            plan = parse_deployment_tags(tags, SERVICE_CONFIG)
+            print("\nDeployment Plan:")
+            print("Services to build:", plan.services_to_build)
+            print("Instances to hold:", plan.instances_to_hold)
 
-        plan = parse_deployment_tags(tags, SERVICE_CONFIG)
-        print("\nDeployment Plan:")
-        print("Services to build:", plan.services_to_build)
-        print("Instances to hold:", plan.instances_to_hold)
+            print("\nExecution Plan:")
 
-        print("\nExecution Plan:")
-
-        build_and_deploy(plan, SERVICE_CONFIG)
+            build_and_deploy(plan, SERVICE_CONFIG)
+        else:
+            print("No tags found")
 
     except ValueError as e:
         print(f"Error: {e}")
