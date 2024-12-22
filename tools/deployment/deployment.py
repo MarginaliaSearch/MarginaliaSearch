@@ -211,7 +211,7 @@ if __name__ == '__main__':
             gradle_target=':code:services-core:assistant-service:docker',
             docker_name='assistant-service',
             instances=2,
-            deploy_tier1=2
+            deploy_tier=2
         ),
         'explorer': ServiceConfig(
             gradle_target=':code:services-application:explorer-service:docker',
