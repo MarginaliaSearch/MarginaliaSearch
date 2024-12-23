@@ -73,6 +73,17 @@ public class FeedFetcherService {
         this.nodeConfigurationService = nodeConfigurationService;
         this.serviceHeartbeat = serviceHeartbeat;
         this.executorClient = executorClient;
+
+
+        // Add support for some alternate date tags for atom
+        rssReader.addItemExtension("issued", this::setDateFallback);
+        rssReader.addItemExtension("created", this::setDateFallback);
+    }
+
+    private void setDateFallback(Item item, String value) {
+        if (item.getPubDate().isEmpty()) {
+            item.setPubDate(value);
+        }
     }
 
     public enum UpdateMode {
@@ -366,7 +377,7 @@ public class FeedFetcherService {
         return seenFragments.size() > 1;
     }
 
-    private static class IsFeedItemDateValid implements Predicate<FeedItem> {
+    static class IsFeedItemDateValid implements Predicate<FeedItem> {
         private final String today = ZonedDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
         public boolean test(FeedItem item) {
