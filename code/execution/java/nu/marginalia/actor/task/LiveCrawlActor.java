@@ -50,12 +50,18 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 yield new Monitor("-");
             }
             case Monitor(String feedsHash) -> {
+                // Sleep initially in case this is during start-up
                 for (;;) {
-                    String currentHash = feedsClient.getFeedDataHash();
-                    if (!Objects.equals(currentHash, feedsHash)) {
-                        yield new LiveCrawl(currentHash);
+                    try {
+                        Thread.sleep(Duration.ofMinutes(15));
+                        String currentHash = feedsClient.getFeedDataHash();
+                        if (!Objects.equals(currentHash, feedsHash)) {
+                            yield new LiveCrawl(currentHash);
+                        }
                     }
-                    Thread.sleep(Duration.ofMinutes(15));
+                    catch (RuntimeException ex) {
+                        logger.error("Failed to fetch feed data hash");
+                    }
                 }
             }
             case LiveCrawl(String feedsHash, long msgId) when msgId < 0 -> {
