@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import subprocess, os
 from typing import List, Set, Dict, Optional
+import argparse
 
 build_dir = "/app/search.marginalia.nu/build"
 docker_dir = "/app/search.marginalia.nu/docker"
@@ -82,9 +83,17 @@ def parse_deployment_tags(
                 if part == 'all':
                     services_to_build.update(available_services)
                 elif part.startswith('-'):
-                    services_to_exclude.add(part[1:])
+                    service = part[1:]
+                    if not service in available_services:
+                        raise ValueError(f"Unknown service {service}")
+
+                    services_to_exclude.add(service)
                 elif part.startswith('+'):
-                    services_to_build.add(part[1:])
+                    service = part[1:]
+                    if not service in available_services:
+                        raise ValueError(f"Unknown service {service}")
+
+                    services_to_build.add(service)
 
         elif tag.startswith('hold:'):
             instances = tag[5:].strip().split(',')
@@ -257,17 +266,26 @@ if __name__ == '__main__':
 
     try:
         tags = get_deployment_tag()
+        parser = argparse.ArgumentParser(
+            prog='deployment.py',
+            description='Continuous Deployment helper')
+        parser.add_argument('-v', '--verify', help='Verify the tags are valid, if present', action='store_true')
+
+        args = parser.parse_args()
+
         if tags != None:
             print("Found deployment tags:", tags)
 
             plan = parse_deployment_tags(tags, SERVICE_CONFIG)
+
             print("\nDeployment Plan:")
             print("Services to build:", plan.services_to_build)
             print("Instances to hold:", plan.instances_to_hold)
 
-            print("\nExecution Plan:")
+            if not args.verify:
+                print("\nExecution Plan:")
 
-            build_and_deploy(plan, SERVICE_CONFIG)
+                build_and_deploy(plan, SERVICE_CONFIG)
         else:
             print("No tags found")
 
