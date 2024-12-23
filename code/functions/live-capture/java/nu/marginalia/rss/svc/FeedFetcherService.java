@@ -38,7 +38,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -124,51 +123,57 @@ public class FeedFetcherService {
 
             for (var feed : definitions) {
                 executor.submitQuietly(() -> {
-                    var oldData = feedDb.getFeed(new EdgeDomain(feed.domain()));
+                    try {
+                        var oldData = feedDb.getFeed(new EdgeDomain(feed.domain()));
 
-                    // If we have existing data, we might skip updating it with a probability that increases with time,
-                    // this is to avoid hammering the feeds that are updated very rarely and save some time and resources
-                    // on our end
+                        // If we have existing data, we might skip updating it with a probability that increases with time,
+                        // this is to avoid hammering the feeds that are updated very rarely and save some time and resources
+                        // on our end
 
-                    if (!oldData.isEmpty()) {
-                        Duration duration = feed.durationSinceUpdated();
-                        long daysSinceUpdate = duration.toDays();
+                        /* Disable for now:
+
+                        if (!oldData.isEmpty()) {
+                            Duration duration = feed.durationSinceUpdated();
+                            long daysSinceUpdate = duration.toDays();
 
 
-                        if (deterministic || (daysSinceUpdate > 2 && ThreadLocalRandom.current()
-                                .nextInt(1, 1 + (int) Math.min(10, daysSinceUpdate) / 2) > 1))
-                        {
-                            // Skip updating this feed, just write the old data back instead
-                            writer.saveFeed(oldData);
-                            return;
-                        }
-                    }
-
-                    FetchResult feedData;
-                    try (DomainLocks.DomainLock domainLock = domainLocks.lockDomain(new EdgeDomain(feed.domain()))) {
-                        feedData = fetchFeedData(feed, client);
-                    }
-                    catch (Exception ex) {
-                        feedData = new FetchResult.TransientError();
-                    }
-
-                    switch (feedData) {
-                        case FetchResult.Success(String value) -> writer.saveFeed(parseFeed(value, feed));
-                        case FetchResult.TransientError() -> {
-                            int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
-                            writer.setErrorCount(feed.domain().toLowerCase(), ++errorCount);
-
-                            if (errorCount < 5) {
-                                // Permit the server a few days worth of retries before we drop the feed entirely
+                            if (deterministic || (daysSinceUpdate > 2 && ThreadLocalRandom.current()
+                                    .nextInt(1, 1 + (int) Math.min(10, daysSinceUpdate) / 2) > 1)) {
+                                // Skip updating this feed, just write the old data back instead
                                 writer.saveFeed(oldData);
+                                return;
                             }
                         }
-                        case FetchResult.PermanentError() -> {} // let the definition be forgotten about
-                    }
+                        */
 
-                    if ((definitionsUpdated.incrementAndGet() % 1_000) == 0) {
-                        // Update the progress every 1k feeds, to avoid hammering the database and flooding the logs
-                        heartbeat.progress("Updated " + definitionsUpdated + "/" + totalDefinitions + " feeds", definitionsUpdated.get(), totalDefinitions);
+                        FetchResult feedData;
+                        try (DomainLocks.DomainLock domainLock = domainLocks.lockDomain(new EdgeDomain(feed.domain()))) {
+                            feedData = fetchFeedData(feed, client);
+                        } catch (Exception ex) {
+                            feedData = new FetchResult.TransientError();
+                        }
+
+                        switch (feedData) {
+                            case FetchResult.Success(String value) -> writer.saveFeed(parseFeed(value, feed));
+                            case FetchResult.TransientError() -> {
+                                int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
+                                writer.setErrorCount(feed.domain().toLowerCase(), ++errorCount);
+
+                                if (errorCount < 5) {
+                                    // Permit the server a few days worth of retries before we drop the feed entirely
+                                    writer.saveFeed(oldData);
+                                }
+                            }
+                            case FetchResult.PermanentError() -> {
+                            } // let the definition be forgotten about
+                        }
+
+                    }
+                    finally {
+                        if ((definitionsUpdated.incrementAndGet() % 1_000) == 0) {
+                            // Update the progress every 1k feeds, to avoid hammering the database and flooding the logs
+                            heartbeat.progress("Updated " + definitionsUpdated + "/" + totalDefinitions + " feeds", definitionsUpdated.get(), totalDefinitions);
+                        }
                     }
                 });
             }
