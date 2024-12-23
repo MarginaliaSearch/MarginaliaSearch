@@ -118,6 +118,7 @@ def deploy_container(container: DockerContainer) -> None:
         text=True
     )
 
+
     # Stream output in real-time
     while True:
         output = process.stdout.readline()
@@ -210,7 +211,7 @@ if __name__ == '__main__':
             instances=2,
             deploy_tier=1
         ),
-        'api': ServiceConfig(
+        'assistant': ServiceConfig(
             gradle_target=':code:services-core:assistant-service:docker',
             docker_name='assistant-service',
             instances=2,
