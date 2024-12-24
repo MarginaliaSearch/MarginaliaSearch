@@ -23,13 +23,13 @@ import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.util.SimpleBlockingThreadPool;
@@ -347,7 +347,7 @@ public class CrawlerMain extends ProcessMainClass {
 
             Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
             Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
-            Path parquetFile = CrawlerOutputFile.createParquetPath(outputDir, id, domain);
+            Path slopFile = CrawlerOutputFile.createSlopPath(outputDir, id, domain);
 
             // Move the WARC file to a temp file if it exists, so we can resume the crawl using the old data
             // while writing to the same file name as before
@@ -381,15 +381,15 @@ public class CrawlerMain extends ProcessMainClass {
                 reference.delete();
 
                 // Convert the WARC file to Parquet
-                CrawledDocumentParquetRecordFileWriter
-                        .convertWarc(domain, userAgent, newWarcFile, parquetFile);
+                SlopCrawlDataRecord
+                        .convertWarc(domain, userAgent, newWarcFile, slopFile);
 
                 // Optionally archive the WARC file if full retention is enabled,
                 // otherwise delete it:
                 warcArchiver.consumeWarc(newWarcFile, domain);
 
                 // Mark the domain as finished in the work log
-                workLog.setJobToFinished(domain, parquetFile.toString(), size);
+                workLog.setJobToFinished(domain, slopFile.toString(), size);
 
                 // Update the progress bar
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);

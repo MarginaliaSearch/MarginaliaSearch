@@ -24,7 +24,7 @@ public class DocumentValuator {
         double scriptPenalty = getScriptPenalty(parsedDocument);
         double chatGptPenalty = getChatGptContentFarmPenalty(parsedDocument);
 
-        int rawLength = crawledDocument.documentBody.length();
+        int rawLength = crawledDocument.documentBodyBytes.length;
 
         if (textLength == 0) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);

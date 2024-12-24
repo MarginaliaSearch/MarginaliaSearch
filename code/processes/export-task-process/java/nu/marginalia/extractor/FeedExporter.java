@@ -12,7 +12,6 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
-import org.jsoup.Jsoup;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -81,13 +80,13 @@ public class FeedExporter implements ExporterIf {
         while (stream.hasNext()) {
             if (!(stream.next() instanceof CrawledDocument doc))
                 continue;
-            if (null == doc.documentBody)
+            if (!doc.hasBody())
                 continue;
             if (!doc.contentType.toLowerCase().startsWith("text/html"))
                 continue;
 
             var baseUrl = new EdgeUrl(doc.url);
-            var parsed = Jsoup.parse(doc.documentBody);
+            var parsed = doc.parseBody();
 
             List<EdgeUrl> feedUrls = new ArrayList<>();
             for (var link : parsed.select("link[rel=alternate]")) {

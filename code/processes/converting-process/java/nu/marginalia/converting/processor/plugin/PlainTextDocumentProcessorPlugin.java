@@ -71,7 +71,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
                                           DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException {
 
-        String documentBody = crawledDocument.documentBody;
+        String documentBody = crawledDocument.documentBody();
 
         if (languageFilter.isBlockedUnicodeRange(documentBody)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);

@@ -19,6 +19,7 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
 
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.List;
@@ -50,7 +51,7 @@ public class SideloaderProcessing {
                 "OK",
                 "NP",
                 "",
-                body,
+                body.getBytes(StandardCharsets.UTF_8),
                 false,
                 null,
                 null
