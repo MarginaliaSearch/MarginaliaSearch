@@ -12,9 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
@@ -208,5 +210,21 @@ public class FeedDb {
         }
 
         reader.getLinksUpdatedSince(since, consumer);
+    }
+
+    public Instant getFetchTime() {
+        if (!Files.exists(readerDbPath)) {
+            return Instant.ofEpochMilli(0);
+        }
+
+        try {
+            return Files.readAttributes(readerDbPath, PosixFileAttributes.class)
+                    .creationTime()
+                    .toInstant();
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read the creatiom time of {}", readerDbPath);
+            return Instant.ofEpochMilli(0);
+        }
     }
 }

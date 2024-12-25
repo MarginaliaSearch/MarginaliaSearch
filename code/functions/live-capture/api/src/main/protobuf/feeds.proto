@@ -46,6 +46,7 @@ message RpcFeed {
   string feedUrl = 3;
   string updated = 4;
   repeated RpcFeedItem items = 5;
+  int64 fetchTimestamp = 6;
 }
 
 message RpcFeedItem {

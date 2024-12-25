@@ -107,8 +107,7 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
 
     @Override
     public void getFeed(RpcDomainId request,
-                        StreamObserver<RpcFeed> responseObserver)
-    {
+                        StreamObserver<RpcFeed> responseObserver) {
         if (!feedDb.isEnabled()) {
             responseObserver.onError(new IllegalStateException("Feed database is disabled on this node"));
             return;
@@ -126,7 +125,8 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
                 .setDomainId(request.getDomainId())
                 .setDomain(domainName.get().toString())
                 .setFeedUrl(feedItems.feedUrl())
-                .setUpdated(feedItems.updated());
+                .setUpdated(feedItems.updated())
+                .setFetchTimestamp(feedDb.getFetchTime().toEpochMilli());
 
         for (var item : feedItems.items()) {
             retB.addItemsBuilder()
