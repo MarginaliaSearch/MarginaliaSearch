@@ -39,7 +39,7 @@
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
 
         @if (results.hasFocusDomain())
-            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white text-gray-600 text-sm p-4 items-center">
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
                 <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a></div>
                 <div class="grow"></div>
                 <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove"></a>
