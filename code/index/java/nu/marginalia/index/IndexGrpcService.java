@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.sql.SQLException;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -92,7 +91,7 @@ public class IndexGrpcService
 
     private final String nodeName;
 
-    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
+    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
@@ -155,7 +154,7 @@ public class IndexGrpcService
 
 
     // exists for test access
-    List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
+    public List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
         try {
             return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
         }
@@ -184,7 +183,7 @@ public class IndexGrpcService
     }
 
     // accessible for tests
-    public List<RpcDecoratedResultItem> executeSearch(SearchParameters params) throws SQLException, InterruptedException {
+    public List<RpcDecoratedResultItem> executeSearch(SearchParameters params) throws Exception {
 
         if (!statefulIndex.isLoaded()) {
             // Short-circuit if the index is not loaded, as we trivially know that there can be no results
@@ -252,12 +251,12 @@ public class IndexGrpcService
      */
     private class QueryExecution {
 
-        private static final Executor workerPool = Executors.newWorkStealingPool(indexValuationThreads*4);
+        private static final Executor workerPool = Executors.newCachedThreadPool();
 
         /** The queue where the results from the index lookup threads are placed,
          * pending ranking by the result ranker threads */
         private final ArrayBlockingQueue<CombinedDocIdList> resultCandidateQueue
-                = new ArrayBlockingQueue<>(8);
+                = new ArrayBlockingQueue<>(64);
         private final ResultPriorityQueue resultHeap;
 
         private final ResultRankingContext resultRankingContext;
@@ -282,7 +281,7 @@ public class IndexGrpcService
         }
 
         /** Execute a search query */
-        public List<RpcDecoratedResultItem> run(SearchParameters parameters) throws SQLException, InterruptedException {
+        public List<RpcDecoratedResultItem> run(SearchParameters parameters) throws Exception {
 
             var terms = new SearchTerms(parameters.query, parameters.compiledQueryIds);
 
@@ -343,31 +342,26 @@ public class IndexGrpcService
             }
 
             private void executeSearch() {
-                final LongArrayList results = new LongArrayList(64);
+                final LongArrayList results = new LongArrayList(16);
 
                 // These queries are different indices for one subquery
-                final LongQueryBuffer buffer = new LongQueryBuffer(64);
+                final LongQueryBuffer buffer = new LongQueryBuffer(4096);
 
                 while (query.hasMore() && budget.hasTimeLeft())
                 {
                     buffer.reset();
                     query.getMoreResults(buffer);
 
-                    for (int i = 0; i < buffer.end; i++) {
-                        results.add(buffer.data.get(i));
-                    }
-
-                    if (results.size() >= 64) {
+                    for (int i = 0; i < buffer.end; i+=16) {
+                        for (int j = 0; j < Math.min(buffer.end - i, 16); j++) {
+                            results.add(buffer.data.get(i+j));
+                        }
                         enqueueResults(new CombinedDocIdList(results));
                         results.clear();
                     }
                 }
 
                 buffer.dispose();
-
-                if (!results.isEmpty()) {
-                    enqueueResults(new CombinedDocIdList(results));
-                }
             }
 
             private void enqueueResults(CombinedDocIdList resultIds) {
@@ -405,6 +399,9 @@ public class IndexGrpcService
                 catch (InterruptedException e) {
                     logger.warn("Interrupted while waiting to poll resultIds from queue", e);
                 }
+                catch (Exception e) {
+                    logger.error("Exception while ranking results", e);
+                }
                 finally {
                     synchronized (remainingValuationTasks) {
                         if (remainingValuationTasks.decrementAndGet() == 0)
@@ -413,7 +410,7 @@ public class IndexGrpcService
                 }
             }
 
-            private boolean execute() throws InterruptedException {
+            private boolean execute() throws Exception {
                 long start = System.currentTimeMillis();
 
                 // Do a relatively short poll to ensure we terminate in a timely manner

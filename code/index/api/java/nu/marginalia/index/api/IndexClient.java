@@ -29,7 +29,7 @@ public class IndexClient {
     private static final Logger logger = LoggerFactory.getLogger(IndexClient.class);
     private final GrpcMultiNodeChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
     private final DomainBlacklistImpl blacklist;
-    private static final ExecutorService executor = Executors.newFixedThreadPool(32);
+    private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     @Inject
     public IndexClient(GrpcChannelPoolFactory channelPoolFactory, DomainBlacklistImpl blacklist) {

@@ -4,6 +4,7 @@ import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.logic.DomainLocks;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
@@ -40,6 +41,7 @@ public class SimpleLinkScraper implements AutoCloseable {
     private final DomainBlacklist domainBlacklist;
     private final Duration connectTimeout = Duration.ofSeconds(10);
     private final Duration readTimeout = Duration.ofSeconds(10);
+    private final DomainLocks domainLocks = new DomainLocks();
 
     public SimpleLinkScraper(LiveCrawlDataSet dataSet,
                              DbDomainQueries domainQueries,
@@ -65,7 +67,9 @@ public class SimpleLinkScraper implements AutoCloseable {
                 .connectTimeout(connectTimeout)
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .version(HttpClient.Version.HTTP_2)
-                .build()) {
+                .build();
+             DomainLocks.DomainLock lock = domainLocks.lockDomain(domain) // throttle concurrent access per domain; do not remove
+        ) {
 
             EdgeUrl rootUrl = domain.toRootUrlHttps();
 

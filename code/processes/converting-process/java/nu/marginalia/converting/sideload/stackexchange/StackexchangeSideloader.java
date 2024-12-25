@@ -157,7 +157,7 @@ public class StackexchangeSideloader implements SideloadSource {
                     (int) -ret.details.quality,
                     EnumSet.of(DocumentFlags.GeneratorDocs));
             ret.details.features = applyFeatures;
-
+            ret.details.hashCode = dld.localitySensitiveHashCode();
             ret.details.metadata.withSizeAndTopology(10000, 0);
 
             ret.details.generator = GeneratorType.DOCS;

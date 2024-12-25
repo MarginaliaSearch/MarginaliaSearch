@@ -15,6 +15,8 @@ import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,6 +34,7 @@ public class AtagExporter implements ExporterIf {
     private static final LinkParser linkParser = new LinkParser();
     private static final MurmurHash3_128 hash = new MurmurHash3_128();
     private final FileStorageService storageService;
+    private static final Logger logger = LoggerFactory.getLogger(AtagExporter.class);
 
     @Inject
     public AtagExporter(FileStorageService storageService) {
@@ -47,8 +50,7 @@ public class AtagExporter implements ExporterIf {
 
         Path inputDir = storageService.getStorage(crawlId).asPath();
 
-        try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))))
-        )
+        try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
         {
             Path crawlerLogFile = inputDir.resolve("crawler.log");
 
@@ -64,7 +66,7 @@ public class AtagExporter implements ExporterIf {
                     exportLinks(tagWriter, stream);
                 }
                 catch (Exception ex) {
-                    ex.printStackTrace();
+                    logger.error("Failed to export ATags for " + item.relPath(), ex);
                 }
             }
 
@@ -72,7 +74,7 @@ public class AtagExporter implements ExporterIf {
 
         }
         catch (Exception ex) {
-
+            logger.error("Failed to export ATags", ex);
         }
         finally {
             Files.deleteIfExists(tmpFile);

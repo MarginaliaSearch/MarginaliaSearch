@@ -49,11 +49,12 @@ public class Units {
         var fromUnit = unitsByName.get(fromUnitName.toLowerCase());
         var toUnit = unitsByName.get(toUnitName.toLowerCase());
 
-        if (Objects.equals(fromUnit, toUnit)) {
-            return Optional.of(value + " " + fromUnit.name);
-        }
         if (null == fromUnit || null == toUnit) {
             return Optional.empty();
+        }
+
+        if (Objects.equals(fromUnit, toUnit)) {
+            return Optional.of(value + " " + fromUnit.name);
         }
 
         if (!Objects.equals(toUnit.type, fromUnit.type)) {

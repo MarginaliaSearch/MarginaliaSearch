@@ -484,9 +484,8 @@ public class IndexResultScoreCalculator {
                 firstPosition = Math.max(firstPosition, positions[i].getInt(0));
                 searchableKeywordCount ++;
 
-                int[] posArray = positions[i].toIntArray();
                 for (var tag : HtmlTag.includedTags) {
-                    int cnt = spans.getSpan(tag).countIntersections(posArray);
+                    int cnt = spans.getSpan(tag).countIntersections(positions[i]);
                     observationsByTag[tag.ordinal()] += cnt;
                     valuesByWordIdx[i] += cnt * weights[tag.ordinal()];
                 }

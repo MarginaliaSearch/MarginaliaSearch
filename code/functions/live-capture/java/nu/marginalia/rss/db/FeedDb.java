@@ -12,13 +12,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -84,6 +87,26 @@ public class FeedDb {
         }
         return List.of();
     }
+
+    public Map<String, Integer> getAllErrorCounts() {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        try {
+            if (reader != null) {
+                return reader.getAllErrorCounts();
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error getting all feeds", e);
+        }
+        return Map.of();
+    }
+
 
     @NotNull
     public FeedItems getFeed(EdgeDomain domain) {
@@ -187,5 +210,21 @@ public class FeedDb {
         }
 
         reader.getLinksUpdatedSince(since, consumer);
+    }
+
+    public Instant getFetchTime() {
+        if (!Files.exists(readerDbPath)) {
+            return Instant.ofEpochMilli(0);
+        }
+
+        try {
+            return Files.readAttributes(readerDbPath, PosixFileAttributes.class)
+                    .creationTime()
+                    .toInstant();
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read the creatiom time of {}", readerDbPath);
+            return Instant.ofEpochMilli(0);
+        }
     }
 }

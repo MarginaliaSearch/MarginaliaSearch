@@ -8,8 +8,29 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 class FeedDbTest {
+
+    @Test
+    public void testErrorCounts() throws Exception {
+        Path dbPath = Files.createTempFile("rss-feeds", ".db");
+
+        try {
+            FeedDb db = new FeedDb(dbPath);
+
+            try (var writer = db.createWriter()) {
+                writer.setErrorCount("foo", 1);
+                writer.setErrorCount("bar", 5);
+                db.switchDb(writer);
+            }
+
+            Map<String, Integer> allErrorCounts = db.getAllErrorCounts();
+            Assertions.assertEquals(Map.of("foo", 1, "bar", 5), allErrorCounts);
+        } finally {
+            Files.delete(dbPath);
+        }
+    }
 
     @Test
     public void testDbHash() throws Exception{
@@ -31,6 +52,5 @@ class FeedDbTest {
         } finally {
             Files.delete(dbPath);
         }
-
     }
 }
