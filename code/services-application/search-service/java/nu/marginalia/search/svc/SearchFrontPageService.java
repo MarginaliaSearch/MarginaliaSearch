@@ -13,6 +13,8 @@ import nu.marginalia.search.model.NavbarModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -44,9 +46,7 @@ public class SearchFrontPageService {
     @Path("/")
     public MapModelAndView render(Context context) {
 
-        List<NewsItemCluster> newsItems = getNewsItems(context);
-
-        IndexModel model = new IndexModel(newsItems, searchVisitorCount.getQueriesPerMinute());
+        IndexModel model = getIndexModel(context);
 
         return new MapModelAndView("serp/start.jte")
                 .put("navbar", NavbarModel.SEARCH)
@@ -54,12 +54,12 @@ public class SearchFrontPageService {
                 .put("websiteUrl", websiteUrl);
     }
 
-    private List<NewsItemCluster> getNewsItems(Context context) {
+    private IndexModel getIndexModel(Context context) {
 
         Set<Integer> subscriptions = subscriptionService.getSubscriptions(context);
 
         if (subscriptions.isEmpty())
-            return List.of();
+            return new IndexModel(List.of(), "never", searchVisitorCount.getQueriesPerMinute());
 
         List<CompletableFuture<RpcFeed>> feedResults = new ArrayList<>();
 
@@ -67,11 +67,17 @@ public class SearchFrontPageService {
             feedResults.add(feedsClient.getFeed(sub));
         }
 
+        Instant refreshDate = Instant.EPOCH;
+
         List<NewsItem> itemsAll = new ArrayList<>();
 
         for (var result : feedResults) {
             try {
                 RpcFeed feed = result.get();
+
+                if (refreshDate == Instant.EPOCH) {
+                    refreshDate = Instant.ofEpochMilli(feed.getFetchTimestamp());
+                }
 
                 for (var item : feed.getItemsList()) {
                     String title = item.getTitle();
@@ -111,7 +117,11 @@ public class SearchFrontPageService {
         if (items.size() > 20) {
             items.subList(20, items.size()).clear();
         }
-        return items;
+
+        Duration refreshDateAge = Duration.between(refreshDate, Instant.now());
+        String refreshDateStr = String.format("%d hours ago", refreshDateAge.toHours());
+
+        return new IndexModel(items, refreshDateStr, searchVisitorCount.getQueriesPerMinute());
     }
 
 
@@ -154,7 +164,9 @@ public class SearchFrontPageService {
         return sb.toString();
     }*/
 
-    public record IndexModel(List<NewsItemCluster> news, int searchPerMinute) { }
+    public record IndexModel(List<NewsItemCluster> news,
+                             String refreshDate,
+                             int searchPerMinute) { }
     public record NewsItem(String title,
                            String url,
                            String domain,

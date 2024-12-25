@@ -116,6 +116,7 @@
             <div class="pt-2"></div>
         </div>
     @endfor
+    <div class="mx-4 text-sm text-gray-800 dark:text-gray-200">Last updated: ${model.refreshDate()}</div>
 </div>
 @endif
 
