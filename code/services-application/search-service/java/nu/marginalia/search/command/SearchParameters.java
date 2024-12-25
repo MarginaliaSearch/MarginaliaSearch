@@ -27,7 +27,7 @@ public record SearchParameters(WebsiteUrl url,
     public static SearchParameters defaultsForQuery(WebsiteUrl url, String query, int page) {
         return new SearchParameters(
                 url,
-                "test",
+                query,
                 SearchProfile.NO_FILTER,
                 SearchJsParameter.DEFAULT,
                 SearchRecentParameter.DEFAULT,
