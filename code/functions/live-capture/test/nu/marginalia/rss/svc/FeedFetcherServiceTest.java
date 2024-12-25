@@ -99,7 +99,9 @@ class FeedFetcherServiceTest extends AbstractModule {
         feedFetcherService.setDeterministic();
         feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
 
-        Assertions.assertFalse(feedDb.getFeed(new EdgeDomain("www.marginalia.nu")).isEmpty());
+        var result = feedDb.getFeed(new EdgeDomain("www.marginalia.nu"));
+        System.out.println(result);
+        Assertions.assertFalse(result.isEmpty());
     }
 
     @Tag("flaky")

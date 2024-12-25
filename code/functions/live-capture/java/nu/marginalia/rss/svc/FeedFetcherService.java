@@ -316,6 +316,8 @@ public class FeedFetcherService {
 
     public FeedItems parseFeed(String feedData, FeedDefinition definition) {
         try {
+            feedData = sanitizeEntities(feedData);
+
             List<Item> rawItems = rssReader.read(
                     // Massage the data to maximize the possibility of the flaky XML parser consuming it
                     new BOMInputStream(new ByteArrayInputStream(feedData.trim().getBytes(StandardCharsets.UTF_8)), false)
@@ -340,6 +342,32 @@ public class FeedFetcherService {
             logger.debug("Exception", e);
             return FeedItems.none();
         }
+    }
+
+    private static final Map<String, String> HTML_ENTITIES = Map.of(
+            "&raquo;", "»",
+            "&laquo;", "«",
+            "&mdash;", "--",
+            "&ndash;", "-",
+            "&rsquo;", "'",
+            "&lsquo;", "'",
+            "&nbsp;", ""
+    );
+
+    /** The XML parser will blow up if you insert HTML entities in the feed XML,
+     * which is unfortunately relatively common.  Replace them as far as is possible
+     * with their corresponding characters
+     */
+    static String sanitizeEntities(String feedData) {
+        String result = feedData;
+        for (Map.Entry<String, String> entry : HTML_ENTITIES.entrySet()) {
+            result = result.replace(entry.getKey(), entry.getValue());
+        }
+
+        // Handle lone ampersands not part of a recognized XML entity
+        result = result.replaceAll("&(?!(amp|lt|gt|apos|quot);)", "&amp;");
+
+        return result;
     }
 
     /** Decide whether to keep URI fragments in the feed items.
