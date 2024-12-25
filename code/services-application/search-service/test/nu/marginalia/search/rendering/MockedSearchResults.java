@@ -132,6 +132,7 @@ public class MockedSearchResults {
     public static SearchSiteInfoService.SiteInfoWithContext mockSiteInfoData() throws URISyntaxException {
         return new SearchSiteInfoService.SiteInfoWithContext(
                 "www.example.com",
+                false,
                 Optional.of("other.example.com"),
                 14,
                 "https://www.example.com",
