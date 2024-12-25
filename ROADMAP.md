@@ -21,7 +21,7 @@ word n-grams known beforehand.  This limits the ability to interpret longer quer
 The positions mask should be supplemented or replaced with a more accurate (e.g.) gamma coded positions
 list, as is the civilized way of doing this.
 
-Completed with PR https://github.com/MarginaliaSearch/MarginaliaSearch/pull/99
+Completed with PR [#99](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/99)
 
 ## Hybridize crawler w/ Common Crawl data
 
@@ -41,6 +41,12 @@ The search engine has a bit of a problem showing spicy content mixed in with the
 to have a way to filter this out.  It's likely something like a URL blacklist (e.g. [UT1](https://dsi.ut-capitole.fr/blacklists/index_en.php) )
 combined with naive bayesian filter would go a long way, or something more sophisticated...?
 
+## Web Design Overhaul
+
+The design is kinda clunky and hard to maintain, and needlessly outdated-looking.  
+
+In progress: PR [#127](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/127)  -- demo available at https://test.marginalia.nu/
+
 ## Additional Language Support
 
 It would be desirable if the search engine supported more languages than English.  This is partially about
@@ -56,7 +62,7 @@ it should be extended to all domains.  It would also be interesting to offer sea
 RSS data itself, or use the RSS set to feed a special live index that updates faster than the
 main dataset. 
 
-Completed with PR [#122](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/122) 
+Completed with PR [#122](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/122) and PR [#125](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/125)
 
 ## Support for binary formats like PDF
 
