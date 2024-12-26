@@ -34,7 +34,6 @@ public class LinkProcessor {
 
         ret.linksExternal = new ArrayList<>();
         ret.linksInternal = new ArrayList<>();
-        ret.feedLinks = new ArrayList<>();
     }
 
     public Set<EdgeUrl> getSeenUrls() {
@@ -70,19 +69,6 @@ public class LinkProcessor {
                 foreignDomains.add(link.domain);
             }
         }
-    }
-
-    /** Accepts a link as a feed link */
-    public void acceptFeed(EdgeUrl link) {
-        if (!isLinkPermitted(link)) {
-            return;
-        }
-
-        if (!seenUrls.add(link)) {
-            return;
-        }
-
-        ret.feedLinks.add(link);
     }
 
     private boolean isLinkPermitted(EdgeUrl link) {

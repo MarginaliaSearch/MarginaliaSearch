@@ -25,12 +25,11 @@ public class ProcessedDocumentDetails {
 
     public List<EdgeUrl> linksInternal;
     public List<EdgeUrl> linksExternal;
-    public List<EdgeUrl> feedLinks;
 
     public DocumentMetadata metadata;
     public GeneratorType generator;
 
     public String toString() {
-        return "ProcessedDocumentDetails(title=" + this.title + ", description=" + this.description + ", pubYear=" + this.pubYear + ", length=" + this.length + ", quality=" + this.quality + ", hashCode=" + this.hashCode + ", features=" + this.features + ", standard=" + this.standard + ", linksInternal=" + this.linksInternal + ", linksExternal=" + this.linksExternal + ", feedLinks=" + this.feedLinks + ", metadata=" + this.metadata + ", generator=" + this.generator + ")";
+        return "ProcessedDocumentDetails(title=" + this.title + ", description=" + this.description + ", pubYear=" + this.pubYear + ", length=" + this.length + ", quality=" + this.quality + ", hashCode=" + this.hashCode + ", features=" + this.features + ", standard=" + this.standard + ", linksInternal=" + this.linksInternal + ", linksExternal=" + this.linksExternal + ", metadata=" + this.metadata + ", generator=" + this.generator + ")";
     }
 }
