@@ -85,7 +85,7 @@ class BTreeWriterTest {
     public void testWriteEntrySize2() throws IOException {
         BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
 
-        var tempFile = Files.createTempFile(Path.of("/tmp"), "tst", "dat");
+        var tempFile = Files.createTempFile("tst", "dat");
 
         int[] data = generateItems32(64);
 

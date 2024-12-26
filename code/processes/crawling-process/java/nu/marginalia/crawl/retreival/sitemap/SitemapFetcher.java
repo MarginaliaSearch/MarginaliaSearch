@@ -7,9 +7,9 @@ import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class SitemapFetcher {
@@ -24,26 +24,27 @@ public class SitemapFetcher {
     }
 
     public void downloadSitemaps(SimpleRobotRules robotsRules, EdgeUrl rootUrl) {
-        List<String> sitemaps = robotsRules.getSitemaps();
+        List<String> urls = robotsRules.getSitemaps();
 
-        List<EdgeUrl> urls = new ArrayList<>(sitemaps.size());
-        if (!sitemaps.isEmpty()) {
-            for (var url : sitemaps) {
-                EdgeUrl.parse(url).ifPresent(urls::add);
-            }
-        }
-        else {
-            urls.add(rootUrl.withPathAndParam("/sitemap.xml", null));
+        if (urls.isEmpty()) {
+            urls = List.of(rootUrl.withPathAndParam("/sitemap.xml", null).toString());
         }
 
         downloadSitemaps(urls);
     }
 
-    public void downloadSitemaps(List<EdgeUrl> urls) {
+    public void downloadSitemaps(List<String> urls) {
 
         Set<String> checkedSitemaps = new HashSet<>();
 
-        for (var url : urls) {
+        for (var rawUrl : urls) {
+            Optional<EdgeUrl> parsedUrl = EdgeUrl.parse(rawUrl);
+            if (parsedUrl.isEmpty()) {
+                continue;
+            }
+
+            EdgeUrl url = parsedUrl.get();
+
             // Let's not download sitemaps from other domains for now
             if (!crawlFrontier.isSameDomain(url)) {
                 continue;
