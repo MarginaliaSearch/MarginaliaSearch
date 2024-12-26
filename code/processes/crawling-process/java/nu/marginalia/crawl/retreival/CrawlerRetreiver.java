@@ -297,16 +297,16 @@ public class CrawlerRetreiver implements AutoCloseable {
     }
 
     private final List<String> likelyFeedEndpoints = List.of(
-            "/rss.xml",
-            "/atom.xml",
-            "/feed.xml",
-            "/index.xml",
-            "/feed",
-            "/rss",
-            "/atom",
-            "/feeds",
-            "/blog/feed",
-            "/blog/rss"
+            "rss.xml",
+            "atom.xml",
+            "feed.xml",
+            "index.xml",
+            "feed",
+            "rss",
+            "atom",
+            "feeds",
+            "blog/feed",
+            "blog/rss"
     );
 
     private Optional<String> guessFeedUrl(CrawlDelayTimer timer) throws InterruptedException {
