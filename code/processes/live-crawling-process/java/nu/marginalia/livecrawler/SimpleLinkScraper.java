@@ -26,6 +26,7 @@ import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -65,52 +66,68 @@ public class SimpleLinkScraper implements AutoCloseable {
         pool.submitQuietly(() -> retrieveNow(domain, id.getAsInt(), urls));
     }
 
-    public void retrieveNow(EdgeDomain domain, int domainId, List<String> urls) throws Exception {
+    public int retrieveNow(EdgeDomain domain, int domainId, List<String> urls) throws Exception {
+
+        EdgeUrl rootUrl = domain.toRootUrlHttps();
+
+        List<EdgeUrl> relevantUrls = new ArrayList<>();
+
+        for (var url : urls) {
+            Optional<EdgeUrl> optParsedUrl = lp.parseLink(rootUrl, url);
+            if (optParsedUrl.isEmpty()) {
+                continue;
+            }
+            if (dataSet.hasUrl(optParsedUrl.get())) {
+                continue;
+            }
+            relevantUrls.add(optParsedUrl.get());
+        }
+
+        if (relevantUrls.isEmpty()) {
+            return 0;
+        }
+
+        int fetched = 0;
+
         try (HttpClient client = HttpClient
                 .newBuilder()
                 .connectTimeout(connectTimeout)
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .version(HttpClient.Version.HTTP_2)
                 .build();
-             DomainLocks.DomainLock lock = domainLocks.lockDomain(domain) // throttle concurrent access per domain; do not remove
+             // throttle concurrent access per domain; IDE will complain it's not used, but it holds a semaphore -- do not remove:
+             DomainLocks.DomainLock lock = domainLocks.lockDomain(domain)
         ) {
-
-            EdgeUrl rootUrl = domain.toRootUrlHttps();
-
             SimpleRobotRules rules = fetchRobotsRules(rootUrl, client);
 
             if (rules == null) { // I/O error fetching robots.txt
                 // If we can't fetch the robots.txt,
-                for (var url : urls) {
-                    lp.parseLink(rootUrl, url).ifPresent(this::maybeFlagAsBad);
+                for (var url : relevantUrls) {
+                    maybeFlagAsBad(url);
                 }
-                return;
+                return fetched;
             }
 
             CrawlDelayTimer timer = new CrawlDelayTimer(rules.getCrawlDelay());
 
-            for (var url : urls) {
-                Optional<EdgeUrl> optParsedUrl = lp.parseLink(rootUrl, url);
-                if (optParsedUrl.isEmpty()) {
-                    continue;
-                }
-                if (dataSet.hasUrl(optParsedUrl.get())) {
-                    continue;
-                }
+            for (var parsedUrl : relevantUrls) {
 
-                EdgeUrl parsedUrl = optParsedUrl.get();
-                if (!rules.isAllowed(url)) {
+                if (!rules.isAllowed(parsedUrl.toString())) {
                     maybeFlagAsBad(parsedUrl);
                     continue;
                 }
 
                 switch (fetchUrl(domainId, parsedUrl, timer, client)) {
-                    case FetchResult.Success(int id, EdgeUrl docUrl, String body, String headers)
-                            -> dataSet.saveDocument(id, docUrl, body, headers, "");
+                    case FetchResult.Success(int id, EdgeUrl docUrl, String body, String headers) -> {
+                            dataSet.saveDocument(id, docUrl, body, headers, "");
+                            fetched++;
+                    }
                     case FetchResult.Error(EdgeUrl docUrl) -> maybeFlagAsBad(docUrl);
                 }
             }
         }
+
+        return fetched;
     }
 
     private void maybeFlagAsBad(EdgeUrl url) {

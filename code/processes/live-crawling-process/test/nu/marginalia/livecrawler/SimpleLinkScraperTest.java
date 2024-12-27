@@ -3,8 +3,8 @@ package nu.marginalia.livecrawler;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import nu.marginalia.model.crawldata.CrawledDomain;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -38,7 +38,8 @@ class SimpleLinkScraperTest {
     @Test
     public void testRetrieveNow() throws Exception {
         var scraper = new SimpleLinkScraper(dataSet, null, Mockito.mock(DomainBlacklistImpl.class));
-        scraper.retrieveNow(new EdgeDomain("www.marginalia.nu"), 1, List.of("https://www.marginalia.nu/"));
+        int fetched = scraper.retrieveNow(new EdgeDomain("www.marginalia.nu"), 1, List.of("https://www.marginalia.nu/"));
+        Assertions.assertEquals(1, fetched);
 
         var streams = dataSet.getDataStreams();
         Assertions.assertEquals(1, streams.size());
@@ -46,23 +47,20 @@ class SimpleLinkScraperTest {
         SerializableCrawlDataStream firstStream = streams.iterator().next();
         Assertions.assertTrue(firstStream.hasNext());
 
-        if (firstStream.next() instanceof CrawledDomain domain) {
-            Assertions.assertEquals("www.marginalia.nu",domain.getDomain());
-        }
-        else {
-            Assertions.fail();
-        }
+        List<CrawledDocument> documents = firstStream.docsAsList();
+        Assertions.assertEquals(1, documents.size());
+        Assertions.assertTrue(documents.getFirst().documentBody.startsWith("<!doctype"));
+    }
 
-        Assertions.assertTrue(firstStream.hasNext());
 
-        if ((firstStream.next() instanceof CrawledDocument document)) {
-            // verify we decompress the body string
-            Assertions.assertTrue(document.documentBody.startsWith("<!doctype"));
-        }
-        else{
-            Assertions.fail();
-        }
 
-        Assertions.assertFalse(firstStream.hasNext());
+    @Test
+    public void testRetrieveNow_Redundant() throws Exception {
+        dataSet.saveDocument(1, new EdgeUrl("https://www.marginalia.nu/"), "<html>", "", "127.0.0.1");
+        var scraper = new SimpleLinkScraper(dataSet, null, Mockito.mock(DomainBlacklistImpl.class));
+
+        // If the requested URL is already in the dataSet, we retrieveNow should shortcircuit and not fetch anything
+        int fetched = scraper.retrieveNow(new EdgeDomain("www.marginalia.nu"), 1, List.of("https://www.marginalia.nu/"));
+        Assertions.assertEquals(0, fetched);
     }
 }
