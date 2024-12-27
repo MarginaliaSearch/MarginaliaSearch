@@ -24,6 +24,7 @@ dependencies {
     implementation project(':code:libraries:message-queue')
 
     implementation project(':code:execution:api')
+    implementation project(':code:processes:crawling-process:ft-content-type')
 
     implementation libs.jsoup
     implementation libs.rssreader

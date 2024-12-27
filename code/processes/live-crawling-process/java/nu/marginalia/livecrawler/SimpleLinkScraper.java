@@ -3,6 +3,8 @@ package nu.marginalia.livecrawler;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.contenttype.ContentType;
+import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.logic.DomainLocks;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 
 /** A simple link scraper that fetches URLs and stores them in a database,
  * with no concept of a crawl frontier, WARC output, or other advanced features
@@ -128,6 +132,7 @@ public class SimpleLinkScraper implements AutoCloseable {
         var robotsRequest = HttpRequest.newBuilder(rootUrl.withPathAndParam("/robots.txt", null).asURI())
                 .GET()
                 .header("User-Agent", WmsaHome.getUserAgent().uaString())
+                .header("Accept-Encoding","gzip")
                 .timeout(readTimeout);
 
         // Fetch the robots.txt
@@ -135,9 +140,10 @@ public class SimpleLinkScraper implements AutoCloseable {
         try {
             SimpleRobotRulesParser parser = new SimpleRobotRulesParser();
             HttpResponse<byte[]> robotsTxt = client.send(robotsRequest.build(), HttpResponse.BodyHandlers.ofByteArray());
+
             if (robotsTxt.statusCode() == 200) {
                 return parser.parseContent(rootUrl.toString(),
-                        robotsTxt.body(),
+                        getResponseData(robotsTxt),
                         robotsTxt.headers().firstValue("Content-Type").orElse("text/plain"),
                         WmsaHome.getUserAgent().uaIdentifier());
             }
@@ -161,18 +167,19 @@ public class SimpleLinkScraper implements AutoCloseable {
                 .GET()
                 .header("User-Agent", WmsaHome.getUserAgent().uaString())
                 .header("Accept", "text/html")
+                .header("Accept-Encoding", "gzip")
                 .timeout(readTimeout)
                 .build();
 
         try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
             // Handle rate limiting by waiting and retrying once
             if (response.statusCode() == 429) {
                 timer.waitRetryDelay(new HttpFetcherImpl.RateLimitException(
                         response.headers().firstValue("Retry-After").orElse("5")
                 ));
-                response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
             }
 
             String contentType = response.headers().firstValue("Content-Type").orElse("").toLowerCase();
@@ -182,12 +189,14 @@ public class SimpleLinkScraper implements AutoCloseable {
                     return new FetchResult.Error(parsedUrl);
                 }
 
-                String body = response.body();
-                if (body.length() > 1024 * 1024) {
+                byte[] body = getResponseData(response);
+                if (body.length > 1024 * 1024) {
                     return new FetchResult.Error(parsedUrl);
                 }
 
-                return new FetchResult.Success(domainId, parsedUrl, body, headersToString(response.headers()));
+                String bodyText = DocumentBodyToString.getStringData(ContentType.parse(contentType), body);
+
+                return new FetchResult.Success(domainId, parsedUrl, bodyText, headersToString(response.headers()));
             }
         }
         catch (IOException ex) {
@@ -196,6 +205,19 @@ public class SimpleLinkScraper implements AutoCloseable {
         }
 
         return new FetchResult.Error(parsedUrl);
+    }
+
+    private byte[] getResponseData(HttpResponse<byte[]> response) throws IOException {
+        String encoding = response.headers().firstValue("Content-Encoding").orElse("");
+
+        if ("gzip".equals(encoding)) {
+            try (var stream = new GZIPInputStream(new ByteArrayInputStream(response.body()))) {
+                return stream.readAllBytes();
+            }
+        }
+        else {
+            return response.body();
+        }
     }
 
     sealed interface FetchResult {

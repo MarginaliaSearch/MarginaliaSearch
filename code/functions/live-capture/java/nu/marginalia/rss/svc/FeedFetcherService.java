@@ -5,6 +5,8 @@ import com.apptasticsoftware.rssreader.RssReader;
 import com.google.inject.Inject;
 import com.opencsv.CSVReader;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.contenttype.ContentType;
+import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
@@ -220,17 +222,23 @@ public class FeedFetcherService {
                     .GET()
                     .uri(uri)
                     .header("User-Agent", WmsaHome.getUserAgent().uaIdentifier())
+                    .header("Accept-Encoding", "gzip")
                     .header("Accept", "text/*, */*;q=0.9")
                     .timeout(Duration.ofSeconds(15))
                     .build();
 
             for (int i = 0; i < 3; i++) {
-                var rs = client.send(getRequest, HttpResponse.BodyHandlers.ofString());
+                var rs = client.send(getRequest, HttpResponse.BodyHandlers.ofByteArray());
                 if (429 == rs.statusCode()) {
                     int retryAfter = Integer.parseInt(rs.headers().firstValue("Retry-After").orElse("2"));
                     Thread.sleep(Duration.ofSeconds(Math.clamp(retryAfter, 1, 5)));
                 } else if (200 == rs.statusCode()) {
-                    return new FetchResult.Success(rs.body());
+                    byte[] responseData = getResponseData(rs);
+
+                    String contentType = rs.headers().firstValue("Content-Type").orElse("");
+                    String bodyText = DocumentBodyToString.getStringData(ContentType.parse(contentType), responseData);
+
+                    return new FetchResult.Success(bodyText);
                 } else if (404 == rs.statusCode()) {
                     return new FetchResult.PermanentError(); // never try again
                 } else {
@@ -243,6 +251,19 @@ public class FeedFetcherService {
         }
 
         return new FetchResult.TransientError();
+    }
+
+    private byte[] getResponseData(HttpResponse<byte[]> response) throws IOException {
+        String encoding = response.headers().firstValue("Content-Encoding").orElse("");
+
+        if ("gzip".equals(encoding)) {
+            try (var stream = new GZIPInputStream(new ByteArrayInputStream(response.body()))) {
+                return stream.readAllBytes();
+            }
+        }
+        else {
+            return response.body();
+        }
     }
 
     public sealed interface FetchResult {
