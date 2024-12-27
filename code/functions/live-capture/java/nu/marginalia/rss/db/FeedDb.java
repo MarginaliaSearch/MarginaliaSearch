@@ -8,6 +8,7 @@ import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItems;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,6 +128,26 @@ public class FeedDb {
         return FeedItems.none();
     }
 
+
+    @Nullable
+    public String getEtag(EdgeDomain domain) {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+        try {
+            if (reader != null) {
+                return reader.getEtag(domain);
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error getting etag for " + domain, e);
+        }
+        return null;
+    }
+
     public Optional<String> getFeedAsJson(String domain) {
         if (!feedDbEnabled) {
             throw new IllegalStateException("Feed database is disabled on this node");
@@ -214,7 +235,7 @@ public class FeedDb {
 
     public Instant getFetchTime() {
         if (!Files.exists(readerDbPath)) {
-            return Instant.ofEpochMilli(0);
+            return Instant.EPOCH;
         }
 
         try {
@@ -224,7 +245,23 @@ public class FeedDb {
         }
         catch (IOException ex) {
             logger.error("Failed to read the creatiom time of {}", readerDbPath);
-            return Instant.ofEpochMilli(0);
+            return Instant.EPOCH;
         }
     }
+
+    public boolean hasData() {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        if (reader != null) {
+            return reader.hasData();
+        }
+
+        return false;
+    }
+
 }

@@ -96,8 +96,27 @@ class FeedFetcherServiceTest extends AbstractModule {
             feedDb.switchDb(writer);
         }
 
-        feedFetcherService.setDeterministic();
         feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+
+        var result = feedDb.getFeed(new EdgeDomain("www.marginalia.nu"));
+        System.out.println(result);
+        Assertions.assertFalse(result.isEmpty());
+    }
+
+    @Tag("flaky")
+    @Test
+    public void testFetchRepeatedly() throws Exception {
+        try (var writer = feedDb.createWriter()) {
+            writer.saveFeed(new FeedItems("www.marginalia.nu", "https://www.marginalia.nu/log/index.xml", "", List.of()));
+            feedDb.switchDb(writer);
+        }
+
+        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        Assertions.assertNotNull(feedDb.getEtag(new EdgeDomain("www.marginalia.nu")));
+        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        Assertions.assertNotNull(feedDb.getEtag(new EdgeDomain("www.marginalia.nu")));
+        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        Assertions.assertNotNull(feedDb.getEtag(new EdgeDomain("www.marginalia.nu")));
 
         var result = feedDb.getFeed(new EdgeDomain("www.marginalia.nu"));
         System.out.println(result);
@@ -112,7 +131,6 @@ class FeedFetcherServiceTest extends AbstractModule {
             feedDb.switchDb(writer);
         }
 
-        feedFetcherService.setDeterministic();
         feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
 
         // We forget the feed on a 404 error
