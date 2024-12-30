@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from dataclasses import dataclass
 import subprocess, os
 from typing import List, Set, Dict, Optional
