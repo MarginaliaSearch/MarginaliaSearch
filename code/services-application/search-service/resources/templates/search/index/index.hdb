@@ -24,7 +24,7 @@
 <section id="frontpage">
 {{>search/index/index-news}}
 {{>search/index/index-about}}
-{{>search/index/index-tips}}
+{{>search/index/index-redesign}}
 </section>
 
 {{>search/parts/search-footer}}
