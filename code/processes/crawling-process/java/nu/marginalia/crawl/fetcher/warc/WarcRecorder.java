@@ -34,8 +34,9 @@ import java.util.*;
 public class WarcRecorder implements AutoCloseable {
     /** Maximum time we'll wait on a single request */
     static final int MAX_TIME = 30_000;
-    /** Maximum (decompressed) size we'll fetch */
-    static final int MAX_SIZE = 1024 * 1024 * 10;
+
+    /** Maximum (decompressed) size we'll save */
+    static final int MAX_SIZE = Integer.getInteger("crawler.maxFetchSize", 10 * 1024 * 1024);
 
     private final WarcWriter writer;
     private final Path warcFile;

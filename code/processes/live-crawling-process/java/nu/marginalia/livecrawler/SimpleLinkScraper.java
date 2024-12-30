@@ -48,6 +48,8 @@ public class SimpleLinkScraper implements AutoCloseable {
     private final Duration readTimeout = Duration.ofSeconds(10);
     private final DomainLocks domainLocks = new DomainLocks();
 
+    private final static int MAX_SIZE = Integer.getInteger("crawler.maxFetchSize", 10 * 1024 * 1024);
+
     public SimpleLinkScraper(LiveCrawlDataSet dataSet,
                              DbDomainQueries domainQueries,
                              DomainBlacklist domainBlacklist) {
@@ -207,7 +209,7 @@ public class SimpleLinkScraper implements AutoCloseable {
                 }
 
                 byte[] body = getResponseData(response);
-                if (body.length > 1024 * 1024) {
+                if (body.length > MAX_SIZE) {
                     return new FetchResult.Error(parsedUrl);
                 }
 
