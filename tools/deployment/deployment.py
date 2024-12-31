@@ -222,6 +222,31 @@ def run_gradle_build(targets: str) -> None:
     if return_code != 0:
         raise BuildError(service, return_code)
 
+
+def find_free_tag() -> str:
+    cmd = ['git', 'tag']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"Git command failed: {result.stderr}")
+
+    existing_tags = set(result.stdout.splitlines())
+
+    for i in range(1, 100000):
+        tag = f'deploy-{i:04d}'
+        if not tag in existing_tags:
+            return tag
+    raise RuntimeError(f"Failed to find a free deployment tag")
+
+def add_tags(tags: str) -> None:
+    new_tag = find_free_tag()
+
+    cmd = ['git', 'tag', new_tag, '-am', tags]
+    result = subprocess.run(cmd)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"Git command failed: {result.stderr}")
+
 # Example usage:
 if __name__ == '__main__':
     # Define service configuration
@@ -295,7 +320,9 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser(
             prog='deployment.py',
             description='Continuous Deployment helper')
+
         parser.add_argument('-v', '--verify', help='Verify the tags are valid, if present', action='store_true')
+        parser.add_argument('-a', '--add', help='Add the tags provided as a new deployment tag, usually combined with -t', action='store_true')
         parser.add_argument('-t', '--tag', help='Use the specified tag value instead of the head git tag starting with deploy-')
 
         args = parser.parse_args()
@@ -316,7 +343,10 @@ if __name__ == '__main__':
             print("Services to build:", plan.services_to_build)
             print("Instances to deploy:", [container.name for container in plan.instances_to_deploy])
 
-            if not args.verify:
+            if args.verify:
+                if args.add:
+                    add_tags(args.tag)
+            else:
                 print("\nExecution Plan:")
 
                 build_and_deploy(plan, SERVICE_CONFIG)
