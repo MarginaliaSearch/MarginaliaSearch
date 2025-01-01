@@ -211,7 +211,7 @@
 </div>
 
 @if (!siteInfo.similar().isEmpty() || !siteInfo.linking().isEmpty())
-    <div class="mx-auto md:py-4 px-4 flex-1 space-y-4 content md:block w-full md:w-auto hidden md:visible">
+    <div class="mx-auto md:py-4 px-4 flex-1 space-y-4 content md:block w-full md:w-auto hidden sm:block">
         @template.siteinfo.part.linkedDomains("Similar Domains", siteInfo.domain(), siteInfo.similar())
         @template.siteinfo.part.linkedDomains("Linked Domains", siteInfo.domain(), siteInfo.linking())
     </div>

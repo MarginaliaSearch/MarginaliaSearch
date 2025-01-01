@@ -14,12 +14,12 @@
             <button class="hide-filter-button fas fa-close"></button>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700">
                     <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Link</th>
-                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider  hidden md:visible">Rank</th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider hidden sm:inline">Rank</th>
                     <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Domain</th>
                     <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Similarity</th>
                 </tr>
@@ -35,7 +35,7 @@
                                 </a>
                             @endif
                         </td>
-                         <td class="px-3 py-6 md:py-3 whitespace-nowrap hidden md:visible">
+                         <td class="px-3 py-6 sm:py-3 whitespace-nowrap hidden sm:inline">
                             <div class="flex items-center">
                                 <span title="${item.rank()}%" class="text-sm text-gray-600 dark:text-yellow-200">
                                   $unsafe{item.getRankSymbols()}
@@ -43,7 +43,7 @@
                             </div>
                         </td>
 
-                        <td class="px-3 py-6 md:py-3 whitespace-nowrap">
+                        <td class="px-3 py-6 sm:py-3 whitespace-nowrap">
                             <a href="/site/${item.url().getDomain().toString()}?view=similar"
                                rel="external noopener nofollow"
                                class="text-liteblue dark:text-blue-200 dark:text-blue-200">
@@ -51,7 +51,7 @@
                             </a>
                         </td>
 
-                        <td class="px-3 py-6 md:py-3">
+                        <td class="px-3 py-6 sm:py-3">
                             <div class="w-16">
                                 <div class="dark:bg-gray-600 bg-gray-200 rounded-full h-2 overflow-hidden">
                                     <div class="bg-margeblue dark:bg-blue-400 h-2 rounded-full"
