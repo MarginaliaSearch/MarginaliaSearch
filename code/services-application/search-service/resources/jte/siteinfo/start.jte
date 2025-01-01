@@ -44,6 +44,7 @@
             marginalia search resources,  instead reach out with an email, and we'll work out some way of exporting the data or creating a dedicated API instead.</p>
     </div>
 
+    @if (!model.domains().isEmpty())
     <div class="border dark:border-gray-600 rounded md:my-4 overflow-hidden w-full md:w-auto">
         <div class="bg-margeblue text-white p-2 text-sm">Recently Discovered Domains</div>
 
@@ -73,6 +74,7 @@
         </div>
 
     </div>
+    @endif
 
 </div>
 

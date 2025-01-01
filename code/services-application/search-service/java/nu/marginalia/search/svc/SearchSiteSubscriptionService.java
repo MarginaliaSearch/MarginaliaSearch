@@ -14,6 +14,7 @@ import java.nio.IntBuffer;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class SearchSiteSubscriptionService {
@@ -65,9 +66,14 @@ public class SearchSiteSubscriptionService {
     }
 
     public boolean isSubscribed(Context context, EdgeDomain domain) {
-        int domainId = dbDomainQueries.getDomainId(domain);
+        try {
+            int domainId = dbDomainQueries.getDomainId(domain);
 
-        return getSubscriptions(context).contains(domainId);
+            return getSubscriptions(context).contains(domainId);
+        }
+        catch (NoSuchElementException ex) {
+            return false;
+        }
     }
 
     public void toggleSubscription(Context context, EdgeDomain domain) {
