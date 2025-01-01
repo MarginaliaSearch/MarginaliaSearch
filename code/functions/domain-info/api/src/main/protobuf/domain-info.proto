@@ -101,6 +101,7 @@ message RpcSimilarDomain {
   bool active = 6;
   bool screenshot = 7;
   LINK_TYPE linkType = 8;
+  bool feed = 9;
 
   enum LINK_TYPE {
       BACKWARD = 0;

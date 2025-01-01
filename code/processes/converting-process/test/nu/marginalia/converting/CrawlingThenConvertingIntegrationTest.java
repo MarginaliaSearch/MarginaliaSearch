@@ -7,6 +7,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.CrawlerMain;
+import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -46,6 +47,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     private Path fileName;
     private Path fileName2;
+    private Path dbTempFile;
 
     @BeforeAll
     public static void setUpAll() {
@@ -63,16 +65,18 @@ public class CrawlingThenConvertingIntegrationTest {
         httpFetcher = new HttpFetcherImpl(WmsaHome.getUserAgent().uaString());
         this.fileName = Files.createTempFile("crawling-then-converting", ".warc.gz");
         this.fileName2 = Files.createTempFile("crawling-then-converting", ".warc.gz");
+        this.dbTempFile = Files.createTempFile("domains", "db");
     }
 
     @AfterEach
     public void tearDown() throws IOException {
         Files.deleteIfExists(fileName);
         Files.deleteIfExists(fileName2);
+        Files.deleteIfExists(dbTempFile);
     }
 
     @Test
-    public void testInvalidDomain() throws IOException {
+    public void testInvalidDomain() throws Exception {
         // Attempt to fetch an invalid domain
         var specs = new CrawlerMain.CrawlSpecRecord("invalid.invalid.invalid", 10);
 
@@ -88,7 +92,7 @@ public class CrawlingThenConvertingIntegrationTest {
     }
 
     @Test
-    public void testRedirectingDomain() throws IOException {
+    public void testRedirectingDomain() throws Exception {
         // Attempt to fetch an invalid domain
         var specs = new CrawlerMain.CrawlSpecRecord("memex.marginalia.nu", 10);
 
@@ -107,7 +111,7 @@ public class CrawlingThenConvertingIntegrationTest {
     }
 
     @Test
-    public void testBlockedDomain() throws IOException {
+    public void testBlockedDomain() throws Exception {
         // Attempt to fetch an invalid domain
         var specs = new CrawlerMain.CrawlSpecRecord("search.marginalia.nu", 10);
 
@@ -124,7 +128,7 @@ public class CrawlingThenConvertingIntegrationTest {
     }
 
     @Test
-    public void crawlSunnyDay() throws IOException {
+    public void crawlSunnyDay() throws Exception {
         var specs = new CrawlerMain.CrawlSpecRecord("www.marginalia.nu", 10);
 
         CrawledDomain domain = crawl(specs);
@@ -157,7 +161,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
 
     @Test
-    public void crawlContentTypes() throws IOException {
+    public void crawlContentTypes() throws Exception {
         var specs = new CrawlerMain.CrawlSpecRecord("www.marginalia.nu", 10,
                 List.of(
                         "https://www.marginalia.nu/sanic.png",
@@ -195,7 +199,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
 
     @Test
-    public void crawlRobotsTxt() throws IOException {
+    public void crawlRobotsTxt() throws Exception {
         var specs = new CrawlerMain.CrawlSpecRecord("search.marginalia.nu", 5,
                         List.of("https://search.marginalia.nu/search?q=hello+world")
         );
@@ -235,15 +239,17 @@ public class CrawlingThenConvertingIntegrationTest {
             return null; // unreachable
         }
     }
-    private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs) throws IOException {
+    private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs) throws Exception {
         return crawl(specs, domain -> true);
     }
 
-    private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws IOException {
+    private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws Exception {
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        try (var recorder = new WarcRecorder(fileName)) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, recorder).crawlDomain();
+        try (var recorder = new WarcRecorder(fileName);
+             var db = new DomainStateDb(dbTempFile))
+        {
+            new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, db, recorder).crawlDomain();
         }
 
         CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain(),

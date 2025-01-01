@@ -2,6 +2,7 @@ package nu.marginalia.crawling.retreival;
 
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.CrawlerMain;
+import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -18,6 +19,7 @@ import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.test.CommonTestData;
 import okhttp3.Headers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -25,6 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,9 +41,14 @@ public class CrawlerMockFetcherTest {
 
     Map<EdgeUrl, CrawledDocument> mockData = new HashMap<>();
     HttpFetcher fetcherMock = new MockFetcher();
-
+    private Path dbTempFile;
+    @BeforeEach
+    public void setUp() throws IOException {
+        dbTempFile = Files.createTempFile("domains","db");
+    }
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws IOException {
+        Files.deleteIfExists(dbTempFile);
         mockData.clear();
     }
 
@@ -66,15 +76,17 @@ public class CrawlerMockFetcherTest {
 
     }
 
-    void crawl(CrawlerMain.CrawlSpecRecord spec)  throws IOException {
-        try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, recorder)
+    void crawl(CrawlerMain.CrawlSpecRecord spec) throws IOException, SQLException {
+        try (var recorder = new WarcRecorder();
+             var db = new DomainStateDb(dbTempFile)
+        ) {
+            new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, db, recorder)
                     .crawlDomain();
         }
     }
 
     @Test
-    public void testLemmy() throws URISyntaxException, IOException {
+    public void testLemmy() throws Exception {
         List<SerializableCrawlData> out = new ArrayList<>();
 
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/"), "mock-crawl-data/lemmy/index.html");
@@ -85,7 +97,7 @@ public class CrawlerMockFetcherTest {
     }
 
     @Test
-    public void testMediawiki() throws URISyntaxException, IOException {
+    public void testMediawiki() throws Exception {
         List<SerializableCrawlData> out = new ArrayList<>();
 
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
@@ -94,7 +106,7 @@ public class CrawlerMockFetcherTest {
     }
 
     @Test
-    public void testDiscourse() throws URISyntaxException, IOException {
+    public void testDiscourse() throws Exception {
         List<SerializableCrawlData> out = new ArrayList<>();
 
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/"), "mock-crawl-data/discourse/index.html");

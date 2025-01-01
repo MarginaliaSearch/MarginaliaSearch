@@ -166,7 +166,6 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.details.length = 128;
 
             ret.details.standard = HtmlStandard.HTML5;
-            ret.details.feedLinks = List.of();
             ret.details.linksExternal = List.of();
             ret.details.linksInternal = List.of();
             ret.state = UrlIndexingState.OK;

@@ -25,6 +25,7 @@ public class QueryExpansion {
             this::joinDashes,
             this::splitWordNum,
             this::joinTerms,
+            this::categoryKeywords,
             this::ngramAll
     );
 
@@ -94,6 +95,24 @@ public class QueryExpansion {
             if (matcher.matches()) {
                 var joined = StringUtils.join(dashPattern.split(qw.word()), '-');
                 graph.addVariant(qw, joined);
+            }
+        }
+    }
+
+    // Category keyword substitution, e.g. guitar wiki -> guitar generator:wiki
+    public void categoryKeywords(QWordGraph graph) {
+
+        for (var qw : graph) {
+
+            // Ensure we only perform the substitution on the last word in the query
+            if (!graph.getNextOriginal(qw).getFirst().isEnd()) {
+                continue;
+            }
+
+            switch (qw.word()) {
+                case "recipe", "recipes" -> graph.addVariant(qw, "category:food");
+                case "forum" -> graph.addVariant(qw, "generator:forum");
+                case "wiki" -> graph.addVariant(qw, "generator:wiki");
             }
         }
     }

@@ -241,6 +241,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         // Set up the work log and the warc archiver so we can keep track of what we've done
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
+             DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(domainsToCrawl)
         ) {
@@ -258,6 +259,7 @@ public class CrawlerMain extends ProcessMainClass {
                         anchorTagsSource,
                         outputDir,
                         warcArchiver,
+                        domainStateDb,
                         workLog);
 
                 if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) == null) {
@@ -299,11 +301,12 @@ public class CrawlerMain extends ProcessMainClass {
         heartbeat.start();
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler-" + targetDomainName.replace('/', '-') + ".log"));
+             DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
         ) {
             var spec = new CrawlSpecRecord(targetDomainName, 1000, List.of());
-            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, workLog);
+            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog);
             task.run();
         }
         catch (Exception ex) {
@@ -324,18 +327,21 @@ public class CrawlerMain extends ProcessMainClass {
         private final AnchorTagsSource anchorTagsSource;
         private final Path outputDir;
         private final WarcArchiverIf warcArchiver;
+        private final DomainStateDb domainStateDb;
         private final WorkLog workLog;
 
         CrawlTask(CrawlSpecRecord specification,
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WarcArchiverIf warcArchiver,
+                  DomainStateDb domainStateDb,
                   WorkLog workLog)
         {
             this.specification = specification;
             this.anchorTagsSource = anchorTagsSource;
             this.outputDir = outputDir;
             this.warcArchiver = warcArchiver;
+            this.domainStateDb = domainStateDb;
             this.workLog = workLog;
 
             this.domain = specification.domain();
@@ -359,7 +365,7 @@ public class CrawlerMain extends ProcessMainClass {
             }
 
             try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
-                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
+                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, domainStateDb, warcRecorder);
                  CrawlDataReference reference = getReference();
                  )
             {

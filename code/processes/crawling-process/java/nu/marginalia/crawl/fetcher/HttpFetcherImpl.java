@@ -139,7 +139,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     public ContentTypeProbeResult probeContentType(EdgeUrl url,
                                                    WarcRecorder warcRecorder,
                                                    ContentTags tags) throws RateLimitException {
-        if (tags.isEmpty()) {
+        if (tags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url)) {
             var headBuilder = new Request.Builder().head()
                     .addHeader("User-agent", userAgentString)
                     .addHeader("Accept-Encoding", "gzip")

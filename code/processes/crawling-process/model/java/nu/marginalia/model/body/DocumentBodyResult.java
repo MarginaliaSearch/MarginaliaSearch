@@ -23,6 +23,10 @@ public sealed interface DocumentBodyResult<T> {
             return mapper.apply(contentType, body);
         }
 
+        public Optional<T> getBody() {
+            return Optional.of(body);
+        }
+
         @Override
         public void ifPresent(ExConsumer<T, Exception> consumer) throws Exception {
             consumer.accept(contentType, body);
@@ -42,6 +46,11 @@ public sealed interface DocumentBodyResult<T> {
         }
 
         @Override
+        public Optional<T> getBody() {
+            return Optional.empty();
+        }
+
+        @Override
         public void ifPresent(ExConsumer<T, Exception> consumer) throws Exception {
         }
     }
@@ -49,6 +58,7 @@ public sealed interface DocumentBodyResult<T> {
     <T2> Optional<T2> mapOpt(BiFunction<ContentType, T, T2> mapper);
     <T2> Optional<T2> flatMapOpt(BiFunction<ContentType, T, Optional<T2>> mapper);
     <T2> DocumentBodyResult<T2> flatMap(BiFunction<ContentType, T, DocumentBodyResult<T2>> mapper);
+    Optional<T> getBody();
 
     void ifPresent(ExConsumer<T,Exception> consumer) throws Exception;
 

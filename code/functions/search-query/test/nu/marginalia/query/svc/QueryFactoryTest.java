@@ -12,6 +12,7 @@ import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -205,6 +206,17 @@ public class QueryFactoryTest {
     public void testExpansion8() {
         var subquery = parseAndGetSpecs("success often consists of");
         System.out.println(subquery);
+    }
+
+    @Test
+    public void testExpansion9() {
+        var subquery = parseAndGetSpecs("pie recipe");
+
+        Assertions.assertTrue(subquery.query.compiledQuery.contains(" category:food "));
+
+        subquery = parseAndGetSpecs("recipe pie");
+
+        Assertions.assertFalse(subquery.query.compiledQuery.contains(" category:food "));
     }
 
     @Test

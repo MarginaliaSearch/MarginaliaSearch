@@ -18,6 +18,7 @@ public class ContentTypeLogic {
             "application/xhtml",
             "application/xml",
             "application/atom+xml",
+            "application/atomsvc+xml",
             "application/rss+xml",
             "application/x-rss+xml",
             "application/rdf+xml",

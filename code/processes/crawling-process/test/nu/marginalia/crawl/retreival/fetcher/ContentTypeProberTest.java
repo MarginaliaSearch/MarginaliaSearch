@@ -42,24 +42,24 @@ class ContentTypeProberTest {
         port = r.nextInt(10000) + 8000;
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 10);
 
-        server.createContext("/html", exchange -> {
+        server.createContext("/html.gz", exchange -> {
             exchange.getResponseHeaders().add("Content-Type", "text/html");
             exchange.sendResponseHeaders(200, -1);
             exchange.close();
         });
-        server.createContext("/redir", exchange -> {
-            exchange.getResponseHeaders().add("Location", "/html");
+        server.createContext("/redir.gz", exchange -> {
+            exchange.getResponseHeaders().add("Location", "/html.gz");
             exchange.sendResponseHeaders(301, -1);
             exchange.close();
         });
 
-        server.createContext("/bin", exchange -> {
+        server.createContext("/bin.gz", exchange -> {
             exchange.getResponseHeaders().add("Content-Type", "application/binary");
             exchange.sendResponseHeaders(200, -1);
             exchange.close();
         });
 
-        server.createContext("/timeout", exchange -> {
+        server.createContext("/timeout.gz", exchange -> {
             try {
                 Thread.sleep(15_000);
             } catch (InterruptedException e) {
@@ -73,10 +73,10 @@ class ContentTypeProberTest {
 
         server.start();
 
-        htmlEndpoint = EdgeUrl.parse("http://localhost:" + port + "/html").get();
-        binaryEndpoint = EdgeUrl.parse("http://localhost:" + port + "/bin").get();
-        timeoutEndpoint = EdgeUrl.parse("http://localhost:" + port + "/timeout").get();
-        htmlRedirEndpoint = EdgeUrl.parse("http://localhost:" + port + "/redir").get();
+        htmlEndpoint = EdgeUrl.parse("http://localhost:" + port + "/html.gz").get();
+        binaryEndpoint = EdgeUrl.parse("http://localhost:" + port + "/bin.gz").get();
+        timeoutEndpoint = EdgeUrl.parse("http://localhost:" + port + "/timeout.gz").get();
+        htmlRedirEndpoint = EdgeUrl.parse("http://localhost:" + port + "/redir.gz").get();
 
         fetcher = new HttpFetcherImpl("test");
         recorder = new WarcRecorder(warcFile);
