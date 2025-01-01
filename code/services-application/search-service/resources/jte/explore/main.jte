@@ -22,7 +22,7 @@
     </div>
 </header>
 
-<div class="max-w-[1400px] mx-auto flex flex-col  gap-1 place-items-center">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-1 place-items-center">
     <div class="border dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-gray-100 my-4 p-3 rounded overflow-hidden flex flex-col space-y-4">
         @if (results.hasFocusDomain())
             <div class="flex space-x-1">
@@ -34,9 +34,9 @@
             Showing a random selection of websites.  Refresh the website to get a new selection.
         @endif
     </div>
-    <div class="grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:gap-8 md:grid-cols-3 xl:grid-cols-4 mx-auto p-4">
+    <div class="grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:gap-8 md:grid-cols-3 xl:grid-cols-4 mx-auto sm:p-4">
         @for (BrowseResult result : results.results())
-            <div class="bg-white border dark:border-gray-600 dark:bg-gray-800 rounded overflow-hidden m-4 sm:m-0">
+            <div class="bg-white border dark:border-gray-600 dark:bg-gray-800 rounded overflow-hidden my-4 mx-2 sm:m-4 sm:m-0">
                 <div class="bg-margeblue text-white p-2 flex space-x-4 text-sm">
                     <span class="break-words">${result.displayDomain()}</span>
                     <div class="grow"></div>
