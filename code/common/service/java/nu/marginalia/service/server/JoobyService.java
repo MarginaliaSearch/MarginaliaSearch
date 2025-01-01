@@ -112,6 +112,13 @@ public class JoobyService {
         var options = new ServerOptions();
         options.setHost(config.bindAddress());
         options.setPort(restEndpoint.port());
+
+        // Enable gzip compression of response data, but set compression to the lowest level
+        // since it doesn't really save much more space to dial it up.  It's typically a
+        // single digit percentage difference since HTML already compresses very well with level = 1.
+        options.setCompressionLevel(1);
+
+
         jooby.setServerOptions(options);
 
         jooby.get("/internal/ping", ctx -> "pong");
