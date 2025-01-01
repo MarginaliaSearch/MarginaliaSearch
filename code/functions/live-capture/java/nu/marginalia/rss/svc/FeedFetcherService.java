@@ -402,6 +402,7 @@ public class FeedFetcherService {
             "&ndash;", "-",
             "&rsquo;", "'",
             "&lsquo;", "'",
+            "&quot;", "\"",
             "&nbsp;", ""
     );
 
