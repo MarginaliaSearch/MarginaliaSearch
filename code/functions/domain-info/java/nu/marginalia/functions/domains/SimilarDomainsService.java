@@ -9,6 +9,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.api.domains.RpcSimilarDomain;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
@@ -17,10 +18,14 @@ import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,12 +37,13 @@ public class SimilarDomainsService {
     private final HikariDataSource dataSource;
     private final AggregateLinkGraphClient linkGraphClient;
 
-    private volatile TIntIntHashMap domainIdToIdx = new TIntIntHashMap(100_000);
+    private final TIntIntHashMap domainIdToIdx = new TIntIntHashMap(100_000);
     private volatile int[] domainIdxToId;
 
     public volatile Int2DoubleArrayMap[] relatedDomains;
     public volatile TIntList[] domainNeighbors = null;
     public volatile RoaringBitmap screenshotDomains = null;
+    public volatile RoaringBitmap feedDomains = null;
     public volatile RoaringBitmap activeDomains = null;
     public volatile RoaringBitmap indexedDomains = null;
     public volatile TIntDoubleHashMap domainRanks = null;
@@ -82,6 +88,7 @@ public class SimilarDomainsService {
                 domainNames = new String[domainIdToIdx.size()];
                 domainNeighbors = new TIntList[domainIdToIdx.size()];
                 screenshotDomains = new RoaringBitmap();
+                feedDomains = new RoaringBitmap();
                 activeDomains = new RoaringBitmap();
                 indexedDomains = new RoaringBitmap();
                 relatedDomains = new Int2DoubleArrayMap[domainIdToIdx.size()];
@@ -145,15 +152,52 @@ public class SimilarDomainsService {
                         activeDomains.add(idx);
                 }
 
-                updateScreenshotInfo();
-
                 logger.info("Loaded {} domains", domainRanks.size());
                 isReady = true;
+
+                // We can defer these as they only populate a roaringbitmap, and will degrade gracefully when not complete
+                updateScreenshotInfo();
+                updateFeedInfo();
             }
         }
         catch (SQLException throwables) {
             logger.warn("Failed to get domain neighbors for domain", throwables);
         }
+    }
+
+    private void updateFeedInfo() {
+        Set<String> feedsDomainNames = new HashSet<>(500_000);
+        Path readerDbPath = WmsaHome.getDataPath().resolve("feeds.db").toAbsolutePath();
+        String dbUrl = "jdbc:sqlite:" + readerDbPath;
+
+        logger.info("Opening feed db at " + dbUrl);
+
+        try (var conn = DriverManager.getConnection(dbUrl);
+             var stmt = conn.createStatement()) {
+            var rs = stmt.executeQuery("""
+                select
+                    json_extract(feed, '$.domain') as domain
+                from feed
+                """);
+            while (rs.next()) {
+                feedsDomainNames.add(rs.getString(1));
+            }
+        }
+        catch (SQLException ex) {
+            //
+        }
+
+        for (int idx = 0; idx < domainNames.length; idx++) {
+            String name = domainNames[idx];
+            if (name == null) {
+                continue;
+            }
+
+            if (feedsDomainNames.contains(name)) {
+                feedDomains.add(idx);
+            }
+        }
+
     }
 
     private void updateScreenshotInfo() {
@@ -254,6 +298,7 @@ public class SimilarDomainsService {
                     .setIndexed(indexedDomains.contains(idx))
                     .setActive(activeDomains.contains(idx))
                     .setScreenshot(screenshotDomains.contains(idx))
+                    .setFeed(feedDomains.contains(idx))
                     .setLinkType(RpcSimilarDomain.LINK_TYPE.valueOf(linkType.name()))
                     .build());
 
@@ -369,6 +414,7 @@ public class SimilarDomainsService {
                             .setIndexed(indexedDomains.contains(idx))
                             .setActive(activeDomains.contains(idx))
                             .setScreenshot(screenshotDomains.contains(idx))
+                            .setFeed(feedDomains.contains(idx))
                             .setLinkType(RpcSimilarDomain.LINK_TYPE.valueOf(linkType.name()))
                     .build());
 
