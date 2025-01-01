@@ -29,7 +29,7 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-3 py-6 md:py-3 whitespace-nowrap">
                             @if(item.linkType().isLinked())
-                                <a href="/crosstalk/?domains=${domainName},${item.url().getDomain().toString()}"
+                                <a href="/crosstalk?domains=${domainName},${item.url().getDomain().toString()}"
                                    class="text-liteblue dark:text-blue-200 ${item.linkType().faIcon()}"
                                    title="${item.linkType().getDescription()}">
                                 </a>
