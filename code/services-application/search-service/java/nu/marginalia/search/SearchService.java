@@ -1,6 +1,7 @@
 package nu.marginalia.search;
 
 import com.google.inject.Inject;
+import io.jooby.Jooby;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import nu.marginalia.WebsiteUrl;
@@ -18,6 +19,7 @@ public class SearchService extends JoobyService {
 
     private final WebsiteUrl websiteUrl;
     private final StaticResources staticResources;
+    private final SearchSiteSubscriptionService siteSubscriptionService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     private static final Histogram wmsa_search_service_request_time = Histogram.build()
@@ -38,6 +40,7 @@ public class SearchService extends JoobyService {
                          StaticResources staticResources,
                          SearchFrontPageService frontPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
+                         SearchSiteSubscriptionService siteSubscriptionService,
                          SearchSiteInfoService siteInfoService,
                          SearchCrosstalkService crosstalkService,
                          SearchBrowseService searchBrowseService,
@@ -57,6 +60,14 @@ public class SearchService extends JoobyService {
         this.websiteUrl = websiteUrl;
         this.staticResources = staticResources;
 
+        this.siteSubscriptionService = siteSubscriptionService;
+    }
+
+    @Override
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
+
+        jooby.get("/export-opml", siteSubscriptionService::exportOpml);
     }
 //
 //        SearchServiceMetrics.get("/search", searchQueryService::pathSearch);

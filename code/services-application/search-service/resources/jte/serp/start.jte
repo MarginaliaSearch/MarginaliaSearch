@@ -81,7 +81,14 @@
 </div>
 @else
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w m-4">
-    <div class="my-4 text-black dark:text-white font-serif text-xl mx-8">Subscriptions</div>
+    <div class="my-4 text-black dark:text-white font-serif text-xl mx-8 place-items-baseline flex">
+        Subscriptions
+        <div class="grow"></div>
+        <a class="text-sm font-sans" href="/export-opml">
+            <i class="fas fa-download mr-2"></i>
+            Export as OPML
+        </a>
+    </div>
     @for (NewsItemCluster cluster : model.news())
         !{NewsItem item = cluster.first();}
 
