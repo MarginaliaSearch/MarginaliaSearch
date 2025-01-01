@@ -34,9 +34,9 @@
             Showing a random selection of websites.  Refresh the website to get a new selection.
         @endif
     </div>
-    <div class="grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:gap-8 md:grid-cols-3 xl:grid-cols-4 mx-auto sm:p-4">
+    <div class="grid-cols-1 gap-4 sm:grid sm:grid-cols-1 md:grid-cols-3 xl:grid-cols-4 mx-auto sm:p-4">
         @for (BrowseResult result : results.results())
-            <div class="bg-white border dark:border-gray-600 dark:bg-gray-800 rounded overflow-hidden my-4 mx-2 sm:m-4 sm:m-0">
+            <div class="bg-white border dark:border-gray-600 dark:bg-gray-800 rounded overflow-hidden">
                 <div class="bg-margeblue text-white p-2 flex space-x-4 text-sm">
                     <span class="break-words">${result.displayDomain()}</span>
                     <div class="grow"></div>
