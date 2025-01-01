@@ -211,8 +211,19 @@
 </div>
 
 @if (!siteInfo.similar().isEmpty() || !siteInfo.linking().isEmpty())
-    <div class="mx-auto md:py-4 px-4 flex-1 space-y-4 content md:block w-full md:w-auto">
+    <div class="mx-auto md:py-4 px-4 flex-1 space-y-4 content md:block w-full md:w-auto hidden md:visible">
         @template.siteinfo.part.linkedDomains("Similar Domains", siteInfo.domain(), siteInfo.similar())
         @template.siteinfo.part.linkedDomains("Linked Domains", siteInfo.domain(), siteInfo.linking())
     </div>
+    <aside id="mobile-menu" class="fixed inset-0 z-50 flex justify-center bg-white/90 dark:bg-black/90 backdrop-blur-sm hidden p-2">
+        <div class="w-full">
+        @template.siteinfo.part.linkedDomains("Similar Domains", siteInfo.domain(), siteInfo.similar())
+        @template.siteinfo.part.linkedDomains("Linked Domains", siteInfo.domain(), siteInfo.linking())
+        </div>
+    </aside>
+    <button class="fixed bottom-10 right-5 sm:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="filter-button">
+        <i class="fas fa-filter mr-3"></i>
+        Similar
+    </button>
 @endif
+

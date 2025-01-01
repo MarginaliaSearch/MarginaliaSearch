@@ -134,4 +134,5 @@
 @template.part.footerLegal()
 
 </body>
+<script lang="javascript" src="/js/mobile-button.js"></script>
 </html>
