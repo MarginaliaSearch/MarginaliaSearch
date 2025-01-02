@@ -32,7 +32,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Function<InstanceAddress, ManagedChannel> channelConstructor;
     private final Function<ManagedChannel, STUB> stubConstructor;
 
-
     public GrpcSingleNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                      ServiceKey<? extends PartitionTraits.Unicast> serviceKey,
                                      Function<InstanceAddress, ManagedChannel> channelConstructor,
@@ -48,8 +47,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         serviceRegistryIf.registerMonitor(this);
 
         onChange();
-
-        awaitChannel(Duration.ofSeconds(5));
     }
 
 
