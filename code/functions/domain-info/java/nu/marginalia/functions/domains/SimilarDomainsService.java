@@ -178,13 +178,14 @@ public class SimilarDomainsService {
                 select
                     json_extract(feed, '$.domain') as domain
                 from feed
+                where json_array_length(feed, '$.items') > 0
                 """);
             while (rs.next()) {
                 feedsDomainNames.add(rs.getString(1));
             }
         }
         catch (SQLException ex) {
-            //
+            logger.error("Failed to read RSS feed items", ex);
         }
 
         for (int idx = 0; idx < domainNames.length; idx++) {
