@@ -1,6 +1,11 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.*;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
@@ -10,21 +15,18 @@ import nu.marginalia.api.feeds.RpcFeedItem;
 import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.renderer.MustacheRenderer;
-import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
+import nu.marginalia.search.model.GroupedUrlDetails;
+import nu.marginalia.search.model.NavbarModel;
+import nu.marginalia.search.model.ResultsPage;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -37,55 +39,113 @@ public class SearchSiteInfoService {
     private final DomainInfoClient domainInfoClient;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
-    private final MustacheRenderer<Object> renderer;
     private final FeedsClient feedsClient;
     private final LiveCaptureClient liveCaptureClient;
     private final ScreenshotService screenshotService;
 
+    private final HikariDataSource dataSource;
+    private final SearchSiteSubscriptionService searchSiteSubscriptions;
+
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
                                  DomainInfoClient domainInfoClient,
-                                 RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries,
                                  FeedsClient feedsClient,
                                  LiveCaptureClient liveCaptureClient,
-                                 ScreenshotService screenshotService) throws IOException
+                                 ScreenshotService screenshotService,
+                                 HikariDataSource dataSource,
+                                 SearchSiteSubscriptionService searchSiteSubscriptions)
     {
         this.searchOperator = searchOperator;
         this.domainInfoClient = domainInfoClient;
         this.flagSiteService = flagSiteService;
         this.domainQueries = domainQueries;
 
-        this.renderer = rendererFactory.renderer("search/site-info/site-info");
-
         this.feedsClient = feedsClient;
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
+        this.dataSource = dataSource;
+        this.searchSiteSubscriptions = searchSiteSubscriptions;
     }
 
-    public Object handle(Request request, Response response) throws SQLException {
-        String domainName = request.params("site");
-        String view = request.queryParamOrDefault("view", "info");
+    @GET
+    @Path("/site")
+    public ModelAndView<?> handleOverview(@QueryParam String domain) {
+        if (domain != null) {
+            // redirect to /site/domainName
+            return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domain));
+        }
+
+        List<SiteOverviewModel.DiscoveredDomain> domains = new ArrayList<>();
+
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, DISCOVER_DATE FROM EC_DOMAIN WHERE NODE_AFFINITY = 0 ORDER BY ID DESC LIMIT 10")) {
+
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                domains.add(new SiteOverviewModel.DiscoveredDomain(rs.getString("DOMAIN_NAME"), rs.getString("DISCOVER_DATE")));
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException();
+        }
+
+        return new MapModelAndView("siteinfo/start.jte",
+                Map.of("navbar", NavbarModel.SITEINFO,
+                        "model", new SiteOverviewModel(domains)));
+    }
+
+    public record SiteOverviewModel(List<DiscoveredDomain> domains) {
+        public record DiscoveredDomain(String name, String timestamp) {}
+    }
+
+    @GET
+    @Path("/site/{domainName}")
+    public ModelAndView<?>  handle(
+            Context context,
+            @PathParam String domainName,
+            @QueryParam String view,
+            @QueryParam Integer page
+    ) throws SQLException {
 
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
 
-        var model = switch (view) {
-            case "links" -> listLinks(domainName);
-            case "docs" -> listDocs(domainName);
-            case "info" -> listInfo(domainName);
+        page = Objects.requireNonNullElse(page, 1);
+        view = Objects.requireNonNullElse(view, "info");
+
+        SiteInfoModel model = switch (view) {
+            case "links" -> listLinks(domainName, page);
+            case "docs" -> listDocs(domainName, page);
+            case "info" -> listInfo(context, domainName);
             case "report" -> reportSite(domainName);
-            default -> listInfo(domainName);
+            default -> listInfo(context, domainName);
         };
 
-        return renderer.render(model);
+        return new MapModelAndView("siteinfo/main.jte",
+                Map.of("model", model, "navbar", NavbarModel.SITEINFO));
     }
 
-    public Object handlePost(Request request, Response response) throws SQLException {
-        String domainName = request.params("site");
-        String view = request.queryParamOrDefault("view", "info");
+    @POST
+    @Path("/site/{domainName}/subscribe")
+    public ModelAndView<?> toggleSubscription(Context context, @PathParam String domainName) throws SQLException {
+        searchSiteSubscriptions.toggleSubscription(context, new EdgeDomain(domainName));
+
+        return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domainName));
+    }
+
+    @POST
+    @Path("/site/{domainName}")
+    public ModelAndView<?> handleComplaint(
+            @PathParam String domainName,
+            @QueryParam String view,
+            @FormParam String category,
+            @FormParam String description,
+            @FormParam String samplequery
+
+    ) throws SQLException {
 
         if (null == domainName || domainName.isBlank()) {
             return null;
@@ -98,9 +158,9 @@ public class SearchSiteInfoService {
 
         FlagSiteFormData formData = new FlagSiteFormData(
                 domainId,
-                request.queryParams("category"),
-                request.queryParams("description"),
-                request.queryParams("sampleQuery")
+                category,
+                description,
+                samplequery
         );
         flagSiteService.insertComplaint(formData);
 
@@ -108,10 +168,11 @@ public class SearchSiteInfoService {
 
         var model = new ReportDomain(domainName, domainId, complaints, List.of(), true);
 
-        return renderer.render(model);
+        return new MapModelAndView("siteinfo/main.jte",
+                Map.of("model", model, "navbar", NavbarModel.SITEINFO));
     }
 
-    private Object reportSite(String domainName) throws SQLException {
+    private ReportDomain reportSite(String domainName) throws SQLException {
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
         var existingComplaints = flagSiteService.getExistingComplaints(domainId);
 
@@ -123,15 +184,20 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName) {
+    private Backlinks listLinks(String domainName, int page) {
+        var results = searchOperator.doBacklinkSearch(domainName, page);
         return new Backlinks(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doBacklinkSearch(domainName));
+                GroupedUrlDetails.groupResults(results.results),
+                results.resultPages
+        );
     }
 
-    private SiteInfoWithContext listInfo(String domainName) {
+    private SiteInfoWithContext listInfo(Context context, String domainName) {
 
-        final int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
+        var domain = new EdgeDomain(domainName);
+        final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);
+        boolean viableAliasDomain = domain.aliasDomain().map(alias -> domainQueries.tryGetDomainId(alias).isPresent()).orElse(false);
 
         final Future<DomainInformation> domainInfoFuture;
         final Future<List<SimilarDomain>> similarSetFuture;
@@ -140,7 +206,7 @@ public class SearchSiteInfoService {
         String url = "https://" + domainName + "/";
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
-
+        boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
         if (domainId < 0) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
@@ -161,12 +227,14 @@ public class SearchSiteInfoService {
             feedItemsFuture = feedsClient.getFeed(domainId);
         }
 
-        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, domainId,5);
+        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, domainId,5, 1).results;
         if (!sampleResults.isEmpty()) {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
 
         var result = new SiteInfoWithContext(domainName,
+                isSubscribed,
+                viableAliasDomain ? domain.aliasDomain().map(EdgeDomain::toString) : Optional.empty(),
                 domainId,
                 url,
                 hasScreenshot,
@@ -240,20 +308,21 @@ public class SearchSiteInfoService {
                     .build();
     }
 
-    private Docs listDocs(String domainName) {
+    private Docs listDocs(String domainName, int page) {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
+        var results = searchOperator.doSiteSearch(domainName, domainId, 100, page);
+
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doSiteSearch(domainName, domainId, 100));
+                results.results.stream().sorted(Comparator.comparing(deets -> -deets.topology)).toList(),
+                results.resultPages
+                );
     }
 
-    public record Docs(Map<String, Boolean> view,
-                       String domain,
+    public record Docs(String domain,
                        long domainId,
-                       List<UrlDetails> results) {
-        public Docs(String domain, long domainId, List<UrlDetails> results) {
-            this(Map.of("docs", true), domain, domainId, results);
-        }
+                       List<UrlDetails> results,
+                       List<ResultsPage> pages) implements SiteInfoModel  {
 
         public String focusDomain() { return domain; }
 
@@ -264,11 +333,12 @@ public class SearchSiteInfoService {
         }
     }
 
-    public record Backlinks(Map<String, Boolean> view, String domain, long domainId, List<UrlDetails> results) {
-        public Backlinks(String domain, long domainId, List<UrlDetails> results) {
-            this(Map.of("links", true), domain, domainId, results);
-        }
-
+    public record Backlinks(String domain,
+                            long domainId,
+                            List<GroupedUrlDetails> results,
+                            List<ResultsPage> pages
+                            ) implements SiteInfoModel
+    {
         public String query() { return "links:" + domain; }
 
         public boolean isKnown() {
@@ -276,9 +346,13 @@ public class SearchSiteInfoService {
         }
     }
 
-    public record SiteInfoWithContext(Map<String, Boolean> view,
-                                      Map<String, Boolean> domainState,
-                                      String domain,
+    public interface SiteInfoModel {
+        String domain();
+    }
+
+    public record SiteInfoWithContext(String domain,
+                                      boolean isSubscribed,
+                                      Optional<String> aliasDomain,
                                       int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,
@@ -286,67 +360,19 @@ public class SearchSiteInfoService {
                                       List<SimilarDomain> similar,
                                       List<SimilarDomain> linking,
                                       FeedItems feed,
-                                      List<UrlDetails> samples
-                                      ) {
-        public SiteInfoWithContext(String domain,
-                                   int domainId,
-                                   String siteUrl,
-                                   boolean hasScreenshot,
-                                   DomainInformation domainInformation,
-                                   List<SimilarDomain> similar,
-                                   List<SimilarDomain> linking,
-                                   FeedItems feedInfo,
-                                   List<UrlDetails> samples
-                            )
-        {
-            this(Map.of("info", true),
-                    Map.of(domainInfoState(domainInformation), true),
-                    domain,
-                    domainId,
-                    siteUrl,
-                    hasScreenshot,
-                    domainInformation,
-                    similar,
-                    linking,
-                    feedInfo,
-                    samples);
+                                      List<UrlDetails> samples)
+            implements SiteInfoModel
+    {
+
+        public boolean hasSamples() {
+            return samples != null && !samples.isEmpty();
         }
 
-        public String getLayout() {
-            // My CSS is too weak to handle this in CSS alone, so I guess we're doing layout in Java...
-            if (similar != null && similar.size() < 25) {
-                return "lopsided";
-            }
-            else if (feed != null && !feed.items().isEmpty()) {
-                return "lopsided";
-            }
-            else if (samples != null && !samples.isEmpty()) {
-                return "lopsided";
-            }
-            else {
-                return "balanced";
-            }
+        public boolean hasFeed() {
+            return feed != null && !feed.items.isEmpty();
         }
 
         public String query() { return "site:" + domain; }
-
-        private static String domainInfoState(DomainInformation info) {
-            if (info.isBlacklisted()) {
-                return "blacklisted";
-            }
-            if (!info.isUnknownDomain() && info.isSuggestForCrawling()) {
-                return "suggestForCrawling";
-            }
-            if (info.isInCrawlQueue()) {
-                return "inCrawlQueue";
-            }
-            if (info.isUnknownDomain()) {
-                return "unknownDomain";
-            }
-            else {
-                return "indexed";
-            }
-        }
 
         public boolean isKnown() {
             return domainId > 0;
@@ -391,21 +417,12 @@ public class SearchSiteInfoService {
     }
 
     public record ReportDomain(
-            Map<String, Boolean> view,
             String domain,
             int domainId,
             List<SearchFlagSiteService.FlagSiteComplaintModel> complaints,
             List<SearchFlagSiteService.CategoryItem> category,
-            boolean submitted)
+            boolean submitted) implements SiteInfoModel
     {
-        public ReportDomain(String domain,
-                            int domainId,
-                            List<SearchFlagSiteService.FlagSiteComplaintModel> complaints,
-                            List<SearchFlagSiteService.CategoryItem> category,
-                            boolean submitted) {
-            this(Map.of("report", true), domain, domainId, complaints, category, submitted);
-        }
-
         public String query() { return "site:" + domain; }
 
         public boolean isKnown() {

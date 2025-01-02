@@ -9,10 +9,9 @@ import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
+import java.time.Duration;
 
 @Singleton
 public class QueryClient  {
@@ -24,13 +23,14 @@ public class QueryClient  {
 
     private final GrpcSingleNodeChannelPool<QueryApiGrpc.QueryApiBlockingStub> queryApiPool;
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     @Inject
-    public QueryClient(GrpcChannelPoolFactory channelPoolFactory) {
+    public QueryClient(GrpcChannelPoolFactory channelPoolFactory) throws InterruptedException {
         this.queryApiPool = channelPoolFactory.createSingle(
                 ServiceKey.forGrpcApi(QueryApiGrpc.class, ServicePartition.any()),
                 QueryApiGrpc::newBlockingStub);
+
+        // Hold up initialization until we have a downstream connection
+        this.queryApiPool.awaitChannel(Duration.ofSeconds(5));
     }
 
     @CheckReturnValue

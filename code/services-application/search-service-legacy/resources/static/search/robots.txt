@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /browse/
+Disallow: /search/
+Disallow: /search
+Disallow: /wiki/
+Disallow: /explore/
+Disallow: /site/
+Disallow: /links/
