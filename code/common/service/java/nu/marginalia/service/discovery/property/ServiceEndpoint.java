@@ -48,5 +48,10 @@ public record ServiceEndpoint(String host, int port) {
         public int port() {
             return endpoint.port();
         }
+
+        @Override
+        public String toString() {
+            return endpoint().host() + ":" + endpoint.port() + " [" + instance + "]";
+        }
     }
 }

@@ -48,6 +48,19 @@ public sealed interface ServiceKey<P extends ServicePartition> {
         {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public String toString() {
+            final String shortName;
+
+            int periodIndex = name.lastIndexOf('.');
+
+            if (periodIndex >= 0) shortName = name.substring(periodIndex+1);
+            else shortName = name;
+
+            return "rest:" + shortName;
+        }
+
     }
     record Grpc<P extends ServicePartition>(String name, P partition) implements ServiceKey<P> {
         public String baseName() {
@@ -63,6 +76,18 @@ public sealed interface ServiceKey<P extends ServicePartition> {
             Grpc<P2> forPartition(P2 partition)
         {
             return new Grpc<>(name, partition);
+        }
+
+        @Override
+        public String toString() {
+            final String shortName;
+
+            int periodIndex = name.lastIndexOf('.');
+
+            if (periodIndex >= 0) shortName = name.substring(periodIndex+1);
+            else shortName = name;
+
+            return "grpc:" + shortName + "[" + partition.identifier() + "]";
         }
     }
 
