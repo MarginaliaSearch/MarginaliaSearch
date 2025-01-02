@@ -1,0 +1,12 @@
+<section class="card browse-result">
+    <h2 title="{{url.domain}}">{{displayDomain}}</h2>
+
+    <a href="{{url.proto}}://{{url.domain}}/">
+        <img src="/screenshot/{{domainId}}" title="{{displayDomain}} screenshot" alt="{{displayDomain}} screenshot" loading="lazy" width="400" height="300" />
+    </a>
+
+    <div class="utils">
+        <a href="/site/{{url.domain}}">Info</a>
+        <a href="/explore/{{url.domain}}">Similar Domains</a>
+    </div>
+</section>

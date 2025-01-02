@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title>Marginalia Search - {{domain}}</title>
+
+    <link rel="stylesheet" href="/serp.css" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+</head>
+<body>
+
+{{>search/parts/search-header}}
+
+{{>search/parts/search-form}}
+<span id="content-start"></span>
+
+{{#with view}}
+<nav id="siteinfo-nav">
+    <h2>{{domain}}</h2>
+    <ul>
+        <li {{#if info}}class="current"{{/if}}><a href="?view=info">Info</a></li>
+        <li {{#if docs}}class="current"{{/if}}>{{#if known}}<a href="?view=docs">Docs</a>{{/if}}{{#unless known}}<a class="link-unavailable" title="This domain is not known by the search engine">Docs</a>{{/unless}}</li>
+        <li {{#if links}}class="current"{{/if}}><a href="?view=links">Backlinks</a></li>
+
+        <li {{#if report}}class="current"{{/if}}>{{#if known}}<a href="?view=report">Report</a>{{/if}}{{#unless known}}<a class="link-unavailable" title="This domain is not known by the search engine">Report</a>{{/unless}}</li>
+    </ul>
+</nav>
+{{/with}}
+
+{{#if view.links}}
+    <div class="infobox">
+        Showing search results with links to {{domain}}.
+    </div>
+    {{#each results}}{{>search/parts/search-result}}{{/each}}
+{{/if}}
+
+{{#if view.docs}}
+    <div class="infobox">
+        Showing documents found in {{domain}}.
+    </div>
+
+    {{#each results}}{{>search/parts/search-result}}{{/each}}
+{{/if}}
+
+{{#if view.report}}
+    {{>search/site-info/site-info-report}}
+{{/if}}
+
+{{#if view.info}}
+    {{>search/site-info/site-info-summary}}
+{{/if}}
+
+{{>search/parts/search-footer}}
+</body>
+
+

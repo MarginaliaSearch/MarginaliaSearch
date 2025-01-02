@@ -8,6 +8,7 @@ include 'code:services-core:executor-service'
 include 'code:services-core:single-service-runner'
 
 include 'code:services-application:search-service'
+include 'code:services-application:search-service-legacy'
 include 'code:services-application:api-service'
 include 'code:services-application:dating-service'
 include 'code:services-application:explorer-service'

@@ -1,0 +1,32 @@
+
+<section data-ms-rank="{{first.matchRank}}" class="card search-result" >
+{{#with first}}
+<div class="url"><a rel="nofollow external" href="{{url}}">{{url}}</a></div>
+<h2> <a tabindex="-1" class="title" rel="nofollow external" href="{{url}}">{{title}}</a> </h2>
+<p class="description">{{description}}</p>
+
+{{/with}}
+<div class="utils">
+  Also from {{first.url.domain}}
+</div>
+<ul class="additional-results">
+{{#each rest}}
+<li><a href="{{url}}">{{title}}</a></li>
+{{/each}}
+</ul>
+{{#with first}}
+<div class="utils">
+    <a href="/site/{{url.domain}}" title="Domain Information">Info</a>
+    <a href="/site-search/{{url.domain}}/{{query}}?profile={{profile}}" title="More results from this domain">{{resultsFromSameDomain}}+</a>
+    <div class="meta">
+        {{#each problems}}
+            <span class="problem" title="{{description}}">{{name}}</span>
+        {{/each}}
+        <span aria-hidden="true" class="meta positions"
+              title="Positions where keywords were found within the document">{{positions}}</span>
+    </div>
+</div>
+{{/with}}
+</section>
+
+<hr class="w3m-helper" />

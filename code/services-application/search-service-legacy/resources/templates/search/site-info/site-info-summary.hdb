@@ -1,0 +1,124 @@
+<div class="infobox">
+    A <a href="/explore/{{domain}}">visual exploration</a> mode is also available.
+</div>
+
+
+<div id="similar-view" data-layout="{{layout}}">
+    <div id="similar-info">
+        <h2><span title="External Link">&#x1F30E;</span>&nbsp;<a rel="external noopener" href="{{siteUrl}}">{{domain}}</a></h2>
+
+
+        {{#if hasScreenshot}}
+        <a rel="external noopener" href="{{siteUrl}}">
+            <img class="screenshot" width="300" height="225" src="/screenshot/{{domainId}}" alt="Screenshot of {{domain}}" />
+        </a>
+        {{/if}}
+
+        {{#unless hasScreenshot}}
+            <p>Screenshot not yet available.</p>
+        {{/unless}}
+
+        {{#with domainInformation}}
+            {{> search/site-info/site-info-feed}}
+            {{> search/site-info/site-info-index}}
+            {{> search/site-info/site-info-links}}
+        {{/with}}
+    </div>
+
+    {{#if linking}}
+        <div id="similar-links">
+            <h2>Linking Domains</h2>
+
+            <table class="similarity-table">
+                <tr>
+                    <th colspan="3">Meta</th>
+                    <th>Rank</th>
+                    <th>Domain</th>
+                    <th>Similarity</th>
+                </tr>
+                {{#each linking}}
+                    <tr>
+                        <td>
+                            {{#if indexed}}
+                                {{#if active}}
+                                    <span title="Indexed">&#128064;</span>
+                                {{/if}}
+                                {{#unless active}}
+                                    <span title="Problem">&#128293;</span>
+                                {{/unless}}
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if screenshot}}&#x1f4f7;{{/if}}
+                        </td>
+                        <td>
+                            {{#if linkType.isLinked}}
+                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}">{{{linkType}}}</a></span>
+                            {{/if}}
+                        </td>
+                        <td>
+                            <span title="{{rank}}%">{{{rankSymbols}}}</span>
+                        </td>
+                        <td>
+                            <a href="/site/{{url.domain}}?view=similar" rel="external noopener nofollow">{{url.domain}}</a></td>
+                        <td>
+                            <progress value="{{relatedness}}" max="100.0">{{relatedness}}</progress><br>
+                        </td>
+                    </tr>
+                {{/each}}
+            </table>
+        </div>
+    {{/if}}
+
+
+    {{#if similar}}
+        <div id="similar-domains">
+            <h2>Similar Domains</h2>
+
+            <table class="similarity-table">
+                <tr>
+                    <th colspan="3">Meta</th>
+                    <th>Rank</th>
+                    <th>Domain</th>
+                    <th>Similarity</th>
+                </tr>
+                {{#each similar}}
+                    <tr>
+                        <td>
+                            {{#if indexed}}
+                                {{#if active}}
+                                    <span title="Indexed">&#128064;</span>
+                                {{/if}}
+                                {{#unless active}}
+                                    <span title="Problem">&#128293;</span>
+                                {{/unless}}
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if screenshot}}&#x1f4f7;{{/if}}
+                        </td>
+                        <td>
+                            {{#if linkType.isLinked}}
+                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}">{{{linkType}}}</a></span>
+                            {{/if}}
+                        </td>
+                        <td>
+                            <span title="{{rank}}%">{{{rankSymbols}}}</span>
+                        </td>
+                        <td>
+                            <a href="/site/{{url.domain}}?view=similar" rel="external noopener nofollow">{{url.domain}}</a></td>
+                        <td>
+                            <progress value="{{relatedness}}" max="100.0">{{relatedness}}</progress><br>
+
+                        </td>
+                    </tr>
+                {{/each}}
+            </table>
+            <p><b>Note</b>: Because two domains are considered similar does not always mean they're in
+                cahoots.   Similarity is a measure of how often they appear in the same contexts,
+                which may be an association like peas and carrots, but some pairings are also defined by their
+                contrasting opposition, like Sparta and Athens.</p>
+        </div>
+    {{/if}}
+
+</div>

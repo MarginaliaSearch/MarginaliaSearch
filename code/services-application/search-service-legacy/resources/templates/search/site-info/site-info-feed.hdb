@@ -1,0 +1,22 @@
+{{#if feed.items}}
+{{#with feed}}
+<h2><a title="Atom/RSS feed" target="external" href="{{feedUrl}}"><img width="16" height="16" src="/rss.svg"></a> Feed</h2>
+
+<dl>
+    {{#each items}}
+        <dt><a href="{{url}}" rel="external noopener ugc">{{title}}</a></dt>
+        <dd><date>{{pubDay}}</date><br>{{{descriptionSafe}}}</dd>
+    {{/each}}
+</dl>
+{{/with}}
+{{/if}}
+
+{{#unless feed.items}}{{#if samples}}
+<h2>Sample</h2>
+<dl>
+{{#each samples}}
+    <dt><a href="{{url}}" rel="external noopener ugc">{{title}}</a></dt>
+    <dd>{{description}}</dd>
+{{/each}}
+</dl>
+{{/if}}{{/unless}}
