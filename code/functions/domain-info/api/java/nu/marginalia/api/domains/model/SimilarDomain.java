@@ -9,6 +9,7 @@ public record SimilarDomain(EdgeUrl url,
                             boolean indexed,
                             boolean active,
                             boolean screenshot,
+                            boolean feed,
                             LinkType linkType) {
 
     public String getRankSymbols() {

@@ -206,7 +206,6 @@ public class SearchSiteInfoService {
         String url = "https://" + domainName + "/";
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
-
         boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
         if (domainId < 0) {

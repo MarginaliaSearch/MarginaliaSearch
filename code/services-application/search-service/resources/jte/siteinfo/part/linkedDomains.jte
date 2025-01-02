@@ -44,6 +44,12 @@
                         </td>
 
                         <td class="px-3 py-6 sm:py-3 whitespace-nowrap">
+                            @if (item.feed())
+                                <i class="fas fa-rss text-orange-500 mr-1" title="Feed available"></i>
+                            @else
+                                <i class="fas fa-link mr-1"></i>
+                            @endif
+
                             <a href="/site/${item.url().getDomain().toString()}?view=similar"
                                rel="external noopener nofollow"
                                class="text-liteblue dark:text-blue-200 dark:text-blue-200">

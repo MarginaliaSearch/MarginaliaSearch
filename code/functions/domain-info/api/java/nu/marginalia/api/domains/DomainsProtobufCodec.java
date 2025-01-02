@@ -38,6 +38,7 @@ public class DomainsProtobufCodec {
                         sd.getIndexed(),
                         sd.getActive(),
                         sd.getScreenshot(),
+                        sd.getFeed(),
                         SimilarDomain.LinkType.valueOf(sd.getLinkType().name())
                 );
             }
