@@ -90,12 +90,16 @@ public class SentenceSegmentSplitter {
         for (int i = 0; i < ret.size(); i++) {
             String part  = ret.get(i);
 
-            if (part.startsWith("'") && part.length() > 1) {
+            if (part.startsWith("<") && part.endsWith(">") && part.length() > 2) {
+                ret.set(i, part.substring(1, part.length() - 1));
+            }
+            else if (part.startsWith("'") && part.length() > 1) {
                 ret.set(i, part.substring(1));
             }
-            if (part.endsWith("'") && part.length() > 1) {
+            else if (part.endsWith("'") && part.length() > 1) {
                 ret.set(i, part.substring(0, part.length()-1));
             }
+
             while (part.endsWith(".")) {
                 part = part.substring(0, part.length()-1);
                 ret.set(i, part);
