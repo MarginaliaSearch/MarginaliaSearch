@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.api.livecapture.LiveCaptureApiGrpc.LiveCaptureApiBlockingStub;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
+import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
@@ -28,6 +29,9 @@ public class LiveCaptureClient {
         try {
             channelPool.call(LiveCaptureApiBlockingStub::requestScreengrab)
                     .run(RpcDomainId.newBuilder().setDomainId(domainId).build());
+        }
+        catch (ServiceNotAvailableException e) {
+            logger.info("requestScreengrab() failed since the service is not available");
         }
         catch (Exception e) {
             logger.error("API Exception", e);

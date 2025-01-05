@@ -7,8 +7,6 @@ import nu.marginalia.service.discovery.property.PartitionTraits;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -24,7 +22,7 @@ import java.util.function.Function;
 public class GrpcMultiNodeChannelPool<STUB> {
     private final ConcurrentHashMap<Integer, GrpcSingleNodeChannelPool<STUB>> pools =
             new ConcurrentHashMap<>();
-    private static final Logger logger = LoggerFactory.getLogger(GrpcMultiNodeChannelPool.class);
+
     private final ServiceRegistryIf serviceRegistryIf;
     private final ServiceKey<? extends PartitionTraits.Multicast> serviceKey;
     private final Function<ServiceEndpoint.InstanceAddress, ManagedChannel> channelConstructor;

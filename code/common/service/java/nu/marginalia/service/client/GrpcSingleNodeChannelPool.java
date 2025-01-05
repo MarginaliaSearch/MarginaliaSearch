@@ -10,6 +10,8 @@ import nu.marginalia.service.discovery.property.ServiceKey;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.time.Duration;
 import java.util.*;
@@ -26,6 +28,7 @@ import java.util.function.Function;
 public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Map<InstanceAddress, ConnectionHolder> channels = new ConcurrentHashMap<>();
 
+    private final Marker grpcMarker = MarkerFactory.getMarker("GRPC");
     private static final Logger logger = LoggerFactory.getLogger(GrpcSingleNodeChannelPool.class);
 
     private final ServiceRegistryIf serviceRegistryIf;
@@ -59,10 +62,10 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         for (var route : Sets.symmetricDifference(oldRoutes, newRoutes)) {
             ConnectionHolder oldChannel;
             if (newRoutes.contains(route)) {
-                logger.info("Adding route {}", route);
+                logger.info(grpcMarker, "Adding route {} => {}", serviceKey, route);
                 oldChannel = channels.put(route, new ConnectionHolder(route));
             } else {
-                logger.info("Expelling route {}", route);
+                logger.info(grpcMarker, "Expelling route {} => {}", serviceKey, route);
                 oldChannel = channels.remove(route);
             }
             if (oldChannel != null) {
@@ -100,7 +103,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             }
 
             try {
-                logger.info("Creating channel for {}:{}", serviceKey, address);
+                logger.info(grpcMarker, "Creating channel for {} => {}", serviceKey, address);
                 value = channelConstructor.apply(address);
                 if (channel.compareAndSet(null, value)) {
                     return value;
@@ -111,7 +114,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
                 }
             }
             catch (Exception e) {
-                logger.error("Failed to get channel for " + address, e);
+                logger.error(grpcMarker, "Failed to get channel for " + address, e);
                 return null;
             }
         }
@@ -203,7 +206,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         }
 
         for (var e : exceptions) {
-            logger.error("Failed to call service {}", serviceKey, e);
+            logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
         }
 
         throw new ServiceNotAvailableException(serviceKey);

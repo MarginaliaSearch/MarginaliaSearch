@@ -167,7 +167,7 @@ public class SimilarDomainsService {
 
     private void updateFeedInfo() {
         Set<String> feedsDomainNames = new HashSet<>(500_000);
-        Path readerDbPath = WmsaHome.getDataPath().resolve("feeds.db").toAbsolutePath();
+        Path readerDbPath = WmsaHome.getDataPath().resolve("rss-feeds.db").toAbsolutePath();
         String dbUrl = "jdbc:sqlite:" + readerDbPath;
 
         logger.info("Opening feed db at " + dbUrl);
