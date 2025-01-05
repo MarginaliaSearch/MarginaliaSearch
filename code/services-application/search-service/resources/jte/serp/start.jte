@@ -37,7 +37,7 @@
         You've stumbled onto a beta version of the redesign of the search engine's UI.  Feel free to explore, but
         beware that things may not quite be polished.
         If you have any feedback, I'd love to hear it.  Please reach me at
-        <a href="mailto:kontakt@marginalia.nu" class="underline text-liteblue dark:text-blue-200">kontakt@marginalia.nu</a>.
+        <a href="mailto:contact@marginalia-search.com" class="underline text-liteblue dark:text-blue-200">contact@marginalia-search.com</a>.
         </div>
     </div>
     <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2">
@@ -72,7 +72,7 @@
         </ul>
         <div class="text-xs text-liteblue dark:text-blue-200 pt-4">
             <i class="fas fa-link"></i>
-            <a href="#" class="underline">Privacy Statement</a> <!-- TODO -->
+            <a href="https://about.marginalia-search.com/article/privacy/" class="underline">Privacy Statement</a>
         </div>
     </div>
 

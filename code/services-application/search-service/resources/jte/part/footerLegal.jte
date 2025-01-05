@@ -15,7 +15,7 @@
     <div class="flex space-y-4 flex-col">
         <p class="text-base"><i class="fas fa-envelope mr-2 text-margeblue dark:text-slate-200"></i>Contact</p>
         <span class="text-sm text-slate-900 dark:text-white">
-            You can reach the webmaster of the search engine at <a class="underline text-liteblue dark:text-blue-200" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+            You can reach the webmaster of the search engine at <a class="underline text-liteblue dark:text-blue-200" href="mailto:contact@marginalia-search.com">contact@marginalia-search.com</a>.
         </span>
         <p class="text-base"><i class="fas fa-gear mr-2 text-margeblue dark:text-slate-200"></i>Sources</p>
         <span class="text-sm text-slate-900 dark:text-white">

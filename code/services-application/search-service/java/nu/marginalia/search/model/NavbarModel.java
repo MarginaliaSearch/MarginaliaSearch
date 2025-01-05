@@ -36,7 +36,7 @@ public record NavbarModel(NavbarGroup first, NavbarGroup second) {
                 ,
                 new NavbarGroup(
                         List.of(
-                                new NavbarEntry("About", "/", false)
+                                new NavbarEntry("About", "https://about.marginalia-search.com/", false)
                         )
                 )
             );

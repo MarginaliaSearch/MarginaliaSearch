@@ -11,7 +11,7 @@
 
     @if (reportDomain.submitted())
         <div class="mx-4 pb-4">Your complaint has been submitted and will be reviewed in a few weeks.
-            For urgent issues, email <a href="mailto:kontakt@marginalia.nu" class="text-blue-600 dark:text-blue-200 hover:underline">kontakt@marginalia.nu</a>
+            For urgent issues, email <a href="mailto:contact@marginalia-search.com" class="text-blue-600 dark:text-blue-200 hover:underline">contact@marginalia-search.com</a>
             instead of using this form.
         </div>
     @else
@@ -55,7 +55,7 @@
                 </button>
 
                 <p class="text-sm text-slate-600 dark:text-gray-200 ">
-                    For urgent issues, email <a href="mailto:kontakt@marginalia.nu" class="text-liteblue dark:text-blue-200 hover:underline">kontakt@marginalia.nu</a>
+                    For urgent issues, email <a href="mailto:contact@marginalia-search.com" class="text-liteblue dark:text-blue-200 hover:underline">contact@marginalia-search.com</a>
                     instead of using this form.
                 </p>
             </div>

@@ -46,10 +46,10 @@
         </p>
         <p class="text-base"><i class="fas fa-server mr-2 text-margeblue dark:text-slate-200"></i>Webmaster Information</p>
         <p>If you wish to add your website to the index, follow the instructions in this <a class="underline text-liteblue dark:text-blue-200"  href="https://github.com/MarginaliaSearch/submit-site-to-marginalia-search">git repository</a>,
-            if you do not want to mess with git, you can also email <a class="underline text-liteblue dark:text-blue-200" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a> with the domain name.</p>
+            if you do not want to mess with git, you can also email <a class="underline text-liteblue dark:text-blue-200" href="mailto:contact@marginalia-search.com">contact@marginalia-search.com</a> with the domain name.</p>
         <p>The search engine's crawler uses the user-agent string <span class="font-mono text-red-800 dark:text-red-200">search.marginalia.nu</span>, and requests come from the IPs indicated in
             <a class="underline text-liteblue dark:text-blue-200" href="https://search.marginalia.nu/crawler-ips.txt">https://search.marginalia.nu/crawler-ips.txt</a>.</p>
-        <p>If you do not want your website to be crawled, the search engine respects robots.txt.  In case of questions, bug reports or concerns, email <a class="underline text-liteblue dark:text-blue-200" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+        <p>If you do not want your website to be crawled, the search engine respects robots.txt.  In case of questions, bug reports or concerns, email <a class="underline text-liteblue dark:text-blue-200" href="mailto:contact@marginalia-search.com">contact@marginalia-search.com</a>.
         </p>
     </div>
     <div class="flex space-y-4 flex-col flex-1">
