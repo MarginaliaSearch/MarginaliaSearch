@@ -11,7 +11,7 @@
         <div class="flex space-x-0">
             <div class="flex flex-col grow" >
                 <div class="flex flex-row space-x-2 place-items-center">
-                    <div class="flex-0">
+                    <div class="flex-0" title="Match density">
                         @template.serp.part.matchogram(mask = result.first.positionsMask)
                     </div>
                     <div class="flex grow justify-between items-start">
