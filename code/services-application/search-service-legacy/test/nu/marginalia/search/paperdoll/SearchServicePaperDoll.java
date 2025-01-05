@@ -280,6 +280,7 @@ public class SearchServicePaperDoll extends AbstractModule {
                 true,
                 true,
                 true,
+                true,
                 SimilarDomain.LinkType.FOWARD
         ));
         dummyLinks.add(new SimilarDomain(
@@ -290,6 +291,7 @@ public class SearchServicePaperDoll extends AbstractModule {
                 false,
                 false,
                 true,
+                true,
                 SimilarDomain.LinkType.BACKWARD
         ));
         dummyLinks.add(new SimilarDomain(
@@ -297,6 +299,7 @@ public class SearchServicePaperDoll extends AbstractModule {
                 3,
                 0,
                 0.5,
+                false,
                 false,
                 false,
                 false,

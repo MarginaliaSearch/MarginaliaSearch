@@ -158,13 +158,13 @@ public class MockedSearchResults {
                         "INDEXED"
                 ),
                 List.of(
-                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,65, 20, true, true, true, SimilarDomain.LinkType.BIDIRECTIONAL)
+                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,65, 20, true, true, true, true, SimilarDomain.LinkType.BIDIRECTIONAL)
                 ),
                 List.of(
-                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,65, 80, true, true, true, SimilarDomain.LinkType.BIDIRECTIONAL),
-                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,35, 40, true, true, false, SimilarDomain.LinkType.BACKWARD),
-                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,25, 20, true, true, false, SimilarDomain.LinkType.FOWARD),
-                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,25, 20, true, true, false, SimilarDomain.LinkType.FOWARD)
+                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,65, 80, true, true, true, false, SimilarDomain.LinkType.BIDIRECTIONAL),
+                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,35, 40, true, true, false, false, SimilarDomain.LinkType.BACKWARD),
+                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,25, 20, true, true, false, false, SimilarDomain.LinkType.FOWARD),
+                        new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,25, 20, true, true, false, false, SimilarDomain.LinkType.FOWARD)
                 ),
                 new SearchSiteInfoService.FeedItems("www.example.com",
                         "https://www.example.com/rss.xml",
