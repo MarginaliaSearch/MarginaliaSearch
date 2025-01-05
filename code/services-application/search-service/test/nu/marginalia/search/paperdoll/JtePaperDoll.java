@@ -8,6 +8,7 @@ import gg.jte.resolve.DirectoryCodeResolver;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.rendering.MockedSearchResults;
+import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.service.server.StaticResources;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 @Tag("paperdoll")
@@ -75,6 +77,7 @@ public class JtePaperDoll {
         Spark.get("/first",
                 (rq, rs) ->  new Object(),
                 ret -> this.render("serp/start.jte", Map.of( "navbar", NavbarModel.SEARCH,
+                                                                                "model", new SearchFrontPageService.IndexModel(List.of(), "2024-01-01", 1),
                                                                              "websiteUrl", new WebsiteUrl("https://localhost:9999/")
                         ))
         );

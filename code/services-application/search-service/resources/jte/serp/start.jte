@@ -34,9 +34,11 @@
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">
     <div class="border dark:border-gray-600 dark:bg-gray-800 bg-white rounded p-2 m-4 ">
         <div class="text-slate-700 dark:text-white text-sm p-4">
-        You've stumbled onto a beta version of the redesign of the search engine's UI.  Feel free to explore, but
-        beware that things may not quite be polished.
-        If you have any feedback, I'd love to hear it.  Please reach me at
+            <div class="fas fa-wrench mr-1 text-margeblue dark:text-slate-200"></div>
+            This is the new design and home of Marginalia Search.  Migration to the new domain <pre class="inline text-red-800 dark:text-red-100">marginalia-search.com</pre> is currently <em>in progress</em>,
+            so mind that some things may be a bit broken for a day or two.  <a href="https://about.marginalia-search.com/article/redesign/"  class="underline text-liteblue dark:text-blue-200">Read more</a>.
+        <p class="my-4"></p>
+        If you have any issues or feedback regarding this change, please email
         <a href="mailto:contact@marginalia-search.com" class="underline text-liteblue dark:text-blue-200">contact@marginalia-search.com</a>.
         </div>
     </div>
@@ -51,7 +53,7 @@
     </div>
 
     <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
-        <div><i class="fas fa-hand-holding-hand mx-2 text-slate-100"></i>Open Source</div>
+        <div><i class="fas fa-hand-holding-hand mx-2 text-margeblue dark:text-slate-200"></i>Open Source</div>
         <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
            <li>Custom index and crawler software</li>
            <li>Simple technology -- no AI or cloud</li>
