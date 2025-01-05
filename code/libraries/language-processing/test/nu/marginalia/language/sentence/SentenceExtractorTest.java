@@ -29,6 +29,20 @@ class SentenceExtractorTest {
     }
 
     @Test
+    void testCplusplus() {
+        var dld = sentenceExtractor.extractSentence("std::vector", EnumSet.noneOf(HtmlTag.class));
+        assertEquals(1, dld.length());
+        assertEquals("std::vector", dld.wordsLowerCase[0]);
+    }
+
+    @Test
+    void testPHP() {
+        var dld = sentenceExtractor.extractSentence("$_GET", EnumSet.noneOf(HtmlTag.class));
+        assertEquals(1, dld.length());
+        assertEquals("$_get", dld.wordsLowerCase[0]);
+    }
+
+    @Test
     void testPolishArtist() {
         var dld = sentenceExtractor.extractSentence("Uklański", EnumSet.noneOf(HtmlTag.class));
 

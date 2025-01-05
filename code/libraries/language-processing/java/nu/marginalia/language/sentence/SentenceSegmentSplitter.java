@@ -27,7 +27,7 @@ public class SentenceSegmentSplitter {
         else {
             // If we flatten unicode, we do this...
             // FIXME: This can almost definitely be cleaned up and simplified.
-            wordBreakPattern = Pattern.compile("([^/_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
+            wordBreakPattern = Pattern.compile("([^/<>$:_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
         }
     }
 
