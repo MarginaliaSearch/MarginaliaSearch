@@ -209,6 +209,17 @@ public class QueryFactoryTest {
     }
 
     @Test
+    public void testQuotedApostrophe() {
+        var subquery = parseAndGetSpecs("\"bob's cars\"");
+
+        System.out.println(subquery);
+
+        Assertions.assertTrue(subquery.query.compiledQuery.contains(" bob "));
+        Assertions.assertFalse(subquery.query.compiledQuery.contains(" bob's "));
+        Assertions.assertEquals("\"bob's cars\"", subquery.humanQuery);
+    }
+
+    @Test
     public void testExpansion9() {
         var subquery = parseAndGetSpecs("pie recipe");
 

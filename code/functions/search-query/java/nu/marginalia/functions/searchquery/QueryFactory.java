@@ -71,6 +71,17 @@ public class QueryFactory {
 
                     String[] parts = StringUtils.split(str, '_');
 
+                    // Trim down tokens to match the behavior of the tokenizer used in indexing
+                    for (int i = 0; i < parts.length; i++) {
+                        String part = parts[i];
+
+                        if (part.endsWith("'s") && part.length() > 2) {
+                            part = part.substring(0, part.length()-2);
+                        }
+
+                        parts[i] = part;
+                    }
+
                     if (parts.length > 1) {
                         // Require that the terms appear in sequence
                         queryBuilder.phraseConstraint(SearchPhraseConstraint.mandatory(parts));
