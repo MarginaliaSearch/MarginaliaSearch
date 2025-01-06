@@ -258,6 +258,13 @@ if __name__ == '__main__':
             deploy_tier=2,
             groups={"all", "frontend", "core"}
         ),
+        'search-legacy': ServiceConfig(
+            gradle_target=':code:services-application:search-service-legacy:docker',
+            docker_name='search-service-legacy',
+            instances=None,
+            deploy_tier=3,
+            groups={"all", "frontend", "core"}
+        ),
         'api': ServiceConfig(
             gradle_target=':code:services-application:api-service:docker',
             docker_name='api-service',
