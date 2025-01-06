@@ -1,3 +1,4 @@
+@import nu.marginalia.model.EdgeDomain
 @import nu.marginalia.search.svc.SearchSiteInfoService
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.model.UrlDetails
@@ -20,11 +21,6 @@
             <a class="mx-3 " tabindex="-1" rel="nofollow noopener external" href="${siteInfo.siteUrl()}">
                 <img class="border dark:border-gray-600 shadow-inner" src="/screenshot/${siteInfo.domainId()}" alt="Screenshot of ${siteInfo.domain()}">
             </a>
-        @elseif (siteInfo.aliasDomain().isPresent())
-            <div class="mx-3 my-3 text-xs text-slate-800 dark:text-white">
-                The search engine is also aware of links to <a class="underline text-liteblue dark:text-blue-200" href="/site/${siteInfo.aliasDomain().get()}">${siteInfo.aliasDomain().get()}</a>,
-                this may be the canonical address.
-            </div>
         @endif
 
         @if (siteInfo.hasFeed())
@@ -79,6 +75,30 @@
 
         @endif
 
+
+        @if (!siteInfo.siblingDomains().isEmpty())
+            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
+                <i class="fas fa-globe"></i>
+                <span>Related Subdomains</span>
+            </div>
+
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 mx-4">
+                <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700">
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Domain Name</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
+                @for (EdgeDomain sibling : siteInfo.siblingDomains())
+                    <tr>
+                        <td class="px-3 py-6 md:py-3 whitespace-nowrap">
+                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.toString()}">${sibling.toString()}</a>
+                        </td>
+                    </tr>
+                @endfor
+                </tbody>
+            </table>
+        @endif
 
         @if (siteInfo.domainInformation().isUnknownDomain())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">

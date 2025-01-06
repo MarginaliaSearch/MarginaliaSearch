@@ -18,7 +18,6 @@ import nu.marginalia.search.svc.SearchSiteInfoService;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MockedSearchResults {
@@ -133,7 +132,9 @@ public class MockedSearchResults {
         return new SearchSiteInfoService.SiteInfoWithContext(
                 "www.example.com",
                 false,
-                Optional.of("other.example.com"),
+                List.of(new EdgeDomain("example.com"),
+                        new EdgeDomain("about.example.com")
+                        ),
                 14,
                 "https://www.example.com",
                 true,

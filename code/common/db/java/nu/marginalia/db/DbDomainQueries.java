@@ -8,17 +8,18 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.model.EdgeDomain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Singleton
 public class DbDomainQueries {
     private final HikariDataSource dataSource;
 
+    private static final Logger logger = LoggerFactory.getLogger(DbDomainQueries.class);
     private final Cache<EdgeDomain, Integer> domainIdCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
 
     @Inject
@@ -100,5 +101,29 @@ public class DbDomainQueries {
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public List<EdgeDomain> otherSubdomains(EdgeDomain domain, int cnt) {
+        List<EdgeDomain> ret = new ArrayList<>();
+
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("SELECT DOMAIN_NAME FROM EC_DOMAIN WHERE DOMAIN_TOP = ? LIMIT ?")) {
+            stmt.setString(1, domain.topDomain);
+            stmt.setInt(2, cnt);
+
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                var sibling = new EdgeDomain(rs.getString(1));
+
+                if (sibling.equals(domain))
+                    continue;
+
+                ret.add(sibling);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to get domain neighbors");
+        }
+
+        return ret;
     }
 }

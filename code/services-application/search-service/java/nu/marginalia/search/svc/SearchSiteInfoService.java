@@ -197,7 +197,6 @@ public class SearchSiteInfoService {
 
         var domain = new EdgeDomain(domainName);
         final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);
-        boolean viableAliasDomain = domain.aliasDomain().map(alias -> domainQueries.tryGetDomainId(alias).isPresent()).orElse(false);
 
         final Future<DomainInformation> domainInfoFuture;
         final Future<List<SimilarDomain>> similarSetFuture;
@@ -232,9 +231,10 @@ public class SearchSiteInfoService {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
 
+
         var result = new SiteInfoWithContext(domainName,
                 isSubscribed,
-                viableAliasDomain ? domain.aliasDomain().map(EdgeDomain::toString) : Optional.empty(),
+                domainQueries.otherSubdomains(domain, 5),
                 domainId,
                 url,
                 hasScreenshot,
@@ -352,7 +352,7 @@ public class SearchSiteInfoService {
 
     public record SiteInfoWithContext(String domain,
                                       boolean isSubscribed,
-                                      Optional<String> aliasDomain,
+                                      List<EdgeDomain> siblingDomains,
                                       int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,
