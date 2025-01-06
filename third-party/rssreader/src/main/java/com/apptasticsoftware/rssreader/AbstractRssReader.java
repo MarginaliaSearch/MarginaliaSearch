@@ -701,7 +701,7 @@ public abstract class AbstractRssReader<C extends Channel, I extends Item> {
                     }
                 }
             } catch (XMLStreamException e) {
-                LOGGER.log(Level.WARNING, "Failed to parse XML.", e);
+                LOGGER.log(Level.FINE, "Failed to parse XML.", e);
             }
 
             close();
