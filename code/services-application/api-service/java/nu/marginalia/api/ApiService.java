@@ -69,7 +69,7 @@ public class ApiService extends SparkService {
         this.searchOperator = searchOperator;
 
         Spark.get("/api/", (rq, rsp) -> {
-            rsp.redirect("https://memex.marginalia.nu/projects/edge/api.gmi");
+            rsp.redirect("https://about.marginalia-search.com/article/api/");
             return "";
         });
 
