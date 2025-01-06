@@ -14,7 +14,7 @@ public class SearchModule extends AbstractModule {
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
 
         bind(WebsiteUrl.class).toInstance(new WebsiteUrl(
-                System.getProperty("search.websiteUrl", "https://search.marginalia.nu/")));
+                System.getProperty("search.legacyWebsiteUrl", "https://old-search.marginalia.nu/")));
     }
 
 }
