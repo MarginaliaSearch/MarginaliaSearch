@@ -27,7 +27,7 @@ dependencies {
     implementation project(':code:processes:crawling-process:ft-content-type')
 
     implementation libs.jsoup
-    implementation libs.rssreader
+    implementation project(':third-party:rssreader')
     implementation libs.opencsv
     implementation libs.sqlite
     implementation libs.bundles.slf4j

@@ -1,0 +1,27 @@
+<feed xmlns="http://www.w3.org/2005/Atom" xml:base="https://nlnet.nl">
+  <title type="text">NLnet news</title>
+  <updated>2025-01-01T00:00:00Z</updated>
+  <id>https://nlnet.nl/feed.atom</id>
+  <link rel="self" type="application/atom+xml" href="https://nlnet.nl/feed.atom"/>
+  <entry>
+    <id>https://nlnet.nl/news/2025/20250101-announcing-grantees-June-call.html</id>
+    <author>
+      <name>NLnet</name>
+    </author>
+    <title type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">50 Free and Open Source Projects Selected for NGI Zero grants</div>
+    </title>
+    <link href="/news/2025/20250101-announcing-grantees-June-call.html"/>
+    <updated>2025-01-01T00:00:00Z</updated>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <p class="paralead">Happy 2025 everyone! On this first day of the fresh new year we are happy to announce 50 project teams were selected to receive NGI Zero grants. We are welcoming projects from 18 countries involving people and organisations of various types: individuals, associations, small and medium enterprises, foundations, universities, and informal collectives. The new projects are all across the different layers of the NGI technology stack: from trustworthy open hardware to services &amp; applications which provide autonomy for end-users.</p>
+        <p>The 50 free and open source projects were selected across two funds. 19 teams will receive grants from the <a href="/commonsfund/">NGI Zero Commons Fund</a>, a broadly themed fund that supports people working on reclaiming the public nature of the internet. The other 31 projects will work within <a href="/core/">NGI Zero Core</a> which focuses on strengthening the open internet architecture. Both funds offer financial and practical support. The latter consisting of <a href="/NGI0/services/">support services</a> such as accessibility and security audits, advice on license compliance, help with testing, documentation or UX design.</p>
+        <h2>If you applied for a grant</h2>
+        <p>This is the selection for the <a href="https://nlnet.nl/news/2024/20240401-call.html">June call</a>. We always inform <em>all</em> applicants about the outcome of the review ahead of the public announcement, if the are selected or not. If you have not heard anything, you probably applied to a later call that is still under review. You can see which call you applied to by checking the application number assigned to the project when you applied. The second number in the sequence refers to the month of the call, so 06 in the case of the June call. (It should not happen, but if you did apply to the June call and did not hear anything, do contact us.)</p>
+        <h2>Meet the new projects!</h2>
+      </div>
+    </content>
+  </entry>
+
+</feed>

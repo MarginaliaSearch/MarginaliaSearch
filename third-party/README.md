@@ -11,6 +11,7 @@ or lack an artifact, or to override some default that is inappropriate for the t
 * [OpenZIM](openzim/) - GPL-2.0+
 * [Commons Codec](commons-codec/) - Apache 2.0
 * [encylopedia.marginalia.nu](encyclopedia-marginalia-nu/) - GPL 2.0+
+* [rssreader](rssreader) - MIT
 
 ### Repackaged
 * [SymSpell](symspell/) - LGPL-3.0
