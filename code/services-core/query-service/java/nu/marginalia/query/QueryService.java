@@ -5,7 +5,7 @@ import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.linkgraph.AggregateLinkGraphService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.SparkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Spark;
@@ -13,7 +13,7 @@ import spark.Spark;
 import java.io.IOException;
 import java.util.List;
 
-public class QueryService extends Service {
+public class QueryService extends SparkService {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 

@@ -1,5 +1,6 @@
 package nu.marginalia.search.model;
 
+import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class DecoratedSearchResults {
                                   String focusDomain,
                                   int focusDomainId,
                                   SearchFilters filters,
-                                  List<Page> resultPages) {
+                                  List<ResultsPage> resultPages) {
         this.params = params;
         this.problems = problems;
         this.evalResult = evalResult;
@@ -62,25 +63,27 @@ public class DecoratedSearchResults {
         return focusDomainId;
     }
 
+    public boolean hasFocusDomain() {
+        return focusDomainId >= 0;
+    }
+
     public SearchFilters getFilters() {
         return filters;
     }
 
-    public List<Page> getResultPages() {
+    public List<ResultsPage> getResultPages() {
         return resultPages;
     }
 
     private final String focusDomain;
     private final int focusDomainId;
+
     private final SearchFilters filters;
 
-    private final List<Page> resultPages;
+    private final List<ResultsPage> resultPages;
 
     public boolean isMultipage() {
         return resultPages.size() > 1;
-    }
-
-    public record Page(int number, boolean current, String href) {
     }
 
     // These are used by the search form, they look unused in the IDE but are used by the mustache template,
@@ -130,7 +133,8 @@ public class DecoratedSearchResults {
         private String focusDomain;
         private int focusDomainId;
         private SearchFilters filters;
-        private List<Page> resultPages;
+        private List<ResultsPage> resultPages;
+        private WebsiteUrl websiteUrl;
 
         DecoratedSearchResultsBuilder() {
         }
@@ -170,17 +174,13 @@ public class DecoratedSearchResults {
             return this;
         }
 
-        public DecoratedSearchResultsBuilder resultPages(List<Page> resultPages) {
+        public DecoratedSearchResultsBuilder resultPages(List<ResultsPage> resultPages) {
             this.resultPages = resultPages;
             return this;
         }
 
         public DecoratedSearchResults build() {
             return new DecoratedSearchResults(this.params, this.problems, this.evalResult, this.results, this.focusDomain, this.focusDomainId, this.filters, this.resultPages);
-        }
-
-        public String toString() {
-            return "DecoratedSearchResults.DecoratedSearchResultsBuilder(params=" + this.params + ", problems=" + this.problems + ", evalResult=" + this.evalResult + ", results=" + this.results + ", focusDomain=" + this.focusDomain + ", focusDomainId=" + this.focusDomainId + ", filters=" + this.filters + ", resultPages=" + this.resultPages + ")";
         }
     }
 }

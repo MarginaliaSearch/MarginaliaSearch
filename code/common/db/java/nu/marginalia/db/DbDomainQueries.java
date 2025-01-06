@@ -28,7 +28,7 @@ public class DbDomainQueries {
     }
 
 
-    public Integer getDomainId(EdgeDomain domain) {
+    public Integer getDomainId(EdgeDomain domain) throws NoSuchElementException {
         try (var connection = dataSource.getConnection()) {
 
             return domainIdCache.get(domain, () -> {
@@ -41,6 +41,9 @@ public class DbDomainQueries {
                 }
                 throw new NoSuchElementException();
             });
+        }
+        catch (UncheckedExecutionException ex) {
+            throw new NoSuchElementException();
         }
         catch (ExecutionException ex) {
             throw new RuntimeException(ex.getCause());

@@ -16,7 +16,7 @@ import spark.Spark;
 
 import java.util.List;
 
-public class Service {
+public class SparkService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // Marker for filtering out sensitive content from the persistent logs
@@ -43,10 +43,10 @@ public class Service {
     private final int node;
     private GrpcServer grpcServer;
 
-    public Service(BaseServiceParams params,
-                   Runnable configureStaticFiles,
-                   ServicePartition partition,
-                   List<DiscoverableService> grpcServices) throws Exception {
+    public SparkService(BaseServiceParams params,
+                        Runnable configureStaticFiles,
+                        ServicePartition partition,
+                        List<DiscoverableService> grpcServices) throws Exception {
 
         this.initialization = params.initialization;
         var config = params.configuration;
@@ -126,18 +126,18 @@ public class Service {
         }
     }
 
-    public Service(BaseServiceParams params,
-                   ServicePartition partition,
-                   List<DiscoverableService> grpcServices) throws Exception {
+    public SparkService(BaseServiceParams params,
+                        ServicePartition partition,
+                        List<DiscoverableService> grpcServices) throws Exception {
         this(params,
-                Service::defaultSparkConfig,
+                SparkService::defaultSparkConfig,
                 partition,
                 grpcServices);
     }
 
-    public Service(BaseServiceParams params) throws Exception {
+    public SparkService(BaseServiceParams params) throws Exception {
         this(params,
-                Service::defaultSparkConfig,
+                SparkService::defaultSparkConfig,
                 ServicePartition.any(),
                 List.of());
     }

@@ -3,7 +3,7 @@ package nu.marginalia.status;
 import com.google.inject.Inject;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.SparkService;
 import nu.marginalia.status.db.StatusMetricDb;
 import nu.marginalia.status.endpoints.ApiEndpoint;
 import nu.marginalia.status.endpoints.MainSearchEndpoint;
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.get;
 
-public class StatusService extends Service {
+public class StatusService extends SparkService {
     private final ScheduledExecutorService scheduledExecutorService =
             Executors.newScheduledThreadPool(5);
 
