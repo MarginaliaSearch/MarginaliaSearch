@@ -62,8 +62,12 @@ public class SearchBrowseService {
     @GET
     @Path("/explore/{domainName}")
     public ModelAndView<?> handleBrowseSite(@PathParam String domainName) throws Exception {
-        BrowseResultSet entries;
+        // Legacy URL contract
+        if ("random".equals(domainName)) {
+            return handleBrowseRandom();
+        }
 
+        BrowseResultSet entries;
         try {
             entries = getRelatedEntries(domainName);
         }
