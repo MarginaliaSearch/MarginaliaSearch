@@ -14,7 +14,12 @@
             <span>${siteInfo.domain()}</span>
             <div class="grow">
             </div>
-            <a rel="nofollow noopener external" href="${siteInfo.siteUrl()}" class="fa-solid fa-arrow-up-right-from-square" ></a>
+            <a href="https://web.archive.org/web/*/${siteInfo.domain()}"
+               class="p-1.5 text-white px-4"
+               title="Wayback Machine">
+                <i class="fas fa-clock-rotate-left text-sm"></i>
+            </a>
+            <a title="Visit ${siteInfo.domain()}" rel="nofollow noopener external" href="${siteInfo.siteUrl()}" class="fa-solid fa-arrow-up-right-from-square" ></a>
         </div>
 
         @if (siteInfo.hasScreenshot())
