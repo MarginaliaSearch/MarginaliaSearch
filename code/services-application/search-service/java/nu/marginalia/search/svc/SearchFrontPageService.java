@@ -85,8 +85,16 @@ public class SearchFrontPageService {
                         title = "[Missing Title]";
                     }
 
+
+                    String url = item.getUrl();
+                    if (url.startsWith("/")) { // relative URL
+                        url = "https://" + feed.getDomain() + url;
+                    } else if (!url.contains(":")) { // no schema, assume relative URL
+                        url = "https://" + feed.getDomain() + "/" + url;
+                    }
+
                     itemsAll.add(
-                            new NewsItem(title, item.getUrl(), feed.getDomain(), item.getDescription(), item.getDate())
+                            new NewsItem(title, url, feed.getDomain(), item.getDescription(), item.getDate())
                     );
                 }
             }

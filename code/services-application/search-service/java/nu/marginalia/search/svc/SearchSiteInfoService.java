@@ -381,11 +381,23 @@ public class SearchSiteInfoService {
 
     public record FeedItem(String title, String date, String description, String url) {
 
-        public FeedItem(RpcFeedItem rpcFeedItem) {
+        public FeedItem(String domain, RpcFeedItem rpcFeedItem) {
             this(rpcFeedItem.getTitle(),
                     rpcFeedItem.getDate(),
                     rpcFeedItem.getDescription(),
-                    rpcFeedItem.getUrl());
+                    absoluteFeedUrl(domain, rpcFeedItem.getUrl())
+            );
+        }
+
+
+        private static String absoluteFeedUrl(String domain, String url) {
+            if (url.startsWith("/")) { // relative URL
+                url = "https://" + domain + url;
+            } else if (!url.contains(":")) { // no schema, assume relative URL
+                url = "https://" + domain + "/" + url;
+            }
+
+            return url;
         }
 
         public String pubDay() { // Extract the date from an ISO style date string
@@ -412,8 +424,9 @@ public class SearchSiteInfoService {
             this(rpcFeedItems.getDomain(),
                     rpcFeedItems.getFeedUrl(),
                     rpcFeedItems.getUpdated(),
-                    rpcFeedItems.getItemsList().stream().map(FeedItem::new).toList());
+                    rpcFeedItems.getItemsList().stream().map(item -> new FeedItem(rpcFeedItems.getDomain(), item)).toList());
         }
+
     }
 
     public record ReportDomain(
