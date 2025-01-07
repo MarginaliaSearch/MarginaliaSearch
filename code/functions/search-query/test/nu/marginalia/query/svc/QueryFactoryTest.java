@@ -209,6 +209,12 @@ public class QueryFactoryTest {
     }
 
     @Test
+    public void testCplusPlus() {
+        var subquery = parseAndGetSpecs("std::vector::push_back vector");
+        System.out.println(subquery);
+    }
+
+    @Test
     public void testQuotedApostrophe() {
         var subquery = parseAndGetSpecs("\"bob's cars\"");
 
