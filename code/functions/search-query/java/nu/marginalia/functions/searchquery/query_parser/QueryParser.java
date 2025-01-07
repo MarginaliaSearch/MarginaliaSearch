@@ -233,9 +233,19 @@ public class QueryParser {
             entity.replace(new QueryToken.RankTerm(limit, str));
         } else if (str.startsWith("qs=")) {
             entity.replace(new QueryToken.QsTerm(str.substring(3)));
-        } else if (str.contains(":")) {
+        } else if (str.startsWith("site:")
+                || str.startsWith("format:")
+                || str.startsWith("file:")
+                || str.startsWith("tld:")
+                || str.startsWith("ip:")
+                || str.startsWith("as:")
+                || str.startsWith("asn:")
+                || str.startsWith("generator:")
+        )
+        {
             entity.replace(new QueryToken.AdviceTerm(str, t.displayStr()));
         }
+
     }
 
     private static SpecificationLimit parseSpecificationLimit(String str) {

@@ -24,6 +24,7 @@ public class HtmlProcessorSpecializations {
     private final WikiSpecialization wikiSpecialization;
     private final BlogSpecialization blogSpecialization;
     private final GogStoreSpecialization gogStoreSpecialization;
+    private final CppreferenceSpecialization cppreferenceSpecialization;
     private final DefaultSpecialization defaultSpecialization;
 
     @Inject
@@ -37,6 +38,7 @@ public class HtmlProcessorSpecializations {
                                         WikiSpecialization wikiSpecialization,
                                         BlogSpecialization blogSpecialization,
                                         GogStoreSpecialization gogStoreSpecialization,
+                                        CppreferenceSpecialization cppreferenceSpecialization,
                                         DefaultSpecialization defaultSpecialization) {
         this.domainTypes = domainTypes;
         this.lemmySpecialization = lemmySpecialization;
@@ -48,6 +50,7 @@ public class HtmlProcessorSpecializations {
         this.wikiSpecialization = wikiSpecialization;
         this.blogSpecialization = blogSpecialization;
         this.gogStoreSpecialization = gogStoreSpecialization;
+        this.cppreferenceSpecialization = cppreferenceSpecialization;
         this.defaultSpecialization = defaultSpecialization;
     }
 
@@ -64,6 +67,10 @@ public class HtmlProcessorSpecializations {
         if (url.domain.getTopDomain().equals("mariadb.com")
                 && url.path.startsWith("/kb")) {
             return mariadbKbSpecialization;
+        }
+
+        if (url.domain.getTopDomain().equals("cppreference.com")) {
+            return cppreferenceSpecialization;
         }
 
         if (url.domain.toString().equals("store.steampowered.com")) {
@@ -86,6 +93,9 @@ public class HtmlProcessorSpecializations {
         if (generator.keywords().contains("javadoc")) {
             return javadocSpecialization;
         }
+
+        // Must be toward the end, as some specializations are for
+        // wiki-generator content
         if (generator.type() == GeneratorType.WIKI) {
             return wikiSpecialization;
         }
@@ -105,7 +115,7 @@ public class HtmlProcessorSpecializations {
 
         boolean shouldIndex(EdgeUrl url);
         double lengthModifier();
-        void amendWords(Document doc, DocumentKeywordsBuilder words);
 
+        default void amendWords(Document doc, DocumentKeywordsBuilder words) {}
     }
 }
