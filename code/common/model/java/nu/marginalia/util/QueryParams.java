@@ -83,6 +83,11 @@ public class QueryParams {
         if (path.endsWith("StoryView.py")) { // folklore.org is neat
             return param.startsWith("project=") || param.startsWith("story=");
         }
+
+        // www.perseus.tufts.edu:
+        if (param.startsWith("collection=")) return true;
+        if (param.startsWith("doc=")) return true;
+
         return false;
     }
 }
