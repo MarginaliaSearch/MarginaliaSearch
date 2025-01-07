@@ -67,6 +67,14 @@
     <div class="row my-2">
         <div class="col-sm-2"><label for="bm25FullWeight">BM25 Weight</label></div>
         <div class="col-sm-2"><input type="text" class="form-control" id="bm25Weight" name="bm25Weight" value="{{bm25Weight}}"></div>
+
+        <div class="col-sm-2"><label for="disablePenalties">Disable Penalties</label></div>
+        <div class="col-sm-2">
+            <select class="form-select" id="disablePenalties" name="disablePenalties">
+                <option value="FALSE" {{#unless disablePenalties}}selected{{/unless}}>FALSE</option>
+                <option value="TRUE" {{#if disablePenalties}}selected{{/if}}>TRUE</option>
+            </select>
+        </div>
     </div>
 
     {{/with}}

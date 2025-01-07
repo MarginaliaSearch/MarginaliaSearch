@@ -248,6 +248,10 @@ public class IndexResultScoreCalculator {
                                           ResultRankingParameters rankingParams,
                                           @Nullable DebugRankingFactors debugRankingFactors) {
 
+        if (rankingParams.disablePenalties) {
+            return 0.;
+        }
+
         int rank = DocumentMetadata.decodeRank(documentMetadata);
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
         int quality = DocumentMetadata.decodeQuality(documentMetadata);

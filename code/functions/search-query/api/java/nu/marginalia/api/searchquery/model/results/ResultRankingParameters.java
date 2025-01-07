@@ -42,12 +42,14 @@ public class ResultRankingParameters {
     public double tcfVerbatim;
     public double tcfProximity;
 
+
     public TemporalBias temporalBias;
     public double temporalBiasWeight;
 
+    public boolean disablePenalties;
     public boolean exportDebugData;
 
-    public ResultRankingParameters(Bm25Parameters bm25Params, int shortDocumentThreshold, double shortDocumentPenalty, double domainRankBonus, double qualityPenalty, int shortSentenceThreshold, double shortSentencePenalty, double bm25Weight, double tcfFirstPosition, double tcfVerbatim, double tcfProximity, TemporalBias temporalBias, double temporalBiasWeight, boolean exportDebugData) {
+    public ResultRankingParameters(Bm25Parameters bm25Params, int shortDocumentThreshold, double shortDocumentPenalty, double domainRankBonus, double qualityPenalty, int shortSentenceThreshold, double shortSentencePenalty, double bm25Weight, double tcfFirstPosition, double tcfVerbatim, double tcfProximity, TemporalBias temporalBias, double temporalBiasWeight, boolean disablePenalties, boolean exportDebugData) {
         this.bm25Params = bm25Params;
         this.shortDocumentThreshold = shortDocumentThreshold;
         this.shortDocumentPenalty = shortDocumentPenalty;
@@ -61,6 +63,7 @@ public class ResultRankingParameters {
         this.tcfProximity = tcfProximity;
         this.temporalBias = temporalBias;
         this.temporalBiasWeight = temporalBiasWeight;
+        this.disablePenalties = disablePenalties;
         this.exportDebugData = exportDebugData;
     }
 
@@ -80,6 +83,7 @@ public class ResultRankingParameters {
                 .temporalBias(TemporalBias.NONE)
                 .temporalBiasWeight(5.0)
                 .exportDebugData(false)
+                .disablePenalties(false)
                 .build();
     }
 
@@ -139,6 +143,8 @@ public class ResultRankingParameters {
         return this.temporalBiasWeight;
     }
 
+    public boolean isDisablePenalties() { return this.disablePenalties; }
+
     public boolean isExportDebugData() {
         return this.exportDebugData;
     }
@@ -166,6 +172,7 @@ public class ResultRankingParameters {
         result = 31 * result + Double.hashCode(tcfProximity);
         result = 31 * result + Objects.hashCode(temporalBias);
         result = 31 * result + Double.hashCode(temporalBiasWeight);
+        result = 31 * result + Boolean.hashCode(disablePenalties);
         result = 31 * result + Boolean.hashCode(exportDebugData);
         return result;
     }
@@ -192,6 +199,7 @@ public class ResultRankingParameters {
         private double tcfProximity;
         private TemporalBias temporalBias;
         private double temporalBiasWeight;
+        private boolean disablePenalties;
         private boolean exportDebugData;
 
         ResultRankingParametersBuilder() {
@@ -262,17 +270,20 @@ public class ResultRankingParameters {
             return this;
         }
 
+
+        public ResultRankingParametersBuilder disablePenalties(boolean disablePenalties) {
+            this.disablePenalties = disablePenalties;
+            return this;
+        }
+
         public ResultRankingParametersBuilder exportDebugData(boolean exportDebugData) {
             this.exportDebugData = exportDebugData;
             return this;
         }
 
         public ResultRankingParameters build() {
-            return new ResultRankingParameters(this.bm25Params, this.shortDocumentThreshold, this.shortDocumentPenalty, this.domainRankBonus, this.qualityPenalty, this.shortSentenceThreshold, this.shortSentencePenalty, this.bm25Weight, this.tcfFirstPosition, this.tcfVerbatim, this.tcfProximity, this.temporalBias, this.temporalBiasWeight, this.exportDebugData);
+            return new ResultRankingParameters(this.bm25Params, this.shortDocumentThreshold, this.shortDocumentPenalty, this.domainRankBonus, this.qualityPenalty, this.shortSentenceThreshold, this.shortSentencePenalty, this.bm25Weight, this.tcfFirstPosition, this.tcfVerbatim, this.tcfProximity, this.temporalBias, this.temporalBiasWeight, this.disablePenalties, this.exportDebugData);
         }
 
-        public String toString() {
-            return "ResultRankingParameters.ResultRankingParametersBuilder(bm25Params=" + this.bm25Params + ", shortDocumentThreshold=" + this.shortDocumentThreshold + ", shortDocumentPenalty=" + this.shortDocumentPenalty + ", domainRankBonus=" + this.domainRankBonus + ", qualityPenalty=" + this.qualityPenalty + ", shortSentenceThreshold=" + this.shortSentenceThreshold + ", shortSentencePenalty=" + this.shortSentencePenalty + ", bm25Weight=" + this.bm25Weight + ", tcfFirstPosition=" + this.tcfFirstPosition + ", tcfVerbatim=" + this.tcfVerbatim + ", tcfProximity=" + this.tcfProximity + ", temporalBias=" + this.temporalBias + ", temporalBiasWeight=" + this.temporalBiasWeight + ", exportDebugData=" + this.exportDebugData + ")";
-        }
     }
 }

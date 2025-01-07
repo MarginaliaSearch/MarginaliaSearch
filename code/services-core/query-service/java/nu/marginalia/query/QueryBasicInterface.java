@@ -146,12 +146,20 @@ public class QueryBasicInterface {
                 .shortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.shortSentenceThreshold))
                 .shortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.shortSentencePenalty))
                 .bm25Weight(doubleFromRequest(request, "bm25Weight", sensibleDefaults.bm25Weight))
+                .disablePenalties(boolFromRequest(request, "disablePenalties", sensibleDefaults.disablePenalties))
                 .exportDebugData(true)
                 .build();
     }
 
     double doubleFromRequest(Request request, String param, double defaultValue) {
         return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Double.parseDouble(request.queryParams(param));
+    }
+
+    boolean boolFromRequest(Request request, String param, boolean defaultValue) {
+        if (param == null)
+            return defaultValue;
+
+        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Boolean.parseBoolean(request.queryParams(param));
     }
 
     int intFromRequest(Request request, String param, int defaultValue) {

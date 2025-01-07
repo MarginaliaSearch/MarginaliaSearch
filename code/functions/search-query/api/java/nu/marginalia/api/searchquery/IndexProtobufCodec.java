@@ -121,6 +121,7 @@ public class IndexProtobufCodec {
                 params.getTcfProximityWeight(),
                 ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
                 params.getTemporalBiasWeight(),
+                params.getDisablePenalties(),
                 params.getExportDebugData()
         );
     }
@@ -146,6 +147,7 @@ public class IndexProtobufCodec {
                         .setTcfProximityWeight(rankingParams.tcfProximity)
                         .setTcfVerbatimWeight(rankingParams.tcfVerbatim)
                         .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
+                        .setDisablePenalties(rankingParams.disablePenalties)
                         .setExportDebugData(rankingParams.exportDebugData);
 
         if (temporalBias != null && temporalBias.getBias() != RpcTemporalBias.Bias.NONE) {
