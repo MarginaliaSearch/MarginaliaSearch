@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
-import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -93,6 +92,8 @@ public class WikiSpecialization extends DefaultSpecialization {
         return true;
     }
 
-    public void amendWords(Document doc, DocumentKeywordsBuilder words) {
+    @Override
+    public double lengthModifier() {
+        return 2.5;
     }
 }
