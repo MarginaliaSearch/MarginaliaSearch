@@ -5,6 +5,7 @@ import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class SearchSpecification {
@@ -28,6 +29,7 @@ public class SearchSpecification {
 
     public final QueryStrategy queryStrategy;
 
+    @Nullable
     public final RpcResultRankingParameters rankingParams;
 
     public SearchSpecification(SearchQuery query,
@@ -40,7 +42,7 @@ public class SearchSpecification {
                                SpecificationLimit rank,
                                RpcQueryLimits queryLimits,
                                QueryStrategy queryStrategy,
-                               RpcResultRankingParameters rankingParams)
+                               @Nullable RpcResultRankingParameters rankingParams)
     {
         this.query = query;
         this.domains = domains;

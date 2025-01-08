@@ -13,8 +13,6 @@ import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.searchset.SearchSet;
 
-import java.util.Objects;
-
 import static nu.marginalia.api.searchquery.IndexProtobufCodec.convertSpecLimit;
 
 public class SearchParameters {
@@ -88,7 +86,7 @@ public class SearchParameters {
         compiledQuery = CompiledQueryParser.parse(this.query.compiledQuery);
         compiledQueryIds = compiledQuery.mapToLong(SearchTermsUtil::getWordId);
 
-        rankingParams = Objects.requireNonNullElseGet(request.getParameters(), PrototypeRankingParameters::sensibleDefaults);
+        rankingParams = request.hasParameters() ? request.getParameters() : PrototypeRankingParameters.sensibleDefaults();
     }
 
 

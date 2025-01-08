@@ -15,7 +15,10 @@ import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class QueryProtobufCodec {
 
@@ -42,13 +45,27 @@ public class QueryProtobufCodec {
         else
             builder.setQueryStrategy(request.getQueryStrategy());
 
-        if (query.specs.rankingParams != null && request.getTemporalBias().getBias() != RpcTemporalBias.Bias.NONE) {
-            builder.setParameters(
-                    RpcResultRankingParameters.newBuilder(query.specs.rankingParams)
-                            .setTemporalBias(request.getTemporalBias())
-                            .build()
-            );
+        if (request.getTemporalBias().getBias() != RpcTemporalBias.Bias.NONE) {
+            if (query.specs.rankingParams != null) {
+                builder.setParameters(
+                        RpcResultRankingParameters.newBuilder(query.specs.rankingParams)
+                                .setTemporalBias(request.getTemporalBias())
+                                .build()
+                );
+            } else {
+                builder.setParameters(
+                        RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults())
+                                .setTemporalBias(request.getTemporalBias())
+                                .build()
+                );
+            }
+        } else if (query.specs.rankingParams != null) {
+            builder.setParameters(query.specs.rankingParams);
         }
+        // else {
+        // if we have no ranking params, we don't need to set them, the client check and use the default values
+        // so we don't need to send this huge object over the wire
+        // }
 
         return builder.build();
     }
@@ -292,7 +309,7 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(specs.getRank()),
                 specs.getQueryLimits(),
                 QueryStrategy.valueOf(specs.getQueryStrategy()),
-                Objects.requireNonNullElseGet(specs.getParameters(), PrototypeRankingParameters::sensibleDefaults)
+                specs.hasParameters() ? specs.getParameters() : null
         );
     }
 
