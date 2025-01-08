@@ -1,15 +1,14 @@
 package nu.marginalia.search;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import io.jooby.Jooby;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
-import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
-import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +33,6 @@ public class SearchService extends JoobyService {
 
     @Inject
     public SearchService(BaseServiceParams params,
-                         WebsiteUrl websiteUrl,
-                         StaticResources staticResources,
                          SearchFrontPageService frontPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchSiteSubscriptionService siteSubscriptionService,
@@ -62,7 +59,25 @@ public class SearchService extends JoobyService {
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
 
+        final String startTimeAttribute = "start-time";
+
         jooby.get("/export-opml", siteSubscriptionService::exportOpml);
+        jooby.before((Context ctx) -> {
+            ctx.setAttribute(startTimeAttribute, System.nanoTime());
+        });
+
+        jooby.after((Context ctx, Object result, Throwable failure) -> {
+            if  (failure != null) {
+                wmsa_search_service_error_count.labels(ctx.getRoute().getPattern(), ctx.getContextPath()).inc();
+            }
+            else {
+                Long startTime = ctx.getAttribute(startTimeAttribute);
+                if (startTime != null) {
+                    wmsa_search_service_request_time.labels(ctx.getRoute().getPattern(), ctx.getContextPath())
+                            .observe((System.nanoTime() - startTime) / 1e9);
+                }
+            }
+        });
     }
 
 
