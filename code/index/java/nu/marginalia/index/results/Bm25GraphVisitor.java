@@ -2,7 +2,6 @@ package nu.marginalia.index.results;
 
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
-import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 
 import java.util.BitSet;
@@ -24,14 +23,14 @@ public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
 
     private final BitSet mask;
 
-    public Bm25GraphVisitor(Bm25Parameters bm25Parameters,
+    public Bm25GraphVisitor(double k1, double b,
                             float[] counts,
                             int length,
                             ResultRankingContext ctx) {
         this.length = length;
 
-        this.k1 = bm25Parameters.k();
-        this.b = bm25Parameters.b();
+        this.k1 = k1;
+        this.b = b;
 
         this.docCount = ctx.termFreqDocCount();
         this.counts = counts;

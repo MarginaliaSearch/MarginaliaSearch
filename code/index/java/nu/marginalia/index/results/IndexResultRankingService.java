@@ -156,7 +156,7 @@ public class IndexResultRankingService {
         // for the selected results, as this would be comically expensive to do for all the results we
         // discard along the way
 
-        if (params.rankingParams.exportDebugData) {
+        if (params.rankingParams.getExportDebugData()) {
             var combinedIdsList = new LongArrayList(resultsList.size());
             for (var item : resultsList) {
                 combinedIdsList.add(item.combinedId);

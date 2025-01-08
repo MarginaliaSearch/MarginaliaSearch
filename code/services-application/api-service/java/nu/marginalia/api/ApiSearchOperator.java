@@ -6,10 +6,10 @@ import nu.marginalia.api.model.ApiSearchResult;
 import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.idx.WordFlags;
 
 import java.util.ArrayList;
@@ -47,11 +47,12 @@ public class ApiSearchOperator {
 
         return new QueryParams(
                 query,
-                new QueryLimits(
-                        2,
-                        Math.min(100, count),
-                        150,
-                        8192),
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(2)
+                        .setResultsTotal(Math.min(100, count))
+                        .setTimeoutMs(150)
+                        .setFetchSize(8192)
+                        .build(),
                 searchSet.name());
     }
 

@@ -5,11 +5,11 @@ import com.google.inject.Singleton;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -155,15 +155,15 @@ public class SearchOperator {
 
 
     public List<UrlDetails> getResultsFromQuery(QueryResponse queryResponse) {
-        final QueryLimits limits = queryResponse.specs().queryLimits;
-        final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
+        final RpcQueryLimits limits = queryResponse.specs().queryLimits;
+        final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.getResultsByDomain());
 
         // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
 
         return queryResponse.results().stream()
                 .filter(deduplicator::shouldRetain)
-                .limit(limits.resultsTotal())
+                .limit(limits.getResultsTotal())
                 .map(SearchOperator::createDetails)
                 .toList();
     }

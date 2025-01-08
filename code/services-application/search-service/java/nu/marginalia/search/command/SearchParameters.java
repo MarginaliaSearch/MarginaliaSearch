@@ -1,7 +1,7 @@
 package nu.marginalia.search.command;
 
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.model.EdgeDomain;
@@ -98,15 +98,15 @@ public record SearchParameters(WebsiteUrl url,
         return path;
     }
 
-    public ResultRankingParameters.TemporalBias temporalBias() {
+    public RpcTemporalBias.Bias temporalBias() {
         if (recent == RECENT) {
-            return ResultRankingParameters.TemporalBias.RECENT;
+            return RpcTemporalBias.Bias.RECENT;
         }
         else if (profile == SearchProfile.VINTAGE) {
-            return ResultRankingParameters.TemporalBias.OLD;
+            return RpcTemporalBias.Bias.OLD;
         }
 
-        return ResultRankingParameters.TemporalBias.NONE;
+        return RpcTemporalBias.Bias.NONE;
     }
 
     public QueryStrategy strategy() {

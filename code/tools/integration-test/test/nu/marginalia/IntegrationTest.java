@@ -5,7 +5,8 @@ import com.google.inject.Inject;
 import nu.marginalia.api.searchquery.QueryProtobufCodec;
 import nu.marginalia.api.searchquery.RpcQsQuery;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.crawl.fetcher.ContentTags;
@@ -211,8 +212,7 @@ public class IntegrationTest {
 
         var params = QueryProtobufCodec.convertRequest(request);
 
-        var p = ResultRankingParameters.sensibleDefaults();
-        p.exportDebugData = true;
+        var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
         var query = queryFactory.createQuery(params, p);
 
 

@@ -1,12 +1,13 @@
 package nu.marginalia.api.searchquery.model.results;
 
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 
 import java.util.BitSet;
 
 public class ResultRankingContext {
     private final int docCount;
-    public final ResultRankingParameters params;
+    public final RpcResultRankingParameters params;
 
 
     public final BitSet regularMask;
@@ -21,7 +22,7 @@ public class ResultRankingContext {
     public final CqDataInt priorityCounts;
 
     public ResultRankingContext(int docCount,
-                                ResultRankingParameters params,
+                                RpcResultRankingParameters params,
                                 BitSet ngramsMask,
                                 BitSet regularMask,
                                 CqDataInt fullCounts,

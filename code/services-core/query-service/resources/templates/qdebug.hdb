@@ -31,20 +31,20 @@
         <div class="col-sm-2"><input type="text" class="form-control" id="shortDocumentPenalty" name="shortDocumentPenalty" value="{{shortDocumentPenalty}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="tcfFirstPosition">TCF First Position Weight</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="tcfFirstPosition" name="tcfFirstPosition" value="{{tcfFirstPosition}}"></div>
+        <div class="col-sm-2"><label for="tcfFirstPositionWeight">TCF First Position Weight</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfFirstPositionWeight" name="tcfFirstPositionWeight" value="{{tcfFirstPositionWeight}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="tcfVerbatim">TCF Verbatim</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="tcfVerbatim" name="tcfVerbatim" value="{{tcfVerbatim}}"></div>
-        <div class="col-sm-2"><label for="tcfProximity">TCF Proximity</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="tcfProximity" name="tcfProximity" value="{{tcfProximity}}"></div>
+        <div class="col-sm-2"><label for="tcfVerbatimWeight">TCF Verbatim</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfVerbatimWeight" name="tcfVerbatimWeight" value="{{tcfVerbatimWeight}}"></div>
+        <div class="col-sm-2"><label for="tcfProximityWeight">TCF Proximity</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="tcfProximityWeight" name="tcfProximityWeight" value="{{tcfProximityWeight}}"></div>
     </div>
     <div class="row my-2">
-        <div class="col-sm-2"><label for="bm25.k1">BM25 K1</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="bm25.k1" name="bm25.k1" value="{{bm25Params.k}}"></div>
-        <div class="col-sm-2"><label for="bm25.b">BM25 B</label></div>
-        <div class="col-sm-2"><input type="text" class="form-control" id="bm25.b" name="bm25.b" value="{{bm25Params.b}}"></div>
+        <div class="col-sm-2"><label for="bm25k">BM25 K1</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="bm25k" name="bm25k" value="{{bm25K}}"></div>
+        <div class="col-sm-2"><label for="bm25b">BM25 B</label></div>
+        <div class="col-sm-2"><input type="text" class="form-control" id="bm25b" name="bm25b" value="{{bm25B}}"></div>
     </div>
     <div class="row my-2">
         <div class="col-sm-2"><label for="temporalBias">Temporal Bias</label></div>

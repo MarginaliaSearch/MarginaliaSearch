@@ -1,12 +1,12 @@
 package nu.marginalia.query.svc;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
@@ -49,10 +49,15 @@ public class QueryFactoryTest {
                         SpecificationLimit.none(),
                         SpecificationLimit.none(),
                         null,
-                        new QueryLimits(100, 100, 100, 100),
+                        RpcQueryLimits.newBuilder()
+                                .setResultsTotal(100)
+                                .setResultsByDomain(100)
+                                .setTimeoutMs(100)
+                                .setFetchSize(100)
+                                .build(),
                         "NONE",
                         QueryStrategy.AUTO,
-                        ResultRankingParameters.TemporalBias.NONE,
+                        RpcTemporalBias.Bias.NONE,
                         0), null).specs;
     }
 

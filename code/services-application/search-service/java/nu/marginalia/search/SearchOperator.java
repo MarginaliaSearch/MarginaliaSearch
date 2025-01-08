@@ -2,14 +2,13 @@ package nu.marginalia.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -47,7 +46,6 @@ public class SearchOperator {
     private final DbDomainQueries domainQueries;
     private final QueryClient queryClient;
     private final SearchQueryParamFactory paramFactory;
-    private final WebsiteUrl websiteUrl;
     private final SearchUnitConversionService searchUnitConversionService;
     private final SearchQueryCountService searchVisitorCount;
 
@@ -57,7 +55,6 @@ public class SearchOperator {
                           DbDomainQueries domainQueries,
                           QueryClient queryClient,
                           SearchQueryParamFactory paramFactory,
-                          WebsiteUrl websiteUrl,
                           SearchUnitConversionService searchUnitConversionService,
                           SearchQueryCountService searchVisitorCount
                           )
@@ -67,7 +64,6 @@ public class SearchOperator {
         this.domainQueries = domainQueries;
         this.queryClient = queryClient;
         this.paramFactory = paramFactory;
-        this.websiteUrl = websiteUrl;
         this.searchUnitConversionService = searchUnitConversionService;
         this.searchVisitorCount = searchVisitorCount;
     }
@@ -154,8 +150,8 @@ public class SearchOperator {
 
 
     public SimpleSearchResults getResultsFromQuery(QueryResponse queryResponse) {
-        final QueryLimits limits = queryResponse.specs().queryLimits;
-        final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
+        final RpcQueryLimits limits = queryResponse.specs().queryLimits;
+        final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.getResultsByDomain());
 
         // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
@@ -164,7 +160,7 @@ public class SearchOperator {
                 .sorted(this::retentionSortOrder) // Sort in an order that makes us more likely to discard the "bad" duplicates
                 .filter(deduplicator::shouldRetain)
                 .sorted() // Return to the presentation sort order before limiting so we don't throw out good results over schema and "ip-ness"
-                .limit(limits.resultsTotal())
+                .limit(limits.getResultsTotal())
                 .map(SearchOperator::createDetails)
                 .toList();
 

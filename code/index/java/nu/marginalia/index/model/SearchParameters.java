@@ -2,15 +2,18 @@ package nu.marginalia.index.model;
 
 import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryParser;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.searchset.SearchSet;
+
+import java.util.Objects;
 
 import static nu.marginalia.api.searchquery.IndexProtobufCodec.convertSpecLimit;
 
@@ -23,7 +26,7 @@ public class SearchParameters {
     public final IndexSearchBudget budget;
     public final SearchQuery query;
     public final QueryParams queryParams;
-    public final ResultRankingParameters rankingParams;
+    public final RpcResultRankingParameters rankingParams;
 
     public final int limitByDomain;
     public final int limitTotal;
@@ -41,11 +44,11 @@ public class SearchParameters {
     public SearchParameters(SearchSpecification specsSet, SearchSet searchSet) {
         var limits = specsSet.queryLimits;
 
-        this.fetchSize = limits.fetchSize();
-        this.budget = new IndexSearchBudget(limits.timeoutMs());
+        this.fetchSize = limits.getFetchSize();
+        this.budget = new IndexSearchBudget(limits.getTimeoutMs());
         this.query = specsSet.query;
-        this.limitByDomain = limits.resultsByDomain();
-        this.limitTotal = limits.resultsTotal();
+        this.limitByDomain = limits.getResultsByDomain();
+        this.limitTotal = limits.getResultsTotal();
 
         queryParams = new QueryParams(
                 specsSet.quality,
@@ -62,17 +65,17 @@ public class SearchParameters {
     }
 
     public SearchParameters(RpcIndexQuery request, SearchSet searchSet) {
-        var limits = IndexProtobufCodec.convertQueryLimits(request.getQueryLimits());
+        var limits = request.getQueryLimits();
 
-        this.fetchSize = limits.fetchSize();
+        this.fetchSize = limits.getFetchSize();
 
         // The time budget is halved because this is the point when we start to
         // wrap up the search and return the results.
-        this.budget = new IndexSearchBudget(limits.timeoutMs() / 2);
+        this.budget = new IndexSearchBudget(limits.getTimeoutMs() / 2);
         this.query = IndexProtobufCodec.convertRpcQuery(request.getQuery());
 
-        this.limitByDomain = limits.resultsByDomain();
-        this.limitTotal = limits.resultsTotal();
+        this.limitByDomain = limits.getResultsByDomain();
+        this.limitTotal = limits.getResultsTotal();
 
         queryParams = new QueryParams(
                 convertSpecLimit(request.getQuality()),
@@ -85,7 +88,7 @@ public class SearchParameters {
         compiledQuery = CompiledQueryParser.parse(this.query.compiledQuery);
         compiledQueryIds = compiledQuery.mapToLong(SearchTermsUtil::getWordId);
 
-        rankingParams = IndexProtobufCodec.convertRankingParameterss(request.getParameters());
+        rankingParams = Objects.requireNonNullElseGet(request.getParameters(), PrototypeRankingParameters::sensibleDefaults);
     }
 
 
