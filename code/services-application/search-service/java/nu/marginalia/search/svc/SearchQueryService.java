@@ -37,7 +37,7 @@ public class SearchQueryService {
             @QueryParam String profile,
             @QueryParam String js,
             @QueryParam String recent,
-            @QueryParam String title,
+            @QueryParam String searchTitle,
             @QueryParam String adtech,
             @QueryParam Integer page
     ) {
@@ -47,7 +47,7 @@ public class SearchQueryService {
                     SearchProfile.getSearchProfile(profile),
                     SearchJsParameter.parse(js),
                     SearchRecentParameter.parse(recent),
-                    SearchTitleParameter.parse(title),
+                    SearchTitleParameter.parse(searchTitle),
                     SearchAdtechParameter.parse(adtech),
                     false,
                     Objects.requireNonNullElse(page,1));
