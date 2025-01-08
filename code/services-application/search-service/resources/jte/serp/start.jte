@@ -34,12 +34,12 @@
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">
     <div class="border dark:border-gray-600 dark:bg-gray-800 bg-white rounded p-2 m-4 ">
         <div class="text-slate-700 dark:text-white text-sm p-4">
-            <div class="fas fa-wrench mr-1 text-margeblue dark:text-slate-200"></div>
-            This is the new design and home of Marginalia Search.  Migration to the new domain <pre class="inline text-red-800 dark:text-red-100">marginalia-search.com</pre> is currently <em>in progress</em>,
-            so mind that some things may be a bit broken for a day or two.  <a href="https://about.marginalia-search.com/article/redesign/"  class="underline text-liteblue dark:text-blue-200">Read more</a>.
+            <div class="fas fa-gift mr-1 text-margeblue dark:text-slate-200"></div>
+            This is the new design and home of Marginalia Search.
+            You can about what this entails <a href="https://about.marginalia-search.com/article/redesign/"  class="underline text-liteblue dark:text-blue-200">here</a>.
         <p class="my-4"></p>
-        If you have any issues or feedback regarding this change, please email
-        <a href="mailto:contact@marginalia-search.com" class="underline text-liteblue dark:text-blue-200">contact@marginalia-search.com</a>.
+        The old version of Marginalia Search remains available at
+        <a href="https://old-search.marginalia.nu/" class="underline text-liteblue dark:text-blue-200">https://old-search.marginalia.nu/</a>.
         </div>
     </div>
     <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2">
