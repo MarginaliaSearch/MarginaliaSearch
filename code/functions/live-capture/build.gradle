@@ -29,6 +29,7 @@ dependencies {
     implementation libs.jsoup
     implementation project(':third-party:rssreader')
     implementation libs.opencsv
+    implementation libs.slop
     implementation libs.sqlite
     implementation libs.bundles.slf4j
     implementation libs.commons.lang3

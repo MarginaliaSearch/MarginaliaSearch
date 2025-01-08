@@ -96,6 +96,7 @@ public class FeedFetcherService {
             throw new IllegalStateException("Already updating feeds, refusing to start another update");
         }
 
+
         try (FeedDbWriter writer = feedDb.createWriter();
              HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
@@ -103,6 +104,7 @@ public class FeedFetcherService {
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .version(HttpClient.Version.HTTP_2)
                 .build();
+             FeedJournal feedJournal = FeedJournal.create();
              var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
         ) {
             updating = true;
@@ -155,6 +157,8 @@ public class FeedFetcherService {
                             case FetchResult.Success(String value, String etag) -> {
                                 writer.saveEtag(feed.domain(), etag);
                                 writer.saveFeed(parseFeed(value, feed));
+
+                                feedJournal.record(feed.feedUrl(), value);
                             }
                             case FetchResult.NotModified() -> {
                                 writer.saveEtag(feed.domain(), ifNoneMatchTag);
