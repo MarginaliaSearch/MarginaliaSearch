@@ -103,11 +103,11 @@ public class DbDomainQueries {
         }
     }
 
-    public List<EdgeDomain> otherSubdomains(EdgeDomain domain, int cnt) {
-        List<EdgeDomain> ret = new ArrayList<>();
+    public List<DomainWithNode> otherSubdomains(EdgeDomain domain, int cnt) {
+        List<DomainWithNode> ret = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("SELECT DOMAIN_NAME FROM EC_DOMAIN WHERE DOMAIN_TOP = ? LIMIT ?")) {
+             var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, NODE_AFFINITY FROM EC_DOMAIN WHERE DOMAIN_TOP = ? LIMIT ?")) {
             stmt.setString(1, domain.topDomain);
             stmt.setInt(2, cnt);
 
@@ -118,12 +118,18 @@ public class DbDomainQueries {
                 if (sibling.equals(domain))
                     continue;
 
-                ret.add(sibling);
+                ret.add(new DomainWithNode(sibling, rs.getInt(2)));
             }
         } catch (SQLException e) {
             logger.error("Failed to get domain neighbors");
         }
 
         return ret;
+    }
+
+    public record DomainWithNode (EdgeDomain domain, int nodeAffinity) {
+        public boolean isIndexed() {
+            return nodeAffinity > 0;
+        }
     }
 }

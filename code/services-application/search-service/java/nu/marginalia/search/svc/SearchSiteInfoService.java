@@ -352,7 +352,7 @@ public class SearchSiteInfoService {
 
     public record SiteInfoWithContext(String domain,
                                       boolean isSubscribed,
-                                      List<EdgeDomain> siblingDomains,
+                                      List<DbDomainQueries.DomainWithNode> siblingDomains,
                                       int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,

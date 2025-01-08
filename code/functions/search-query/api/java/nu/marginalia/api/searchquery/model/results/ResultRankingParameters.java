@@ -67,8 +67,7 @@ public class ResultRankingParameters {
         this.exportDebugData = exportDebugData;
     }
 
-    public static ResultRankingParameters sensibleDefaults() {
-        return builder()
+    private static final ResultRankingParameters _sensibleDefaults = builder()
                 .bm25Params(new Bm25Parameters(1.2, 0.5))
                 .shortDocumentThreshold(2000)
                 .shortDocumentPenalty(2.)
@@ -85,6 +84,9 @@ public class ResultRankingParameters {
                 .exportDebugData(false)
                 .disablePenalties(false)
                 .build();
+
+    public static ResultRankingParameters sensibleDefaults() {
+        return _sensibleDefaults;
     }
 
     public static ResultRankingParametersBuilder builder() {

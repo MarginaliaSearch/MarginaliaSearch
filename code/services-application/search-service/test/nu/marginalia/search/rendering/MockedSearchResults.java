@@ -6,6 +6,7 @@ import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -132,8 +133,9 @@ public class MockedSearchResults {
         return new SearchSiteInfoService.SiteInfoWithContext(
                 "www.example.com",
                 false,
-                List.of(new EdgeDomain("example.com"),
-                        new EdgeDomain("about.example.com")
+                List.of(
+                        new DbDomainQueries.DomainWithNode(new EdgeDomain("example.com"), 1),
+                        new DbDomainQueries.DomainWithNode(new EdgeDomain("example.com"), 0)
                         ),
                 14,
                 "https://www.example.com",

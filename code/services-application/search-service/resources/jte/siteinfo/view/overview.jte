@@ -1,3 +1,4 @@
+@import nu.marginalia.db.DbDomainQueries
 @import nu.marginalia.model.EdgeDomain
 @import nu.marginalia.search.svc.SearchSiteInfoService
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
@@ -94,10 +95,14 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
-                @for (EdgeDomain sibling : siteInfo.siblingDomains())
+                @for (DbDomainQueries.DomainWithNode sibling : siteInfo.siblingDomains())
                     <tr>
                         <td class="px-3 py-6 md:py-3 whitespace-nowrap">
-                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.toString()}">${sibling.toString()}</a>
+                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.domain().toString()}">${sibling.domain().toString()}</a>
+
+                            @if (!sibling.isIndexed())
+                                <i class="ml-1 fa-regular fa-question-circle text-gray-400 dark:text-gray-600 text-xs" title="Not indexed"></i>
+                            @endif
                         </td>
                     </tr>
                 @endfor
