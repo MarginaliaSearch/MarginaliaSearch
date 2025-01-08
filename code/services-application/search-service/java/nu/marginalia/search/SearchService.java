@@ -68,12 +68,12 @@ public class SearchService extends JoobyService {
 
         jooby.after((Context ctx, Object result, Throwable failure) -> {
             if  (failure != null) {
-                wmsa_search_service_error_count.labels(ctx.getRoute().getPattern(), ctx.getContextPath()).inc();
+                wmsa_search_service_error_count.labels(ctx.getRoute().getPattern(), ctx.getMethod()).inc();
             }
             else {
                 Long startTime = ctx.getAttribute(startTimeAttribute);
                 if (startTime != null) {
-                    wmsa_search_service_request_time.labels(ctx.getRoute().getPattern(), ctx.getContextPath())
+                    wmsa_search_service_request_time.labels(ctx.getRoute().getPattern(), ctx.getMethod())
                             .observe((System.nanoTime() - startTime) / 1e9);
                 }
             }
