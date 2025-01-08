@@ -47,18 +47,23 @@ public class SearchAddToCrawlQueueService {
         return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domainName));
     }
 
-    private void addToCrawlQueue(int id) throws SQLException {
+    /** Mark a domain for crawling by setting node affinity to zero,
+     * unless it is already marked for crawling, then node affinity should
+     * be left unchanged.
+     * */
+    void addToCrawlQueue(int domainId) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     INSERT IGNORE INTO CRAWL_QUEUE(DOMAIN_NAME, SOURCE)
-                     SELECT DOMAIN_NAME, "user" FROM EC_DOMAIN WHERE ID=?
+                     UPDATE EC_DOMAIN 
+                     SET WMSA_prod.EC_DOMAIN.NODE_AFFINITY = 0 
+                     WHERE ID=? AND WMSA_prod.EC_DOMAIN.NODE_AFFINITY < 0
                      """)) {
-            stmt.setInt(1, id);
+            stmt.setInt(1, domainId);
             stmt.executeUpdate();
         }
     }
 
-    private String getDomainName(int id) {
+    String getDomainName(int id) {
         var domain = domainQueries.getDomain(id);
         if (domain.isEmpty())
             throw new IllegalArgumentException();
