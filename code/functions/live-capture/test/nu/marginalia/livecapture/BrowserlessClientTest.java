@@ -2,16 +2,21 @@ package nu.marginalia.livecapture;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.net.URI;
+import java.util.Map;
 
 @Testcontainers
+@Tag("slow")
 public class BrowserlessClientTest {
-    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("browserless/chrome")).withExposedPorts(3000);
+    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("browserless/chrome"))
+            .withEnv(Map.of("TOKEN", "BROWSERLESS_TOKEN"))
+            .withExposedPorts(3000);
 
     @BeforeAll
     public static void setup() {
