@@ -1,7 +1,5 @@
 package nu.marginalia.rss.svc;
 
-import com.apptasticsoftware.rssreader.Item;
-import com.apptasticsoftware.rssreader.RssReader;
 import com.google.inject.Inject;
 import com.opencsv.CSVReader;
 import nu.marginalia.WmsaHome;
@@ -20,7 +18,6 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.util.SimpleBlockingThreadPool;
-import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +29,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -47,8 +43,6 @@ import java.util.zip.GZIPInputStream;
 public class FeedFetcherService {
     private static final int MAX_FEED_ITEMS = 10;
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
-
-    private final RssReader rssReader = new RssReader();
 
     private final FeedDb feedDb;
     private final FileStorageService fileStorageService;
@@ -72,17 +66,6 @@ public class FeedFetcherService {
         this.nodeConfigurationService = nodeConfigurationService;
         this.serviceHeartbeat = serviceHeartbeat;
         this.executorClient = executorClient;
-
-
-        // Add support for some alternate date tags for atom
-        rssReader.addItemExtension("issued", this::setDateFallback);
-        rssReader.addItemExtension("created", this::setDateFallback);
-    }
-
-    private void setDateFallback(Item item, String value) {
-        if (item.getPubDate().isEmpty()) {
-            item.setPubDate(value);
-        }
     }
 
     public enum UpdateMode {
@@ -371,12 +354,7 @@ public class FeedFetcherService {
 
     public FeedItems parseFeed(String feedData, FeedDefinition definition) {
         try {
-            feedData = sanitizeEntities(feedData);
-
-            List<Item> rawItems = rssReader.read(
-                    // Massage the data to maximize the possibility of the flaky XML parser consuming it
-                    new BOMInputStream(new ByteArrayInputStream(feedData.trim().getBytes(StandardCharsets.UTF_8)), false)
-            ).toList();
+            List<SimpleFeedParser.ItemData> rawItems = SimpleFeedParser.parse(feedData);
 
             boolean keepUriFragment = rawItems.size() < 2 || areFragmentsDisparate(rawItems);
 
@@ -399,33 +377,6 @@ public class FeedFetcherService {
         }
     }
 
-    private static final Map<String, String> HTML_ENTITIES = Map.of(
-            "&raquo;", "»",
-            "&laquo;", "«",
-            "&mdash;", "--",
-            "&ndash;", "-",
-            "&rsquo;", "'",
-            "&lsquo;", "'",
-            "&quot;", "\"",
-            "&nbsp;", ""
-    );
-
-    /** The XML parser will blow up if you insert HTML entities in the feed XML,
-     * which is unfortunately relatively common.  Replace them as far as is possible
-     * with their corresponding characters
-     */
-    static String sanitizeEntities(String feedData) {
-        String result = feedData;
-        for (Map.Entry<String, String> entry : HTML_ENTITIES.entrySet()) {
-            result = result.replace(entry.getKey(), entry.getValue());
-        }
-
-        // Handle lone ampersands not part of a recognized XML entity
-        result = result.replaceAll("&(?!(amp|lt|gt|apos|quot);)", "&amp;");
-
-        return result;
-    }
-
     /** Decide whether to keep URI fragments in the feed items.
      * <p></p>
      * We keep fragments if there are multiple different fragments in the items.
@@ -433,16 +384,16 @@ public class FeedFetcherService {
      * @param items The items to check
      * @return True if we should keep the fragments, false otherwise
      */
-    private boolean areFragmentsDisparate(List<Item> items) {
+    private boolean areFragmentsDisparate(List<SimpleFeedParser.ItemData> items) {
         Set<String> seenFragments = new HashSet<>();
 
         try {
             for (var item : items) {
-                if (item.getLink().isEmpty()) {
+                if (item.url().isBlank()) {
                     continue;
                 }
 
-                var link = item.getLink().get();
+                var link = item.url();
                 if (!link.contains("#")) {
                     continue;
                 }

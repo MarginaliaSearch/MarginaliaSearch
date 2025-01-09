@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.BiConsumer;
 
 /** Utility for recording fetched feeds to a journal, useful in debugging feed parser issues.
  */
@@ -58,6 +59,17 @@ public interface FeedJournal extends AutoCloseable {
         public synchronized void record(String url, String contents) throws IOException {
             urlWriter.put(url);
             contentsWriter.put(contents);
+        }
+    }
+
+    static void replay(Path journalPath, BiConsumer<String, String> urlAndContent) throws IOException {
+        try (SlopTable table = new SlopTable(journalPath)) {
+            final StringColumn.Reader urlReader = urlColumn.open(table);
+            final StringColumn.Reader contentsReader = contentsColumn.open(table);
+
+            while (urlReader.hasRemaining()) {
+                urlAndContent.accept(urlReader.get(), contentsReader.get());
+            }
         }
 
     }
