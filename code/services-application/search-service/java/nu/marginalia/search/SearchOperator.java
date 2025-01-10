@@ -320,6 +320,8 @@ public class SearchOperator {
         // Return the results to the user
         return DecoratedSearchResults.builder()
                 .params(userParams)
+                .problems(List.of())
+                .evalResult("")
                 .results(clusteredResults)
                 .filters(new SearchFilters(userParams))
                 .focusDomain(focusDomain)
@@ -353,6 +355,8 @@ public class SearchOperator {
         // Return the results to the user
         return DecoratedSearchResults.builder()
                 .params(userParams)
+                .problems(List.of())
+                .evalResult("")
                 .results(clusteredResults)
                 .filters(new SearchFilters(userParams))
                 .focusDomain(focusDomain)
@@ -382,6 +386,8 @@ public class SearchOperator {
         // Return the results to the user
         return DecoratedSearchResults.builder()
                 .params(userParams)
+                .problems(List.of())
+                .evalResult("")
                 .results(clusteredResults)
                 .filters(new SearchFilters(userParams))
                 .focusDomain(null)

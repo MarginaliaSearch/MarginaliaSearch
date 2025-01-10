@@ -32,19 +32,19 @@ public class SearchCommand implements SearchCommandInterface {
         else if (parameters.debug() == 1) {
             DecoratedSearchResults results = searchOperator.doSearchFastTrack1(parameters);
             return Optional.of(new MapModelAndView("serp/main.jte",
-                    Map.of("parameters", results, "navbar", NavbarModel.SEARCH)
+                    Map.of("results", results, "navbar", NavbarModel.SEARCH)
             ));
         }
         else if (parameters.debug() == 2) {
             DecoratedSearchResults results = searchOperator.doSearchFastTrack2(parameters);
             return Optional.of(new MapModelAndView("serp/main.jte",
-                    Map.of("parameters", results, "navbar", NavbarModel.SEARCH)
+                    Map.of("results", results, "navbar", NavbarModel.SEARCH)
             ));
         }
         else if (parameters.debug() == 3) {
             DecoratedSearchResults results = searchOperator.doSearchFastTrack3(parameters);
             return Optional.of(new MapModelAndView("serp/main.jte",
-                    Map.of("parameters", results, "navbar", NavbarModel.SEARCH)
+                    Map.of("results", results, "navbar", NavbarModel.SEARCH)
             ));
         }
         else {
