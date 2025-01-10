@@ -39,7 +39,8 @@ public class SearchQueryService {
             @QueryParam String recent,
             @QueryParam String searchTitle,
             @QueryParam String adtech,
-            @QueryParam Integer page
+            @QueryParam Integer page,
+            @QueryParam Integer debug
     ) {
         try {
             SearchParameters parameters = new SearchParameters(websiteUrl,
@@ -50,7 +51,9 @@ public class SearchQueryService {
                     SearchTitleParameter.parse(searchTitle),
                     SearchAdtechParameter.parse(adtech),
                     false,
-                    Objects.requireNonNullElse(page,1));
+                    Objects.requireNonNullElse(page,1),
+                    Objects.requireNonNullElse(debug,0)
+                    );
 
             return searchCommandEvaulator.eval(parameters);
         }

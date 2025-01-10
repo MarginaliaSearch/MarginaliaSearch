@@ -21,7 +21,8 @@ public record SearchParameters(WebsiteUrl url,
                                SearchTitleParameter searchTitle,
                                SearchAdtechParameter adtech,
                                boolean newFilter,
-                               int page
+                               int page,
+                               int debug
                                ) {
 
     public static SearchParameters defaultsForQuery(WebsiteUrl url, String query, int page) {
@@ -34,7 +35,8 @@ public record SearchParameters(WebsiteUrl url,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
                 false,
-                page);
+                page,
+                0);
     }
 
     public String profileStr() {
@@ -42,30 +44,30 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page, debug);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page, debug);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page, debug);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, true, page, debug);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(url, query, profile, js, recent, title, adtech, true, page);
+        return new SearchParameters(url, query, profile, js, recent, title, adtech, true, page, debug);
     }
 
     public SearchParameters withPage(int page) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, false, page, debug);
     }
 
     public SearchParameters withQuery(String query) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, false, page, debug);
     }
 
     public String renderUrlWithoutSiteFocus() {

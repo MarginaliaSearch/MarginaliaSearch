@@ -17,13 +17,13 @@ public class SearchResultClusterer {
 
     public static SearchResultClusterStrategy selectStrategy(QueryResponse response) {
         if (response.domain() != null && !response.domain().isBlank())
-            return SearchResultClusterer::noOp;
+            return SearchResultClusterer::noOpClustering;
 
         return SearchResultClusterer::byDomain;
     }
 
     /** No clustering, just return the results as is */
-    private static List<ClusteredUrlDetails> noOp(List<UrlDetails> results, int total) {
+    public static List<ClusteredUrlDetails> noOpClustering(List<UrlDetails> results, int total) {
         if (results.isEmpty())
             return List.of();
 
