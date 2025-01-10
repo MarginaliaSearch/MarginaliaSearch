@@ -81,35 +81,6 @@
 
         @endif
 
-
-        @if (!siteInfo.siblingDomains().isEmpty())
-            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-globe"></i>
-                <span>Related Subdomains</span>
-            </div>
-
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 mx-4">
-                <thead>
-                <tr class="bg-gray-50 dark:bg-gray-700">
-                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Domain Name</th>
-                </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
-                @for (DbDomainQueries.DomainWithNode sibling : siteInfo.siblingDomains())
-                    <tr>
-                        <td class="px-3 py-6 md:py-3 whitespace-nowrap">
-                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.domain().toString()}">${sibling.domain().toString()}</a>
-
-                            @if (!sibling.isIndexed())
-                                <i class="ml-1 fa-regular fa-question-circle text-gray-400 dark:text-gray-600 text-xs" title="Not indexed"></i>
-                            @endif
-                        </td>
-                    </tr>
-                @endfor
-                </tbody>
-            </table>
-        @endif
-
         @if (siteInfo.domainInformation().isUnknownDomain())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fa-regular fa-circle-question"></i>
@@ -177,6 +148,36 @@
                 </div>
             </form>
         @endif
+
+
+        @if (!siteInfo.siblingDomains().isEmpty())
+            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
+                <i class="fas fa-globe"></i>
+                <span>Related Subdomains</span>
+            </div>
+
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 mx-4">
+                <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700">
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">Domain Name</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-xs">
+                @for (DbDomainQueries.DomainWithNode sibling : siteInfo.siblingDomains())
+                    <tr>
+                        <td class="px-3 py-6 md:py-3 whitespace-nowrap">
+                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.domain().toString()}">${sibling.domain().toString()}</a>
+
+                            @if (!sibling.isIndexed())
+                                <i class="ml-1 fa-regular fa-question-circle text-gray-400 dark:text-gray-600 text-xs" title="Not indexed"></i>
+                            @endif
+                        </td>
+                    </tr>
+                @endfor
+                </tbody>
+            </table>
+        @endif
+
 
         @if (siteInfo.isKnown())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">

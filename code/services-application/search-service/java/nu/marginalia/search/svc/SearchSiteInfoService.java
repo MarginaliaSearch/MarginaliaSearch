@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -69,12 +71,35 @@ public class SearchSiteInfoService {
         this.searchSiteSubscriptions = searchSiteSubscriptions;
     }
 
+    private volatile SiteOverviewModel model = new SiteOverviewModel(List.of(), Instant.EPOCH);
+
     @GET
     @Path("/site")
     public ModelAndView<?> handleOverview(@QueryParam String domain) {
         if (domain != null) {
             // redirect to /site/domainName
             return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domain));
+        }
+
+        if (model.age().compareTo(Duration.ofMinutes(15)) > 0) {
+            updateModel();
+        }
+
+        return new MapModelAndView("siteinfo/start.jte",
+                Map.of("navbar", NavbarModel.SITEINFO,
+                        "model", model));
+    }
+
+    /**  Update the model if it is older than 15 minutes.
+     *   This query is expensive and should not be run too often,
+     *   and the data doesn't change that often either.
+     *  <p></p>
+     *   This method is synchronized to avoid multiple threads updating the model at the same time.
+     */
+    private synchronized void updateModel() {
+        var currentModel = model;
+        if (currentModel.age().compareTo(Duration.ofMinutes(15)) < 0) {
+            return;
         }
 
         List<SiteOverviewModel.DiscoveredDomain> domains = new ArrayList<>();
@@ -91,13 +116,20 @@ public class SearchSiteInfoService {
             throw new RuntimeException();
         }
 
-        return new MapModelAndView("siteinfo/start.jte",
-                Map.of("navbar", NavbarModel.SITEINFO,
-                        "model", new SiteOverviewModel(domains)));
+        model = new SiteOverviewModel(domains);
     }
 
-    public record SiteOverviewModel(List<DiscoveredDomain> domains) {
+    public record SiteOverviewModel(List<DiscoveredDomain> domains, Instant captureTime) {
+
+        public SiteOverviewModel(List<DiscoveredDomain> domains) {
+            this(domains, Instant.now());
+        }
+
         public record DiscoveredDomain(String name, String timestamp) {}
+
+        public Duration age() {
+            return Duration.between(captureTime, Instant.now());
+        }
     }
 
     @GET
