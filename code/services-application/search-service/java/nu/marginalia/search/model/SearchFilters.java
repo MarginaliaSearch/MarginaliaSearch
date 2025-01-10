@@ -60,8 +60,7 @@ public class SearchFilters {
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
                 false,
-                1,
-                0));
+                1));
     }
 
     public SearchFilters(SearchParameters parameters) {
