@@ -84,18 +84,33 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public String renderUrl() {
-        String path = String.format("/search?query=%s&profile=%s&js=%s&adtech=%s&recent=%s&searchTitle=%s&newfilter=%s&page=%d",
-                URLEncoder.encode(query, StandardCharsets.UTF_8),
-                URLEncoder.encode(profile.filterId, StandardCharsets.UTF_8),
-                URLEncoder.encode(js.value, StandardCharsets.UTF_8),
-                URLEncoder.encode(adtech.value, StandardCharsets.UTF_8),
-                URLEncoder.encode(recent.value, StandardCharsets.UTF_8),
-                URLEncoder.encode(searchTitle.value, StandardCharsets.UTF_8),
-                Boolean.valueOf(newFilter).toString(),
-                page
-                );
 
-        return path;
+        StringBuilder pathBuilder = new StringBuilder("/search?");
+        pathBuilder.append("query=").append(URLEncoder.encode(query, StandardCharsets.UTF_8));
+
+        if (profile != SearchProfile.NO_FILTER) {
+            pathBuilder.append("&profile=").append(URLEncoder.encode(profile.filterId, StandardCharsets.UTF_8));
+        }
+        if (js != SearchJsParameter.DEFAULT) {
+            pathBuilder.append("&js=").append(URLEncoder.encode(js.value, StandardCharsets.UTF_8));
+        }
+        if (adtech != SearchAdtechParameter.DEFAULT) {
+            pathBuilder.append("&adtech=").append(URLEncoder.encode(adtech.value, StandardCharsets.UTF_8));
+        }
+        if (recent != SearchRecentParameter.DEFAULT) {
+            pathBuilder.append("&recent=").append(URLEncoder.encode(recent.value, StandardCharsets.UTF_8));
+        }
+        if (searchTitle != SearchTitleParameter.DEFAULT) {
+            pathBuilder.append("&searchTitle=").append(URLEncoder.encode(searchTitle.value, StandardCharsets.UTF_8));
+        }
+        if (page != 1) {
+            pathBuilder.append("&page=").append(page);
+        }
+        if (newFilter) {
+            pathBuilder.append("&newfilter=").append(Boolean.valueOf(newFilter).toString());
+        }
+
+        return pathBuilder.toString();
     }
 
     public RpcTemporalBias.Bias temporalBias() {

@@ -36,10 +36,11 @@
 
     </div>
 
+    @if (filters.showRecentOption.isSet()) <input type="hidden" name="js" value="${filters.removeJsOption.value()}"> @endif
+    @if (filters.reduceAdtechOption.isSet()) <input type="hidden" name="adtech" value="${filters.reduceAdtechOption.value()}"> @endif
+    @if (filters.searchTitleOption.isSet()) <input type="hidden" name="searchTitle" value="${filters.searchTitleOption.value()}"> @endif
+    @if (filters.showRecentOption.isSet()) <input type="hidden" name="recent" value="${filters.showRecentOption.value()}"> @endif
 
-    <input type="hidden" name="js" value="${filters.removeJsOption.value()}">
-    <input type="hidden" name="adtech" value="${filters.reduceAdtechOption.value()}">
-    <input type="hidden" name="searchTitle" value="${filters.searchTitleOption.value()}">
     <input type="hidden" name="profile" value="${profile}">
-    <input type="hidden" name="recent" value="${filters.showRecentOption.value()}">
+
 </form>
