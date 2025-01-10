@@ -137,7 +137,7 @@ public class SearchSiteInfoService {
             @PathParam String domainName,
             @QueryParam String view,
             @QueryParam Integer page
-    ) throws SQLException {
+    ) throws SQLException, ExecutionException {
 
         if (null == domainName || domainName.isBlank()) {
             return null;
