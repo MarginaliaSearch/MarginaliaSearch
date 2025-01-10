@@ -1,5 +1,4 @@
 @import nu.marginalia.db.DbDomainQueries
-@import nu.marginalia.model.EdgeDomain
 @import nu.marginalia.search.svc.SearchSiteInfoService
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.model.UrlDetails
