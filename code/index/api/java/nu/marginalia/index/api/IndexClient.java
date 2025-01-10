@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 @Singleton
 public class IndexClient {
@@ -65,7 +66,13 @@ public class IndexClient {
                             totalNumResults.addAndGet(ret.size());
                             return ret;
                         }))
-                        .map(CompletableFuture::join)
+                        .mapMulti((CompletableFuture<List<RpcDecoratedResultItem>> fut, Consumer<List<RpcDecoratedResultItem>> c) ->{
+                            try {
+                                c.accept(fut.join());
+                            } catch (Exception e) {
+                                logger.error("Error while fetching results", e);
+                            }
+                        })
                         .flatMap(List::stream)
                         .filter(item -> !isBlacklisted(item))
                         .sorted(comparator)
