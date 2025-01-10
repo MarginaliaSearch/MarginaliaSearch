@@ -71,7 +71,7 @@ public class SearchSiteInfoService {
         Thread.ofPlatform().name("Recently Added Domains Model Updater").start(this::modelUpdater);
     }
 
-    private volatile SiteOverviewModel model = new SiteOverviewModel(List.of());
+    private volatile SiteOverviewModel cachedOverviewModel = new SiteOverviewModel(List.of());
 
     @GET
     @Path("/site")
@@ -83,7 +83,7 @@ public class SearchSiteInfoService {
 
         return new MapModelAndView("siteinfo/start.jte",
                 Map.of("navbar", NavbarModel.SITEINFO,
-                        "model", model));
+                        "model", cachedOverviewModel));
     }
 
     private void modelUpdater() {
@@ -95,17 +95,26 @@ public class SearchSiteInfoService {
             // the result.
 
             try (var conn = dataSource.getConnection();
-                 var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, DISCOVER_DATE FROM EC_DOMAIN WHERE NODE_AFFINITY = 0 ORDER BY ID DESC LIMIT 10")) {
-
+                 var stmt = conn.prepareStatement("""
+                    SELECT DOMAIN_NAME, DISCOVER_DATE
+                    FROM EC_DOMAIN
+                    WHERE NODE_AFFINITY = 0
+                    ORDER BY ID DESC
+                    LIMIT 10
+                    """))
+            {
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
-                    domains.add(new SiteOverviewModel.DiscoveredDomain(rs.getString("DOMAIN_NAME"), rs.getString("DISCOVER_DATE")));
+                    domains.add(new SiteOverviewModel.DiscoveredDomain(
+                            rs.getString("DOMAIN_NAME"),
+                            rs.getString("DISCOVER_DATE"))
+                    );
                 }
             } catch (SQLException ex) {
-                throw new RuntimeException();
+                logger.warn("Failed to get recently added domains: {}", ex.getMessage());
             }
 
-            model = new SiteOverviewModel(domains);
+            cachedOverviewModel = new SiteOverviewModel(domains);
 
             try {
                 TimeUnit.MINUTES.sleep(15);
