@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -222,7 +223,7 @@ public class SearchSiteInfoService {
         );
     }
 
-    private SiteInfoWithContext listInfo(Context context, String domainName) {
+    private SiteInfoWithContext listInfo(Context context, String domainName) throws ExecutionException {
 
         var domain = new EdgeDomain(domainName);
         final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);

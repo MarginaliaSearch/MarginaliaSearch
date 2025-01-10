@@ -20,7 +20,10 @@ public class DbDomainQueries {
     private final HikariDataSource dataSource;
 
     private static final Logger logger = LoggerFactory.getLogger(DbDomainQueries.class);
+
     private final Cache<EdgeDomain, Integer> domainIdCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
+    private final Cache<Integer, EdgeDomain> domainNameCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
+    private final Cache<String, List<DomainWithNode>> siblingsCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
 
     @Inject
     public DbDomainQueries(HikariDataSource dataSource)
@@ -30,16 +33,21 @@ public class DbDomainQueries {
 
 
     public Integer getDomainId(EdgeDomain domain) throws NoSuchElementException {
-        try (var connection = dataSource.getConnection()) {
-
+        try {
             return domainIdCache.get(domain, () -> {
-                try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
+                try (var connection = dataSource.getConnection();
+                     var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
+
                     stmt.setString(1, domain.toString());
                     var rsp = stmt.executeQuery();
                     if (rsp.next()) {
                         return rsp.getInt(1);
                     }
                 }
+                catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
                 throw new NoSuchElementException();
             });
         }
@@ -48,9 +56,6 @@ public class DbDomainQueries {
         }
         catch (ExecutionException ex) {
             throw new RuntimeException(ex.getCause());
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
@@ -84,47 +89,55 @@ public class DbDomainQueries {
     }
 
     public Optional<EdgeDomain> getDomain(int id) {
-        try (var connection = dataSource.getConnection()) {
 
+        EdgeDomain existing = domainNameCache.getIfPresent(id);
+        if (existing != null) {
+            return Optional.of(existing);
+        }
+
+        try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement("SELECT DOMAIN_NAME FROM EC_DOMAIN WHERE ID=?")) {
                 stmt.setInt(1, id);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
-                    return Optional.of(new EdgeDomain(rsp.getString(1)));
+                    var val = new EdgeDomain(rsp.getString(1));
+                    domainNameCache.put(id, val);
+                    return Optional.of(val);
                 }
                 return Optional.empty();
             }
-        }
-        catch (UncheckedExecutionException ex) {
-            throw new RuntimeException(ex.getCause());
         }
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public List<DomainWithNode> otherSubdomains(EdgeDomain domain, int cnt) {
-        List<DomainWithNode> ret = new ArrayList<>();
+    public List<DomainWithNode> otherSubdomains(EdgeDomain domain, int cnt) throws ExecutionException {
+        String topDomain = domain.topDomain;
 
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, NODE_AFFINITY FROM EC_DOMAIN WHERE DOMAIN_TOP = ? LIMIT ?")) {
-            stmt.setString(1, domain.topDomain);
-            stmt.setInt(2, cnt);
+        return siblingsCache.get(topDomain, () -> {
+            List<DomainWithNode> ret = new ArrayList<>();
 
-            var rs = stmt.executeQuery();
-            while (rs.next()) {
-                var sibling = new EdgeDomain(rs.getString(1));
+            try (var conn = dataSource.getConnection();
+                 var stmt = conn.prepareStatement("SELECT DOMAIN_NAME, NODE_AFFINITY FROM EC_DOMAIN WHERE DOMAIN_TOP = ? LIMIT ?")) {
+                stmt.setString(1, topDomain);
+                stmt.setInt(2, cnt);
 
-                if (sibling.equals(domain))
-                    continue;
+                var rs = stmt.executeQuery();
+                while (rs.next()) {
+                    var sibling = new EdgeDomain(rs.getString(1));
 
-                ret.add(new DomainWithNode(sibling, rs.getInt(2)));
+                    if (sibling.equals(domain))
+                        continue;
+
+                    ret.add(new DomainWithNode(sibling, rs.getInt(2)));
+                }
+            } catch (SQLException e) {
+                logger.error("Failed to get domain neighbors");
             }
-        } catch (SQLException e) {
-            logger.error("Failed to get domain neighbors");
-        }
+            return ret;
+        });
 
-        return ret;
     }
 
     public record DomainWithNode (EdgeDomain domain, int nodeAffinity) {
