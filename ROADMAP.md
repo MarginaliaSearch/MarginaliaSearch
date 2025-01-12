@@ -30,12 +30,6 @@ Retaining the ability to independently crawl the web is still strongly desirable
 The search engine has a bit of a problem showing spicy content mixed in with the results.  It would be desirable to have a way to filter this out.  It's likely something like a URL blacklist (e.g. [UT1](https://dsi.ut-capitole.fr/blacklists/index_en.php) )
 combined with naive bayesian filter would go a long way, or something more sophisticated...?
 
-## Web Design Overhaul
-
-The design is kinda clunky and hard to maintain, and needlessly outdated-looking.  
-
-In progress: PR [#127](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/127)  -- demo available at https://test.marginalia.nu/
-
 ## Additional Language Support
 
 It would be desirable if the search engine supported more languages than English.  This is partially about
@@ -62,7 +56,22 @@ filter for any API consumer.
 
 I've talked to the stract dev and he does not think it's a good idea to mimic their optics language, which is quite ad-hoc, but instead to work together to find some new common description language for this. 
 
+## Show favicons next to search results
+
+This is expected from search engines.  Basic proof of concept sketch of fetching this data has been done, but the feature is some way from being reality. 
+
+## Specialized crawler for github
+
+One of the search engine's biggest limitations right now is that it does not index github at all.   A specialized crawler that fetches at least the readme.md would go a long way toward providing search capabilities in this domain.
+
 # Completed
+
+## Web Design Overhaul (COMPLETED 2025-01)
+
+The design is kinda clunky and hard to maintain, and needlessly outdated-looking.  
+
+PR [#127](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/127)
+
 
 ## Proper Position Index (COMPLETED 2024-09)
 
