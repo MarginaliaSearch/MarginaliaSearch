@@ -36,7 +36,7 @@
         <div class="text-slate-700 dark:text-white text-sm p-4">
             <div class="fas fa-gift mr-1 text-margeblue dark:text-slate-200"></div>
             This is the new design and home of Marginalia Search.
-            You can about what this entails <a href="https://about.marginalia-search.com/article/redesign/"  class="underline text-liteblue dark:text-blue-200">here</a>.
+            You can read about what this entails <a href="https://about.marginalia-search.com/article/redesign/"  class="underline text-liteblue dark:text-blue-200">here</a>.
         <p class="my-4"></p>
         The old version of Marginalia Search remains available at
         <a href="https://old-search.marginalia.nu/" class="underline text-liteblue dark:text-blue-200">https://old-search.marginalia.nu/</a>.
