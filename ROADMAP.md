@@ -1,4 +1,4 @@
-# Roadmap 2024-2025
+# Roadmap 2025
 
 This is a roadmap with major features planned for Marginalia Search.
 
