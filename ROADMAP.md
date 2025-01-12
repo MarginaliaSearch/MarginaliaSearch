@@ -72,6 +72,14 @@ The design is kinda clunky and hard to maintain, and needlessly outdated-looking
 
 PR [#127](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/127)
 
+## Finalize RSS support (COMPLETED 2024-11)
+
+Marginalia has experimental RSS preview support for a few domains.  This works well and
+it should be extended to all domains.  It would also be interesting to offer search of the
+RSS data itself, or use the RSS set to feed a special live index that updates faster than the
+main dataset. 
+
+Completed with PR [#122](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/122) and PR [#125](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/125)
 
 ## Proper Position Index (COMPLETED 2024-09)
 
@@ -85,11 +93,3 @@ list, as is the civilized way of doing this.
 
 Completed with PR [#99](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/99)
 
-## Finalize RSS support (COMPLETED 2024-11)
-
-Marginalia has experimental RSS preview support for a few domains.  This works well and
-it should be extended to all domains.  It would also be interesting to offer search of the
-RSS data itself, or use the RSS set to feed a special live index that updates faster than the
-main dataset. 
-
-Completed with PR [#122](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/122) and PR [#125](https://github.com/MarginaliaSearch/MarginaliaSearch/pull/125)
