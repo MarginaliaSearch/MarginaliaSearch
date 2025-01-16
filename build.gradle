@@ -47,7 +47,7 @@ ext {
     dockerImageBase='container-registry.oracle.com/graalvm/jdk:23'
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
-    jibVersion = '3.4.3'
+    jibVersion = '3.4.4'
 
 }
 
