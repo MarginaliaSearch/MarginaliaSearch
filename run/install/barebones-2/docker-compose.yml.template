@@ -103,11 +103,11 @@ services:
     image: "mariadb:lts"
     container_name: "mariadb"
     env_file: "${INSTALL_DIR}/env/mariadb.env"
-    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    command: ['mariadbd', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     ports:
       - "127.0.0.1:3306:3306/tcp"
     healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u ${uval} --password=${pval}
+      test: mariadb-admin ping -h 127.0.0.1 -u ${uval} --password=${pval}
       start_period: 5s
       interval: 5s
       timeout: 5s
