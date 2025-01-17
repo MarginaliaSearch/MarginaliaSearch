@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -166,6 +167,19 @@ public class WarcRecorder implements AutoCloseable {
 
             warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
             writer.write(warcRequest);
+
+            if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
+                    && inputBuffer.size() < 2048)
+            {
+                // Fast detection and mitigation of crawler traps that respond with slow
+                // small responses, with a high branching factor
+
+                // Note we bail *after* writing the warc records, this will effectively only
+                // prevent link extraction from the document.
+
+                logger.warn("URL {} took too long to fetch and was too small for the effort", requestUri);
+                return new HttpFetchResult.ResultException(new IOException("Likely crawler trap"));
+            }
 
             return new HttpFetchResult.ResultOk(responseUri,
                     response.code(),
