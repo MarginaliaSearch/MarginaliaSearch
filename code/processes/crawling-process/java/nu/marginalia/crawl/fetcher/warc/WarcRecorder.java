@@ -90,6 +90,7 @@ public class WarcRecorder implements AutoCloseable {
 
         var call = client.newCall(request);
 
+
         cookieInformation.update(client, request.url());
 
         try (var response = call.execute();
@@ -169,7 +170,8 @@ public class WarcRecorder implements AutoCloseable {
             writer.write(warcRequest);
 
             if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
-                    && inputBuffer.size() < 2048)
+                    && inputBuffer.size() < 2048
+                    && !request.url().encodedPath().endsWith("robots.txt")) // don't bail on robots.txt
             {
                 // Fast detection and mitigation of crawler traps that respond with slow
                 // small responses, with a high branching factor
@@ -177,7 +179,12 @@ public class WarcRecorder implements AutoCloseable {
                 // Note we bail *after* writing the warc records, this will effectively only
                 // prevent link extraction from the document.
 
-                logger.warn("URL {} took too long to fetch and was too small for the effort", requestUri);
+                logger.warn("URL {} took too long to fetch ({}s) and was too small for the effort ({}b)",
+                        requestUri,
+                        Duration.between(date, Instant.now()).getSeconds(),
+                        inputBuffer.size()
+                );
+
                 return new HttpFetchResult.ResultException(new IOException("Likely crawler trap"));
             }
 
