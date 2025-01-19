@@ -8,6 +8,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
+import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -246,7 +247,7 @@ public class CrawlingThenConvertingIntegrationTest {
     private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws Exception {
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        try (var recorder = new WarcRecorder(fileName);
+        try (var recorder = new WarcRecorder(fileName, new Cookies());
              var db = new DomainStateDb(dbTempFile))
         {
             new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, db, recorder).crawlDomain();

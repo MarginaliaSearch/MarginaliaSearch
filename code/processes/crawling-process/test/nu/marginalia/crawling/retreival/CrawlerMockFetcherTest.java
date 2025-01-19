@@ -3,10 +3,7 @@ package nu.marginalia.crawling.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
-import nu.marginalia.crawl.fetcher.ContentTags;
-import nu.marginalia.crawl.fetcher.HttpFetcher;
-import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.fetcher.SitemapRetriever;
+import nu.marginalia.crawl.fetcher.*;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
@@ -17,7 +14,6 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.test.CommonTestData;
-import okhttp3.Headers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.http.HttpHeaders;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -122,7 +119,7 @@ public class CrawlerMockFetcherTest {
         public void setAllowAllContentTypes(boolean allowAllContentTypes) {}
 
         @Override
-        public List<String> getCookies() { return List.of();}
+        public Cookies getCookies() { return new Cookies();}
 
         @Override
         public void clearCookies() {}
@@ -149,7 +146,7 @@ public class CrawlerMockFetcherTest {
                     return new HttpFetchResult.ResultOk(
                             url.asURI(),
                             200,
-                            new Headers.Builder().build(),
+                            HttpHeaders.of(Map.of(), (k,v)->true),
                             "127.0.0.1",
                             bodyBytes,
                             0,
@@ -174,5 +171,9 @@ public class CrawlerMockFetcherTest {
             return Mockito.mock(SitemapRetriever.class);
         }
 
+        @Override
+        public void close() {
+
+        }
     }
 }

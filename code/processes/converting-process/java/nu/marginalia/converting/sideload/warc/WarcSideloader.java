@@ -106,11 +106,7 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
                 return false;
 
             var url = new EdgeUrl(warcResponse.target());
-            if (!Objects.equals(url.getDomain(), domain)) {
-                return false;
-            }
-
-            return true;
+            return Objects.equals(url.getDomain(), domain);
         } catch (Exception e) {
             logger.warn("Failed to process response", e);
         }

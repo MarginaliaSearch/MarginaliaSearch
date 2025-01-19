@@ -55,7 +55,6 @@ dependencies {
     implementation libs.zstd
     implementation libs.jwarc
     implementation libs.crawlercommons
-    implementation libs.okhttp3
     implementation libs.jsoup
     implementation libs.opencsv
     implementation libs.fastutil

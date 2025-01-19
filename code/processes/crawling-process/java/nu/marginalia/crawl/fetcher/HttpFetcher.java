@@ -8,13 +8,11 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 
-import java.util.List;
-
 @ImplementedBy(HttpFetcherImpl.class)
-public interface HttpFetcher {
+public interface HttpFetcher extends AutoCloseable {
     void setAllowAllContentTypes(boolean allowAllContentTypes);
 
-    List<String> getCookies();
+    Cookies getCookies();
     void clearCookies();
 
     DomainProbeResult probeDomain(EdgeUrl url);
@@ -27,7 +25,7 @@ public interface HttpFetcher {
     HttpFetchResult fetchContent(EdgeUrl url,
                                  WarcRecorder recorder,
                                  ContentTags tags,
-                                 ProbeType probeType) throws HttpFetcherImpl.RateLimitException, Exception;
+                                 ProbeType probeType) throws Exception;
 
     SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder);
 

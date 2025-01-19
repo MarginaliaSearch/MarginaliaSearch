@@ -27,7 +27,7 @@ public class NoSecuritySSL {
             }
     };
 
-    public static SSLSocketFactory buildSocketFactory() {
+    public static SSLContext buildSslContext() {
         try {
             // Install the all-trusting trust manager
             final SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -40,14 +40,11 @@ public class NoSecuritySSL {
             clientSessionContext.setSessionCacheSize(2048);
 
             // Create a ssl socket factory with our all-trusting manager
-            return sslContext.getSocketFactory();
+            return sslContext;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static HostnameVerifier buildHostnameVerifyer() {
-        return (hn, session) -> true;
-    }
 }

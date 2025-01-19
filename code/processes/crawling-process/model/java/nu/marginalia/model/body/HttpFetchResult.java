@@ -1,17 +1,17 @@
 package nu.marginalia.model.body;
 
 import nu.marginalia.contenttype.ContentType;
-import okhttp3.Headers;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.netpreserve.jwarc.MessageHeaders;
 import org.netpreserve.jwarc.WarcResponse;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.http.HttpHeaders;
 import java.util.Optional;
 
 /* FIXME:  This interface has a very unfortunate name that is not very descriptive.
@@ -56,42 +56,26 @@ public sealed interface HttpFetchResult {
      */
     record ResultOk(URI uri,
                     int statusCode,
-                    Headers headers,
+                    HttpHeaders headers,
                     String ipAddress,
                     byte[] bytesRaw,
                     int bytesStart,
                     int bytesLength
     ) implements HttpFetchResult {
 
+        public ResultOk(URI uri, int status, MessageHeaders headers, String ipAddress, byte[] bytes, int bytesStart, int length) {
+            this(uri, status, HttpHeaders.of(headers.map(), (k,v) -> true), ipAddress, bytes, bytesStart, length);
+        }
+
         public boolean isOk() {
             return statusCode >= 200 && statusCode < 300;
-        }
-
-        public ResultOk(URI uri,
-                        int statusCode,
-                        MessageHeaders headers,
-                        String ipAddress,
-                        byte[] bytesRaw,
-                        int bytesStart,
-                        int bytesLength) {
-            this(uri, statusCode, convertHeaders(headers), ipAddress, bytesRaw, bytesStart, bytesLength);
-        }
-
-        private static Headers convertHeaders(MessageHeaders headers) {
-            var ret = new Headers.Builder();
-            for (var header : headers.map().entrySet()) {
-                for (var value : header.getValue()) {
-                    ret.add(header.getKey(), value);
-                }
-            }
-            return ret.build();
         }
 
         public InputStream getInputStream() {
             return new ByteArrayInputStream(bytesRaw, bytesStart, bytesLength);
         }
 
-        public Optional<Document> parseDocument() throws IOException {
+        public Optional<Document> parseDocument() {
             return DocumentBodyExtractor.asString(this).flatMapOpt((contentType, body) -> {
                 if (contentType.is("text/html")) {
                     return Optional.of(Jsoup.parse(body));
@@ -102,8 +86,9 @@ public sealed interface HttpFetchResult {
             });
         }
 
+        @Nullable
         public String header(String name) {
-            return headers.get(name);
+            return headers.firstValue(name).orElse(null);
         }
 
     }

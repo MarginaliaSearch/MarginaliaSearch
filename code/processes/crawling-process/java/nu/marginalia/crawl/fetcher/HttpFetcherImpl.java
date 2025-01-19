@@ -1,11 +1,10 @@
 package nu.marginalia.crawl.fetcher;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import nu.marginalia.UserAgent;
-import nu.marginalia.crawl.fetcher.socket.FastTerminatingSocketFactory;
-import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.fetcher.socket.NoSecuritySSL;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
@@ -14,22 +13,21 @@ import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
-import okhttp3.ConnectionPool;
-import okhttp3.Dispatcher;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.X509TrustManager;
-import java.io.InterruptedIOException;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 
+@Singleton
 public class HttpFetcherImpl implements HttpFetcher {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -40,39 +38,28 @@ public class HttpFetcherImpl implements HttpFetcher {
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
+    private final Duration requestTimeout = Duration.ofSeconds(10);
+
     @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
         contentTypeLogic.setAllowAllContentTypes(allowAllContentTypes);
     }
 
-    private final OkHttpClient client;
+    private final HttpClient client;
 
-    private static final FastTerminatingSocketFactory ftSocketFactory = new FastTerminatingSocketFactory();
-
-    private OkHttpClient createClient(Dispatcher dispatcher, ConnectionPool pool) {
-        var builder = new OkHttpClient.Builder();
-        if (dispatcher != null) {
-            builder.dispatcher(dispatcher);
-        }
-
-        return builder.sslSocketFactory(NoSecuritySSL.buildSocketFactory(), (X509TrustManager) NoSecuritySSL.trustAllCerts[0])
-            .socketFactory(ftSocketFactory)
-            .hostnameVerifier(NoSecuritySSL.buildHostnameVerifyer())
-            .addNetworkInterceptor(new IpInterceptingNetworkInterceptor())
-            .connectionPool(pool)
-            .cookieJar(cookies.getJar())
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .connectTimeout(8, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .build();
-
+    private HttpClient createClient() {
+        return HttpClient.newBuilder()
+                .sslContext(NoSecuritySSL.buildSslContext())
+                .cookieHandler(cookies)
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.ofSeconds(8))
+                .executor(Executors.newCachedThreadPool())
+                .build();
     }
 
     @Override
-    public List<String> getCookies() {
-        return cookies.getCookies();
+    public Cookies getCookies() {
+        return cookies;
     }
 
     @Override
@@ -81,26 +68,24 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     @Inject
-    public HttpFetcherImpl(UserAgent userAgent,
-                           Dispatcher dispatcher,
-                           ConnectionPool connectionPool)
+    public HttpFetcherImpl(UserAgent userAgent)
     {
-        this.client = createClient(dispatcher, connectionPool);
+        this.client = createClient();
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
     }
 
     public HttpFetcherImpl(String userAgent) {
-        this.client = createClient(null, new ConnectionPool());
+        this.client = createClient();
         this.userAgentString = userAgent;
         this.userAgentIdentifier = userAgent;
     }
 
     // Not necessary in prod, but useful in test
     public void close() {
-        client.dispatcher().executorService().shutdown();
-        client.connectionPool().evictAll();
+        client.close();
     }
+
     /**
      * Probe the domain to see if it is reachable, attempting to identify which schema to use,
      * and if there are any redirects.  This is done by one or more HEAD requests.
@@ -110,19 +95,26 @@ public class HttpFetcherImpl implements HttpFetcher {
      */
     @Override
     public DomainProbeResult probeDomain(EdgeUrl url) {
-        var head = new Request.Builder().head().addHeader("User-agent", userAgentString)
-                .url(url.toString())
-                .build();
+        HttpRequest head;
+        try {
+            head = HttpRequest.newBuilder()
+                    .HEAD()
+                    .uri(url.asURI())
+                    .header("User-agent", userAgentString)
+                    .timeout(requestTimeout)
+                    .build();
+        } catch (URISyntaxException e) {
+            return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid URL");
+        }
 
-        var call = client.newCall(head);
+        try {
+            var rsp = client.send(head, HttpResponse.BodyHandlers.discarding());
+            EdgeUrl rspUri = new EdgeUrl(rsp.uri());
 
-        try (var rsp = call.execute()) {
-            EdgeUrl requestUrl = new EdgeUrl(rsp.request().url().toString());
-
-            if (!Objects.equals(requestUrl.domain, url.domain)) {
-                return new DomainProbeResult.Redirect(requestUrl.domain);
+            if (!Objects.equals(rspUri.domain, url.domain)) {
+                return new DomainProbeResult.Redirect(rspUri.domain);
             }
-            return new DomainProbeResult.Ok(requestUrl);
+            return new DomainProbeResult.Ok(rspUri);
         }
         catch (Exception ex) {
             return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, ex.getMessage());
@@ -140,21 +132,25 @@ public class HttpFetcherImpl implements HttpFetcher {
                                                    WarcRecorder warcRecorder,
                                                    ContentTags tags) throws RateLimitException {
         if (tags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url)) {
-            var headBuilder = new Request.Builder().head()
-                    .addHeader("User-agent", userAgentString)
-                    .addHeader("Accept-Encoding", "gzip")
-                    .url(url.toString());
 
-            var head = headBuilder.build();
-            var call = client.newCall(head);
+            try {
+                var headBuilder = HttpRequest.newBuilder()
+                    .HEAD()
+                    .uri(url.asURI())
+                    .header("User-agent", userAgentString)
+                    .header("Accept-Encoding", "gzip")
+                    .timeout(requestTimeout)
+                    ;
 
-            try (var rsp = call.execute()) {
-                var contentTypeHeader = rsp.header("Content-type");
+                var rsp = client.send(headBuilder.build(), HttpResponse.BodyHandlers.discarding());
+                var headers = rsp.headers();
+
+                var contentTypeHeader = headers.firstValue("Content-Type").orElse(null);
 
                 if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
-                    warcRecorder.flagAsFailedContentTypeProbe(url, contentTypeHeader, rsp.code());
+                    warcRecorder.flagAsFailedContentTypeProbe(url, contentTypeHeader, rsp.statusCode());
 
-                    return new ContentTypeProbeResult.BadContentType(contentTypeHeader, rsp.code());
+                    return new ContentTypeProbeResult.BadContentType(contentTypeHeader, rsp.statusCode());
                 }
 
                 // Update the URL to the final URL of the HEAD request, otherwise we might end up doing
@@ -168,27 +164,27 @@ public class HttpFetcherImpl implements HttpFetcher {
                 // too many eyebrows when looking at the logs on the target server.  Overall it's probably desirable
                 // that it looks like the traffic makes sense, as opposed to looking like a broken bot.
 
-                var redirectUrl = new EdgeUrl(rsp.request().url().toString());
+                var redirectUrl = new EdgeUrl(rsp.uri());
                 EdgeUrl ret;
 
                 if (Objects.equals(redirectUrl.domain, url.domain)) ret = redirectUrl;
                 else ret = url;
 
                 // Intercept rate limiting
-                if (rsp.code() == 429) {
-                    throw new HttpFetcherImpl.RateLimitException(Objects.requireNonNullElse(rsp.header("Retry-After"), "1"));
+                if (rsp.statusCode() == 429) {
+                    throw new HttpFetcherImpl.RateLimitException(headers.firstValue("Retry-After").orElse("1"));
                 }
 
                 return new ContentTypeProbeResult.Ok(ret);
             }
+            catch (HttpTimeoutException ex) {
+                warcRecorder.flagAsTimeout(url);
+                return new ContentTypeProbeResult.Timeout(ex);
+            }
             catch (RateLimitException ex) {
                 throw ex;
             }
-            catch (InterruptedIOException ex) {
-                warcRecorder.flagAsTimeout(url);
-
-                return new ContentTypeProbeResult.Timeout(ex);
-            } catch (Exception ex) {
+            catch (Exception ex) {
                 logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
 
                 warcRecorder.flagAsError(url, ex);
@@ -210,13 +206,15 @@ public class HttpFetcherImpl implements HttpFetcher {
                                            ProbeType probeType)
         throws Exception
     {
-        var getBuilder = new Request.Builder().get();
-
-        getBuilder.url(url.toString())
-                .addHeader("Accept-Encoding", "gzip")
-                .addHeader("Accept-Language", "en,*;q=0.5")
-                .addHeader("Accept", "text/html, application/xhtml+xml, text/*;q=0.8")
-                .addHeader("User-agent", userAgentString);
+        var getBuilder = HttpRequest.newBuilder()
+                .GET()
+                .uri(url.asURI())
+                .header("User-agent", userAgentString)
+                .header("Accept-Encoding", "gzip")
+                .header("Accept-Language", "en,*;q=0.5")
+                .header("Accept", "text/html, application/xhtml+xml, text/*;q=0.8")
+                .timeout(requestTimeout)
+                ;
 
         contentTags.paint(getBuilder);
 
@@ -257,12 +255,15 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private Optional<SimpleRobotRules> fetchAndParseRobotsTxt(EdgeUrl url, WarcRecorder recorder) {
         try {
-            var getBuilder = new Request.Builder().get();
+            var getBuilder = HttpRequest.newBuilder();
 
-            getBuilder.url(url.toString())
-                    .addHeader("Accept-Encoding", "gzip")
-                    .addHeader("Accept", "text/*, */*;q=0.9")
-                    .addHeader("User-agent", userAgentString);
+            getBuilder
+                    .GET()
+                    .uri(url.asURI())
+                    .header("Accept-Encoding", "gzip")
+                    .header("Accept", "text/*, */*;q=0.9")
+                    .header("User-agent", userAgentString)
+                    .timeout(requestTimeout);
 
             HttpFetchResult result = recorder.fetch(client, getBuilder.build());
 
