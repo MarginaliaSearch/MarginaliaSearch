@@ -3,10 +3,13 @@ package nu.marginalia.crawl.fetcher;
 import com.google.inject.ImplementedBy;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+
+import java.util.List;
 
 @ImplementedBy(HttpFetcherImpl.class)
 public interface HttpFetcher extends AutoCloseable {
@@ -26,6 +29,8 @@ public interface HttpFetcher extends AutoCloseable {
                                  WarcRecorder recorder,
                                  ContentTags tags,
                                  ProbeType probeType) throws Exception;
+
+    List<EdgeUrl> fetchSitemapUrls(String rootSitemapUrl, CrawlDelayTimer delayTimer);
 
     SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder);
 

@@ -7,24 +7,32 @@ import crawlercommons.robots.SimpleRobotRulesParser;
 import nu.marginalia.UserAgent;
 import nu.marginalia.crawl.fetcher.socket.NoSecuritySSL;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPInputStream;
 
 
 @Singleton
@@ -241,6 +249,122 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     @Override
+    public List<EdgeUrl> fetchSitemapUrls(String root, CrawlDelayTimer delayTimer) {
+        try {
+            List<EdgeUrl> ret = new ArrayList<>();
+
+            Set<String> seenUrls = new HashSet<>();
+            Set<String> seenSitemaps = new HashSet<>();
+
+            Deque<EdgeUrl> sitemapQueue = new LinkedList<>();
+
+            EdgeUrl rootSitemapUrl = new EdgeUrl(root);
+
+            sitemapQueue.add(rootSitemapUrl);
+
+            int fetchedSitemaps = 0;
+
+            while (!sitemapQueue.isEmpty() && ret.size() < 20_000 && ++fetchedSitemaps < 10) {
+                var head = sitemapQueue.removeFirst();
+
+                switch (fetchSitemap(head)) {
+                    case SitemapResult.SitemapUrls(List<String> urls) -> {
+
+                        for (var url : urls) {
+                            if (seenUrls.add(url)) {
+                                EdgeUrl.parse(url)
+                                        .filter(u -> u.domain.equals(rootSitemapUrl.domain))
+                                        .ifPresent(ret::add);
+                            }
+                        }
+
+                    }
+                    case SitemapResult.SitemapReferences(List<String> refs) -> {
+                        for (var ref : refs) {
+                            if (seenSitemaps.add(ref)) {
+                                EdgeUrl.parse(ref)
+                                        .filter(url -> url.domain.equals(rootSitemapUrl.domain))
+                                        .ifPresent(sitemapQueue::addFirst);
+                            }
+                        }
+                    }
+                    case SitemapResult.SitemapError() -> {}
+                }
+
+                delayTimer.waitFetchDelay();
+            }
+
+            return ret;
+        }
+        catch (Exception ex) {
+            logger.error("Error while fetching sitemaps via " + root, ex);
+            return List.of();
+        }
+    }
+
+
+    private SitemapResult fetchSitemap(EdgeUrl sitemapUrl) throws URISyntaxException, IOException, InterruptedException {
+        HttpRequest getRequest = HttpRequest.newBuilder()
+                .GET()
+                .uri(sitemapUrl.asURI())
+                .header("Accept-Encoding", "gzip")
+                .header("Accept", "text/*, */*;q=0.9")
+                .header("User-agent", userAgentString)
+                .timeout(requestTimeout)
+                .build();
+
+        var response = client.send(getRequest, HttpResponse.BodyHandlers.ofInputStream());
+        if (response.statusCode() != 200) {
+            return new SitemapResult.SitemapError();
+        }
+
+        try (InputStream inputStream = response.body()) {
+
+            InputStream parserStream;
+            if (sitemapUrl.path.endsWith(".gz")) {
+                parserStream = new GZIPInputStream(inputStream);
+            }
+            else {
+                parserStream = inputStream;
+            }
+
+            Document parsedSitemap = Jsoup.parse(parserStream, "UTF-8", sitemapUrl.toString(), Parser.xmlParser());
+            String rootTagName = parsedSitemap.child(0).tagName();
+
+            return switch (rootTagName.toLowerCase()) {
+                case "sitemapindex" -> {
+                    List<String> references = new ArrayList<>();
+                    for (var locTag : parsedSitemap.getElementsByTag("loc")) {
+                        references.add(URLDecoder.decode(locTag.text().trim(), StandardCharsets.UTF_8));
+                    }
+                    yield new SitemapResult.SitemapReferences(Collections.unmodifiableList(references));
+                }
+                case "urlset" -> {
+                    List<String> urls = new ArrayList<>();
+                    for (var locTag : parsedSitemap.select("url > loc")) {
+                        urls.add(URLDecoder.decode(locTag.text().trim(), StandardCharsets.UTF_8));
+                    }
+                    yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
+                }
+                case "rss", "atom" -> {
+                    List<String> urls = new ArrayList<>();
+                    for (var locTag : parsedSitemap.select("link, url")) {
+                        urls.add(locTag.text().trim());
+                    }
+                    yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
+                }
+                default -> new SitemapResult.SitemapError();
+            };
+        }
+    }
+
+    private sealed interface SitemapResult {
+        record SitemapUrls(List<String> urls) implements SitemapResult {}
+        record SitemapReferences(List<String> sitemapRefs) implements SitemapResult {}
+        record SitemapError() implements SitemapResult {}
+    }
+
+    @Override
     public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
         var ret = fetchAndParseRobotsTxt(new EdgeUrl("https", domain, null, "/robots.txt", null), recorder);
         if (ret.isPresent())
@@ -255,9 +379,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private Optional<SimpleRobotRules> fetchAndParseRobotsTxt(EdgeUrl url, WarcRecorder recorder) {
         try {
-            var getBuilder = HttpRequest.newBuilder();
-
-            getBuilder
+            var getRequest = HttpRequest.newBuilder()
                     .GET()
                     .uri(url.asURI())
                     .header("Accept-Encoding", "gzip")
@@ -265,7 +387,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .header("User-agent", userAgentString)
                     .timeout(requestTimeout);
 
-            HttpFetchResult result = recorder.fetch(client, getBuilder.build());
+            HttpFetchResult result = recorder.fetch(client, getRequest.build());
 
             return DocumentBodyExtractor.asBytes(result).mapOpt((contentType, body) ->
                 robotsParser.parseContent(url.toString(),

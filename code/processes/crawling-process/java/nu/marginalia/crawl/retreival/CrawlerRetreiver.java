@@ -12,7 +12,6 @@ import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.logic.LinkFilterSelector;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
-import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
@@ -53,7 +52,6 @@ public class CrawlerRetreiver implements AutoCloseable {
     private final WarcRecorder warcRecorder;
     private final CrawlerRevisitor crawlerRevisitor;
 
-    private final SitemapFetcher sitemapFetcher;
     int errorCount = 0;
 
     public CrawlerRetreiver(HttpFetcher fetcher,
@@ -71,7 +69,6 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), specs.urls(), specs.crawlDepth());
         crawlerRevisitor = new CrawlerRevisitor(crawlFrontier, this, warcRecorder);
-        sitemapFetcher = new SitemapFetcher(crawlFrontier, fetcher.createSitemapRetriever());
 
         // We must always crawl the index page first, this is assumed when fingerprinting the server
         var fst = crawlFrontier.peek();
@@ -145,9 +142,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         // Add external links to the crawl frontier
         crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
 
-        // Add links from the sitemap to the crawl frontier
-        sitemapFetcher.downloadSitemaps(robotsRules, rootUrl);
 
+        // Fetch sitemaps
+        for (var sitemap : robotsRules.getSitemaps()) {
+            crawlFrontier.addAllToQueue(fetcher.fetchSitemapUrls(sitemap, delayTimer));
+        }
 
         while (!crawlFrontier.isEmpty()
             && !crawlFrontier.isCrawlDepthReached()
@@ -271,10 +270,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             }
 
             // Download the sitemap if available
-            if (feedLink.isPresent()) {
-                sitemapFetcher.downloadSitemaps(List.of(feedLink.get()));
-                timer.waitFetchDelay(0);
-            }
+            feedLink.ifPresent(s -> fetcher.fetchSitemapUrls(s, timer));
 
             // Grab the favicon if it exists
             fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());

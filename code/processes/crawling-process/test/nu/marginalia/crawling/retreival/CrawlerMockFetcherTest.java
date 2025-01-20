@@ -5,6 +5,7 @@ import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.crawl.fetcher.*;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.model.EdgeDomain;
@@ -159,6 +160,11 @@ public class CrawlerMockFetcherTest {
             }
 
             return new HttpFetchResult.ResultNone();
+        }
+
+        @Override
+        public List<EdgeUrl> fetchSitemapUrls(String rootSitemapUrl, CrawlDelayTimer delayTimer) {
+            return List.of();
         }
 
         @Override
