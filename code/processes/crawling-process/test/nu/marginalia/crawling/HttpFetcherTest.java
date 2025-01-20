@@ -4,6 +4,7 @@ import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
@@ -35,6 +36,12 @@ class HttpFetcherTest {
                 System.out.println(bodyOk.contentType());
             }
         }
+    }
+
+    @Test
+    void testSitemapMarginalia() {
+        var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
+        fetcher.fetchSitemapUrls("https://www.marginalia.nu/sitemap.xml", new CrawlDelayTimer(1)).forEach(System.out::println);
     }
 
     @Test

@@ -2,6 +2,7 @@ package nu.marginalia.crawl.retreival.fetcher;
 
 import com.sun.net.httpserver.HttpServer;
 import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -79,7 +80,7 @@ class ContentTypeProberTest {
         htmlRedirEndpoint = EdgeUrl.parse("http://localhost:" + port + "/redir.gz").get();
 
         fetcher = new HttpFetcherImpl("test");
-        recorder = new WarcRecorder(warcFile);
+        recorder = new WarcRecorder(warcFile, new Cookies());
     }
 
     @AfterEach

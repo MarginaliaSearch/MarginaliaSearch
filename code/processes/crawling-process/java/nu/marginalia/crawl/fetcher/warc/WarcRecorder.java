@@ -1,13 +1,11 @@
 package nu.marginalia.crawl.fetcher.warc;
 
 import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.jetbrains.annotations.Nullable;
 import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
@@ -18,6 +16,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,7 +27,7 @@ import java.util.*;
 
 /** Based on JWarc's fetch method, APL 2.0 license
  * <p></p>
- * This class wraps OkHttp's OkHttpClient and records the HTTP request and response in a WARC file,
+ * This class wraps HttpClient and records the HTTP request and response in a WARC file,
  * as best is possible given not all the data is available at the same time and needs to
  * be reconstructed.
  */
@@ -48,20 +47,22 @@ public class WarcRecorder implements AutoCloseable {
     // Affix a version string in case we need to change the format in the future
     // in some way
     private final String warcRecorderVersion = "1.0";
-
-    // We need to know if the site uses cookies so this can be reported among the search results
-    // -- flip this to true if we see any cookies.  This information will also be painted on any
-    // revisited pages.  It's not 100% perfect and a bit order dependent, but it's good enough.
-    private final WarcXCookieInformationHeader cookieInformation = new WarcXCookieInformationHeader();
-
+    private final Cookies cookies;
     /**
      * Create a new WarcRecorder that will write to the given file
      *
      * @param warcFile The file to write to
      */
-    public WarcRecorder(Path warcFile) throws IOException {
+    public WarcRecorder(Path warcFile, HttpFetcherImpl fetcher) throws IOException {
         this.warcFile = warcFile;
         this.writer = new WarcWriter(warcFile);
+        this.cookies = fetcher.getCookies();
+    }
+
+    public WarcRecorder(Path warcFile, Cookies cookies) throws IOException {
+        this.warcFile = warcFile;
+        this.writer = new WarcWriter(warcFile);
+        this.cookies = cookies;
     }
 
     /**
@@ -71,37 +72,40 @@ public class WarcRecorder implements AutoCloseable {
     public WarcRecorder() throws IOException {
         this.warcFile = Files.createTempFile("warc", ".warc.gz");
         this.writer = new WarcWriter(this.warcFile);
+        this.cookies = new Cookies();
 
         temporaryFile = true;
     }
 
-    public HttpFetchResult fetch(OkHttpClient client, Request request) throws NoSuchAlgorithmException,
-            IOException,
-            URISyntaxException,
-            InterruptedException
+    public HttpFetchResult fetch(HttpClient client,
+                                 java.net.http.HttpRequest request)
+            throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
     {
-        URI requestUri = request.url().uri();
+        URI requestUri = request.uri();
 
         WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
         WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
 
-        String ip;
         Instant date = Instant.now();
 
-        var call = client.newCall(request);
+        var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
 
 
-        cookieInformation.update(client, request.url());
+        Map<String, List<String>> extraHeaders = new HashMap<>();
 
-        try (var response = call.execute();
-             WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response))
+        // Not entirely sure why we need to do this, but keeping it due to Chesterton's Fence
+        extraHeaders.putAll(request.headers().map());
+
+        try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response))
         {
+            if (cookies.hasCookies()) {
+                extraHeaders.put("X-Has-Cookies", List.of("1"));
+            }
+
             byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
 
             ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length);
             InputStream inputStream = inputBuffer.read();
-
-            ip = IpInterceptingNetworkInterceptor.getIpFromResponse(response);
 
             responseDataBuffer.put(responseHeaders);
             responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseHeaders.length);
@@ -125,17 +129,15 @@ public class WarcRecorder implements AutoCloseable {
 
             // It looks like this might be the same as requestUri, but it's not;
             // it's the URI after resolving redirects.
-            final URI responseUri = response.request().url().uri();
+            final URI responseUri = response.uri();
 
             WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
                     .blockDigest(responseDigestBuilder.build())
                     .date(date)
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
-            cookieInformation.paint(responseBuilder);
-
-            if (ip != null) responseBuilder.ipAddress(InetAddress.getByName(ip));
-
+            InetAddress inetAddress = InetAddress.getByName(responseUri.getHost());
+            responseBuilder.ipAddress(inetAddress);
             responseBuilder.payloadDigest(payloadDigestBuilder.build());
             responseBuilder.truncated(inputBuffer.truncationReason());
 
@@ -152,8 +154,8 @@ public class WarcRecorder implements AutoCloseable {
             byte[] httpRequestString = WarcProtocolReconstructor
                     .getHttpRequestString(
                             response.request().method(),
-                            response.request().headers().toMultimap(),
-                            request.headers().toMultimap(),
+                            response.request().headers().map(),
+                            extraHeaders,
                             requestUri)
                     .getBytes();
 
@@ -171,7 +173,7 @@ public class WarcRecorder implements AutoCloseable {
 
             if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
                     && inputBuffer.size() < 2048
-                    && !request.url().encodedPath().endsWith("robots.txt")) // don't bail on robots.txt
+                    && !request.uri().getPath().endsWith("robots.txt")) // don't bail on robots.txt
             {
                 // Fast detection and mitigation of crawler traps that respond with slow
                 // small responses, with a high branching factor
@@ -189,9 +191,9 @@ public class WarcRecorder implements AutoCloseable {
             }
 
             return new HttpFetchResult.ResultOk(responseUri,
-                    response.code(),
+                    response.statusCode(),
                     inputBuffer.headers(),
-                    ip,
+                    inetAddress.getHostAddress(),
                     responseDataBuffer.data,
                     dataStart,
                     responseDataBuffer.length() - dataStart);
@@ -267,7 +269,9 @@ public class WarcRecorder implements AutoCloseable {
                     .date(Instant.now())
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
-            cookieInformation.paint(builder);
+            if (cookies.hasCookies()) {
+                builder.addHeader("X-Has-Cookies", "1");
+            }
 
             var reference = builder.build();
 

@@ -8,6 +8,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
+import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -200,23 +201,23 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlRobotsTxt() throws Exception {
-        var specs = new CrawlerMain.CrawlSpecRecord("search.marginalia.nu", 5,
-                        List.of("https://search.marginalia.nu/search?q=hello+world")
+        var specs = new CrawlerMain.CrawlSpecRecord("marginalia-search.com", 5,
+                        List.of("https://marginalia-search.com/search?q=hello+world")
         );
 
         CrawledDomain domain = crawl(specs);
         assertFalse(domain.doc.isEmpty());
         assertEquals("OK", domain.crawlerStatus);
-        assertEquals("search.marginalia.nu", domain.domain);
+        assertEquals("marginalia-search.com", domain.domain);
 
         Set<String> allUrls = domain.doc.stream().map(doc -> doc.url).collect(Collectors.toSet());
-        assertTrue(allUrls.contains("https://search.marginalia.nu/search"), "We expect a record for entities that are forbidden");
+        assertTrue(allUrls.contains("https://marginalia-search.com/search"), "We expect a record for entities that are forbidden");
 
         var output = process();
 
         assertNotNull(output);
         assertFalse(output.documents.isEmpty());
-        assertEquals(new EdgeDomain("search.marginalia.nu"), output.domain);
+        assertEquals(new EdgeDomain("marginalia-search.com"), output.domain);
         assertEquals(DomainIndexingState.ACTIVE, output.state);
 
         for (var doc : output.documents) {
@@ -246,7 +247,7 @@ public class CrawlingThenConvertingIntegrationTest {
     private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws Exception {
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        try (var recorder = new WarcRecorder(fileName);
+        try (var recorder = new WarcRecorder(fileName, new Cookies());
              var db = new DomainStateDb(dbTempFile))
         {
             new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, db, recorder).crawlDomain();

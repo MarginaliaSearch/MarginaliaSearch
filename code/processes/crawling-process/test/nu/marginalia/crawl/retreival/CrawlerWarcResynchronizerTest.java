@@ -1,11 +1,9 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawl.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +13,8 @@ import org.netpreserve.jwarc.WarcResponse;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
@@ -27,11 +27,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 class CrawlerWarcResynchronizerTest {
     Path fileName;
     Path outputFile;
-    OkHttpClient httpClient;
+    HttpClient httpClient;
     @BeforeEach
     public void setUp() throws Exception {
-        httpClient = new OkHttpClient.Builder()
-                .addNetworkInterceptor(new IpInterceptingNetworkInterceptor())
+        httpClient = HttpClient.newBuilder()
                 .build();
 
         fileName = Files.createTempFile("test", ".warc.gz");
@@ -46,7 +45,7 @@ class CrawlerWarcResynchronizerTest {
 
     @Test
     void run() throws IOException, URISyntaxException {
-        try (var oldRecorder = new WarcRecorder(fileName)) {
+        try (var oldRecorder = new WarcRecorder(fileName, new Cookies())) {
             fetchUrl(oldRecorder, "https://www.marginalia.nu/");
             fetchUrl(oldRecorder, "https://www.marginalia.nu/log/");
             fetchUrl(oldRecorder, "https://www.marginalia.nu/feed/");
@@ -56,7 +55,7 @@ class CrawlerWarcResynchronizerTest {
 
         var crawlFrontier = new DomainCrawlFrontier(new EdgeDomain("www.marginalia.nu"), List.of(), 100);
 
-        try (var newRecorder = new WarcRecorder(outputFile)) {
+        try (var newRecorder = new WarcRecorder(outputFile, new Cookies())) {
             new CrawlerWarcResynchronizer(crawlFrontier, newRecorder).run(fileName);
         }
 
@@ -79,10 +78,11 @@ class CrawlerWarcResynchronizerTest {
     }
 
     void fetchUrl(WarcRecorder recorder, String url) throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
-        var req = new Request.Builder().url(url)
-                .addHeader("User-agent", "test.marginalia.nu")
-                .addHeader("Accept-Encoding", "gzip")
-                .get().build();
+        var req = HttpRequest.newBuilder()
+                .uri(new java.net.URI(url))
+                .header("User-agent", "test.marginalia.nu")
+                .header("Accept-Encoding", "gzip")
+                .GET().build();
         recorder.fetch(httpClient, req);
     }
 }
