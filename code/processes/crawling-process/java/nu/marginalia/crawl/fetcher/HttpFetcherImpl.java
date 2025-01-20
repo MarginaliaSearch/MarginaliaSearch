@@ -297,7 +297,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             return ret;
         }
         catch (Exception ex) {
-            logger.error("Error while fetching sitemaps via " + root, ex);
+            logger.error("Error while fetching sitemaps via {}: {} ({})", root, ex.getClass().getSimpleName(), ex.getMessage());
             return List.of();
         }
     }
@@ -329,6 +329,10 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
 
             Document parsedSitemap = Jsoup.parse(parserStream, "UTF-8", sitemapUrl.toString(), Parser.xmlParser());
+            if (parsedSitemap.childrenSize() == 0) {
+                return new SitemapResult.SitemapError();
+            }
+
             String rootTagName = parsedSitemap.child(0).tagName();
 
             return switch (rootTagName.toLowerCase()) {
