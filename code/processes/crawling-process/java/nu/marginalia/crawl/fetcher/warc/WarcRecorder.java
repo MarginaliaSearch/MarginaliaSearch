@@ -17,6 +17,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,15 +89,21 @@ public class WarcRecorder implements AutoCloseable {
 
         Instant date = Instant.now();
 
-        var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
-
-
-        Map<String, List<String>> extraHeaders = new HashMap<>();
-
         // Not entirely sure why we need to do this, but keeping it due to Chesterton's Fence
-        extraHeaders.putAll(request.headers().map());
+        Map<String, List<String>> extraHeaders = new HashMap<>(request.headers().map());
 
-        try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response))
+        HttpResponse<InputStream> response;
+        try {
+            response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
+        }
+        catch (IOException ex) {
+            logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
+            return new HttpFetchResult.ResultException(ex);
+        }
+
+
+        try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response);
+             InputStream inputStream = inputBuffer.read())
         {
             if (cookies.hasCookies()) {
                 extraHeaders.put("X-Has-Cookies", List.of("1"));
@@ -105,7 +112,6 @@ public class WarcRecorder implements AutoCloseable {
             byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
 
             ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length);
-            InputStream inputStream = inputBuffer.read();
 
             responseDataBuffer.put(responseHeaders);
             responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseHeaders.length);
