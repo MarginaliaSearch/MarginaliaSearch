@@ -96,7 +96,7 @@ public class WarcRecorder implements AutoCloseable {
         try {
             response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
             return new HttpFetchResult.ResultException(ex);
         }
