@@ -80,7 +80,7 @@ class CrawledDocumentParquetRecordFileWriterTest {
         var document = (CrawledDocument) secondItem;
         assertEquals("https://www.marginalia.nu/", document.url);
         assertEquals("text/html", document.contentType);
-        assertEquals("hello world", document.documentBody);
+        assertEquals("hello world", document.documentBody());
         assertEquals(200, document.httpStatus);
     }
 
@@ -103,7 +103,7 @@ class CrawledDocumentParquetRecordFileWriterTest {
                     System.out.println(doc.url);
                     System.out.println(doc.contentType);
                     System.out.println(doc.httpStatus);
-                    System.out.println(doc.documentBody.length());
+                    System.out.println(doc.documentBody().length());
                 }
             }
         } catch (IOException e) {

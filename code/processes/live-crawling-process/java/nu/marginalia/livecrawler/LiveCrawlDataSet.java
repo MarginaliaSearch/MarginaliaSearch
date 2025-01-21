@@ -119,12 +119,16 @@ public class LiveCrawlDataSet implements AutoCloseable {
         }
     }
 
-    private String decompress(byte[] data) {
+    private String decompressStr(byte[] data) {
+        return new String(decompressBytes(data));
+    }
+
+    private byte[] decompressBytes(byte[] data) {
         // gzip decompression
-        try (var bis = new ByteArrayInputStream(data);
-             var gzip = new GZIPInputStream(bis))
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+             GZIPInputStream gzip = new GZIPInputStream(bis))
         {
-            return new String(gzip.readAllBytes());
+            return gzip.readAllBytes();
         }
         catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -177,8 +181,8 @@ public class LiveCrawlDataSet implements AutoCloseable {
                 dataStack = new ArrayList<>();
                 while (rs.next()) {
                     String url = rs.getString("url");
-                    String body = decompress(rs.getBytes("body"));
-                    String headers = decompress(rs.getBytes("headers"));
+                    byte[] body = decompressBytes(rs.getBytes("body"));
+                    String headers = decompressStr(rs.getBytes("headers"));
 
                     dataStack.add(new CrawledDocument(
                             "LIVE",

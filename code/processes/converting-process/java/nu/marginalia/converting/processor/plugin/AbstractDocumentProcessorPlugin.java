@@ -14,6 +14,7 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.html.HtmlStandard;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +26,7 @@ public abstract class AbstractDocumentProcessorPlugin {
         this.languageFilter = languageFilter;
     }
 
-    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, LinkTexts linkTexts, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException;
+    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, LinkTexts linkTexts, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException, IOException;
     public abstract boolean isApplicable(CrawledDocument doc);
 
     protected void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {
@@ -86,6 +87,7 @@ public abstract class AbstractDocumentProcessorPlugin {
 
             return this;
         }
+
         public MetaTagsBuilder addPubDate(PubDate pubDate) {
 
             if (pubDate.year() > 1900) {

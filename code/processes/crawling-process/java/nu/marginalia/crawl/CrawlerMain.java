@@ -23,16 +23,18 @@ import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.util.SimpleBlockingThreadPool;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,13 +44,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 
@@ -182,6 +182,8 @@ public class CrawlerMain extends ProcessMainClass {
         // Assign any domains with node_affinity=0 to this node, and then fetch all domains assigned to this node
         // to be crawled.
 
+        performMigration(outputDir);
+
         try (var conn = dataSource.getConnection()) {
             try (var assignFreeDomains = conn.prepareStatement(
                     """
@@ -291,7 +293,6 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
-
     public void runForSingleDomain(String targetDomainName, FileStorageId fileStorageId) throws Exception {
         runForSingleDomain(targetDomainName, fileStorageService.getStorage(fileStorageId).asPath());
     }
@@ -353,7 +354,7 @@ public class CrawlerMain extends ProcessMainClass {
 
             Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
             Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
-            Path parquetFile = CrawlerOutputFile.createParquetPath(outputDir, id, domain);
+            Path slopFile = CrawlerOutputFile.createSlopPath(outputDir, id, domain);
 
             // Move the WARC file to a temp file if it exists, so we can resume the crawl using the old data
             // while writing to the same file name as before
@@ -387,15 +388,15 @@ public class CrawlerMain extends ProcessMainClass {
                 reference.delete();
 
                 // Convert the WARC file to Parquet
-                CrawledDocumentParquetRecordFileWriter
-                        .convertWarc(domain, userAgent, newWarcFile, parquetFile);
+                SlopCrawlDataRecord
+                        .convertWarc(domain, userAgent, newWarcFile, slopFile);
 
                 // Optionally archive the WARC file if full retention is enabled,
                 // otherwise delete it:
                 warcArchiver.consumeWarc(newWarcFile, domain);
 
                 // Mark the domain as finished in the work log
-                workLog.setJobToFinished(domain, parquetFile.toString(), size);
+                workLog.setJobToFinished(domain, slopFile.toString(), size);
 
                 // Update the progress bar
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
@@ -480,4 +481,93 @@ public class CrawlerMain extends ProcessMainClass {
             }
         }
     }
+
+    // Data migration logic
+
+    private void performMigration(Path root) throws IOException {
+        Path crawlerLog = root.resolve("crawler.log");
+        Path newCrawlerLog = Files.createTempFile(root, "crawler", ".migrate.log");
+
+
+        int finishedTasks = 0;
+        int totalTasks;
+        try (var oldLog = new WorkLog(crawlerLog)) {
+            totalTasks = oldLog.countFinishedJobs();
+        }
+
+        try (WorkLog workLog = new WorkLog(newCrawlerLog);
+            var migrationHeartbeat = heartbeat.createAdHocTaskHeartbeat("MIGRATING")) {
+
+
+
+            for (Map.Entry<WorkLogEntry, Path> item : WorkLog.iterableMap(crawlerLog, new CrawlDataLocator(root))) {
+
+                var entry = item.getKey();
+                var path = item.getValue();
+
+                if (path.toFile().getName().endsWith(".parquet")) {
+                    logger.info("Converting {}", entry.id());
+
+                    String domain = entry.id();
+                    String id = Integer.toHexString(domain.hashCode());
+
+                    Path outputFile = CrawlerOutputFile.createSlopPath(root, id, domain);
+
+                    SlopCrawlDataRecord.convertFromParquet(path, outputFile);
+
+                    workLog.setJobToFinished(entry.id(), outputFile.toString(), entry.cnt());
+                }
+                else {
+                    workLog.setJobToFinished(entry.id(), path.toString(), entry.cnt());
+                }
+
+                migrationHeartbeat.progress("Parquet To Slop", ++finishedTasks, totalTasks);
+            }
+        }
+
+        Path oldCrawlerLog = Files.createTempFile(root, "crawler-", ".migrate.old.log");
+        Files.move(crawlerLog, oldCrawlerLog, StandardCopyOption.REPLACE_EXISTING);
+        Files.move(newCrawlerLog, crawlerLog);
+    }
+
+
+    private static class CrawlDataLocator implements Function<WorkLogEntry, Optional<Map.Entry<WorkLogEntry, Path>>> {
+
+        private final Path crawlRootDir;
+
+        CrawlDataLocator(Path crawlRootDir) {
+            this.crawlRootDir = crawlRootDir;
+        }
+
+        @Override
+        public Optional<Map.Entry<WorkLogEntry, Path>> apply(WorkLogEntry entry) {
+            var path = getCrawledFilePath(crawlRootDir, entry.path());
+
+            if (!Files.exists(path)) {
+                return Optional.empty();
+            }
+
+            try {
+                return Optional.of(Map.entry(entry, path));
+            }
+            catch (Exception ex) {
+                return Optional.empty();
+            }
+        }
+
+        private Path getCrawledFilePath(Path crawlDir, String fileName) {
+            int sp = fileName.lastIndexOf('/');
+
+            // Normalize the filename
+            if (sp >= 0 && sp + 1< fileName.length())
+                fileName = fileName.substring(sp + 1);
+            if (fileName.length() < 4)
+                fileName = Strings.repeat("0", 4 - fileName.length()) + fileName;
+
+            String sp1 = fileName.substring(0, 2);
+            String sp2 = fileName.substring(2, 4);
+            return crawlDir.resolve(sp1).resolve(sp2).resolve(fileName);
+        }
+    }
+
 }

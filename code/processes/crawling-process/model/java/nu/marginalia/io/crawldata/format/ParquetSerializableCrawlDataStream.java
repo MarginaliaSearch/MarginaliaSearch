@@ -1,7 +1,6 @@
 package nu.marginalia.io.crawldata.format;
 
 import nu.marginalia.contenttype.ContentType;
-import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeUrl;
@@ -18,6 +17,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
+@Deprecated
 public class ParquetSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
     private static final Logger logger = LoggerFactory.getLogger(ParquetSerializableCrawlDataStream.class);
 
@@ -124,9 +124,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         }
         else if (nextRecord.body != null) {
             try {
-                bodyString = DocumentBodyToString.getStringData(
-                        ContentType.parse(nextRecord.contentType),
-                        nextRecord.body);
+                ContentType.parse(nextRecord.contentType);
             } catch (Exception ex) {
                 logger.error("Failed to convert body to string", ex);
                 status = CrawlerDocumentStatus.BAD_CHARSET;
@@ -147,7 +145,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 status.toString(),
                 "",
                 nextRecord.headers,
-                bodyString,
+                nextRecord.body,
                 // this field isn't actually used, maybe we can skip calculating it?
                 nextRecord.cookies,
                 lastModified,

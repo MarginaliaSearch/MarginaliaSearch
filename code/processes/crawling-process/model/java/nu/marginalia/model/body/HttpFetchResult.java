@@ -99,19 +99,9 @@ public sealed interface HttpFetchResult {
      *
      * @see Result304Raw for the case where the document has not yet been replaced with the reference data.
      */
-    record Result304ReplacedWithReference(String url, ContentType contentType, String body) implements HttpFetchResult {
-
+    record Result304ReplacedWithReference(String url, ContentType contentType, byte[] body) implements HttpFetchResult {
         public boolean isOk() {
             return true;
-        }
-
-        public Optional<Document> parseDocument() {
-            try {
-                return Optional.of(Jsoup.parse(body));
-            }
-            catch (Exception ex) {
-                return Optional.empty();
-            }
         }
     }
 

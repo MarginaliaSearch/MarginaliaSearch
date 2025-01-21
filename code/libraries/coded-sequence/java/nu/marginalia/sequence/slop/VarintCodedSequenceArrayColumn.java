@@ -45,6 +45,11 @@ public class VarintCodedSequenceArrayColumn extends AbstractObjectColumn<List<Va
         );
     }
 
+    @Override
+    public int alignmentSize() {
+        return 0;
+    }
+
     public Reader openUnregistered(URI uri, int page) throws IOException {
         return new Reader(
                 dataColumn.openUnregistered(uri, page),
@@ -107,6 +112,11 @@ public class VarintCodedSequenceArrayColumn extends AbstractObjectColumn<List<Va
                 toSkip += groupsReader.get();
             }
             dataReader.skip(toSkip);
+        }
+
+        @Override
+        public boolean isDirect() {
+            return dataReader.isDirect();
         }
 
         @Override

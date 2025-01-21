@@ -136,7 +136,7 @@ public class IntegrationTest {
                                </p>
                             </body>
                             </html>
-                            """,
+                            """.getBytes(),
                     "",
                     ContentTags.empty()
             );

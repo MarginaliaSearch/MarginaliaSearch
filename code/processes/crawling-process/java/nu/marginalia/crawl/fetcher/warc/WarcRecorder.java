@@ -214,7 +214,7 @@ public class WarcRecorder implements AutoCloseable {
         writer.write(item);
     }
 
-    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, String documentBody, @Nullable String headers, ContentTags contentTags) {
+    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, byte[] documentBody, @Nullable String headers, ContentTags contentTags) {
         try {
             WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
             WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
@@ -224,7 +224,7 @@ public class WarcRecorder implements AutoCloseable {
             if (documentBody == null) {
                 bytes = new byte[0];
             } else {
-                bytes = documentBody.getBytes();
+                bytes = documentBody;
             }
 
             // Create a synthesis of custom headers and the original headers
@@ -295,7 +295,7 @@ public class WarcRecorder implements AutoCloseable {
      * an E-Tag or Last-Modified header, and the server responds with a 304 Not Modified.  In this
      * scenario we want to record the data as it was in the previous crawl, but not re-fetch it.
      */
-    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, String documentBody, @Nullable String headers, ContentTags ctags) {
+    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, byte[] documentBody, @Nullable String headers, ContentTags ctags) {
         saveOldResponse(url, contentType, statusCode, documentBody, headers, ctags);
     }
 

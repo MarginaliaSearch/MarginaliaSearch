@@ -58,7 +58,7 @@ public class CrawlDataReference implements AutoCloseable {
         return null;
     }
 
-    public static boolean isContentBodySame(String one, String other) {
+    public static boolean isContentBodySame(byte[] one, byte[] other) {
 
         final long contentHashOne = contentHash(one);
         final long contentHashOther = contentHash(other);
@@ -66,7 +66,7 @@ public class CrawlDataReference implements AutoCloseable {
         return EasyLSH.hammingDistance(contentHashOne, contentHashOther) < 4;
     }
 
-    private static long contentHash(String content) {
+    private static long contentHash(byte[] content) {
         EasyLSH hash = new EasyLSH();
         int next = 0;
 
@@ -74,8 +74,8 @@ public class CrawlDataReference implements AutoCloseable {
 
         // In a naive best-effort fashion, extract the text
         // content of the document and feed it into the LSH
-        for (int i = 0; i < content.length(); i++) {
-            char c = content.charAt(i);
+        for (byte b : content) {
+            char c = (char) b;
             if (c == '<') {
                 isInTag = true;
             } else if (c == '>') {

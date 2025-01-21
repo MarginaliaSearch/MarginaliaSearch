@@ -15,7 +15,6 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.util.SimpleBlockingThreadPool;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,13 +109,13 @@ public class TermFrequencyExporter implements ExporterIf {
                     return;
 
                 if (!(stream.next() instanceof CrawledDocument doc)) continue;
-                if (doc.documentBody == null) continue;
+                if (!doc.hasBody()) continue;
                 if (!doc.contentType.toLowerCase().startsWith("text/html"))
                     continue;
 
                 docCount.incrementAndGet();
 
-                Document parsed = Jsoup.parse(doc.documentBody);
+                Document parsed = doc.parseBody();
                 parsed.body().filter(new DomPruningFilter(0.5));
 
                 DocumentLanguageData dld = se.extractSentences(parsed);

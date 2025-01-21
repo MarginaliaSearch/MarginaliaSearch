@@ -19,6 +19,7 @@ import nu.marginalia.model.idx.WordFlags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +92,7 @@ public class DocumentProcessor {
                                  DocumentClass documentClass,
                                  DocumentDecorator documentDecorator,
                                  DomainLinks externalDomainLinks,
-                                 ProcessedDocument ret) throws URISyntaxException, DisqualifiedException
+                                 ProcessedDocument ret) throws URISyntaxException, IOException, DisqualifiedException
     {
 
         var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
@@ -109,7 +110,7 @@ public class DocumentProcessor {
 
         ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
 
-        final var plugin = findPlugin(crawledDocument);
+        AbstractDocumentProcessorPlugin plugin = findPlugin(crawledDocument);
 
         EdgeUrl url = new EdgeUrl(crawledDocument.url);
         LinkTexts linkTexts = anchorTextKeywords.getAnchorTextKeywords(externalDomainLinks, url);

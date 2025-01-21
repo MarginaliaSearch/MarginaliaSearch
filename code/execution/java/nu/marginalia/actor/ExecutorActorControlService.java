@@ -66,6 +66,7 @@ public class ExecutorActorControlService {
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines,
+                                       MigrateCrawlDataActor migrateCrawlDataActor,
                                        ExportAllPrecessionActor exportAllPrecessionActor,
                                        UpdateRssActor updateRssActor) throws SQLException {
         this.messageQueueFactory = messageQueueFactory;
@@ -106,6 +107,8 @@ public class ExecutorActorControlService {
 
         register(ExecutorActor.SCRAPE_FEEDS, scrapeFeedsActor);
         register(ExecutorActor.UPDATE_RSS, updateRssActor);
+
+        register(ExecutorActor.MIGRATE_CRAWL_DATA, migrateCrawlDataActor);
 
         if (serviceConfiguration.node() == 1) {
             register(ExecutorActor.PREC_EXPORT_ALL, exportAllPrecessionActor);

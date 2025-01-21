@@ -49,7 +49,7 @@ class SimpleLinkScraperTest {
 
         List<CrawledDocument> documents = firstStream.docsAsList();
         Assertions.assertEquals(1, documents.size());
-        Assertions.assertTrue(documents.getFirst().documentBody.startsWith("<!doctype"));
+        Assertions.assertTrue(documents.getFirst().documentBody().startsWith("<!doctype"));
     }
 
 
