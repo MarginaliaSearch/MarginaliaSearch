@@ -35,19 +35,6 @@ public class CrawlerOutputFile {
         return destDir.resolve(id + "-" + filesystemSafeName(domain) + "-" + version.suffix + ".warc.gz");
     }
 
-    public static Path createParquetPath(Path basePath, String id, String domain) throws IOException {
-        id = padId(id);
-
-        String first = id.substring(0, 2);
-        String second = id.substring(2, 4);
-
-        Path destDir = basePath.resolve(first).resolve(second);
-        if (!Files.exists(destDir)) {
-            Files.createDirectories(destDir);
-        }
-        return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".parquet");
-    }
-
     public static Path createSlopPath(Path basePath, String id, String domain) throws IOException {
         id = padId(id);
 
@@ -71,15 +58,16 @@ public class CrawlerOutputFile {
         return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".parquet");
     }
 
-    public static Path getWarcPath(Path basePath, String id, String domain, WarcFileVersion version) {
+    public static Path getSlopPath(Path basePath, String id, String domain) {
         id = padId(id);
 
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
 
         Path destDir = basePath.resolve(first).resolve(second);
-        return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".warc" + version.suffix);
+        return destDir.resolve(id + "-" + filesystemSafeName(domain) + ".slop.zip");
     }
+
 
     /**
      * Pads the given ID with leading zeros to ensure it has a length of 4 characters.

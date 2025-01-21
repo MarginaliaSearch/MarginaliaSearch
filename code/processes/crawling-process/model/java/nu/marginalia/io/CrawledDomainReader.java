@@ -5,9 +5,7 @@ import nu.marginalia.io.crawldata.format.SlopSerializableCrawlDataStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class CrawledDomainReader {
@@ -26,7 +24,8 @@ public class CrawledDomainReader {
                 return SerializableCrawlDataStream.empty();
             }
         }
-        else if (fileName.endsWith(".slop.zip")) {
+
+        if (fileName.endsWith(".slop.zip")) {
             try {
                 return new SlopSerializableCrawlDataStream(fullPath);
             } catch (Exception ex) {
@@ -34,22 +33,9 @@ public class CrawledDomainReader {
                 return SerializableCrawlDataStream.empty();
             }
         }
-        else {
-            logger.error("Unknown file type: {}", fullPath);
-            return SerializableCrawlDataStream.empty();
-        }
-    }
 
-    /** An iterator-like access to domain data. This must be closed otherwise it will leak off-heap memory! */
-    public static SerializableCrawlDataStream createDataStream(Path basePath, String domain, String id) throws IOException {
-        Path parquetPath = CrawlerOutputFile.getParquetPath(basePath, id, domain);
-
-        if (Files.exists(parquetPath)) {
-            return createDataStream(parquetPath);
-        }
-        else {
-            throw new FileNotFoundException("No such file: " + parquetPath);
-        }
+        logger.error("Unknown file type: {}", fullPath);
+        return SerializableCrawlDataStream.empty();
     }
 
 }
