@@ -339,14 +339,14 @@ public class HttpFetcherImpl implements HttpFetcher {
                 case "sitemapindex" -> {
                     List<String> references = new ArrayList<>();
                     for (var locTag : parsedSitemap.getElementsByTag("loc")) {
-                        references.add(URLDecoder.decode(locTag.text().trim(), StandardCharsets.UTF_8));
+                        references.add(locTag.text().trim());
                     }
                     yield new SitemapResult.SitemapReferences(Collections.unmodifiableList(references));
                 }
                 case "urlset" -> {
                     List<String> urls = new ArrayList<>();
                     for (var locTag : parsedSitemap.select("url > loc")) {
-                        urls.add(URLDecoder.decode(locTag.text().trim(), StandardCharsets.UTF_8));
+                        urls.add(locTag.text().trim());
                     }
                     yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
                 }
