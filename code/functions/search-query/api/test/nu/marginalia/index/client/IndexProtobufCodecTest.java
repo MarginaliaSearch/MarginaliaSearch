@@ -3,8 +3,6 @@ package nu.marginalia.index.client;
 import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import org.junit.jupiter.api.Test;
 
@@ -22,18 +20,6 @@ class IndexProtobufCodecTest {
         verifyIsIdentityTransformation(SpecificationLimit.lessThan(1), l -> IndexProtobufCodec.convertSpecLimit(IndexProtobufCodec.convertSpecLimit(l)));
     }
 
-    @Test
-    public void testRankingParameters() {
-        verifyIsIdentityTransformation(ResultRankingParameters.sensibleDefaults(),
-                p -> IndexProtobufCodec.convertRankingParameterss(IndexProtobufCodec.convertRankingParameterss(p, null)));
-    }
-
-    @Test
-    public void testQueryLimits() {
-        verifyIsIdentityTransformation(new QueryLimits(1,2,3,4),
-                l -> IndexProtobufCodec.convertQueryLimits(IndexProtobufCodec.convertQueryLimits(l))
-                );
-    }
     @Test
     public void testSubqery() {
         verifyIsIdentityTransformation(new SearchQuery(

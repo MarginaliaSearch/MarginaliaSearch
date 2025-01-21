@@ -1,10 +1,10 @@
 package nu.marginalia.search;
 
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.search.command.SearchParameters;
@@ -12,6 +12,22 @@ import nu.marginalia.search.command.SearchParameters;
 import java.util.List;
 
 public class SearchQueryParamFactory {
+
+
+    static final RpcQueryLimits defaultLimits = RpcQueryLimits.newBuilder()
+            .setResultsTotal(100)
+            .setResultsByDomain(5)
+            .setTimeoutMs(200)
+            .setFetchSize(8192)
+            .build();
+
+
+    static final RpcQueryLimits shallowLimit = RpcQueryLimits.newBuilder()
+            .setResultsTotal(100)
+            .setResultsByDomain(100)
+            .setTimeoutMs(100)
+            .setFetchSize(512)
+            .build();
 
     public QueryParams forRegularSearch(SearchParameters userParams) {
         SearchQuery prototype =  new SearchQuery();
@@ -29,11 +45,11 @@ public class SearchQueryParamFactory {
                 prototype.searchTermsPriority,
                 prototype.searchTermsAdvice,
                 profile.getQualityLimit(),
-                profile.getYearLimit(),
+                userParams.yearLimit(),
                 profile.getSizeLimit(),
                 SpecificationLimit.none(),
                 List.of(),
-                new QueryLimits(5, 100, 200, 8192),
+                defaultLimits,
                 profile.searchSetIdentifier.name(),
                 userParams.strategy(),
                 userParams.temporalBias(),
@@ -42,7 +58,7 @@ public class SearchQueryParamFactory {
 
     }
 
-    public QueryParams forSiteSearch(String domain, int domainId, int count) {
+    public QueryParams forSiteSearch(String domain, int domainId, int count, int page) {
         return new QueryParams("site:"+domain,
                 null,
                 List.of(),
@@ -54,15 +70,20 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(domainId),
-                new QueryLimits(count, count, 100, 512),
+                RpcQueryLimits.newBuilder()
+                        .setResultsTotal(count)
+                        .setResultsByDomain(count)
+                        .setTimeoutMs(100)
+                        .setFetchSize(512)
+                        .build(),
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE,
-                1
+                RpcTemporalBias.Bias.NONE,
+                page
         );
     }
 
-    public QueryParams forBacklinkSearch(String domain) {
+    public QueryParams forBacklinkSearch(String domain, int page) {
         return new QueryParams("links:"+domain,
                 null,
                 List.of(),
@@ -74,11 +95,11 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(),
-                new QueryLimits(100, 100, 100, 512),
+                shallowLimit,
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE,
-                1
+                RpcTemporalBias.Bias.NONE,
+                page
         );
     }
 
@@ -94,10 +115,10 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(),
-                new QueryLimits(100, 100, 100, 512),
+                shallowLimit,
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE,
+                RpcTemporalBias.Bias.NONE,
                 1
         );
     }

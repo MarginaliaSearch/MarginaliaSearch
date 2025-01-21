@@ -8,14 +8,13 @@ import nu.marginalia.rss.model.FeedItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class FeedDbReader implements AutoCloseable {
@@ -33,6 +32,8 @@ public class FeedDbReader implements AutoCloseable {
         // Create table if it doesn't exist to avoid errors before any feeds have been fetched
         try (var stmt = connection.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS feed (domain TEXT PRIMARY KEY, feed JSON)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS errors (domain TEXT PRIMARY KEY, cnt INT DEFAULT 0)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS etags (domain TEXT PRIMARY KEY, etag TEXT)");
         }
     }
 
@@ -76,6 +77,22 @@ public class FeedDbReader implements AutoCloseable {
         return Optional.empty();
     }
 
+    public Map<String, Integer> getAllErrorCounts() {
+        Map<String, Integer> ret = new HashMap<>(100_000);
+
+        try (var stmt = connection.prepareStatement("SELECT domain, cnt FROM errors")) {
+
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                ret.put(rs.getString(1), rs.getInt(2));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting errors", e);
+        }
+
+        return ret;
+    }
+
     public FeedItems getFeed(EdgeDomain domain) {
         try (var stmt = connection.prepareStatement("SELECT FEED FROM feed WHERE DOMAIN = ?")) {
             stmt.setString(1, domain.toString());
@@ -89,6 +106,22 @@ public class FeedDbReader implements AutoCloseable {
         }
 
         return FeedItems.none();
+    }
+
+    @Nullable
+    public String getEtag(EdgeDomain domain) {
+        try (var stmt = connection.prepareStatement("SELECT etag FROM etags WHERE DOMAIN = ?")) {
+            stmt.setString(1, domain.toString());
+            var rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting etag for " + domain, e);
+        }
+
+        return null;
     }
 
     private FeedItems deserialize(String string) {
@@ -122,6 +155,22 @@ public class FeedDbReader implements AutoCloseable {
             }
         } catch (SQLException e) {
             logger.error("Error getting updated links", e);
+        }
+    }
+
+
+    public boolean hasData() {
+        try (var stmt = connection.prepareStatement("SELECT 1 FROM feed LIMIT 1")) {
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean(1);
+            }
+            else {
+                return false;
+            }
+        }
+        catch (SQLException ex) {
+            return false;
         }
     }
 }

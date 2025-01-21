@@ -30,9 +30,11 @@ class DocumentPositionMapperTest {
         Assertions.assertFalse(positionMapper.matchesWordPattern("1234567890abcdef"));
 
         Assertions.assertTrue(positionMapper.matchesWordPattern("test-test-test-test-test"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("test-test-test-test-test-test"));
+        Assertions.assertFalse(positionMapper.matchesWordPattern("test-test-test-test-test-test-test-test-test"));
         Assertions.assertTrue(positionMapper.matchesWordPattern("192.168.1.100/24"));
         Assertions.assertTrue(positionMapper.matchesWordPattern("std::vector"));
+        Assertions.assertTrue(positionMapper.matchesWordPattern("std::vector::push_back"));
+
         Assertions.assertTrue(positionMapper.matchesWordPattern("c++"));
         Assertions.assertTrue(positionMapper.matchesWordPattern("m*a*s*h"));
         Assertions.assertFalse(positionMapper.matchesWordPattern("Stulpnagelstrasse"));

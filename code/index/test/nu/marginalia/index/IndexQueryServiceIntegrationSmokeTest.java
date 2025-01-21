@@ -4,10 +4,11 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
 import nu.marginalia.index.construction.prio.PrioIndexConstructor;
@@ -17,7 +18,6 @@ import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -115,9 +115,16 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
-                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
+                        .queryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setResultsByDomain(10)
+                                        .setResultsTotal(10)
+                                        .setTimeoutMs(Integer.MAX_VALUE)
+                                        .setFetchSize(4000)
+                                        .build()
+                        )
                         .queryStrategy(QueryStrategy.SENTENCE)
-                        .rankingParams(ResultRankingParameters.sensibleDefaults())
+                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
                         .query(
@@ -171,9 +178,16 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
-                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
+                        .queryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setResultsByDomain(10)
+                                        .setResultsTotal(10)
+                                        .setTimeoutMs(Integer.MAX_VALUE)
+                                        .setFetchSize(4000)
+                                        .build()
+                        )
                         .queryStrategy(QueryStrategy.SENTENCE)
-                        .rankingParams(ResultRankingParameters.sensibleDefaults())
+                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier("NONE")
                         .query(
@@ -225,8 +239,15 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
-                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
-                        .rankingParams(ResultRankingParameters.sensibleDefaults())
+                        .queryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setResultsByDomain(10)
+                                        .setResultsTotal(10)
+                                        .setTimeoutMs(Integer.MAX_VALUE)
+                                        .setFetchSize(4000)
+                                        .build()
+                        )
+                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
                         .query(
@@ -282,11 +303,18 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         var rsp = queryService.justQuery(
                 SearchSpecification.builder()
-                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
+                        .queryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setResultsByDomain(10)
+                                        .setResultsTotal(10)
+                                        .setTimeoutMs(Integer.MAX_VALUE)
+                                        .setFetchSize(4000)
+                                        .build()
+                        )
                         .year(SpecificationLimit.equals(1998))
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier("NONE")
-                        .rankingParams(ResultRankingParameters.sensibleDefaults())
+                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
                         .query(
                             SearchQuery.builder()
                                 .compiledQuery("4")

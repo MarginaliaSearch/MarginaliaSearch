@@ -1,14 +1,14 @@
 package nu.marginalia.crawl.fetcher.warc;
 
-import okhttp3.Headers;
-import okhttp3.Response;
 import org.apache.commons.io.input.BOMInputStream;
 import org.netpreserve.jwarc.WarcTruncationReason;
 
 import java.io.*;
+import java.net.http.HttpHeaders;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 /** Input buffer for temporary storage of a HTTP response
@@ -17,8 +17,9 @@ import java.util.zip.GZIPInputStream;
  * */
 public abstract class WarcInputBuffer implements AutoCloseable {
     protected WarcTruncationReason truncationReason = WarcTruncationReason.NOT_TRUNCATED;
-    protected Headers headers;
-    WarcInputBuffer(Headers headers) {
+    protected HttpHeaders headers;
+
+    WarcInputBuffer(HttpHeaders headers) {
         this.headers = headers;
     }
 
@@ -30,7 +31,7 @@ public abstract class WarcInputBuffer implements AutoCloseable {
 
     public final WarcTruncationReason truncationReason() { return truncationReason; }
 
-    public final Headers headers() { return headers; }
+    public final HttpHeaders headers() { return headers; }
 
     /** Create a buffer for a response.
      *  If the response is small and not compressed, it will be stored in memory.
@@ -38,26 +39,27 @@ public abstract class WarcInputBuffer implements AutoCloseable {
      *  and suppressed from the headers.
      *  If an error occurs, a buffer will be created with no content and an error status.
      */
-    static WarcInputBuffer forResponse(Response rsp) {
+    static WarcInputBuffer forResponse(HttpResponse<InputStream> rsp) {
         if (rsp == null)
             return new ErrorBuffer();
 
-        try {
-            String contentLengthHeader = Objects.requireNonNullElse(rsp.header("Content-Length"), "-1");
-            int contentLength = Integer.parseInt(contentLengthHeader);
-            String contentEncoding = rsp.header("Content-Encoding");
+        var headers = rsp.headers();
+
+        try (var is = rsp.body()) {
+            int contentLength = (int) headers.firstValueAsLong("Content-Length").orElse(-1L);
+            String contentEncoding = headers.firstValue("Content-Encoding").orElse(null);
 
             if (contentEncoding == null && contentLength > 0 && contentLength < 8192) {
                 // If the content is small and not compressed, we can just read it into memory
-                return new MemoryBuffer(rsp, contentLength);
+                return new MemoryBuffer(headers, is, contentLength);
             }
             else {
                 // Otherwise, we unpack it into a file and read it from there
-                return new FileBuffer(rsp);
+                return new FileBuffer(headers, is);
             }
         }
         catch (Exception ex) {
-            return new ErrorBuffer(rsp);
+            return new ErrorBuffer();
         }
 
     }
@@ -99,12 +101,8 @@ public abstract class WarcInputBuffer implements AutoCloseable {
 /** Pseudo-buffer for when we have an error */
 class ErrorBuffer extends WarcInputBuffer {
     public ErrorBuffer() {
-        super(Headers.of());
-        truncationReason = WarcTruncationReason.UNSPECIFIED;
-    }
+        super(HttpHeaders.of(Map.of(), (k,v)->false));
 
-    public ErrorBuffer(Response rsp) {
-        super(rsp.headers());
         truncationReason = WarcTruncationReason.UNSPECIFIED;
     }
 
@@ -125,12 +123,12 @@ class ErrorBuffer extends WarcInputBuffer {
 /** Buffer for when we have the response in memory */
 class MemoryBuffer extends WarcInputBuffer {
     byte[] data;
-    public MemoryBuffer(Response response, int size) {
-        super(response.headers());
+    public MemoryBuffer(HttpHeaders headers, InputStream responseStream, int size) {
+        super(headers);
 
         var outputStream = new ByteArrayOutputStream(size);
 
-        copy(response.body().byteStream(), outputStream);
+        copy(responseStream, outputStream);
 
         data = outputStream.toByteArray();
     }
@@ -154,19 +152,15 @@ class MemoryBuffer extends WarcInputBuffer {
 class FileBuffer extends WarcInputBuffer {
     private final Path tempFile;
 
-    public FileBuffer(Response response) throws IOException {
-        super(suppressContentEncoding(response.headers()));
+    public FileBuffer(HttpHeaders headers, InputStream responseStream) throws IOException {
+        super(suppressContentEncoding(headers));
 
         this.tempFile = Files.createTempFile("rsp", ".html");
 
-        if (response.body() == null) {
-            truncationReason = WarcTruncationReason.DISCONNECT;
-            return;
-        }
 
-        if ("gzip".equals(response.header("Content-Encoding"))) {
+        if ("gzip".equalsIgnoreCase(headers.firstValue("Content-Encoding").orElse(""))) {
             try (var out = Files.newOutputStream(tempFile)) {
-                copy(new GZIPInputStream(response.body().byteStream()), out);
+                copy(new GZIPInputStream(responseStream), out);
             }
             catch (Exception ex) {
                 truncationReason = WarcTruncationReason.UNSPECIFIED;
@@ -174,7 +168,7 @@ class FileBuffer extends WarcInputBuffer {
         }
         else {
             try (var out = Files.newOutputStream(tempFile)) {
-                copy(response.body().byteStream(), out);
+                copy(responseStream, out);
             }
             catch (Exception ex) {
                 truncationReason = WarcTruncationReason.UNSPECIFIED;
@@ -182,22 +176,13 @@ class FileBuffer extends WarcInputBuffer {
         }
     }
 
-    private static Headers suppressContentEncoding(Headers headers) {
-        var builder = new Headers.Builder();
-
-        headers.toMultimap().forEach((k, values) -> {
+    private static HttpHeaders suppressContentEncoding(HttpHeaders headers) {
+        return HttpHeaders.of(headers.map(), (k, v) -> {
             if ("Content-Encoding".equalsIgnoreCase(k)) {
-                return;
+                return false;
             }
-            if ("Transfer-Encoding".equalsIgnoreCase(k)) {
-                return;
-            }
-            for (var value : values) {
-                builder.add(k, value);
-            }
+            return !"Transfer-Encoding".equalsIgnoreCase(k);
         });
-
-        return builder.build();
     }
 
 

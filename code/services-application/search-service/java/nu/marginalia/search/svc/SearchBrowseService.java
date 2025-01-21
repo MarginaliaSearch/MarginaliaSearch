@@ -1,6 +1,11 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.jooby.MapModelAndView;
+import io.jooby.ModelAndView;
+import io.jooby.annotation.GET;
+import io.jooby.annotation.Path;
+import io.jooby.annotation.PathParam;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
@@ -9,12 +14,11 @@ import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.search.JteRenderer;
+import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.results.BrowseResultCleaner;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -26,6 +30,7 @@ public class SearchBrowseService {
     private final DbDomainQueries domainQueries;
     private final DomainBlacklist blacklist;
     private final DomainInfoClient domainInfoClient;
+    private final JteRenderer jteRenderer;
     private final BrowseResultCleaner browseResultCleaner;
 
     @Inject
@@ -33,13 +38,48 @@ public class SearchBrowseService {
                                DbDomainQueries domainQueries,
                                DomainBlacklist blacklist,
                                DomainInfoClient domainInfoClient,
+                               JteRenderer jteRenderer,
                                BrowseResultCleaner browseResultCleaner)
     {
         this.randomDomains = randomDomains;
         this.domainQueries = domainQueries;
         this.blacklist = blacklist;
         this.domainInfoClient = domainInfoClient;
+        this.jteRenderer = jteRenderer;
         this.browseResultCleaner = browseResultCleaner;
+    }
+
+    @GET
+    @Path("/explore")
+    public ModelAndView<?> handleBrowseRandom() {
+        return new MapModelAndView("explore/main.jte",
+                Map.of("navbar", NavbarModel.EXPLORE,
+                        "results", getRandomEntries(1)
+                )
+        );
+    }
+
+    @GET
+    @Path("/explore/{domainName}")
+    public ModelAndView<?> handleBrowseSite(@PathParam String domainName) throws Exception {
+        // Legacy URL contract
+        if ("random".equals(domainName)) {
+            return handleBrowseRandom();
+        }
+
+        BrowseResultSet entries;
+        try {
+            entries = getRelatedEntries(domainName);
+        }
+        catch (Exception ex) {
+            entries = new BrowseResultSet(List.of(), domainName);
+        }
+
+        return new MapModelAndView("explore/main.jte",
+                Map.of("navbar", NavbarModel.EXPLORE,
+                        "results", entries
+                )
+        );
     }
 
     public BrowseResultSet getRandomEntries(int set) {

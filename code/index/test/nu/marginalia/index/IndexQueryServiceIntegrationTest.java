@@ -4,10 +4,11 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
@@ -18,7 +19,6 @@ import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -389,13 +389,20 @@ public class IndexQueryServiceIntegrationTest {
     SearchSpecification basicQuery(Function<SearchSpecification.SearchSpecificationBuilder, SearchSpecification.SearchSpecificationBuilder> mutator)
     {
         var builder = SearchSpecification.builder()
-                .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
+                .queryLimits(
+                        RpcQueryLimits.newBuilder()
+                                .setResultsByDomain(10)
+                                .setResultsTotal(10)
+                                .setTimeoutMs(Integer.MAX_VALUE)
+                                .setFetchSize(4000)
+                                .build()
+                )
                 .queryStrategy(QueryStrategy.SENTENCE)
                 .year(SpecificationLimit.none())
                 .quality(SpecificationLimit.none())
                 .size(SpecificationLimit.none())
                 .rank(SpecificationLimit.none())
-                .rankingParams(ResultRankingParameters.sensibleDefaults())
+                .rankingParams(PrototypeRankingParameters.sensibleDefaults())
                 .domains(new ArrayList<>())
                 .searchSetIdentifier("NONE");
 

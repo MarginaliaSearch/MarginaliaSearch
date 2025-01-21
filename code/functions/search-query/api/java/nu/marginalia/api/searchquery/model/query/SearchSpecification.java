@@ -1,10 +1,11 @@
 package nu.marginalia.api.searchquery.model.query;
 
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class SearchSpecification {
@@ -24,11 +25,12 @@ public class SearchSpecification {
     public SpecificationLimit size;
     public SpecificationLimit rank;
 
-    public final QueryLimits queryLimits;
+    public final RpcQueryLimits queryLimits;
 
     public final QueryStrategy queryStrategy;
 
-    public final ResultRankingParameters rankingParams;
+    @Nullable
+    public final RpcResultRankingParameters rankingParams;
 
     public SearchSpecification(SearchQuery query,
                                List<Integer> domains,
@@ -38,9 +40,9 @@ public class SearchSpecification {
                                SpecificationLimit year,
                                SpecificationLimit size,
                                SpecificationLimit rank,
-                               QueryLimits queryLimits,
+                               RpcQueryLimits queryLimits,
                                QueryStrategy queryStrategy,
-                               ResultRankingParameters rankingParams)
+                               @Nullable RpcResultRankingParameters rankingParams)
     {
         this.query = query;
         this.domains = domains;
@@ -91,7 +93,7 @@ public class SearchSpecification {
         return this.rank;
     }
 
-    public QueryLimits getQueryLimits() {
+    public RpcQueryLimits getQueryLimits() {
         return this.queryLimits;
     }
 
@@ -99,7 +101,7 @@ public class SearchSpecification {
         return this.queryStrategy;
     }
 
-    public ResultRankingParameters getRankingParams() {
+    public RpcResultRankingParameters getRankingParams() {
         return this.rankingParams;
     }
 
@@ -120,9 +122,9 @@ public class SearchSpecification {
         private boolean size$set;
         private SpecificationLimit rank$value;
         private boolean rank$set;
-        private QueryLimits queryLimits;
+        private RpcQueryLimits queryLimits;
         private QueryStrategy queryStrategy;
-        private ResultRankingParameters rankingParams;
+        private RpcResultRankingParameters rankingParams;
 
         SearchSpecificationBuilder() {
         }
@@ -171,7 +173,7 @@ public class SearchSpecification {
             return this;
         }
 
-        public SearchSpecificationBuilder queryLimits(QueryLimits queryLimits) {
+        public SearchSpecificationBuilder queryLimits(RpcQueryLimits queryLimits) {
             this.queryLimits = queryLimits;
             return this;
         }
@@ -181,7 +183,7 @@ public class SearchSpecification {
             return this;
         }
 
-        public SearchSpecificationBuilder rankingParams(ResultRankingParameters rankingParams) {
+        public SearchSpecificationBuilder rankingParams(RpcResultRankingParameters rankingParams) {
             this.rankingParams = rankingParams;
             return this;
         }

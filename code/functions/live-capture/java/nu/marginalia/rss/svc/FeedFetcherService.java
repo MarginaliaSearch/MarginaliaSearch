@@ -1,14 +1,15 @@
 package nu.marginalia.rss.svc;
 
-import com.apptasticsoftware.rssreader.Item;
-import com.apptasticsoftware.rssreader.RssReader;
 import com.google.inject.Inject;
 import com.opencsv.CSVReader;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.contenttype.ContentType;
+import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.rss.db.FeedDb;
+import nu.marginalia.rss.db.FeedDbWriter;
 import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItem;
 import nu.marginalia.rss.model.FeedItems;
@@ -21,18 +22,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.SQLException;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -43,20 +44,13 @@ public class FeedFetcherService {
     private static final int MAX_FEED_ITEMS = 10;
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
-    private final RssReader rssReader = new RssReader(
-            HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
-                    .executor(Executors.newCachedThreadPool())
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .version(HttpClient.Version.HTTP_2)
-                    .build()
-    );
-
     private final FeedDb feedDb;
     private final FileStorageService fileStorageService;
     private final NodeConfigurationService nodeConfigurationService;
     private final ServiceHeartbeat serviceHeartbeat;
     private final ExecutorClient executorClient;
+
+    private final DomainLocks domainLocks = new DomainLocks();
 
     private volatile boolean updating;
 
@@ -72,8 +66,6 @@ public class FeedFetcherService {
         this.nodeConfigurationService = nodeConfigurationService;
         this.serviceHeartbeat = serviceHeartbeat;
         this.executorClient = executorClient;
-
-        rssReader.addHeader("User-Agent", WmsaHome.getUserAgent().uaIdentifier());
     }
 
     public enum UpdateMode {
@@ -87,8 +79,16 @@ public class FeedFetcherService {
             throw new IllegalStateException("Already updating feeds, refusing to start another update");
         }
 
-        try (var writer = feedDb.createWriter();
-            var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
+
+        try (FeedDbWriter writer = feedDb.createWriter();
+             HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(15))
+                .executor(Executors.newCachedThreadPool())
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .version(HttpClient.Version.HTTP_2)
+                .build();
+             FeedJournal feedJournal = FeedJournal.create();
+             var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
         ) {
             updating = true;
 
@@ -96,6 +96,7 @@ public class FeedFetcherService {
             // RSS exports instead
 
             Collection<FeedDefinition> definitions = feedDb.getAllFeeds();
+            Map<String, Integer> errorCounts = feedDb.getAllErrorCounts();
 
             // If we didn't get any definitions, or a clean update is requested, read the definitions from the system
             // instead
@@ -112,35 +113,59 @@ public class FeedFetcherService {
 
             for (var feed : definitions) {
                 executor.submitQuietly(() -> {
-                    var oldData = feedDb.getFeed(new EdgeDomain(feed.domain()));
+                    try {
+                        EdgeDomain domain = new EdgeDomain(feed.domain());
+                        var oldData = feedDb.getFeed(domain);
 
-                    // If we have existing data, we might skip updating it with a probability that increases with time,
-                    // this is to avoid hammering the feeds that are updated very rarely and save some time and resources
-                    // on our end
+                        @Nullable
+                        String ifModifiedSinceDate = switch(updateMode) {
+                            case REFRESH -> getIfModifiedSinceDate(feedDb);
+                            case CLEAN -> null;
+                        };
 
-                    if (!oldData.isEmpty()) {
-                        Duration duration = feed.durationSinceUpdated();
-                        long daysSinceUpdate = duration.toDays();
+                        @Nullable
+                        String ifNoneMatchTag = switch (updateMode) {
+                            case REFRESH -> feedDb.getEtag(domain);
+                            case CLEAN -> null;
+                        };
 
-
-                        if (daysSinceUpdate > 2 && ThreadLocalRandom.current()
-                                .nextInt(1, 1 + (int) Math.min(10, daysSinceUpdate) / 2) > 1)
-                        {
-                            // Skip updating this feed, just write the old data back instead
-                            writer.saveFeed(oldData);
-                            return;
+                        FetchResult feedData;
+                        try (DomainLocks.DomainLock domainLock = domainLocks.lockDomain(new EdgeDomain(feed.domain()))) {
+                            feedData = fetchFeedData(feed, client, ifModifiedSinceDate, ifNoneMatchTag);
+                        } catch (Exception ex) {
+                            feedData = new FetchResult.TransientError();
                         }
+
+                        switch (feedData) {
+                            case FetchResult.Success(String value, String etag) -> {
+                                writer.saveEtag(feed.domain(), etag);
+                                writer.saveFeed(parseFeed(value, feed));
+
+                                feedJournal.record(feed.feedUrl(), value);
+                            }
+                            case FetchResult.NotModified() -> {
+                                writer.saveEtag(feed.domain(), ifNoneMatchTag);
+                                writer.saveFeed(oldData);
+                            }
+                            case FetchResult.TransientError() -> {
+                                int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
+                                writer.setErrorCount(feed.domain().toLowerCase(), ++errorCount);
+
+                                if (errorCount < 5) {
+                                    // Permit the server a few days worth of retries before we drop the feed entirely
+                                    writer.saveFeed(oldData);
+                                }
+                            }
+                            case FetchResult.PermanentError() -> {
+                            } // let the definition be forgotten about
+                        }
+
                     }
-
-
-                    var items = fetchFeed(feed);
-                    if (!items.isEmpty()) {
-                        writer.saveFeed(items);
-                    }
-
-                    if ((definitionsUpdated.incrementAndGet() % 1_000) == 0) {
-                        // Update the progress every 1k feeds, to avoid hammering the database and flooding the logs
-                        heartbeat.progress("Updated " + definitionsUpdated + "/" + totalDefinitions + " feeds", definitionsUpdated.get(), totalDefinitions);
+                    finally {
+                        if ((definitionsUpdated.incrementAndGet() % 1_000) == 0) {
+                            // Update the progress every 1k feeds, to avoid hammering the database and flooding the logs
+                            heartbeat.progress("Updated " + definitionsUpdated + "/" + totalDefinitions + " feeds", definitionsUpdated.get(), totalDefinitions);
+                        }
                     }
                 });
             }
@@ -166,6 +191,102 @@ public class FeedFetcherService {
         finally {
             updating = false;
         }
+    }
+
+    @Nullable
+    static String getIfModifiedSinceDate(FeedDb feedDb) {
+
+        // If the db is fresh, we don't send If-Modified-Since
+        if (!feedDb.hasData())
+            return null;
+
+        Instant cutoffInstant = feedDb.getFetchTime();
+
+        // If we're unable to establish fetch time, we don't send If-Modified-Since
+        if (cutoffInstant == Instant.EPOCH)
+            return null;
+
+        return cutoffInstant.atZone(ZoneId.of("GMT")).format(DateTimeFormatter.RFC_1123_DATE_TIME);
+    }
+
+    private FetchResult fetchFeedData(FeedDefinition feed,
+                                      HttpClient client,
+                                      @Nullable String ifModifiedSinceDate,
+                                      @Nullable String ifNoneMatchTag)
+    {
+        try {
+            URI uri = new URI(feed.feedUrl());
+
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(uri)
+                    .header("User-Agent", WmsaHome.getUserAgent().uaIdentifier())
+                    .header("Accept-Encoding", "gzip")
+                    .header("Accept", "text/*, */*;q=0.9")
+                    .timeout(Duration.ofSeconds(15))
+                    ;
+
+            if (ifModifiedSinceDate != null) {
+                requestBuilder.header("If-Modified-Since", ifModifiedSinceDate);
+            }
+
+            if (ifNoneMatchTag != null) {
+                requestBuilder.header("If-None-Match", ifNoneMatchTag);
+            }
+
+            HttpRequest getRequest = requestBuilder.build();
+
+            for (int i = 0; i < 3; i++) {
+                HttpResponse<byte[]> rs = client.send(getRequest, HttpResponse.BodyHandlers.ofByteArray());
+
+                if (rs.statusCode() == 429) { // Too Many Requests
+                    int retryAfter = Integer.parseInt(rs.headers().firstValue("Retry-After").orElse("2"));
+                    Thread.sleep(Duration.ofSeconds(Math.clamp(retryAfter, 1, 5)));
+                    continue;
+                }
+
+                String newEtagValue = rs.headers().firstValue("ETag").orElse("");
+
+                return switch (rs.statusCode()) {
+                    case 200 -> {
+                        byte[] responseData = getResponseData(rs);
+
+                        String contentType = rs.headers().firstValue("Content-Type").orElse("");
+                        String bodyText = DocumentBodyToString.getStringData(ContentType.parse(contentType), responseData);
+
+                        yield new FetchResult.Success(bodyText, newEtagValue);
+                    }
+                    case 304 -> new FetchResult.NotModified(); // via If-Modified-Since semantics
+                    case 404 -> new FetchResult.PermanentError(); // never try again
+                    default -> new FetchResult.TransientError(); // we try again later
+                };
+            }
+        }
+        catch (Exception ex) {
+            logger.debug("Error fetching feed", ex);
+        }
+
+        return new FetchResult.TransientError();
+    }
+
+    private byte[] getResponseData(HttpResponse<byte[]> response) throws IOException {
+        String encoding = response.headers().firstValue("Content-Encoding").orElse("");
+
+        if ("gzip".equals(encoding)) {
+            try (var stream = new GZIPInputStream(new ByteArrayInputStream(response.body()))) {
+                return stream.readAllBytes();
+            }
+        }
+        else {
+            return response.body();
+        }
+    }
+
+    public sealed interface FetchResult {
+        record Success(String value, String etag) implements FetchResult {}
+        record NotModified() implements FetchResult {}
+        record TransientError() implements FetchResult {}
+        record PermanentError()  implements FetchResult {}
     }
 
     public Collection<FeedDefinition> readDefinitionsFromSystem() throws IOException {
@@ -231,9 +352,9 @@ public class FeedFetcherService {
         }
     }
 
-    public FeedItems fetchFeed(FeedDefinition definition) {
+    public FeedItems parseFeed(String feedData, FeedDefinition definition) {
         try {
-            List<Item> rawItems = rssReader.read(definition.feedUrl()).toList();
+            List<SimpleFeedParser.ItemData> rawItems = SimpleFeedParser.parse(feedData);
 
             boolean keepUriFragment = rawItems.size() < 2 || areFragmentsDisparate(rawItems);
 
@@ -263,16 +384,16 @@ public class FeedFetcherService {
      * @param items The items to check
      * @return True if we should keep the fragments, false otherwise
      */
-    private boolean areFragmentsDisparate(List<Item> items) {
+    private boolean areFragmentsDisparate(List<SimpleFeedParser.ItemData> items) {
         Set<String> seenFragments = new HashSet<>();
 
         try {
             for (var item : items) {
-                if (item.getLink().isEmpty()) {
+                if (item.url().isBlank()) {
                     continue;
                 }
 
-                var link = item.getLink().get();
+                var link = item.url();
                 if (!link.contains("#")) {
                     continue;
                 }
@@ -291,7 +412,7 @@ public class FeedFetcherService {
         return seenFragments.size() > 1;
     }
 
-    private static class IsFeedItemDateValid implements Predicate<FeedItem> {
+    static class IsFeedItemDateValid implements Predicate<FeedItem> {
         private final String today = ZonedDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
         public boolean test(FeedItem item) {

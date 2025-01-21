@@ -3,7 +3,6 @@ package nu.marginalia.index.results;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
-import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.model.idx.WordFlags;
 
@@ -15,15 +14,14 @@ public class TermFlagsGraphVisitor implements CqExpression.DoubleVisitor {
     private final CqDataLong wordMetaData;
     private final CqDataInt frequencies;
     private final float[] counts;
-    private final Bm25Parameters bm25Parameters;
-
+    private final double k1;
     private final int docCount;
 
-    public TermFlagsGraphVisitor(Bm25Parameters bm25Parameters,
+    public TermFlagsGraphVisitor(double k1,
                                  CqDataLong wordMetaData,
                                  float[] counts,
                                  ResultRankingContext ctx) {
-        this.bm25Parameters = bm25Parameters;
+        this.k1 = k1;
         this.counts = counts;
         this.docCount = ctx.termFreqDocCount();
         this.wordMetaData = wordMetaData;
@@ -55,7 +53,7 @@ public class TermFlagsGraphVisitor implements CqExpression.DoubleVisitor {
         int freq = frequencies.get(idx);
 
         // note we override b to zero for priority terms as they are independent of document length
-        return invFreq(docCount, freq) * f(bm25Parameters.k(), 0, count, 0);
+        return invFreq(docCount, freq) * f(k1, 0, count, 0);
     }
 
     private double evaluatePriorityScore(int idx) {

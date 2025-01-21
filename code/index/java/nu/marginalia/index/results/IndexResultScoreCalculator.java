@@ -2,10 +2,11 @@ package nu.marginalia.index.results;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.forward.spans.DocumentSpans;
@@ -116,14 +117,14 @@ public class IndexResultScoreCalculator {
 
         float proximitiyFac = getProximitiyFac(decodedPositions, searchTerms.phraseConstraints, verbatimMatches, unorderedMatches, spans);
 
-        double score_firstPosition = params.tcfFirstPosition * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
-        double score_verbatim = params.tcfVerbatim * verbatimMatches.getScore();
-        double score_proximity = params.tcfProximity * proximitiyFac;
-        double score_bM25 = params.bm25Weight
-                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.bm25Params, unorderedMatches.getWeightedCounts(), docSize, rankingContext))
+        double score_firstPosition = params.getTcfFirstPositionWeight() * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
+        double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
+        double score_proximity = params.getTcfProximityWeight() * proximitiyFac;
+        double score_bM25 = params.getBm25Weight()
+                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
-        double score_bFlags = params.bm25Weight
-                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.bm25Params, wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
+        double score_bFlags = params.getBm25Weight()
+                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
         double score = normalize(
@@ -245,8 +246,12 @@ public class IndexResultScoreCalculator {
     private double calculateDocumentBonus(long documentMetadata,
                                           int features,
                                           int length,
-                                          ResultRankingParameters rankingParams,
+                                          RpcResultRankingParameters rankingParams,
                                           @Nullable DebugRankingFactors debugRankingFactors) {
+
+        if (rankingParams.getDisablePenalties()) {
+            return 0.;
+        }
 
         int rank = DocumentMetadata.decodeRank(documentMetadata);
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
@@ -256,18 +261,18 @@ public class IndexResultScoreCalculator {
         int topology = DocumentMetadata.decodeTopology(documentMetadata);
         int year = DocumentMetadata.decodeYear(documentMetadata);
 
-        double averageSentenceLengthPenalty = (asl >= rankingParams.shortSentenceThreshold ? 0 : -rankingParams.shortSentencePenalty);
+        double averageSentenceLengthPenalty = (asl >= rankingParams.getShortSentenceThreshold() ? 0 : -rankingParams.getShortSentencePenalty());
 
         final double qualityPenalty = calculateQualityPenalty(size, quality, rankingParams);
-        final double rankingBonus = (255. - rank) * rankingParams.domainRankBonus;
+        final double rankingBonus = (255. - rank) * rankingParams.getDomainRankBonus();
         final double topologyBonus = Math.log(1 + topology);
-        final double documentLengthPenalty = length > rankingParams.shortDocumentThreshold ? 0 : -rankingParams.shortDocumentPenalty;
+        final double documentLengthPenalty = length > rankingParams.getShortDocumentThreshold() ? 0 : -rankingParams.getShortDocumentPenalty();
         final double temporalBias;
 
-        if (rankingParams.temporalBias == ResultRankingParameters.TemporalBias.RECENT) {
-            temporalBias = - Math.abs(year - PubDate.MAX_YEAR) * rankingParams.temporalBiasWeight;
-        } else if (rankingParams.temporalBias == ResultRankingParameters.TemporalBias.OLD) {
-            temporalBias = - Math.abs(year - PubDate.MIN_YEAR) * rankingParams.temporalBiasWeight;
+        if (rankingParams.getTemporalBias().getBias() == RpcTemporalBias.Bias.RECENT) {
+            temporalBias = - Math.abs(year - PubDate.MAX_YEAR) * rankingParams.getTemporalBiasWeight();
+        } else if (rankingParams.getTemporalBias().getBias() == RpcTemporalBias.Bias.OLD) {
+            temporalBias = - Math.abs(year - PubDate.MIN_YEAR) * rankingParams.getTemporalBiasWeight();
         } else {
             temporalBias = 0;
         }
@@ -506,14 +511,14 @@ public class IndexResultScoreCalculator {
     }
 
 
-    private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
+    private double calculateQualityPenalty(int size, int quality, RpcResultRankingParameters rankingParams) {
         if (size < 400) {
             if (quality < 5)
                 return 0;
-            return -quality * rankingParams.qualityPenalty;
+            return -quality * rankingParams.getQualityPenalty();
         }
         else {
-            return -quality * rankingParams.qualityPenalty * 20;
+            return -quality * rankingParams.getQualityPenalty() * 20;
         }
     }
 

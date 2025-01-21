@@ -3,12 +3,13 @@ package nu.marginalia.query;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.index.api.IndexClient;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
@@ -53,9 +54,14 @@ public class QueryBasicInterface {
         int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
         String set = requireNonNullElse(request.queryParams("set"), "");
 
-        var params = new QueryParams(queryString, new QueryLimits(
-                domainCount, min(100, count * 10), 250, 8192
-        ), set);
+        var params = new QueryParams(queryString,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(domainCount)
+                        .setResultsTotal(min(100, count * 10))
+                        .setTimeoutMs(250)
+                        .setFetchSize(8192)
+                        .build()
+        , set);
 
         var pagination = new IndexClient.Pagination(page, count);
 
@@ -63,7 +69,7 @@ public class QueryBasicInterface {
                 queryString,
                 params,
                 pagination,
-                ResultRankingParameters.sensibleDefaults()
+                PrototypeRankingParameters.sensibleDefaults()
         );
 
         var results = detailedDirectResult.result();
@@ -92,7 +98,7 @@ public class QueryBasicInterface {
         String queryString = request.queryParams("q");
         if (queryString == null) {
             // Show the default query form if no query is given
-            return qdebugRenderer.render(Map.of("rankingParams", ResultRankingParameters.sensibleDefaults())
+            return qdebugRenderer.render(Map.of("rankingParams", PrototypeRankingParameters.sensibleDefaults())
             );
         }
 
@@ -101,9 +107,14 @@ public class QueryBasicInterface {
         int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
         String set = requireNonNullElse(request.queryParams("set"), "");
 
-        var queryParams = new QueryParams(queryString, new QueryLimits(
-                domainCount, min(100, count * 10), 250, 8192
-        ), set);
+        var queryParams = new QueryParams(queryString,
+                RpcQueryLimits.newBuilder()
+                    .setResultsByDomain(domainCount)
+                    .setResultsTotal(min(100, count * 10))
+                    .setTimeoutMs(250)
+                    .setFetchSize(8192)
+                    .build(),
+                set);
 
         var pagination = new IndexClient.Pagination(page, count);
 
@@ -126,32 +137,40 @@ public class QueryBasicInterface {
         );
     }
 
-    private ResultRankingParameters debugRankingParamsFromRequest(Request request) {
-        var sensibleDefaults = ResultRankingParameters.sensibleDefaults();
+    private RpcResultRankingParameters debugRankingParamsFromRequest(Request request) {
+        var sensibleDefaults = PrototypeRankingParameters.sensibleDefaults();
 
-        return ResultRankingParameters.builder()
-                .domainRankBonus(doubleFromRequest(request, "domainRankBonus", sensibleDefaults.domainRankBonus))
-                .qualityPenalty(doubleFromRequest(request, "qualityPenalty", sensibleDefaults.qualityPenalty))
-                .shortDocumentThreshold(intFromRequest(request, "shortDocumentThreshold", sensibleDefaults.shortDocumentThreshold))
-                .shortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.shortDocumentPenalty))
-                .tcfFirstPosition(doubleFromRequest(request, "tcfFirstPosition", sensibleDefaults.tcfFirstPosition))
-                .tcfVerbatim(doubleFromRequest(request, "tcfVerbatim", sensibleDefaults.tcfVerbatim))
-                .tcfProximity(doubleFromRequest(request, "tcfProximity", sensibleDefaults.tcfProximity))
-                .bm25Params(new Bm25Parameters(
-                        doubleFromRequest(request, "bm25.k1", sensibleDefaults.bm25Params.k()),
-                        doubleFromRequest(request, "bm25.b", sensibleDefaults.bm25Params.b())
-                ))
-                .temporalBias(ResultRankingParameters.TemporalBias.valueOf(stringFromRequest(request, "temporalBias", sensibleDefaults.temporalBias.toString())))
-                .temporalBiasWeight(doubleFromRequest(request, "temporalBiasWeight", sensibleDefaults.temporalBiasWeight))
-                .shortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.shortSentenceThreshold))
-                .shortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.shortSentencePenalty))
-                .bm25Weight(doubleFromRequest(request, "bm25Weight", sensibleDefaults.bm25Weight))
-                .exportDebugData(true)
+        var bias = RpcTemporalBias.Bias.valueOf(stringFromRequest(request, "temporalBias", "NONE"));
+
+        return RpcResultRankingParameters.newBuilder()
+                .setDomainRankBonus(doubleFromRequest(request, "domainRankBonus", sensibleDefaults.getDomainRankBonus()))
+                .setQualityPenalty(doubleFromRequest(request, "qualityPenalty", sensibleDefaults.getQualityPenalty()))
+                .setShortDocumentThreshold(intFromRequest(request, "shortDocumentThreshold", sensibleDefaults.getShortDocumentThreshold()))
+                .setShortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.getShortDocumentPenalty()))
+                .setTcfFirstPositionWeight(doubleFromRequest(request, "tcfFirstPositionWeight", sensibleDefaults.getTcfFirstPositionWeight()))
+                .setTcfVerbatimWeight(doubleFromRequest(request, "tcfVerbatimWeight", sensibleDefaults.getTcfVerbatimWeight()))
+                .setTcfProximityWeight(doubleFromRequest(request, "tcfProximityWeight", sensibleDefaults.getTcfProximityWeight()))
+                .setBm25B(doubleFromRequest(request, "bm25b", sensibleDefaults.getBm25B()))
+                .setBm25K(doubleFromRequest(request, "bm25k", sensibleDefaults.getBm25K()))
+                .setTemporalBias(RpcTemporalBias.newBuilder().setBias(bias).build())
+                .setTemporalBiasWeight(doubleFromRequest(request, "temporalBiasWeight", sensibleDefaults.getTemporalBiasWeight()))
+                .setShortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.getShortSentenceThreshold()))
+                .setShortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.getShortSentencePenalty()))
+                .setBm25Weight(doubleFromRequest(request, "bm25Weight", sensibleDefaults.getBm25Weight()))
+                .setDisablePenalties(boolFromRequest(request, "disablePenalties", sensibleDefaults.getDisablePenalties()))
+                .setExportDebugData(true)
                 .build();
     }
 
     double doubleFromRequest(Request request, String param, double defaultValue) {
         return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Double.parseDouble(request.queryParams(param));
+    }
+
+    boolean boolFromRequest(Request request, String param, boolean defaultValue) {
+        if (param == null)
+            return defaultValue;
+
+        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Boolean.parseBoolean(request.queryParams(param));
     }
 
     int intFromRequest(Request request, String param, int defaultValue) {

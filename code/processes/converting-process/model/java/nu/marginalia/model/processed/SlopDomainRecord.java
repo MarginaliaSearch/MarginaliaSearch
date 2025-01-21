@@ -1,7 +1,6 @@
 package nu.marginalia.model.processed;
 
 import nu.marginalia.slop.SlopTable;
-import nu.marginalia.slop.column.array.ObjectArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.string.EnumColumn;
 import nu.marginalia.slop.column.string.TxtStringColumn;
@@ -10,7 +9,6 @@ import nu.marginalia.slop.desc.StorageType;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Consumer;
 
 public record SlopDomainRecord(
@@ -20,8 +18,7 @@ public record SlopDomainRecord(
         int visitedUrls,
         String state,
         String redirectDomain,
-        String ip,
-        List<String> rssFeeds)
+        String ip)
 {
 
     public record DomainWithIpProjection(
@@ -37,9 +34,6 @@ public record SlopDomainRecord(
     private static final IntColumn knownUrlsColumn = new IntColumn("knownUrls", StorageType.PLAIN);
     private static final IntColumn goodUrlsColumn = new IntColumn("goodUrls", StorageType.PLAIN);
     private static final IntColumn visitedUrlsColumn = new IntColumn("visitedUrls", StorageType.PLAIN);
-
-    private static final ObjectArrayColumn<String> rssFeedsColumn = new TxtStringColumn("rssFeeds", StandardCharsets.UTF_8, StorageType.GZIP).asArray();
-
 
     public static class DomainNameReader extends SlopTable {
         private final TxtStringColumn.Reader domainsReader;
@@ -101,8 +95,6 @@ public record SlopDomainRecord(
         private final IntColumn.Reader goodUrlsReader;
         private final IntColumn.Reader visitedUrlsReader;
 
-        private final ObjectArrayColumn<String>.Reader rssFeedsReader;
-
         public Reader(SlopTable.Ref<SlopDomainRecord> ref) throws IOException {
             super(ref);
 
@@ -114,8 +106,6 @@ public record SlopDomainRecord(
             knownUrlsReader = knownUrlsColumn.open(this);
             goodUrlsReader = goodUrlsColumn.open(this);
             visitedUrlsReader = visitedUrlsColumn.open(this);
-
-            rssFeedsReader = rssFeedsColumn.open(this);
         }
 
         public Reader(Path baseDir, int page) throws IOException {
@@ -140,8 +130,7 @@ public record SlopDomainRecord(
                     visitedUrlsReader.get(),
                     statesReader.get(),
                     redirectReader.get(),
-                    ipReader.get(),
-                    rssFeedsReader.get()
+                    ipReader.get()
             );
         }
     }
@@ -156,8 +145,6 @@ public record SlopDomainRecord(
         private final IntColumn.Writer goodUrlsWriter;
         private final IntColumn.Writer visitedUrlsWriter;
 
-        private final ObjectArrayColumn<String>.Writer rssFeedsWriter;
-
         public Writer(Path baseDir, int page) throws IOException {
             super(baseDir, page);
 
@@ -169,8 +156,6 @@ public record SlopDomainRecord(
             knownUrlsWriter = knownUrlsColumn.create(this);
             goodUrlsWriter = goodUrlsColumn.create(this);
             visitedUrlsWriter = visitedUrlsColumn.create(this);
-
-            rssFeedsWriter = rssFeedsColumn.create(this);
         }
 
         public void write(SlopDomainRecord record) throws IOException {
@@ -182,8 +167,6 @@ public record SlopDomainRecord(
             knownUrlsWriter.put(record.knownUrls());
             goodUrlsWriter.put(record.goodUrls());
             visitedUrlsWriter.put(record.visitedUrls());
-
-            rssFeedsWriter.put(record.rssFeeds());
         }
     }
 }

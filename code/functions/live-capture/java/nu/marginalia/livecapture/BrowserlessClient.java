@@ -15,7 +15,9 @@ import java.util.Map;
 
 /** Client for local browserless.io API */
 public class BrowserlessClient implements AutoCloseable {
+
     private static final Logger logger = LoggerFactory.getLogger(BrowserlessClient.class);
+    private static final String BROWSERLESS_TOKEN = System.getProperty("live-capture.browserless-token", "BROWSERLESS_TOKEN");
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
@@ -36,7 +38,7 @@ public class BrowserlessClient implements AutoCloseable {
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(browserlessURI.resolve("/content"))
+                .uri(browserlessURI.resolve("/content?token="+BROWSERLESS_TOKEN))
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))
@@ -63,7 +65,7 @@ public class BrowserlessClient implements AutoCloseable {
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(browserlessURI.resolve("/screenshot"))
+                .uri(browserlessURI.resolve("/screenshot?token="+BROWSERLESS_TOKEN))
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))

@@ -1,5 +1,7 @@
 package nu.marginalia.io;
 
+import nu.marginalia.model.crawldata.CrawledDocument;
+import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -7,7 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -63,6 +67,37 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
             }
         };
 
+    }
+
+    /** For tests */
+    default List<SerializableCrawlData> asList() throws IOException {
+        List<SerializableCrawlData> data = new ArrayList<>();
+        while (hasNext()) {
+            data.add(next());
+        }
+        return data;
+    }
+
+    /** For tests */
+    default List<CrawledDocument> docsAsList() throws IOException {
+        List<CrawledDocument> data = new ArrayList<>();
+        while (hasNext()) {
+            if (next() instanceof CrawledDocument doc) {
+                data.add(doc);
+            }
+        }
+        return data;
+    }
+
+    /** For tests */
+    default List<CrawledDomain> domainsAsList() throws IOException {
+        List<CrawledDomain> data = new ArrayList<>();
+        while (hasNext()) {
+            if (next() instanceof CrawledDomain domain) {
+                data.add(domain);
+            }
+        }
+        return data;
     }
 
     // Dummy iterator over nothing

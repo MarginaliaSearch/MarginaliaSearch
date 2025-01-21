@@ -4,6 +4,8 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.CrawlerMain;
+import nu.marginalia.crawl.DomainStateDb;
+import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -25,6 +27,7 @@ import java.io.RandomAccessFile;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,11 +42,13 @@ class CrawlerRetreiverTest {
     Path tempFileWarc2;
     Path tempFileParquet2;
     Path tempFileWarc3;
+    Path tempFileDb;
     @BeforeEach
     public void setUp() throws IOException {
         httpFetcher = new HttpFetcherImpl("search.marginalia.nu; testing a bit :D");
         tempFileParquet1 = Files.createTempFile("crawling-process", ".parquet");
         tempFileParquet2 = Files.createTempFile("crawling-process", ".parquet");
+        tempFileDb = Files.createTempFile("crawling-process", ".db");
 
     }
 
@@ -176,7 +181,7 @@ class CrawlerRetreiverTest {
                 new EdgeDomain("www.marginalia.nu"),
                 List.of(), 100);
         var resync = new CrawlerWarcResynchronizer(revisitCrawlFrontier,
-                new WarcRecorder(tempFileWarc2)
+                new WarcRecorder(tempFileWarc2, new Cookies())
         );
 
         // truncate the size of the file to simulate a crash
@@ -454,7 +459,7 @@ class CrawlerRetreiverTest {
                 List.of(), 100);
 
         var resync = new CrawlerWarcResynchronizer(revisitCrawlFrontier,
-                new WarcRecorder(tempFileWarc3)
+                new WarcRecorder(tempFileWarc3, new Cookies())
         );
 
         // truncate the size of the file to simulate a crash
@@ -505,22 +510,26 @@ class CrawlerRetreiverTest {
     }
 
     private void doCrawlWithReferenceStream(CrawlerMain.CrawlSpecRecord specs, SerializableCrawlDataStream stream) {
-        try (var recorder = new WarcRecorder(tempFileWarc2)) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).crawlDomain(new DomainLinks(),
+        try (var recorder = new WarcRecorder(tempFileWarc2, new Cookies());
+             var db = new DomainStateDb(tempFileDb)
+        ) {
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, db, recorder).crawlDomain(new DomainLinks(),
                     new CrawlDataReference(stream));
         }
-        catch (IOException ex) {
+        catch (IOException | SQLException ex) {
             Assertions.fail(ex);
         }
     }
 
     @NotNull
     private DomainCrawlFrontier doCrawl(Path tempFileWarc1, CrawlerMain.CrawlSpecRecord specs) {
-        try (var recorder = new WarcRecorder(tempFileWarc1)) {
-            var crawler = new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder);
+        try (var recorder = new WarcRecorder(tempFileWarc1, new Cookies());
+             var db = new DomainStateDb(tempFileDb)
+        ) {
+            var crawler = new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, db, recorder);
             crawler.crawlDomain();
             return crawler.getCrawlFrontier();
-        } catch (IOException ex) {
+        } catch (IOException| SQLException  ex) {
             Assertions.fail(ex);
             return null; // unreachable
         }

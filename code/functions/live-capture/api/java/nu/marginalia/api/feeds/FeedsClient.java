@@ -59,12 +59,6 @@ public class FeedsClient {
                 .forEachRemaining(rsp -> consumer.accept(rsp.getDomain(), new ArrayList<>(rsp.getUrlList())));
     }
 
-    public record UpdatedDomain(String domain, List<String> urls) {
-        public UpdatedDomain(RpcUpdatedLinksResponse rsp) {
-            this(rsp.getDomain(), new ArrayList<>(rsp.getUrlList()));
-        }
-    }
-
     /** Get the hash of the feed data, for identifying when the data has been updated */
     public String getFeedDataHash() {
         return channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getFeedDataHash)

@@ -2,8 +2,9 @@ package nu.marginalia.functions.searchquery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.model.query.*;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
@@ -36,7 +37,7 @@ public class QueryFactory {
 
 
     public ProcessedQuery createQuery(QueryParams params,
-                                      @Nullable ResultRankingParameters rankingParams) {
+                                      @Nullable RpcResultRankingParameters rankingParams) {
         final var query = params.humanQuery();
 
         if (query.length() > 1000) {
@@ -70,6 +71,17 @@ public class QueryFactory {
                     searchTermsHuman.addAll(Arrays.asList(displayStr.replace("\"", "").split("\\s+")));
 
                     String[] parts = StringUtils.split(str, '_');
+
+                    // Trim down tokens to match the behavior of the tokenizer used in indexing
+                    for (int i = 0; i < parts.length; i++) {
+                        String part = parts[i];
+
+                        if (part.endsWith("'s") && part.length() > 2) {
+                            part = part.substring(0, part.length()-2);
+                        }
+
+                        parts[i] = part;
+                    }
 
                     if (parts.length > 1) {
                         // Require that the terms appear in sequence
@@ -121,7 +133,9 @@ public class QueryFactory {
         var limits = params.limits();
         // Disable limits on number of results per domain if we're searching with a site:-type term
         if (domain != null) {
-            limits = limits.forSingleDomain();
+            limits = RpcQueryLimits.newBuilder(limits)
+                    .setResultsByDomain(limits.getResultsTotal())
+                    .build();
         }
 
         var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsInclude);

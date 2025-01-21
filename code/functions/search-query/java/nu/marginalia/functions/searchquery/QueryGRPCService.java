@@ -9,7 +9,7 @@ import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class QueryGRPCService
                     .time(() -> {
 
                 var params = QueryProtobufCodec.convertRequest(request);
-                var query = queryFactory.createQuery(params, ResultRankingParameters.sensibleDefaults());
+                var query = queryFactory.createQuery(params, PrototypeRankingParameters.sensibleDefaults());
 
                 var indexRequest = QueryProtobufCodec.convertQuery(request, query);
 
@@ -102,7 +102,7 @@ public class QueryGRPCService
             String originalQuery,
             QueryParams params,
             IndexClient.Pagination pagination,
-            ResultRankingParameters rankingParameters) {
+            RpcResultRankingParameters rankingParameters) {
 
         var query = queryFactory.createQuery(params, rankingParameters);
         IndexClient.AggregateQueryResponse response = indexClient.executeQueries(QueryProtobufCodec.convertQuery(originalQuery, query), pagination);

@@ -8,6 +8,7 @@ include 'code:services-core:executor-service'
 include 'code:services-core:single-service-runner'
 
 include 'code:services-application:search-service'
+include 'code:services-application:search-service-legacy'
 include 'code:services-application:api-service'
 include 'code:services-application:dating-service'
 include 'code:services-application:explorer-service'
@@ -99,7 +100,12 @@ include 'third-party:openzim'
 include 'third-party:count-min-sketch'
 include 'third-party:commons-codec'
 include 'third-party:parquet-floor'
+include 'third-party:rssreader'
 include 'third-party:encyclopedia-marginalia-nu'
+
+ext {
+    joobyVersion = '3.5.5'
+}
 
 dependencyResolutionManagement {
 
@@ -153,8 +159,6 @@ dependencyResolutionManagement {
             library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
             library('prometheus-server', 'io.prometheus', 'simpleclient_httpserver').version('0.16.0')
             library('prometheus-hotspot', 'io.prometheus', 'simpleclient_hotspot').version('0.16.0')
-
-            library('rssreader', 'com.apptasticsoftware', 'rssreader').version('3.5.0')
 
             library('slf4j.api', 'org.slf4j', 'slf4j-api').version('1.7.36')
             library('slf4j.jdk14', 'org.slf4j', 'slf4j-jdk14').version('2.0.3')
@@ -231,6 +235,11 @@ dependencyResolutionManagement {
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
 
             library('slop', 'nu.marginalia', 'slop').version('0.0.9-org-5-SNAPSHOT')
+            library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
+            library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
+            library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)
+
+            library('jte','gg.jte','jte').version('3.1.15')
 
             bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 
@@ -248,8 +257,9 @@ dependencyResolutionManagement {
             bundle('parquet', ['parquet-column', 'parquet-hadoop'])
             bundle('junit', ['junit.jupiter', 'junit.jupiter.engine'])
             bundle('flyway', ['flyway.core', 'flyway.mysql'])
-
+            bundle('jooby', ['jooby-netty', 'jooby-jte'])
             bundle('curator', ['curator-framework', 'curator-x-discovery'])
+
         }
     }
 }

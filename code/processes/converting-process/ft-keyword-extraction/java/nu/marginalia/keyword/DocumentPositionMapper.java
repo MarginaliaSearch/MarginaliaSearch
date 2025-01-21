@@ -152,7 +152,10 @@ public class DocumentPositionMapper {
     }
 
     boolean matchesWordPattern(String s) {
-        // this function is an unrolled version of the regexp [\da-zA-Z]{1,15}([.\-_/:+*][\da-zA-Z]{1,10}){0,4}
+        if (s.length() > 48)
+            return false;
+
+        // this function is an unrolled version of the regexp [\da-zA-Z]{1,15}([.\-_/:+*][\da-zA-Z]{1,10}){0,8}
 
         String wordPartSeparator = ".-_/:+*";
 
@@ -169,7 +172,7 @@ public class DocumentPositionMapper {
         if (i == 0)
             return false;
 
-        for (int j = 0; j < 5; j++) {
+        for (int j = 0; j < 8; j++) {
             if (i == s.length()) return true;
 
             if (wordPartSeparator.indexOf(s.charAt(i)) < 0) {

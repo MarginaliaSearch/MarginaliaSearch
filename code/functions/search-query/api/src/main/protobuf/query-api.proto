@@ -162,6 +162,7 @@ message RpcResultRankingParameters {
   double temporalBiasWeight = 17;
 
   bool exportDebugData = 18;
+  bool disablePenalties = 19;
 
 }
 

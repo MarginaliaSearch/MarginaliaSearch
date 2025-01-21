@@ -10,12 +10,12 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
@@ -211,7 +211,7 @@ public class IndexGrpcService
     /** This class is responsible for ranking the results and adding the best results to the
      * resultHeap, which depending on the state of the indexLookup threads may or may not block
      */
-    private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams,
+    private ResultRankingContext createRankingContext(RpcResultRankingParameters rankingParams,
                                                       CompiledQuery<String> compiledQuery,
                                                       CompiledQueryLong compiledQueryIds)
     {

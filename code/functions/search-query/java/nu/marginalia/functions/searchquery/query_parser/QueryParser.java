@@ -155,16 +155,25 @@ public class QueryParser {
 
         // Remove trailing punctuation
         int lastChar = str.charAt(str.length() - 1);
-        if (":.,!?$'".indexOf(lastChar) >= 0)
-            entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 1), lt.displayStr()));
+        if (":.,!?$'".indexOf(lastChar) >= 0) {
+            str = str.substring(0, str.length() - 1);
+            entity.replace(new QueryToken.LiteralTerm(str, lt.displayStr()));
+        }
 
         // Remove term elements that aren't indexed by the search engine
-        if (str.endsWith("'s"))
-            entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 2), lt.displayStr()));
-        if (str.endsWith("()"))
-            entity.replace(new QueryToken.LiteralTerm(str.substring(0, str.length() - 2), lt.displayStr()));
-        if (str.startsWith("$"))
-            entity.replace(new QueryToken.LiteralTerm(str.substring(1), lt.displayStr()));
+        if (str.endsWith("'s")) {
+            str = str.substring(0, str.length() - 2);
+            entity.replace(new QueryToken.LiteralTerm(str, lt.displayStr()));
+        }
+        if (str.endsWith("()")) {
+            str = str.substring(0, str.length() - 2);
+            entity.replace(new QueryToken.LiteralTerm(str, lt.displayStr()));
+        }
+
+        while (str.startsWith("$") || str.startsWith("_")) {
+            str = str.substring(1);
+            entity.replace(new QueryToken.LiteralTerm(str, lt.displayStr()));
+        }
 
         if (entity.isBlank()) {
             entity.remove();
@@ -224,9 +233,19 @@ public class QueryParser {
             entity.replace(new QueryToken.RankTerm(limit, str));
         } else if (str.startsWith("qs=")) {
             entity.replace(new QueryToken.QsTerm(str.substring(3)));
-        } else if (str.contains(":")) {
+        } else if (str.startsWith("site:")
+                || str.startsWith("format:")
+                || str.startsWith("file:")
+                || str.startsWith("tld:")
+                || str.startsWith("ip:")
+                || str.startsWith("as:")
+                || str.startsWith("asn:")
+                || str.startsWith("generator:")
+        )
+        {
             entity.replace(new QueryToken.AdviceTerm(str, t.displayStr()));
         }
+
     }
 
     private static SpecificationLimit parseSpecificationLimit(String str) {

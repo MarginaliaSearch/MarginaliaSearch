@@ -2,11 +2,10 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.control.ControlRendererFactory;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.nodecfg.NodeConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -22,18 +21,16 @@ public class SearchToBanService {
     private final ControlRendererFactory rendererFactory;
     private final QueryClient queryClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final NodeConfigurationService nodeConfigurationService;
 
     @Inject
     public SearchToBanService(ControlBlacklistService blacklistService,
                               ControlRendererFactory rendererFactory,
-                              QueryClient queryClient, NodeConfigurationService nodeConfigurationService)
+                              QueryClient queryClient)
     {
 
         this.blacklistService = blacklistService;
         this.rendererFactory = rendererFactory;
         this.queryClient = queryClient;
-        this.nodeConfigurationService = nodeConfigurationService;
     }
 
     public void register() throws IOException {
@@ -76,7 +73,14 @@ public class SearchToBanService {
 
     private Object executeQuery(String query) {
         return queryClient.search(new QueryParams(
-                query, new QueryLimits(2, 200, 250, 8192),
+                query,
+                RpcQueryLimits.newBuilder()
+                        .setResultsTotal(100)
+                        .setResultsByDomain(2)
+                        .setTimeoutMs(200)
+                        .setFetchSize(8192)
+                        .build()
+                ,
                 "NONE"
         ));
     }

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,8 +34,7 @@ public class SlopDomainRecordTest {
                 1, 2, 3,
                 "state",
                 "redirectDomain",
-                "192.168.0.1",
-                List.of("rss1", "rss2")
+                "192.168.0.1"
         );
 
         try (var writer = new SlopDomainRecord.Writer(testDir, 0)) {

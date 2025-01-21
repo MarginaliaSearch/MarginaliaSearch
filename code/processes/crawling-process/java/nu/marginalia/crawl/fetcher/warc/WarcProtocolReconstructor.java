@@ -1,11 +1,12 @@
 package nu.marginalia.crawl.fetcher.warc;
 
-import okhttp3.Protocol;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -75,13 +76,13 @@ public class WarcProtocolReconstructor {
         return "HTTP/" + version + " " + statusCode + " " + statusMessage + "\r\n" + headerString + "\r\n\r\n";
     }
 
-    static String getResponseHeader(Response response, long size) {
-        String version = response.protocol() == Protocol.HTTP_1_1 ? "1.1" : "2.0";
+    static String getResponseHeader(HttpResponse<?> response, long size) {
+        String version = response.version() == HttpClient.Version.HTTP_1_1 ? "1.1" : "2.0";
 
-        String statusCode = String.valueOf(response.code());
-        String statusMessage = STATUS_CODE_MAP.getOrDefault(response.code(), "Unknown");
+        String statusCode = String.valueOf(response.statusCode());
+        String statusMessage = STATUS_CODE_MAP.getOrDefault(response.statusCode(), "Unknown");
 
-        String headerString = getHeadersAsString(response, size);
+        String headerString = getHeadersAsString(response.headers(), size);
 
         return "HTTP/" + version + " " + statusCode + " " + statusMessage + "\r\n" + headerString + "\r\n\r\n";
     }
@@ -148,10 +149,10 @@ public class WarcProtocolReconstructor {
         return joiner.toString();
     }
 
-    static private String getHeadersAsString(Response response, long responseSize) {
+    static private String getHeadersAsString(HttpHeaders headers, long responseSize) {
         StringJoiner joiner = new StringJoiner("\r\n");
 
-        response.headers().toMultimap().forEach((k, values) -> {
+        headers.map().forEach((k, values) -> {
             String headerCapitalized = capitalizeHeader(k);
 
             // Omit pseudoheaders injected by the crawler itself
@@ -179,8 +180,8 @@ public class WarcProtocolReconstructor {
         return joiner.toString();
     }
 
-    // okhttp gives us flattened headers, so we need to reconstruct Camel-Kebab-Case style
-    // for the WARC parser's sake...
+    // okhttp gave us flattened headers, so we need to reconstruct Camel-Kebab-Case style
+    // for the WARC parser's sake...  (do we still need this, mr chesterton?)
     static private String capitalizeHeader(String k) {
         return Arrays.stream(StringUtils.split(k, '-'))
                 .map(StringUtils::capitalize)

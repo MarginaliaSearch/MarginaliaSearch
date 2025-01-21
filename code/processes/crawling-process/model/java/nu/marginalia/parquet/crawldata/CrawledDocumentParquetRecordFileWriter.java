@@ -165,27 +165,28 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             contentType = "";
         }
 
-        String headersStr = null;
         StringJoiner headersStrBuilder = new StringJoiner("\n");
-        for (var header : headers) {
-            headersStrBuilder.add(header.getFirst() + ": " + header.getSecond());
+        for (var header : headers.map().entrySet()) {
+            for (var value : header.getValue()) {
+                headersStrBuilder.add(header.getKey() + ": " + value);
+            }
         }
-        headersStr = headersStrBuilder.toString();
+        String headersStr = headersStrBuilder.toString();
 
 
         write(new CrawledDocumentParquetRecord(
                 domain,
                 response.target(),
                 fetchOk.ipAddress(),
-                WarcXCookieInformationHeader.hasCookies(response),
+                headers.firstValue("X-Has-Cookies").orElse("0").equals("1"),
                 fetchOk.statusCode(),
                 response.date(),
                 contentType,
                 bodyBytes,
                 headersStr,
-                headers.get("ETag"),
-                headers.get("Last-Modified"))
-        );
+                headers.firstValue("ETag").orElse(null),
+                headers.firstValue("Last-Modified").orElse(null)
+        ));
     }
 
 

@@ -5,7 +5,7 @@ import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.api.searchquery.model.results.debug.DebugFactor;
@@ -37,7 +37,7 @@ public class QueryProtobufCodec {
         builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
         builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
 
-        builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
+        builder.setQueryLimits(query.specs.queryLimits);
 
         // Query strategy may be overridden by the query, but if not, use the one from the request
         if (query.specs.queryStrategy != null && query.specs.queryStrategy != QueryStrategy.AUTO)
@@ -45,9 +45,27 @@ public class QueryProtobufCodec {
         else
             builder.setQueryStrategy(request.getQueryStrategy());
 
-        if (query.specs.rankingParams != null) {
-            builder.setParameters(IndexProtobufCodec.convertRankingParameterss(query.specs.rankingParams, request.getTemporalBias()));
+        if (request.getTemporalBias().getBias() != RpcTemporalBias.Bias.NONE) {
+            if (query.specs.rankingParams != null) {
+                builder.setParameters(
+                        RpcResultRankingParameters.newBuilder(query.specs.rankingParams)
+                                .setTemporalBias(request.getTemporalBias())
+                                .build()
+                );
+            } else {
+                builder.setParameters(
+                        RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults())
+                                .setTemporalBias(request.getTemporalBias())
+                                .build()
+                );
+            }
+        } else if (query.specs.rankingParams != null) {
+            builder.setParameters(query.specs.rankingParams);
         }
+        // else {
+        // if we have no ranking params, we don't need to set them, the client check and use the default values
+        // so we don't need to send this huge object over the wire
+        // }
 
         return builder.build();
     }
@@ -65,18 +83,13 @@ public class QueryProtobufCodec {
         builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
         builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
 
-        builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
+        builder.setQueryLimits(query.specs.queryLimits);
 
         // Query strategy may be overridden by the query, but if not, use the one from the request
         builder.setQueryStrategy(query.specs.queryStrategy.name());
 
         if (query.specs.rankingParams != null) {
-            builder.setParameters(IndexProtobufCodec.convertRankingParameterss(
-                    query.specs.rankingParams,
-                    RpcTemporalBias.newBuilder().setBias(
-                                    RpcTemporalBias.Bias.NONE)
-                            .build())
-            );
+            builder.setParameters(query.specs.rankingParams);
         }
 
         return builder.build();
@@ -95,10 +108,10 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(request.getSize()),
                 IndexProtobufCodec.convertSpecLimit(request.getRank()),
                 request.getDomainIdsList(),
-                IndexProtobufCodec.convertQueryLimits(request.getQueryLimits()),
+                request.getQueryLimits(),
                 request.getSearchSetIdentifier(),
                 QueryStrategy.valueOf(request.getQueryStrategy()),
-                ResultRankingParameters.TemporalBias.valueOf(request.getTemporalBias().getBias().name()),
+                RpcTemporalBias.Bias.valueOf(request.getTemporalBias().getBias().name()),
                 request.getPagination().getPage()
         );
     }
@@ -294,9 +307,9 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(specs.getYear()),
                 IndexProtobufCodec.convertSpecLimit(specs.getSize()),
                 IndexProtobufCodec.convertSpecLimit(specs.getRank()),
-                IndexProtobufCodec.convertQueryLimits(specs.getQueryLimits()),
+                specs.getQueryLimits(),
                 QueryStrategy.valueOf(specs.getQueryStrategy()),
-                IndexProtobufCodec.convertRankingParameterss(specs.getParameters())
+                specs.hasParameters() ? specs.getParameters() : null
         );
     }
 
@@ -307,7 +320,7 @@ public class QueryProtobufCodec {
                 .addAllTacitExcludes(params.tacitExcludes())
                 .addAllTacitPriority(params.tacitPriority())
                 .setHumanQuery(params.humanQuery())
-                .setQueryLimits(IndexProtobufCodec.convertQueryLimits(params.limits()))
+                .setQueryLimits(params.limits())
                 .setQuality(IndexProtobufCodec.convertSpecLimit(params.quality()))
                 .setYear(IndexProtobufCodec.convertSpecLimit(params.year()))
                 .setSize(IndexProtobufCodec.convertSpecLimit(params.size()))
@@ -319,7 +332,7 @@ public class QueryProtobufCodec {
                         .build())
                 .setPagination(RpcQsQueryPagination.newBuilder()
                         .setPage(params.page())
-                        .setPageSize(Math.min(100, params.limits().resultsTotal()))
+                        .setPageSize(Math.min(100, params.limits().getResultsTotal()))
                         .build());
 
         if (params.nearDomain() != null)

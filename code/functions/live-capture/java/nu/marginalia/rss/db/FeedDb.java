@@ -8,17 +8,21 @@ import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItems;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -85,6 +89,26 @@ public class FeedDb {
         return List.of();
     }
 
+    public Map<String, Integer> getAllErrorCounts() {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        try {
+            if (reader != null) {
+                return reader.getAllErrorCounts();
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error getting all feeds", e);
+        }
+        return Map.of();
+    }
+
+
     @NotNull
     public FeedItems getFeed(EdgeDomain domain) {
         if (!feedDbEnabled) {
@@ -102,6 +126,26 @@ public class FeedDb {
             logger.error("Error getting feed for " + domain, e);
         }
         return FeedItems.none();
+    }
+
+
+    @Nullable
+    public String getEtag(EdgeDomain domain) {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+        try {
+            if (reader != null) {
+                return reader.getEtag(domain);
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error getting etag for " + domain, e);
+        }
+        return null;
     }
 
     public Optional<String> getFeedAsJson(String domain) {
@@ -188,4 +232,36 @@ public class FeedDb {
 
         reader.getLinksUpdatedSince(since, consumer);
     }
+
+    public Instant getFetchTime() {
+        if (!Files.exists(readerDbPath)) {
+            return Instant.EPOCH;
+        }
+
+        try {
+            return Files.readAttributes(readerDbPath, PosixFileAttributes.class)
+                    .creationTime()
+                    .toInstant();
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read the creatiom time of {}", readerDbPath);
+            return Instant.EPOCH;
+        }
+    }
+
+    public boolean hasData() {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+
+        if (reader != null) {
+            return reader.hasData();
+        }
+
+        return false;
+    }
+
 }

@@ -33,8 +33,6 @@ import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.util.SimpleBlockingThreadPool;
-import okhttp3.ConnectionPool;
-import okhttp3.Dispatcher;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +83,7 @@ public class CrawlerMain extends ProcessMainClass {
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
+                       HttpFetcherImpl httpFetcher,
                        ProcessHeartbeatImpl heartbeat,
                        MessageQueueFactory messageQueueFactory, DomainProber domainProber,
                        FileStorageService fileStorageService,
@@ -98,6 +97,7 @@ public class CrawlerMain extends ProcessMainClass {
         super(messageQueueFactory, processConfiguration, gson, CRAWLER_INBOX);
 
         this.userAgent = userAgent;
+        this.fetcher = httpFetcher;
         this.heartbeat = heartbeat;
         this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
@@ -111,10 +111,6 @@ public class CrawlerMain extends ProcessMainClass {
                 Integer.getInteger("crawler.poolSize", 256),
                 1);
 
-        fetcher = new HttpFetcherImpl(userAgent,
-                new Dispatcher(),
-                new ConnectionPool(5, 10, TimeUnit.SECONDS)
-        );
 
         // Wait for the blacklist to be loaded before starting the crawl
         blacklist.waitUntilLoaded();
@@ -131,6 +127,10 @@ public class CrawlerMain extends ProcessMainClass {
         // If these aren't set properly, the JVM will hang forever on some requests
         System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
         System.setProperty("sun.net.client.defaultReadTimeout", "30000");
+
+        // Set the maximum number of connections to keep alive in the connection pool
+        System.setProperty("jdk.httpclient.idleTimeout", "15"); // 15 seconds
+        System.setProperty("jdk.httpclient.connectionPoolSize", "256");
 
         // We don't want to use too much memory caching sessions for https
         System.setProperty("javax.net.ssl.sessionCacheSize", "2048");
@@ -241,6 +241,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         // Set up the work log and the warc archiver so we can keep track of what we've done
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
+             DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(domainsToCrawl)
         ) {
@@ -258,6 +259,7 @@ public class CrawlerMain extends ProcessMainClass {
                         anchorTagsSource,
                         outputDir,
                         warcArchiver,
+                        domainStateDb,
                         workLog);
 
                 if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) == null) {
@@ -299,11 +301,12 @@ public class CrawlerMain extends ProcessMainClass {
         heartbeat.start();
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler-" + targetDomainName.replace('/', '-') + ".log"));
+             DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
         ) {
             var spec = new CrawlSpecRecord(targetDomainName, 1000, List.of());
-            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, workLog);
+            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog);
             task.run();
         }
         catch (Exception ex) {
@@ -324,18 +327,21 @@ public class CrawlerMain extends ProcessMainClass {
         private final AnchorTagsSource anchorTagsSource;
         private final Path outputDir;
         private final WarcArchiverIf warcArchiver;
+        private final DomainStateDb domainStateDb;
         private final WorkLog workLog;
 
         CrawlTask(CrawlSpecRecord specification,
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WarcArchiverIf warcArchiver,
+                  DomainStateDb domainStateDb,
                   WorkLog workLog)
         {
             this.specification = specification;
             this.anchorTagsSource = anchorTagsSource;
             this.outputDir = outputDir;
             this.warcArchiver = warcArchiver;
+            this.domainStateDb = domainStateDb;
             this.workLog = workLog;
 
             this.domain = specification.domain();
@@ -358,10 +364,10 @@ public class CrawlerMain extends ProcessMainClass {
                 Files.deleteIfExists(tempFile);
             }
 
-            try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
-                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
-                 CrawlDataReference reference = getReference();
-                 )
+            try (var warcRecorder = new WarcRecorder(newWarcFile, fetcher); // write to a temp file for now
+                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, domainStateDb, warcRecorder);
+                 CrawlDataReference reference = getReference()
+            )
             {
                 // Resume the crawl if it was aborted
                 if (Files.exists(tempFile)) {

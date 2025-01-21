@@ -1,7 +1,7 @@
 package nu.marginalia.api.searchquery.model.query;
 
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 
@@ -21,14 +21,14 @@ public record QueryParams(
         SpecificationLimit size,
         SpecificationLimit rank,
         List<Integer> domainIds,
-        QueryLimits limits,
+        RpcQueryLimits limits,
         String identifier,
         QueryStrategy queryStrategy,
-        ResultRankingParameters.TemporalBias temporalBias,
+        RpcTemporalBias.Bias temporalBias,
         int page
 )
 {
-    public QueryParams(String query, QueryLimits limits, String identifier) {
+    public QueryParams(String query, RpcQueryLimits limits, String identifier) {
         this(query, null,
                 List.of(),
                 List.of(),
@@ -42,7 +42,7 @@ public record QueryParams(
                 limits,
                 identifier,
                 QueryStrategy.AUTO,
-                ResultRankingParameters.TemporalBias.NONE,
+                RpcTemporalBias.Bias.NONE,
                 1 // page
                 );
     }

@@ -178,7 +178,6 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     public void writeDomainData(ProcessedDomain domain) throws IOException {
         DomainMetadata metadata = DomainMetadata.from(domain);
 
-        List<String> feeds = getFeedUrls(domain);
 
         domainWriter.write(
                 new SlopDomainRecord(
@@ -188,23 +187,9 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                         metadata.visited(),
                         Optional.ofNullable(domain.state).map(DomainIndexingState::toString).orElse(""),
                         Optional.ofNullable(domain.redirect).map(EdgeDomain::toString).orElse(""),
-                        domain.ip,
-                        feeds
+                        domain.ip
                 )
         );
-    }
-
-    private List<String> getFeedUrls(ProcessedDomain domain) {
-        var documents = domain.documents;
-        if (documents == null)
-            return List.of();
-
-        return documents.stream().map(doc -> doc.details)
-                .filter(Objects::nonNull)
-                .flatMap(dets -> dets.feedLinks.stream())
-                .distinct()
-                .map(EdgeUrl::toString)
-                .toList();
     }
 
     public void close() throws IOException {

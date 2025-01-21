@@ -2,12 +2,23 @@
 
 This service handles search traffic and is the service
 you're most directly interacting with when visiting
-[search.marginalia.nu](https://search.marginalia.nu). 
+[marginalia-search.com](https://marginalia-search.com). 
 
 It interprets a "human" query and translates it into a
 request that gets passed into to the index service, which finds
 related documents, which this service then ranks and returns
 to the user.
+
+The UI is built using [JTE templates](https://jte.gg/syntax/) and the [Jooby framework](https://jooby.io), primarily using
+its MVC facilities.
+
+When developing, it's possible to set up a mock version of the UI by running
+the gradle command 
+
+```$ ./gradlew paperDoll -i```  
+
+The UI will be available at http://localhost:9999/, and has hot reloading of JTE classes 
+and static resources.
 
 
 ![image](../../../doc/diagram/search-service-map.svg)

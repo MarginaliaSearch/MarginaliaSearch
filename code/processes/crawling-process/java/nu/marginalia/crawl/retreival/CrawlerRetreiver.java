@@ -4,6 +4,7 @@ import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.crawl.CrawlerMain;
+import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -11,12 +12,14 @@ import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.logic.LinkFilterSelector;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
-import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
+import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,17 +48,19 @@ public class CrawlerRetreiver implements AutoCloseable {
 
     private final DomainProber domainProber;
     private final DomainCrawlFrontier crawlFrontier;
+    private final DomainStateDb domainStateDb;
     private final WarcRecorder warcRecorder;
     private final CrawlerRevisitor crawlerRevisitor;
 
-    private final SitemapFetcher sitemapFetcher;
     int errorCount = 0;
 
     public CrawlerRetreiver(HttpFetcher fetcher,
                             DomainProber domainProber,
                             CrawlerMain.CrawlSpecRecord specs,
+                            DomainStateDb domainStateDb,
                             WarcRecorder warcRecorder)
     {
+        this.domainStateDb = domainStateDb;
         this.warcRecorder = warcRecorder;
         this.fetcher = fetcher;
         this.domainProber = domainProber;
@@ -64,7 +69,6 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), specs.urls(), specs.crawlDepth());
         crawlerRevisitor = new CrawlerRevisitor(crawlFrontier, this, warcRecorder);
-        sitemapFetcher = new SitemapFetcher(crawlFrontier, fetcher.createSitemapRetriever());
 
         // We must always crawl the index page first, this is assumed when fingerprinting the server
         var fst = crawlFrontier.peek();
@@ -89,8 +93,21 @@ public class CrawlerRetreiver implements AutoCloseable {
         try {
             // Do an initial domain probe to determine the root URL
             EdgeUrl rootUrl;
-            if (probeRootUrl() instanceof HttpFetcher.DomainProbeResult.Ok ok) rootUrl = ok.probedUrl();
-            else return 1;
+
+            var probeResult = probeRootUrl();
+            switch (probeResult) {
+                case HttpFetcher.DomainProbeResult.Ok(EdgeUrl probedUrl) -> {
+                    rootUrl = probedUrl; // Good track
+                }
+                case HttpFetcher.DomainProbeResult.Redirect(EdgeDomain domain1) -> {
+                    domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, "Redirect", domain1.toString()));
+                    return 1;
+                }
+                case HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus status, String desc) -> {
+                    domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, status.toString(), desc));
+                    return 1;
+                }
+            }
 
             // Sleep after the initial probe, we don't have access to the robots.txt yet
             // so we don't know the crawl delay
@@ -113,7 +130,8 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         delayTimer.waitFetchDelay(0); // initial delay after robots.txt
 
-        sniffRootDocument(rootUrl, delayTimer);
+        DomainStateDb.SummaryRecord summaryRecord = sniffRootDocument(rootUrl, delayTimer);
+        domainStateDb.save(summaryRecord);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
         if (crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer) > 0) {
@@ -124,9 +142,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         // Add external links to the crawl frontier
         crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
 
-        // Add links from the sitemap to the crawl frontier
-        sitemapFetcher.downloadSitemaps(robotsRules, rootUrl);
 
+        // Fetch sitemaps
+        for (var sitemap : robotsRules.getSitemaps()) {
+            crawlFrontier.addAllToQueue(fetcher.fetchSitemapUrls(sitemap, delayTimer));
+        }
 
         while (!crawlFrontier.isEmpty()
             && !crawlFrontier.isCrawlDepthReached()
@@ -195,7 +215,9 @@ public class CrawlerRetreiver implements AutoCloseable {
         return domainProbeResult;
     }
 
-    private void sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
+    private DomainStateDb.SummaryRecord sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
+        Optional<String> feedLink = Optional.empty();
+
         try {
             var url = rootUrl.withPathAndParam("/", null);
 
@@ -203,11 +225,11 @@ public class CrawlerRetreiver implements AutoCloseable {
             timer.waitFetchDelay(0);
 
             if (!(result instanceof HttpFetchResult.ResultOk ok))
-                return;
+                return DomainStateDb.SummaryRecord.forSuccess(domain);
 
             var optDoc = ok.parseDocument();
             if (optDoc.isEmpty())
-                return;
+                return DomainStateDb.SummaryRecord.forSuccess(domain);
 
             // Sniff the software based on the sample document
             var doc = optDoc.get();
@@ -215,7 +237,6 @@ public class CrawlerRetreiver implements AutoCloseable {
             crawlFrontier.enqueueLinksFromDocument(url, doc);
 
             EdgeUrl faviconUrl = url.withPathAndParam("/favicon.ico", null);
-            Optional<EdgeUrl> sitemapUrl = Optional.empty();
 
             for (var link : doc.getElementsByTag("link")) {
                 String rel = link.attr("rel");
@@ -231,23 +252,30 @@ public class CrawlerRetreiver implements AutoCloseable {
 
                 // Grab the RSS/Atom as a sitemap if it exists
                 if (rel.equalsIgnoreCase("alternate")
-                && (type.equalsIgnoreCase("application/atom+xml") || type.equalsIgnoreCase("application/atomsvc+xml"))) {
+                && (type.equalsIgnoreCase("application/atom+xml")
+                        || type.equalsIgnoreCase("application/atomsvc+xml")
+                        || type.equalsIgnoreCase("application/rss+xml")
+                )) {
                     String href = link.attr("href");
 
-                    sitemapUrl = linkParser.parseLink(url, href)
-                            .filter(crawlFrontier::isSameDomain);
+                    feedLink = linkParser.parseLink(url, href)
+                            .filter(crawlFrontier::isSameDomain)
+                            .map(EdgeUrl::toString);
                 }
             }
 
-            // Download the sitemap if available exists
-            if (sitemapUrl.isPresent()) {
-                sitemapFetcher.downloadSitemaps(List.of(sitemapUrl.get()));
-                timer.waitFetchDelay(0);
+
+            if (feedLink.isEmpty()) {
+                feedLink = guessFeedUrl(timer);
             }
+
+            // Download the sitemap if available
+            feedLink.ifPresent(s -> fetcher.fetchSitemapUrls(s, timer));
 
             // Grab the favicon if it exists
             fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
             timer.waitFetchDelay(0);
+
         }
         catch (Exception ex) {
             logger.error("Error configuring link filter", ex);
@@ -255,6 +283,74 @@ public class CrawlerRetreiver implements AutoCloseable {
         finally {
             crawlFrontier.addVisited(rootUrl);
         }
+
+        if (feedLink.isPresent()) {
+            return DomainStateDb.SummaryRecord.forSuccess(domain, feedLink.get());
+        }
+        else {
+            return DomainStateDb.SummaryRecord.forSuccess(domain);
+        }
+    }
+
+    private final List<String> likelyFeedEndpoints = List.of(
+            "rss.xml",
+            "atom.xml",
+            "feed.xml",
+            "index.xml",
+            "feed",
+            "rss",
+            "atom",
+            "feeds",
+            "blog/feed",
+            "blog/rss"
+    );
+
+    private Optional<String> guessFeedUrl(CrawlDelayTimer timer) throws InterruptedException {
+        var oldDomainStateRecord = domainStateDb.get(domain);
+
+        // If we are already aware of an old feed URL, then we can just revalidate it
+        if (oldDomainStateRecord.isPresent()) {
+            var oldRecord = oldDomainStateRecord.get();
+            if (oldRecord.feedUrl() != null && validateFeedUrl(oldRecord.feedUrl(), timer)) {
+                return Optional.of(oldRecord.feedUrl());
+            }
+        }
+
+        for (String endpoint : likelyFeedEndpoints) {
+            String url = "https://" + domain + "/" + endpoint;
+            if (validateFeedUrl(url, timer)) {
+                return Optional.of(url);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private boolean validateFeedUrl(String url, CrawlDelayTimer timer) throws InterruptedException {
+        var parsedOpt = EdgeUrl.parse(url);
+        if (parsedOpt.isEmpty())
+            return false;
+
+        HttpFetchResult result = fetchWithRetry(parsedOpt.get(), timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
+        timer.waitFetchDelay(0);
+
+        if (!(result instanceof HttpFetchResult.ResultOk ok)) {
+            return false;
+        }
+
+        // Extract the beginning of the
+        Optional<String> bodyOpt = DocumentBodyExtractor.asString(ok).getBody();
+        if (bodyOpt.isEmpty())
+            return false;
+        String body = bodyOpt.get();
+        body = body.substring(0, Math.min(128, body.length())).toLowerCase();
+
+        if (body.contains("<atom"))
+            return true;
+        if (body.contains("<rss"))
+            return true;
+
+        return false;
     }
 
     public HttpFetchResult fetchContentWithReference(EdgeUrl top,

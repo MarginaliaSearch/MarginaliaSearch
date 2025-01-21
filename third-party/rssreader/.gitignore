@@ -1,0 +1,89 @@
+.gradle
+/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+# IDEA
+# ----
+.idea
+.shelf
+/*.iml
+/*.ipr
+/*.iws
+/buildSrc/.idea
+/buildSrc/.shelf
+/buildSrc/*.iml
+/buildSrc/*.ipr
+/buildSrc/*.iws
+/buildSrc/out
+/buildSrc/subprojects/*/*.iml
+/buildSrc/subprojects/*/out
+/out
+/subprojects/*/*.iml
+/subprojects/*/out
+
+
+# Eclipse
+# -------
+*.classpath
+*.project
+*.settings
+/bin
+/subprojects/*/bin
+atlassian-ide-plugin.xml
+.metadata/
+
+
+# Emacs
+# -----
+*~
+\#*\#
+.\#*
+
+
+# macOS
+# ----
+.DS_Store
+
+
+# HPROF
+# -----
+*.hprof
+
+
+# Compiled class file
+# -------------------
+*.class
+
+
+# Logs
+# ----
+/*.log
+
+
+# Package Files
+# -------------
+*.jar
+*.war
+*.ear
+
+
+# generated files
+# ---------------
+bin/
+gen/
+
+
+# Virtual machine crash logs
+# --------------------------
+hs_err_pid*

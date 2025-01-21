@@ -55,6 +55,7 @@ dependencies {
 
     implementation libs.duckdb
     implementation libs.jsoup
+    implementation libs.protobuf
 
     implementation libs.trove
     implementation dependencies.create(libs.spark.get()) {

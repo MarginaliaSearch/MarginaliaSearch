@@ -125,7 +125,6 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         /* These are assumed to be populated */
         ret.linksInternal = new ArrayList<>();
         ret.linksExternal = new ArrayList<>();
-        ret.feedLinks = new ArrayList<>();
 
         return new DetailsWithWords(ret, words);
     }

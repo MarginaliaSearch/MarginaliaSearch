@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class ScreenshotCaptureToolMain {
 
     private static final Logger logger = LoggerFactory.getLogger(ScreenshotCaptureToolMain.class);
-
+    private static final String BROWSERLESS_TOKEN = System.getenv("live-capture.browserless-token");
     public static void main(String[] args) {
         DatabaseModule databaseModule = new DatabaseModule(false);
         var ds = databaseModule.provideConnection();
@@ -107,7 +107,7 @@ public class ScreenshotCaptureToolMain {
             );
 
             var request = HttpRequest.newBuilder()
-                    .uri(new URI("http://browserless:3000/screenshot"))
+                    .uri(new URI("http://browserless:3000/screenshot?token=" + BROWSERLESS_TOKEN))
                     .method("POST", HttpRequest.BodyPublishers.ofString(
                             gson.toJson(requestData)
                     ))

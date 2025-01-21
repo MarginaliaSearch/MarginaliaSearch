@@ -179,6 +179,9 @@ public class LiveCrawlerMain extends ProcessMainClass {
                     EdgeDomain domain = new EdgeDomain(entry.getKey());
                     List<String> urls = entry.getValue();
 
+                    if (urls.isEmpty())
+                        continue;
+
                     fetcher.scheduleRetrieval(domain, urls);
                 }
             }

@@ -2,9 +2,6 @@ package nu.marginalia.api.searchquery;
 
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.results.Bm25Parameters;
-import nu.marginalia.api.searchquery.model.results.ResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 
@@ -27,37 +24,19 @@ public class IndexProtobufCodec {
                 .build();
     }
 
-    public static  QueryLimits convertQueryLimits(RpcQueryLimits queryLimits) {
-        return new QueryLimits(
-                queryLimits.getResultsByDomain(),
-                queryLimits.getResultsTotal(),
-                queryLimits.getTimeoutMs(),
-                queryLimits.getFetchSize()
-        );
-    }
-
-    public static RpcQueryLimits convertQueryLimits(QueryLimits queryLimits) {
-        return RpcQueryLimits.newBuilder()
-                .setResultsByDomain(queryLimits.resultsByDomain())
-                .setResultsTotal(queryLimits.resultsTotal())
-                .setTimeoutMs(queryLimits.timeoutMs())
-                .setFetchSize(queryLimits.fetchSize())
-                .build();
-    }
-
     public static SearchQuery convertRpcQuery(RpcQuery query) {
-        List<SearchPhraseConstraint> phraeConstraints = new ArrayList<>();
+        List<SearchPhraseConstraint> phraseConstraints = new ArrayList<>();
 
         for (int j = 0; j < query.getPhrasesCount(); j++) {
             var coh = query.getPhrases(j);
             if (coh.getType() == RpcPhrases.TYPE.OPTIONAL) {
-                phraeConstraints.add(new SearchPhraseConstraint.Optional(List.copyOf(coh.getTermsList())));
+                phraseConstraints.add(new SearchPhraseConstraint.Optional(List.copyOf(coh.getTermsList())));
             }
             else if (coh.getType() == RpcPhrases.TYPE.MANDATORY) {
-                phraeConstraints.add(new SearchPhraseConstraint.Mandatory(List.copyOf(coh.getTermsList())));
+                phraseConstraints.add(new SearchPhraseConstraint.Mandatory(List.copyOf(coh.getTermsList())));
             }
             else if (coh.getType() == RpcPhrases.TYPE.FULL) {
-                phraeConstraints.add(new SearchPhraseConstraint.Full(List.copyOf(coh.getTermsList())));
+                phraseConstraints.add(new SearchPhraseConstraint.Full(List.copyOf(coh.getTermsList())));
             }
             else {
                 throw new IllegalArgumentException("Unknown phrase constraint type: " + coh.getType());
@@ -70,7 +49,7 @@ public class IndexProtobufCodec {
                 query.getExcludeList(),
                 query.getAdviceList(),
                 query.getPriorityList(),
-                phraeConstraints
+                phraseConstraints
         );
     }
 
@@ -101,62 +80,6 @@ public class IndexProtobufCodec {
         }
 
         return subqueryBuilder.build();
-    }
-
-    public static ResultRankingParameters convertRankingParameterss(RpcResultRankingParameters params) {
-        if (params == null)
-            return ResultRankingParameters.sensibleDefaults();
-
-        return new ResultRankingParameters(
-                new Bm25Parameters(params.getBm25K(), params.getBm25B()),
-                params.getShortDocumentThreshold(),
-                params.getShortDocumentPenalty(),
-                params.getDomainRankBonus(),
-                params.getQualityPenalty(),
-                params.getShortSentenceThreshold(),
-                params.getShortSentencePenalty(),
-                params.getBm25Weight(),
-                params.getTcfFirstPositionWeight(),
-                params.getTcfVerbatimWeight(),
-                params.getTcfProximityWeight(),
-                ResultRankingParameters.TemporalBias.valueOf(params.getTemporalBias().getBias().name()),
-                params.getTemporalBiasWeight(),
-                params.getExportDebugData()
-        );
-    }
-
-    public static RpcResultRankingParameters convertRankingParameterss(ResultRankingParameters rankingParams,
-                                                                       RpcTemporalBias temporalBias)
-    {
-        if (rankingParams == null) {
-            rankingParams = ResultRankingParameters.sensibleDefaults();
-        }
-
-        var builder = RpcResultRankingParameters.newBuilder()
-                        .setBm25B(rankingParams.bm25Params.b())
-                        .setBm25K(rankingParams.bm25Params.k())
-                        .setShortDocumentThreshold(rankingParams.shortDocumentThreshold)
-                        .setShortDocumentPenalty(rankingParams.shortDocumentPenalty)
-                        .setDomainRankBonus(rankingParams.domainRankBonus)
-                        .setQualityPenalty(rankingParams.qualityPenalty)
-                        .setShortSentenceThreshold(rankingParams.shortSentenceThreshold)
-                        .setShortSentencePenalty(rankingParams.shortSentencePenalty)
-                        .setBm25Weight(rankingParams.bm25Weight)
-                        .setTcfFirstPositionWeight(rankingParams.tcfFirstPosition)
-                        .setTcfProximityWeight(rankingParams.tcfProximity)
-                        .setTcfVerbatimWeight(rankingParams.tcfVerbatim)
-                        .setTemporalBiasWeight(rankingParams.temporalBiasWeight)
-                        .setExportDebugData(rankingParams.exportDebugData);
-
-        if (temporalBias != null && temporalBias.getBias() != RpcTemporalBias.Bias.NONE) {
-            builder.setTemporalBias(temporalBias);
-        }
-        else {
-            builder.setTemporalBias(RpcTemporalBias.newBuilder()
-                    .setBias(RpcTemporalBias.Bias.valueOf(rankingParams.temporalBias.name())));
-        }
-
-        return builder.build();
     }
 
 }

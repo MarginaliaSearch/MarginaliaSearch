@@ -291,11 +291,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         for (var meta : doc.select("meta[http-equiv=refresh]")) {
             linkParser.parseMetaRedirect(baseUrl, meta).ifPresent(lp::accept);
         }
-        for (var link : doc.select("link[rel=alternate]")) {
-            feedExtractor
-                    .getFeedFromAlternateTag(baseUrl, link)
-                    .ifPresent(lp::acceptFeed);
-        }
 
         words.addAllSyntheticTerms(FileLinks.createFileLinkKeywords(lp, domain));
         words.addAllSyntheticTerms(FileLinks.createFileEndingKeywords(doc));
