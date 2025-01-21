@@ -40,13 +40,16 @@ public class IndexResultRankingService {
 
     private final DocumentDbReader documentDbReader;
     private final StatefulIndex statefulIndex;
+    private final DomainRankingOverrides domainRankingOverrides;
 
     @Inject
     public IndexResultRankingService(DocumentDbReader documentDbReader,
-                                     StatefulIndex statefulIndex)
+                                     StatefulIndex statefulIndex,
+                                     DomainRankingOverrides domainRankingOverrides)
     {
         this.documentDbReader = documentDbReader;
         this.statefulIndex = statefulIndex;
+        this.domainRankingOverrides = domainRankingOverrides;
     }
 
     public List<SearchResultItem> rankResults(SearchParameters params,
@@ -57,7 +60,7 @@ public class IndexResultRankingService {
         if (resultIds.isEmpty())
             return List.of();
 
-        IndexResultScoreCalculator resultRanker = new IndexResultScoreCalculator(statefulIndex, rankingContext, params);
+        IndexResultScoreCalculator resultRanker = new IndexResultScoreCalculator(statefulIndex, domainRankingOverrides, rankingContext, params);
 
         List<SearchResultItem> results = new ArrayList<>(resultIds.size());
 

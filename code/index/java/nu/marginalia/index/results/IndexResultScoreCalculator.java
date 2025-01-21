@@ -41,14 +41,17 @@ public class IndexResultScoreCalculator {
     private final CombinedIndexReader index;
     private final QueryParams queryParams;
 
+    private final DomainRankingOverrides domainRankingOverrides;
     private final ResultRankingContext rankingContext;
     private final CompiledQuery<String> compiledQuery;
 
     public IndexResultScoreCalculator(StatefulIndex statefulIndex,
+                                      DomainRankingOverrides domainRankingOverrides,
                                       ResultRankingContext rankingContext,
                                       SearchParameters params)
     {
         this.index = statefulIndex.get();
+        this.domainRankingOverrides = domainRankingOverrides;
         this.rankingContext = rankingContext;
 
         this.queryParams = params.queryParams;
@@ -127,10 +130,10 @@ public class IndexResultScoreCalculator {
                 * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
+        double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
+
         double score = normalize(
-                score_firstPosition + score_proximity + score_verbatim
-                        + score_bM25
-                        + score_bFlags,
+                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags),
                 -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
         );
 
@@ -580,3 +583,4 @@ public class IndexResultScoreCalculator {
     }
 
 }
+
