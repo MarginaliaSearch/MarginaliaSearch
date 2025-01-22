@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.http.HttpHeaders;
+import java.util.Arrays;
 import java.util.Optional;
 
 /* FIXME:  This interface has a very unfortunate name that is not very descriptive.
@@ -58,7 +59,7 @@ public sealed interface HttpFetchResult {
                     int statusCode,
                     HttpHeaders headers,
                     String ipAddress,
-                    byte[] bytesRaw,
+                    byte[] bytesRaw, // raw data for the entire response including headers
                     int bytesStart,
                     int bytesLength
     ) implements HttpFetchResult {
@@ -73,6 +74,12 @@ public sealed interface HttpFetchResult {
 
         public InputStream getInputStream() {
             return new ByteArrayInputStream(bytesRaw, bytesStart, bytesLength);
+        }
+
+        /** Copy the byte range corresponding to the payload of the response,
+            Warning:  Copies the data, use getInputStream() for zero copy access */
+        public byte[] getBodyBytes() {
+            return Arrays.copyOfRange(bytesRaw, bytesStart, bytesStart + bytesLength);
         }
 
         public Optional<Document> parseDocument() {

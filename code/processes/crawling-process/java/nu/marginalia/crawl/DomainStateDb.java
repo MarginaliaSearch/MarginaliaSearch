@@ -60,6 +60,8 @@ public class DomainStateDb implements AutoCloseable {
 
     }
 
+    public record FaviconRecord(String contentType, byte[] imageData) {}
+
     public DomainStateDb(Path filename) throws SQLException {
         String sqliteDbString = "jdbc:sqlite:" + filename.toString();
         connection = DriverManager.getConnection(sqliteDbString);
@@ -74,7 +76,13 @@ public class DomainStateDb implements AutoCloseable {
                         feedUrl TEXT
                     )
                     """);
-
+            stmt.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS favicon (
+                        domain TEXT PRIMARY KEY,
+                        contentType TEXT NOT NULL,
+                        icon BLOB NOT NULL
+                    )
+                    """);
             stmt.execute("PRAGMA journal_mode=WAL");
         }
     }
@@ -84,6 +92,41 @@ public class DomainStateDb implements AutoCloseable {
         connection.close();
     }
 
+
+    public void saveIcon(String domain, FaviconRecord faviconRecord) {
+        try (var stmt = connection.prepareStatement("""
+                INSERT OR REPLACE INTO favicon (domain, contentType, icon)
+                       VALUES(?, ?, ?)
+            """)) {
+            stmt.setString(1, domain);
+            stmt.setString(2, faviconRecord.contentType);
+            stmt.setBytes(3, faviconRecord.imageData);
+            stmt.executeUpdate();
+        }
+        catch (SQLException ex) {
+            logger.error("Failed to insert favicon", ex);
+        }
+    }
+
+    public Optional<FaviconRecord> getIcon(String domain) {
+        try (var stmt = connection.prepareStatement("SELECT contentType, icon FROM favicon WHERE DOMAIN = ?")) {
+            stmt.setString(1, domain);
+            var rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return Optional.of(
+                    new FaviconRecord(
+                        rs.getString("contentType"),
+                        rs.getBytes("icon")
+                    )
+                );
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to retrieve favicon", e);
+        }
+
+        return Optional.empty();
+    }
 
     public void save(SummaryRecord record) {
         try (var stmt = connection.prepareStatement("""

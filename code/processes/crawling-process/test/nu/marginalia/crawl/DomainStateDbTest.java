@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DomainStateDbTest {
 
@@ -26,7 +26,7 @@ class DomainStateDbTest {
     }
 
     @Test
-    public void testSunnyDay() throws SQLException {
+    public void testSummaryRecord() throws SQLException {
         try (var db = new DomainStateDb(tempFile)) {
             var allFields = new DomainStateDb.SummaryRecord(
                     "all.marginalia.nu",
@@ -60,6 +60,23 @@ class DomainStateDbTest {
 
             db.save(updatedAllFields);
             assertEquals(updatedAllFields, db.get("all.marginalia.nu").orElseThrow());
+        }
+    }
+
+    @Test
+    public void testFavicon() throws SQLException {
+        try (var db = new DomainStateDb(tempFile)) {
+            db.saveIcon("www.marginalia.nu", new DomainStateDb.FaviconRecord("text/plain", "hello world".getBytes()));
+
+            var maybeData = db.getIcon("www.marginalia.nu");
+            assertTrue(maybeData.isPresent());
+            var actualData = maybeData.get();
+
+            assertEquals("text/plain", actualData.contentType());
+            assertArrayEquals("hello world".getBytes(), actualData.imageData());
+
+            maybeData = db.getIcon("foobar");
+            assertTrue(maybeData.isEmpty());
         }
     }
 

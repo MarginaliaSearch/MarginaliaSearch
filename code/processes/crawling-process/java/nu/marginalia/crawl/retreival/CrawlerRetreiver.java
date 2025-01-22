@@ -19,7 +19,6 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
-import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -273,7 +272,16 @@ public class CrawlerRetreiver implements AutoCloseable {
             feedLink.ifPresent(s -> fetcher.fetchSitemapUrls(s, timer));
 
             // Grab the favicon if it exists
-            fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
+
+            if (fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty()) instanceof HttpFetchResult.ResultOk iconResult) {
+                String contentType = iconResult.header("Content-Type");
+                byte[] iconData = iconResult.getBodyBytes();
+
+                domainStateDb.saveIcon(
+                        domain,
+                        new DomainStateDb.FaviconRecord(contentType, iconData)
+                );
+            }
             timer.waitFetchDelay(0);
 
         }
