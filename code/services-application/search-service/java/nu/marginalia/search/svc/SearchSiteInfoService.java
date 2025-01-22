@@ -140,7 +140,8 @@ public class SearchSiteInfoService {
     ) throws SQLException, ExecutionException {
 
         if (null == domainName || domainName.isBlank()) {
-            return null;
+            // If we don't get a domain name, we redirect to the /site endpoint
+            return new MapModelAndView("redirect.jte", Map.of("url", "/site"));
         }
 
         page = Objects.requireNonNullElse(page, 1);
