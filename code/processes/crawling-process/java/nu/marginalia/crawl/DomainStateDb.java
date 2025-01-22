@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Supplemental sqlite database for storing the summary of a crawl.
@@ -99,7 +100,7 @@ public class DomainStateDb implements AutoCloseable {
                        VALUES(?, ?, ?)
             """)) {
             stmt.setString(1, domain);
-            stmt.setString(2, faviconRecord.contentType);
+            stmt.setString(2, Objects.requireNonNullElse(faviconRecord.contentType, "application/octet-stream"));
             stmt.setBytes(3, faviconRecord.imageData);
             stmt.executeUpdate();
         }
