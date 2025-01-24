@@ -86,7 +86,7 @@
             @endif
 
             @if(result.getFirst().isTracking())
-                <span class="px-1 bg-yellow-100 text-yellow-700 dark:border dark:border-yellow-600 dark:text-yellow-400 dark:bg-black rounded" title="Uses tracking scripts">Track</span>
+                <span class="px-1 bg-yellow-100 text-yellow-700 dark:border dark:border-yellow-600 dark:text-yellow-400 dark:bg-black rounded" title="Uses tracking scripts">Tracking</span>
             @endif
 
             @if(result.getFirst().isScripts())
@@ -94,11 +94,11 @@
             @endif
 
             @if(result.getFirst().isAds())
-                <span class="px-1 bg-red-100 text-red-700 dark:border dark:border-red-600 dark:text-red-400 dark:bg-black rounded" title="Contains adtech">Ads</span>
+                <span class="px-1 bg-red-100 text-red-700 dark:border dark:border-red-600 dark:text-red-400 dark:bg-black rounded" title="Contains adtech">Has Ads</span>
             @endif
 
             @if(result.getFirst().isAffiliate())
-                <span class="px-1 bg-red-100 text-red-700 dark:border dark:border-red-600 dark:text-red-400 dark:bg-black rounded" title="Contains Affiliate Link">Affiliate</span>
+                <span class="px-1 bg-red-100 text-red-700 dark:border dark:border-red-600 dark:text-red-400 dark:bg-black rounded" title="Contains Affiliate Link">Has Affiliate</span>
             @endif
 
         </span>
