@@ -155,8 +155,15 @@ public class SentenceExtractor {
     public List<DocumentSentence> extractSentencesFromString(String text, EnumSet<HtmlTag> htmlTags) {
         String[] sentences;
 
-        // Normalize spaces
+        // Safety net against malformed data DOS attacks,
+        // found 5+ MB <p>-tags in the wild that just break
+        // the sentence extractor causing it to stall forever.
+        if (text.length() > 50_000) {
+            // 50k chars can hold a small novel, let alone single html tags
+            text = text.substring(0, 50_000);
+        }
 
+        // Normalize spaces
         text = normalizeSpaces(text);
 
         // Split into sentences
