@@ -26,7 +26,7 @@ public class DocumentBodyToString {
         return new String(data, charset);
     }
 
-    public static Document getParsedData(ContentType type, byte[] data, String url) throws IOException {
+    public static Document getParsedData(ContentType type, byte[] data, int maxLength, String url) throws IOException {
         final Charset charset;
 
         if (type.charset() == null || type.charset().isBlank()) {
@@ -35,7 +35,7 @@ public class DocumentBodyToString {
             charset = charsetMap.computeIfAbsent(type, DocumentBodyToString::computeCharset);
         }
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        ByteArrayInputStream bais = new ByteArrayInputStream(data, 0, Math.min(data.length, maxLength));
 
         return Jsoup.parse(bais, charset.name(), url);
     }

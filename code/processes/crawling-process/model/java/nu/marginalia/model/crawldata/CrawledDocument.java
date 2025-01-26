@@ -61,12 +61,10 @@ public final class CrawledDocument implements SerializableCrawlData {
     public Document parseBody() throws IOException {
         // Prevent stalls from parsing excessively large documents
 
-        byte[] bytes = documentBodyBytes.length > 200_000
-                ? Arrays.copyOf(documentBodyBytes, 200_000) : documentBodyBytes;
-
         return DocumentBodyToString.getParsedData(
                 ContentType.parse(contentType),
-                bytes,
+                documentBodyBytes,
+                200_000,
                 url);
     }
 
