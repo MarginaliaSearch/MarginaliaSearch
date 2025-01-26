@@ -5,7 +5,7 @@ import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
-import nu.marginalia.io.CrawledDomainReader;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -103,7 +103,7 @@ public class TermFrequencyExporter implements ExporterIf {
     {
         TLongHashSet words = new TLongHashSet(1000);
 
-        try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(crawlDataPath)) {
             while (stream.hasNext()) {
                 if (Thread.interrupted())
                     return;

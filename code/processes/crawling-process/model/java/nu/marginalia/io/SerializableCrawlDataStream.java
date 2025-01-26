@@ -1,5 +1,7 @@
 package nu.marginalia.io;
 
+import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
+import nu.marginalia.io.crawldata.format.SlopSerializableCrawlDataStream;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
@@ -18,7 +20,6 @@ import java.util.function.Function;
 /** Closable iterator exceptional over serialized crawl data
  * The data may appear in any order, and the iterator must be closed.
  *
- * @see CrawledDomainReader
  * */
 public interface SerializableCrawlDataStream extends AutoCloseable {
     Logger logger = LoggerFactory.getLogger(SerializableCrawlDataStream.class);
@@ -27,7 +28,7 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
 
     /** Return a size hint for the stream.  0 is returned if the hint is not available,
      * or if the file is seemed too small to bother */
-    default int sizeHint() { return 0; }
+    default int getSizeHint() { return 0; }
 
     boolean hasNext() throws IOException;
 
@@ -35,6 +36,49 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
     default Path path() { return null; }
 
     void close() throws IOException;
+
+    /** An iterator-like access to domain data  This must be closed otherwise it will leak off-heap memory! */
+    static SerializableCrawlDataStream openDataStream(Path fullPath) throws IOException
+    {
+
+        String fileName = fullPath.getFileName().toString();
+        if (fileName.endsWith(".parquet")) {
+            try {
+                return new ParquetSerializableCrawlDataStream(fullPath);
+            } catch (Exception ex) {
+                logger.error("Error reading domain data from " + fullPath, ex);
+                return SerializableCrawlDataStream.empty();
+            }
+        }
+
+        if (fileName.endsWith(".slop.zip")) {
+            try {
+                return new SlopSerializableCrawlDataStream(fullPath);
+            } catch (Exception ex) {
+                logger.error("Error reading domain data from " + fullPath, ex);
+                return SerializableCrawlDataStream.empty();
+            }
+        }
+
+        logger.error("Unknown file type: {}", fullPath);
+        return SerializableCrawlDataStream.empty();
+    }
+
+    /** Get an idication of the size of the stream.  This is used to determine whether to
+     * load the stream into memory or not.  0 is returned if the hint is not available,
+     * or if the file is seemed too small to bother */
+    static int getSizeHint(Path fullPath) {
+        String fileName = fullPath.getFileName().toString();
+        if (fileName.endsWith(".parquet")) {
+            return ParquetSerializableCrawlDataStream.sizeHint(fullPath);
+        }
+        else if (fileName.endsWith(".slop.zip")) {
+            return SlopSerializableCrawlDataStream.sizeHint(fullPath);
+        }
+        else {
+            return 0;
+        }
+    }
 
     default <T>  Iterator<T> map(Function<SerializableCrawlData, Optional<T>> mapper) {
         return new Iterator<>() {

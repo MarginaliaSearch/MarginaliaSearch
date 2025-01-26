@@ -26,7 +26,7 @@ import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.searchset.SearchSetAny;
-import nu.marginalia.io.CrawledDomainReader;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
@@ -152,7 +152,7 @@ public class IntegrationTest {
 
         /** PROCESS CRAWL DATA */
 
-        var processedDomain = domainProcessor.fullProcessing(CrawledDomainReader.createDataStream(crawlDataParquet));
+        var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataParquet));
 
         System.out.println(processedDomain);
 

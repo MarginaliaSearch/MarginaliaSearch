@@ -10,7 +10,6 @@ import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.*;
-import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -227,7 +226,7 @@ class CrawlerRetreiverTest {
 
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -280,7 +279,7 @@ class CrawlerRetreiverTest {
 
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -329,7 +328,7 @@ class CrawlerRetreiverTest {
         doCrawl(tempFileWarc1, specs);
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -376,7 +375,7 @@ class CrawlerRetreiverTest {
         doCrawl(tempFileWarc1, specs);
         convertToParquet(tempFileWarc1, tempFileParquet1);
         doCrawlWithReferenceStream(specs,
-                CrawledDomainReader.createDataStream(tempFileParquet1)
+                SerializableCrawlDataStream.openDataStream(tempFileParquet1)
         );
         convertToParquet(tempFileWarc2, tempFileParquet2);
 
@@ -397,7 +396,7 @@ class CrawlerRetreiverTest {
             });
         }
 
-        try (var ds = CrawledDomainReader.createDataStream(tempFileParquet2)) {
+        try (var ds = SerializableCrawlDataStream.openDataStream(tempFileParquet2)) {
             while (ds.hasNext()) {
                 var doc = ds.next();
                 if (doc instanceof CrawledDomain dr) {
@@ -439,7 +438,7 @@ class CrawlerRetreiverTest {
 
         convertToParquet(tempFileWarc1, tempFileParquet1);
 
-        try (var stream = CrawledDomainReader.createDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
             while (stream.hasNext()) {
                 var doc = stream.next();
                 data.computeIfAbsent(doc.getClass(), c -> new ArrayList<>()).add(doc);
@@ -448,7 +447,7 @@ class CrawlerRetreiverTest {
             throw new RuntimeException(e);
         }
 
-        var stream = CrawledDomainReader.createDataStream(tempFileParquet1);
+        var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1);
 
         System.out.println("---");
 
@@ -488,7 +487,7 @@ class CrawlerRetreiverTest {
             });
         }
 
-        try (var ds = CrawledDomainReader.createDataStream(tempFileParquet2)) {
+        try (var ds = SerializableCrawlDataStream.openDataStream(tempFileParquet2)) {
             while (ds.hasNext()) {
                 var doc = ds.next();
                 if (doc instanceof CrawledDomain dr) {

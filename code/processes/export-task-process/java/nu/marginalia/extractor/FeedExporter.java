@@ -1,7 +1,6 @@
 package nu.marginalia.extractor;
 
 import com.google.inject.Inject;
-import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.link_parser.LinkParser;
@@ -56,7 +55,7 @@ public class FeedExporter implements ExporterIf {
                 }
 
                 Path crawlDataPath = inputDir.resolve(item.relPath());
-                try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
+                try (var stream = SerializableCrawlDataStream.openDataStream(crawlDataPath)) {
                     exportFeeds(tagWriter, stream);
                 }
                 catch (Exception ex) {
@@ -75,7 +74,7 @@ public class FeedExporter implements ExporterIf {
     private boolean exportFeeds(FeedCsvWriter exporter, SerializableCrawlDataStream stream) throws IOException, URISyntaxException {
         FeedExtractor feedExtractor = new FeedExtractor(new LinkParser());
 
-        int size = stream.sizeHint();
+        int size = stream.getSizeHint();
 
         while (stream.hasNext()) {
             if (!(stream.next() instanceof CrawledDocument doc))

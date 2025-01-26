@@ -3,7 +3,6 @@ package nu.marginalia.extractor;
 import com.google.inject.Inject;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.hash.MurmurHash3_128;
-import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
@@ -59,7 +58,7 @@ public class AtagExporter implements ExporterIf {
                 }
 
                 Path crawlDataPath = inputDir.resolve(item.relPath());
-                try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
+                try (var stream = SerializableCrawlDataStream.openDataStream(crawlDataPath)) {
                     exportLinks(tagWriter, stream);
                 }
                 catch (Exception ex) {

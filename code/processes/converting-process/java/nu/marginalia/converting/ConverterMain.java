@@ -12,7 +12,7 @@ import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
-import nu.marginalia.io.CrawledDomainReader;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.process.ProcessConfiguration;
@@ -207,12 +207,12 @@ public class ConverterMain extends ProcessMainClass {
             for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
                     new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
             {
-                if (CrawledDomainReader.sizeHint(dataPath) >= SIDELOAD_THRESHOLD) {
+                if (SerializableCrawlDataStream.getSizeHint(dataPath) >= SIDELOAD_THRESHOLD) {
                     continue;
                 }
 
                 pool.submit(() -> {
-                    try (var dataStream = CrawledDomainReader.createDataStream(dataPath)) {
+                    try (var dataStream = SerializableCrawlDataStream.openDataStream(dataPath)) {
                         ConverterBatchWritableIf writable = processor.fullProcessing(dataStream) ;
                         converterWriter.accept(writable);
                     }
@@ -239,7 +239,7 @@ public class ConverterMain extends ProcessMainClass {
             for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
                     new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
             {
-                int sizeHint = CrawledDomainReader.sizeHint(dataPath);
+                int sizeHint = SerializableCrawlDataStream.getSizeHint(dataPath);
                 if (sizeHint < SIDELOAD_THRESHOLD) {
                     continue;
                 }
