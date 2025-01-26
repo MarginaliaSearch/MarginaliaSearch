@@ -194,6 +194,9 @@ public class DomainProcessor {
         @Override
         public Iterator<ProcessedDocument> getDocumentsStream() {
             return iteratorFactory.create((taskConsumer) -> {
+
+                logger.info("Simple Processing: {}", domain);
+
                 while (dataStream.hasNext())
                 {
                     if (!(dataStream.next() instanceof CrawledDocument doc))
@@ -218,6 +221,8 @@ public class DomainProcessor {
                         return processedDoc;
                     });
                 }
+
+                logger.info("Finished Simple Processing: {}", domain);
             });
         }
 
