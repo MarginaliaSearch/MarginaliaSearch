@@ -244,8 +244,14 @@ public class ConverterMain extends ProcessMainClass {
                     continue;
                 }
 
-                try (var dataStream = CrawledDomainReader.createDataStream(dataPath)) {
-                    ConverterBatchWritableIf writable = processor.simpleProcessing(dataStream, sizeHint);
+                try {
+                    // SerializableCrawlDataStream is autocloseable, we can't try-with-resources because then it will be
+                    // closed before it's consumed by the converterWriter.  Instead, the converterWriter guarantees it
+                    // will close it after it's consumed.
+
+                    var stream = SerializableCrawlDataStream.openDataStream(dataPath);
+                    ConverterBatchWritableIf writable = processor.simpleProcessing(stream, sizeHint);
+
                     converterWriter.accept(writable);
                 }
                 catch (Exception ex) {

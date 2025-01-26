@@ -39,6 +39,9 @@ public class ConverterWriter implements AutoCloseable {
         workerThread.start();
     }
 
+    /** Queue and eventually write the domain into the converter journal
+     *  The domain object will be closed after it's processed.
+     * */
     public void accept(@Nullable ConverterBatchWritableIf domain) {
         if (null == domain)
             return;
@@ -72,15 +75,15 @@ public class ConverterWriter implements AutoCloseable {
 
                 if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
                     logger.warn("Skipping already logged item {}", id);
+                }
+                else {
+                    currentWriter.write(data);
+                    workLog.logItem(id);
                     data.close();
-                    continue;
                 }
 
-                currentWriter.write(data);
-
-                workLog.logItem(id);
-
                 switcher.tick();
+                data.close();
             }
         }
         catch (Exception ex) {
