@@ -38,4 +38,16 @@ public class CrawledDomainReader {
         return SerializableCrawlDataStream.empty();
     }
 
+    public static int sizeHint(Path fullPath) {
+        String fileName = fullPath.getFileName().toString();
+        if (fileName.endsWith(".parquet")) {
+            return ParquetSerializableCrawlDataStream.sizeHint(fullPath);
+        }
+        else if (fileName.endsWith(".slop.zip")) {
+            return SlopSerializableCrawlDataStream.sizeHint(fullPath);
+        }
+        else {
+            return 0;
+        }
+    }
 }

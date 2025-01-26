@@ -52,7 +52,7 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
         return path;
     }
 
-    public int sizeHint() {
+    public static int sizeHint(Path path) {
         // Only calculate size hint for large files
         // (the reason we calculate them in the first place is to assess whether it is large
         // because it has many documents, or because it is a small number of large documents)

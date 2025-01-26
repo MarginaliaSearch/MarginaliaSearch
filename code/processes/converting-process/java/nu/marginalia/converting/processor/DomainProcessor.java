@@ -14,7 +14,6 @@ import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.geoip.sources.AsnTable;
-import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -28,13 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
 
 public class DomainProcessor {
-    private static final int SIDELOAD_THRESHOLD = Integer.getInteger("converter.sideloadThreshold", 10_000);
     private final DocumentProcessor documentProcessor;
     private final SiteWords siteWords;
     private final AnchorTagsSource anchorTagsSource;
@@ -54,21 +51,6 @@ public class DomainProcessor {
         this.geoIpDictionary = geoIpDictionary;
 
         geoIpDictionary.waitReady();
-    }
-
-    public ConverterBatchWritableIf createWritable(Path path) throws IOException {
-
-        var dataStream = CrawledDomainReader.createDataStream(path);
-
-        final int sizeHint = dataStream.sizeHint();
-
-        if (sizeHint > SIDELOAD_THRESHOLD) {
-            // If the file is too big, we run a processing mode that doesn't
-            // require loading the entire dataset into RAM
-            return simpleProcessing(dataStream, sizeHint);
-        }
-
-        return fullProcessing(dataStream);
     }
 
     public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
@@ -159,6 +141,7 @@ public class DomainProcessor {
         private final Set<String> processedUrls = new HashSet<>();
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
+
         private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
                 Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
         );
@@ -195,8 +178,6 @@ public class DomainProcessor {
         public Iterator<ProcessedDocument> getDocumentsStream() {
             return iteratorFactory.create((taskConsumer) -> {
 
-                logger.info("Simple Processing: {}", domain);
-
                 while (dataStream.hasNext())
                 {
                     if (!(dataStream.next() instanceof CrawledDocument doc))
@@ -221,8 +202,6 @@ public class DomainProcessor {
                         return processedDoc;
                     });
                 }
-
-                logger.info("Finished Simple Processing: {}", domain);
             });
         }
 

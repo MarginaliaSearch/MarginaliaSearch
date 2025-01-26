@@ -34,6 +34,8 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
     @Nullable
     default Path path() { return null; }
 
+    void close() throws IOException;
+
     default <T>  Iterator<T> map(Function<SerializableCrawlData, Optional<T>> mapper) {
         return new Iterator<>() {
             T next = null;

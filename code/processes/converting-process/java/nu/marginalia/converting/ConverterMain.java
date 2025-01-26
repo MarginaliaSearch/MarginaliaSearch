@@ -12,6 +12,7 @@ import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
+import nu.marginalia.io.CrawledDomainReader;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.process.ProcessConfiguration;
@@ -49,6 +50,7 @@ public class ConverterMain extends ProcessMainClass {
     private final ProcessHeartbeat heartbeat;
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
+    private static final int SIDELOAD_THRESHOLD = Integer.getInteger("converter.sideloadThreshold", 10_000);
 
     public static void main(String... args) throws Exception {
 
@@ -199,12 +201,19 @@ public class ConverterMain extends ProcessMainClass {
             processedDomains.set(batchingWorkLog.size());
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
-            for (var domain : WorkLog.iterableMap(crawlDir.getLogFile(),
+            logger.info("Processing small items");
+
+            // First process the small items
+            for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
                     new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
             {
+                if (CrawledDomainReader.sizeHint(dataPath) >= SIDELOAD_THRESHOLD) {
+                    continue;
+                }
+
                 pool.submit(() -> {
-                    try {
-                        ConverterBatchWritableIf writable = processor.createWritable(domain);
+                    try (var dataStream = CrawledDomainReader.createDataStream(dataPath)) {
+                        ConverterBatchWritableIf writable = processor.fullProcessing(dataStream) ;
                         converterWriter.accept(writable);
                     }
                     catch (Exception ex) {
@@ -223,6 +232,31 @@ public class ConverterMain extends ProcessMainClass {
             do {
                 System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
             } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+
+            logger.info("Processing large items");
+
+            // Next the big items domain-by-domain
+            for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
+                    new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
+            {
+                int sizeHint = CrawledDomainReader.sizeHint(dataPath);
+                if (sizeHint < SIDELOAD_THRESHOLD) {
+                    continue;
+                }
+
+                try (var dataStream = CrawledDomainReader.createDataStream(dataPath)) {
+                    ConverterBatchWritableIf writable = processor.simpleProcessing(dataStream, sizeHint);
+                    converterWriter.accept(writable);
+                }
+                catch (Exception ex) {
+                    logger.info("Error in processing", ex);
+                }
+                finally {
+                    heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+                }
+            }
+
+            logger.info("Processing complete");
         }
     }
 
