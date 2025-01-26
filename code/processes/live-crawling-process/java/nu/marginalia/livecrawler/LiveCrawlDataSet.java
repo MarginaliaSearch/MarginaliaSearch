@@ -228,7 +228,7 @@ public class LiveCrawlDataSet implements AutoCloseable {
         }
 
         @Override
-        public boolean hasNext() throws IOException {
+        public boolean hasNext() {
             if (dataStack == null) {
                 query();
             }
@@ -236,7 +236,7 @@ public class LiveCrawlDataSet implements AutoCloseable {
         }
 
         @Override
-        public void close() throws Exception {
+        public void close() {
             dataStack.clear();
         }
     }
