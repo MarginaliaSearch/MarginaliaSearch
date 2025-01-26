@@ -202,12 +202,13 @@ public class ConverterMain extends ProcessMainClass {
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
             logger.info("Processing small items");
-
+            int numBigTasks = 0;
             // First process the small items
             for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
                     new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
             {
                 if (SerializableCrawlDataStream.getSizeHint(dataPath) >= SIDELOAD_THRESHOLD) {
+                    numBigTasks ++;
                     continue;
                 }
 
@@ -235,30 +236,35 @@ public class ConverterMain extends ProcessMainClass {
 
             logger.info("Processing large items");
 
-            // Next the big items domain-by-domain
-            for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
-                    new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
-            {
-                int sizeHint = SerializableCrawlDataStream.getSizeHint(dataPath);
-                if (sizeHint < SIDELOAD_THRESHOLD) {
-                    continue;
-                }
+            try (var hb = heartbeat.createAdHocTaskHeartbeat("Large Domains")) {
+                int bigTaskIdx = 0;
+                // Next the big items domain-by-domain
+                for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
+                        new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
+                {
+                    int sizeHint = SerializableCrawlDataStream.getSizeHint(dataPath);
+                    if (sizeHint < SIDELOAD_THRESHOLD) {
+                        continue;
+                    }
 
-                try {
-                    // SerializableCrawlDataStream is autocloseable, we can't try-with-resources because then it will be
-                    // closed before it's consumed by the converterWriter.  Instead, the converterWriter guarantees it
-                    // will close it after it's consumed.
+                    hb.progress(dataPath.toFile().getName(), bigTaskIdx++, numBigTasks);
 
-                    var stream = SerializableCrawlDataStream.openDataStream(dataPath);
-                    ConverterBatchWritableIf writable = processor.simpleProcessing(stream, sizeHint);
+                    try {
+                        // SerializableCrawlDataStream is autocloseable, we can't try-with-resources because then it will be
+                        // closed before it's consumed by the converterWriter.  Instead, the converterWriter guarantees it
+                        // will close it after it's consumed.
 
-                    converterWriter.accept(writable);
-                }
-                catch (Exception ex) {
-                    logger.info("Error in processing", ex);
-                }
-                finally {
-                    heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+                        var stream = SerializableCrawlDataStream.openDataStream(dataPath);
+                        ConverterBatchWritableIf writable = processor.simpleProcessing(stream, sizeHint);
+
+                        converterWriter.accept(writable);
+                    }
+                    catch (Exception ex) {
+                        logger.info("Error in processing", ex);
+                    }
+                    finally {
+                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+                    }
                 }
             }
 
