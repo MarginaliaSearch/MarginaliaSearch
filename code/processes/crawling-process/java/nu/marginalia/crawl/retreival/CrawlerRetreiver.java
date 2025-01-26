@@ -89,30 +89,45 @@ public class CrawlerRetreiver implements AutoCloseable {
     }
 
     public int crawlDomain(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
-        try {
+        try (oldCrawlData) {
             // Do an initial domain probe to determine the root URL
-            EdgeUrl rootUrl;
-
             var probeResult = probeRootUrl();
-            switch (probeResult) {
+
+            return switch (probeResult) {
                 case HttpFetcher.DomainProbeResult.Ok(EdgeUrl probedUrl) -> {
-                    rootUrl = probedUrl; // Good track
+
+                    // Sleep after the initial probe, we don't have access to the robots.txt yet
+                    // so we don't know the crawl delay
+                    TimeUnit.SECONDS.sleep(1);
+
+                    final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(probedUrl.domain, warcRecorder);
+                    final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
+
+                    delayTimer.waitFetchDelay(0); // initial delay after robots.txt
+
+                    DomainStateDb.SummaryRecord summaryRecord = sniffRootDocument(probedUrl, delayTimer);
+                    domainStateDb.save(summaryRecord);
+
+                    // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
+                    if (crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer) > 0) {
+                        // If we have reference data, we will always grow the crawl depth a bit
+                        crawlFrontier.increaseDepth(1.5, 2500);
+                    }
+
+                    oldCrawlData.close(); // proactively close the crawl data reference here to not hold onto expensive resources
+
+                    yield crawlDomain(probedUrl, robotsRules, delayTimer, domainLinks);
                 }
                 case HttpFetcher.DomainProbeResult.Redirect(EdgeDomain domain1) -> {
                     domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, "Redirect", domain1.toString()));
-                    return 1;
+                    yield 1;
                 }
                 case HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus status, String desc) -> {
                     domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, status.toString(), desc));
-                    return 1;
+                    yield 1;
                 }
-            }
+            };
 
-            // Sleep after the initial probe, we don't have access to the robots.txt yet
-            // so we don't know the crawl delay
-            TimeUnit.SECONDS.sleep(1);
-
-            return crawlDomain(oldCrawlData, rootUrl, domainLinks);
         }
         catch (Exception ex) {
             logger.error("Error crawling domain {}", domain, ex);
@@ -120,27 +135,14 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    private int crawlDomain(CrawlDataReference oldCrawlData,
-                            EdgeUrl rootUrl,
-                            DomainLinks domainLinks) throws InterruptedException {
+    private int crawlDomain(EdgeUrl rootUrl,
+                            SimpleRobotRules robotsRules,
+                            CrawlDelayTimer delayTimer,
+                            DomainLinks domainLinks) {
 
-        final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(rootUrl.domain, warcRecorder);
-        final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
-
-        delayTimer.waitFetchDelay(0); // initial delay after robots.txt
-
-        DomainStateDb.SummaryRecord summaryRecord = sniffRootDocument(rootUrl, delayTimer);
-        domainStateDb.save(summaryRecord);
-
-        // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
-        if (crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer) > 0) {
-            // If we have reference data, we will always grow the crawl depth a bit
-            crawlFrontier.increaseDepth(1.5, 2500);
-        }
 
         // Add external links to the crawl frontier
         crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
-
 
         // Fetch sitemaps
         for (var sitemap : robotsRules.getSitemaps()) {

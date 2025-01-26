@@ -375,7 +375,7 @@ class CrawlerRetreiverTest {
         doCrawl(tempFileWarc1, specs);
         convertToParquet(tempFileWarc1, tempFileParquet1);
         doCrawlWithReferenceStream(specs,
-                SerializableCrawlDataStream.openDataStream(tempFileParquet1)
+                new CrawlDataReference(tempFileParquet1)
         );
         convertToParquet(tempFileWarc2, tempFileParquet2);
 
@@ -447,11 +447,9 @@ class CrawlerRetreiverTest {
             throw new RuntimeException(e);
         }
 
-        var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1);
-
         System.out.println("---");
 
-        doCrawlWithReferenceStream(specs, stream);
+        doCrawlWithReferenceStream(specs, new CrawlDataReference(tempFileParquet1));
 
         var revisitCrawlFrontier = new DomainCrawlFrontier(
                 new EdgeDomain("www.marginalia.nu"),
@@ -508,12 +506,11 @@ class CrawlerRetreiverTest {
         }
     }
 
-    private void doCrawlWithReferenceStream(CrawlerMain.CrawlSpecRecord specs, SerializableCrawlDataStream stream) {
+    private void doCrawlWithReferenceStream(CrawlerMain.CrawlSpecRecord specs, CrawlDataReference reference) {
         try (var recorder = new WarcRecorder(tempFileWarc2, new Cookies());
              var db = new DomainStateDb(tempFileDb)
         ) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, db, recorder).crawlDomain(new DomainLinks(),
-                    new CrawlDataReference(stream));
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, db, recorder).crawlDomain(new DomainLinks(), reference);
         }
         catch (IOException | SQLException ex) {
             Assertions.fail(ex);

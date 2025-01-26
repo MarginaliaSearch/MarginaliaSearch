@@ -108,15 +108,17 @@ public record SlopCrawlDataRecord(String domain,
     public static void convertFromParquet(Path parquetInput, Path slopOutput) throws IOException {
         Path tempDir = Files.createTempDirectory(slopOutput.getParent(), "conversion");
 
-        try (var writer = new Writer(tempDir)) {
-            CrawledDocumentParquetRecordFileReader.stream(parquetInput).forEach(
-                    parquetRecord -> {
-                        try {
-                            writer.write(new SlopCrawlDataRecord(parquetRecord));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+        try (var writer = new Writer(tempDir);
+             var stream = CrawledDocumentParquetRecordFileReader.stream(parquetInput))
+        {
+            stream.forEach(
+                parquetRecord -> {
+                    try {
+                        writer.write(new SlopCrawlDataRecord(parquetRecord));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
         }
         catch (IOException ex) {
             FileUtils.deleteDirectory(tempDir.toFile());

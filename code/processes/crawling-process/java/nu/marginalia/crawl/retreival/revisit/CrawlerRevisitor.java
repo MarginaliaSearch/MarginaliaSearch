@@ -40,18 +40,12 @@ public class CrawlerRevisitor {
         int errors = 0;
         int skipped = 0;
 
-        for (;;) {
+        for (CrawledDocument doc : oldCrawlData) {
             if (errors > 20) {
                 // If we've had too many errors, we'll stop trying to recrawl
                 break;
             }
 
-            CrawledDocument doc = oldCrawlData.nextDocument();
-
-            if (doc == null)
-                break;
-
-            // This Shouldn't Happen (TM)
             var urlMaybe = EdgeUrl.parse(doc.url);
             if (urlMaybe.isEmpty())
                 continue;

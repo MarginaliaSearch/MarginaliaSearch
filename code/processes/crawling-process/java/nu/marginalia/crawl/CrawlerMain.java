@@ -20,7 +20,6 @@ import nu.marginalia.crawl.warc.WarcArchiverFactory;
 import nu.marginalia.crawl.warc.WarcArchiverIf;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.io.CrawlerOutputFile;
-import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.process.ProcessConfiguration;
@@ -417,13 +416,13 @@ public class CrawlerMain extends ProcessMainClass {
             try {
                 Path slopPath = CrawlerOutputFile.getSlopPath(outputDir, id, domain);
                 if (Files.exists(slopPath)) {
-                    return new CrawlDataReference(SerializableCrawlDataStream.openDataStream(slopPath));
+                    return new CrawlDataReference(slopPath);
                 }
 
                 Path parquetPath = CrawlerOutputFile.getParquetPath(outputDir, id, domain);
                 if (Files.exists(parquetPath)) {
                     slopPath = migrateParquetData(parquetPath, domain, outputDir);
-                    return new CrawlDataReference(SerializableCrawlDataStream.openDataStream(slopPath));
+                    return new CrawlDataReference(slopPath);
                 }
 
             } catch (IOException e) {

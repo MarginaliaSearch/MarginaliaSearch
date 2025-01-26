@@ -4,6 +4,7 @@ import nu.marginalia.ContentTypes;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.lsh.EasyLSH;
 import nu.marginalia.model.crawldata.CrawledDocument;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,51 +12,73 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Optional;
 
 /** A reference to a domain that has been crawled before. */
-public class CrawlDataReference implements AutoCloseable {
+public class CrawlDataReference implements AutoCloseable, Iterable<CrawledDocument> {
 
-    private final SerializableCrawlDataStream data;
+    private boolean closed = false;
+
+    @Nullable
+    private final Path path;
+
+    @Nullable
+    private SerializableCrawlDataStream data = null;
+
     private static final Logger logger = LoggerFactory.getLogger(CrawlDataReference.class);
 
-    public CrawlDataReference(SerializableCrawlDataStream data) {
-        this.data = data;
+    public CrawlDataReference(@Nullable Path path) {
+        this.path = path;
     }
 
     public CrawlDataReference() {
-        this(SerializableCrawlDataStream.empty());
+        this(null);
     }
 
     /** Delete the associated data from disk, if it exists */
     public void delete() throws IOException {
-        Path filePath = data.path();
-
-        if (filePath != null) {
-            Files.deleteIfExists(filePath);
+        if (path != null) {
+            Files.deleteIfExists(path);
         }
     }
 
-    /** Get the next document from the crawl data,
-     * returning null when there are no more documents
-     * available
-     */
-    @Nullable
-    public CrawledDocument nextDocument() {
-        try {
-            while (data.hasNext()) {
-                if (data.next() instanceof CrawledDocument doc) {
-                    if (!ContentTypes.isAccepted(doc.contentType))
-                        continue;
+    public @NotNull Iterator<CrawledDocument> iterator() {
 
-                    return doc;
+        requireStream();
+        // Guaranteed by requireStream, but helps java
+        Objects.requireNonNull(data);
+
+        return data.map(next -> {
+            if (next instanceof CrawledDocument doc && ContentTypes.isAccepted(doc.contentType)) {
+                return Optional.of(doc);
+            }
+            else {
+                return Optional.empty();
+            }
+        });
+    }
+
+    /** After calling this method, data is guaranteed to be non-null */
+    private void requireStream() {
+        if (closed) {
+            throw new IllegalStateException("Use after close()");
+        }
+
+        if (data == null) {
+            try {
+                if (path != null) {
+                    data = SerializableCrawlDataStream.openDataStream(path);
+                    return;
                 }
             }
-        }
-        catch (IOException ex) {
-            logger.error("Failed to read next document", ex);
-        }
+            catch (Exception ex) {
+                logger.error("Failed to open stream", ex);
+            }
 
-        return null;
+            data = SerializableCrawlDataStream.empty();
+        }
     }
 
     public static boolean isContentBodySame(byte[] one, byte[] other) {
@@ -98,7 +121,12 @@ public class CrawlDataReference implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        data.close();
+    public void close() throws IOException {
+        if (!closed) {
+            if (data != null) {
+                data.close();
+            }
+            closed = true;
+        }
     }
 }
