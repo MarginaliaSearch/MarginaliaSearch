@@ -9,7 +9,7 @@
         <span>
         Access logs containing IP-addresses are retained for up to 24 hours,
         anonymized logs with source addresses removed are sometimes kept longer
-        for to help diagnosing bugs.
+        to help diagnose bugs.
         </span>
     </div>
     <div class="flex space-y-4 flex-col">
