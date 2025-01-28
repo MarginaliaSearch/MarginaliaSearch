@@ -10,7 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 /** WorkLog is a journal of work done by a process,
@@ -59,6 +61,12 @@ public class WorkLog implements AutoCloseable, Closeable {
      */
     public static <T> Iterable<T> iterableMap(Path logFile, Function<WorkLogEntry, Optional<T>> mapper) {
         return new WorkLoadIterable<>(logFile, mapper);
+    }
+
+    public static int countEntries(Path crawlerLog) throws IOException{
+        try (var linesStream = Files.lines(crawlerLog)) {
+            return (int) linesStream.filter(WorkLogEntry::isJobId).count();
+        }
     }
 
     // Use synchro over concurrent set to avoid competing writes

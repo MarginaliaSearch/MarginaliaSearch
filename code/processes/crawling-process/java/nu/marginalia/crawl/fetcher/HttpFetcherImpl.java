@@ -45,6 +45,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
     private final Duration requestTimeout = Duration.ofSeconds(10);
+    private final Duration probeTimeout = Duration.ofSeconds(30);
 
     @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
@@ -107,23 +108,27 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .HEAD()
                     .uri(url.asURI())
                     .header("User-agent", userAgentString)
-                    .timeout(requestTimeout)
+                    .timeout(probeTimeout)
                     .build();
         } catch (URISyntaxException e) {
             return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid URL");
         }
 
-        try {
-            var rsp = client.send(head, HttpResponse.BodyHandlers.discarding());
-            EdgeUrl rspUri = new EdgeUrl(rsp.uri());
+        for (int tries = 0;; tries++) {
+            try {
+                var rsp = client.send(head, HttpResponse.BodyHandlers.discarding());
+                EdgeUrl rspUri = new EdgeUrl(rsp.uri());
 
-            if (!Objects.equals(rspUri.domain, url.domain)) {
-                return new DomainProbeResult.Redirect(rspUri.domain);
+                if (!Objects.equals(rspUri.domain, url.domain)) {
+                    return new DomainProbeResult.Redirect(rspUri.domain);
+                }
+                return new DomainProbeResult.Ok(rspUri);
+            } catch (Exception ex) {
+                if (tries > 3) {
+                    return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, ex.getMessage());
+                }
+                // else try again ...
             }
-            return new DomainProbeResult.Ok(rspUri);
-        }
-        catch (Exception ex) {
-            return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, ex.getMessage());
         }
     }
 
@@ -143,7 +148,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 var headBuilder = HttpRequest.newBuilder()
                     .HEAD()
                     .uri(url.asURI())
-                    .header("User-agent", userAgentString)
+                    .header("User-Agent", userAgentString)
                     .header("Accept-Encoding", "gzip")
                     .timeout(requestTimeout)
                     ;
@@ -215,7 +220,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         var getBuilder = HttpRequest.newBuilder()
                 .GET()
                 .uri(url.asURI())
-                .header("User-agent", userAgentString)
+                .header("User-Agent", userAgentString)
                 .header("Accept-Encoding", "gzip")
                 .header("Accept-Language", "en,*;q=0.5")
                 .header("Accept", "text/html, application/xhtml+xml, text/*;q=0.8")
@@ -307,7 +312,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .uri(sitemapUrl.asURI())
                 .header("Accept-Encoding", "gzip")
                 .header("Accept", "text/*, */*;q=0.9")
-                .header("User-agent", userAgentString)
+                .header("User-Agent", userAgentString)
                 .timeout(requestTimeout)
                 .build();
 
@@ -386,7 +391,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .uri(url.asURI())
                     .header("Accept-Encoding", "gzip")
                     .header("Accept", "text/*, */*;q=0.9")
-                    .header("User-agent", userAgentString)
+                    .header("User-Agent", userAgentString)
                     .timeout(requestTimeout);
 
             HttpFetchResult result = recorder.fetch(client, getRequest.build());
