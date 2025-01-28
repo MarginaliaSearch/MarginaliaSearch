@@ -148,7 +148,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 var headBuilder = HttpRequest.newBuilder()
                     .HEAD()
                     .uri(url.asURI())
-                    .header("User-agent", userAgentString)
+                    .header("User-Agent", userAgentString)
                     .header("Accept-Encoding", "gzip")
                     .timeout(requestTimeout)
                     ;
@@ -220,7 +220,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         var getBuilder = HttpRequest.newBuilder()
                 .GET()
                 .uri(url.asURI())
-                .header("User-agent", userAgentString)
+                .header("User-Agent", userAgentString)
                 .header("Accept-Encoding", "gzip")
                 .header("Accept-Language", "en,*;q=0.5")
                 .header("Accept", "text/html, application/xhtml+xml, text/*;q=0.8")
@@ -312,7 +312,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .uri(sitemapUrl.asURI())
                 .header("Accept-Encoding", "gzip")
                 .header("Accept", "text/*, */*;q=0.9")
-                .header("User-agent", userAgentString)
+                .header("User-Agent", userAgentString)
                 .timeout(requestTimeout)
                 .build();
 
@@ -391,7 +391,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .uri(url.asURI())
                     .header("Accept-Encoding", "gzip")
                     .header("Accept", "text/*, */*;q=0.9")
-                    .header("User-agent", userAgentString)
+                    .header("User-Agent", userAgentString)
                     .timeout(requestTimeout);
 
             HttpFetchResult result = recorder.fetch(client, getRequest.build());
