@@ -23,7 +23,7 @@ public class DocumentGeneratorExtractor {
 
         var tags = doc.select("meta[name=generator]");
 
-        if (tags.size() == 0) {
+        if (tags.isEmpty()) {
             // Some sites have a comment in the head instead of a meta tag
             return fingerprintServerTech(doc, responseHeaders);
         }

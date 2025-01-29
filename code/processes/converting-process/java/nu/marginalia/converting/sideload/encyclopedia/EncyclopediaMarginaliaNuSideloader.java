@@ -127,7 +127,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         }
         fullHtml.append("</div></body></html>");
 
-        var doc = sideloaderProcessing
+        return sideloaderProcessing
                 .processDocument(fullUrl,
                         fullHtml.toString(),
                         List.of("encyclopedia", "wiki"),
@@ -137,8 +137,6 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         anchorTextKeywords.getAnchorTextKeywords(domainLinks, new EdgeUrl(fullUrl)),
                         LocalDate.now().getYear(),
                         10_000_000);
-
-        return doc;
     }
 
     private String normalizeUtf8(String url) {

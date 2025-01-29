@@ -116,7 +116,7 @@ public class AdblockSimulator {
 
 
     // Refrain from cleaning up this code, it's very hot code and needs to be fast.
-    // This version is about 100x faster than the a "clean" first stab implementation.
+    // This version is about 100x faster than a "clean" first stab implementation.
 
     class RuleVisitor implements NodeFilter {
         public boolean sawAds;

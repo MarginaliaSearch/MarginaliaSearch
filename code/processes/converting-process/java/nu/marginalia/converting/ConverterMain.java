@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -202,13 +203,19 @@ public class ConverterMain extends ProcessMainClass {
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
             logger.info("Processing small items");
-            int numBigTasks = 0;
+
+            // We separate the large and small domains to reduce the number of critical sections,
+            // as the large domains have a separate processing track that doesn't store everything
+            // in memory
+
+            final List<Path> bigTasks = new ArrayList<>();
+
             // First process the small items
             for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
                     new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
             {
                 if (SerializableCrawlDataStream.getSizeHint(dataPath) >= SIDELOAD_THRESHOLD) {
-                    numBigTasks ++;
+                    bigTasks.add(dataPath);
                     continue;
                 }
 
@@ -239,15 +246,8 @@ public class ConverterMain extends ProcessMainClass {
             try (var hb = heartbeat.createAdHocTaskHeartbeat("Large Domains")) {
                 int bigTaskIdx = 0;
                 // Next the big items domain-by-domain
-                for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
-                        new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
-                {
-                    int sizeHint = SerializableCrawlDataStream.getSizeHint(dataPath);
-                    if (sizeHint < SIDELOAD_THRESHOLD) {
-                        continue;
-                    }
-
-                    hb.progress(dataPath.toFile().getName(), bigTaskIdx++, numBigTasks);
+                for (var dataPath : bigTasks) {
+                    hb.progress(dataPath.toFile().getName(), bigTaskIdx++, bigTasks.size());
 
                     try {
                         // SerializableCrawlDataStream is autocloseable, we can't try-with-resources because then it will be
@@ -255,7 +255,7 @@ public class ConverterMain extends ProcessMainClass {
                         // will close it after it's consumed.
 
                         var stream = SerializableCrawlDataStream.openDataStream(dataPath);
-                        ConverterBatchWritableIf writable = processor.simpleProcessing(stream, sizeHint);
+                        ConverterBatchWritableIf writable = processor.simpleProcessing(stream, SerializableCrawlDataStream.getSizeHint(dataPath));
 
                         converterWriter.accept(writable);
                     }
