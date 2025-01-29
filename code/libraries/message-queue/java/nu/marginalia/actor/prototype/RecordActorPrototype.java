@@ -5,9 +5,7 @@ import nu.marginalia.actor.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public abstract class RecordActorPrototype implements ActorPrototype {
 
@@ -118,7 +116,7 @@ public abstract class RecordActorPrototype implements ActorPrototype {
         }
 
         private String functionName(Class<? extends ActorStep> functionClass) {
-            return functionClass.getSimpleName().toUpperCase();
+            return ActorStep.functionName(functionClass);
         }
 
         private ActorStep constructState(String message) throws ReflectiveOperationException {
@@ -143,6 +141,45 @@ public abstract class RecordActorPrototype implements ActorPrototype {
         public boolean isFinal() {
             return stepClass.getAnnotation(Terminal.class) != null;
         }
+    }
+
+    /** Get a list of JSON prototypes for each actor step declared by this actor */
+    @SuppressWarnings("unchecked")
+    public Map<String, String> getMessagePrototypes() {
+        Map<String, String> messagePrototypes = new HashMap<>();
+
+        for (var clazz : getClass().getDeclaredClasses()) {
+            if (!clazz.isRecord() || !ActorStep.class.isAssignableFrom(clazz))
+                continue;
+
+            StringJoiner sj = new StringJoiner(",\n\t", "{\n\t", "\n}");
+
+            renderToJsonPrototype(sj, (Class<? extends Record>) clazz);
+
+            messagePrototypes.put(ActorStep.functionName((Class<? extends ActorStep>) clazz), sj.toString());
+        }
+
+        return messagePrototypes;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void renderToJsonPrototype(StringJoiner sj, Class<? extends Record> recordType) {
+        for (var field : recordType.getDeclaredFields()) {
+            String typeName = field.getType().getSimpleName();
+
+            if ("List".equals(typeName)) {
+                sj.add(String.format("\"%s\": [ ]", field.getName()));
+            }
+            else if (field.getType().isRecord()) {
+                var innerSj = new StringJoiner(",", "{", "}");
+                renderToJsonPrototype(innerSj, (Class<? extends Record>) field.getType());
+                sj.add(String.format("\"%s\": %s", field.getName(), sj));
+            }
+            else {
+                sj.add(String.format("\"%s\": \"%s\"", field.getName(), typeName));
+            }
+        }
+
     }
 
 }
