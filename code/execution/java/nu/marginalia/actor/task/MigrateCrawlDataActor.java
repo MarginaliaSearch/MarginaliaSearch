@@ -75,6 +75,7 @@ public class MigrateCrawlDataActor extends RecordActorPrototype {
                             if (Files.exists(inputPath)) {
                                 try {
                                     SlopCrawlDataRecord.convertFromParquet(inputPath, outputPath);
+                                    Files.deleteIfExists(inputPath);
                                 } catch (Exception ex) {
                                     outputPath = inputPath; // don't update the work log on error
                                     logger.error("Failed to convert " + inputPath, ex);
