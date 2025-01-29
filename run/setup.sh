@@ -74,3 +74,7 @@ download_model model/tfreq-new-algo3.bin https://huggingface.co/MarginaliaNu/Mar
 download_model model/lid.176.ftz https://huggingface.co/MarginaliaNu/MarginaliaModelData/resolve/c9339e4224f1dfad7f628809c32687e748198ae3/lid.176.ftz?download=true 340156704bb8c8e50c4abf35a7ec2569
 
 popd
+
+pushd $(dirname $0)/..
+npm install -D tailwindcss@3
+popd

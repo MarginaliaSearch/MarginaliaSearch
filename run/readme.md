@@ -16,8 +16,6 @@ platforms, but for lack of suitable hardware, this can not be guaranteed.
 The civilized way of installing this is to use [SDKMAN](https://sdkman.io/);
 graalce is a good distribution choice but it doesn't matter too much.
 
-**Tailwindcss** - Install NPM and run `npm install tailwindcss @tailwindcss/cli`
-
 ## Quick Set up
 
 [https://docs.marginalia.nu/](https://docs.marginalia.nu/) has a more comprehensive guide for the install
