@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -94,7 +95,7 @@ public class MigrateCrawlDataActor extends RecordActorPrototype {
                 }
 
                 Path oldCrawlerLog = Files.createTempFile(root, "crawler-", ".migrate.old.log");
-                Files.move(crawlerLog, oldCrawlerLog);
+                Files.move(crawlerLog, oldCrawlerLog, StandardCopyOption.REPLACE_EXISTING);
                 Files.move(newCrawlerLog, crawlerLog);
 
                 yield new End();
