@@ -12,8 +12,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.http.HttpHeaders;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 /* FIXME:  This interface has a very unfortunate name that is not very descriptive.
  */
@@ -65,7 +64,21 @@ public sealed interface HttpFetchResult {
     ) implements HttpFetchResult {
 
         public ResultOk(URI uri, int status, MessageHeaders headers, String ipAddress, byte[] bytes, int bytesStart, int length) {
-            this(uri, status, HttpHeaders.of(headers.map(), (k,v) -> true), ipAddress, bytes, bytesStart, length);
+            this(uri, status, convertHeaders(headers), ipAddress, bytes, bytesStart, length);
+        }
+
+        private static HttpHeaders convertHeaders(MessageHeaders messageHeaders) {
+            Map<String, List<String>> inputMap = messageHeaders.map();
+            Map<String, List<String>> filteredMap = new HashMap<>(Math.max(4, inputMap.size()));
+
+            inputMap.forEach((k, v) -> {
+                if (k.isBlank()) return;
+                if (!Character.isAlphabetic(k.charAt(0))) return;
+
+                filteredMap.put(k, v);
+            });
+
+            return HttpHeaders.of(filteredMap, (k,v) -> true);
         }
 
         public boolean isOk() {
