@@ -381,8 +381,10 @@ public class CrawlerRetreiver implements AutoCloseable {
                 if (docOpt.isPresent()) {
                     var doc = docOpt.get();
 
-                    crawlFrontier.enqueueLinksFromDocument(top, doc);
-                    crawlFrontier.addVisited(new EdgeUrl(ok.uri()));
+                    var responseUrl = new EdgeUrl(ok.uri());
+
+                    crawlFrontier.enqueueLinksFromDocument(responseUrl, doc);
+                    crawlFrontier.addVisited(responseUrl);
                 }
             }
             else if (fetchedDoc instanceof HttpFetchResult.Result304Raw && reference.doc() != null) {
