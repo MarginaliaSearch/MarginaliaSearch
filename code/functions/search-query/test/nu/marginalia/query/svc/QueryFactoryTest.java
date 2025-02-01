@@ -213,6 +213,18 @@ public class QueryFactoryTest {
         System.out.println(subquery);
     }
 
+
+    @Test
+    public void testContractionWordNum() {
+        var subquery = parseAndGetSpecs("glove 80");
+
+        Assertions.assertTrue(subquery.query.compiledQuery.contains(" glove "));
+        Assertions.assertTrue(subquery.query.compiledQuery.contains(" 80 "));
+        Assertions.assertTrue(subquery.query.compiledQuery.contains(" glove-80 "));
+        Assertions.assertTrue(subquery.query.compiledQuery.contains(" glove80 "));
+    }
+
+
     @Test
     public void testCplusPlus() {
         var subquery = parseAndGetSpecs("std::vector::push_back vector");

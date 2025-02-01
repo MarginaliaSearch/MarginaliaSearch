@@ -134,6 +134,10 @@ public class QueryExpansion {
                 if (scoreCombo > scoreA + scoreB || scoreCombo > 1000) {
                     graph.addVariantForSpan(prev, qw, joinedWord);
                 }
+                else if (StringUtils.isAlpha(prev.word()) && StringUtils.isNumeric(qw.word())) { // join e.g. trs 80 to trs80 and trs-80
+                    graph.addVariantForSpan(prev, qw, prev.word() + qw.word());
+                    graph.addVariantForSpan(prev, qw, prev.word() + "-" + qw.word());
+                }
             }
 
             prev = qw;
