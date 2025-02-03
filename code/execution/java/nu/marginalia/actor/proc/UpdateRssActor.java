@@ -14,6 +14,8 @@ import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.service.module.ServiceConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ public class UpdateRssActor extends RecordActorPrototype {
 
     private final NodeConfigurationService nodeConfigurationService;
     private final MqPersistence persistence;
+    private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
 
     @Inject
     public UpdateRssActor(Gson gson,
@@ -101,8 +104,8 @@ public class UpdateRssActor extends RecordActorPrototype {
             case UpdateRefresh(int count, long msgId) -> {
                 MqMessage msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(10), Duration.ofHours(12));
                 if (msg == null) {
-                    // Retry the update
-                    yield new Error("Failed to update feeds: message not found");
+                    logger.warn("UpdateRefresh is taking a very long time");
+                    yield new UpdateRefresh(count, msgId);
                 } else if (msg.state() != MqMessageState.OK) {
                     // Retry the update
                     yield new Error("Failed to update feeds: " + msg.state());
@@ -119,8 +122,8 @@ public class UpdateRssActor extends RecordActorPrototype {
             case UpdateClean(long msgId) -> {
                 MqMessage msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(10), Duration.ofHours(12));
                 if (msg == null) {
-                    // Retry the update
-                    yield new Error("Failed to update feeds: message not found");
+                    logger.warn("UpdateClean is taking a very long time");
+                    yield new UpdateClean(msgId);
                 } else if (msg.state() != MqMessageState.OK) {
                     // Retry the update
                     yield new Error("Failed to update feeds: " + msg.state());
