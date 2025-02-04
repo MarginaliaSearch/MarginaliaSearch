@@ -6,6 +6,7 @@ import nu.marginalia.service.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
@@ -115,7 +116,7 @@ public class ServiceConfigurationModule extends AbstractModule {
         }
     }
 
-    public static String getLocalNetworkIP() throws Exception {
+    public static String getLocalNetworkIP() throws IOException {
         Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
 
         while (nets.hasMoreElements()) {

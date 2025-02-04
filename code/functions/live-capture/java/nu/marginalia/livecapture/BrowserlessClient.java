@@ -13,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
 /** Client for local browserless.io API */
 public class BrowserlessClient implements AutoCloseable {
@@ -34,7 +35,7 @@ public class BrowserlessClient implements AutoCloseable {
         this.browserlessURI = browserlessURI;
     }
 
-    public String content(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
+    public Optional<String> content(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
         Map<String, Object> requestData = Map.of(
                 "url", url,
                 "userAgent", userAgent,
@@ -53,10 +54,10 @@ public class BrowserlessClient implements AutoCloseable {
 
         if (rsp.statusCode() >= 300) {
             logger.info("Failed to fetch content for {}, status {}", url, rsp.statusCode());
-            return null;
+            return Optional.empty();
         }
 
-        return rsp.body();
+        return Optional.of(rsp.body());
     }
 
     public byte[] screenshot(String url, GotoOptions gotoOptions, ScreenshotOptions screenshotOptions)
@@ -89,7 +90,7 @@ public class BrowserlessClient implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         httpClient.shutdownNow();
     }
 
