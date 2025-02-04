@@ -1,6 +1,7 @@
 package nu.marginalia.livecapture;
 
 import com.google.gson.Gson;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,8 @@ public class BrowserlessClient implements AutoCloseable {
     private final URI browserlessURI;
     private final Gson gson = GsonFactory.get();
 
+    private final String userAgent = WmsaHome.getUserAgent().uaString();
+
     public BrowserlessClient(URI browserlessURI) {
         this.browserlessURI = browserlessURI;
     }
@@ -34,6 +37,7 @@ public class BrowserlessClient implements AutoCloseable {
     public String content(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
         Map<String, Object> requestData = Map.of(
                 "url", url,
+                "userAgent", userAgent,
                 "gotoOptions", gotoOptions
         );
 
@@ -60,6 +64,7 @@ public class BrowserlessClient implements AutoCloseable {
 
         Map<String, Object> requestData = Map.of(
                 "url", url,
+                "userAgent", userAgent,
                 "options", screenshotOptions,
                 "gotoOptions", gotoOptions
         );
