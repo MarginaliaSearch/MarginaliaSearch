@@ -56,7 +56,9 @@ public class SearchQueryService {
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            return errorPageService.serveError(SearchParameters.defaultsForQuery(websiteUrl, query, page));
+            return errorPageService.serveError(
+                    SearchParameters.defaultsForQuery(websiteUrl, query, Objects.requireNonNullElse(page, 1))
+            );
         }
     }
 
