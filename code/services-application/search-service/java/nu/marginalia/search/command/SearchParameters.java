@@ -86,8 +86,10 @@ public record SearchParameters(WebsiteUrl url,
     public String renderUrl() {
 
         StringBuilder pathBuilder = new StringBuilder("/search?");
-        pathBuilder.append("query=").append(URLEncoder.encode(query, StandardCharsets.UTF_8));
 
+        if (query != null) {
+            pathBuilder.append("query=").append(URLEncoder.encode(query, StandardCharsets.UTF_8));
+        }
         if (profile != SearchProfile.NO_FILTER) {
             pathBuilder.append("&profile=").append(URLEncoder.encode(profile.filterId, StandardCharsets.UTF_8));
         }
