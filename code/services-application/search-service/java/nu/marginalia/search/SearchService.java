@@ -3,8 +3,10 @@ package nu.marginalia.search;
 import com.google.inject.Inject;
 import io.jooby.Context;
 import io.jooby.Jooby;
+import io.jooby.StatusCode;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
+import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -16,6 +18,7 @@ import java.util.List;
 
 public class SearchService extends JoobyService {
 
+    private final WebsiteUrl websiteUrl;
     private final SearchSiteSubscriptionService siteSubscriptionService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
@@ -33,6 +36,7 @@ public class SearchService extends JoobyService {
 
     @Inject
     public SearchService(BaseServiceParams params,
+                         WebsiteUrl websiteUrl,
                          SearchFrontPageService frontPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchSiteSubscriptionService siteSubscriptionService,
@@ -51,6 +55,7 @@ public class SearchService extends JoobyService {
                         new SearchAddToCrawlQueueService_(addToCrawlQueueService),
                         new SearchBrowseService_(searchBrowseService)
                 ));
+        this.websiteUrl = websiteUrl;
 
         this.siteSubscriptionService = siteSubscriptionService;
     }
@@ -62,6 +67,10 @@ public class SearchService extends JoobyService {
         final String startTimeAttribute = "start-time";
 
         jooby.get("/export-opml", siteSubscriptionService::exportOpml);
+
+        jooby.get("/site/https://*", this::handleSiteUrlRedirect);
+        jooby.get("/site/http://*", this::handleSiteUrlRedirect);
+
         jooby.before((Context ctx) -> {
             ctx.setAttribute(startTimeAttribute, System.nanoTime());
         });
@@ -80,5 +89,19 @@ public class SearchService extends JoobyService {
         });
     }
 
+    /** Redirect handler for the case when the user passes
+     * an url like /site/https://example.com/, in this
+     * scenario we want to extract the domain name and redirect
+     * to /site/example.com/
+     */
+    private Context handleSiteUrlRedirect(Context ctx) {
+        var pv = ctx.path("*").value();
+        int trailSlash = pv.indexOf('/');
+        if (trailSlash > 0) {
+            pv = pv.substring(0, trailSlash);
+        }
+        ctx.sendRedirect(StatusCode.TEMPORARY_REDIRECT, websiteUrl.withPath("site/" + pv));
+        return ctx;
+    }
 
 }
