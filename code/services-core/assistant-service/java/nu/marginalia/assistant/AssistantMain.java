@@ -3,6 +3,8 @@ package nu.marginalia.assistant;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
 import nu.marginalia.livecapture.LivecaptureModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
@@ -38,8 +40,17 @@ public class AssistantMain extends MainClass {
         var configuration = injector.getInstance(ServiceConfiguration.class);
         orchestrateBoot(registry, configuration);
 
-        injector.getInstance(AssistantMain.class);
+        var main = injector.getInstance(AssistantMain.class);
         injector.getInstance(Initialization.class).setReady();
 
+        Jooby.runApp(new String[] { "application.env=prod" }, ExecutionMode.WORKER, () -> new Jooby() {
+            {
+                main.start(this);
+            }
+        });
+    }
+
+    public void start(Jooby jooby) {
+        service.startJooby(jooby);
     }
 }

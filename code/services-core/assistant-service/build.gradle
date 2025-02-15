@@ -37,8 +37,6 @@ dependencies {
     implementation project(':code:functions:domain-info')
     implementation project(':code:functions:domain-info:api')
 
-    implementation project(':code:features-search:screenshots')
-
     implementation project(':code:libraries:geo-ip')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
@@ -48,6 +46,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
     implementation libs.prometheus
+    implementation libs.commons.io
     implementation libs.guava
     libs.bundles.grpc.get().each {
         implementation dependencies.create(it) {
@@ -61,9 +60,7 @@ dependencies {
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
+    implementation libs.bundles.jooby
     implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove

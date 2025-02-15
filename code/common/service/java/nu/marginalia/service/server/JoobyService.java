@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -106,9 +107,12 @@ public class JoobyService {
                 config.externalAddress());
 
         // FIXME:  This won't work outside of docker, may need to submit a PR to jooby to allow classpaths here
-        jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes/jte-precompiled")));
-        jooby.assets("/*", Paths.get("/app/resources/static"));
-
+        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes/jte-precompiled"))) {
+            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes/jte-precompiled")));
+        }
+        if (Files.exists(Path.of("/app/resources/static"))) {
+            jooby.assets("/*", Paths.get("/app/resources/static"));
+        }
         var options = new ServerOptions();
         options.setHost(config.bindAddress());
         options.setPort(restEndpoint.port());
