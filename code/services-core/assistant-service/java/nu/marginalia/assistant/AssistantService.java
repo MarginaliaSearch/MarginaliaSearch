@@ -50,7 +50,7 @@ public class AssistantService extends JoobyService {
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
 
-        jooby.get("/suggest", this::getSuggestions);
+        jooby.get("/suggest/", this::getSuggestions);
         jooby.get("/screenshot/{id}", screenshotService::serveScreenshotRequest);
     }
 
