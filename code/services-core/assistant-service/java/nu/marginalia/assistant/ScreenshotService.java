@@ -67,7 +67,9 @@ public class ScreenshotService {
                 context.setResponseCode(200);
                 context.setResponseHeader("Cache-control", "public,max-age=3600");
 
-                IOUtils.copy(rsp.getBlob(2).getBinaryStream(), context.responseStream());
+                try (var rs = context.responseStream()) {
+                    IOUtils.copy(rsp.getBlob(2).getBinaryStream(), rs);
+                }
                 return "";
             }
         }
