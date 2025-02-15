@@ -23,7 +23,12 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 apply from: "$rootProject.projectDir/docker.gradle"
 
 dependencies {
-    implementation project(':third-party:symspell')
+
+
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+    implementation project(':code:common:service')
+    implementation project(':code:common:config')
 
     implementation project(':code:functions:live-capture')
     implementation project(':code:functions:live-capture:api')
@@ -32,19 +37,16 @@ dependencies {
     implementation project(':code:functions:domain-info')
     implementation project(':code:functions:domain-info:api')
 
-    implementation project(':code:common:config')
-    implementation project(':code:common:service')
-    implementation project(':code:common:model')
-    implementation project(':code:common:db')
-
     implementation project(':code:features-search:screenshots')
 
     implementation project(':code:libraries:geo-ip')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
 
-    implementation libs.bundles.slf4j
+    implementation project(':third-party:symspell')
 
+
+    implementation libs.bundles.slf4j
     implementation libs.prometheus
     implementation libs.guava
     libs.bundles.grpc.get().each {
