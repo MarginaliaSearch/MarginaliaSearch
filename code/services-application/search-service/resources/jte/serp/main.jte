@@ -44,6 +44,11 @@
                 <div class="grow"></div>
                 <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove"></a>
             </div>
+        @elseif (results.isEmpty())
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+                No search results found.  Try different search terms, or spelling variations.  The search engine currently
+                only supports queries in the English language.
+            </div>
         @endif
 
         <div class="space-y-4 sm:space-y-6">

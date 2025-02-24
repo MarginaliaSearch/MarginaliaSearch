@@ -67,6 +67,10 @@ public class DecoratedSearchResults {
         return focusDomainId >= 0;
     }
 
+    public boolean isEmpty() {
+        return results.isEmpty();
+    }
+
     public SearchFilters getFilters() {
         return filters;
     }
