@@ -11,7 +11,6 @@ import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
 import nu.marginalia.slop.column.string.EnumColumn;
 import nu.marginalia.slop.column.string.StringColumn;
-import nu.marginalia.slop.column.string.TxtStringColumn;
 import nu.marginalia.slop.desc.StorageType;
 import org.jetbrains.annotations.Nullable;
 
@@ -182,8 +181,8 @@ public record SlopDocumentRecord(
     }
 
     // Basic information
-    private static final TxtStringColumn domainsColumn = new TxtStringColumn("domain", StandardCharsets.UTF_8, StorageType.GZIP);
-    private static final TxtStringColumn urlsColumn = new TxtStringColumn("url", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final StringColumn domainsColumn = new StringColumn("domain", StandardCharsets.UTF_8, StorageType.GZIP);
+    private static final StringColumn urlsColumn = new StringColumn("url", StandardCharsets.UTF_8, StorageType.GZIP);
     private static final VarintColumn ordinalsColumn = new VarintColumn("ordinal", StorageType.PLAIN);
     private static final EnumColumn statesColumn = new EnumColumn("state", StandardCharsets.US_ASCII, StorageType.PLAIN);
     private static final StringColumn stateReasonsColumn = new StringColumn("stateReason", StandardCharsets.US_ASCII, StorageType.GZIP);
@@ -211,7 +210,7 @@ public record SlopDocumentRecord(
     private static final VarintCodedSequenceArrayColumn spansColumn = new VarintCodedSequenceArrayColumn("spans", StorageType.ZSTD);
 
     public static class KeywordsProjectionReader extends SlopTable {
-        private final TxtStringColumn.Reader domainsReader;
+        private final StringColumn.Reader domainsReader;
         private final VarintColumn.Reader ordinalsReader;
         private final IntColumn.Reader htmlFeaturesReader;
         private final LongColumn.Reader domainMetadataReader;
@@ -275,8 +274,8 @@ public record SlopDocumentRecord(
     }
 
     public static class MetadataReader extends SlopTable {
-        private final TxtStringColumn.Reader domainsReader;
-        private final TxtStringColumn.Reader urlsReader;
+        private final StringColumn.Reader domainsReader;
+        private final StringColumn.Reader urlsReader;
         private final VarintColumn.Reader ordinalsReader;
         private final StringColumn.Reader titlesReader;
         private final StringColumn.Reader descriptionsReader;
@@ -332,8 +331,8 @@ public record SlopDocumentRecord(
     }
 
     public static class Writer extends SlopTable {
-        private final TxtStringColumn.Writer domainsWriter;
-        private final TxtStringColumn.Writer urlsWriter;
+        private final StringColumn.Writer domainsWriter;
+        private final StringColumn.Writer urlsWriter;
         private final VarintColumn.Writer ordinalsWriter;
         private final EnumColumn.Writer statesWriter;
         private final StringColumn.Writer stateReasonsWriter;
