@@ -7,9 +7,7 @@ import java.util.Arrays;
 
 public enum SearchJsParameter {
     DEFAULT("default"),
-    DENY_JS("no-js", "js:true"),
-    REQUIRE_JS("yes-js", "js:false");
-
+    DENY_JS("no-js", "special:scripts");
     public final String value;
     public final String[] implictExcludeSearchTerms;
 
@@ -20,7 +18,6 @@ public enum SearchJsParameter {
 
     public static SearchJsParameter parse(@Nullable String value) {
         if (DENY_JS.value.equals(value)) return DENY_JS;
-        if (REQUIRE_JS.value.equals(value)) return REQUIRE_JS;
 
         return DEFAULT;
     }
