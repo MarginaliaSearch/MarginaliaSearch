@@ -266,11 +266,11 @@ public class CrawlerMain extends ProcessMainClass {
 
                 // Start every task we currently can from the deferral list
                 deferredTasks.removeIf(task -> {
-                    if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) != null) {
-                        return true; // task has already run, duplicate in crawl specs
-                    }
-
                     if (task.canRun()) {
+                        if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) != null) {
+                            return true; // task has already run, duplicate in crawl specs
+                        }
+
                         // This blocks the caller when the pool is full
                         pool.submitQuietly(task);
                         return true;
@@ -280,7 +280,7 @@ public class CrawlerMain extends ProcessMainClass {
                 });
             }
 
-            // Schedule any lingering tasks
+            // Schedule any lingering tasks for immediate execution
             for (var task : deferredTasks) {
                 if (pendingCrawlTasks.putIfAbsent(task.domain, task) != null)
                     continue;
