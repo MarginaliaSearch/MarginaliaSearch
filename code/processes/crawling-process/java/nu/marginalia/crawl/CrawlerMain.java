@@ -41,10 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -248,22 +245,47 @@ public class CrawlerMain extends ProcessMainClass {
             // (this happens when the process is restarted after a crash or a shutdown)
             tasksDone.set(workLog.countFinishedJobs());
 
+            // List of deferred tasks used to ensure beneficial scheduling of domains with regard to DomainLocks,
+            // merely shuffling the domains tends to lead to a lot of threads being blocked waiting for a semphore,
+            // this will more aggressively attempt to schedule the jobs to avoid blocking
+            List<CrawlTask> deferredTasks = new LinkedList<>();
+
             // Create crawl tasks and submit them to the pool for execution
             for (CrawlSpecRecord crawlSpec : crawlSpecRecords) {
                 if (workLog.isJobFinished(crawlSpec.domain()))
                     continue;
 
-                var task = new CrawlTask(
+                // Add to the end of the deferral list
+                deferredTasks.addLast(new CrawlTask(
                         crawlSpec,
                         anchorTagsSource,
                         outputDir,
                         warcArchiver,
                         domainStateDb,
-                        workLog);
+                        workLog));
 
-                if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) == null) {
-                    pool.submitQuietly(task);
-                }
+                // Start every task we currently can from the deferral list
+                deferredTasks.removeIf(task -> {
+                    if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) != null) {
+                        return true; // task has already run, duplicate in crawl specs
+                    }
+
+                    if (task.canRun()) {
+                        // This blocks the caller when the pool is full
+                        pool.submitQuietly(task);
+                        return true;
+                    }
+
+                    return false;
+                });
+            }
+
+            // Schedule any lingering tasks
+            for (var task : deferredTasks) {
+                if (pendingCrawlTasks.putIfAbsent(task.domain, task) != null)
+                    continue;
+
+                pool.submitQuietly(task);
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
@@ -344,6 +366,12 @@ public class CrawlerMain extends ProcessMainClass {
 
             this.domain = specification.domain();
             this.id = Integer.toHexString(domain.hashCode());
+        }
+
+        /** Best effort indicator whether we could start this now without getting stuck in
+         * DomainLocks purgatory */
+        public boolean canRun() {
+            return domainLocks.canLock(new EdgeDomain(domain));
         }
 
         @Override

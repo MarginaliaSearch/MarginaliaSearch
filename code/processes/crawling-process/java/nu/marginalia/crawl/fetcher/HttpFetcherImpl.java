@@ -60,7 +60,15 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .cookieHandler(cookies)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(8))
-                .executor(Executors.newCachedThreadPool())
+                .executor(Executors.newCachedThreadPool(
+                        r -> Thread.ofPlatform()
+                                .name("FetcherClient")
+                                .daemon(true)
+                                .uncaughtExceptionHandler((t, ex) -> {
+                                    logger.error("Uncaught Exception in " + t.getName(), ex);
+                                })
+                                .start(r)
+                ))
                 .build();
     }
 
@@ -251,6 +259,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         return new SitemapRetriever();
     }
 
+    /** Recursively fetch sitemaps */
     @Override
     public List<EdgeUrl> fetchSitemapUrls(String root, CrawlDelayTimer delayTimer) {
         try {
@@ -270,7 +279,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             while (!sitemapQueue.isEmpty() && ret.size() < 20_000 && ++fetchedSitemaps < 10) {
                 var head = sitemapQueue.removeFirst();
 
-                switch (fetchSitemap(head)) {
+                switch (fetchSingleSitemap(head)) {
                     case SitemapResult.SitemapUrls(List<String> urls) -> {
 
                         for (var url : urls) {
@@ -306,7 +315,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
 
-    private SitemapResult fetchSitemap(EdgeUrl sitemapUrl) throws URISyntaxException, IOException, InterruptedException {
+    private SitemapResult fetchSingleSitemap(EdgeUrl sitemapUrl) throws URISyntaxException, IOException, InterruptedException {
         HttpRequest getRequest = HttpRequest.newBuilder()
                 .GET()
                 .uri(sitemapUrl.asURI())

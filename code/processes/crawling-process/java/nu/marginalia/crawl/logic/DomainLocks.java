@@ -44,6 +44,14 @@ public class DomainLocks {
         return new Semaphore(2);
     }
 
+    public boolean canLock(EdgeDomain domain) {
+        Semaphore sem = locks.get(domain.topDomain.toLowerCase());
+        if (null == sem)
+            return true;
+        else
+            return sem.availablePermits() > 0;
+    }
+
     public static class DomainLock implements AutoCloseable {
         private final String domainName;
         private final Semaphore semaphore;
