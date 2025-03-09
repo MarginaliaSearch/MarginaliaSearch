@@ -60,15 +60,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .cookieHandler(cookies)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(8))
-                .executor(Executors.newCachedThreadPool(
-                        r -> Thread.ofPlatform()
-                                .name("FetcherClient")
-                                .daemon(true)
-                                .uncaughtExceptionHandler((t, ex) -> {
-                                    logger.error("Uncaught Exception in " + t.getName(), ex);
-                                })
-                                .start(r)
-                ))
+                .executor(Executors.newCachedThreadPool())
                 .build();
     }
 
