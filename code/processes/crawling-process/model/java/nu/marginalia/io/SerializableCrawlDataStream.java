@@ -42,18 +42,20 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
     {
 
         String fileName = fullPath.getFileName().toString();
-        if (fileName.endsWith(".parquet")) {
+
+        if (fileName.endsWith(".slop.zip")) {
             try {
-                return new ParquetSerializableCrawlDataStream(fullPath);
+                return new SlopSerializableCrawlDataStream(fullPath);
             } catch (Exception ex) {
                 logger.error("Error reading domain data from " + fullPath, ex);
                 return SerializableCrawlDataStream.empty();
             }
         }
 
-        if (fileName.endsWith(".slop.zip")) {
+        else if (fileName.endsWith(".parquet")) {
+            logger.error("Opening deprecated parquet-style crawl data stream", new Exception());
             try {
-                return new SlopSerializableCrawlDataStream(fullPath);
+                return new ParquetSerializableCrawlDataStream(fullPath);
             } catch (Exception ex) {
                 logger.error("Error reading domain data from " + fullPath, ex);
                 return SerializableCrawlDataStream.empty();
