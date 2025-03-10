@@ -121,6 +121,7 @@ public class ServiceConfigurationModule extends AbstractModule {
 
         while (nets.hasMoreElements()) {
             NetworkInterface netif = nets.nextElement();
+            logger.info("Considering network interface {}:  Up? {},  Loopback? {}", netif.getDisplayName(), netif.isUp(), netif.isLoopback());
             if (!netif.isUp() || netif.isLoopback()) {
                 continue;
             }
@@ -128,6 +129,7 @@ public class ServiceConfigurationModule extends AbstractModule {
             Enumeration<InetAddress> inetAddresses = netif.getInetAddresses();
             while (inetAddresses.hasMoreElements()) {
                 InetAddress addr = inetAddresses.nextElement();
+                logger.info("Considering address {}: SiteLocal? {}, Loopback? {}", addr.getHostAddress(), addr.isSiteLocalAddress(), addr.isLoopbackAddress());
                 if (addr.isSiteLocalAddress() && !addr.isLoopbackAddress()) {
                     return addr.getHostAddress();
                 }
