@@ -522,7 +522,7 @@ public class CrawlerMain extends ProcessMainClass {
     //
     // This must be synchronized as chewing through parquet files in parallel leads to enormous memory overhead
     private synchronized Path migrateParquetData(Path inputPath, String domain, Path crawlDataRoot) throws IOException {
-        if (!inputPath.endsWith(".parquet")) {
+        if (!inputPath.toString().endsWith(".parquet")) {
             return inputPath;
         }
 
