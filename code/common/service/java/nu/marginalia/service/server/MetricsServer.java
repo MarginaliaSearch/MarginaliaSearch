@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 
 public class MetricsServer {
 
-    private static Logger logger = LoggerFactory.getLogger(MetricsServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetricsServer.class);
 
     @Inject
     public MetricsServer(ServiceConfiguration configuration) {
@@ -29,6 +29,8 @@ public class MetricsServer {
             server.setHandler(context);
 
             context.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
+
+            logger.info("MetricsServer listening on {}:{}", configuration.bindAddress(), configuration.metricsPort());
 
             server.start();
         }
