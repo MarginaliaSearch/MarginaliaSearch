@@ -81,7 +81,7 @@ public class SearchFilters {
                             ),
                             List.of(
                                     new Filter("Vintage", "fa-clock-rotate-left", SearchProfile.VINTAGE, parameters),
-                                    new Filter("Small Web", "fa-user-minus", SearchProfile.SMALLWEB, parameters),
+                                    new Filter("Small Web", "fa-minus", SearchProfile.SMALLWEB, parameters),
                                     new Filter("Plain Text", "fa-file", SearchProfile.PLAIN_TEXT, parameters),
                                     new Filter("Tilde", "fa-house", SearchProfile.TILDE, parameters)
                             ),
