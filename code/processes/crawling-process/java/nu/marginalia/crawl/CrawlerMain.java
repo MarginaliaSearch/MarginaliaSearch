@@ -267,7 +267,7 @@ public class CrawlerMain extends ProcessMainClass {
                 // Start every task we currently can from the deferral list
                 deferredTasks.removeIf(task -> {
                     if (task.canRun()) {
-                        if (pendingCrawlTasks.putIfAbsent(crawlSpec.domain(), task) != null) {
+                        if (pendingCrawlTasks.putIfAbsent(task.domain, task) != null) {
                             return true; // task has already run, duplicate in crawl specs
                         }
 
@@ -280,12 +280,23 @@ public class CrawlerMain extends ProcessMainClass {
                 });
             }
 
-            // Schedule any lingering tasks for immediate execution
-            for (var task : deferredTasks) {
-                if (pendingCrawlTasks.putIfAbsent(task.domain, task) != null)
-                    continue;
 
-                pool.submitQuietly(task);
+            // Schedule any lingering tasks for immediate execution until none exist
+            while (!deferredTasks.isEmpty()) {
+                deferredTasks.removeIf(task -> {
+                    if (task.canRun()) {
+                        if (pendingCrawlTasks.putIfAbsent(task.domain, task) != null) {
+                            return true; // task has already run, duplicate in crawl specs
+                        }
+
+                        // This blocks the caller when the pool is full
+                        pool.submitQuietly(task);
+                        return true;
+                    }
+
+                    return false;
+                });
+                TimeUnit.MILLISECONDS.sleep(50);
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
