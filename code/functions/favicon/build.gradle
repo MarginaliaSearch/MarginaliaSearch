@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:config')
+    implementation project(':code:common:service')
+    implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:functions:favicon:api')
+    implementation project(':code:processes:crawling-process')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.prometheus
+    implementation libs.guava
+    libs.bundles.grpc.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'com.google.guava'
+        }
+    }
+
+
+    implementation libs.notnull
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation dependencies.create(libs.spark.get()) {
+        exclude group: 'org.eclipse.jetty'
+    }
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+
+}

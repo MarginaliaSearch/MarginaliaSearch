@@ -1,5 +1,8 @@
 package nu.marginalia.crawl;
 
+import com.google.inject.Inject;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +65,23 @@ public class DomainStateDb implements AutoCloseable {
     }
 
     public record FaviconRecord(String contentType, byte[] imageData) {}
+
+    @Inject
+    public DomainStateDb(FileStorageService fileStorageService) throws SQLException {
+        this(findFilename(fileStorageService));
+    }
+
+    private static Path findFilename(FileStorageService fileStorageService) throws SQLException {
+        var fsId = fileStorageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
+
+        if (fsId.isPresent()) {
+            var fs = fileStorageService.getStorage(fsId.get());
+            return fs.asPath().resolve("domainstate.db");
+        }
+        else {
+            throw new SQLException("Could not find crawl data storage");
+        }
+    }
 
     public DomainStateDb(Path filename) throws SQLException {
         String sqliteDbString = "jdbc:sqlite:" + filename.toString();

@@ -22,6 +22,7 @@ public class DbDomainQueries {
     private static final Logger logger = LoggerFactory.getLogger(DbDomainQueries.class);
 
     private final Cache<EdgeDomain, Integer> domainIdCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
+    private final Cache<EdgeDomain, DomainIdWithNode> domainWithNodeCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
     private final Cache<Integer, EdgeDomain> domainNameCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
     private final Cache<String, List<DomainWithNode>> siblingsCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
 
@@ -42,6 +43,34 @@ public class DbDomainQueries {
                     var rsp = stmt.executeQuery();
                     if (rsp.next()) {
                         return rsp.getInt(1);
+                    }
+                }
+                catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                throw new NoSuchElementException();
+            });
+        }
+        catch (UncheckedExecutionException ex) {
+            throw new NoSuchElementException();
+        }
+        catch (ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+    }
+
+
+    public DomainIdWithNode getDomainIdWithNode(EdgeDomain domain) throws NoSuchElementException {
+        try {
+            return domainWithNodeCache.get(domain, () -> {
+                try (var connection = dataSource.getConnection();
+                     var stmt = connection.prepareStatement("SELECT ID, NODE_AFFINITY FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
+
+                    stmt.setString(1, domain.toString());
+                    var rsp = stmt.executeQuery();
+                    if (rsp.next()) {
+                        return new DomainIdWithNode(rsp.getInt(1), rsp.getInt(2));
                     }
                 }
                 catch (SQLException ex) {
@@ -145,4 +174,6 @@ public class DbDomainQueries {
             return nodeAffinity > 0;
         }
     }
+
+    public record DomainIdWithNode (int domainId, int nodeAffinity) { }
 }

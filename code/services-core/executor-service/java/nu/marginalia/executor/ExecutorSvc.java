@@ -2,6 +2,7 @@ package nu.marginalia.executor;
 
 import com.google.inject.Inject;
 import nu.marginalia.execution.*;
+import nu.marginalia.functions.favicon.FaviconGrpcService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.SparkService;
@@ -24,6 +25,7 @@ public class ExecutorSvc extends SparkService {
                        ExecutorCrawlGrpcService executorCrawlGrpcService,
                        ExecutorSideloadGrpcService executorSideloadGrpcService,
                        ExecutorExportGrpcService executorExportGrpcService,
+                       FaviconGrpcService faviconGrpcService,
                        ExecutionInit executionInit,
                        ExecutorFileTransferService fileTransferService) throws Exception {
         super(params,
@@ -31,7 +33,8 @@ public class ExecutorSvc extends SparkService {
                 List.of(executorGrpcService,
                         executorCrawlGrpcService,
                         executorSideloadGrpcService,
-                        executorExportGrpcService)
+                        executorExportGrpcService,
+                        faviconGrpcService)
             );
 
         this.executionInit = executionInit;

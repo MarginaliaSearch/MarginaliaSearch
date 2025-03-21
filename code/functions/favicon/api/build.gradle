@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+
+    id "com.google.protobuf" version "0.9.4"
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+jar.archiveBaseName = 'favicon-api'
+
+apply from: "$rootProject.projectDir/protobuf.gradle"
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:common:config')
+    implementation project(':code:common:service')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.prometheus
+    implementation libs.notnull
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation libs.gson
+    implementation libs.bundles.protobuf
+    implementation libs.guava
+    libs.bundles.grpc.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'com.google.guava'
+        }
+    }
+
+
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}

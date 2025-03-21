@@ -42,6 +42,8 @@ dependencies {
     implementation project(':code:libraries:message-queue')
 
     implementation project(':code:functions:link-graph:api')
+    implementation project(':code:functions:favicon')
+    implementation project(':code:functions:favicon:api')
 
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:model')

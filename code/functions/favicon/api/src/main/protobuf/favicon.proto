@@ -1,0 +1,20 @@
+syntax="proto3";
+package marginalia.api.favicon;
+
+option java_package="nu.marginalia.api.favicon";
+option java_multiple_files=true;
+
+service FaviconAPI {
+  /** Fetches information about a domain. */
+  rpc getFavicon(RpcFaviconRequest) returns (RpcFaviconResponse) {}
+}
+
+message RpcFaviconRequest {
+  string domain = 1;
+}
+
+message RpcFaviconResponse {
+  string domain = 1;
+  bytes data = 2;
+  string contentType = 3;
+}

@@ -16,7 +16,8 @@ include 'code:services-application:status-service'
 
 include 'code:functions:math'
 include 'code:functions:math:api'
-
+include 'code:functions:favicon'
+include 'code:functions:favicon:api'
 include 'code:functions:domain-info'
 include 'code:functions:domain-info:api'
 
