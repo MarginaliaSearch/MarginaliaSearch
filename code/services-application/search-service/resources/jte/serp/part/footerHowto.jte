@@ -26,15 +26,15 @@
             It operates a bit like a clock, starting at the top and working its way around clockwise.</p>
 
         <div class="flex gap-4 place-items-middle">
-            @template.serp.part.matchogram(mask = 90)
+            @template.serp.part.matchogram(mask = 90, domain = "example.com")
             <div>This is by the beginning</div>
         </div>
         <div class="flex gap-4 place-items-middle">
-            @template.serp.part.matchogram(mask = 90L<<26)
+            @template.serp.part.matchogram(mask = 90L<<26, domain = "example.com")
             <div>This is in the middle</div>
         </div>
         <div class="flex gap-4 place-items-middle">
-            @template.serp.part.matchogram(mask = 5L<<48)
+            @template.serp.part.matchogram(mask = 5L<<48, domain = "example.com")
             <div>This is toward the end</div>
         </div>
 
