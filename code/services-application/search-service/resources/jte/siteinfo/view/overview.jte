@@ -9,8 +9,8 @@
 
 <div class="flex-1 p-4 space-y-4 mx-auto w-full md:w-auto">
     <div class="flex border dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex-col space-y-4 pb-4 overflow-hidden md:max-w-lg" >
-        <div class="flex place-items-baseline space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
-            <i class="fa fa-globe"></i>
+        <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
+            <img src="/site/${siteInfo.domain()}/favicon" style="width: 16px; height: 16px; vertical-align: center">
             <span>${siteInfo.domain()}</span>
             <div class="grow">
             </div>
