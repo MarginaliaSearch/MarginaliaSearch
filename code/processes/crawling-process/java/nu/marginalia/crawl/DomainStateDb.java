@@ -79,11 +79,16 @@ public class DomainStateDb implements AutoCloseable {
             return fs.asPath().resolve("domainstate.db");
         }
         else {
-            throw new SQLException("Could not find crawl data storage");
+            return null;
         }
     }
 
-    public DomainStateDb(Path filename) throws SQLException {
+    public DomainStateDb(@Nullable Path filename) throws SQLException {
+        if (null == filename) {
+            connection = null;
+            return;
+        }
+
         String sqliteDbString = "jdbc:sqlite:" + filename.toString();
         connection = DriverManager.getConnection(sqliteDbString);
 
@@ -110,11 +115,18 @@ public class DomainStateDb implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        }
     }
 
+    public boolean isAvailable() {
+        return connection != null;
+    }
 
     public void saveIcon(String domain, FaviconRecord faviconRecord) {
+        if (connection == null) throw new IllegalStateException("No connection to domainstate db");
+
         try (var stmt = connection.prepareStatement("""
                 INSERT OR REPLACE INTO favicon (domain, contentType, icon)
                        VALUES(?, ?, ?)
@@ -130,6 +142,9 @@ public class DomainStateDb implements AutoCloseable {
     }
 
     public Optional<FaviconRecord> getIcon(String domain) {
+        if (connection == null)
+            return Optional.empty();
+
         try (var stmt = connection.prepareStatement("SELECT contentType, icon FROM favicon WHERE DOMAIN = ?")) {
             stmt.setString(1, domain);
             var rs = stmt.executeQuery();
@@ -150,6 +165,8 @@ public class DomainStateDb implements AutoCloseable {
     }
 
     public void save(SummaryRecord record) {
+        if (connection == null) throw new IllegalStateException("No connection to domainstate db");
+
         try (var stmt = connection.prepareStatement("""
                 INSERT OR REPLACE INTO summary (domain, lastUpdatedEpochMs, state, stateDesc, feedUrl)
                 VALUES (?, ?, ?, ?, ?)
@@ -166,6 +183,9 @@ public class DomainStateDb implements AutoCloseable {
     }
 
     public Optional<SummaryRecord> get(String domainName) {
+        if (connection == null)
+            return Optional.empty();
+
         try (var stmt = connection.prepareStatement("""
                 SELECT domain, lastUpdatedEpochMs, state, stateDesc, feedUrl
                 FROM summary

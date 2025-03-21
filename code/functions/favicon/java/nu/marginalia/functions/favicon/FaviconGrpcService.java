@@ -21,6 +21,10 @@ public class FaviconGrpcService extends FaviconAPIGrpc.FaviconAPIImplBase implem
         this.domainStateDb = domainStateDb;
     }
 
+    public boolean shouldRegisterService() {
+        return domainStateDb.isAvailable();
+    }
+
     @Override
     public void getFavicon(RpcFaviconRequest request, StreamObserver<RpcFaviconResponse> responseObserver) {
         Optional<DomainStateDb.FaviconRecord> icon = domainStateDb.getIcon(request.getDomain());
