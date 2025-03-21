@@ -82,17 +82,17 @@ public class SearchService extends JoobyService {
         jooby.get("/site/https://*", this::handleSiteUrlRedirect);
         jooby.get("/site/http://*", this::handleSiteUrlRedirect);
 
+        String emptySvg = "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>";
         jooby.get("/site/{domain}/favicon", ctx -> {
             String domain = ctx.path("domain").value();
             logger.info("Finding icon for domain {}", domain);
-            domainQueries.getDomainId(new EdgeDomain(domain));
             try {
                 DbDomainQueries.DomainIdWithNode domainIdWithNode = domainQueries.getDomainIdWithNode(new EdgeDomain(domain));
                 var faviconMaybe = faviconClient.getFavicon(domain, domainIdWithNode.nodeAffinity());
 
                 if (faviconMaybe.isEmpty()) {
-                    ctx.setResponseCode(404);
-                    return "";
+                    ctx.setResponseType(MediaType.valueOf("image/svg+xml"));
+                    return emptySvg;
                 } else {
                     var favicon = faviconMaybe.get();
 
@@ -102,7 +102,8 @@ public class SearchService extends JoobyService {
                 }
             }
             catch (NoSuchElementException ex) {
-                ctx.setResponseCode(404);
+                ctx.setResponseType(MediaType.valueOf("image/svg+xml"));
+                return emptySvg;
             }
             return "";
         });
