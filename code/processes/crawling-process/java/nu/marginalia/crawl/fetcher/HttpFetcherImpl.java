@@ -30,6 +30,7 @@ import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
 
 
@@ -116,7 +117,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         for (int tries = 0;; tries++) {
             try {
-                var rsp = client.send(head, HttpResponse.BodyHandlers.discarding());
+                var rsp = SendLock.wrapSend(client, head, HttpResponse.BodyHandlers.discarding());
                 EdgeUrl rspUri = new EdgeUrl(rsp.uri());
 
                 if (!Objects.equals(rspUri.domain, url.domain)) {
@@ -153,7 +154,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .timeout(requestTimeout)
                     ;
 
-                var rsp = client.send(headBuilder.build(), HttpResponse.BodyHandlers.discarding());
+                var rsp = SendLock.wrapSend(client, headBuilder.build(), HttpResponse.BodyHandlers.discarding());
                 var headers = rsp.headers();
 
                 var contentTypeHeader = headers.firstValue("Content-Type").orElse(null);
@@ -229,21 +230,24 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         contentTags.paint(getBuilder);
 
-        HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
+        try (var sl = new SendLock()) {
+            HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
 
-        if (result instanceof HttpFetchResult.ResultOk ok) {
-            if (ok.statusCode() == 429) {
-                throw new RateLimitException(Objects.requireNonNullElse(ok.header("Retry-After"), "1"));
+            if (result instanceof HttpFetchResult.ResultOk ok) {
+                if (ok.statusCode() == 429) {
+                    throw new RateLimitException(Objects.requireNonNullElse(ok.header("Retry-After"), "1"));
+                }
+                if (ok.statusCode() == 304) {
+                    return new HttpFetchResult.Result304Raw();
+                }
+                if (ok.statusCode() == 200) {
+                    return ok;
+                }
             }
-            if (ok.statusCode() == 304) {
-                return new HttpFetchResult.Result304Raw();
-            }
-            if (ok.statusCode() == 200) {
-                return ok;
-            }
+
+            return result;
         }
 
-        return result;
     }
 
     @Override
@@ -317,22 +321,28 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .timeout(requestTimeout)
                 .build();
 
-        var response = client.send(getRequest, HttpResponse.BodyHandlers.ofInputStream());
-        if (response.statusCode() != 200) {
-            return new SitemapResult.SitemapError();
-        }
-
-        try (InputStream inputStream = response.body()) {
-
-            InputStream parserStream;
-            if (sitemapUrl.path.endsWith(".gz")) {
-                parserStream = new GZIPInputStream(inputStream);
-            }
-            else {
-                parserStream = inputStream;
+        try (var sl = new SendLock()) {
+            var response = client.send(getRequest, HttpResponse.BodyHandlers.ofInputStream());
+            if (response.statusCode() != 200) {
+                return new SitemapResult.SitemapError();
             }
 
-            Document parsedSitemap = Jsoup.parse(parserStream, "UTF-8", sitemapUrl.toString(), Parser.xmlParser());
+            Document parsedSitemap;
+
+            try (InputStream inputStream = response.body()) {
+                InputStream parserStream;
+                if (sitemapUrl.path.endsWith(".gz")) {
+                    parserStream = new GZIPInputStream(inputStream);
+                } else {
+                    parserStream = inputStream;
+                }
+
+                parsedSitemap = Jsoup.parse(parserStream, "UTF-8", sitemapUrl.toString(), Parser.xmlParser());
+            }
+            finally {
+                sl.close();
+            }
+
             if (parsedSitemap.childrenSize() == 0) {
                 return new SitemapResult.SitemapError();
             }
@@ -386,7 +396,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     private Optional<SimpleRobotRules> fetchAndParseRobotsTxt(EdgeUrl url, WarcRecorder recorder) {
-        try {
+        try (var sl = new SendLock()) {
             var getRequest = HttpRequest.newBuilder()
                     .GET()
                     .uri(url.asURI())
@@ -427,6 +437,31 @@ public class HttpFetcherImpl implements HttpFetcher {
             catch (NumberFormatException ex) {
                 return Duration.ofSeconds(1);
             }
+        }
+    }
+
+}
+
+class SendLock implements AutoCloseable {
+
+    private static final Semaphore maxConcurrentRequests = new Semaphore(Integer.getInteger("crawler.maxConcurrentRequests", 100));
+    boolean closed = false;
+
+    public SendLock() {
+        maxConcurrentRequests.acquireUninterruptibly();
+    }
+
+    public static <T> HttpResponse<T> wrapSend(HttpClient client, HttpRequest request, HttpResponse.BodyHandler<T> handler) throws IOException, InterruptedException {
+        try (var lock = new SendLock()) {
+            return client.send(request, handler);
+        }
+    }
+
+    @Override
+    public void close() {
+        if (!closed) {
+            maxConcurrentRequests.release();
+            closed = true;
         }
     }
 }
