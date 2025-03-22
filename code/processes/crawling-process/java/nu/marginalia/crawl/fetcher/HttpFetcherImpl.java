@@ -444,7 +444,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
 class SendLock implements AutoCloseable {
 
-    private static final Semaphore maxConcurrentRequests = new Semaphore(Integer.getInteger("crawler.maxConcurrentRequests", 100));
+    private static final Semaphore maxConcurrentRequests = new Semaphore(Integer.getInteger("crawler.maxConcurrentRequests", 512));
     boolean closed = false;
 
     public SendLock() {
