@@ -9,11 +9,11 @@
 
 @template.part.head(title = "Marginalia Search - Site Viewer")
 
-<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
+<body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 
 @template.part.navbar(navbar = navbar)
 
-<header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
+<header class="border-b border-gray-300 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-4">
         <h1 class="text-base md:text-xl mr-2 md:mr-8 font-serif">View Site Information</h1>
     </div>
@@ -22,7 +22,7 @@
 <div class="max-w-[1000px] mx-auto flex gap-4 flex-col md:flex-row place-items-center md:place-items-start p-4">
 
 
-    <div class="border dark:border-gray-600 rounded md:my-4 overflow-hidden bg-white dark:bg-gray-800 flex flex-col space-y-2 flex-1">
+    <div class="border border-gray-300 dark:border-gray-600 rounded md:my-4 overflow-hidden bg-white dark:bg-gray-800 flex flex-col space-y-2 flex-1">
         <div class="bg-margeblue text-white p-2 text-sm mb-2">View Site Information</div>
 
         <p class="mx-4">This utility lets you explore what the search engine knows about the web,
@@ -45,7 +45,7 @@
     </div>
 
     @if (!model.domains().isEmpty())
-    <div class="border dark:border-gray-600 rounded md:my-4 overflow-hidden w-full md:w-auto">
+    <div class="border border-gray-300 dark:border-gray-600 rounded md:my-4 overflow-hidden w-full md:w-auto">
         <div class="bg-margeblue text-white p-2 text-sm">Recently Discovered Domains</div>
 
 

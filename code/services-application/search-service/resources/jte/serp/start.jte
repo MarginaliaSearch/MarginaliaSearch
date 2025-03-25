@@ -15,7 +15,7 @@
 
 @template.part.head(title = "Marginalia Search", allowIndexing = true)
 
-<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
+<body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 
 @template.part.navbar(navbar = navbar)
 
@@ -32,18 +32,14 @@
 
 @if (model.news().isEmpty())
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">
-    <div class="border dark:border-gray-600 dark:bg-gray-800 bg-white rounded p-2 m-4 ">
+    <div class="border border-gray-300 border-gray-100 dark:border-gray-600 dark:bg-gray-800 bg-white rounded p-2 m-4 ">
         <div class="text-slate-700 dark:text-white text-sm p-4">
-            <div class="fas fa-gift mr-1 text-margeblue dark:text-slate-200"></div>
-            This is the new design and home of Marginalia Search.
-            You can read about what this entails <a href="https://about.marginalia-search.com/article/redesign/"  class="underline text-liteblue dark:text-blue-200">here</a>.
-        <p class="my-4"></p>
-        The old version of Marginalia Search remains available at
-        <a href="https://old-search.marginalia.nu/" class="underline text-liteblue dark:text-blue-200">https://old-search.marginalia.nu/</a>.
+        The old version of Marginalia Search remains available
+        <a href="https://old-search.marginalia.nu/" class="underline text-liteblue dark:text-blue-200">here</a>.
         </div>
     </div>
     <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2">
-    <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6 space-y-3">
+    <div class="flex flex-col border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6 space-y-3">
         <div><i class="fas fa-sailboat mx-2 text-margeblue dark:text-slate-200"></i>Explore the Web</div>
         <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
             <li>Prioritizes non-commercial content</li>
@@ -52,7 +48,7 @@
         </ul>
     </div>
 
-    <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
+    <div class="flex flex-col border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
         <div><i class="fas fa-hand-holding-hand mx-2 text-margeblue dark:text-slate-200"></i>Open Source</div>
         <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
            <li>Custom index and crawler software</li>
@@ -65,7 +61,7 @@
         </div>
     </div>
 
-    <div class="flex flex-col border dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
+    <div class="flex flex-col border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-6  space-y-3 ">
         <div><i class="fas fa-lock mx-2 text-margeblue dark:text-slate-200"></i> Privacy by default</div>
         <ul class="list-disc ml-6 text-slate-700 dark:text-white text-xs leading-5">
             <li>Filter out tracking and adtech</li>

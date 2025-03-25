@@ -4,7 +4,7 @@
 @param ReportDomain reportDomain
 
 <div class="flex-col mx-auto">
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 border dark:border-gray-600 rounded overflow-auto shadow-sm my-4 space-y-4 w-full">
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded overflow-auto shadow-sm my-4 space-y-4 w-full">
     <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200 dark:border-gray-800">
         <h2 class="text-md">Report Domain Issue</h2>
     </div>

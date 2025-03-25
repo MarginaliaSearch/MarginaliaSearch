@@ -9,17 +9,17 @@
 <div class="flex flex-col space-y-4 my-4">
 
 @if (docs.results().isEmpty())
-    <div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm">
+    <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm">
         The search engine doesn't index any documents from ${docs.domain()}
     </div>
 @else
-    <div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm">
+    <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm">
         Showing documents from ${docs.domain()}
     </div>
 @endif
 
 @for (UrlDetails details : docs.results())
-<div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden mx-4">
+<div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden mx-4">
     <div class="flex grow justify-between items-start p-4">
         <div class="flex-1">
             <h2 class="text-xl text-gray-800 dark:text-white font-serif mr-4">

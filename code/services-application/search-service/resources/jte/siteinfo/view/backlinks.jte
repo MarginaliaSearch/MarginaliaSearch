@@ -8,17 +8,17 @@
 <div class="flex flex-col space-y-4 my-4  w-full">
 
 @if (backlinks.results().isEmpty())
-<div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm ">
+<div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm ">
     The search engine isn't aware of any backlinks to ${backlinks.domain()}!
 </div>
 @else
-<div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm">
+<div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-4 text-gray-800 text-sm">
     Showing documents linking to ${backlinks.domain()}
 </div>
 @endif
 
 @for (GroupedUrlDetails group : backlinks.results())
-<div class="border dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden mx-4">
+<div class="border dark:border-gray-600 border-gray-300 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden mx-4">
     <div class="flex space-x-2 flex-row place-items-baseline bg-margeblue text-white p-2  text-md">
         <span class="fas fa-globe"></span>
         <a href="/site/${group.domain().toString()}">${group.domain().toString()}</a>

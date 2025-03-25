@@ -9,6 +9,7 @@
                     nicotine: '#f8f8ee',
                     margeblue: '#3e5f6f',
                     liteblue: '#0066cc',
+                    bgblue: '#e5e9eb',
                 },
                 screens: {
                     'coarsepointer': {

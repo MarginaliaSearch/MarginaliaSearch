@@ -15,7 +15,7 @@
 
 @template.part.head(title = "Marginalia Search - " +  parameters.query())
 
-<body class="min-h-screen bg-slate-100 dark:bg-gray-900 dark:text-white font-sans " >
+<body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)
 
 <div>
