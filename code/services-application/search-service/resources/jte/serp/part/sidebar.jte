@@ -38,7 +38,7 @@
             <div class="space-y-2">
                 @for (SearchFilters.SearchOption option : filters.searchOptions())
                     <label class="flex items-center">
-                            <button title="${option.name()}" onclick="document.location='$unsafe{option.getUrl()}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                            <button title="${option.name()}" onclick="document.location='$unsafe{option.getUrl()}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                                 @if (option.isSet())
                                     <input type="checkbox" checked class="sr-only" aria-checked="true" />
                                 @else
