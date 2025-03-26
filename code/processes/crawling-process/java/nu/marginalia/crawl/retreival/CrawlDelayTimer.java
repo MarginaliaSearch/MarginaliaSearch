@@ -81,7 +81,7 @@ public class CrawlDelayTimer {
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException();
+            throw new RuntimeException("Interrupted", e);
         }
     }
 }

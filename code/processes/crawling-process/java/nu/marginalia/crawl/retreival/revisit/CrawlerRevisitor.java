@@ -46,6 +46,10 @@ public class CrawlerRevisitor {
                 break;
             }
 
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             var urlMaybe = EdgeUrl.parse(doc.url);
             if (urlMaybe.isEmpty())
                 continue;

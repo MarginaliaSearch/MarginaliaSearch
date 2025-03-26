@@ -108,6 +108,11 @@ public class CrawlerRetreiver implements AutoCloseable {
                     DomainStateDb.SummaryRecord summaryRecord = sniffRootDocument(probedUrl, delayTimer);
                     domainStateDb.save(summaryRecord);
 
+                    if (Thread.interrupted()) {
+                        // There's a small chance we're interrupted during the sniffing portion
+                        throw new InterruptedException();
+                    }
+
                     // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
                     if (crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer) > 0) {
                         // If we have reference data, we will always grow the crawl depth a bit
@@ -139,7 +144,6 @@ public class CrawlerRetreiver implements AutoCloseable {
                             SimpleRobotRules robotsRules,
                             CrawlDelayTimer delayTimer,
                             DomainLinks domainLinks) {
-
 
         // Add external links to the crawl frontier
         crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
@@ -289,6 +293,10 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
         catch (Exception ex) {
             logger.error("Error configuring link filter", ex);
+            if (Thread.interrupted()) {
+                Thread.currentThread().interrupt();
+                return DomainStateDb.SummaryRecord.forError(domain, "Crawler Interrupted", ex.getMessage());
+            }
         }
         finally {
             crawlFrontier.addVisited(rootUrl);
