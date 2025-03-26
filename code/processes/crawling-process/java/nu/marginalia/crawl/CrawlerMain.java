@@ -41,10 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -224,10 +221,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         logger.info("Loaded {} domains", crawlSpecRecords.size());
 
-        // Shuffle the domains to ensure we get a good mix of domains in each crawl,
-        // so that e.g. the big domains don't get all crawled at once, or we end up
-        // crawling the same server in parallel from different subdomains...
-        Collections.shuffle(crawlSpecRecords);
+        crawlSpecRecords.sort(crawlSpecArrangement(crawlSpecRecords));
 
         // First a validation run to ensure the file is all good to parse
         if (crawlSpecRecords.isEmpty()) {
@@ -304,6 +298,30 @@ public class CrawlerMain extends ProcessMainClass {
         finally {
             heartbeat.shutDown();
         }
+    }
+
+    /** Create a comparator that sorts the crawl specs in a way that is beneficial for the crawl,
+     * we want to enqueue domains that have common top domains first, but otherwise have a random
+     * order.
+     * <p></p>
+     * Note, we can't use hash codes for randomization as it is not desirable to have the same order
+     * every time the process is restarted (and CrawlSpecRecord is a record, which defines equals and
+     * hashcode based on the fields).
+     * */
+    private Comparator<CrawlSpecRecord> crawlSpecArrangement(List<CrawlSpecRecord> records) {
+        Random r = new Random();
+        Map<String, Integer> topDomainCounts = new HashMap<>(4 + (int) Math.sqrt(records.size()));
+        Map<String, Integer> randomOrder = new HashMap<>(records.size());
+
+        for (var spec : records) {
+            topDomainCounts.merge(EdgeDomain.getTopDomain(spec.domain), 1, Integer::sum);
+            randomOrder.put(spec.domain, r.nextInt());
+        }
+
+        return Comparator.comparing((CrawlSpecRecord spec) -> topDomainCounts.getOrDefault(EdgeDomain.getTopDomain(spec.domain), 0))
+                .reversed()
+                .thenComparing(spec -> randomOrder.get(spec.domain))
+                .thenComparing(Record::hashCode); // non-deterministic tie-breaker to
     }
 
     /** Submit a task for execution if it can be run, returns true if it was submitted

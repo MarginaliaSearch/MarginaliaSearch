@@ -14,7 +14,7 @@ public class EdgeDomain implements Serializable {
     @Nonnull
     public final String topDomain;
 
-    public EdgeDomain(String host) {
+    public EdgeDomain(@Nonnull String host) {
         Objects.requireNonNull(host, "domain name must not be null");
 
         host = host.toLowerCase();
@@ -59,6 +59,10 @@ public class EdgeDomain implements Serializable {
     public EdgeDomain(@Nonnull String subDomain, @Nonnull String topDomain) {
         this.subDomain = subDomain;
         this.topDomain = topDomain;
+    }
+
+    public static String getTopDomain(String host) {
+        return new EdgeDomain(host).topDomain;
     }
 
     private boolean looksLikeGovTld(String host) {
@@ -114,24 +118,6 @@ public class EdgeDomain implements Serializable {
             return topDomain;
         }
         return topDomain.substring(0, cutPoint).toLowerCase();
-    }
-
-    public String getLongDomainKey() {
-        StringBuilder ret = new StringBuilder();
-
-        int cutPoint = topDomain.indexOf('.');
-        if (cutPoint < 0) {
-            ret.append(topDomain);
-        } else {
-            ret.append(topDomain, 0, cutPoint);
-        }
-
-        if (!subDomain.isEmpty() && !"www".equals(subDomain)) {
-            ret.append(":");
-            ret.append(subDomain);
-        }
-
-        return ret.toString().toLowerCase();
     }
 
     /** If possible, try to provide an alias domain,
