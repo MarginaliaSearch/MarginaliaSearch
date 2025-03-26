@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 class ZkServiceRegistryTest {
     private static final int ZOOKEEPER_PORT = 2181;
     private static final GenericContainer<?> zookeeper =
-            new GenericContainer<>("zookeeper:3.8.0")
+            new GenericContainer<>("zookeeper:3.8")
                     .withExposedPorts(ZOOKEEPER_PORT);
 
     List<ZkServiceRegistry> registries = new ArrayList<>();
