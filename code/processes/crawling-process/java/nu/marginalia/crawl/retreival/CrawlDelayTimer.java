@@ -3,6 +3,7 @@ package nu.marginalia.crawl.retreival;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 
 import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -53,12 +54,13 @@ public class CrawlDelayTimer {
     public void waitFetchDelay(long spentTime) {
         long sleepTime = delayTime;
 
+        long jitter = ThreadLocalRandom.current().nextLong(0, 150);
         try {
             if (sleepTime >= 1) {
                 if (spentTime > sleepTime)
                     return;
 
-                Thread.sleep(min(sleepTime - spentTime, 5000));
+                Thread.sleep(min(sleepTime - spentTime, 5000) + jitter);
             } else {
                 // When no crawl delay is specified, lean toward twice the fetch+process time,
                 // within sane limits. This means slower servers get slower crawling, and faster
@@ -71,12 +73,12 @@ public class CrawlDelayTimer {
                 if (spentTime > sleepTime)
                     return;
 
-                Thread.sleep(sleepTime - spentTime);
+                Thread.sleep(sleepTime - spentTime + jitter);
             }
 
             if (slowDown) {
                 // Additional delay when the server is signalling it wants slower requests
-                Thread.sleep(DEFAULT_CRAWL_DELAY_MIN_MS);
+                Thread.sleep(DEFAULT_CRAWL_DELAY_MIN_MS + jitter);
             }
         }
         catch (InterruptedException e) {
