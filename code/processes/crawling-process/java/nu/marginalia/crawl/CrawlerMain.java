@@ -105,7 +105,8 @@ public class CrawlerMain extends ProcessMainClass {
 
         pool = new SimpleBlockingThreadPool("CrawlerPool",
                 Integer.getInteger("crawler.poolSize", 256),
-                1);
+                1,
+                SimpleBlockingThreadPool.ThreadType.VIRTUAL);
 
 
         // Wait for the blacklist to be loaded before starting the crawl

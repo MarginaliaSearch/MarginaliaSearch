@@ -23,16 +23,33 @@ public class SimpleBlockingThreadPool {
     private final Logger logger = LoggerFactory.getLogger(SimpleBlockingThreadPool.class);
 
     public SimpleBlockingThreadPool(String name, int poolSize, int queueSize) {
+        this(name, poolSize, queueSize, ThreadType.PLATFORM);
+    }
+
+    public SimpleBlockingThreadPool(String name, int poolSize, int queueSize, ThreadType threadType) {
         tasks = new ArrayBlockingQueue<>(queueSize);
 
         for (int i = 0; i < poolSize; i++) {
-            Thread worker = new Thread(this::worker, name  + "[" + i + "]");
-            worker.setDaemon(true);
-            worker.start();
+
+            Thread.Builder threadBuilder = switch (threadType) {
+                case VIRTUAL -> Thread.ofVirtual();
+                case PLATFORM -> Thread.ofPlatform().daemon(true);
+            };
+
+            Thread worker = threadBuilder
+                    .name(name  + "[" + i + "]")
+                    .start(this::worker);
+
             workers.add(worker);
         }
 
     }
+
+    public enum ThreadType {
+        VIRTUAL,
+        PLATFORM
+    }
+
     public void submit(Task task) throws InterruptedException {
         tasks.put(task);
     }

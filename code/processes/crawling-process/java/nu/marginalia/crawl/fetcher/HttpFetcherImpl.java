@@ -61,7 +61,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .cookieHandler(cookies)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(8))
-                .executor(Executors.newCachedThreadPool())
+                .executor(Executors.newVirtualThreadPerTaskExecutor())
                 .build();
     }
 
