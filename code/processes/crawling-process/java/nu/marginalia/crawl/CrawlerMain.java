@@ -302,8 +302,8 @@ public class CrawlerMain extends ProcessMainClass {
     }
 
     /** Create a comparator that sorts the crawl specs in a way that is beneficial for the crawl,
-     * we want to enqueue domains that have common top domains first, but otherwise have a random
-     * order.
+     * we want to enqueue domains that tend ro be large and have common top domains first,
+     * but otherwise have a random order.
      * <p></p>
      * Note, we can't use hash codes for randomization as it is not desirable to have the same order
      * every time the process is restarted (and CrawlSpecRecord is a record, which defines equals and
@@ -311,15 +311,13 @@ public class CrawlerMain extends ProcessMainClass {
      * */
     private Comparator<CrawlSpecRecord> crawlSpecArrangement(List<CrawlSpecRecord> records) {
         Random r = new Random();
-        Map<String, Integer> topDomainCounts = new HashMap<>(4 + (int) Math.sqrt(records.size()));
         Map<String, Integer> randomOrder = new HashMap<>(records.size());
 
         for (var spec : records) {
-            topDomainCounts.merge(EdgeDomain.getTopDomain(spec.domain), 1, Integer::sum);
             randomOrder.put(spec.domain, r.nextInt());
         }
 
-        return Comparator.comparing((CrawlSpecRecord spec) -> topDomainCounts.getOrDefault(EdgeDomain.getTopDomain(spec.domain), 0) >= 8)
+        return Comparator.comparing((CrawlSpecRecord spec) -> spec.domain.contains(".edu"))
                 .reversed()
                 .thenComparing(spec -> randomOrder.get(spec.domain))
                 .thenComparing(Record::hashCode); // non-deterministic tie-breaker to
