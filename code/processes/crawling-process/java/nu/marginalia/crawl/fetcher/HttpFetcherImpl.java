@@ -29,6 +29,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
@@ -56,12 +57,21 @@ public class HttpFetcherImpl implements HttpFetcher {
     private final HttpClient client;
 
     private HttpClient createClient() {
+        final ExecutorService executorService;
+
+        if (Boolean.getBoolean("crawler.httpclient.useVirtualThreads")) {
+            executorService = Executors.newVirtualThreadPerTaskExecutor();
+        }
+        else {
+            executorService = Executors.newCachedThreadPool();
+        }
+
         return HttpClient.newBuilder()
                 .sslContext(NoSecuritySSL.buildSslContext())
                 .cookieHandler(cookies)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(8))
-                .executor(Executors.newVirtualThreadPerTaskExecutor())
+                .executor(executorService)
                 .build();
     }
 

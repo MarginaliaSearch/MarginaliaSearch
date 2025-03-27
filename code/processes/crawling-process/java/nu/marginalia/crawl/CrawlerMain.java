@@ -103,10 +103,18 @@ public class CrawlerMain extends ProcessMainClass {
         this.blacklist = blacklist;
         this.node = processConfiguration.node();
 
+        SimpleBlockingThreadPool.ThreadType threadType;
+        if (Boolean.getBoolean("crawler.useVirtualThreads")) {
+            threadType = SimpleBlockingThreadPool.ThreadType.VIRTUAL;
+        }
+        else {
+            threadType = SimpleBlockingThreadPool.ThreadType.PLATFORM;
+        }
+
         pool = new SimpleBlockingThreadPool("CrawlerPool",
                 Integer.getInteger("crawler.poolSize", 256),
                 1,
-                SimpleBlockingThreadPool.ThreadType.VIRTUAL);
+                threadType);
 
 
         // Wait for the blacklist to be loaded before starting the crawl
