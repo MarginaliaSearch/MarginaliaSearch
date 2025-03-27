@@ -319,7 +319,7 @@ public class CrawlerMain extends ProcessMainClass {
             randomOrder.put(spec.domain, r.nextInt());
         }
 
-        return Comparator.comparing((CrawlSpecRecord spec) -> topDomainCounts.getOrDefault(EdgeDomain.getTopDomain(spec.domain), 0))
+        return Comparator.comparing((CrawlSpecRecord spec) -> topDomainCounts.getOrDefault(EdgeDomain.getTopDomain(spec.domain), 0) >= 8)
                 .reversed()
                 .thenComparing(spec -> randomOrder.get(spec.domain))
                 .thenComparing(Record::hashCode); // non-deterministic tie-breaker to
