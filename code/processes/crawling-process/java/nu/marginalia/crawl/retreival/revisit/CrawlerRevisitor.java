@@ -31,7 +31,7 @@ public class CrawlerRevisitor {
     }
 
     /** Performs a re-crawl of old documents, comparing etags and last-modified */
-    public int recrawl(CrawlDataReference oldCrawlData,
+    public RecrawlMetadata recrawl(CrawlDataReference oldCrawlData,
                        SimpleRobotRules robotsRules,
                        CrawlDelayTimer delayTimer)
     throws InterruptedException {
@@ -39,6 +39,7 @@ public class CrawlerRevisitor {
         int retained = 0;
         int errors = 0;
         int skipped = 0;
+        int size = 0;
 
         for (CrawledDocument doc : oldCrawlData) {
             if (errors > 20) {
@@ -82,6 +83,7 @@ public class CrawlerRevisitor {
                 continue;
             }
 
+            size++;
 
             double skipProb;
 
@@ -154,6 +156,8 @@ public class CrawlerRevisitor {
             }
         }
 
-        return recrawled;
+        return new RecrawlMetadata(size, errors, skipped);
     }
+
+    public record RecrawlMetadata(int size, int errors, int skipped) {}
 }

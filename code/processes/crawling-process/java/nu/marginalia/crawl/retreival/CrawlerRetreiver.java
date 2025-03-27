@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -113,15 +115,19 @@ public class CrawlerRetreiver implements AutoCloseable {
                         throw new InterruptedException();
                     }
 
+                    Instant recrawlStart = Instant.now();
+                    CrawlerRevisitor.RecrawlMetadata recrawlMetadata = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
+                    Duration recrawlTime = Duration.between(recrawlStart, Instant.now());
+
                     // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
-                    if (crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer) > 0) {
+                    if (recrawlMetadata.size() > 0) {
                         // If we have reference data, we will always grow the crawl depth a bit
                         crawlFrontier.increaseDepth(1.5, 2500);
                     }
 
                     oldCrawlData.close(); // proactively close the crawl data reference here to not hold onto expensive resources
 
-                    yield crawlDomain(probedUrl, robotsRules, delayTimer, domainLinks);
+                    yield crawlDomain(probedUrl, robotsRules, delayTimer, domainLinks, recrawlMetadata, recrawlTime);
                 }
                 case HttpFetcher.DomainProbeResult.Redirect(EdgeDomain domain1) -> {
                     domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, "Redirect", domain1.toString()));
@@ -143,7 +149,11 @@ public class CrawlerRetreiver implements AutoCloseable {
     private int crawlDomain(EdgeUrl rootUrl,
                             SimpleRobotRules robotsRules,
                             CrawlDelayTimer delayTimer,
-                            DomainLinks domainLinks) {
+                            DomainLinks domainLinks,
+                            CrawlerRevisitor.RecrawlMetadata recrawlMetadata,
+                            Duration recrawlTime) {
+
+        Instant crawlStart = Instant.now();
 
         // Add external links to the crawl frontier
         crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
@@ -152,6 +162,8 @@ public class CrawlerRetreiver implements AutoCloseable {
         for (var sitemap : robotsRules.getSitemaps()) {
             crawlFrontier.addAllToQueue(fetcher.fetchSitemapUrls(sitemap, delayTimer));
         }
+
+        int crawlerAdditions = 0;
 
         while (!crawlFrontier.isEmpty()
             && !crawlFrontier.isCrawlDepthReached()
@@ -184,13 +196,28 @@ public class CrawlerRetreiver implements AutoCloseable {
                 continue;
 
             try {
-                fetchContentWithReference(top, delayTimer, DocumentWithReference.empty());
+                var result = fetchContentWithReference(top, delayTimer, DocumentWithReference.empty());
+
+                if (result.isOk()) {
+                    crawlerAdditions++;
+                }
             }
             catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                 break;
             }
         }
+
+        Duration crawlTime = Duration.between(crawlStart, Instant.now());
+        domainStateDb.save(new DomainStateDb.CrawlMeta(
+                domain,
+                Instant.now(),
+                recrawlTime,
+                crawlTime,
+                recrawlMetadata.errors(),
+                crawlerAdditions,
+                recrawlMetadata.size() + crawlerAdditions
+        ));
 
         return crawlFrontier.visitedSize();
     }
@@ -324,7 +351,7 @@ public class CrawlerRetreiver implements AutoCloseable {
     );
 
     private Optional<String> guessFeedUrl(CrawlDelayTimer timer) throws InterruptedException {
-        var oldDomainStateRecord = domainStateDb.get(domain);
+        var oldDomainStateRecord = domainStateDb.getSummary(domain);
 
         // If we are already aware of an old feed URL, then we can just revalidate it
         if (oldDomainStateRecord.isPresent()) {

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,8 +48,8 @@ class DomainStateDbTest {
             db.save(allFields);
             db.save(minFields);
 
-            assertEquals(allFields, db.get("all.marginalia.nu").orElseThrow());
-            assertEquals(minFields, db.get("min.marginalia.nu").orElseThrow());
+            assertEquals(allFields, db.getSummary("all.marginalia.nu").orElseThrow());
+            assertEquals(minFields, db.getSummary("min.marginalia.nu").orElseThrow());
 
             var updatedAllFields = new DomainStateDb.SummaryRecord(
                     "all.marginalia.nu",
@@ -59,7 +60,19 @@ class DomainStateDbTest {
             );
 
             db.save(updatedAllFields);
-            assertEquals(updatedAllFields, db.get("all.marginalia.nu").orElseThrow());
+            assertEquals(updatedAllFields, db.getSummary("all.marginalia.nu").orElseThrow());
+        }
+    }
+
+    @Test
+    public void testMetadata() throws SQLException {
+        try (var db = new DomainStateDb(tempFile)) {
+            var original = new DomainStateDb.CrawlMeta("example.com", Instant.ofEpochMilli(12345), Duration.ofMillis(30), Duration.ofMillis(300), 1, 2, 3);
+            db.save(original);
+
+            var maybeMeta = db.getMeta("example.com");
+            assertTrue(maybeMeta.isPresent());
+            assertEquals(original, maybeMeta.get());
         }
     }
 

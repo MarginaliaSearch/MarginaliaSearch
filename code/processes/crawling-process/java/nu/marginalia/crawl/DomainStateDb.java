@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,6 +24,17 @@ public class DomainStateDb implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(DomainStateDb.class);
 
     private final Connection connection;
+
+
+    public record CrawlMeta(
+            String domainName,
+            Instant lastFullCrawl,
+            Duration recrawlTime,
+            Duration crawlTime,
+            int recrawlErrors,
+            int crawlChanges,
+            int totalCrawlSize
+    ) {}
 
     public record SummaryRecord(
             String domainName,
@@ -103,6 +115,17 @@ public class DomainStateDb implements AutoCloseable {
                     )
                     """);
             stmt.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS crawl_meta (
+                        domain TEXT PRIMARY KEY,
+                        lastFullCrawlEpochMs LONG NOT NULL,
+                        recrawlTimeMs LONG NOT NULL,
+                        recrawlErrors INTEGER NOT NULL,
+                        crawlTimeMs LONG NOT NULL,
+                        crawlChanges INTEGER NOT NULL,
+                        totalCrawlSize INTEGER NOT NULL
+                    )
+                    """);
+            stmt.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS favicon (
                         domain TEXT PRIMARY KEY,
                         contentType TEXT NOT NULL,
@@ -164,6 +187,26 @@ public class DomainStateDb implements AutoCloseable {
         return Optional.empty();
     }
 
+    public void save(CrawlMeta crawlMeta) {
+        if (connection == null) throw new IllegalStateException("No connection to domainstate db");
+
+        try (var stmt = connection.prepareStatement("""
+                INSERT OR REPLACE INTO crawl_meta (domain, lastFullCrawlEpochMs, recrawlTimeMs, recrawlErrors, crawlTimeMs, crawlChanges, totalCrawlSize)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """)) {
+            stmt.setString(1, crawlMeta.domainName());
+            stmt.setLong(2, crawlMeta.lastFullCrawl.toEpochMilli());
+            stmt.setLong(3, crawlMeta.recrawlTime.toMillis());
+            stmt.setInt(4, crawlMeta.recrawlErrors);
+            stmt.setLong(5, crawlMeta.crawlTime.toMillis());
+            stmt.setInt(6, crawlMeta.crawlChanges);
+            stmt.setInt(7, crawlMeta.totalCrawlSize);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Failed to insert crawl meta record", e);
+        }
+    }
+
     public void save(SummaryRecord record) {
         if (connection == null) throw new IllegalStateException("No connection to domainstate db");
 
@@ -182,7 +225,35 @@ public class DomainStateDb implements AutoCloseable {
         }
     }
 
-    public Optional<SummaryRecord> get(String domainName) {
+    public Optional<CrawlMeta> getMeta(String domainName) {
+        if (connection == null)
+            return Optional.empty();
+
+        try (var stmt = connection.prepareStatement("""
+                SELECT domain, lastFullCrawlEpochMs, recrawlTimeMs, recrawlErrors, crawlTimeMs, crawlChanges, totalCrawlSize
+                FROM crawl_meta
+                WHERE domain = ?
+                """)) {
+            stmt.setString(1, domainName);
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(new CrawlMeta(
+                        rs.getString("domain"),
+                        Instant.ofEpochMilli(rs.getLong("lastFullCrawlEpochMs")),
+                        Duration.ofMillis(rs.getLong("recrawlTimeMs")),
+                        Duration.ofMillis(rs.getLong("crawlTimeMs")),
+                        rs.getInt("recrawlErrors"),
+                        rs.getInt("crawlChanges"),
+                        rs.getInt("totalCrawlSize")
+                ));
+            }
+        } catch (SQLException ex) {
+            logger.error("Failed to get crawl meta record", ex);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<SummaryRecord> getSummary(String domainName) {
         if (connection == null)
             return Optional.empty();
 
