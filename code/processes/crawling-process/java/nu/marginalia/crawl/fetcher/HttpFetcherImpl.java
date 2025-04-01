@@ -70,6 +70,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .sslContext(NoSecuritySSL.buildSslContext())
                 .cookieHandler(cookies)
                 .followRedirects(HttpClient.Redirect.NORMAL)
+                .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(8))
                 .executor(executorService)
                 .build();
