@@ -160,7 +160,14 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         // Fetch sitemaps
         for (var sitemap : robotsRules.getSitemaps()) {
-            crawlFrontier.addAllToQueue(fetcher.fetchSitemapUrls(sitemap, delayTimer));
+
+            // Validate the sitemap URL and check if it belongs to the domain as the root URL
+            if (EdgeUrl.parse(sitemap)
+                    .map(url -> url.getDomain().equals(rootUrl.domain))
+                    .orElse(false)) {
+
+                crawlFrontier.addAllToQueue(fetcher.fetchSitemapUrls(sitemap, delayTimer));
+            }
         }
 
         int crawlerAdditions = 0;
