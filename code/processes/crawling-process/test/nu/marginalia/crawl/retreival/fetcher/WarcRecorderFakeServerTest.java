@@ -10,12 +10,10 @@ import org.netpreserve.jwarc.WarcResponse;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -29,6 +27,8 @@ class WarcRecorderFakeServerTest {
     @BeforeAll
     public static void setUpAll() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 14510), 10);
+
+        // This endpoint will finish sending the response immediately
         server.createContext("/fast", exchange -> {
             exchange.getResponseHeaders().add("Content-Type", "text/html");
             exchange.sendResponseHeaders(200, "<html><body>hello</body></html>".length());
@@ -40,6 +40,8 @@ class WarcRecorderFakeServerTest {
             exchange.close();
         });
 
+        // This endpoint will take 10 seconds to finish sending the response,
+        // which should trigger a timeout in the client
         server.createContext("/slow", exchange -> {
             exchange.getResponseHeaders().add("Content-Type", "text/html");
             exchange.sendResponseHeaders(200, "<html><body>hello</body></html>:D".length());
@@ -88,7 +90,7 @@ class WarcRecorderFakeServerTest {
     }
 
     @Test
-    void fetchFast() throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
+    public void fetchFast() throws Exception {
         client.fetch(httpClient,
                 HttpRequest.newBuilder()
                         .uri(new java.net.URI("http://localhost:14510/fast"))
@@ -114,7 +116,7 @@ class WarcRecorderFakeServerTest {
     }
 
     @Test
-    void fetchSlow() throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
+    public void fetchSlow() throws Exception {
         Instant start = Instant.now();
         client.fetch(httpClient,
                 HttpRequest.newBuilder()
@@ -141,9 +143,10 @@ class WarcRecorderFakeServerTest {
 
         System.out.println(sampleData);
 
-        // Timeout is set to 1 second, but the server will take 5 seconds to respond, so we expect the request to take 1s and change
-        // before it times out.
-        Assertions.assertTrue(Duration.between(start, end).toMillis() < 2000, "Request should take less than 2 seconds");
+        // Timeout is set to 1 second, but the server will take 5 seconds to respond,
+        // so we expect the request to take 1s and change before it times out.
+
+        Assertions.assertTrue(Duration.between(start, end).toMillis() < 2000);
     }
 
 }
