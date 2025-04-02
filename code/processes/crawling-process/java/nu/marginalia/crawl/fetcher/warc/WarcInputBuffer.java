@@ -8,7 +8,10 @@ import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
 
 /** Input buffer for temporary storage of a HTTP response
@@ -39,7 +42,7 @@ public abstract class WarcInputBuffer implements AutoCloseable {
      *  and suppressed from the headers.
      *  If an error occurs, a buffer will be created with no content and an error status.
      */
-    static WarcInputBuffer forResponse(HttpResponse<InputStream> rsp) {
+    static WarcInputBuffer forResponse(HttpResponse<InputStream> rsp, Duration timeLimit) {
         if (rsp == null)
             return new ErrorBuffer();
 
@@ -51,11 +54,11 @@ public abstract class WarcInputBuffer implements AutoCloseable {
 
             if (contentEncoding == null && contentLength > 0 && contentLength < 8192) {
                 // If the content is small and not compressed, we can just read it into memory
-                return new MemoryBuffer(headers, is, contentLength);
+                return new MemoryBuffer(headers, timeLimit, is, contentLength);
             }
             else {
                 // Otherwise, we unpack it into a file and read it from there
-                return new FileBuffer(headers, is);
+                return new FileBuffer(headers, timeLimit, is);
             }
         }
         catch (Exception ex) {
@@ -64,9 +67,16 @@ public abstract class WarcInputBuffer implements AutoCloseable {
 
     }
 
+    private static final ExecutorService virtualExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+
+    private Future<Integer> readAsync(InputStream is, byte[] out) {
+        return virtualExecutorService.submit(() -> is.read(out));
+    }
+
     /** Copy an input stream to an output stream, with a maximum size and time limit */
-    protected void copy(InputStream is, OutputStream os) {
-        long startTime = System.currentTimeMillis();
+    protected void copy(InputStream is, OutputStream os, Duration timeLimit) {
+        Instant start = Instant.now();
+        Instant timeout = start.plus(timeLimit);
         long size = 0;
 
         byte[] buffer = new byte[8192];
@@ -76,7 +86,15 @@ public abstract class WarcInputBuffer implements AutoCloseable {
 
         while (true) {
             try {
-                int n = is.read(buffer);
+                Duration remaining = Duration.between(Instant.now(), timeout);
+                if (remaining.isNegative()) {
+                    truncationReason = WarcTruncationReason.TIME;
+                    break;
+                }
+
+                Future<Integer> readAsync = readAsync(is, buffer);
+                int n = readAsync.get(remaining.toMillis(), TimeUnit.MILLISECONDS);
+
                 if (n < 0) break;
                 size += n;
                 os.write(buffer, 0, n);
@@ -85,12 +103,11 @@ public abstract class WarcInputBuffer implements AutoCloseable {
                     truncationReason = WarcTruncationReason.LENGTH;
                     break;
                 }
-
-                if (System.currentTimeMillis() - startTime > WarcRecorder.MAX_TIME) {
-                    truncationReason = WarcTruncationReason.TIME;
-                    break;
-                }
-            } catch (IOException e) {
+            } catch (IOException|ExecutionException e) {
+                truncationReason = WarcTruncationReason.UNSPECIFIED;
+            } catch (TimeoutException e) {
+                truncationReason = WarcTruncationReason.TIME;
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -123,12 +140,12 @@ class ErrorBuffer extends WarcInputBuffer {
 /** Buffer for when we have the response in memory */
 class MemoryBuffer extends WarcInputBuffer {
     byte[] data;
-    public MemoryBuffer(HttpHeaders headers, InputStream responseStream, int size) {
+    public MemoryBuffer(HttpHeaders headers, Duration timeLimit, InputStream responseStream, int size) {
         super(headers);
 
         var outputStream = new ByteArrayOutputStream(size);
 
-        copy(responseStream, outputStream);
+        copy(responseStream, outputStream, timeLimit);
 
         data = outputStream.toByteArray();
     }
@@ -152,7 +169,7 @@ class MemoryBuffer extends WarcInputBuffer {
 class FileBuffer extends WarcInputBuffer {
     private final Path tempFile;
 
-    public FileBuffer(HttpHeaders headers, InputStream responseStream) throws IOException {
+    public FileBuffer(HttpHeaders headers, Duration timeLimit, InputStream responseStream) throws IOException {
         super(suppressContentEncoding(headers));
 
         this.tempFile = Files.createTempFile("rsp", ".html");
@@ -160,7 +177,7 @@ class FileBuffer extends WarcInputBuffer {
 
         if ("gzip".equalsIgnoreCase(headers.firstValue("Content-Encoding").orElse(""))) {
             try (var out = Files.newOutputStream(tempFile)) {
-                copy(new GZIPInputStream(responseStream), out);
+                copy(new GZIPInputStream(responseStream), out, timeLimit);
             }
             catch (Exception ex) {
                 truncationReason = WarcTruncationReason.UNSPECIFIED;
@@ -168,7 +185,7 @@ class FileBuffer extends WarcInputBuffer {
         }
         else {
             try (var out = Files.newOutputStream(tempFile)) {
-                copy(responseStream, out);
+                copy(responseStream, out, timeLimit);
             }
             catch (Exception ex) {
                 truncationReason = WarcTruncationReason.UNSPECIFIED;

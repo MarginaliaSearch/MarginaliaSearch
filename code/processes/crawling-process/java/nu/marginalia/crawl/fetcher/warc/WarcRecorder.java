@@ -102,7 +102,7 @@ public class WarcRecorder implements AutoCloseable {
         }
 
 
-        try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response);
+        try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request.timeout().orElseGet(() -> Duration.ofMillis(MAX_TIME)));
              InputStream inputStream = inputBuffer.read())
         {
             if (cookies.hasCookies()) {
