@@ -501,7 +501,7 @@ public class CrawlerMain extends ProcessMainClass {
                     return new CrawlDataReference(slopPath);
                 }
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain());
             }
 
