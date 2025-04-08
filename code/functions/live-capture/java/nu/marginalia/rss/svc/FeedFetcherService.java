@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,7 +72,7 @@ public class FeedFetcherService {
     public enum UpdateMode {
         CLEAN,
         REFRESH
-    };
+    }
 
     public void updateFeeds(UpdateMode updateMode) throws IOException {
         if (updating) // Prevent concurrent updates
@@ -87,6 +88,7 @@ public class FeedFetcherService {
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .version(HttpClient.Version.HTTP_2)
                 .build();
+             ExecutorService fetchExecutor = Executors.newCachedThreadPool();
              FeedJournal feedJournal = FeedJournal.create();
              var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
         ) {
@@ -131,7 +133,7 @@ public class FeedFetcherService {
 
                         FetchResult feedData;
                         try (DomainLocks.DomainLock domainLock = domainLocks.lockDomain(new EdgeDomain(feed.domain()))) {
-                            feedData = fetchFeedData(feed, client, ifModifiedSinceDate, ifNoneMatchTag);
+                            feedData = fetchFeedData(feed, client, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
                         } catch (Exception ex) {
                             feedData = new FetchResult.TransientError();
                         }
@@ -211,6 +213,7 @@ public class FeedFetcherService {
 
     private FetchResult fetchFeedData(FeedDefinition feed,
                                       HttpClient client,
+                                      ExecutorService executorService,
                                       @Nullable String ifModifiedSinceDate,
                                       @Nullable String ifNoneMatchTag)
     {
@@ -237,7 +240,14 @@ public class FeedFetcherService {
             HttpRequest getRequest = requestBuilder.build();
 
             for (int i = 0; i < 3; i++) {
-                HttpResponse<byte[]> rs = client.send(getRequest, HttpResponse.BodyHandlers.ofByteArray());
+
+                /* Note we need to use an executor to time-limit the send() method in HttpClient, as
+                 * its support for timeouts only applies to the time until response starts to be received,
+                 * and does not catch the case when the server starts to send data but then hangs.
+                 */
+                HttpResponse<byte[]> rs = executorService.submit(
+                        () -> client.send(getRequest, HttpResponse.BodyHandlers.ofByteArray()))
+                                .get(15, TimeUnit.SECONDS);
 
                 if (rs.statusCode() == 429) { // Too Many Requests
                     int retryAfter = Integer.parseInt(rs.headers().firstValue("Retry-After").orElse("2"));
