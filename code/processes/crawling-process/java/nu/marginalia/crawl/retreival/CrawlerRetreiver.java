@@ -53,6 +53,10 @@ public class CrawlerRetreiver implements AutoCloseable {
     private final WarcRecorder warcRecorder;
     private final CrawlerRevisitor crawlerRevisitor;
 
+    private static final CrawlerConnectionThrottle connectionThrottle = new CrawlerConnectionThrottle(
+            Duration.ofSeconds(1) // pace the connections to avoid network congestion by waiting 1 second between establishing them
+    );
+
     int errorCount = 0;
 
     public CrawlerRetreiver(HttpFetcher fetcher,
@@ -92,6 +96,11 @@ public class CrawlerRetreiver implements AutoCloseable {
 
     public int crawlDomain(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
         try (oldCrawlData) {
+
+            // Wait for permission to open a connection to avoid network congestion
+            // from hundreds/thousands of TCP handshakes
+            connectionThrottle.waitForConnectionPermission();
+
             // Do an initial domain probe to determine the root URL
             var probeResult = probeRootUrl();
 
@@ -253,6 +262,8 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         return domainProbeResult;
     }
+
+
 
     private DomainStateDb.SummaryRecord sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
         Optional<String> feedLink = Optional.empty();
