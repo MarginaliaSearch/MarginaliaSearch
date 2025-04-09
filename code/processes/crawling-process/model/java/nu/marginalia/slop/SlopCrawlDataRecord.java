@@ -341,12 +341,15 @@ public record SlopCrawlDataRecord(String domain,
                 contentType = "";
             }
 
+            boolean hasCookies = false;
+
             String headersStr;
             StringJoiner headersStrBuilder = new StringJoiner("\n");
-            for (var header : headers.map().entrySet()) {
-                for (var value : header.getValue()) {
-                    headersStrBuilder.add(header.getKey() + ": " + value);
+            for (var header : headers) {
+                if (header.getName().equalsIgnoreCase("X-Cookies") && "1".equals(header.getValue())) {
+                    hasCookies = true;
                 }
+                headersStrBuilder.add(header.getName() + ": " + header.getValue());
             }
             headersStr = headersStrBuilder.toString();
 
@@ -355,7 +358,7 @@ public record SlopCrawlDataRecord(String domain,
                     domain,
                     response.target(),
                     fetchOk.ipAddress(),
-                    "1".equals(headers.firstValue("X-Cookies").orElse("0")),
+                    hasCookies,
                     fetchOk.statusCode(),
                     response.date().toEpochMilli(),
                     contentType,

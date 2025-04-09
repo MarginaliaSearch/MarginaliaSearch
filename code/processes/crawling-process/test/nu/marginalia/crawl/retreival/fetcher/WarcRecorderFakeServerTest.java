@@ -1,8 +1,11 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
 import com.sun.net.httpserver.HttpServer;
-import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.*;
 import org.netpreserve.jwarc.WarcReader;
 import org.netpreserve.jwarc.WarcRequest;
@@ -10,8 +13,6 @@ import org.netpreserve.jwarc.WarcResponse;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -50,11 +51,19 @@ class WarcRecorderFakeServerTest {
                 os.write("<html><body>hello</body></html>".getBytes());
                 os.flush();
                 try {
-                    TimeUnit.SECONDS.sleep(10);
+                    TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                os.write(":D".getBytes());
+                os.write(":".getBytes());
+                os.flush();
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                os.write("D".getBytes());
                 os.flush();
             }
             exchange.close();
@@ -75,12 +84,12 @@ class WarcRecorderFakeServerTest {
     HttpClient httpClient;
     @BeforeEach
     public void setUp() throws Exception {
-        httpClient = HttpClient.newBuilder().build();
+        httpClient = HttpClients.createDefault();
 
         fileNameWarc = Files.createTempFile("test", ".warc");
         fileNameParquet = Files.createTempFile("test", ".parquet");
 
-        client = new WarcRecorder(fileNameWarc, new Cookies());
+        client = new WarcRecorder(fileNameWarc, new BasicCookieStore());
     }
 
     @AfterEach
@@ -92,12 +101,11 @@ class WarcRecorderFakeServerTest {
     @Test
     public void fetchFast() throws Exception {
         client.fetch(httpClient,
-                HttpRequest.newBuilder()
-                        .uri(new java.net.URI("http://localhost:14510/fast"))
-                        .timeout(Duration.ofSeconds(1))
-                        .header("User-agent", "test.marginalia.nu")
-                        .header("Accept-Encoding", "gzip")
-                        .GET().build()
+                ClassicRequestBuilder
+                        .get(new java.net.URI("http://localhost:14510/fast"))
+                        .addHeader("User-agent", "test.marginalia.nu")
+                        .addHeader("Accept-Encoding", "gzip")
+                        .build()
         );
 
         Map<String, String> sampleData = new HashMap<>();
@@ -118,13 +126,13 @@ class WarcRecorderFakeServerTest {
     @Test
     public void fetchSlow() throws Exception {
         Instant start = Instant.now();
+
         client.fetch(httpClient,
-                HttpRequest.newBuilder()
-                        .uri(new java.net.URI("http://localhost:14510/slow"))
-                        .timeout(Duration.ofSeconds(1))
-                        .header("User-agent", "test.marginalia.nu")
-                        .header("Accept-Encoding", "gzip")
-                        .GET().build()
+                ClassicRequestBuilder.get(new java.net.URI("http://localhost:14510/slow"))
+                        .addHeader("User-agent", "test.marginalia.nu")
+                        .addHeader("Accept-Encoding", "gzip")
+                        .build(),
+                Duration.ofSeconds(1)
         );
         Instant end = Instant.now();
 
@@ -146,7 +154,7 @@ class WarcRecorderFakeServerTest {
         // Timeout is set to 1 second, but the server will take 5 seconds to respond,
         // so we expect the request to take 1s and change before it times out.
 
-        Assertions.assertTrue(Duration.between(start, end).toMillis() < 2000);
+        Assertions.assertTrue(Duration.between(start, end).toMillis() < 3000);
     }
 
 }

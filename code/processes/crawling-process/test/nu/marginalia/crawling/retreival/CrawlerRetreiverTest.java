@@ -5,7 +5,6 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
-import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
@@ -17,6 +16,7 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.netpreserve.jwarc.*;
@@ -180,7 +180,7 @@ class CrawlerRetreiverTest {
                 new EdgeDomain("www.marginalia.nu"),
                 List.of(), 100);
         var resync = new CrawlerWarcResynchronizer(revisitCrawlFrontier,
-                new WarcRecorder(tempFileWarc2, new Cookies())
+                new WarcRecorder(tempFileWarc2, new BasicCookieStore())
         );
 
         // truncate the size of the file to simulate a crash
@@ -456,7 +456,7 @@ class CrawlerRetreiverTest {
                 List.of(), 100);
 
         var resync = new CrawlerWarcResynchronizer(revisitCrawlFrontier,
-                new WarcRecorder(tempFileWarc3, new Cookies())
+                new WarcRecorder(tempFileWarc3, new BasicCookieStore())
         );
 
         // truncate the size of the file to simulate a crash
@@ -507,7 +507,7 @@ class CrawlerRetreiverTest {
     }
 
     private void doCrawlWithReferenceStream(CrawlerMain.CrawlSpecRecord specs, CrawlDataReference reference) {
-        try (var recorder = new WarcRecorder(tempFileWarc2, new Cookies());
+        try (var recorder = new WarcRecorder(tempFileWarc2, new BasicCookieStore());
              var db = new DomainStateDb(tempFileDb)
         ) {
             new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, db, recorder).crawlDomain(new DomainLinks(), reference);
@@ -519,7 +519,7 @@ class CrawlerRetreiverTest {
 
     @NotNull
     private DomainCrawlFrontier doCrawl(Path tempFileWarc1, CrawlerMain.CrawlSpecRecord specs) {
-        try (var recorder = new WarcRecorder(tempFileWarc1, new Cookies());
+        try (var recorder = new WarcRecorder(tempFileWarc1, new BasicCookieStore());
              var db = new DomainStateDb(tempFileDb)
         ) {
             var crawler = new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, db, recorder);

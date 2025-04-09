@@ -1,6 +1,9 @@
 package nu.marginalia.model.body;
 
 import nu.marginalia.contenttype.ContentType;
+import nu.marginalia.model.EdgeUrl;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -11,8 +14,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.http.HttpHeaders;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 /* FIXME:  This interface has a very unfortunate name that is not very descriptive.
  */
@@ -56,7 +61,7 @@ public sealed interface HttpFetchResult {
      */
     record ResultOk(URI uri,
                     int statusCode,
-                    HttpHeaders headers,
+                    Header[] headers,
                     String ipAddress,
                     byte[] bytesRaw, // raw data for the entire response including headers
                     int bytesStart,
@@ -67,18 +72,17 @@ public sealed interface HttpFetchResult {
             this(uri, status, convertHeaders(headers), ipAddress, bytes, bytesStart, length);
         }
 
-        private static HttpHeaders convertHeaders(MessageHeaders messageHeaders) {
-            Map<String, List<String>> inputMap = messageHeaders.map();
-            Map<String, List<String>> filteredMap = new HashMap<>(Math.max(4, inputMap.size()));
+        private static Header[] convertHeaders(MessageHeaders messageHeaders) {
+            List<Header> headers = new ArrayList<>(12);
 
-            inputMap.forEach((k, v) -> {
+            messageHeaders.map().forEach((k, v) -> {
                 if (k.isBlank()) return;
                 if (!Character.isAlphabetic(k.charAt(0))) return;
 
-                filteredMap.put(k, v);
+                headers.add(new BasicHeader(k, v));
             });
 
-            return HttpHeaders.of(filteredMap, (k,v) -> true);
+            return headers.toArray(new Header[0]);
         }
 
         public boolean isOk() {
@@ -108,7 +112,12 @@ public sealed interface HttpFetchResult {
 
         @Nullable
         public String header(String name) {
-            return headers.firstValue(name).orElse(null);
+            for (var header : headers) {
+                if (header.getName().equalsIgnoreCase(name)) {
+                    return header.getValue();
+                }
+            }
+            return null;
         }
 
     }
@@ -129,6 +138,12 @@ public sealed interface HttpFetchResult {
     record ResultException(Exception ex) implements HttpFetchResult {
         public boolean isOk() {
             return false;
+        }
+    }
+
+    record ResultRedirect(EdgeUrl url) implements HttpFetchResult {
+        public boolean isOk() {
+            return true;
         }
     }
 

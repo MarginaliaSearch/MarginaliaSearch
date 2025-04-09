@@ -1,6 +1,8 @@
 package nu.marginalia.crawl.fetcher.warc;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.Header;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -17,7 +19,7 @@ import java.util.stream.Collectors;
 public class WarcProtocolReconstructor {
 
     static String getHttpRequestString(String method,
-                                       Map<String, List<String>> mainHeaders,
+                                       Header[] mainHeaders,
                                        Map<String, List<String>> extraHeaders,
                                        URI uri) {
         StringBuilder requestStringBuilder = new StringBuilder();
@@ -34,12 +36,13 @@ public class WarcProtocolReconstructor {
 
         Set<String> addedHeaders = new HashSet<>();
 
-        mainHeaders.forEach((k, values) -> {
-            for (var value : values) {
-                addedHeaders.add(k);
-                requestStringBuilder.append(capitalizeHeader(k)).append(": ").append(value).append("\r\n");
-            }
-        });
+        for (var header : mainHeaders) {
+            String k = header.getName();
+            String v = header.getValue();
+
+            addedHeaders.add(k);
+            requestStringBuilder.append(capitalizeHeader(k)).append(": ").append(v).append("\r\n");
+        }
 
         extraHeaders.forEach((k, values) -> {
             if (!addedHeaders.contains(k)) {
@@ -85,6 +88,12 @@ public class WarcProtocolReconstructor {
         String headerString = getHeadersAsString(response.headers(), size);
 
         return "HTTP/" + version + " " + statusCode + " " + statusMessage + "\r\n" + headerString + "\r\n\r\n";
+    }
+
+    static String getResponseHeader(ClassicHttpResponse response, long size) {
+        String headerString = getHeadersAsString(response.getHeaders(), size);
+
+        return response.getVersion().format() + " " + response.getCode() + " " + response.getReasonPhrase() + "\r\n" + headerString + "\r\n\r\n";
     }
 
     private static final Map<Integer, String> STATUS_CODE_MAP = Map.ofEntries(
@@ -145,6 +154,37 @@ public class WarcProtocolReconstructor {
         StringJoiner joiner = new StringJoiner("\r\n");
 
         Arrays.stream(headersBlob.split("\n")).forEach(joiner::add);
+
+        return joiner.toString();
+    }
+
+
+
+    static private String getHeadersAsString(Header[] headers, long responseSize) {
+        StringJoiner joiner = new StringJoiner("\r\n");
+
+        for (var header : headers) {
+            String headerCapitalized = capitalizeHeader(header.getName());
+
+            // Omit pseudoheaders injected by the crawler itself
+            if (headerCapitalized.startsWith("X-Marginalia"))
+                continue;
+
+            // Omit Transfer-Encoding and Content-Encoding headers
+            if (headerCapitalized.equals("Transfer-Encoding"))
+                continue;
+            if (headerCapitalized.equals("Content-Encoding"))
+                continue;
+
+            // Since we're transparently decoding gzip, we need to update the Content-Length header
+            // to reflect the actual size of the response body. We'll do this at the end.
+            if (headerCapitalized.equals("Content-Length"))
+                continue;
+
+            joiner.add(headerCapitalized + ": " + header.getValue());
+        }
+
+        joiner.add("Content-Length: " + responseSize);
 
         return joiner.toString();
     }

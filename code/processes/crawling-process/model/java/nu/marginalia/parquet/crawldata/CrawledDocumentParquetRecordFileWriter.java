@@ -165,12 +165,26 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             contentType = "";
         }
 
+        boolean hasCookies = false;
+        String etag = null;
+        String lastModified = null;
+
         StringJoiner headersStrBuilder = new StringJoiner("\n");
-        for (var header : headers.map().entrySet()) {
-            for (var value : header.getValue()) {
-                headersStrBuilder.add(header.getKey() + ": " + value);
+        for (var header : headers) {
+            if (header.getName().equalsIgnoreCase("X-Has-Cookies")) {
+                hasCookies = hasCookies || header.getValue().equals("1");
+            }
+            else if (header.getName().equalsIgnoreCase("ETag")) {
+                etag = header.getValue();
+            }
+            else if (header.getName().equalsIgnoreCase("Last-Modified")) {
+                lastModified = header.getValue();
+            }
+            else {
+                headersStrBuilder.add(header.getName() + ": " + header.getValue());
             }
         }
+
         String headersStr = headersStrBuilder.toString();
 
 
@@ -178,14 +192,14 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 domain,
                 response.target(),
                 fetchOk.ipAddress(),
-                headers.firstValue("X-Has-Cookies").orElse("0").equals("1"),
+                hasCookies,
                 fetchOk.statusCode(),
                 response.date(),
                 contentType,
                 bodyBytes,
                 headersStr,
-                headers.firstValue("ETag").orElse(null),
-                headers.firstValue("Last-Modified").orElse(null)
+                etag,
+                lastModified
         ));
     }
 

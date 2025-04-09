@@ -87,6 +87,8 @@ dependencies {
     implementation libs.commons.compress
     implementation libs.sqlite
 
+    implementation libs.bundles.httpcomponents
+
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito

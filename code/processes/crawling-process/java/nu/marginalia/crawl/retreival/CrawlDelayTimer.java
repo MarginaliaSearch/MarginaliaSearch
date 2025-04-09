@@ -51,6 +51,10 @@ public class CrawlDelayTimer {
         waitFetchDelay(0);
     }
 
+    public void waitFetchDelay(Duration spentTime) {
+        waitFetchDelay(spentTime.toMillis());
+    }
+
     public void waitFetchDelay(long spentTime) {
         long sleepTime = delayTime;
 

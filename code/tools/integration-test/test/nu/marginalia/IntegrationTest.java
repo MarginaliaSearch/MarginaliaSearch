@@ -10,7 +10,6 @@ import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.crawl.fetcher.ContentTags;
-import nu.marginalia.crawl.fetcher.Cookies;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.functions.searchquery.QueryFactory;
@@ -44,6 +43,7 @@ import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.test.IntegrationTestModule;
 import nu.marginalia.test.TestUtil;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -121,7 +121,7 @@ public class IntegrationTest {
     public void run() throws Exception {
 
         /** CREATE WARC */
-        try (WarcRecorder warcRecorder = new WarcRecorder(warcData, new Cookies())) {
+        try (WarcRecorder warcRecorder = new WarcRecorder(warcData, new BasicCookieStore())) {
             warcRecorder.writeWarcinfoHeader("127.0.0.1", new EdgeDomain("www.example.com"),
                     new HttpFetcherImpl.DomainProbeResult.Ok(new EdgeUrl("https://www.example.com/")));
 

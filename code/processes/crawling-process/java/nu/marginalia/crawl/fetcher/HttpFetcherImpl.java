@@ -5,79 +5,114 @@ import com.google.inject.Singleton;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import nu.marginalia.UserAgent;
-import nu.marginalia.crawl.fetcher.socket.NoSecuritySSL;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
+import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import org.apache.hc.client5.http.HttpRequestRetryStrategy;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.CookieStore;
+import org.apache.hc.client5.http.cookie.StandardCookieSpec;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.TimeValue;
+import org.apache.hc.core5.util.Timeout;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.zip.GZIPInputStream;
+import java.util.concurrent.TimeUnit;
 
 
 @Singleton
-public class HttpFetcherImpl implements HttpFetcher {
+public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String userAgentString;
     private final String userAgentIdentifier;
-    private final Cookies cookies = new Cookies();
+
+    private final CookieStore cookies = new BasicCookieStore();
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
-    private final Duration requestTimeout = Duration.ofSeconds(10);
-    private final Duration probeTimeout = Duration.ofSeconds(30);
-
+    private final LinkParser linkParser = new LinkParser();
     @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
         contentTypeLogic.setAllowAllContentTypes(allowAllContentTypes);
     }
 
-    private final HttpClient client;
+    private final CloseableHttpClient client;
 
-    private HttpClient createClient() {
-        final ExecutorService executorService;
+    private CloseableHttpClient createClient() throws NoSuchAlgorithmException {
+        final ConnectionConfig connectionConfig = ConnectionConfig.custom()
+                .setSocketTimeout(10, TimeUnit.SECONDS)
+                .setConnectTimeout(10, TimeUnit.SECONDS)
+                .setTimeToLive(180, TimeUnit.SECONDS)
+                .build();
 
-        if (Boolean.getBoolean("crawler.httpclient.useVirtualThreads")) {
-            executorService = Executors.newVirtualThreadPerTaskExecutor();
-        }
-        else {
-            executorService = Executors.newCachedThreadPool();
-        }
+        final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setMaxConnPerRoute(4)
+                .setDefaultConnectionConfig(connectionConfig)
+                .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()))
+                .build();
 
-        return HttpClient.newBuilder()
-                .sslContext(NoSecuritySSL.buildSslContext())
-                .cookieHandler(cookies)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofSeconds(8))
-                .executor(executorService)
+        connectionManager.setDefaultSocketConfig(SocketConfig.custom()
+                .setSoLinger(TimeValue.ofSeconds(15))
+                .setSoTimeout(Timeout.ofSeconds(10))
+                .build()
+        );
+
+        final RequestConfig defaultRequestConfig = RequestConfig.custom()
+                .setCookieSpec(StandardCookieSpec.RELAXED)
+                .setResponseTimeout(10, TimeUnit.SECONDS)
+                .setConnectionRequestTimeout(8, TimeUnit.SECONDS)
+                .build();
+
+        return HttpClients.custom()
+                .setDefaultCookieStore(cookies)
+                .setConnectionManager(connectionManager)
+                .setRetryStrategy(this)
+                .disableRedirectHandling()
+                .setDefaultHeaders(List.of(new BasicHeader("User-Agent", userAgentString)))
+                .setDefaultRequestConfig(defaultRequestConfig)
                 .build();
     }
 
     @Override
-    public Cookies getCookies() {
+    public CookieStore getCookies() {
         return cookies;
     }
 
@@ -89,19 +124,27 @@ public class HttpFetcherImpl implements HttpFetcher {
     @Inject
     public HttpFetcherImpl(UserAgent userAgent)
     {
-        this.client = createClient();
+        try {
+            this.client = createClient();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
     }
 
     public HttpFetcherImpl(String userAgent) {
-        this.client = createClient();
+        try {
+            this.client = createClient();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
         this.userAgentString = userAgent;
         this.userAgentIdentifier = userAgent;
     }
 
     // Not necessary in prod, but useful in test
-    public void close() {
+    public void close() throws IOException {
         client.close();
     }
 
@@ -114,34 +157,74 @@ public class HttpFetcherImpl implements HttpFetcher {
      */
     @Override
     public DomainProbeResult probeDomain(EdgeUrl url) {
-        HttpRequest head;
-        try {
-            head = HttpRequest.newBuilder()
-                    .HEAD()
-                    .uri(url.asURI())
-                    .header("User-agent", userAgentString)
-                    .timeout(probeTimeout)
-                    .build();
-        } catch (URISyntaxException e) {
-            return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid URL");
-        }
+        List<EdgeUrl> urls = new ArrayList<>();
+        urls.add(url);
 
-        for (int tries = 0;; tries++) {
+        int redirects = 0;
+
+        while (!urls.isEmpty() && ++redirects < 5) {
+            ClassicHttpRequest head;
+
+            EdgeUrl topUrl = urls.removeFirst();
             try {
-                var rsp = SendLock.wrapSend(client, head, HttpResponse.BodyHandlers.discarding());
-                EdgeUrl rspUri = new EdgeUrl(rsp.uri());
-
-                if (!Objects.equals(rspUri.domain, url.domain)) {
-                    return new DomainProbeResult.Redirect(rspUri.domain);
-                }
-                return new DomainProbeResult.Ok(rspUri);
-            } catch (Exception ex) {
-                if (tries > 3) {
-                    return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, ex.getMessage());
-                }
-                // else try again ...
+                head = ClassicRequestBuilder.head(topUrl.asURI())
+                        .build();
+            } catch (URISyntaxException e) {
+                return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid URL");
             }
+
+            try {
+                var result = SendLock.wrapSend(client, head, response -> {
+                    EntityUtils.consume(response.getEntity());
+
+                    return switch (response.getCode()) {
+                        case 200 -> new DomainProbeResult.Ok(url);
+                        case 301, 302, 307 -> {
+                            var location = response.getFirstHeader("Location");
+
+                            if (location != null) {
+                                Optional<EdgeUrl> newUrl = linkParser.parseLink(topUrl, location.getValue());
+                                if (newUrl.isEmpty()) {
+                                    yield new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid location header on redirect");
+                                }
+                                EdgeUrl newEdgeUrl = newUrl.get();
+                                if (newEdgeUrl.domain.equals(topUrl.domain)) {
+                                    yield new DomainProbeResult.RedirectSameDomain_Internal(newEdgeUrl);
+                                }
+                                else {
+                                    yield new DomainProbeResult.Redirect(newEdgeUrl.domain);
+                                }
+                            }
+
+                            yield new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "No location header on redirect");
+
+                        }
+                        default ->
+                                new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "HTTP status " + response.getCode());
+                    };
+                });
+
+                if (result instanceof DomainProbeResult.RedirectSameDomain_Internal(EdgeUrl redirUrl)) {
+                    urls.add(redirUrl);
+                }
+                else {
+                    return result;
+                }
+
+                // We don't have robots.txt yet, so we'll assume a request delay of 1 second
+                TimeUnit.SECONDS.sleep(1);
+            }
+            catch (SocketTimeoutException ex) {
+                return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Timeout during domain probe");
+            }
+            catch (Exception ex) {
+                return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Error during domain probe");
+            }
+
         }
+
+        return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Failed to resolve domain root");
+
     }
 
     /** Perform a HEAD request to fetch the content type of a URL.
@@ -152,70 +235,62 @@ public class HttpFetcherImpl implements HttpFetcher {
      * recorded in the WARC file on failure.
      */
     public ContentTypeProbeResult probeContentType(EdgeUrl url,
-                                                   WarcRecorder warcRecorder,
-                                                   ContentTags tags) throws RateLimitException {
-        if (tags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url)) {
-
-            try {
-                var headBuilder = HttpRequest.newBuilder()
-                    .HEAD()
-                    .uri(url.asURI())
-                    .header("User-Agent", userAgentString)
-                    .header("Accept-Encoding", "gzip")
-                    .timeout(requestTimeout)
-                    ;
-
-                var rsp = SendLock.wrapSend(client, headBuilder.build(), HttpResponse.BodyHandlers.discarding());
-                var headers = rsp.headers();
-
-                var contentTypeHeader = headers.firstValue("Content-Type").orElse(null);
-
-                if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
-                    warcRecorder.flagAsFailedContentTypeProbe(url, contentTypeHeader, rsp.statusCode());
-
-                    return new ContentTypeProbeResult.BadContentType(contentTypeHeader, rsp.statusCode());
-                }
-
-                // Update the URL to the final URL of the HEAD request, otherwise we might end up doing
-
-                // HEAD 301 url1 -> url2
-                // HEAD 200 url2
-                // GET 301 url1 -> url2
-                // GET 200 url2
-
-                // which is not what we want. Overall we want to do as few requests as possible to not raise
-                // too many eyebrows when looking at the logs on the target server.  Overall it's probably desirable
-                // that it looks like the traffic makes sense, as opposed to looking like a broken bot.
-
-                var redirectUrl = new EdgeUrl(rsp.uri());
-                EdgeUrl ret;
-
-                if (Objects.equals(redirectUrl.domain, url.domain)) ret = redirectUrl;
-                else ret = url;
-
-                // Intercept rate limiting
-                if (rsp.statusCode() == 429) {
-                    throw new HttpFetcherImpl.RateLimitException(headers.firstValue("Retry-After").orElse("1"));
-                }
-
-                return new ContentTypeProbeResult.Ok(ret);
-            }
-            catch (HttpTimeoutException ex) {
-                warcRecorder.flagAsTimeout(url);
-                return new ContentTypeProbeResult.Timeout(ex);
-            }
-            catch (RateLimitException ex) {
-                throw ex;
-            }
-            catch (Exception ex) {
-                logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
-
-                warcRecorder.flagAsError(url, ex);
-
-                return new ContentTypeProbeResult.Exception(ex);
-            }
+                                                   ContentTags tags) {
+        if (!tags.isEmpty() || !contentTypeLogic.isUrlLikeBinary(url)) {
+            return new ContentTypeProbeResult.Ok(url);
         }
-        return new ContentTypeProbeResult.Ok(url);
+
+        try {
+            ClassicHttpRequest head = ClassicRequestBuilder.head(url.asURI())
+                    .addHeader("Accept-Encoding", "gzip")
+                    .build();
+
+            var result = SendLock.wrapSend(client, head, (rsp) -> {
+                EntityUtils.consume(rsp.getEntity());
+
+                int statusCode = rsp.getCode();
+
+                // Handle redirects
+                if (statusCode == 301 || statusCode == 302 || statusCode == 307) {
+                    var location = rsp.getFirstHeader("Location");
+                    if (location != null) {
+                        Optional<EdgeUrl> newUrl = linkParser.parseLink(url, location.getValue());
+                        if (newUrl.isEmpty())
+                            return new ContentTypeProbeResult.HttpError(statusCode, "Invalid location header on redirect");
+                        return new ContentTypeProbeResult.Redirect(newUrl.get());
+                    }
+                }
+
+                // Handle errors
+                if (statusCode < 200 || statusCode > 300) {
+                    return new ContentTypeProbeResult.HttpError(statusCode, "Bad status code");
+                }
+
+                // Handle missing content type
+                var ctHeader = rsp.getFirstHeader("Content-Type");
+                if (ctHeader == null) {
+                    return new ContentTypeProbeResult.HttpError(statusCode, "Missing Content-Type header");
+                }
+                var contentType = ctHeader.getValue();
+
+                // Check if the content type is allowed
+                if (contentTypeLogic.isAllowableContentType(contentType)) {
+                    return new ContentTypeProbeResult.Ok(url);
+                } else {
+                    return new ContentTypeProbeResult.BadContentType(contentType, statusCode);
+                }
+            });
+
+            return result;
+        }
+        catch (SocketTimeoutException ex) {
+
+            return new ContentTypeProbeResult.Timeout(ex);
+        }
+        catch (Exception ex) {
+            logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+            return new ContentTypeProbeResult.Exception(ex);
+        }
     }
 
     /** Fetch the content of a URL, and record it in a WARC file,
@@ -225,38 +300,66 @@ public class HttpFetcherImpl implements HttpFetcher {
     @Override
     public HttpFetchResult fetchContent(EdgeUrl url,
                                            WarcRecorder warcRecorder,
+                                           CrawlDelayTimer timer,
                                            ContentTags contentTags,
                                            ProbeType probeType)
-        throws Exception
     {
-        var getBuilder = HttpRequest.newBuilder()
-                .GET()
-                .uri(url.asURI())
-                .header("User-Agent", userAgentString)
-                .header("Accept-Encoding", "gzip")
-                .header("Accept-Language", "en,*;q=0.5")
-                .header("Accept", "text/html, application/xhtml+xml, text/*;q=0.8")
-                .timeout(requestTimeout)
-                ;
 
-        contentTags.paint(getBuilder);
+        try {
+            if (probeType == HttpFetcher.ProbeType.FULL) {
+                Instant probeStart = Instant.now();
+                try {
+                    var probeResult = probeContentType(url, contentTags);
 
-        try (var sl = new SendLock()) {
-            HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
+                    switch (probeResult) {
+                        case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
+                            url = resolvedUrl; // If we were redirected while probing, use the final URL for fetching
+                            break;
+                        case ContentTypeProbeResult.BadContentType badContentType:
+                            warcRecorder.flagAsFailedContentTypeProbe(url, badContentType.contentType(), badContentType.statusCode());
+                            return new HttpFetchResult.ResultNone();
+                        case ContentTypeProbeResult.BadContentType.Timeout(Exception ex):
+                            warcRecorder.flagAsTimeout(url);
+                            return new HttpFetchResult.ResultException(ex);
+                        case ContentTypeProbeResult.Exception(Exception ex):
+                            warcRecorder.flagAsError(url, ex);
+                            return new HttpFetchResult.ResultException(ex);
+                        case ContentTypeProbeResult.HttpError httpError:
+                            return new HttpFetchResult.ResultException(new HttpException("HTTP status code " + httpError.statusCode() + ": " + httpError.message()));
+                        case ContentTypeProbeResult.Redirect redirect:
+                            return new HttpFetchResult.ResultRedirect(redirect.location());
+                    }
+                } catch (Exception ex) {
+                    logger.warn("Failed to fetch {}", url, ex);
+                    return new HttpFetchResult.ResultException(ex);
+                }
 
-            if (result instanceof HttpFetchResult.ResultOk ok) {
-                if (ok.statusCode() == 429) {
-                    throw new RateLimitException(Objects.requireNonNullElse(ok.header("Retry-After"), "1"));
-                }
-                if (ok.statusCode() == 304) {
-                    return new HttpFetchResult.Result304Raw();
-                }
-                if (ok.statusCode() == 200) {
-                    return ok;
-                }
+                timer.waitFetchDelay(/* spent time = */ Duration.between(probeStart, Instant.now()));
             }
 
-            return result;
+            ClassicRequestBuilder getBuilder = ClassicRequestBuilder.get(url.asURI())
+                    .addHeader("Accept-Encoding", "gzip")
+                    .addHeader("Accept-Language", "en,*;q=0.5")
+                    .addHeader("Accept-Encoding", "gzip")
+                    .addHeader("Accept", "text/html, application/xhtml+xml, text/*;q=0.8");
+
+            contentTags.paint(getBuilder);
+
+            try (var sl = new SendLock()) {
+                HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
+
+                if (result instanceof HttpFetchResult.ResultOk ok) {
+                    if (ok.statusCode() == 304) {
+                        return new HttpFetchResult.Result304Raw();
+                    }
+                }
+
+                return result;
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return new HttpFetchResult.ResultException(ex);
         }
 
     }
@@ -323,67 +426,59 @@ public class HttpFetcherImpl implements HttpFetcher {
 
 
     private SitemapResult fetchSingleSitemap(EdgeUrl sitemapUrl) throws URISyntaxException, IOException, InterruptedException {
-        HttpRequest getRequest = HttpRequest.newBuilder()
-                .GET()
-                .uri(sitemapUrl.asURI())
-                .header("Accept-Encoding", "gzip")
-                .header("Accept", "text/*, */*;q=0.9")
-                .header("User-Agent", userAgentString)
-                .timeout(requestTimeout)
+        ClassicHttpRequest getRequest = ClassicRequestBuilder.get(sitemapUrl.asURI())
+                .addHeader("Accept-Encoding", "gzip")
+                .addHeader("Accept", "text/*, */*;q=0.9")
+                .addHeader("User-Agent", userAgentString)
                 .build();
 
         try (var sl = new SendLock()) {
-            var response = client.send(getRequest, HttpResponse.BodyHandlers.ofInputStream());
-            if (response.statusCode() != 200) {
-                return new SitemapResult.SitemapError();
-            }
-
-            Document parsedSitemap;
-
-            try (InputStream inputStream = response.body()) {
-                InputStream parserStream;
-                if (sitemapUrl.path.endsWith(".gz")) {
-                    parserStream = new GZIPInputStream(inputStream);
-                } else {
-                    parserStream = inputStream;
+            return client.execute(getRequest, response -> {
+                if (response.getCode() != 200) {
+                    return new SitemapResult.SitemapError();
                 }
 
-                parsedSitemap = Jsoup.parse(parserStream, "UTF-8", sitemapUrl.toString(), Parser.xmlParser());
-            }
-            finally {
-                sl.close();
-            }
+                Document parsedSitemap = Jsoup.parse(
+                        EntityUtils.toString(response.getEntity()),
+                        sitemapUrl.toString(),
+                        Parser.xmlParser()
+                );
 
-            if (parsedSitemap.childrenSize() == 0) {
-                return new SitemapResult.SitemapError();
-            }
+                if (parsedSitemap.childrenSize() == 0) {
+                    return new SitemapResult.SitemapError();
+                }
 
-            String rootTagName = parsedSitemap.child(0).tagName();
+                String rootTagName = parsedSitemap.child(0).tagName();
 
-            return switch (rootTagName.toLowerCase()) {
-                case "sitemapindex" -> {
-                    List<String> references = new ArrayList<>();
-                    for (var locTag : parsedSitemap.getElementsByTag("loc")) {
-                        references.add(locTag.text().trim());
+                return switch (rootTagName.toLowerCase()) {
+                    case "sitemapindex" -> {
+                        List<String> references = new ArrayList<>();
+                        for (var locTag : parsedSitemap.getElementsByTag("loc")) {
+                            references.add(locTag.text().trim());
+                        }
+                        yield new SitemapResult.SitemapReferences(Collections.unmodifiableList(references));
                     }
-                    yield new SitemapResult.SitemapReferences(Collections.unmodifiableList(references));
-                }
-                case "urlset" -> {
-                    List<String> urls = new ArrayList<>();
-                    for (var locTag : parsedSitemap.select("url > loc")) {
-                        urls.add(locTag.text().trim());
+                    case "urlset" -> {
+                        List<String> urls = new ArrayList<>();
+                        for (var locTag : parsedSitemap.select("url > loc")) {
+                            urls.add(locTag.text().trim());
+                        }
+                        yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
                     }
-                    yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
-                }
-                case "rss", "atom" -> {
-                    List<String> urls = new ArrayList<>();
-                    for (var locTag : parsedSitemap.select("link, url")) {
-                        urls.add(locTag.text().trim());
+                    case "rss", "atom" -> {
+                        List<String> urls = new ArrayList<>();
+                        for (var locTag : parsedSitemap.select("link, url")) {
+                            urls.add(locTag.text().trim());
+                        }
+                        yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
                     }
-                    yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
-                }
-                default -> new SitemapResult.SitemapError();
-            };
+                    default -> new SitemapResult.SitemapError();
+                };
+            });
+        }
+        catch (Exception ex) {
+            logger.warn("Error while fetching sitemap {}: {} ({})", sitemapUrl, ex.getClass().getSimpleName(), ex.getMessage());
+            return new SitemapResult.SitemapError();
         }
     }
 
@@ -408,15 +503,13 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private Optional<SimpleRobotRules> fetchAndParseRobotsTxt(EdgeUrl url, WarcRecorder recorder) {
         try (var sl = new SendLock()) {
-            var getRequest = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(url.asURI())
-                    .header("Accept-Encoding", "gzip")
-                    .header("Accept", "text/*, */*;q=0.9")
-                    .header("User-Agent", userAgentString)
-                    .timeout(requestTimeout);
 
-            HttpFetchResult result = recorder.fetch(client, getRequest.build());
+            ClassicHttpRequest request = ClassicRequestBuilder.get(url.asURI())
+                    .addHeader("Accept-Encoding", "gzip")
+                    .addHeader("Accept", "text/*, */*;q=0.9")
+                    .build();
+
+            HttpFetchResult result = recorder.fetch(client, request);
 
             return DocumentBodyExtractor.asBytes(result).mapOpt((contentType, body) ->
                 robotsParser.parseContent(url.toString(),
@@ -430,6 +523,57 @@ public class HttpFetcherImpl implements HttpFetcher {
         }
     }
 
+    @Override
+    public boolean retryRequest(HttpRequest request, IOException exception, int executionCount, HttpContext context) {
+        if (exception instanceof SocketTimeoutException ex) {
+            return false;
+        }
+
+        return executionCount < 3;
+    }
+
+    @Override
+    public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
+        return switch (response.getCode()) {
+            case 500, 503 -> executionCount < 2;
+            case 429 -> executionCount < 3;
+            default -> false;
+        };
+    }
+
+    @Override
+    public TimeValue getRetryInterval(HttpRequest request, IOException exception, int executionCount, HttpContext context) {
+        logger.info("Error", exception);
+        return TimeValue.ofSeconds(1);
+    }
+
+    @Override
+    public TimeValue getRetryInterval(HttpResponse response, int executionCount, HttpContext context) {
+
+        int statusCode = response.getCode();
+
+        // Give 503 a bit more time
+        if (statusCode == 503) return TimeValue.ofSeconds(5);
+
+        if (statusCode == 429) {
+            // get the Retry-After header
+            String retryAfter = response.getFirstHeader("Retry-After").getValue();
+            if (retryAfter == null) {
+                return TimeValue.ofSeconds(2);
+            }
+
+            try {
+                int retryAfterTime = Integer.parseInt(retryAfter);
+                retryAfterTime = Math.clamp(retryAfterTime, 1, 5);
+
+                return TimeValue.ofSeconds(retryAfterTime);
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid Retry-After header: {}", retryAfter);
+            }
+        }
+
+        return TimeValue.ofSeconds(2);
+    }
 
     public static class RateLimitException extends Exception {
         private final String retryAfter;
@@ -462,9 +606,10 @@ class SendLock implements AutoCloseable {
         maxConcurrentRequests.acquireUninterruptibly();
     }
 
-    public static <T> HttpResponse<T> wrapSend(HttpClient client, HttpRequest request, HttpResponse.BodyHandler<T> handler) throws IOException, InterruptedException {
+    public static <T> T wrapSend(HttpClient client, final ClassicHttpRequest request,
+                                               final HttpClientResponseHandler<? extends T> responseHandler) throws IOException {
         try (var lock = new SendLock()) {
-            return client.send(request, handler);
+            return client.execute(request, responseHandler);
         }
     }
 
