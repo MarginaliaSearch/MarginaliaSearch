@@ -99,7 +99,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .build();
 
         connectionManager.setDefaultSocketConfig(SocketConfig.custom()
-                .setSoLinger(TimeValue.ofSeconds(15))
+                .setSoLinger(TimeValue.ofSeconds(-1))
                 .setSoTimeout(Timeout.ofSeconds(10))
                 .build()
         );
