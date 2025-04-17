@@ -14,6 +14,7 @@ import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
@@ -26,14 +27,12 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.HttpRequest;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
+import org.apache.hc.core5.http.message.MessageSupport;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
@@ -79,7 +78,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         final ConnectionConfig connectionConfig = ConnectionConfig.custom()
                 .setSocketTimeout(10, TimeUnit.SECONDS)
                 .setConnectTimeout(10, TimeUnit.SECONDS)
-                .setTimeToLive(180, TimeUnit.SECONDS)
                 .build();
 
         final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
@@ -104,6 +102,38 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .setDefaultCookieStore(cookies)
                 .setConnectionManager(connectionManager)
                 .setRetryStrategy(this)
+                .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
+                    // Default keep-alive duration is 3 minutes, but this is too long for us,
+                    // as we are either going to re-use it fairly quickly or close it for a long time.
+                    //
+                    // So we set it to 30 seconds or clamp the server-provided value to a minimum of 10 seconds.
+                    private static final TimeValue defaultValue = TimeValue.ofSeconds(30);
+
+                    @Override
+                    public TimeValue getKeepAliveDuration(HttpResponse response, HttpContext context) {
+                        final Iterator<HeaderElement> it = MessageSupport.iterate(response, HeaderElements.KEEP_ALIVE);
+
+                        while (it.hasNext()) {
+                            final HeaderElement he = it.next();
+                            final String param = he.getName();
+                            final String value = he.getValue();
+
+                            if (value == null)
+                                continue;
+                            if (!"timeout".equalsIgnoreCase(param))
+                                continue;
+
+                            try {
+                                long timeout = Long.parseLong(value);
+                                timeout = Math.clamp(timeout, 30, defaultValue.toSeconds());
+                                return TimeValue.ofSeconds(timeout);
+                            } catch (final NumberFormatException ignore) {
+                                break;
+                            }
+                        }
+                        return defaultValue;
+                    }
+                })
                 .disableRedirectHandling()
                 .setDefaultRequestConfig(defaultRequestConfig)
                 .build();

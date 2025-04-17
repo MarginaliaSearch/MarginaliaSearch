@@ -37,6 +37,7 @@ class HttpFetcherImplFetchTest {
     private static EdgeUrl timeoutUrl;
     private static EdgeUrl redirectUrl;
     private static EdgeUrl badHttpStatusUrl;
+    private static EdgeUrl keepAliveUrl;
 
     @BeforeAll
     public static void setupAll() throws URISyntaxException {
@@ -107,6 +108,15 @@ class HttpFetcherImplFetchTest {
                         .withHeader("Content-Range", "bytes 0-100/200")
                         .withBody("Hello World")
                         .withStatus(206)));
+
+        keepAliveUrl = new EdgeUrl("http://localhost:18089/keepalive.bin");
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(keepAliveUrl.path))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "text/html")
+                        .withStatus(200)
+                        .withHeader("Keep-Alive", "max=4, timeout=30")
+                        .withBody("Hello")
+                        ));
         wireMockServer.start();
 
     }
@@ -287,6 +297,15 @@ class HttpFetcherImplFetchTest {
         WarcXEntityRefused entity = (WarcXEntityRefused) records.getFirst();
         assertEquals(WarcXEntityRefused.documentProbeTimeout, entity.profile());
         assertEquals(timeoutUrl.asURI(), entity.targetURI());
+    }
+
+    @Test
+    public void testKeepaliveUrl() {
+        // mostly for smoke testing and debugger utility
+        var result = fetcher.fetchContent(keepAliveUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+
+        Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
+        Assertions.assertTrue(result.isOk());
     }
 
 

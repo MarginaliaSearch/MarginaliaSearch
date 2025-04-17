@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 public class CrawlerRetreiver implements AutoCloseable {
 
     private static final int MAX_ERRORS = 20;
-    private static final int HTTP_429_RETRY_LIMIT = 1; // Retry 429s once
 
     private final HttpFetcher fetcher;
 
