@@ -21,6 +21,7 @@ class HttpFetcherImplContentTypeProbeTest {
     private static EdgeUrl contentTypeBinaryUrl;
     private static EdgeUrl redirectUrl;
     private static EdgeUrl badHttpStatusUrl;
+    private static EdgeUrl onlyGetAllowedUrl;
 
     @BeforeAll
     public static void setupAll() throws URISyntaxException {
@@ -57,6 +58,15 @@ class HttpFetcherImplContentTypeProbeTest {
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "text/html")
                         .withStatus(500)));
+
+        onlyGetAllowedUrl = new EdgeUrl("http://localhost:18089/onlyget.bin");
+        wireMockServer.stubFor(WireMock.head(WireMock.urlEqualTo(onlyGetAllowedUrl.path))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(405))); // Method Not Allowed
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(onlyGetAllowedUrl.path))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "text/html")
+                        .withStatus(200)));
 
         wireMockServer.start();
 
@@ -114,6 +124,11 @@ class HttpFetcherImplContentTypeProbeTest {
         Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.HttpError(500, "Bad status code"), result);
     }
 
+    @Test
+    public void testOnlyGetAllowed() {
+        var result = fetcher.probeContentType(onlyGetAllowedUrl, ContentTags.empty());
+        Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.Ok(onlyGetAllowedUrl), result);
+    }
 
     @Test
     public void testTimeout() {

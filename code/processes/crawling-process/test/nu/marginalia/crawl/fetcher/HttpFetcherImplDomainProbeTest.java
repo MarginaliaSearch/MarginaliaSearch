@@ -69,6 +69,13 @@ class HttpFetcherImplDomainProbeTest {
     }
 
     @Test
+    public void testProbeDomainOnlyGET() throws URISyntaxException {
+        // This test is to check if the domain probe only allows GET requests
+        var result = fetcher.probeDomain(new EdgeUrl("https://marginalia-search.com/"));
+        Assertions.assertEquals(new HttpFetcher.DomainProbeResult.Ok(new EdgeUrl("https://marginalia-search.com/")), result);
+    }
+
+    @Test
     public void testProbeDomainError() throws URISyntaxException {
         var result = fetcher.probeDomain(new EdgeUrl("https://invalid.example.com/"));
         Assertions.assertEquals(new HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Error during domain probe"), result);

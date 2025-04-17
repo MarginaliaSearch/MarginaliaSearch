@@ -53,6 +53,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Singleton
@@ -159,24 +160,44 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         urls.add(url);
 
         int redirects = 0;
+        AtomicBoolean tryGet = new AtomicBoolean(false);
 
         while (!urls.isEmpty() && ++redirects < 5) {
-            ClassicHttpRequest head;
+            ClassicHttpRequest request;
 
             EdgeUrl topUrl = urls.removeFirst();
             try {
-                head = ClassicRequestBuilder.head(topUrl.asURI())
-                        .build();
+                if (tryGet.get()) {
+                    request = ClassicRequestBuilder.get(topUrl.asURI())
+                                .addHeader("User-Agent", userAgentString)
+                                .addHeader("Accept-Encoding", "gzip")
+                                .addHeader("Range", "bytes=0-255")
+                                .build();
+                } else {
+                    request = ClassicRequestBuilder.head(topUrl.asURI())
+                                .addHeader("User-Agent", userAgentString)
+                                .addHeader("Accept-Encoding", "gzip")
+                                .build();
+                }
             } catch (URISyntaxException e) {
                 return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid URL");
             }
 
             try {
-                var result = SendLock.wrapSend(client, head, response -> {
+                var result = SendLock.wrapSend(client, request, response -> {
                     EntityUtils.consume(response.getEntity());
 
                     return switch (response.getCode()) {
                         case 200 -> new DomainProbeResult.Ok(url);
+                        case 405 -> {
+                            if (!tryGet.get()) {
+                                tryGet.set(true);
+                                yield new DomainProbeResult.RedirectSameDomain_Internal(url);
+                            }
+                            else {
+                                yield new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "HTTP status 405, tried HEAD and GET?!");
+                            }
+                        }
                         case 301, 302, 307 -> {
                             var location = response.getFirstHeader("Location");
 
@@ -258,6 +279,11 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                             return new ContentTypeProbeResult.HttpError(statusCode, "Invalid location header on redirect");
                         return new ContentTypeProbeResult.Redirect(newUrl.get());
                     }
+                }
+
+                if (statusCode == 405) {
+                    // If we get a 405, we can't probe the content type with HEAD, so we'll just say it's ok
+                    return new ContentTypeProbeResult.Ok(url);
                 }
 
                 // Handle errors
