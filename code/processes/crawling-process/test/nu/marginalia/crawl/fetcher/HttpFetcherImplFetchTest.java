@@ -9,16 +9,17 @@ import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import org.junit.jupiter.api.*;
-import org.netpreserve.jwarc.WarcReader;
-import org.netpreserve.jwarc.WarcRecord;
-import org.netpreserve.jwarc.WarcXEntityRefused;
-import org.netpreserve.jwarc.WarcXResponseReference;
+import org.netpreserve.jwarc.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("slow")
 class HttpFetcherImplFetchTest {
@@ -128,13 +129,19 @@ class HttpFetcherImplFetchTest {
 
 
     @Test
-    public void testOk_NoProbe() {
+    public void testOk_NoProbe() throws IOException {
         var result = fetcher.fetchContent(okUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());
 
-        System.out.println(result);
+        List<WarcRecord> warcRecords = getWarcRecords();
+        assertEquals(2, warcRecords.size());
+        Assertions.assertInstanceOf(WarcRequest.class, warcRecords.get(0));
+        Assertions.assertInstanceOf(WarcResponse.class, warcRecords.get(1));
+
+        WarcResponse response = (WarcResponse) warcRecords.get(1);
+        assertEquals("0", response.headers().first("X-Has-Cookies").orElse("0"));
     }
 
     @Test
@@ -143,8 +150,6 @@ class HttpFetcherImplFetchTest {
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());
-
-        System.out.println(result);
     }
 
     @Test
@@ -165,13 +170,17 @@ class HttpFetcherImplFetchTest {
     }
 
     @Test
-    public void testBadStatus_NoProbe() {
+    public void testBadStatus_NoProbe() throws IOException {
         var result = fetcher.fetchContent(badHttpStatusUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertFalse(result.isOk());
 
-        System.out.println(result);
+
+        List<WarcRecord> warcRecords = getWarcRecords();
+        assertEquals(2, warcRecords.size());
+        Assertions.assertInstanceOf(WarcRequest.class, warcRecords.get(0));
+        Assertions.assertInstanceOf(WarcResponse.class, warcRecords.get(1));
     }
 
     @Test
@@ -185,13 +194,16 @@ class HttpFetcherImplFetchTest {
     }
 
     @Test
-    public void testRedirect_NoProbe() throws URISyntaxException {
+    public void testRedirect_NoProbe() throws URISyntaxException, IOException {
         var result = fetcher.fetchContent(redirectUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultRedirect.class, result);
-        Assertions.assertEquals(new EdgeUrl("http://localhost:18089/test.html.bin"), ((HttpFetchResult.ResultRedirect) result).url());
+        assertEquals(new EdgeUrl("http://localhost:18089/test.html.bin"), ((HttpFetchResult.ResultRedirect) result).url());
 
-        System.out.println(result);
+        List<WarcRecord> warcRecords = getWarcRecords();
+        assertEquals(2, warcRecords.size());
+        Assertions.assertInstanceOf(WarcRequest.class, warcRecords.get(0));
+        Assertions.assertInstanceOf(WarcResponse.class, warcRecords.get(1));
     }
 
     @Test
@@ -199,7 +211,7 @@ class HttpFetcherImplFetchTest {
         var result = fetcher.fetchContent(redirectUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultRedirect.class, result);
-        Assertions.assertEquals(new EdgeUrl("http://localhost:18089/test.html.bin"), ((HttpFetchResult.ResultRedirect) result).url());
+        assertEquals(new EdgeUrl("http://localhost:18089/test.html.bin"), ((HttpFetchResult.ResultRedirect) result).url());
 
         System.out.println(result);
     }
@@ -223,7 +235,12 @@ class HttpFetcherImplFetchTest {
 
         Assertions.assertTrue(requestEnd.isBefore(requestStart.plusSeconds(15)), "Request should have taken less than 15 seconds");
 
-        verifyWarcHasTimeoutMarker();
+        var records = getWarcRecords();
+        Assertions.assertEquals(1, records.size());
+        Assertions.assertInstanceOf(WarcXEntityRefused.class, records.getFirst());
+        WarcXEntityRefused entity = (WarcXEntityRefused) records.getFirst();
+        assertEquals(WarcXEntityRefused.documentProbeTimeout, entity.profile());
+        assertEquals(timeoutUrl.asURI(), entity.targetURI());
     }
 
     @Test
@@ -241,26 +258,31 @@ class HttpFetcherImplFetchTest {
 
         Assertions.assertTrue(requestEnd.isBefore(requestStart.plusSeconds(15)), "Request should have taken less than 15 seconds");
 
-        verifyWarcHasTimeoutMarker();
+        var records = getWarcRecords();
+        Assertions.assertEquals(1, records.size());
+        Assertions.assertInstanceOf(WarcXEntityRefused.class, records.getFirst());
+        WarcXEntityRefused entity = (WarcXEntityRefused) records.getFirst();
+        assertEquals(WarcXEntityRefused.documentProbeTimeout, entity.profile());
+        assertEquals(timeoutUrl.asURI(), entity.targetURI());
     }
 
-    private void verifyWarcHasTimeoutMarker() throws IOException, URISyntaxException {
+
+    private List<WarcRecord> getWarcRecords() throws IOException {
+        List<WarcRecord> records = new ArrayList<>();
+
+        System.out.println(Files.readString(warcFile));
 
         try (var reader = new WarcReader(warcFile)) {
             WarcXResponseReference.register(reader);
             WarcXEntityRefused.register(reader);
 
-            WarcRecord record;
-            var iter = reader.iterator();
-            Assertions.assertTrue(iter.hasNext());
-            record = iter.next();
-            Assertions.assertInstanceOf(WarcXEntityRefused.class, record);
-            WarcXEntityRefused entity = (WarcXEntityRefused) record;
-
-            Assertions.assertEquals(WarcXEntityRefused.documentProbeTimeout, entity.profile());
-            Assertions.assertEquals(timeoutUrl.asURI(), entity.targetURI());
-
-            Assertions.assertFalse(iter.hasNext());
+            for (var record : reader) {
+                records.add(record);
+            }
         }
+
+        return records;
     }
+
+
 }

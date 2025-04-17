@@ -85,7 +85,7 @@ public class WarcRecorder implements AutoCloseable {
     }
 
     private boolean hasCookies() {
-        return cookies.getCookies().isEmpty();
+        return !cookies.getCookies().isEmpty();
     }
 
     public HttpFetchResult fetch(HttpClient client,
@@ -115,6 +115,30 @@ public class WarcRecorder implements AutoCloseable {
 
                 try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, timeout);
                      InputStream inputStream = inputBuffer.read()) {
+
+                    // Build and write the request
+
+                    WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
+
+                    byte[] httpRequestString = WarcProtocolReconstructor
+                            .getHttpRequestString(
+                                    request.getMethod(),
+                                    request.getHeaders(),
+                                    extraHeaders,
+                                    requestUri)
+                            .getBytes();
+
+                    requestDigestBuilder.update(httpRequestString);
+
+                    WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
+                            .blockDigest(requestDigestBuilder.build())
+                            .date(date)
+                            .body(MediaType.HTTP_REQUEST, httpRequestString)
+                            .build();
+
+                    warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
+                    writer.write(warcRequest);
+
                     if (hasCookies()) {
                         extraHeaders.put("X-Has-Cookies", List.of("1"));
                     }
@@ -128,7 +152,7 @@ public class WarcRecorder implements AutoCloseable {
 
                     int dataStart = responseDataBuffer.pos();
 
-                    for (; ; ) {
+                    for (;;) {
                         int remainingLength = responseDataBuffer.remaining();
                         if (remainingLength == 0)
                             break;
@@ -151,6 +175,7 @@ public class WarcRecorder implements AutoCloseable {
                     WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
                             .blockDigest(responseDigestBuilder.build())
                             .date(date)
+                            .concurrentTo(warcRequest.id())
                             .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
                     InetAddress inetAddress = InetAddress.getByName(responseUri.getHost());
@@ -163,30 +188,6 @@ public class WarcRecorder implements AutoCloseable {
                     var warcResponse = responseBuilder.build();
                     warcResponse.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
                     writer.write(warcResponse);
-
-                    // Build and write the request
-
-                    WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
-
-                    byte[] httpRequestString = WarcProtocolReconstructor
-                            .getHttpRequestString(
-                                    request.getMethod(),
-                                    request.getHeaders(),
-                                    extraHeaders,
-                                    requestUri)
-                            .getBytes();
-
-                    requestDigestBuilder.update(httpRequestString);
-
-                    WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
-                            .blockDigest(requestDigestBuilder.build())
-                            .date(date)
-                            .body(MediaType.HTTP_REQUEST, httpRequestString)
-                            .concurrentTo(warcResponse.id())
-                            .build();
-
-                    warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
-                    writer.write(warcRequest);
 
                     if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
                             && inputBuffer.size() < 2048
@@ -222,6 +223,7 @@ public class WarcRecorder implements AutoCloseable {
                             return new HttpFetchResult.ResultException(new IOException("Invalid redirect location: " + response.getFirstHeader("Location")));
                         }
                     }
+
 
                     return new HttpFetchResult.ResultOk(responseUri,
                             response.getCode(),

@@ -34,7 +34,6 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
-import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
@@ -106,7 +105,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .setConnectionManager(connectionManager)
                 .setRetryStrategy(this)
                 .disableRedirectHandling()
-                .setDefaultHeaders(List.of(new BasicHeader("User-Agent", userAgentString)))
                 .setDefaultRequestConfig(defaultRequestConfig)
                 .build();
     }
@@ -242,6 +240,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
         try {
             ClassicHttpRequest head = ClassicRequestBuilder.head(url.asURI())
+                    .addHeader("User-Agent", userAgentString)
                     .addHeader("Accept-Encoding", "gzip")
                     .build();
 
@@ -338,9 +337,9 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             }
 
             ClassicRequestBuilder getBuilder = ClassicRequestBuilder.get(url.asURI())
+                    .addHeader("User-Agent", userAgentString)
                     .addHeader("Accept-Encoding", "gzip")
                     .addHeader("Accept-Language", "en,*;q=0.5")
-                    .addHeader("Accept-Encoding", "gzip")
                     .addHeader("Accept", "text/html, application/xhtml+xml, text/*;q=0.8");
 
             contentTags.paint(getBuilder);
@@ -427,6 +426,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     private SitemapResult fetchSingleSitemap(EdgeUrl sitemapUrl) throws URISyntaxException, IOException, InterruptedException {
         ClassicHttpRequest getRequest = ClassicRequestBuilder.get(sitemapUrl.asURI())
+                .addHeader("User-Agent", userAgentString)
                 .addHeader("Accept-Encoding", "gzip")
                 .addHeader("Accept", "text/*, */*;q=0.9")
                 .addHeader("User-Agent", userAgentString)
@@ -505,6 +505,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         try (var sl = new SendLock()) {
 
             ClassicHttpRequest request = ClassicRequestBuilder.get(url.asURI())
+                    .addHeader("User-Agent", userAgentString)
                     .addHeader("Accept-Encoding", "gzip")
                     .addHeader("Accept", "text/*, */*;q=0.9")
                     .build();
