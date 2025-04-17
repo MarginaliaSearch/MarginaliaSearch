@@ -99,7 +99,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.RELAXED)
                 .setResponseTimeout(10, TimeUnit.SECONDS)
-                .setConnectionRequestTimeout(8, TimeUnit.SECONDS)
+                .setConnectionRequestTimeout(5, TimeUnit.MINUTES)
                 .build();
 
         return HttpClients.custom()
