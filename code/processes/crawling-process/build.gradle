@@ -60,10 +60,14 @@ dependencies {
     implementation libs.fastutil
 
     implementation libs.bundles.mariadb
+    implementation libs.bundles.httpcomponents
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation libs.wiremock
+
+
 
     testImplementation project(':code:processes:test-data')
 }

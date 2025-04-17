@@ -179,8 +179,9 @@ dependencyResolutionManagement {
 
             library('jwarc', 'org.netpreserve', 'jwarc').version('0.28.5')
 
-            library('httpcomponents.core','org.apache.httpcomponents','httpcore').version('4.4.15')
-            library('httpcomponents.client','org.apache.httpcomponents','httpclient').version('4.5.13')
+
+            library('httpcore', 'org.apache.httpcomponents.core5','httpcore5').version('5.3.4')
+            library('httpclient', 'org.apache.httpcomponents.client5','httpclient5').version('5.4.3')
             library('commons.net', 'commons-net','commons-net').version('3.9.0')
             library('commons.lang3', 'org.apache.commons','commons-lang3').version('3.12.0')
             library('commons.compress','org.apache.commons','commons-compress').version('1.25.0')
@@ -255,7 +256,7 @@ dependencyResolutionManagement {
             bundle('grpc', ['protobuf', 'grpc-stub', 'grpc-protobuf', 'grpc-netty'])
             bundle('protobuf', ['protobuf', 'javax.annotation'])
             bundle('gson', ['gson', 'gson-type-adapter'])
-            bundle('httpcomponents', ['httpcomponents.core', 'httpcomponents.client'])
+            bundle('httpcomponents', ['httpcore', 'httpclient'])
             bundle('parquet', ['parquet-column', 'parquet-hadoop'])
             bundle('junit', ['junit.jupiter', 'junit.jupiter.engine'])
             bundle('flyway', ['flyway.core', 'flyway.mysql'])

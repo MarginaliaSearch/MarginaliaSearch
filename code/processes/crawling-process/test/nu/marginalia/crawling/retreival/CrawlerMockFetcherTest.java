@@ -3,7 +3,10 @@ package nu.marginalia.crawling.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
-import nu.marginalia.crawl.fetcher.*;
+import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
+import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.fetcher.SitemapRetriever;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
@@ -15,6 +18,9 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.test.CommonTestData;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.CookieStore;
+import org.apache.hc.core5.http.Header;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.http.HttpHeaders;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -120,7 +125,7 @@ public class CrawlerMockFetcherTest {
         public void setAllowAllContentTypes(boolean allowAllContentTypes) {}
 
         @Override
-        public Cookies getCookies() { return new Cookies();}
+        public CookieStore getCookies() { return new BasicCookieStore();}
 
         @Override
         public void clearCookies() {}
@@ -132,13 +137,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public ContentTypeProbeResult probeContentType(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
-            logger.info("Probing {}", url);
-            return new HttpFetcher.ContentTypeProbeResult.Ok(url);
-        }
-
-        @Override
-        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags, ProbeType probeType) {
+        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, CrawlDelayTimer timer, ContentTags tags, ProbeType probeType) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 byte[] bodyBytes = mockData.get(url).documentBodyBytes;
@@ -147,7 +146,7 @@ public class CrawlerMockFetcherTest {
                     return new HttpFetchResult.ResultOk(
                             url.asURI(),
                             200,
-                            HttpHeaders.of(Map.of(), (k,v)->true),
+                            new Header[0],
                             "127.0.0.1",
                             bodyBytes,
                             0,

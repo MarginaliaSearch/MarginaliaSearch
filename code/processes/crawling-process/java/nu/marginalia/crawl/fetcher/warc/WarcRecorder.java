@@ -1,11 +1,17 @@
 package nu.marginalia.crawl.fetcher.warc;
 
 import nu.marginalia.crawl.fetcher.ContentTags;
-import nu.marginalia.crawl.fetcher.Cookies;
+import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.CookieStore;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.NameValuePair;
 import org.jetbrains.annotations.Nullable;
 import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
@@ -14,10 +20,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +53,8 @@ public class WarcRecorder implements AutoCloseable {
     // Affix a version string in case we need to change the format in the future
     // in some way
     private final String warcRecorderVersion = "1.0";
-    private final Cookies cookies;
+    private final CookieStore cookies;
+    private final LinkParser linkParser = new LinkParser();
     /**
      * Create a new WarcRecorder that will write to the given file
      *
@@ -60,7 +66,7 @@ public class WarcRecorder implements AutoCloseable {
         this.cookies = fetcher.getCookies();
     }
 
-    public WarcRecorder(Path warcFile, Cookies cookies) throws IOException {
+    public WarcRecorder(Path warcFile, CookieStore cookies) throws IOException {
         this.warcFile = warcFile;
         this.writer = new WarcWriter(warcFile);
         this.cookies = cookies;
@@ -73,16 +79,28 @@ public class WarcRecorder implements AutoCloseable {
     public WarcRecorder() throws IOException {
         this.warcFile = Files.createTempFile("warc", ".warc.gz");
         this.writer = new WarcWriter(this.warcFile);
-        this.cookies = new Cookies();
+        this.cookies = new BasicCookieStore();
 
         temporaryFile = true;
     }
 
+    private boolean hasCookies() {
+        return !cookies.getCookies().isEmpty();
+    }
+
     public HttpFetchResult fetch(HttpClient client,
-                                 java.net.http.HttpRequest request)
+                                 ClassicHttpRequest request)
             throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
     {
-        URI requestUri = request.uri();
+        return fetch(client, request, Duration.ofMillis(MAX_TIME));
+    }
+
+    public HttpFetchResult fetch(HttpClient client,
+                                 ClassicHttpRequest request,
+                                 Duration timeout)
+            throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
+    {
+        URI requestUri = request.getUri();
 
         WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
         WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
@@ -90,121 +108,148 @@ public class WarcRecorder implements AutoCloseable {
         Instant date = Instant.now();
 
         // Not entirely sure why we need to do this, but keeping it due to Chesterton's Fence
-        Map<String, List<String>> extraHeaders = new HashMap<>(request.headers().map());
+        Map<String, List<String>> extraHeaders = new HashMap<>(request.getHeaders().length);
 
-        HttpResponse<InputStream> response;
+        // Inject a range header to attempt to limit the size of the response
+        // to the maximum size we want to store, if the server supports it.
+        request.addHeader("Range", "bytes=0-"+MAX_SIZE);
+
         try {
-            response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
-        }
-        catch (Exception ex) {
-            logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
+            return client.execute(request, response -> {
+
+                try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, timeout);
+                     InputStream inputStream = inputBuffer.read()) {
+
+                    // Build and write the request
+
+                    WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
+
+                    byte[] httpRequestString = WarcProtocolReconstructor
+                            .getHttpRequestString(
+                                    request.getMethod(),
+                                    request.getHeaders(),
+                                    extraHeaders,
+                                    requestUri)
+                            .getBytes();
+
+                    requestDigestBuilder.update(httpRequestString);
+
+                    WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
+                            .blockDigest(requestDigestBuilder.build())
+                            .date(date)
+                            .body(MediaType.HTTP_REQUEST, httpRequestString)
+                            .build();
+
+                    warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
+                    writer.write(warcRequest);
+
+                    if (hasCookies()) {
+                        extraHeaders.put("X-Has-Cookies", List.of("1"));
+                    }
+
+                    byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
+
+                    ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length);
+
+                    responseDataBuffer.put(responseHeaders);
+                    responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseHeaders.length);
+
+                    int dataStart = responseDataBuffer.pos();
+
+                    for (;;) {
+                        int remainingLength = responseDataBuffer.remaining();
+                        if (remainingLength == 0)
+                            break;
+
+                        int startPos = responseDataBuffer.pos();
+
+                        int n = responseDataBuffer.readFrom(inputStream, remainingLength);
+                        if (n < 0)
+                            break;
+
+                        responseDataBuffer.updateDigest(responseDigestBuilder, startPos, n);
+                        responseDataBuffer.updateDigest(payloadDigestBuilder, startPos, n);
+                    }
+
+                    // with some http client libraries, that resolve redirects transparently, this might be different
+                    // from the request URI, but currently we don't have transparent redirect resolution so it's always
+                    // the same (though let's keep the variables separate in case this changes)
+                    final URI responseUri = requestUri;
+
+                    WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
+                            .blockDigest(responseDigestBuilder.build())
+                            .date(date)
+                            .concurrentTo(warcRequest.id())
+                            .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
+
+                    InetAddress inetAddress = InetAddress.getByName(responseUri.getHost());
+                    responseBuilder.ipAddress(inetAddress);
+                    responseBuilder.payloadDigest(payloadDigestBuilder.build());
+                    responseBuilder.truncated(inputBuffer.truncationReason());
+
+                    // Build and write the response
+
+                    var warcResponse = responseBuilder.build();
+                    warcResponse.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
+                    writer.write(warcResponse);
+
+                    if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
+                            && inputBuffer.size() < 2048
+                            && !requestUri.getPath().endsWith("robots.txt")) // don't bail on robots.txt
+                    {
+                        // Fast detection and mitigation of crawler traps that respond with slow
+                        // small responses, with a high branching factor
+
+                        // Note we bail *after* writing the warc records, this will effectively only
+                        // prevent link extraction from the document.
+
+                        logger.warn("URL {} took too long to fetch ({}s) and was too small for the effort ({}b)",
+                                requestUri,
+                                Duration.between(date, Instant.now()).getSeconds(),
+                                inputBuffer.size()
+                        );
+
+                        return new HttpFetchResult.ResultException(new IOException("Likely crawler trap"));
+                    }
+
+                    if (response.getCode() == 301 || response.getCode() == 302 || response.getCode() == 307) {
+                        // If the server responds with a redirect, we need to
+                        // update the request URI to the new location
+                        EdgeUrl redirectLocation = Optional.ofNullable(response.getFirstHeader("Location"))
+                                                           .map(NameValuePair::getValue)
+                                .flatMap(location -> linkParser.parseLink(new EdgeUrl(requestUri), location))
+                                .orElse(null);
+                        if (redirectLocation != null) {
+                            // If the redirect location is a valid URL, we need to update the request URI
+                            return new HttpFetchResult.ResultRedirect(redirectLocation);
+                        } else {
+                            // If the redirect location is not a valid URL, we need to throw an exception
+                            return new HttpFetchResult.ResultException(new IOException("Invalid redirect location: " + response.getFirstHeader("Location")));
+                        }
+                    }
+
+
+                    return new HttpFetchResult.ResultOk(responseUri,
+                            response.getCode(),
+                            inputBuffer.headers(),
+                            inetAddress.getHostAddress(),
+                            responseDataBuffer.data,
+                            dataStart,
+                            responseDataBuffer.length() - dataStart);
+                } catch (Exception ex) {
+                    flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
+                    logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
+                    return new HttpFetchResult.ResultException(ex);
+                }
+            });
+        // the client.execute() method will throw an exception if the request times out
+        // or on other IO exceptions, so we need to catch those here as well as having
+        // exception handling in the response handler
+        } catch (SocketTimeoutException ex) {
+            flagAsTimeout(new EdgeUrl(requestUri)); // write a WARC record to indicate the timeout
             return new HttpFetchResult.ResultException(ex);
-        }
-
-
-        try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request.timeout().orElseGet(() -> Duration.ofMillis(MAX_TIME)));
-             InputStream inputStream = inputBuffer.read())
-        {
-            if (cookies.hasCookies()) {
-                extraHeaders.put("X-Has-Cookies", List.of("1"));
-            }
-
-            byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
-
-            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length);
-
-            responseDataBuffer.put(responseHeaders);
-            responseDataBuffer.updateDigest(responseDigestBuilder, 0, responseHeaders.length);
-
-            int dataStart = responseDataBuffer.pos();
-
-            for (;;) {
-                int remainingLength = responseDataBuffer.remaining();
-                if (remainingLength == 0)
-                    break;
-
-                int startPos = responseDataBuffer.pos();
-
-                int n = responseDataBuffer.readFrom(inputStream, remainingLength);
-                if (n < 0)
-                    break;
-
-                responseDataBuffer.updateDigest(responseDigestBuilder, startPos, n);
-                responseDataBuffer.updateDigest(payloadDigestBuilder, startPos, n);
-            }
-
-            // It looks like this might be the same as requestUri, but it's not;
-            // it's the URI after resolving redirects.
-            final URI responseUri = response.uri();
-
-            WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
-                    .blockDigest(responseDigestBuilder.build())
-                    .date(date)
-                    .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
-
-            InetAddress inetAddress = InetAddress.getByName(responseUri.getHost());
-            responseBuilder.ipAddress(inetAddress);
-            responseBuilder.payloadDigest(payloadDigestBuilder.build());
-            responseBuilder.truncated(inputBuffer.truncationReason());
-
-            // Build and write the response
-
-            var warcResponse = responseBuilder.build();
-            warcResponse.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
-            writer.write(warcResponse);
-
-            // Build and write the request
-
-            WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
-
-            byte[] httpRequestString = WarcProtocolReconstructor
-                    .getHttpRequestString(
-                            response.request().method(),
-                            response.request().headers().map(),
-                            extraHeaders,
-                            requestUri)
-                    .getBytes();
-
-            requestDigestBuilder.update(httpRequestString);
-
-            WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
-                    .blockDigest(requestDigestBuilder.build())
-                    .date(date)
-                    .body(MediaType.HTTP_REQUEST, httpRequestString)
-                    .concurrentTo(warcResponse.id())
-                    .build();
-
-            warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
-            writer.write(warcRequest);
-
-            if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
-                    && inputBuffer.size() < 2048
-                    && !request.uri().getPath().endsWith("robots.txt")) // don't bail on robots.txt
-            {
-                // Fast detection and mitigation of crawler traps that respond with slow
-                // small responses, with a high branching factor
-
-                // Note we bail *after* writing the warc records, this will effectively only
-                // prevent link extraction from the document.
-
-                logger.warn("URL {} took too long to fetch ({}s) and was too small for the effort ({}b)",
-                        requestUri,
-                        Duration.between(date, Instant.now()).getSeconds(),
-                        inputBuffer.size()
-                );
-
-                return new HttpFetchResult.ResultException(new IOException("Likely crawler trap"));
-            }
-
-            return new HttpFetchResult.ResultOk(responseUri,
-                    response.statusCode(),
-                    inputBuffer.headers(),
-                    inetAddress.getHostAddress(),
-                    responseDataBuffer.data,
-                    dataStart,
-                    responseDataBuffer.length() - dataStart);
-        }
-        catch (Exception ex) {
+        } catch (IOException ex) {
+            flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
             logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
             return new HttpFetchResult.ResultException(ex);
         }
@@ -275,7 +320,7 @@ public class WarcRecorder implements AutoCloseable {
                     .date(Instant.now())
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
-            if (cookies.hasCookies()) {
+            if (hasCookies()) {
                 builder.addHeader("X-Has-Cookies", "1");
             }
 
@@ -315,6 +360,9 @@ public class WarcRecorder implements AutoCloseable {
                 break;
             case HttpFetcherImpl.DomainProbeResult.Ok ok:
                 fields.put("X-WARC-Probe-Status", List.of("OK"));
+                break;
+            case HttpFetcher.DomainProbeResult.RedirectSameDomain_Internal redirectSameDomain:
+                fields.put("X-WARC-Probe-Status", List.of("REDIR-INTERNAL"));
                 break;
         }
 

@@ -7,7 +7,6 @@ import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
-import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.logic.LinkFilterSelector;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
@@ -29,13 +28,13 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class CrawlerRetreiver implements AutoCloseable {
 
     private static final int MAX_ERRORS = 20;
-    private static final int HTTP_429_RETRY_LIMIT = 1; // Retry 429s once
 
     private final HttpFetcher fetcher;
 
@@ -144,6 +143,10 @@ public class CrawlerRetreiver implements AutoCloseable {
                 }
                 case HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus status, String desc) -> {
                     domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, status.toString(), desc));
+                    yield 1;
+                }
+                default -> {
+                    logger.error("Unexpected domain probe result {}", probeResult);
                     yield 1;
                 }
             };
@@ -271,11 +274,21 @@ public class CrawlerRetreiver implements AutoCloseable {
         try {
             var url = rootUrl.withPathAndParam("/", null);
 
-            HttpFetchResult result = fetchWithRetry(url, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
+            HttpFetchResult result = fetcher.fetchContent(url, warcRecorder, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
             timer.waitFetchDelay(0);
 
-            if (!(result instanceof HttpFetchResult.ResultOk ok))
+            if (result instanceof HttpFetchResult.ResultRedirect(EdgeUrl location)) {
+                if (Objects.equals(location.domain, url.domain)) {
+                    // TODO: Follow the redirect to the new location and sniff the document
+                    crawlFrontier.addFirst(location);
+                }
+
                 return DomainStateDb.SummaryRecord.forSuccess(domain);
+            }
+
+            if (!(result instanceof HttpFetchResult.ResultOk ok)) {
+                return DomainStateDb.SummaryRecord.forSuccess(domain);
+            }
 
             var optDoc = ok.parseDocument();
             if (optDoc.isEmpty())
@@ -324,7 +337,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
             // Grab the favicon if it exists
 
-            if (fetchWithRetry(faviconUrl, timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty()) instanceof HttpFetchResult.ResultOk iconResult) {
+            if (fetcher.fetchContent(faviconUrl, warcRecorder, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED) instanceof HttpFetchResult.ResultOk iconResult) {
                 String contentType = iconResult.header("Content-Type");
                 byte[] iconData = iconResult.getBodyBytes();
 
@@ -394,7 +407,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         if (parsedOpt.isEmpty())
             return false;
 
-        HttpFetchResult result = fetchWithRetry(parsedOpt.get(), timer, HttpFetcher.ProbeType.DISABLED, ContentTags.empty());
+        HttpFetchResult result = fetcher.fetchContent(parsedOpt.get(), warcRecorder, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
         timer.waitFetchDelay(0);
 
         if (!(result instanceof HttpFetchResult.ResultOk ok)) {
@@ -420,110 +433,61 @@ public class CrawlerRetreiver implements AutoCloseable {
                                                      CrawlDelayTimer timer,
                                                      DocumentWithReference reference) throws InterruptedException
     {
-        logger.debug("Fetching {}", top);
-
-        long startTime = System.currentTimeMillis();
         var contentTags = reference.getContentTags();
 
-        HttpFetchResult fetchedDoc = fetchWithRetry(top, timer, HttpFetcher.ProbeType.FULL, contentTags);
+        HttpFetchResult fetchedDoc = fetcher.fetchContent(top, warcRecorder, timer, contentTags, HttpFetcher.ProbeType.FULL);
+        timer.waitFetchDelay();
+
+        if (Thread.interrupted()) {
+            Thread.currentThread().interrupt();
+            throw new InterruptedException();
+        }
 
         // Parse the document and enqueue links
         try {
-            if (fetchedDoc instanceof HttpFetchResult.ResultOk ok) {
-                var docOpt = ok.parseDocument();
-                if (docOpt.isPresent()) {
-                    var doc = docOpt.get();
+            switch (fetchedDoc) {
+                case HttpFetchResult.ResultOk ok -> {
+                    var docOpt = ok.parseDocument();
+                    if (docOpt.isPresent()) {
+                        var doc = docOpt.get();
 
-                    var responseUrl = new EdgeUrl(ok.uri());
+                        var responseUrl = new EdgeUrl(ok.uri());
 
-                    crawlFrontier.enqueueLinksFromDocument(responseUrl, doc);
-                    crawlFrontier.addVisited(responseUrl);
+                        crawlFrontier.enqueueLinksFromDocument(responseUrl, doc);
+                        crawlFrontier.addVisited(responseUrl);
+                    }
                 }
-            }
-            else if (fetchedDoc instanceof HttpFetchResult.Result304Raw && reference.doc() != null) {
-                var doc = reference.doc();
+                case HttpFetchResult.Result304Raw ref when reference.doc() != null ->
+                {
+                    var doc = reference.doc();
 
-                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBodyBytes, doc.headers, contentTags);
+                    warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBodyBytes, doc.headers, contentTags);
 
-                fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
-                        new ContentType(doc.contentType, "UTF-8"),
-                        doc.documentBodyBytes);
+                    fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
+                            new ContentType(doc.contentType, "UTF-8"),
+                            doc.documentBodyBytes);
 
-                if (doc.documentBodyBytes != null) {
-                    var parsed = doc.parseBody();
+                    if (doc.documentBodyBytes != null) {
+                        var parsed = doc.parseBody();
 
-                    crawlFrontier.enqueueLinksFromDocument(top, parsed);
-                    crawlFrontier.addVisited(top);
+                        crawlFrontier.enqueueLinksFromDocument(top, parsed);
+                        crawlFrontier.addVisited(top);
+                    }
                 }
-            }
-            else if (fetchedDoc instanceof HttpFetchResult.ResultException) {
-                errorCount ++;
+                case HttpFetchResult.ResultRedirect(EdgeUrl location) -> {
+                    if (Objects.equals(location.domain, top.domain)) {
+                        crawlFrontier.addFirst(location);
+                    }
+                }
+                case HttpFetchResult.ResultException ex -> errorCount++;
+                default -> {} // Ignore other types
             }
         }
         catch (Exception ex) {
             logger.error("Error parsing document {}", top, ex);
         }
 
-        timer.waitFetchDelay(System.currentTimeMillis() - startTime);
-
         return fetchedDoc;
-    }
-
-    /** Fetch a document and retry on 429s */
-    private HttpFetchResult fetchWithRetry(EdgeUrl url,
-                                           CrawlDelayTimer timer,
-                                           HttpFetcher.ProbeType probeType,
-                                           ContentTags contentTags) throws InterruptedException {
-
-        long probeStart = System.currentTimeMillis();
-
-        if (probeType == HttpFetcher.ProbeType.FULL) {
-            retryLoop:
-            for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
-                try {
-                    var probeResult = fetcher.probeContentType(url, warcRecorder, contentTags);
-
-                    switch (probeResult) {
-                        case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
-                            url = resolvedUrl; // If we were redirected while probing, use the final URL for fetching
-                            break retryLoop;
-                        case HttpFetcher.ContentTypeProbeResult.BadContentType badContentType:
-                            return new HttpFetchResult.ResultNone();
-                        case HttpFetcher.ContentTypeProbeResult.BadContentType.Timeout timeout:
-                            return new HttpFetchResult.ResultException(timeout.ex());
-                        case HttpFetcher.ContentTypeProbeResult.Exception exception:
-                            return new HttpFetchResult.ResultException(exception.ex());
-                        default:  // should be unreachable
-                            throw new IllegalStateException("Unknown probe result");
-                    }
-                }
-                catch (HttpFetcherImpl.RateLimitException ex) {
-                    timer.waitRetryDelay(ex);
-                }
-                catch (Exception ex) {
-                    logger.warn("Failed to fetch {}", url, ex);
-                    return new HttpFetchResult.ResultException(ex);
-                }
-            }
-
-            timer.waitFetchDelay(System.currentTimeMillis() - probeStart);
-        }
-
-
-        for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
-            try {
-                return fetcher.fetchContent(url, warcRecorder, contentTags, probeType);
-            }
-            catch (HttpFetcherImpl.RateLimitException ex) {
-                timer.waitRetryDelay(ex);
-            }
-            catch (Exception ex) {
-                logger.warn("Failed to fetch {}", url, ex);
-                return new HttpFetchResult.ResultException(ex);
-            }
-        }
-
-        return new HttpFetchResult.ResultNone();
     }
 
     private boolean isAllowedProtocol(String proto) {

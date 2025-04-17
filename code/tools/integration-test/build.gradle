@@ -44,6 +44,7 @@ dependencies {
     implementation libs.guice
     implementation libs.fastutil
     implementation libs.trove
+    implementation libs.bundles.httpcomponents
 
     testImplementation libs.bundles.junit
     testImplementation project(':code:libraries:test-helpers')

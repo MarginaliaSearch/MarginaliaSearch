@@ -41,6 +41,8 @@ dependencies {
     implementation libs.snakeyaml
     implementation libs.zstd
 
+    implementation libs.bundles.httpcomponents
+
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito

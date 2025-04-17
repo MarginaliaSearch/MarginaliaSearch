@@ -31,7 +31,7 @@ class HttpFetcherTest {
     void fetchUTF8() throws Exception {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
         try (var recorder = new WarcRecorder()) {
-            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty(), HttpFetcher.ProbeType.FULL);
+            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, new CrawlDelayTimer(100), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
             if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
                 System.out.println(bodyOk.contentType());
             }
@@ -49,7 +49,7 @@ class HttpFetcherTest {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
 
         try (var recorder = new WarcRecorder()) {
-            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), recorder, ContentTags.empty(), HttpFetcher.ProbeType.FULL);
+            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), recorder, new CrawlDelayTimer(100), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
             if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
                 System.out.println(bodyOk.contentType());
             }
