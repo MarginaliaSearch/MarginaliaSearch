@@ -79,7 +79,9 @@ public sealed interface HttpFetchResult {
                 if (k.isBlank()) return;
                 if (!Character.isAlphabetic(k.charAt(0))) return;
 
-                headers.add(new BasicHeader(k, v));
+                for (var value : v) {
+                    headers.add(new BasicHeader(k, value));
+                }
             });
 
             return headers.toArray(new Header[0]);
@@ -114,7 +116,8 @@ public sealed interface HttpFetchResult {
         public String header(String name) {
             for (var header : headers) {
                 if (header.getName().equalsIgnoreCase(name)) {
-                    return header.getValue();
+                    String headerValue = header.getValue();
+                    return headerValue;
                 }
             }
             return null;
