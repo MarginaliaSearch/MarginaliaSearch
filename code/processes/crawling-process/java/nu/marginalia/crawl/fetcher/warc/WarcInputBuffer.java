@@ -51,7 +51,6 @@ public abstract class WarcInputBuffer implements AutoCloseable {
         var entity = response.getEntity();
 
         if (null == entity) {
-            System.out.println("Null entity on " + response.getCode() + " : " + response.getReasonPhrase());
             return new ErrorBuffer();
         }
 

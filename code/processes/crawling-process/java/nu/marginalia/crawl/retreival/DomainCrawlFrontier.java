@@ -55,6 +55,9 @@ public class DomainCrawlFrontier {
         }
     }
 
+    public EdgeDomain getDomain() {
+        return thisDomain;
+    }
     /** Increase the depth of the crawl by a factor.  If the current depth is smaller
      * than the number of already visited documents, the base depth will be adjusted
      * to the visited count first.

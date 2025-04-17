@@ -10,6 +10,8 @@ import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawledDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -18,9 +20,12 @@ import java.io.IOException;
  *  E-Tag and Last-Modified headers.
  */
 public class CrawlerRevisitor {
+
     private final DomainCrawlFrontier crawlFrontier;
     private final CrawlerRetreiver crawlerRetreiver;
     private final WarcRecorder warcRecorder;
+
+    private static final Logger logger = LoggerFactory.getLogger(CrawlerRevisitor.class);
 
     public CrawlerRevisitor(DomainCrawlFrontier crawlFrontier,
                             CrawlerRetreiver crawlerRetreiver,
@@ -151,10 +156,12 @@ public class CrawlerRevisitor {
                 else if (result instanceof HttpFetchResult.ResultException) {
                     errors++;
                 }
-
                 recrawled++;
             }
         }
+
+        logger.info("Recrawl summary {}: {} recrawled, {} retained, {} errors, {} skipped",
+                crawlFrontier.getDomain(), recrawled, retained, errors, skipped);
 
         return new RecrawlMetadata(size, errors, skipped);
     }

@@ -54,6 +54,7 @@ public interface HttpFetcher extends AutoCloseable {
     }
 
     sealed interface ContentTypeProbeResult {
+        record NoOp() implements ContentTypeProbeResult {}
         record Ok(EdgeUrl resolvedUrl) implements ContentTypeProbeResult { }
         record HttpError(int statusCode, String message) implements ContentTypeProbeResult { }
         record Redirect(EdgeUrl location) implements ContentTypeProbeResult { }

@@ -41,6 +41,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -65,6 +67,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
+    private final Marker crawlerAuditMarker = MarkerFactory.getMarker("CRAWLER");
 
     private final LinkParser linkParser = new LinkParser();
     @Override
@@ -286,7 +289,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                                                    CrawlDelayTimer timer,
                                                    ContentTags tags) {
         if (!tags.isEmpty() || !contentTypeLogic.isUrlLikeBinary(url)) {
-            return new ContentTypeProbeResult.Ok(url);
+            return new ContentTypeProbeResult.NoOp();
         }
 
         try {
@@ -362,13 +365,14 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                                            ContentTags contentTags,
                                            ProbeType probeType)
     {
-
         try {
             if (probeType == HttpFetcher.ProbeType.FULL) {
                 try {
                     var probeResult = probeContentType(url, timer, contentTags);
-
+                    logger.info(crawlerAuditMarker, "Probe result {} for {}", probeResult.getClass().getSimpleName(), url);
                     switch (probeResult) {
+                        case HttpFetcher.ContentTypeProbeResult.NoOp():
+                            break; //
                         case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
                             url = resolvedUrl; // If we were redirected while probing, use the final URL for fetching
                             break;
@@ -410,6 +414,14 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     }
                 }
 
+                switch (result) {
+                    case HttpFetchResult.ResultOk ok -> logger.info(crawlerAuditMarker, "Fetch result OK {} for {}", ok.statusCode(), url);
+                    case HttpFetchResult.ResultRedirect redirect -> logger.info(crawlerAuditMarker, "Fetch result redirect: {}  for {}", redirect.url(), url);
+                    case HttpFetchResult.ResultNone none -> logger.info(crawlerAuditMarker, "Fetch result none  for {}", url);
+                    case HttpFetchResult.ResultException ex -> logger.error(crawlerAuditMarker, "Fetch result exception: {}  for {}", ex.getClass().getSimpleName(), url);
+                    case HttpFetchResult.Result304Raw raw -> logger.info(crawlerAuditMarker, "Fetch result: 304 Raw for {}", url);
+                    case HttpFetchResult.Result304ReplacedWithReference ref -> logger.info(crawlerAuditMarker, "Fetch result: 304 With reference for {}", url);
+                }
                 return result;
             }
         }

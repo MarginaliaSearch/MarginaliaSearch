@@ -5,6 +5,7 @@
             <Filters>
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </Console>
         <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
@@ -17,6 +18,17 @@
                 <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+            </Filters>
+        </RollingFile>
+        <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/crawler-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss,SSS}: %msg{nolookups}%n</Pattern>
+            </PatternLayout>
+            <SizeBasedTriggeringPolicy size="100MB" />
+            <Filters>
+                <MarkerFilter marker="CRAWLER" onMatch="ALLOW" onMismatch="DENY" />
             </Filters>
         </RollingFile>
     </Appenders>
