@@ -80,11 +80,11 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     private CloseableHttpClient createClient() throws NoSuchAlgorithmException {
         final ConnectionConfig connectionConfig = ConnectionConfig.custom()
                 .setSocketTimeout(10, TimeUnit.SECONDS)
-                .setConnectTimeout(10, TimeUnit.SECONDS)
+                .setConnectTimeout(30, TimeUnit.SECONDS)
                 .build();
 
         final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-                .setMaxConnPerRoute(4)
+                .setMaxConnPerRoute(25)
                 .setMaxConnTotal(5000)
                 .setDefaultConnectionConfig(connectionConfig)
                 .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()))
