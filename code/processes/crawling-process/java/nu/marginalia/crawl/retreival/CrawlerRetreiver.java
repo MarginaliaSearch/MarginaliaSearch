@@ -53,7 +53,7 @@ public class CrawlerRetreiver implements AutoCloseable {
     private final CrawlerRevisitor crawlerRevisitor;
 
     private static final CrawlerConnectionThrottle connectionThrottle = new CrawlerConnectionThrottle(
-            Duration.ofSeconds(1) // pace the connections to avoid network congestion by waiting 1 second between establishing them
+            Duration.ofMillis(50) // pace the connections to avoid network congestion at startup
     );
 
     int errorCount = 0;
