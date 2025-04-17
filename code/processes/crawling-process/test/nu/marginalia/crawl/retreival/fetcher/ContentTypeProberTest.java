@@ -101,7 +101,7 @@ class ContentTypeProberTest {
 
         System.out.println(result);
 
-        assertEquals(result, new HttpFetcher.ContentTypeProbeResult.Ok(htmlEndpoint));
+        assertEquals(result, new HttpFetcher.ContentTypeProbeResult.Redirect(htmlEndpoint));
     }
 
     @Test
