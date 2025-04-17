@@ -419,7 +419,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     case HttpFetchResult.ResultOk ok -> logger.info(crawlerAuditMarker, "Fetch result OK {} for {}", ok.statusCode(), url);
                     case HttpFetchResult.ResultRedirect redirect -> logger.info(crawlerAuditMarker, "Fetch result redirect: {}  for {}", redirect.url(), url);
                     case HttpFetchResult.ResultNone none -> logger.info(crawlerAuditMarker, "Fetch result none  for {}", url);
-                    case HttpFetchResult.ResultException ex -> logger.error(crawlerAuditMarker, "Fetch result exception: {}  for {}", ex.getClass().getSimpleName(), url);
+                    case HttpFetchResult.ResultException ex -> logger.error(crawlerAuditMarker, "Fetch result exception for " + url + ": {}", ex.ex());
                     case HttpFetchResult.Result304Raw raw -> logger.info(crawlerAuditMarker, "Fetch result: 304 Raw for {}", url);
                     case HttpFetchResult.Result304ReplacedWithReference ref -> logger.info(crawlerAuditMarker, "Fetch result: 304 With reference for {}", url);
                 }
