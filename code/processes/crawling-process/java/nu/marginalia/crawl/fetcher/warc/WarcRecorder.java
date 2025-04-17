@@ -237,7 +237,6 @@ public class WarcRecorder implements AutoCloseable {
                             dataStart,
                             responseDataBuffer.length() - dataStart);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
                     flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
                     logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
                     return new HttpFetchResult.ResultException(ex);
@@ -250,7 +249,6 @@ public class WarcRecorder implements AutoCloseable {
             flagAsTimeout(new EdgeUrl(requestUri)); // write a WARC record to indicate the timeout
             return new HttpFetchResult.ResultException(ex);
         } catch (IOException ex) {
-            ex.printStackTrace();
             flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
             logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
             return new HttpFetchResult.ResultException(ex);

@@ -57,10 +57,11 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             return new ErrorBuffer();
         }
 
-        InputStream is = entity.getContent();
-        long length = entity.getContentLength();
-
+        InputStream is = null;
         try {
+            is = entity.getContent();
+            long length = entity.getContentLength();
+
             if (length > 0 && length < 8192) {
                 // If the content is small and not compressed, we can just read it into memory
                 return new MemoryBuffer(response.getHeaders(), request, timeLimit, is, (int) length);

@@ -94,6 +94,7 @@ class WarcRecorderFakeServerTest {
 
     @AfterEach
     public void tearDown() throws Exception {
+
         client.close();
         Files.delete(fileNameWarc);
     }

@@ -139,11 +139,22 @@ class HttpFetcherImplFetchTest {
 
     @AfterEach
     public void tearDown() throws IOException {
+        var stats = fetcher.getPoolStats();
+        assertEquals(0, stats.getLeased());
+        assertEquals(0, stats.getPending());
+
+        System.out.println(stats);
+
         fetcher.close();
         warcRecorder.close();
         Files.deleteIfExists(warcFile);
     }
 
+
+    @Test
+    public void testFoo() {
+        fetcher.fetchSitemapUrls("https://www.marginalia.nu/sitemap.xml", new CrawlDelayTimer(100));
+    }
 
     @Test
     public void testOk_NoProbe() throws IOException {

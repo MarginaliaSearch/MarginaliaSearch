@@ -11,6 +11,8 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @Tag("slow")
 class HttpFetcherImplContentTypeProbeTest {
 
@@ -85,6 +87,10 @@ class HttpFetcherImplContentTypeProbeTest {
 
     @AfterEach
     public void tearDown() throws IOException {
+        var stats = fetcher.getPoolStats();
+        assertEquals(0, stats.getLeased());
+        assertEquals(0, stats.getPending());
+
         fetcher.close();
     }
 

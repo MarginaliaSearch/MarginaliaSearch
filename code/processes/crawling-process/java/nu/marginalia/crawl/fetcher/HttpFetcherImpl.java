@@ -35,6 +35,7 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.MessageSupport;
 import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.pool.PoolStats;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.jsoup.Jsoup;
@@ -77,14 +78,20 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     }
 
     private final CloseableHttpClient client;
+    private PoolingHttpClientConnectionManager connectionManager;
+
+    public PoolStats getPoolStats() {
+        return connectionManager.getTotalStats();
+    }
 
     private CloseableHttpClient createClient() throws NoSuchAlgorithmException {
         final ConnectionConfig connectionConfig = ConnectionConfig.custom()
                 .setSocketTimeout(10, TimeUnit.SECONDS)
                 .setConnectTimeout(30, TimeUnit.SECONDS)
+                .setValidateAfterInactivity(TimeValue.ofSeconds(5))
                 .build();
 
-        final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+        connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                 .setMaxConnPerRoute(2)
                 .setMaxConnTotal(5000)
                 .setDefaultConnectionConfig(connectionConfig)
@@ -96,6 +103,18 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .setSoTimeout(Timeout.ofSeconds(10))
                 .build()
         );
+
+        Thread.ofPlatform().daemon(true).start(() -> {
+            try {
+                for (;;) {
+                    TimeUnit.SECONDS.sleep(15);
+                    logger.info("Connection pool stats: {}", connectionManager.getTotalStats());
+                }
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
 
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.RELAXED)
