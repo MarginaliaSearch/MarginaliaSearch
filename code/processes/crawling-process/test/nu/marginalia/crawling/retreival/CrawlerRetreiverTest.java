@@ -15,7 +15,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
+import nu.marginalia.slop.SlopCrawlDataRecord;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
@@ -37,16 +37,16 @@ class CrawlerRetreiverTest {
     private HttpFetcher httpFetcher;
 
     Path tempFileWarc1;
-    Path tempFileParquet1;
+    Path tempFileSlop1;
     Path tempFileWarc2;
-    Path tempFileParquet2;
+    Path tempFileSlop2;
     Path tempFileWarc3;
     Path tempFileDb;
     @BeforeEach
     public void setUp() throws IOException {
         httpFetcher = new HttpFetcherImpl("search.marginalia.nu; testing a bit :D");
-        tempFileParquet1 = Files.createTempFile("crawling-process", ".parquet");
-        tempFileParquet2 = Files.createTempFile("crawling-process", ".parquet");
+        tempFileSlop1 = Files.createTempFile("crawling-process", ".slop.zip");
+        tempFileSlop2 = Files.createTempFile("crawling-process", ".slop.zip");
         tempFileDb = Files.createTempFile("crawling-process", ".db");
 
     }
@@ -62,14 +62,14 @@ class CrawlerRetreiverTest {
         if (tempFileWarc1 != null) {
             Files.deleteIfExists(tempFileWarc1);
         }
-        if (tempFileParquet1 != null) {
-            Files.deleteIfExists(tempFileParquet1);
+        if (tempFileSlop1 != null) {
+            Files.deleteIfExists(tempFileSlop1);
         }
         if (tempFileWarc2 != null) {
             Files.deleteIfExists(tempFileWarc2);
         }
-        if (tempFileParquet2 != null) {
-            Files.deleteIfExists(tempFileParquet2);
+        if (tempFileSlop2 != null) {
+            Files.deleteIfExists(tempFileSlop2);
         }
         if (tempFileWarc3 != null) {
             Files.deleteIfExists(tempFileWarc3);
@@ -224,9 +224,9 @@ class CrawlerRetreiverTest {
 
         doCrawl(tempFileWarc1, specs);
 
-        convertToParquet(tempFileWarc1, tempFileParquet1);
+        convertToSlop(tempFileWarc1, tempFileSlop1);
 
-        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileSlop1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -277,9 +277,9 @@ class CrawlerRetreiverTest {
         assertFalse(frontier.isVisited(new EdgeUrl("https://www.marginalia.nu/log/06-optimization/")));
         assertTrue(frontier.isKnown(new EdgeUrl("https://www.marginalia.nu/log/06-optimization/")));
 
-        convertToParquet(tempFileWarc1, tempFileParquet1);
+        convertToSlop(tempFileWarc1, tempFileSlop1);
 
-        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileSlop1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -293,7 +293,7 @@ class CrawlerRetreiverTest {
         // redirects to https://www.marginalia.nu/log/06-optimization.gmi/  (note the trailing slash)
         //
         // Ensure that the redirect is followed, and that the trailing slash is added
-        // to the url as reported in the parquet file.
+        // to the url as reported in the Slop file.
 
         var fetchedUrls =
                 data.stream()
@@ -326,9 +326,9 @@ class CrawlerRetreiverTest {
         tempFileWarc1 = Files.createTempFile("crawling-process", ".warc");
 
         doCrawl(tempFileWarc1, specs);
-        convertToParquet(tempFileWarc1, tempFileParquet1);
+        convertToSlop(tempFileWarc1, tempFileSlop1);
 
-        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileSlop1)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDocument doc) {
                     data.add(doc);
@@ -373,11 +373,11 @@ class CrawlerRetreiverTest {
         tempFileWarc2 = Files.createTempFile("crawling-process", ".warc.gz");
 
         doCrawl(tempFileWarc1, specs);
-        convertToParquet(tempFileWarc1, tempFileParquet1);
+        convertToSlop(tempFileWarc1, tempFileSlop1);
         doCrawlWithReferenceStream(specs,
-                new CrawlDataReference(tempFileParquet1)
+                new CrawlDataReference(tempFileSlop1)
         );
-        convertToParquet(tempFileWarc2, tempFileParquet2);
+        convertToSlop(tempFileWarc2, tempFileSlop2);
 
         try (var reader = new WarcReader(tempFileWarc2)) {
             WarcXResponseReference.register(reader);
@@ -396,7 +396,7 @@ class CrawlerRetreiverTest {
             });
         }
 
-        try (var ds = SerializableCrawlDataStream.openDataStream(tempFileParquet2)) {
+        try (var ds = SerializableCrawlDataStream.openDataStream(tempFileSlop2)) {
             while (ds.hasNext()) {
                 var doc = ds.next();
                 if (doc instanceof CrawledDomain dr) {
@@ -411,9 +411,9 @@ class CrawlerRetreiverTest {
         }
     }
 
-    private void convertToParquet(Path tempFileWarc2, Path tempFileParquet2) {
-        CrawledDocumentParquetRecordFileWriter.convertWarc("www.marginalia.nu",
-                new UserAgent("test", "test"), tempFileWarc2, tempFileParquet2);
+    private void convertToSlop(Path tempFileWarc2, Path tempFileSlop2) throws IOException {
+        SlopCrawlDataRecord.convertWarc("www.marginalia.nu",
+                new UserAgent("test", "test"), tempFileWarc2, tempFileSlop2);
     }
 
 
@@ -436,9 +436,9 @@ class CrawlerRetreiverTest {
 
         doCrawl(tempFileWarc1, specs);
 
-        convertToParquet(tempFileWarc1, tempFileParquet1);
+        convertToSlop(tempFileWarc1, tempFileSlop1);
 
-        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileParquet1)) {
+        try (var stream = SerializableCrawlDataStream.openDataStream(tempFileSlop1)) {
             while (stream.hasNext()) {
                 var doc = stream.next();
                 data.computeIfAbsent(doc.getClass(), c -> new ArrayList<>()).add(doc);
@@ -449,7 +449,7 @@ class CrawlerRetreiverTest {
 
         System.out.println("---");
 
-        doCrawlWithReferenceStream(specs, new CrawlDataReference(tempFileParquet1));
+        doCrawlWithReferenceStream(specs, new CrawlDataReference(tempFileSlop1));
 
         var revisitCrawlFrontier = new DomainCrawlFrontier(
                 new EdgeDomain("www.marginalia.nu"),
@@ -465,7 +465,7 @@ class CrawlerRetreiverTest {
         resync.run(tempFileWarc2);
 
         assertTrue(revisitCrawlFrontier.addKnown(new EdgeUrl("https://www.marginalia.nu/")));
-        convertToParquet(tempFileWarc3, tempFileParquet2);
+        convertToSlop(tempFileWarc3, tempFileSlop2);
 
 
         try (var reader = new WarcReader(tempFileWarc3)) {
@@ -485,7 +485,7 @@ class CrawlerRetreiverTest {
             });
         }
 
-        try (var ds = SerializableCrawlDataStream.openDataStream(tempFileParquet2)) {
+        try (var ds = SerializableCrawlDataStream.openDataStream(tempFileSlop2)) {
             while (ds.hasNext()) {
                 var doc = ds.next();
                 if (doc instanceof CrawledDomain dr) {
