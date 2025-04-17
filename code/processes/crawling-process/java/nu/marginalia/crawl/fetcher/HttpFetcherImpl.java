@@ -505,46 +505,51 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
         try (var sl = new SendLock()) {
             return client.execute(getRequest, response -> {
-                if (response.getCode() != 200) {
-                    return new SitemapResult.SitemapError();
+                try {
+                    if (response.getCode() != 200) {
+                        return new SitemapResult.SitemapError();
+                    }
+
+                    Document parsedSitemap = Jsoup.parse(
+                            EntityUtils.toString(response.getEntity()),
+                            sitemapUrl.toString(),
+                            Parser.xmlParser()
+                    );
+
+                    if (parsedSitemap.childrenSize() == 0) {
+                        return new SitemapResult.SitemapError();
+                    }
+
+                    String rootTagName = parsedSitemap.child(0).tagName();
+
+                    return switch (rootTagName.toLowerCase()) {
+                        case "sitemapindex" -> {
+                            List<String> references = new ArrayList<>();
+                            for (var locTag : parsedSitemap.getElementsByTag("loc")) {
+                                references.add(locTag.text().trim());
+                            }
+                            yield new SitemapResult.SitemapReferences(Collections.unmodifiableList(references));
+                        }
+                        case "urlset" -> {
+                            List<String> urls = new ArrayList<>();
+                            for (var locTag : parsedSitemap.select("url > loc")) {
+                                urls.add(locTag.text().trim());
+                            }
+                            yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
+                        }
+                        case "rss", "atom" -> {
+                            List<String> urls = new ArrayList<>();
+                            for (var locTag : parsedSitemap.select("link, url")) {
+                                urls.add(locTag.text().trim());
+                            }
+                            yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
+                        }
+                        default -> new SitemapResult.SitemapError();
+                    };
                 }
-
-                Document parsedSitemap = Jsoup.parse(
-                        EntityUtils.toString(response.getEntity()),
-                        sitemapUrl.toString(),
-                        Parser.xmlParser()
-                );
-
-                if (parsedSitemap.childrenSize() == 0) {
-                    return new SitemapResult.SitemapError();
+                finally {
+                    EntityUtils.consume(response.getEntity());
                 }
-
-                String rootTagName = parsedSitemap.child(0).tagName();
-
-                return switch (rootTagName.toLowerCase()) {
-                    case "sitemapindex" -> {
-                        List<String> references = new ArrayList<>();
-                        for (var locTag : parsedSitemap.getElementsByTag("loc")) {
-                            references.add(locTag.text().trim());
-                        }
-                        yield new SitemapResult.SitemapReferences(Collections.unmodifiableList(references));
-                    }
-                    case "urlset" -> {
-                        List<String> urls = new ArrayList<>();
-                        for (var locTag : parsedSitemap.select("url > loc")) {
-                            urls.add(locTag.text().trim());
-                        }
-                        yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
-                    }
-                    case "rss", "atom" -> {
-                        List<String> urls = new ArrayList<>();
-                        for (var locTag : parsedSitemap.select("link, url")) {
-                            urls.add(locTag.text().trim());
-                        }
-                        yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
-                    }
-                    default -> new SitemapResult.SitemapError();
-                };
             });
         }
         catch (Exception ex) {
