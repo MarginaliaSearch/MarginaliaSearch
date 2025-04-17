@@ -3,9 +3,9 @@ package nu.marginalia.crawl.retreival.fetcher;
 import com.sun.net.httpserver.HttpServer;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.*;
 import org.netpreserve.jwarc.WarcReader;
 import org.netpreserve.jwarc.WarcRequest;
@@ -51,14 +51,14 @@ class WarcRecorderFakeServerTest {
                 os.write("<html><body>hello</body></html>".getBytes());
                 os.flush();
                 try {
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
                 os.write(":".getBytes());
                 os.flush();
                 try {
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -100,13 +100,10 @@ class WarcRecorderFakeServerTest {
 
     @Test
     public void fetchFast() throws Exception {
-        client.fetch(httpClient,
-                ClassicRequestBuilder
-                        .get(new java.net.URI("http://localhost:14510/fast"))
-                        .addHeader("User-agent", "test.marginalia.nu")
-                        .addHeader("Accept-Encoding", "gzip")
-                        .build()
-        );
+        HttpGet request = new HttpGet("http://localhost:14510/fast");
+        request.addHeader("User-agent", "test.marginalia.nu");
+        request.addHeader("Accept-Encoding", "gzip");
+        client.fetch(httpClient, request);
 
         Map<String, String> sampleData = new HashMap<>();
         try (var warcReader = new WarcReader(fileNameWarc)) {
@@ -127,11 +124,12 @@ class WarcRecorderFakeServerTest {
     public void fetchSlow() throws Exception {
         Instant start = Instant.now();
 
+        HttpGet request = new HttpGet("http://localhost:14510/slow");
+        request.addHeader("User-agent", "test.marginalia.nu");
+        request.addHeader("Accept-Encoding", "gzip");
+
         client.fetch(httpClient,
-                ClassicRequestBuilder.get(new java.net.URI("http://localhost:14510/slow"))
-                        .addHeader("User-agent", "test.marginalia.nu")
-                        .addHeader("Accept-Encoding", "gzip")
-                        .build(),
+                request,
                 Duration.ofSeconds(1)
         );
         Instant end = Instant.now();
@@ -149,6 +147,8 @@ class WarcRecorderFakeServerTest {
             });
         }
 
+        System.out.println(
+                Files.readString(fileNameWarc));
         System.out.println(sampleData);
 
         // Timeout is set to 1 second, but the server will take 5 seconds to respond,

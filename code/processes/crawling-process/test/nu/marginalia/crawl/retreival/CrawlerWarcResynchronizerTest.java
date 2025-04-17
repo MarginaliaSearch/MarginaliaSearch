@@ -4,9 +4,9 @@ import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,10 +78,10 @@ class CrawlerWarcResynchronizerTest {
     }
 
     void fetchUrl(WarcRecorder recorder, String url) throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
-        var req = ClassicRequestBuilder.get(new java.net.URI(url))
-                .addHeader("User-agent", "test.marginalia.nu")
-                .addHeader("Accept-Encoding", "gzip")
-                .build();
-        recorder.fetch(httpClient, req);
+        HttpGet request = new HttpGet(url);
+        request.addHeader("User-agent", "test.marginalia.nu");
+        request.addHeader("Accept-Encoding", "gzip");
+
+        recorder.fetch(httpClient, request);
     }
 }

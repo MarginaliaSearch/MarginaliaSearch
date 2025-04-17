@@ -1,6 +1,6 @@
 package nu.marginalia.crawl.fetcher;
 
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 
 /** Encapsulates request modifiers; the ETag and Last-Modified tags for a resource */
 public record ContentTags(String etag, String lastMod) {
@@ -17,14 +17,14 @@ public record ContentTags(String etag, String lastMod) {
     }
 
     /** Paints the tags onto the request builder. */
-    public void paint(ClassicRequestBuilder getBuilder) {
+    public void paint(HttpGet request) {
 
         if (etag != null) {
-            getBuilder.addHeader("If-None-Match", etag);
+            request.addHeader("If-None-Match", etag);
         }
 
         if (lastMod != null) {
-            getBuilder.addHeader("If-Modified-Since", lastMod);
+            request.addHeader("If-Modified-Since", lastMod);
         }
     }
 }

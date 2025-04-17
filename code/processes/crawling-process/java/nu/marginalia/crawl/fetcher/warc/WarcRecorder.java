@@ -8,9 +8,9 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.CookieStore;
-import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.NameValuePair;
 import org.jetbrains.annotations.Nullable;
 import org.netpreserve.jwarc.*;
@@ -89,14 +89,14 @@ public class WarcRecorder implements AutoCloseable {
     }
 
     public HttpFetchResult fetch(HttpClient client,
-                                 ClassicHttpRequest request)
+                                 HttpGet request)
             throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
     {
         return fetch(client, request, Duration.ofMillis(MAX_TIME));
     }
 
     public HttpFetchResult fetch(HttpClient client,
-                                 ClassicHttpRequest request,
+                                 HttpGet request,
                                  Duration timeout)
             throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
     {
@@ -117,7 +117,7 @@ public class WarcRecorder implements AutoCloseable {
         try {
             return client.execute(request, response -> {
 
-                try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, timeout);
+                try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request, timeout);
                      InputStream inputStream = inputBuffer.read()) {
 
                     // Build and write the request
@@ -237,6 +237,7 @@ public class WarcRecorder implements AutoCloseable {
                             dataStart,
                             responseDataBuffer.length() - dataStart);
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
                     logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
                     return new HttpFetchResult.ResultException(ex);
@@ -249,6 +250,7 @@ public class WarcRecorder implements AutoCloseable {
             flagAsTimeout(new EdgeUrl(requestUri)); // write a WARC record to indicate the timeout
             return new HttpFetchResult.ResultException(ex);
         } catch (IOException ex) {
+            ex.printStackTrace();
             flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
             logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
             return new HttpFetchResult.ResultException(ex);

@@ -91,14 +91,14 @@ class HttpFetcherImplContentTypeProbeTest {
     @Test
     public void testProbeContentTypeHtmlShortcircuitPath() throws URISyntaxException {
         var result = fetcher.probeContentType(new EdgeUrl("https://localhost/test.html"), new CrawlDelayTimer(50), ContentTags.empty());
-        Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.Ok.class, result);
+        Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.NoOp.class, result);
     }
 
 
     @Test
     public void testProbeContentTypeHtmlShortcircuitTags() {
         var result = fetcher.probeContentType(contentTypeBinaryUrl, new CrawlDelayTimer(50), new ContentTags("a", "b"));
-        Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.Ok.class, result);
+        Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.NoOp.class, result);
     }
 
     @Test

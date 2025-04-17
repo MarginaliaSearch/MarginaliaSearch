@@ -17,6 +17,7 @@ import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
@@ -398,16 +399,16 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
             }
 
-            ClassicRequestBuilder getBuilder = ClassicRequestBuilder.get(url.asURI())
-                    .addHeader("User-Agent", userAgentString)
-                    .addHeader("Accept-Encoding", "gzip")
-                    .addHeader("Accept-Language", "en,*;q=0.5")
-                    .addHeader("Accept", "text/html, application/xhtml+xml, text/*;q=0.8");
+            HttpGet request = new HttpGet(url.asURI());
+            request.addHeader("User-Agent", userAgentString);
+            request.addHeader("Accept-Encoding", "gzip");
+            request.addHeader("Accept-Language", "en,*;q=0.5");
+            request.addHeader("Accept", "text/html, application/xhtml+xml, text/*;q=0.8");
 
-            contentTags.paint(getBuilder);
+            contentTags.paint(request);
 
             try (var sl = new SendLock()) {
-                HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
+                HttpFetchResult result = warcRecorder.fetch(client, request);
 
                 if (result instanceof HttpFetchResult.ResultOk ok) {
                     if (ok.statusCode() == 304) {
@@ -494,13 +495,13 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     }
 
 
-    private SitemapResult fetchSingleSitemap(EdgeUrl sitemapUrl) throws URISyntaxException, IOException, InterruptedException {
-        ClassicHttpRequest getRequest = ClassicRequestBuilder.get(sitemapUrl.asURI())
-                .addHeader("User-Agent", userAgentString)
-                .addHeader("Accept-Encoding", "gzip")
-                .addHeader("Accept", "text/*, */*;q=0.9")
-                .addHeader("User-Agent", userAgentString)
-                .build();
+    private SitemapResult fetchSingleSitemap(EdgeUrl sitemapUrl) throws URISyntaxException {
+        HttpGet getRequest = new HttpGet(sitemapUrl.asURI());
+
+        getRequest.addHeader("User-Agent", userAgentString);
+        getRequest.addHeader("Accept-Encoding", "gzip");
+        getRequest.addHeader("Accept", "text/*, */*;q=0.9");
+        getRequest.addHeader("User-Agent", userAgentString);
 
         try (var sl = new SendLock()) {
             return client.execute(getRequest, response -> {
@@ -574,11 +575,10 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     private Optional<SimpleRobotRules> fetchAndParseRobotsTxt(EdgeUrl url, WarcRecorder recorder) {
         try (var sl = new SendLock()) {
 
-            ClassicHttpRequest request = ClassicRequestBuilder.get(url.asURI())
-                    .addHeader("User-Agent", userAgentString)
-                    .addHeader("Accept-Encoding", "gzip")
-                    .addHeader("Accept", "text/*, */*;q=0.9")
-                    .build();
+            HttpGet request = new HttpGet(url.asURI());
+            request.addHeader("User-Agent", userAgentString);
+            request.addHeader("Accept-Encoding", "gzip");
+            request.addHeader("Accept", "text/*, */*;q=0.9");
 
             HttpFetchResult result = recorder.fetch(client, request);
 

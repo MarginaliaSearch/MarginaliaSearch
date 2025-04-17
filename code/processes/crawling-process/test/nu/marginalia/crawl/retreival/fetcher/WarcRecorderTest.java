@@ -7,9 +7,9 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileReader;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,11 +52,14 @@ class WarcRecorderTest {
 
     @Test
     void fetch() throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
+
+        HttpGet request = new HttpGet("https://www.marginalia.nu/");
+        request.addHeader("User-agent", "test.marginalia.nu");
+        request.addHeader("Accept-Encoding", "gzip");
+        client.fetch(httpClient, request);
+
         client.fetch(httpClient,
-                ClassicRequestBuilder.get(new java.net.URI("https://www.marginalia.nu/"))
-                        .addHeader("User-agent", "test.marginalia.nu")
-                        .addHeader("Accept-Encoding", "gzip")
-                        .build()
+                request
         );
 
         Map<String, String> sampleData = new HashMap<>();
@@ -138,23 +141,23 @@ class WarcRecorderTest {
 
     @Test
     public void testConvertToParquet() throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
-        client.fetch(httpClient, ClassicRequestBuilder
-                .get(new java.net.URI("https://www.marginalia.nu/"))
-                .addHeader("User-agent", "test.marginalia.nu")
-                .addHeader("Accept-Encoding", "gzip")
-                .build());
+        HttpGet request1 = new HttpGet("https://www.marginalia.nu/");
+        request1.addHeader("User-agent", "test.marginalia.nu");
+        request1.addHeader("Accept-Encoding", "gzip");
 
-        client.fetch(httpClient, ClassicRequestBuilder
-                .get(new java.net.URI("https://www.marginalia.nu/log/"))
-                .addHeader("User-agent", "test.marginalia.nu")
-                .addHeader("Accept-Encoding", "gzip")
-                .build());
+        client.fetch(httpClient, request1);
 
-        client.fetch(httpClient, ClassicRequestBuilder
-                .get(new java.net.URI("https://www.marginalia.nu/sanic.png"))
-                .addHeader("User-agent", "test.marginalia.nu")
-                .addHeader("Accept-Encoding", "gzip")
-                .build());
+        HttpGet request2 = new HttpGet("https://www.marginalia.nu/log/");
+        request2.addHeader("User-agent", "test.marginalia.nu");
+        request2.addHeader("Accept-Encoding", "gzip");
+
+        client.fetch(httpClient, request2);
+
+        HttpGet request3 = new HttpGet("https://www.marginalia.nu/sanic.png");
+        request3.addHeader("User-agent", "test.marginalia.nu");
+        request3.addHeader("Accept-Encoding", "gzip");
+
+        client.fetch(httpClient, request3);
 
         CrawledDocumentParquetRecordFileWriter.convertWarc(
                 "www.marginalia.nu",
