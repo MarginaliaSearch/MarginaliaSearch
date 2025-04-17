@@ -84,7 +84,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .build();
 
         final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-                .setMaxConnPerRoute(25)
+                .setMaxConnPerRoute(2)
                 .setMaxConnTotal(5000)
                 .setDefaultConnectionConfig(connectionConfig)
                 .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()))
