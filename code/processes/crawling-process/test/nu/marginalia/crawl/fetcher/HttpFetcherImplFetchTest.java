@@ -31,6 +31,7 @@ class HttpFetcherImplFetchTest {
     private static String lastModified = "Wed, 21 Oct 2024 07:28:00 GMT";
 
     private static EdgeUrl okUrl;
+    private static EdgeUrl okRangeResponseUrl;
     private static EdgeUrl okUrlWith304;
 
     private static EdgeUrl timeoutUrl;
@@ -100,6 +101,12 @@ class HttpFetcherImplFetchTest {
                         .withHeader("Last-Modified", lastModified)
                         .withStatus(304)));
 
+        okRangeResponseUrl = new EdgeUrl("http://localhost:18089/okRangeResponse.bin");
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(okRangeResponseUrl.path))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Range", "bytes 0-100/200")
+                        .withBody("Hello World")
+                        .withStatus(206)));
         wireMockServer.start();
 
     }
@@ -241,6 +248,22 @@ class HttpFetcherImplFetchTest {
         WarcXEntityRefused entity = (WarcXEntityRefused) records.getFirst();
         assertEquals(WarcXEntityRefused.documentProbeTimeout, entity.profile());
         assertEquals(timeoutUrl.asURI(), entity.targetURI());
+    }
+
+    @Test
+    public void testRangeResponse() throws IOException {
+        var result = fetcher.fetchContent(okRangeResponseUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+
+        Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
+        Assertions.assertTrue(result.isOk());
+
+        List<WarcRecord> warcRecords = getWarcRecords();
+        assertEquals(2, warcRecords.size());
+        Assertions.assertInstanceOf(WarcRequest.class, warcRecords.get(0));
+        Assertions.assertInstanceOf(WarcResponse.class, warcRecords.get(1));
+
+        var response = (WarcResponse) warcRecords.get(1);
+        assertEquals("length", response.headers().first("WARC-Truncated").orElse(""));
     }
 
     @Test

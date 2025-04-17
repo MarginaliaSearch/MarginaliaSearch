@@ -105,6 +105,71 @@ public abstract class WarcInputBuffer implements AutoCloseable {
         }
     }
 
+    /** Takes a Content-Range header and checks if it is complete.
+     *  A complete range is one that covers the entire resource.
+     *  For example, "bytes 0-1023/2048" or "bytes 0-1023/*" are complete ranges.
+     *  "bytes 0-1023/2048" is not a complete range.
+     */
+    public boolean isRangeComplete(Header[] headers) {
+        // Find the Content-Range header
+        String contentRangeHeader = null;
+        for (var header : headers) {
+            if ("Content-Range".equalsIgnoreCase(header.getName())) {
+                contentRangeHeader = header.getValue();
+                break;
+            }
+        }
+
+        // Return true if header is null or empty
+        if (contentRangeHeader == null || contentRangeHeader.isEmpty()) {
+            return true;
+        }
+
+        try {
+            // Content-Range format: "bytes range-start-range-end/size"
+            // e.g., "bytes 0-1023/2048" or "bytes 0-1023/*"
+
+            // Get the part after "bytes "
+            String[] parts = contentRangeHeader.split(" ", 2);
+            if (parts.length < 2) {
+                return false;
+            }
+
+            // Get the range and size parts (e.g., "0-1023/2048")
+            String rangeAndSize = parts[1];
+            String[] rangeAndSizeParts = rangeAndSize.split("/", 2);
+            if (rangeAndSizeParts.length < 2) {
+                return false;
+            }
+
+            // Get the range (e.g., "0-1023")
+            String range = rangeAndSizeParts[0];
+            String[] rangeParts = range.split("-", 2);
+            if (rangeParts.length < 2) {
+                return false;
+            }
+
+            // Get the size (e.g., "2048" or "*")
+            String size = rangeAndSizeParts[1];
+
+            // If size is "*", we don't know the total size, so return false
+            if ("*".equals(size)) {
+                return false;
+            }
+
+            // Parse as long to handle large files
+            long rangeStart = Long.parseLong(rangeParts[0]);
+            long rangeEnd = Long.parseLong(rangeParts[1]);
+            long totalSize = Long.parseLong(size);
+
+            // Check if the range covers the entire resource
+            return rangeStart == 0 && rangeEnd == totalSize - 1;
+
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            return false;
+        }
+    }
+
 }
 
 /** Pseudo-buffer for when we have an error */
@@ -141,6 +206,12 @@ class MemoryBuffer extends WarcInputBuffer {
     public MemoryBuffer(Header[] headers, Duration timeLimit, InputStream responseStream, int size) {
         super(suppressContentEncoding(headers));
 
+        if (!isRangeComplete(headers)) {
+            truncationReason = WarcTruncationReason.LENGTH;
+        } else {
+            truncationReason = WarcTruncationReason.NOT_TRUNCATED;
+        }
+
         var outputStream = new ByteArrayOutputStream(size);
 
         copy(responseStream, outputStream, timeLimit);
@@ -169,6 +240,12 @@ class FileBuffer extends WarcInputBuffer {
 
     public FileBuffer(Header[] headers, Duration timeLimit, InputStream responseStream) throws IOException {
         super(suppressContentEncoding(headers));
+
+        if (!isRangeComplete(headers)) {
+            truncationReason = WarcTruncationReason.LENGTH;
+        } else {
+            truncationReason = WarcTruncationReason.NOT_TRUNCATED;
+        }
 
         this.tempFile = Files.createTempFile("rsp", ".html");
 

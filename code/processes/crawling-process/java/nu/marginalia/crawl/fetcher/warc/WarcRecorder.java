@@ -110,6 +110,10 @@ public class WarcRecorder implements AutoCloseable {
         // Not entirely sure why we need to do this, but keeping it due to Chesterton's Fence
         Map<String, List<String>> extraHeaders = new HashMap<>(request.getHeaders().length);
 
+        // Inject a range header to attempt to limit the size of the response
+        // to the maximum size we want to store, if the server supports it.
+        request.addHeader("Range", "bytes=0-"+MAX_SIZE);
+
         try {
             return client.execute(request, response -> {
 
