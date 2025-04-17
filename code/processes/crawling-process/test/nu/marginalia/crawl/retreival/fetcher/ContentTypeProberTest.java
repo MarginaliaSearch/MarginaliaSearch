@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.model.EdgeUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +88,7 @@ class ContentTypeProberTest {
 
     @Test
     void probeContentTypeOk() throws Exception {
-        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(htmlEndpoint, ContentTags.empty());
+        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(htmlEndpoint, new CrawlDelayTimer(50), ContentTags.empty());
 
         System.out.println(result);
 
@@ -96,7 +97,7 @@ class ContentTypeProberTest {
 
     @Test
     void probeContentTypeRedir() throws Exception {
-        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(htmlRedirEndpoint, ContentTags.empty());
+        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(htmlRedirEndpoint, new CrawlDelayTimer(50), ContentTags.empty());
 
         System.out.println(result);
 
@@ -105,7 +106,7 @@ class ContentTypeProberTest {
 
     @Test
     void probeContentTypeBad() throws Exception {
-        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(binaryEndpoint, ContentTags.empty());
+        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(binaryEndpoint, new CrawlDelayTimer(50), ContentTags.empty());
 
         System.out.println(result);
 
@@ -114,7 +115,7 @@ class ContentTypeProberTest {
 
     @Test
     void probeContentTypeTimeout() throws Exception {
-        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(timeoutEndpoint, ContentTags.empty());
+        HttpFetcher.ContentTypeProbeResult result = fetcher.probeContentType(timeoutEndpoint, new CrawlDelayTimer(50), ContentTags.empty());
 
         System.out.println(result);
 

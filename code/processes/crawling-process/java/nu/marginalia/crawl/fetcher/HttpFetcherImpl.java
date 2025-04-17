@@ -49,7 +49,6 @@ import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -254,6 +253,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
      * recorded in the WARC file on failure.
      */
     public ContentTypeProbeResult probeContentType(EdgeUrl url,
+                                                   CrawlDelayTimer timer,
                                                    ContentTags tags) {
         if (!tags.isEmpty() || !contentTypeLogic.isUrlLikeBinary(url)) {
             return new ContentTypeProbeResult.Ok(url);
@@ -316,6 +316,9 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
             return new ContentTypeProbeResult.Exception(ex);
         }
+        finally {
+            timer.waitFetchDelay();
+        }
     }
 
     /** Fetch the content of a URL, and record it in a WARC file,
@@ -332,9 +335,8 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
         try {
             if (probeType == HttpFetcher.ProbeType.FULL) {
-                Instant probeStart = Instant.now();
                 try {
-                    var probeResult = probeContentType(url, contentTags);
+                    var probeResult = probeContentType(url, timer, contentTags);
 
                     switch (probeResult) {
                         case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
@@ -359,7 +361,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     return new HttpFetchResult.ResultException(ex);
                 }
 
-                timer.waitFetchDelay(/* spent time = */ Duration.between(probeStart, Instant.now()));
             }
 
             ClassicRequestBuilder getBuilder = ClassicRequestBuilder.get(url.asURI())
