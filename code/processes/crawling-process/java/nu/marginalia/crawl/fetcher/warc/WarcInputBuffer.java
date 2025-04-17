@@ -1,5 +1,6 @@
 package nu.marginalia.crawl.fetcher.warc;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.Header;
@@ -93,15 +94,30 @@ public abstract class WarcInputBuffer implements AutoCloseable {
 
                 if (n < 0) break;
                 size += n;
-                os.write(buffer, 0, n);
 
-                if (size > WarcRecorder.MAX_SIZE) {
-                    truncationReason = WarcTruncationReason.LENGTH;
-                    break;
+                // Even if we've exceeded the max length,
+                // we keep consuming the stream up until the end or a timeout,
+                // as closing the stream means resetting the connection, and
+                // that's generally not desirable.
+
+                if (size < WarcRecorder.MAX_SIZE) {
+                    os.write(buffer, 0, n);
                 }
+                else if (truncationReason != WarcTruncationReason.LENGTH) {
+                    truncationReason = WarcTruncationReason.LENGTH;
+                }
+
             } catch (IOException e) {
                 truncationReason = WarcTruncationReason.UNSPECIFIED;
             }
+        }
+
+        // Try to close the connection as long as we haven't timed out.
+        // As per Apache HttpClient's semantics, this will reset the connection
+        // and close the stream if we have timed out.
+
+        if (truncationReason != WarcTruncationReason.TIME) {
+            IOUtils.closeQuietly(is);
         }
     }
 
