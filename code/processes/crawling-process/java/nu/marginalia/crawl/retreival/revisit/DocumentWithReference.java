@@ -6,6 +6,7 @@ import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawledDocument;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 public record DocumentWithReference(
         @Nullable CrawledDocument doc,
@@ -33,8 +34,22 @@ public record DocumentWithReference(
             return false;
         if (doc == null)
             return false;
-        if (doc.documentBodyBytes.length == 0)
-            return false;
+        if (doc.documentBodyBytes.length == 0) {
+            if (doc.httpStatus < 300) {
+                return resultOk.bytesLength() == 0;
+            }
+            else if (doc.httpStatus == 301 || doc.httpStatus == 302 || doc.httpStatus == 307) {
+                @Nullable
+                String docLocation = doc.getHeader("Location");
+                @Nullable
+                String resultLocation = resultOk.header("Location");
+
+                return Objects.equals(docLocation, resultLocation);
+            }
+            else {
+                return doc.httpStatus == resultOk.statusCode();
+            }
+        }
 
         return CrawlDataReference.isContentBodySame(doc.documentBodyBytes, resultOk.bytesRaw());
     }

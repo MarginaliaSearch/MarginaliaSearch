@@ -102,7 +102,7 @@ public final class CrawledDocument implements SerializableCrawlData {
     }
 
     @Nullable
-    private String getHeader(String header) {
+    public String getHeader(String header) {
         if (headers == null) {
             return null;
         }
