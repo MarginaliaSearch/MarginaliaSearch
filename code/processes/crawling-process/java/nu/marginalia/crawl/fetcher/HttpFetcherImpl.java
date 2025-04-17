@@ -613,7 +613,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     @Override
     public TimeValue getRetryInterval(HttpRequest request, IOException exception, int executionCount, HttpContext context) {
-        logger.info("Error", exception);
         return TimeValue.ofSeconds(1);
     }
 
