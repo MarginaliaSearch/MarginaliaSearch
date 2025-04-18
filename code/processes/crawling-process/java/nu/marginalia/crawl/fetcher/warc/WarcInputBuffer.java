@@ -106,8 +106,7 @@ public abstract class WarcInputBuffer implements AutoCloseable {
                     // so we don't keep the connection open forever or are forced to consume
                     // the stream to the end
 
-                    // FIXME: Disable this for now, as it may cause issues with the connection pool
-                    // request.abort();
+                    request.abort();
                     break;
                 }
 
