@@ -47,6 +47,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
@@ -622,18 +623,21 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     @Override
     public boolean retryRequest(HttpRequest request, IOException exception, int executionCount, HttpContext context) {
-        if (exception instanceof SocketTimeoutException ex) {
+        if (exception instanceof SocketTimeoutException) { // Timeouts are not recoverable
+            return false;
+        }
+        if (exception instanceof SSLException) { // SSL exceptions are unlikely to be recoverable
             return false;
         }
 
-        return executionCount < 3;
+        return executionCount <= 3;
     }
 
     @Override
     public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
         return switch (response.getCode()) {
-            case 500, 503 -> executionCount < 2;
-            case 429 -> executionCount < 3;
+            case 500, 503 -> executionCount <= 2;
+            case 429 -> executionCount <= 3;
             default -> false;
         };
     }
