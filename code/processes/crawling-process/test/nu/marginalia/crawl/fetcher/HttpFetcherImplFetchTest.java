@@ -31,6 +31,7 @@ class HttpFetcherImplFetchTest {
     private static String lastModified = "Wed, 21 Oct 2024 07:28:00 GMT";
 
     private static EdgeUrl okUrl;
+    private static EdgeUrl okUrlSetsCookie;
     private static EdgeUrl okRangeResponseUrl;
     private static EdgeUrl okUrlWith304;
 
@@ -88,6 +89,19 @@ class HttpFetcherImplFetchTest {
                         .withStatus(200)
                         .withBody("Hello World")));
 
+        okUrlSetsCookie = new EdgeUrl("http://localhost:18089/okSetCookie.bin");
+        wireMockServer.stubFor(WireMock.head(WireMock.urlEqualTo(okUrlSetsCookie.path))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "text/html")
+                        .withHeader("Set-Cookie", "test=1")
+                        .withStatus(200)));
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(okUrlSetsCookie.path))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "text/html")
+                        .withHeader("Set-Cookie", "test=1")
+                        .withStatus(200)
+                        .withBody("Hello World")));
+
         okUrlWith304 = new EdgeUrl("http://localhost:18089/ok304.bin");
         wireMockServer.stubFor(WireMock.head(WireMock.urlEqualTo(okUrlWith304.path))
                 .willReturn(WireMock.aResponse()
@@ -117,6 +131,8 @@ class HttpFetcherImplFetchTest {
                         .withHeader("Keep-Alive", "max=4, timeout=30")
                         .withBody("Hello")
                         ));
+
+
         wireMockServer.start();
 
     }
@@ -134,7 +150,7 @@ class HttpFetcherImplFetchTest {
     public void setUp() throws IOException {
         fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu"));
         warcFile = Files.createTempFile(getClass().getSimpleName(), ".warc");
-        warcRecorder = new WarcRecorder(warcFile, fetcher);
+        warcRecorder = new WarcRecorder(warcFile);
     }
 
     @AfterEach
@@ -158,7 +174,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testOk_NoProbe() throws IOException {
-        var result = fetcher.fetchContent(okUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(okUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());
@@ -169,12 +185,29 @@ class HttpFetcherImplFetchTest {
         Assertions.assertInstanceOf(WarcResponse.class, warcRecords.get(1));
 
         WarcResponse response = (WarcResponse) warcRecords.get(1);
-        assertEquals("0", response.headers().first("X-Has-Cookies").orElse("0"));
+        assertEquals("0", response.http().headers().first("X-Has-Cookies").orElse("0"));
+    }
+
+    @Test
+    public void testOkSetsCookie() throws IOException {
+        var cookies = new DomainCookies();
+        var result = fetcher.fetchContent(okUrlSetsCookie, warcRecorder, cookies, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+
+        Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
+        Assertions.assertTrue(result.isOk());
+
+        List<WarcRecord> warcRecords = getWarcRecords();
+        assertEquals(2, warcRecords.size());
+        Assertions.assertInstanceOf(WarcRequest.class, warcRecords.get(0));
+        Assertions.assertInstanceOf(WarcResponse.class, warcRecords.get(1));
+
+        WarcResponse response = (WarcResponse) warcRecords.get(1);
+        assertEquals("1", response.http().headers().first("X-Has-Cookies").orElse("0"));
     }
 
     @Test
     public void testOk_FullProbe() {
-        var result = fetcher.fetchContent(okUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
+        var result = fetcher.fetchContent(okUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());
@@ -182,7 +215,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testOk304_NoProbe() {
-        var result = fetcher.fetchContent(okUrlWith304, warcRecorder, new CrawlDelayTimer(1000), new ContentTags(etag, lastModified), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(okUrlWith304, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), new ContentTags(etag, lastModified), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.Result304Raw.class, result);
         System.out.println(result);
@@ -191,7 +224,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testOk304_FullProbe() {
-        var result = fetcher.fetchContent(okUrlWith304, warcRecorder, new CrawlDelayTimer(1000), new ContentTags(etag, lastModified), HttpFetcher.ProbeType.FULL);
+        var result = fetcher.fetchContent(okUrlWith304, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), new ContentTags(etag, lastModified), HttpFetcher.ProbeType.FULL);
 
         Assertions.assertInstanceOf(HttpFetchResult.Result304Raw.class, result);
         System.out.println(result);
@@ -199,7 +232,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testBadStatus_NoProbe() throws IOException {
-        var result = fetcher.fetchContent(badHttpStatusUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(badHttpStatusUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertFalse(result.isOk());
@@ -213,7 +246,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testBadStatus_FullProbe() {
-        var result = fetcher.fetchContent(badHttpStatusUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
+        var result = fetcher.fetchContent(badHttpStatusUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertFalse(result.isOk());
@@ -223,7 +256,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testRedirect_NoProbe() throws URISyntaxException, IOException {
-        var result = fetcher.fetchContent(redirectUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(redirectUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultRedirect.class, result);
         assertEquals(new EdgeUrl("http://localhost:18089/test.html.bin"), ((HttpFetchResult.ResultRedirect) result).url());
@@ -236,7 +269,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testRedirect_FullProbe() throws URISyntaxException {
-        var result = fetcher.fetchContent(redirectUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
+        var result = fetcher.fetchContent(redirectUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultRedirect.class, result);
         assertEquals(new EdgeUrl("http://localhost:18089/test.html.bin"), ((HttpFetchResult.ResultRedirect) result).url());
@@ -249,7 +282,7 @@ class HttpFetcherImplFetchTest {
     public void testFetchTimeout_NoProbe() throws IOException, URISyntaxException {
         Instant requestStart = Instant.now();
 
-        var result = fetcher.fetchContent(timeoutUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(timeoutUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultException.class, result);
 
@@ -273,7 +306,7 @@ class HttpFetcherImplFetchTest {
 
     @Test
     public void testRangeResponse() throws IOException {
-        var result = fetcher.fetchContent(okRangeResponseUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(okRangeResponseUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());
@@ -290,7 +323,7 @@ class HttpFetcherImplFetchTest {
     @Test
     public void testFetchTimeout_Probe() throws IOException, URISyntaxException {
         Instant requestStart = Instant.now();
-        var result = fetcher.fetchContent(timeoutUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
+        var result = fetcher.fetchContent(timeoutUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
         Instant requestEnd = Instant.now();
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultException.class, result);
@@ -313,7 +346,7 @@ class HttpFetcherImplFetchTest {
     @Test
     public void testKeepaliveUrl() {
         // mostly for smoke testing and debugger utility
-        var result = fetcher.fetchContent(keepAliveUrl, warcRecorder, new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        var result = fetcher.fetchContent(keepAliveUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());
@@ -330,6 +363,13 @@ class HttpFetcherImplFetchTest {
             WarcXEntityRefused.register(reader);
 
             for (var record : reader) {
+                // Load the body, we need to do this before we close the reader to have access to the content.
+                if (record instanceof WarcRequest req) {
+                    req.http();
+                } else if (record instanceof WarcResponse rsp) {
+                    rsp.http();
+                }
+
                 records.add(record);
             }
         }

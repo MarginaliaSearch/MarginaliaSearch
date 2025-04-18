@@ -2,13 +2,13 @@ package nu.marginalia.crawl.retreival.fetcher;
 
 import nu.marginalia.UserAgent;
 import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileReader;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,7 @@ class WarcRecorderTest {
         fileNameWarc = Files.createTempFile("test", ".warc");
         fileNameParquet = Files.createTempFile("test", ".parquet");
 
-        client = new WarcRecorder(fileNameWarc, new BasicCookieStore());
+        client = new WarcRecorder(fileNameWarc);
     }
 
     @AfterEach
@@ -56,11 +56,8 @@ class WarcRecorderTest {
         HttpGet request = new HttpGet("https://www.marginalia.nu/");
         request.addHeader("User-agent", "test.marginalia.nu");
         request.addHeader("Accept-Encoding", "gzip");
-        client.fetch(httpClient, request);
 
-        client.fetch(httpClient,
-                request
-        );
+        client.fetch(httpClient, new DomainCookies(), request);
 
         Map<String, String> sampleData = new HashMap<>();
         try (var warcReader = new WarcReader(fileNameWarc)) {
@@ -81,8 +78,9 @@ class WarcRecorderTest {
     @Test
     public void flagAsSkipped() throws IOException, URISyntaxException {
 
-        try (var recorder = new WarcRecorder(fileNameWarc, new BasicCookieStore())) {
+        try (var recorder = new WarcRecorder(fileNameWarc)) {
             recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
+                    new DomainCookies(),
                     "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>".getBytes(),
@@ -105,8 +103,9 @@ class WarcRecorderTest {
     @Test
     public void flagAsSkippedNullBody() throws IOException, URISyntaxException {
 
-        try (var recorder = new WarcRecorder(fileNameWarc, new BasicCookieStore())) {
+        try (var recorder = new WarcRecorder(fileNameWarc)) {
             recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
+                    new DomainCookies(),
                     "text/html",
                     200,
                     null,
@@ -117,8 +116,9 @@ class WarcRecorderTest {
 
     @Test
     public void testSaveImport() throws URISyntaxException, IOException {
-        try (var recorder = new WarcRecorder(fileNameWarc, new BasicCookieStore())) {
+        try (var recorder = new WarcRecorder(fileNameWarc)) {
             recorder.writeReferenceCopy(new EdgeUrl("https://www.marginalia.nu/"),
+                    new DomainCookies(),
                     "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>".getBytes(),
@@ -145,19 +145,19 @@ class WarcRecorderTest {
         request1.addHeader("User-agent", "test.marginalia.nu");
         request1.addHeader("Accept-Encoding", "gzip");
 
-        client.fetch(httpClient, request1);
+        client.fetch(httpClient, new DomainCookies(), request1);
 
         HttpGet request2 = new HttpGet("https://www.marginalia.nu/log/");
         request2.addHeader("User-agent", "test.marginalia.nu");
         request2.addHeader("Accept-Encoding", "gzip");
 
-        client.fetch(httpClient, request2);
+        client.fetch(httpClient, new DomainCookies(), request2);
 
         HttpGet request3 = new HttpGet("https://www.marginalia.nu/sanic.png");
         request3.addHeader("User-agent", "test.marginalia.nu");
         request3.addHeader("Accept-Encoding", "gzip");
 
-        client.fetch(httpClient, request3);
+        client.fetch(httpClient, new DomainCookies(), request3);
 
         CrawledDocumentParquetRecordFileWriter.convertWarc(
                 "www.marginalia.nu",

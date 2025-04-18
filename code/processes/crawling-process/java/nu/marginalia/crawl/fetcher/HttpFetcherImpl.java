@@ -307,6 +307,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
      * recorded in the WARC file on failure.
      */
     public ContentTypeProbeResult probeContentType(EdgeUrl url,
+                                                   DomainCookies cookies,
                                                    CrawlDelayTimer timer,
                                                    ContentTags tags) {
         if (!tags.isEmpty() || !contentTypeLogic.isUrlLikeBinary(url)) {
@@ -319,9 +320,11 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     .addHeader("Accept-Encoding", "gzip")
                     .build();
 
-            var result = SendLock.wrapSend(client, head, (rsp) -> {
-                EntityUtils.consume(rsp.getEntity());
+            cookies.paintRequest(head);
 
+            return SendLock.wrapSend(client, head, (rsp) -> {
+                cookies.updateCookieStore(rsp);
+                EntityUtils.consume(rsp.getEntity());
                 int statusCode = rsp.getCode();
 
                 // Handle redirects
@@ -359,8 +362,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     return new ContentTypeProbeResult.BadContentType(contentType, statusCode);
                 }
             });
-
-            return result;
         }
         catch (SocketTimeoutException ex) {
 
@@ -382,6 +383,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     @Override
     public HttpFetchResult fetchContent(EdgeUrl url,
                                            WarcRecorder warcRecorder,
+                                           DomainCookies cookies,
                                            CrawlDelayTimer timer,
                                            ContentTags contentTags,
                                            ProbeType probeType)
@@ -389,7 +391,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         try {
             if (probeType == HttpFetcher.ProbeType.FULL) {
                 try {
-                    var probeResult = probeContentType(url, timer, contentTags);
+                    var probeResult = probeContentType(url, cookies, timer, contentTags);
                     logger.info(crawlerAuditMarker, "Probe result {} for {}", probeResult.getClass().getSimpleName(), url);
                     switch (probeResult) {
                         case HttpFetcher.ContentTypeProbeResult.NoOp():
@@ -427,7 +429,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             contentTags.paint(request);
 
             try (var sl = new SendLock()) {
-                HttpFetchResult result = warcRecorder.fetch(client, request);
+                HttpFetchResult result = warcRecorder.fetch(client, cookies, request);
 
                 if (result instanceof HttpFetchResult.ResultOk ok) {
                     if (ok.statusCode() == 304) {
@@ -604,7 +606,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             request.addHeader("Accept-Encoding", "gzip");
             request.addHeader("Accept", "text/*, */*;q=0.9");
 
-            HttpFetchResult result = recorder.fetch(client, request);
+            HttpFetchResult result = recorder.fetch(client, new DomainCookies(), request);
 
             return DocumentBodyExtractor.asBytes(result).mapOpt((contentType, body) ->
                 robotsParser.parseContent(url.toString(),

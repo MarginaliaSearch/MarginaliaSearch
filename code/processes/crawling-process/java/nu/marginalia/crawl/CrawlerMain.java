@@ -438,7 +438,7 @@ public class CrawlerMain extends ProcessMainClass {
                 Files.deleteIfExists(tempFile);
             }
 
-            try (var warcRecorder = new WarcRecorder(newWarcFile, fetcher); // write to a temp file for now
+            try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
                  var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, domainStateDb, warcRecorder);
                  CrawlDataReference reference = getReference()
             )

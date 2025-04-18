@@ -1,11 +1,11 @@
 package nu.marginalia.crawl.retreival;
 
+import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ class CrawlerWarcResynchronizerTest {
 
     @Test
     void run() throws IOException, URISyntaxException {
-        try (var oldRecorder = new WarcRecorder(fileName, new BasicCookieStore())) {
+        try (var oldRecorder = new WarcRecorder(fileName)) {
             fetchUrl(oldRecorder, "https://www.marginalia.nu/");
             fetchUrl(oldRecorder, "https://www.marginalia.nu/log/");
             fetchUrl(oldRecorder, "https://www.marginalia.nu/feed/");
@@ -55,7 +55,7 @@ class CrawlerWarcResynchronizerTest {
 
         var crawlFrontier = new DomainCrawlFrontier(new EdgeDomain("www.marginalia.nu"), List.of(), 100);
 
-        try (var newRecorder = new WarcRecorder(outputFile, new BasicCookieStore())) {
+        try (var newRecorder = new WarcRecorder(outputFile)) {
             new CrawlerWarcResynchronizer(crawlFrontier, newRecorder).run(fileName);
         }
 
@@ -82,6 +82,6 @@ class CrawlerWarcResynchronizerTest {
         request.addHeader("User-agent", "test.marginalia.nu");
         request.addHeader("Accept-Encoding", "gzip");
 
-        recorder.fetch(httpClient, request);
+        recorder.fetch(httpClient, new DomainCookies(), request);
     }
 }

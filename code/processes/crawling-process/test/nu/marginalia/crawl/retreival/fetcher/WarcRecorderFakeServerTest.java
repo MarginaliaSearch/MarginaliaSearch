@@ -1,10 +1,10 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
 import com.sun.net.httpserver.HttpServer;
+import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.*;
 import org.netpreserve.jwarc.WarcReader;
@@ -89,7 +89,7 @@ class WarcRecorderFakeServerTest {
         fileNameWarc = Files.createTempFile("test", ".warc");
         fileNameParquet = Files.createTempFile("test", ".parquet");
 
-        client = new WarcRecorder(fileNameWarc, new BasicCookieStore());
+        client = new WarcRecorder(fileNameWarc);
     }
 
     @AfterEach
@@ -104,7 +104,7 @@ class WarcRecorderFakeServerTest {
         HttpGet request = new HttpGet("http://localhost:14510/fast");
         request.addHeader("User-agent", "test.marginalia.nu");
         request.addHeader("Accept-Encoding", "gzip");
-        client.fetch(httpClient, request);
+        client.fetch(httpClient, new DomainCookies(), request);
 
         Map<String, String> sampleData = new HashMap<>();
         try (var warcReader = new WarcReader(fileNameWarc)) {
@@ -130,6 +130,7 @@ class WarcRecorderFakeServerTest {
         request.addHeader("Accept-Encoding", "gzip");
 
         client.fetch(httpClient,
+                new DomainCookies(),
                 request,
                 Duration.ofSeconds(1)
         );

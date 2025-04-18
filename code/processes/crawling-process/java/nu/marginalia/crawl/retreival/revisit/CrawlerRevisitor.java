@@ -2,6 +2,7 @@ package nu.marginalia.crawl.retreival.revisit;
 
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
@@ -37,6 +38,7 @@ public class CrawlerRevisitor {
 
     /** Performs a re-crawl of old documents, comparing etags and last-modified */
     public RecrawlMetadata recrawl(CrawlDataReference oldCrawlData,
+                       DomainCookies cookies,
                        SimpleRobotRules robotsRules,
                        CrawlDelayTimer delayTimer)
     throws InterruptedException {
@@ -132,6 +134,7 @@ public class CrawlerRevisitor {
                 }
                 // Add a WARC record so we don't repeat this
                 warcRecorder.writeReferenceCopy(url,
+                        cookies,
                         doc.contentType,
                         doc.httpStatus,
                         doc.documentBodyBytes,

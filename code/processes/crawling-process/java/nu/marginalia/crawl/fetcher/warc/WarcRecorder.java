@@ -1,6 +1,7 @@
 package nu.marginalia.crawl.fetcher.warc;
 
 import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.link_parser.LinkParser;
@@ -9,8 +10,6 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
-import org.apache.hc.client5.http.cookie.CookieStore;
 import org.apache.hc.core5.http.NameValuePair;
 import org.jetbrains.annotations.Nullable;
 import org.netpreserve.jwarc.*;
@@ -53,23 +52,15 @@ public class WarcRecorder implements AutoCloseable {
     // Affix a version string in case we need to change the format in the future
     // in some way
     private final String warcRecorderVersion = "1.0";
-    private final CookieStore cookies;
     private final LinkParser linkParser = new LinkParser();
     /**
      * Create a new WarcRecorder that will write to the given file
      *
      * @param warcFile The file to write to
      */
-    public WarcRecorder(Path warcFile, HttpFetcherImpl fetcher) throws IOException {
+    public WarcRecorder(Path warcFile) throws IOException {
         this.warcFile = warcFile;
         this.writer = new WarcWriter(warcFile);
-        this.cookies = fetcher.getCookies();
-    }
-
-    public WarcRecorder(Path warcFile, CookieStore cookies) throws IOException {
-        this.warcFile = warcFile;
-        this.writer = new WarcWriter(warcFile);
-        this.cookies = cookies;
     }
 
     /**
@@ -79,23 +70,20 @@ public class WarcRecorder implements AutoCloseable {
     public WarcRecorder() throws IOException {
         this.warcFile = Files.createTempFile("warc", ".warc.gz");
         this.writer = new WarcWriter(this.warcFile);
-        this.cookies = new BasicCookieStore();
 
         temporaryFile = true;
     }
 
-    private boolean hasCookies() {
-        return !cookies.getCookies().isEmpty();
-    }
-
     public HttpFetchResult fetch(HttpClient client,
+                                 DomainCookies cookies,
                                  HttpGet request)
             throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
     {
-        return fetch(client, request, Duration.ofMillis(MAX_TIME));
+        return fetch(client, cookies, request, Duration.ofMillis(MAX_TIME));
     }
 
     public HttpFetchResult fetch(HttpClient client,
+                                 DomainCookies cookies,
                                  HttpGet request,
                                  Duration timeout)
             throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException
@@ -113,12 +101,14 @@ public class WarcRecorder implements AutoCloseable {
         // Inject a range header to attempt to limit the size of the response
         // to the maximum size we want to store, if the server supports it.
         request.addHeader("Range", "bytes=0-"+MAX_SIZE);
-
+        cookies.paintRequest(request);
         try {
-            return client.execute(request, response -> {
+            return client.execute(request,response -> {
 
                 try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request, timeout);
                      InputStream inputStream = inputBuffer.read()) {
+
+                    cookies.updateCookieStore(response);
 
                     // Build and write the request
 
@@ -143,8 +133,9 @@ public class WarcRecorder implements AutoCloseable {
                     warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
                     writer.write(warcRequest);
 
-                    if (hasCookies()) {
-                        extraHeaders.put("X-Has-Cookies", List.of("1"));
+
+                    if (cookies.hasCookies()) {
+                        response.addHeader("X-Has-Cookies", 1);
                     }
 
                     byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
@@ -259,7 +250,7 @@ public class WarcRecorder implements AutoCloseable {
         writer.write(item);
     }
 
-    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, byte[] documentBody, @Nullable String headers, ContentTags contentTags) {
+    private void saveOldResponse(EdgeUrl url, DomainCookies domainCookies, String contentType, int statusCode, byte[] documentBody, @Nullable String headers, ContentTags contentTags) {
         try {
             WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
             WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
@@ -320,7 +311,7 @@ public class WarcRecorder implements AutoCloseable {
                     .date(Instant.now())
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
-            if (hasCookies()) {
+            if (domainCookies.hasCookies() || (headers != null && headers.contains("Set-Cookie:"))) {
                 builder.addHeader("X-Has-Cookies", "1");
             }
 
@@ -340,8 +331,8 @@ public class WarcRecorder implements AutoCloseable {
      * an E-Tag or Last-Modified header, and the server responds with a 304 Not Modified.  In this
      * scenario we want to record the data as it was in the previous crawl, but not re-fetch it.
      */
-    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, byte[] documentBody, @Nullable String headers, ContentTags ctags) {
-        saveOldResponse(url, contentType, statusCode, documentBody, headers, ctags);
+    public void writeReferenceCopy(EdgeUrl url, DomainCookies cookies, String contentType, int statusCode, byte[] documentBody, @Nullable String headers, ContentTags ctags) {
+        saveOldResponse(url, cookies, contentType, statusCode, documentBody, headers, ctags);
     }
 
     public void writeWarcinfoHeader(String ip, EdgeDomain domain, HttpFetcherImpl.DomainProbeResult result) throws IOException {

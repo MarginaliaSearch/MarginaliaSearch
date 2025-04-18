@@ -23,6 +23,7 @@ public interface HttpFetcher extends AutoCloseable {
 
     HttpFetchResult fetchContent(EdgeUrl url,
                                  WarcRecorder recorder,
+                                 DomainCookies cookies,
                                  CrawlDelayTimer timer,
                                  ContentTags tags,
                                  ProbeType probeType);

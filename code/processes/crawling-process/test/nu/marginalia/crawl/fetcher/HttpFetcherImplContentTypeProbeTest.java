@@ -96,50 +96,50 @@ class HttpFetcherImplContentTypeProbeTest {
 
     @Test
     public void testProbeContentTypeHtmlShortcircuitPath() throws URISyntaxException {
-        var result = fetcher.probeContentType(new EdgeUrl("https://localhost/test.html"), new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(new EdgeUrl("https://localhost/test.html"), new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.NoOp.class, result);
     }
 
 
     @Test
     public void testProbeContentTypeHtmlShortcircuitTags() {
-        var result = fetcher.probeContentType(contentTypeBinaryUrl, new CrawlDelayTimer(50), new ContentTags("a", "b"));
+        var result = fetcher.probeContentType(contentTypeBinaryUrl, new DomainCookies(), new CrawlDelayTimer(50), new ContentTags("a", "b"));
         Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.NoOp.class, result);
     }
 
     @Test
     public void testProbeContentTypeHtml() {
-        var result = fetcher.probeContentType(contentTypeHtmlUrl, new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(contentTypeHtmlUrl, new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.Ok(contentTypeHtmlUrl), result);
     }
 
     @Test
     public void testProbeContentTypeBinary() {
-        var result = fetcher.probeContentType(contentTypeBinaryUrl, new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(contentTypeBinaryUrl, new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.BadContentType("application/octet-stream", 200), result);
     }
 
     @Test
     public void testProbeContentTypeRedirect() {
-        var result = fetcher.probeContentType(redirectUrl, new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(redirectUrl, new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.Redirect(contentTypeHtmlUrl), result);
     }
 
     @Test
     public void testProbeContentTypeBadHttpStatus() {
-        var result = fetcher.probeContentType(badHttpStatusUrl, new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(badHttpStatusUrl, new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.HttpError(500, "Bad status code"), result);
     }
 
     @Test
     public void testOnlyGetAllowed() {
-        var result = fetcher.probeContentType(onlyGetAllowedUrl, new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(onlyGetAllowedUrl, new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertEquals(new HttpFetcher.ContentTypeProbeResult.Ok(onlyGetAllowedUrl), result);
     }
 
     @Test
     public void testTimeout() {
-        var result = fetcher.probeContentType(timeoutUrl, new CrawlDelayTimer(50), ContentTags.empty());
+        var result = fetcher.probeContentType(timeoutUrl, new DomainCookies(), new CrawlDelayTimer(50), ContentTags.empty());
         Assertions.assertInstanceOf(HttpFetcher.ContentTypeProbeResult.Timeout.class, result);
     }
 

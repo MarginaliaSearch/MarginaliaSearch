@@ -6,6 +6,7 @@ import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.crawl.fetcher.ContentTags;
+import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.HttpFetcher;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.logic.LinkFilterSelector;
@@ -51,6 +52,7 @@ public class CrawlerRetreiver implements AutoCloseable {
     private final DomainStateDb domainStateDb;
     private final WarcRecorder warcRecorder;
     private final CrawlerRevisitor crawlerRevisitor;
+    private final DomainCookies cookies = new DomainCookies();
 
     private static final CrawlerConnectionThrottle connectionThrottle = new CrawlerConnectionThrottle(
             Duration.ofSeconds(1) // pace the connections to avoid network congestion at startup
@@ -124,7 +126,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                     }
 
                     Instant recrawlStart = Instant.now();
-                    CrawlerRevisitor.RecrawlMetadata recrawlMetadata = crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
+                    CrawlerRevisitor.RecrawlMetadata recrawlMetadata = crawlerRevisitor.recrawl(oldCrawlData, cookies, robotsRules, delayTimer);
                     Duration recrawlTime = Duration.between(recrawlStart, Instant.now());
 
                     // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
@@ -274,7 +276,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         try {
             var url = rootUrl.withPathAndParam("/", null);
 
-            HttpFetchResult result = fetcher.fetchContent(url, warcRecorder, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+            HttpFetchResult result = fetcher.fetchContent(url, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
             timer.waitFetchDelay(0);
 
             if (result instanceof HttpFetchResult.ResultRedirect(EdgeUrl location)) {
@@ -337,7 +339,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
             // Grab the favicon if it exists
 
-            if (fetcher.fetchContent(faviconUrl, warcRecorder, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED) instanceof HttpFetchResult.ResultOk iconResult) {
+            if (fetcher.fetchContent(faviconUrl, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED) instanceof HttpFetchResult.ResultOk iconResult) {
                 String contentType = iconResult.header("Content-Type");
                 byte[] iconData = iconResult.getBodyBytes();
 
@@ -407,7 +409,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         if (parsedOpt.isEmpty())
             return false;
 
-        HttpFetchResult result = fetcher.fetchContent(parsedOpt.get(), warcRecorder, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        HttpFetchResult result = fetcher.fetchContent(parsedOpt.get(), warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
         timer.waitFetchDelay(0);
 
         if (!(result instanceof HttpFetchResult.ResultOk ok)) {
@@ -435,7 +437,7 @@ public class CrawlerRetreiver implements AutoCloseable {
     {
         var contentTags = reference.getContentTags();
 
-        HttpFetchResult fetchedDoc = fetcher.fetchContent(top, warcRecorder, timer, contentTags, HttpFetcher.ProbeType.FULL);
+        HttpFetchResult fetchedDoc = fetcher.fetchContent(top, warcRecorder, cookies, timer, contentTags, HttpFetcher.ProbeType.FULL);
         timer.waitFetchDelay();
 
         if (Thread.interrupted()) {
@@ -461,7 +463,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                 {
                     var doc = reference.doc();
 
-                    warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBodyBytes, doc.headers, contentTags);
+                    warcRecorder.writeReferenceCopy(top, cookies, doc.contentType, doc.httpStatus, doc.documentBodyBytes, doc.headers, contentTags);
 
                     fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
                             new ContentType(doc.contentType, "UTF-8"),

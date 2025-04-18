@@ -20,7 +20,6 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,7 +246,7 @@ public class CrawlingThenConvertingIntegrationTest {
     private CrawledDomain crawl(CrawlerMain.CrawlSpecRecord specs, Predicate<EdgeDomain> domainBlacklist) throws Exception {
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        try (var recorder = new WarcRecorder(fileName, new BasicCookieStore());
+        try (var recorder = new WarcRecorder(fileName);
              var db = new DomainStateDb(dbTempFile))
         {
             new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, db, recorder).crawlDomain();

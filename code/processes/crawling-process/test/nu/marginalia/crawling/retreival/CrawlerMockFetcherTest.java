@@ -3,10 +3,7 @@ package nu.marginalia.crawling.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.crawl.DomainStateDb;
-import nu.marginalia.crawl.fetcher.ContentTags;
-import nu.marginalia.crawl.fetcher.HttpFetcher;
-import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.fetcher.SitemapRetriever;
+import nu.marginalia.crawl.fetcher.*;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
@@ -137,7 +134,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, CrawlDelayTimer timer, ContentTags tags, ProbeType probeType) {
+        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, DomainCookies cookies, CrawlDelayTimer timer, ContentTags tags, ProbeType probeType) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 byte[] bodyBytes = mockData.get(url).documentBodyBytes;
