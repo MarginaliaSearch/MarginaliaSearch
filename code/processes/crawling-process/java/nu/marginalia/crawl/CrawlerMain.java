@@ -43,6 +43,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.Security;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,6 +66,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final DomainLocks domainLocks = new DomainLocks();
 
     private final Map<String, CrawlTask> pendingCrawlTasks = new ConcurrentHashMap<>();
+    private final LinkedBlockingQueue<CrawlTask> retryQueue = new LinkedBlockingQueue<>();
 
     private final AtomicInteger tasksDone = new AtomicInteger(0);
     private final HttpFetcherImpl fetcher;
@@ -277,12 +279,26 @@ public class CrawlerMain extends ProcessMainClass {
             }
 
              // Schedule viable tasks for execution until list is empty
-            while (!taskList.isEmpty()) {
-                taskList.removeIf(this::trySubmitDeferredTask);
+            for (int emptyRuns = 0;emptyRuns < 300;) {
+                boolean hasTasks = !taskList.isEmpty();
 
-                // Add a small pause here to avoid busy looping toward the end of the execution cycle when
-                // we might have no new viable tasks to run for hours on end
-                TimeUnit.MILLISECONDS.sleep(50);
+                // The order of these checks  very important to avoid a race condition
+                // where we miss a task that is put into the retry queue
+                boolean hasRunningTasks = pool.getActiveCount() > 0;
+                boolean hasRetryTasks = !retryQueue.isEmpty();
+
+                if (hasTasks || hasRetryTasks || hasRunningTasks) {
+                    retryQueue.drainTo(taskList);
+                    taskList.removeIf(this::trySubmitDeferredTask);
+                    // Add a small pause here to avoid busy looping toward the end of the execution cycle when
+                    // we might have no new viable tasks to run for hours on end
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } else {
+                    // We have no tasks to run, and no tasks in the retry queue
+                    // but we wait a bit to see if any new tasks come in via the retry queue
+                    emptyRuns++;
+                    TimeUnit.SECONDS.sleep(1);
+                }
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
@@ -425,66 +441,73 @@ public class CrawlerMain extends ProcessMainClass {
                 return;
             }
 
-            Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
-            Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
-            Path slopFile = CrawlerOutputFile.createSlopPath(outputDir, id, domain);
-
-            // Move the WARC file to a temp file if it exists, so we can resume the crawl using the old data
-            // while writing to the same file name as before
-            if (Files.exists(newWarcFile)) {
-                Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            Optional<DomainLocks.DomainLock> lock = domainLocks.tryLockDomain(new EdgeDomain(domain));
+            // We don't have a lock, so we can't run this task
+            // we return to avoid blocking the pool for too long
+            if (lock.isEmpty()) {
+                retryQueue.add(this);
+                return;
             }
-            else {
-                Files.deleteIfExists(tempFile);
-            }
+            DomainLocks.DomainLock domainLock = lock.get();
 
-            try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
-                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, domainStateDb, warcRecorder);
-                 CrawlDataReference reference = getReference()
-            )
-            {
-                // Resume the crawl if it was aborted
-                if (Files.exists(tempFile)) {
-                    retriever.syncAbortedRun(tempFile);
-                    Files.delete(tempFile);
+            try (domainLock) {
+                Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
+                Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
+                Path slopFile = CrawlerOutputFile.createSlopPath(outputDir, id, domain);
+
+                // Move the WARC file to a temp file if it exists, so we can resume the crawl using the old data
+                // while writing to the same file name as before
+                if (Files.exists(newWarcFile)) {
+                    Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+                else {
+                    Files.deleteIfExists(tempFile);
                 }
 
-                DomainLinks domainLinks = anchorTagsSource.getAnchorTags(domain);
+                try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
+                     var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, domainStateDb, warcRecorder);
+                     CrawlDataReference reference = getReference())
+                {
+                    // Resume the crawl if it was aborted
+                    if (Files.exists(tempFile)) {
+                        retriever.syncAbortedRun(tempFile);
+                        Files.delete(tempFile);
+                    }
 
-                int size;
-                try (var lock = domainLocks.lockDomain(new EdgeDomain(domain))) {
-                    size = retriever.crawlDomain(domainLinks, reference);
+                    DomainLinks domainLinks = anchorTagsSource.getAnchorTags(domain);
+
+                    int size = retriever.crawlDomain(domainLinks, reference);
+
+                    // Delete the reference crawl data if it's not the same as the new one
+                    // (mostly a case when migrating from legacy->warc)
+                    reference.delete();
+
+                    // Convert the WARC file to Parquet
+                    SlopCrawlDataRecord
+                            .convertWarc(domain, userAgent, newWarcFile, slopFile);
+
+                    // Optionally archive the WARC file if full retention is enabled,
+                    // otherwise delete it:
+                    warcArchiver.consumeWarc(newWarcFile, domain);
+
+                    // Mark the domain as finished in the work log
+                    workLog.setJobToFinished(domain, slopFile.toString(), size);
+
+                    // Update the progress bar
+                    heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
+
+                    logger.info("Fetched {}", domain);
+                } catch (Exception e) {
+                    logger.error("Error fetching domain " + domain, e);
                 }
+                finally {
+                    // We don't need to double-count these; it's also kept in the workLog
+                    pendingCrawlTasks.remove(domain);
+                    Thread.currentThread().setName("[idle]");
 
-                // Delete the reference crawl data if it's not the same as the new one
-                // (mostly a case when migrating from legacy->warc)
-                reference.delete();
-
-                // Convert the WARC file to Parquet
-                SlopCrawlDataRecord
-                        .convertWarc(domain, userAgent, newWarcFile, slopFile);
-
-                // Optionally archive the WARC file if full retention is enabled,
-                // otherwise delete it:
-                warcArchiver.consumeWarc(newWarcFile, domain);
-
-                // Mark the domain as finished in the work log
-                workLog.setJobToFinished(domain, slopFile.toString(), size);
-
-                // Update the progress bar
-                heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
-
-                logger.info("Fetched {}", domain);
-            } catch (Exception e) {
-                logger.error("Error fetching domain " + domain, e);
-            }
-            finally {
-                // We don't need to double-count these; it's also kept in the workLog
-                pendingCrawlTasks.remove(domain);
-                Thread.currentThread().setName("[idle]");
-
-                Files.deleteIfExists(newWarcFile);
-                Files.deleteIfExists(tempFile);
+                    Files.deleteIfExists(newWarcFile);
+                    Files.deleteIfExists(tempFile);
+                }
             }
         }
 

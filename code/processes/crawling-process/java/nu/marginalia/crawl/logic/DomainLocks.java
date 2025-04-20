@@ -3,6 +3,7 @@ package nu.marginalia.crawl.logic;
 import nu.marginalia.model.EdgeDomain;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
@@ -19,8 +20,21 @@ public class DomainLocks {
      * and may be held by another thread.  The caller is responsible for locking and  releasing the lock.
      */
     public DomainLock lockDomain(EdgeDomain domain) throws InterruptedException {
-        return new DomainLock(domain.toString(),
+        var ret = new DomainLock(domain.toString(),
                 locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits));
+        ret.lock();
+        return ret;
+    }
+
+    public Optional<DomainLock> tryLockDomain(EdgeDomain domain) {
+        var sem = locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits);
+        if (sem.tryAcquire(1)) {
+            return Optional.of(new DomainLock(domain.toString(), sem));
+        }
+        else {
+            // We don't have a lock, so we return an empty optional
+            return Optional.empty();
+        }
     }
 
     private Semaphore defaultPermits(String topDomain) {
@@ -56,10 +70,13 @@ public class DomainLocks {
         private final String domainName;
         private final Semaphore semaphore;
 
-        DomainLock(String domainName, Semaphore semaphore) throws InterruptedException {
+        DomainLock(String domainName, Semaphore semaphore) {
             this.domainName = domainName;
             this.semaphore = semaphore;
+        }
 
+        // This method is called to lock the domain.  It will block until the lock is available.
+        private void lock() throws InterruptedException {
             Thread.currentThread().setName("crawling:" + domainName + " [await domain lock]");
             semaphore.acquire();
             Thread.currentThread().setName("crawling:" + domainName);
