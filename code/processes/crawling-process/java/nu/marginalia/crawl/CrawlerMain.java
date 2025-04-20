@@ -42,8 +42,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -66,7 +66,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final DomainLocks domainLocks = new DomainLocks();
 
     private final Map<String, CrawlTask> pendingCrawlTasks = new ConcurrentHashMap<>();
-    private final LinkedBlockingQueue<CrawlTask> retryQueue = new LinkedBlockingQueue<>();
+    private final ArrayBlockingQueue<CrawlTask> retryQueue = new ArrayBlockingQueue<>(64);
 
     private final AtomicInteger tasksDone = new AtomicInteger(0);
     private final HttpFetcherImpl fetcher;
@@ -445,6 +445,8 @@ public class CrawlerMain extends ProcessMainClass {
             // We don't have a lock, so we can't run this task
             // we return to avoid blocking the pool for too long
             if (lock.isEmpty()) {
+                // Sleep a moment to avoid busy looping via the retry queue
+                Thread.sleep(10);
                 retryQueue.add(this);
                 return;
             }
