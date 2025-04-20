@@ -445,9 +445,13 @@ public class CrawlerMain extends ProcessMainClass {
             // We don't have a lock, so we can't run this task
             // we return to avoid blocking the pool for too long
             if (lock.isEmpty()) {
-                // Sleep a moment to avoid busy looping via the retry queue
-                Thread.sleep(10);
-                retryQueue.add(this);
+                if (retryQueue.remainingCapacity() > 0) {
+                    // Sleep a moment to avoid busy looping via the retry queue
+                    // in the case when few tasks remain
+                    Thread.sleep(10);
+                }
+
+                retryQueue.put(this);
                 return;
             }
             DomainLocks.DomainLock domainLock = lock.get();
