@@ -20,16 +20,17 @@ public class DomainLocks {
      * and may be held by another thread.  The caller is responsible for locking and  releasing the lock.
      */
     public DomainLock lockDomain(EdgeDomain domain) throws InterruptedException {
-        var ret = new DomainLock(domain.toString(),
-                locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits));
-        ret.lock();
-        return ret;
+        var sem = locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits);
+
+        sem.acquire();
+
+        return new DomainLock(sem);
     }
 
     public Optional<DomainLock> tryLockDomain(EdgeDomain domain) {
         var sem = locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits);
         if (sem.tryAcquire(1)) {
-            return Optional.of(new DomainLock(domain.toString(), sem));
+            return Optional.of(new DomainLock(sem));
         }
         else {
             // We don't have a lock, so we return an empty optional
@@ -58,7 +59,11 @@ public class DomainLocks {
         return new Semaphore(2);
     }
 
-    public boolean canLock(EdgeDomain domain) {
+    /** Returns true if the domain is lockable, i.e. if it is not already locked by another thread.
+     * (this is just a hint, and does not guarantee that the domain is actually lockable any time
+     * after this method returns true)
+     */
+    public boolean isLockableHint(EdgeDomain domain) {
         Semaphore sem = locks.get(domain.topDomain.toLowerCase());
         if (null == sem)
             return true;
@@ -67,25 +72,16 @@ public class DomainLocks {
     }
 
     public static class DomainLock implements AutoCloseable {
-        private final String domainName;
         private final Semaphore semaphore;
 
-        DomainLock(String domainName, Semaphore semaphore) {
-            this.domainName = domainName;
+        DomainLock(Semaphore semaphore) {
             this.semaphore = semaphore;
-        }
-
-        // This method is called to lock the domain.  It will block until the lock is available.
-        private void lock() throws InterruptedException {
-            Thread.currentThread().setName("crawling:" + domainName + " [await domain lock]");
-            semaphore.acquire();
-            Thread.currentThread().setName("crawling:" + domainName);
         }
 
         @Override
         public void close() throws Exception {
             semaphore.release();
-            Thread.currentThread().setName("crawling:" + domainName + " [wrapping up]");
+            Thread.currentThread().setName("[idle]");
         }
     }
 }

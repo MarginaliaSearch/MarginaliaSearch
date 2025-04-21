@@ -66,6 +66,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final DomainLocks domainLocks = new DomainLocks();
 
     private final Map<String, CrawlTask> pendingCrawlTasks = new ConcurrentHashMap<>();
+
     private final LinkedBlockingQueue<CrawlTask> retryQueue = new LinkedBlockingQueue<>();
 
     private final AtomicInteger tasksDone = new AtomicInteger(0);
@@ -433,7 +434,7 @@ public class CrawlerMain extends ProcessMainClass {
         /** Best effort indicator whether we could start this now without getting stuck in
          * DomainLocks purgatory */
         public boolean canRun() {
-            return domainLocks.canLock(new EdgeDomain(domain));
+            return domainLocks.isLockableHint(new EdgeDomain(domain));
         }
 
         @Override
@@ -456,12 +457,13 @@ public class CrawlerMain extends ProcessMainClass {
                 }
 
                 retryQueue.put(this);
-                Thread.currentThread().setName("[idle]");
                 return;
             }
             DomainLocks.DomainLock domainLock = lock.get();
 
             try (domainLock) {
+                Thread.currentThread().setName("crawling:" + domain);
+
                 Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
                 Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
                 Path slopFile = CrawlerOutputFile.createSlopPath(outputDir, id, domain);
