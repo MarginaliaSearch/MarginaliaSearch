@@ -42,8 +42,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -66,7 +66,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final DomainLocks domainLocks = new DomainLocks();
 
     private final Map<String, CrawlTask> pendingCrawlTasks = new ConcurrentHashMap<>();
-    private final ArrayBlockingQueue<CrawlTask> retryQueue = new ArrayBlockingQueue<>(64);
+    private final LinkedBlockingQueue<CrawlTask> retryQueue = new LinkedBlockingQueue<>();
 
     private final AtomicInteger tasksDone = new AtomicInteger(0);
     private final HttpFetcherImpl fetcher;
@@ -289,10 +289,13 @@ public class CrawlerMain extends ProcessMainClass {
 
                 if (hasTasks || hasRetryTasks || hasRunningTasks) {
                     retryQueue.drainTo(taskList);
+
+                    // Try to submit any tasks that are in the retry queue (this will block if the pool is full)
                     taskList.removeIf(this::trySubmitDeferredTask);
+
                     // Add a small pause here to avoid busy looping toward the end of the execution cycle when
                     // we might have no new viable tasks to run for hours on end
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    TimeUnit.MILLISECONDS.sleep(5);
                 } else {
                     // We have no tasks to run, and no tasks in the retry queue
                     // but we wait a bit to see if any new tasks come in via the retry queue
@@ -447,11 +450,13 @@ public class CrawlerMain extends ProcessMainClass {
             if (lock.isEmpty()) {
                 if (retryQueue.remainingCapacity() > 0) {
                     // Sleep a moment to avoid busy looping via the retry queue
-                    // in the case when few tasks remain
-                    Thread.sleep(10);
+                    // in the case when few tasks remain and almost all are ineligible for
+                    // immediate restart
+                    Thread.sleep(5);
                 }
 
                 retryQueue.put(this);
+                Thread.currentThread().setName("[idle]");
                 return;
             }
             DomainLocks.DomainLock domainLock = lock.get();
