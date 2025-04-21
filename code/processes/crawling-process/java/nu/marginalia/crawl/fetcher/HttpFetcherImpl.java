@@ -53,6 +53,7 @@ import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -393,25 +394,31 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             if (probeType == HttpFetcher.ProbeType.FULL) {
                 try {
                     var probeResult = probeContentType(url, cookies, timer, contentTags);
-                    logger.info(crawlerAuditMarker, "Probe result {} for {}", probeResult.getClass().getSimpleName(), url);
+
                     switch (probeResult) {
                         case HttpFetcher.ContentTypeProbeResult.NoOp():
                             break; //
                         case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
+                            logger.info(crawlerAuditMarker, "Probe result OK for {}", url);
                             url = resolvedUrl; // If we were redirected while probing, use the final URL for fetching
                             break;
                         case ContentTypeProbeResult.BadContentType badContentType:
                             warcRecorder.flagAsFailedContentTypeProbe(url, badContentType.contentType(), badContentType.statusCode());
+                            logger.info(crawlerAuditMarker, "Probe result Bad ContenType ({}) for {}", badContentType.contentType(), url);
                             return new HttpFetchResult.ResultNone();
                         case ContentTypeProbeResult.BadContentType.Timeout(Exception ex):
+                            logger.info(crawlerAuditMarker, "Probe result Timeout for {}", url);
                             warcRecorder.flagAsTimeout(url);
                             return new HttpFetchResult.ResultException(ex);
                         case ContentTypeProbeResult.Exception(Exception ex):
+                            logger.info(crawlerAuditMarker, "Probe result Exception({}) for {}", ex.getClass().getSimpleName(), url);
                             warcRecorder.flagAsError(url, ex);
                             return new HttpFetchResult.ResultException(ex);
                         case ContentTypeProbeResult.HttpError httpError:
+                            logger.info(crawlerAuditMarker, "Probe result HTTP Error ({}) for {}", httpError.statusCode(), url);
                             return new HttpFetchResult.ResultException(new HttpException("HTTP status code " + httpError.statusCode() + ": " + httpError.message()));
                         case ContentTypeProbeResult.Redirect redirect:
+                            logger.info(crawlerAuditMarker, "Probe result redirect for {} -> {}", url, redirect.location());
                             return new HttpFetchResult.ResultRedirect(redirect.location());
                     }
                 } catch (Exception ex) {
@@ -430,27 +437,32 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             contentTags.paint(request);
 
             try (var sl = new SendLock()) {
+                Instant start = Instant.now();
                 HttpFetchResult result = warcRecorder.fetch(client, cookies, request);
+
+                Duration fetchDuration = Duration.between(start, Instant.now());
 
                 if (result instanceof HttpFetchResult.ResultOk ok) {
                     if (ok.statusCode() == 304) {
-                        return new HttpFetchResult.Result304Raw();
+                        result = new HttpFetchResult.Result304Raw();
                     }
                 }
 
                 switch (result) {
-                    case HttpFetchResult.ResultOk ok -> logger.info(crawlerAuditMarker, "Fetch result OK {} for {}", ok.statusCode(), url);
+                    case HttpFetchResult.ResultOk ok -> logger.info(crawlerAuditMarker, "Fetch result OK {} for {} ({} ms)", ok.statusCode(), url, fetchDuration.toMillis());
                     case HttpFetchResult.ResultRedirect redirect -> logger.info(crawlerAuditMarker, "Fetch result redirect: {}  for {}", redirect.url(), url);
-                    case HttpFetchResult.ResultNone none -> logger.info(crawlerAuditMarker, "Fetch result none  for {}", url);
-                    case HttpFetchResult.ResultException ex -> logger.error(crawlerAuditMarker, "Fetch result exception for " + url + ": {}", ex.ex());
+                    case HttpFetchResult.ResultNone none -> logger.info(crawlerAuditMarker, "Fetch result none for {}", url);
+                    case HttpFetchResult.ResultException ex -> logger.error(crawlerAuditMarker, "Fetch result exception for {}", url, ex.ex());
                     case HttpFetchResult.Result304Raw raw -> logger.info(crawlerAuditMarker, "Fetch result: 304 Raw for {}", url);
                     case HttpFetchResult.Result304ReplacedWithReference ref -> logger.info(crawlerAuditMarker, "Fetch result: 304 With reference for {}", url);
                 }
+
                 return result;
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error(crawlerAuditMarker, "Fetch result exception for {}", url, ex);
+
             return new HttpFetchResult.ResultException(ex);
         }
 
