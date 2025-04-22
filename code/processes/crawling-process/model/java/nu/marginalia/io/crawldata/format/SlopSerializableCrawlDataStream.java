@@ -37,7 +37,11 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
             public boolean filter(String url, int status, String contentType) {
                 String ctLc = contentType.toLowerCase();
 
+                // Permit all plain text content types
                 if (ctLc.startsWith("text/"))
+                    return true;
+                // PDF
+                else if (ctLc.startsWith("application/pdf"))
                     return true;
                 else if (ctLc.startsWith("x-marginalia/"))
                     return true;

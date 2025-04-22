@@ -40,6 +40,8 @@ class HttpFetcherImplFetchTest {
     private static EdgeUrl badHttpStatusUrl;
     private static EdgeUrl keepAliveUrl;
 
+    private static EdgeUrl pdfUrl;
+
     @BeforeAll
     public static void setupAll() throws URISyntaxException {
         wireMockServer =
@@ -132,6 +134,13 @@ class HttpFetcherImplFetchTest {
                         .withBody("Hello")
                         ));
 
+
+        pdfUrl = new EdgeUrl("http://localhost:18089/test.pdf");
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(pdfUrl.path))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "application/pdf")
+                        .withStatus(200)
+                        .withBody("Hello World")));
 
         wireMockServer.start();
 
@@ -347,6 +356,14 @@ class HttpFetcherImplFetchTest {
     public void testKeepaliveUrl() {
         // mostly for smoke testing and debugger utility
         var result = fetcher.fetchContent(keepAliveUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+
+        Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
+        Assertions.assertTrue(result.isOk());
+    }
+
+    @Test
+    public void testPdf() {
+        var result = fetcher.fetchContent(pdfUrl, warcRecorder, new DomainCookies(), new CrawlDelayTimer(1000), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
 
         Assertions.assertInstanceOf(HttpFetchResult.ResultOk.class, result);
         Assertions.assertTrue(result.isOk());

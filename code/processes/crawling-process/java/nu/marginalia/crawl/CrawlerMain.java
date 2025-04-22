@@ -495,7 +495,7 @@ public class CrawlerMain extends ProcessMainClass {
                     // (mostly a case when migrating from legacy->warc)
                     reference.delete();
 
-                    // Convert the WARC file to Parquet
+                    // Convert the WARC file to Slop
                     SlopCrawlDataRecord
                             .convertWarc(domain, userAgent, newWarcFile, slopFile);
 

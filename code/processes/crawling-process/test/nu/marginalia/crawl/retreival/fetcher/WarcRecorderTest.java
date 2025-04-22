@@ -4,9 +4,9 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.crawl.fetcher.ContentTags;
 import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
+import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileReader;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
+import nu.marginalia.slop.SlopCrawlDataRecord;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -24,13 +24,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class WarcRecorderTest {
     Path fileNameWarc;
-    Path fileNameParquet;
+    Path fileNameSlop;
     WarcRecorder client;
 
     HttpClient httpClient;
@@ -39,7 +40,7 @@ class WarcRecorderTest {
         httpClient = HttpClients.createDefault();
 
         fileNameWarc = Files.createTempFile("test", ".warc");
-        fileNameParquet = Files.createTempFile("test", ".parquet");
+        fileNameSlop = Files.createTempFile("test", ".slop.zip");
 
         client = new WarcRecorder(fileNameWarc);
     }
@@ -159,17 +160,28 @@ class WarcRecorderTest {
 
         client.fetch(httpClient, new DomainCookies(), request3);
 
-        CrawledDocumentParquetRecordFileWriter.convertWarc(
+        HttpGet request4 = new HttpGet("https://downloads.marginalia.nu/test.pdf");
+        request4.addHeader("User-agent", "test.marginalia.nu");
+        request4.addHeader("Accept-Encoding", "gzip");
+
+        client.fetch(httpClient, new DomainCookies(), request4);
+
+        SlopCrawlDataRecord.convertWarc(
                 "www.marginalia.nu",
                 new UserAgent("test", "test"),
                 fileNameWarc,
-                fileNameParquet);
+                fileNameSlop);
 
-        var urls = CrawledDocumentParquetRecordFileReader.stream(fileNameParquet).map(doc -> doc.url).toList();
-        assertEquals(2, urls.size());
+        List<String> urls;
+        try (var stream = SerializableCrawlDataStream.openDataStream(fileNameSlop)) {
+            urls = stream.docsAsList().stream().map(doc -> doc.url.toString()).toList();
+        }
+
+        assertEquals(3, urls.size());
         assertEquals("https://www.marginalia.nu/", urls.get(0));
         assertEquals("https://www.marginalia.nu/log/", urls.get(1));
         // sanic.jpg gets filtered out for its bad mime type
+        assertEquals("https://downloads.marginalia.nu/test.pdf", urls.get(2));
 
     }
 
