@@ -216,6 +216,11 @@ public record SlopCrawlDataRecord(String domain,
             return false;
         }
 
+        // If the format is binary, we don't want to translate it if the response is truncated
+        if (response.truncated() != WarcTruncationReason.NOT_TRUNCATED && ContentTypes.isBinary(contentType)) {
+            return false;
+        }
+
         return true;
     }
 

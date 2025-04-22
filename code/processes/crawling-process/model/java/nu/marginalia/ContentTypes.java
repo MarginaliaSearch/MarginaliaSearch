@@ -6,6 +6,7 @@ public class ContentTypes {
     public static final Set<String> acceptedContentTypes = Set.of("application/xhtml+xml",
             "application/xhtml",
             "text/html",
+            "application/pdf",
             "image/x-icon",
             "text/plain");
 
@@ -17,6 +18,11 @@ public class ContentTypes {
             }
         }
         return false;
+    }
+
+    public static boolean isBinary(String contentTypeHeader) {
+        String lcHeader = contentTypeHeader.toLowerCase();
+        return lcHeader.startsWith("application/pdf");
     }
 
 }

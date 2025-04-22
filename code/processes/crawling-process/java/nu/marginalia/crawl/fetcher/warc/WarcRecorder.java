@@ -41,7 +41,7 @@ public class WarcRecorder implements AutoCloseable {
     static final int MAX_TIME = 30_000;
 
     /** Maximum (decompressed) size we'll save */
-    static final int MAX_SIZE = Integer.getInteger("crawler.maxFetchSize", 10 * 1024 * 1024);
+    static final int MAX_SIZE = Integer.getInteger("crawler.maxFetchSize", 32 * 1024 * 1024);
 
     private final WarcWriter writer;
     private final Path warcFile;
