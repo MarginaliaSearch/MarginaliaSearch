@@ -24,25 +24,25 @@ This is a sample of real crawl data.  It is intended for demo, testing and devel
     <tr>
         <td><input id="sample-s" value="sample-s" name="sample" class="form-check-input" type="radio"></td>
         <td><label for="sample-s">Small</label></td>
-        <td>1000 Domains. About 2 GB. </td>
+        <td>1000 Domains. About 1 GB. </td>
     </tr>
 
     <tr>
         <td><input id="sample-m" value="sample-m" name="sample" class="form-check-input" type="radio"></td>
         <td><label for="sample-m">Medium</label></td>
-        <td>2000 Domains. About 6 GB. Recommended.</td>
+        <td>2000 Domains. About 2 GB. Recommended.</td>
     </tr>
 
     <tr>
         <td><input id="sample-l" value="sample-l" name="sample" class="form-check-input" type="radio"></td>
         <td><label for="sample-l">Large</label></td>
-        <td>5000 Domains.  About 20 GB.</td>
+        <td>5000 Domains.  About 7 GB.</td>
     </tr>
 
     <tr>
         <td><input id="sample-xl" value="sample-xl" name="sample" class="form-check-input" type="radio"></td>
         <td><label for="sample-xl">Huge</label></td>
-        <td>50,000 Domains.  Around 180 GB.  Primarily intended for pre-production like testing environments.
+        <td>50,000 Domains.  Around 80 GB.  Primarily intended for pre-production like testing environments.
             Expect hours of processing time. </td>
     </tr>
 </table>
