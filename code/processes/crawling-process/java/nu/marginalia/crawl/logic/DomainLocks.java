@@ -43,16 +43,16 @@ public class DomainLocks {
             return new Semaphore(16);
         if (topDomain.equals("blogspot.com"))
             return new Semaphore(8);
-
+        if (topDomain.equals("tumblr.com"))
+            return new Semaphore(8);
         if (topDomain.equals("neocities.org"))
-            return new Semaphore(4);
+            return new Semaphore(8);
         if (topDomain.equals("github.io"))
-            return new Semaphore(4);
+            return new Semaphore(8);
 
+        // Substack really dislikes broad-scale crawlers, so we need to be careful
+        // to not get blocked.
         if (topDomain.equals("substack.com")) {
-            return new Semaphore(1);
-        }
-        if (topDomain.endsWith(".edu")) {
             return new Semaphore(1);
         }
 
