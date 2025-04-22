@@ -13,7 +13,7 @@
                    class="shadow-inner flex-1 dark:bg-black dark:text-gray-100 bg-gray-50 border dark:border-gray-600 border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"
                    value="${query}"
                    autofocus
-                   placeholder="Search..."
+                   placeholder="Search the web!"
                    autocomplete="off"
                    name="query"
                    id="searchInput" />
@@ -21,7 +21,7 @@
             <input type="text"
                    class="shadow-inner flex-1 dark:bg-black dark:text-gray-100 bg-gray-50 border dark:border-gray-600 border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"
                    value="${query}"
-                   placeholder="Search..."
+                   placeholder="Search the web!"
                    autocomplete="off"
                    name="query"
                    id="searchInput" />
