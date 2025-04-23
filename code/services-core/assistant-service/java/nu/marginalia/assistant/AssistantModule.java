@@ -10,7 +10,7 @@ import static com.google.inject.name.Names.named;
 
 public class AssistantModule extends AbstractModule {
     public void configure() {
-        bind(Path.class).annotatedWith(named("suggestions-file")).toInstance(WmsaHome.getHomePath().resolve("data/suggestions.txt"));
+        bind(Path.class).annotatedWith(named("suggestions-file")).toInstance(WmsaHome.getHomePath().resolve("data/suggestions2.txt.gz"));
 
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
     }
