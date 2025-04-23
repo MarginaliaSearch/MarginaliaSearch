@@ -44,7 +44,7 @@ function displaySuggestions(suggestions) {
 
     suggestionsContainer.innerHTML = suggestions.map((suggestion, index) => `
                 <div 
-                    class="suggestion px-4 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedIndex ? 'bg-blue-50' : ''}"
+                    class="suggestion px-4 py-2 cursor-pointer hover:bg-gray-300 ${index === selectedIndex ? 'bg-blue-50' : ''}"
                     data-index="${index}"
                 >
                     ${suggestion}

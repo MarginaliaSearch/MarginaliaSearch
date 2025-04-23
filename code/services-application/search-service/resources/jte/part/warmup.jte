@@ -7,3 +7,4 @@ as we sometimes generate classes from Java code!
 <i class="text-green-800 bg-green-50 dark:text-green-200 dark:bg-green-950"></i>
 <i class="text-purple-800 bg-purple-50 dark:text-purple-200 dark:bg-purple-950"></i>
 <i class="text-blue-950 bg-gray-100 dark:text-blue-50 dark:bg-gray-900"></i>
+<span class="hover:bg-gray-300 "></span>
