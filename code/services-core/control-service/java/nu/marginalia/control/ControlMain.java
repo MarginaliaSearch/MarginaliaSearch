@@ -59,9 +59,9 @@ public class ControlMain extends MainClass {
             download(adblockFile, new URI("https://downloads.marginalia.nu/data/adblock.txt"));
         }
 
-        Path suggestionsFile = dataPath.resolve("suggestions.txt");
+        Path suggestionsFile = dataPath.resolve("suggestions2.txt.gz");
         if (!Files.exists(suggestionsFile)) {
-            downloadGzipped(suggestionsFile, new URI("https://downloads.marginalia.nu/data/suggestions.txt.gz"));
+            download(suggestionsFile, new URI("https://downloads.marginalia.nu/data/suggestions2.txt.gz"));
         }
 
         Path asnRawData = dataPath.resolve("asn-data-raw-table");
