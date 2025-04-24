@@ -1,6 +1,7 @@
 package nu.marginalia.assistant.suggest;
 
 import gnu.trove.list.array.TIntArrayList;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -434,7 +435,7 @@ public class PrefixSearchStructure {
     /**
      * Class representing a suggested completion.
      */
-    public static class ScoredSuggestion {
+    public static class ScoredSuggestion implements Comparable<ScoredSuggestion> {
         private final String word;
         private final int score;
 
@@ -454,6 +455,11 @@ public class PrefixSearchStructure {
         @Override
         public String toString() {
             return word + " (" + score + ")";
+        }
+
+        @Override
+        public int compareTo(@NotNull PrefixSearchStructure.ScoredSuggestion o) {
+            return Integer.compare(this.score, o.score);
         }
     }
 }

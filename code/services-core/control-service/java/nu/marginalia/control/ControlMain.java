@@ -64,6 +64,11 @@ public class ControlMain extends MainClass {
             download(suggestionsFile, new URI("https://downloads.marginalia.nu/data/suggestions2.txt.gz"));
         }
 
+        Path altSuggestionsFile = dataPath.resolve("suggestions3.txt.gz");
+        if (!Files.exists(altSuggestionsFile)) {
+            download(altSuggestionsFile, new URI("https://downloads.marginalia.nu/data/suggestions3.txt.gz"));
+        }
+
         Path asnRawData = dataPath.resolve("asn-data-raw-table");
         if (!Files.exists(asnRawData)) {
             download(asnRawData, new URI("https://thyme.apnic.net/current/data-raw-table"));
