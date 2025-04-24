@@ -43,13 +43,13 @@ function displaySuggestions(suggestions) {
     }
 
     suggestionsContainer.innerHTML = suggestions.map((suggestion, index) => `
-                <div 
-                    class="suggestion px-4 py-2 cursor-pointer hover:bg-gray-300 ${index === selectedIndex ? 'bg-blue-50' : ''}"
-                    data-index="${index}"
-                >
-                    ${suggestion}
-                </div>
-            `).join('');
+        <label class="suggestion group block relative">
+            <input type="radio" name="suggestion" class="peer hidden" ${index === selectedIndex ? 'checked' : ''}>
+            <div class="px-4 py-2 cursor-pointer dark:peer-checked:bg-gray-700 dark:hover:bg-gray-700 peer-checked:bg-gray-300 hover:bg-gray-300 w-full" data-index="${index}">
+                ${suggestion}
+            </div>
+        </label>
+    `).join('');
 
     suggestionsContainer.classList.remove('hidden');
 

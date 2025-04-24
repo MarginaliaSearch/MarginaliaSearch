@@ -27,7 +27,7 @@
                    id="searchInput" />
         @endif
 
-        <div id="searchSuggestions" class="text-sm absolute top-2 mt-10 w-96 bg-white dark:bg-black border dark:border-gray-600 border-gray-200 rounded-lg shadow-lg hidden"></div>
+        <div aria-hidden="true" id="searchSuggestions" class="text-sm absolute top-3 mt-10 w-96 bg-white dark:bg-black border dark:border-gray-600 border-gray-300 rounded-lg shadow-lg hidden"></div>
 
         <button class="px-4 py-2 bg-margeblue text-white ml-2 rounded whitespace-nowrap active:text-slate-200">
             <i class="fas fa-search text-sm sm:mr-3"></i>
