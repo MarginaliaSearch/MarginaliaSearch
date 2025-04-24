@@ -68,6 +68,12 @@ public class Suggestions {
                     // Remove junk items we may have gotten from link extraction
                     if (word.startsWith("click here"))
                         continue;
+                    if (word.contains("new window"))
+                        continue;
+                    if (word.contains("click to"))
+                        continue;
+                    if (word.startsWith("share "))
+                        continue;
 
                     if (word.length() > 3) {
                         ret.insert(word, cnt);
