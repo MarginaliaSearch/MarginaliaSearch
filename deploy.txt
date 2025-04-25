@@ -1,5 +1,6 @@
-## This is a token file for automatic deployment
+## This is a token file for triggering automatic deployment when no commit is made.
 
 2025-01-08:  Deploy executor.
 2025-01-07:  Deploy executor.
 2025-04-24:  Deploy executor.
+2025-04-24:  Deploy assistant.
