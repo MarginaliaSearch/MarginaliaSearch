@@ -19,11 +19,13 @@ public record ContentTags(String etag, String lastMod) {
     /** Paints the tags onto the request builder. */
     public void paint(HttpGet request) {
 
+        // Paint the ETag header if present,
+        // otherwise paint the Last-Modified header
+        // (but not both at the same time due to some servers not liking it)
+
         if (etag != null) {
             request.addHeader("If-None-Match", etag);
-        }
-
-        if (lastMod != null) {
+        } else if (lastMod != null) {
             request.addHeader("If-Modified-Since", lastMod);
         }
     }

@@ -229,13 +229,15 @@ public class FeedFetcherService {
                     .timeout(Duration.ofSeconds(15))
                     ;
 
-            if (ifModifiedSinceDate != null) {
+            // Set the If-Modified-Since or If-None-Match headers if we have them
+            // though since there are certain idiosyncrasies in server implementations,
+            // we avoid setting both at the same time as that may turn a 304 into a 200.
+            if (ifNoneMatchTag != null) {
+                requestBuilder.header("If-None-Match", ifNoneMatchTag);
+            } else if (ifModifiedSinceDate != null) {
                 requestBuilder.header("If-Modified-Since", ifModifiedSinceDate);
             }
 
-            if (ifNoneMatchTag != null) {
-                requestBuilder.header("If-None-Match", ifNoneMatchTag);
-            }
 
             HttpRequest getRequest = requestBuilder.build();
 
