@@ -27,3 +27,9 @@
     <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
 
 </head>
+<noscript>
+    <h1>Users of text-based browsers</h1>
+    <p>Consider using the old interface at <a href="https://old-search.marginalia.nu/">https://old-search.marginalia.nu/</a>,
+    as it uses fewer modern CSS tricks, and should work better than the new UI.  It's functionally nearly identical, but just renders it using a different layout.</p>
+    <hr>
+</noscript>
