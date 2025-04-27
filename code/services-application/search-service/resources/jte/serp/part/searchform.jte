@@ -7,7 +7,7 @@
 
 <form class="flex-1 max-w-2xl" action="/search">
     <div class="flex">
-        @if (query.isBlank())
+        @if (query != null && query.isBlank())
         <%-- Add autofocus if the query is blank --%>
             <input type="text"
                    class="shadow-inner flex-1 dark:bg-black dark:text-gray-100 bg-gray-50 border dark:border-gray-600 border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"

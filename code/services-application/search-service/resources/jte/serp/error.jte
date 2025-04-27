@@ -26,7 +26,7 @@
 
     <!-- Main content -->
     <main class="flex-1 p-4 max-w-2xl space-y-4">
-        <div class="border dark:border-gray-600 rounded bg-white text-black dark:bg-gray-800 dark:text-white text-m p-4">
+        <div class="border border-gray-300 dark:border-gray-600 rounded bg-white text-black dark:bg-gray-800 dark:text-white text-m p-4">
             <div class="flex space-x-3  place-items-baseline">
                 <i class="fa fa-circle-exclamation text-red-800"></i>
                 <div class="grow">${model.errorTitle()}</div>
