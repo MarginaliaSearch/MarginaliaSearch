@@ -80,10 +80,6 @@
             <tr><td>rank&gt;50</td><td>The ranking of the website is at least 50 in a span of 1 - 255</td></tr>
             <tr><td>rank&lt;50</td><td>The ranking of the website is at most 50 in a span of 1 - 255</td></tr>
 
-            <tr><td>count&gt;10</td><td> The search term must appear in at least 10 results form the domain</td></tr>
-            <tr><td>count&lt;10</td><td> The search term must appear in at most 10 results from the domain</td></tr>
-
-
             <tr><td>format:html5</td><td>Filter documents using the HTML5 standard. This is typically modern websites.</td></tr>
             <tr><td>format:xhtml</td><td>Filter documents using the XHTML standard</td></tr>
             <tr><td>format:html123</td><td>Filter documents using the HTML standards 1, 2, and 3. This is typically very old websites. </td></tr>
