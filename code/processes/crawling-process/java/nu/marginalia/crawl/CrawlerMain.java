@@ -264,17 +264,16 @@ public class CrawlerMain extends ProcessMainClass {
                 if (workLog.isJobFinished(crawlSpec.domain))
                     continue;
 
-                var task = new CrawlTask(
-                        crawlSpec,
-                        anchorTagsSource,
-                        outputDir,
-                        warcArchiver,
-                        domainStateDb,
-                        workLog);
+                var task = new CrawlTask(crawlSpec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog);
 
                 // Try to run immediately, to avoid unnecessarily keeping the entire work set in RAM
                 if (!trySubmitDeferredTask(task)) {
-                    // Otherwise add to the taskList for deferred execution
+
+                    // Drain the retry queue to the taskList, and try to submit any tasks that are in the retry queue
+                    retryQueue.drainTo(taskList);
+                    taskList.removeIf(this::trySubmitDeferredTask);
+
+                    // Then add this new task to the retry queue
                     taskList.add(task);
                 }
             }
