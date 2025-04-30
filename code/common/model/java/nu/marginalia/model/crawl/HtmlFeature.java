@@ -26,6 +26,9 @@ public enum HtmlFeature {
     ADVERTISEMENT("special:ads"),
     CATEGORY_CRAFTS("category:crafts"),
 
+    CATEGORY_NSFW("special:nsfw"),
+    CATEGORY_SPAM("special:spam"),
+
     GA_SPAM("special:gaspam"),
 
     /** For fingerprinting and ranking */

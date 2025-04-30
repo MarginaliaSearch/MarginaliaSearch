@@ -5,9 +5,8 @@ import com.google.inject.Singleton;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.classifier.adblock.AdblockSimulator;
 import nu.marginalia.converting.processor.classifier.adblock.GoogleAnwersSpamDetector;
+import nu.marginalia.converting.processor.classifier.topic.EscortSpamDetector;
 import nu.marginalia.converting.processor.classifier.topic.RecipeDetector;
-import nu.marginalia.converting.processor.classifier.topic.TextileCraftDetector;
-import nu.marginalia.converting.processor.classifier.topic.WoodworkingDetector;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -67,21 +66,19 @@ public class FeatureExtractor {
 
     private final AdblockSimulator adblockSimulator;
     private final RecipeDetector recipeDetector;
-    private final TextileCraftDetector textileCraftDetector;
-    private final WoodworkingDetector woodworkingDetector;
+    private final EscortSpamDetector escortSpamDetector;
     private final GoogleAnwersSpamDetector googleAnwersSpamDetector;
 
     @Inject
     public FeatureExtractor(AdblockSimulator adblockSimulator,
                             RecipeDetector recipeDetector,
-                            TextileCraftDetector textileCraftDetector,
-                            WoodworkingDetector woodworkingDetector,
+                            EscortSpamDetector escortSpamDetector,
                             GoogleAnwersSpamDetector googleAnwersSpamDetector)
     {
         this.adblockSimulator = adblockSimulator;
         this.recipeDetector = recipeDetector;
-        this.textileCraftDetector = textileCraftDetector;
-        this.woodworkingDetector = woodworkingDetector;
+        this.escortSpamDetector = escortSpamDetector;
+
         this.googleAnwersSpamDetector = googleAnwersSpamDetector;
     }
 
@@ -343,9 +340,11 @@ public class FeatureExtractor {
 
         if (recipeDetector.testP(dld) > 0.5)
             features.add(HtmlFeature.CATEGORY_FOOD);
-        // these should be mutually exclusive
-        else if (woodworkingDetector.testP(dld) > 0.3 || textileCraftDetector.testP(dld) > 0.3)
-            features.add(HtmlFeature.CATEGORY_CRAFTS);
+
+        if (escortSpamDetector.test(dld, url)) {
+            features.add(HtmlFeature.CATEGORY_SPAM);
+            features.add(HtmlFeature.CATEGORY_NSFW);
+        }
 
         return features;
     }
