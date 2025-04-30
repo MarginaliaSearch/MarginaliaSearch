@@ -30,7 +30,7 @@ public class EscortSpamDetector {
     private static final Logger logger = LoggerFactory.getLogger(EscortSpamDetector.class);
     private static final Marker marker = MarkerFactory.getMarker("FILTER");
 
-    PorterStemmer ps = new PorterStemmer();
+    private final PorterStemmer ps = new PorterStemmer();
 
     @Inject
     public EscortSpamDetector() {
@@ -44,7 +44,7 @@ public class EscortSpamDetector {
         register(sexyValues, "date", 0.1);
         register(sexyValues, "callgirl", 0.5); // Note callgirl will raise escortValues too
 
-        register(escortValues, "escort", 1);
+        register(escortValues, "escort", 0.3);
         register(escortValues, "callgirl", 1);
 
         register(navyValues, "navy", 0.1);
@@ -65,6 +65,7 @@ public class EscortSpamDetector {
 
         addCallgirlPhrase("call", "girl");
         addCallgirlPhrase("escort", "service");
+        addCallgirlPhrase("escort", "agency");
     }
 
     private void register(Map<String, Double> map, String word, double value) {
@@ -110,9 +111,9 @@ public class EscortSpamDetector {
 
         }
 
-        if (count == 0 || escortP <= 0) return false;
+        if (count == 0 || escortP < 1.5) return false;
 
-        boolean is = sexyP > navyP + carP;
+        boolean is = sexyP > navyP + carP + 1.5;
         if (is) {
             logger.info(marker, "Escort spam identified in {}", url);
         }
