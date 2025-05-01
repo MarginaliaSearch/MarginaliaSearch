@@ -57,6 +57,7 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             return new ErrorBuffer();
         }
 
+        Instant start = Instant.now();
         InputStream is = null;
         try {
             is = entity.getContent();
@@ -71,8 +72,25 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             }
         }
         finally {
+            // We're required to consume the stream to avoid leaking connections,
+            // but we also don't want to get stuck on slow or malicious connections
+            // forever, so we set a time limit on this phase and call abort() if it's exceeded.
             try {
-                is.skip(Long.MAX_VALUE);
+                while (is != null) {
+                    // Consume some data
+                    if (is.skip(65536) == 0) {
+                        // Note that skip may return 0 if the stream is empty
+                        // or for other unspecified reasons, so we need to check
+                        // with read() as well to determine if the stream is done
+                        if (is.read() == -1)
+                            is = null;
+                    }
+                    // Check if the time limit has been exceeded
+                    else if (Duration.between(start, Instant.now()).compareTo(timeLimit) > 0) {
+                        request.abort();
+                        is = null;
+                    }
+                }
             }
             catch (IOException e) {
                 // Ignore the exception
