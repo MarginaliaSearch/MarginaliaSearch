@@ -51,6 +51,7 @@ import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
@@ -635,14 +636,12 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     @Override
     public boolean retryRequest(HttpRequest request, IOException exception, int executionCount, HttpContext context) {
-        if (exception instanceof SocketTimeoutException) { // Timeouts are not recoverable
-            return false;
-        }
-        if (exception instanceof SSLException) { // SSL exceptions are unlikely to be recoverable
-            return false;
-        }
-
-        return executionCount <= 3;
+        return switch (exception) {
+            case SocketTimeoutException ste -> false;
+            case SSLException ssle -> false;
+            case UnknownHostException uhe -> false;
+            default -> executionCount <= 3;
+        };
     }
 
     @Override
