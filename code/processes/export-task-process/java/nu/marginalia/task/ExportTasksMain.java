@@ -92,7 +92,7 @@ public class ExportTasksMain extends ProcessMainClass {
                     termFrequencyExporter.export(request.crawlId, request.destId);
                     break;
                 case SAMPLE_DATA:
-                    sampleDataExporter.export(request.crawlId, request.destId, request.size, request.name);
+                    sampleDataExporter.export(request.crawlId, request.destId, request.size, request.ctFilter, request.name);
                     break;
                 case ADJACENCIES:
                     websiteAdjacenciesCalculator.export();

@@ -321,9 +321,10 @@ public class ControlNodeActionsService {
     private Object exportSampleData(Request req, Response rsp) {
         FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
         int size = Integer.parseInt(req.queryParams("size"));
+        String ctFilter = req.queryParams("ctFilter");
         String name = req.queryParams("name");
 
-        exportClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, name);
+        exportClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, ctFilter, name);
 
         return "";
     }

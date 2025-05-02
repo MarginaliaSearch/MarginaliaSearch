@@ -49,6 +49,7 @@ public class ExecutorExportGrpcService
                     new ExportSampleDataActor.Export(
                             FileStorageId.of(request.getFileStorageId()),
                             request.getSize(),
+                            request.getCtFilter(),
                             request.getName()
                     )
             );
