@@ -48,12 +48,13 @@ public class ExecutorExportClient {
         return msgId;
     }
 
-    public void exportSampleData(int node, FileStorageId fid, int size, String name) {
+    public void exportSampleData(int node, FileStorageId fid, int size, String ctFilter, String name) {
         channelPool.call(ExecutorExportApiBlockingStub::exportSampleData)
                 .forNode(node)
                 .run(RpcExportSampleData.newBuilder()
                         .setFileStorageId(fid.id())
                         .setSize(size)
+                        .setCtFilter(ctFilter)
                         .setName(name)
                         .build());
     }

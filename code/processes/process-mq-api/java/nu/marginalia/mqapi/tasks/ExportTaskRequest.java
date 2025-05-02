@@ -16,6 +16,7 @@ public class ExportTaskRequest {
     public FileStorageId destId;
     public int size;
     public String name;
+    public String ctFilter;
 
     public ExportTaskRequest(Task task) {
         this.task = task;
@@ -42,12 +43,13 @@ public class ExportTaskRequest {
         return request;
     }
 
-    public static ExportTaskRequest sampleData(FileStorageId crawlId, FileStorageId destId, int size, String name) {
+    public static ExportTaskRequest sampleData(FileStorageId crawlId, FileStorageId destId, String ctFilter, int size, String name) {
         ExportTaskRequest request = new ExportTaskRequest(Task.SAMPLE_DATA);
         request.crawlId = crawlId;
         request.destId = destId;
         request.size = size;
         request.name = name;
+        request.ctFilter = ctFilter;
         return request;
     }
 

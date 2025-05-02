@@ -26,32 +26,32 @@ public class ExportSampleDataActor extends RecordActorPrototype {
     private final MqOutbox exportTasksOutbox;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public record Export(FileStorageId crawlId, int size, String name) implements ActorStep {}
-    public record Run(FileStorageId crawlId, FileStorageId destId, int size, String name, long msgId) implements ActorStep {
-        public Run(FileStorageId crawlId, FileStorageId destId, int size, String name) {
-            this(crawlId, destId, size, name, -1);
+    public record Export(FileStorageId crawlId, int size, String ctFilter, String name) implements ActorStep {}
+    public record Run(FileStorageId crawlId, FileStorageId destId, int size, String ctFilter, String name, long msgId) implements ActorStep {
+        public Run(FileStorageId crawlId, FileStorageId destId, int size, String name, String ctFilter) {
+            this(crawlId, destId, size, name, ctFilter,-1);
         }
     }
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
-            case Export(FileStorageId crawlId, int size, String name) -> {
+            case Export(FileStorageId crawlId, int size, String ctFilter, String name) -> {
                 var storage = storageService.allocateStorage(FileStorageType.EXPORT,
                         "crawl-sample-export",
                         "Crawl Data Sample " + name + "/" + size + " " + LocalDateTime.now()
                 );
 
                 if (storage == null) yield new Error("Bad storage id");
-                yield new Run(crawlId, storage.id(), size, name);
+                yield new Run(crawlId, storage.id(), size, ctFilter, name);
             }
-            case Run(FileStorageId crawlId, FileStorageId destId, int size, String name, long msgId) when msgId < 0 -> {
+            case Run(FileStorageId crawlId, FileStorageId destId, int size, String ctFilter, String name, long msgId) when msgId < 0 -> {
                 storageService.setFileStorageState(destId, FileStorageState.NEW);
 
-                long newMsgId = exportTasksOutbox.sendAsync(ExportTaskRequest.sampleData(crawlId, destId, size, name));
-                yield new Run(crawlId, destId, size, name, newMsgId);
+                long newMsgId = exportTasksOutbox.sendAsync(ExportTaskRequest.sampleData(crawlId, destId, ctFilter, size, name));
+                yield new Run(crawlId, destId, size, ctFilter, name, newMsgId);
             }
-            case Run(_, FileStorageId destId, _, _, long msgId) -> {
+            case Run(_, FileStorageId destId, _, _, _, long msgId) -> {
                 var rsp = processWatcher.waitResponse(exportTasksOutbox, ProcessService.ProcessId.EXPORT_TASKS, msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
@@ -70,7 +70,7 @@ public class ExportSampleDataActor extends RecordActorPrototype {
 
     @Override
     public String describe() {
-        return "Export RSS/Atom feeds from crawl data";
+        return "Export sample crawl data";
     }
 
     @Inject

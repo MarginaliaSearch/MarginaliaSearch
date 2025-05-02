@@ -36,6 +36,11 @@
         <small class="text-muted">How many domains to include in the sample set</small>
     </div>
     <div class="mb-3">
+        <label for="ctFilter">Content Type Filter</label>
+        <div><input type="text" name="ctFilter" id="ctFilter" /></div>
+        <small class="text-muted">If set, includes only documents with the specified content type value</small>
+    </div>
+    <div class="mb-3">
         <label for="name">Name</label>
         <div><input type="text" name="name" id="name" /></div>
         <small class="text-muted">A name for the sample set.  This name will show up in the
