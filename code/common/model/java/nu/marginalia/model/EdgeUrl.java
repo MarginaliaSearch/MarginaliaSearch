@@ -1,16 +1,14 @@
 package nu.marginalia.model;
 
 import nu.marginalia.util.QueryParams;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class EdgeUrl implements Serializable {
     public final String proto;
@@ -33,7 +31,7 @@ public class EdgeUrl implements Serializable {
 
     private static URI parseURI(String url) throws URISyntaxException {
         try {
-            return new URI(urlencodeFixer(url));
+            return EdgeUriFactory.uriFromString(url);
         } catch (URISyntaxException ex) {
             throw new URISyntaxException("Failed to parse URI '" + url + "'", ex.getMessage());
         }
@@ -51,58 +49,6 @@ public class EdgeUrl implements Serializable {
         }
     }
 
-    private static Pattern badCharPattern = Pattern.compile("[ \t\n\"<>\\[\\]()',|]");
-
-    /* Java's URI parser is a bit too strict in throwing exceptions when there's an error.
-
-       Here on the Internet, standards are like the picture on the box of the frozen pizza,
-       and what you get is more like what's on the inside, we try to patch things instead,
-       just give it a best-effort attempt att cleaning out broken or unnecessary constructions
-       like bad or missing URLEncoding
-     */
-    public static String urlencodeFixer(String url) throws URISyntaxException {
-        var s = new StringBuilder();
-        String goodChars = "&.?:/-;+$#";
-        String hexChars = "0123456789abcdefABCDEF";
-
-        int pathIdx = findPathIdx(url);
-        if (pathIdx < 0) { // url looks like http://marginalia.nu
-            return url + "/";
-        }
-        s.append(url, 0, pathIdx);
-
-        // We don't want the fragment, and multiple fragments breaks the Java URIParser for some reason
-        int end = url.indexOf("#");
-        if (end < 0) end = url.length();
-
-        for (int i = pathIdx; i < end; i++) {
-            int c = url.charAt(i);
-
-            if (goodChars.indexOf(c) >= 0 || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-                s.appendCodePoint(c);
-            } else if (c == '%' && i + 2 < end) {
-                int cn = url.charAt(i + 1);
-                int cnn = url.charAt(i + 2);
-                if (hexChars.indexOf(cn) >= 0 && hexChars.indexOf(cnn) >= 0) {
-                    s.appendCodePoint(c);
-                } else {
-                    s.append("%25");
-                }
-            } else {
-                s.append(String.format("%%%02X", c));
-            }
-        }
-
-        return s.toString();
-    }
-
-    private static int findPathIdx(String url) throws URISyntaxException {
-        int colonIdx = url.indexOf(':');
-        if (colonIdx < 0 || colonIdx + 2 >= url.length()) {
-            throw new URISyntaxException(url, "Lacking protocol");
-        }
-        return url.indexOf('/', colonIdx + 2);
-    }
 
     public EdgeUrl(URI URI) {
         try {
@@ -245,5 +191,125 @@ public class EdgeUrl implements Serializable {
     public String getProto() {
         return this.proto;
     }
+
+}
+
+/* Java's URI parser is a bit too strict in throwing exceptions when there's an error.
+
+   Here on the Internet, standards are like the picture on the box of the frozen pizza,
+   and what you get is more like what's on the inside, we try to patch things instead,
+   just give it a best-effort attempt att cleaning out broken or unnecessary constructions
+   like bad or missing URLEncoding
+ */
+class EdgeUriFactory {
+    public static URI uriFromString(String url) throws URISyntaxException {
+        var s = new StringBuilder();
+
+        int pathIdx = findPathIdx(url);
+        if (pathIdx < 0) { // url looks like http://marginalia.nu
+            return new URI(url + "/");
+        }
+        s.append(url, 0, pathIdx);
+
+        // We don't want the fragment, and multiple fragments breaks the Java URIParser for some reason
+        int end = url.indexOf("#");
+        if (end < 0) end = url.length();
+
+        int queryIdx = url.indexOf('?');
+        if (queryIdx < 0) queryIdx = end;
+
+        recombinePaths(s, url.substring(pathIdx, queryIdx));
+        if (queryIdx < end) {
+            recombineQueryString(s, url.substring(queryIdx + 1, end));
+        }
+        return new URI(s.toString());
+    }
+
+    private static void recombinePaths(StringBuilder sb, String path) {
+        if (path == null || path.isEmpty()) {
+            return;
+        }
+
+        String[] pathParts = StringUtils.split(path, '/');
+        if (pathParts.length == 0) {
+            sb.append('/');
+            return;
+        }
+
+        for (String pathPart : pathParts) {
+            if (pathPart.isEmpty()) continue;
+
+            if (needsUrlEncode(pathPart)) {
+                sb.append('/');
+                sb.append(URLEncoder.encode(pathPart, StandardCharsets.UTF_8));
+            } else {
+                sb.append('/');
+                sb.append(pathPart);
+            }
+        }
+
+    }
+
+    private static void recombineQueryString(StringBuilder sb, String param) {
+        if (param == null || param.isEmpty()) {
+            return;
+        }
+
+        sb.append('?');
+        String[] pathParts = StringUtils.split(param, '&');
+        boolean first = true;
+        for (String pathPart : pathParts) {
+            if (pathPart.isEmpty()) continue;
+
+            if (first) {
+                first = false;
+            } else {
+                sb.append('&');
+            }
+            if (needsUrlEncode(pathPart)) {
+                sb.append(URLEncoder.encode(pathPart, StandardCharsets.UTF_8));
+            } else {
+                sb.append(pathPart);
+            }
+        }
+    }
+
+
+    /** Test if the url element needs URL encoding.
+     * <p></p>
+     * Note we may have been given an already encoded path element,
+     * so we include % and + in the list of good characters
+     */
+    private static boolean needsUrlEncode(String urlElement) {
+        for (int i = 0; i < urlElement.length(); i++) {
+            char c = urlElement.charAt(i);
+
+            if (c >= 'a' && c <= 'z') continue;
+            if (c >= 'A' && c <= 'Z') continue;
+            if (c >= '0' && c <= '9') continue;
+            if ("-_.~+?=&".indexOf(c) >= 0) continue;
+            if (c == '%' && i + 2 < urlElement.length()) {
+                char c1 = urlElement.charAt(i + 1);
+                char c2 = urlElement.charAt(i + 2);
+                if (c1 >= '0' && c1 <= '9' && c2 >= '0' && c2 <= '9') {
+                    i += 2;
+                    continue;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static int findPathIdx(String url) throws URISyntaxException {
+        int colonIdx = url.indexOf(':');
+        if (colonIdx < 0 || colonIdx + 3 >= url.length()) {
+            throw new URISyntaxException(url, "Lacking protocol");
+        }
+        return url.indexOf('/', colonIdx + 3);
+    }
+
 
 }
