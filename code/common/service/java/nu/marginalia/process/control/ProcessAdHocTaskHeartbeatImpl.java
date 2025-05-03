@@ -59,16 +59,13 @@ public class ProcessAdHocTaskHeartbeatImpl implements AutoCloseable, ProcessAdHo
      */
     @Override
     public void progress(String step, int stepProgress, int stepCount) {
+        int lastProgress = this.progress;
         this.step = step;
-
-
-        // off by one since we calculate the progress based on the number of steps,
-        // and Enum.ordinal() is zero-based (so the 5th step in a 5 step task is 4, not 5; resulting in the
-        // final progress being 80% and not 100%)
-
         this.progress = (int) Math.round(100. * stepProgress / (double) stepCount);
 
-        logger.info("ProcessTask {} progress: {}%", taskBase, progress);
+        if (this.progress / 10 != lastProgress / 10) {
+            logger.info("ProcessTask {} progress: {}%", taskBase, progress);
+        }
     }
 
     /** Wrap a collection to provide heartbeat progress updates as it's iterated through */
