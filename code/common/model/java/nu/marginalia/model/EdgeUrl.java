@@ -291,7 +291,7 @@ class EdgeUriFactory {
             if (c == '%' && i + 2 < urlElement.length()) {
                 char c1 = urlElement.charAt(i + 1);
                 char c2 = urlElement.charAt(i + 2);
-                if (c1 >= '0' && c1 <= '9' && c2 >= '0' && c2 <= '9') {
+                if (isHexDigit(c1) && isHexDigit(c2)) {
                     i += 2;
                     continue;
                 }
@@ -301,6 +301,10 @@ class EdgeUriFactory {
         }
 
         return false;
+    }
+
+    private static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
     private static int findPathIdx(String url) throws URISyntaxException {
