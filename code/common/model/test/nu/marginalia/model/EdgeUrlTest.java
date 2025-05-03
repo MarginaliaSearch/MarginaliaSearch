@@ -24,7 +24,9 @@ class EdgeUrlTest {
 
     @Test
     void testUriFromString() throws URISyntaxException {
+        Assertions.assertEquals("https://www.example.com/", EdgeUriFactory.uriFromString("https://www.example.com/").toString());
         Assertions.assertEquals("https://www.example.com/", EdgeUriFactory.uriFromString("https://www.example.com/#heredoc").toString());
+        Assertions.assertEquals("https://www.example.com/trailingslash/", EdgeUriFactory.uriFromString("https://www.example.com/trailingslash/").toString());
         Assertions.assertEquals("https://www.example.com/%25-sign", EdgeUriFactory.uriFromString("https://www.example.com/%-sign").toString());
         Assertions.assertEquals("https://www.example.com/%22-sign", EdgeUriFactory.uriFromString("https://www.example.com/%22-sign").toString());
         Assertions.assertEquals("https://www.example.com/%0A+%22huh%22", EdgeUriFactory.uriFromString("https://www.example.com/\n \"huh\"").toString());

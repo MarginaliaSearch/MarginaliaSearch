@@ -248,6 +248,10 @@ class EdgeUriFactory {
             }
         }
 
+        if (path.endsWith("/")) {
+            sb.append('/');
+        }
+
     }
 
     private static void recombineQueryString(StringBuilder sb, String param) {
