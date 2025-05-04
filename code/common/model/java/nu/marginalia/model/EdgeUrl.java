@@ -303,7 +303,14 @@ class EdgeUriFactory {
             }
 
             if (shouldUrlEncode) {
-                sb.append(URLEncoder.encode(queryPart, StandardCharsets.UTF_8));
+                int idx = queryPart.indexOf('=');
+                if (idx < 0) {
+                    sb.append(URLEncoder.encode(queryPart, StandardCharsets.UTF_8));
+                } else {
+                    sb.append(URLEncoder.encode(queryPart.substring(0, idx), StandardCharsets.UTF_8));
+                    sb.append('=');
+                    sb.append(URLEncoder.encode(queryPart.substring(idx + 1), StandardCharsets.UTF_8));
+                }
             } else {
                 sb.append(queryPart);
             }
