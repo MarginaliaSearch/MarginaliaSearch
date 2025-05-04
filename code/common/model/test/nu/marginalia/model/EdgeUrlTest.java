@@ -59,7 +59,7 @@ class EdgeUrlTest {
         Assertions.assertEquals("https://en.wikipedia.org/wiki/S%C3%A1mi", EdgeUriFactory.parseURILenient("https://en.wikipedia.org/wiki/Sámi").toString());
         Assertions.assertEquals("https://en.wikipedia.org/wiki/S%C3%A1mi", new EdgeUrl("https://en.wikipedia.org/wiki/Sámi").toString());
 
-        Assertions.assertEquals("https://www.prijatelji-zivotinja.hr/index.en.php?id=2301k", new EdgeUrl("https://en.wikipedia.org/wiki/Sámi").toString());
+        Assertions.assertEquals("https://www.prijatelji-zivotinja.hr/index.en.php?id=2301k", new EdgeUrl("https://www.prijatelji-zivotinja.hr/index.en.php?id=2301k").toString());
     }
 
     @Test
