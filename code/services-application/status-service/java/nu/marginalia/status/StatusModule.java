@@ -20,6 +20,6 @@ public class StatusModule extends AbstractModule {
         bind(String.class)
                 .annotatedWith(Names.named("searchEngineTestQuery"))
                 .toInstance(System.getProperty("status-service.public-query",
-                        "https://search.marginalia.nu/search?query=plato&ref=marginalia-automatic-metrics"));
+                        "https://marginalia-search.com/search?query=plato&ref=marginalia-automatic-metrics"));
     }
 }
