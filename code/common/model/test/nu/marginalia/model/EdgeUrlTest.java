@@ -24,13 +24,36 @@ class EdgeUrlTest {
 
     @Test
     void testUriFromString() throws URISyntaxException {
-        Assertions.assertEquals("https://www.example.com/", EdgeUriFactory.uriFromString("https://www.example.com/").toString());
-        Assertions.assertEquals("https://www.example.com/", EdgeUriFactory.uriFromString("https://www.example.com/#heredoc").toString());
-        Assertions.assertEquals("https://www.example.com/trailingslash/", EdgeUriFactory.uriFromString("https://www.example.com/trailingslash/").toString());
-        Assertions.assertEquals("https://www.example.com/%25-sign", EdgeUriFactory.uriFromString("https://www.example.com/%-sign").toString());
-        Assertions.assertEquals("https://www.example.com/%22-sign", EdgeUriFactory.uriFromString("https://www.example.com/%22-sign").toString());
-        Assertions.assertEquals("https://www.example.com/%0A+%22huh%22", EdgeUriFactory.uriFromString("https://www.example.com/\n \"huh\"").toString());
-        Assertions.assertEquals("https://en.wikipedia.org/wiki/S%C3%A1mi", EdgeUriFactory.uriFromString("https://en.wikipedia.org/wiki/Sámi").toString());
+        // We test these URLs several times as we perform URLEncode-fixing both when parsing the URL and when
+        // converting it back to a string, we want to ensure there is no changes along the way.
+
+        Assertions.assertEquals("/", EdgeUriFactory.parseURILenient("https://www.example.com/").getPath());
+        Assertions.assertEquals("https://www.example.com/", EdgeUriFactory.parseURILenient("https://www.example.com/").toString());
+        Assertions.assertEquals("https://www.example.com/", new EdgeUrl("https://www.example.com/").toString());
+
+        Assertions.assertEquals("/", EdgeUriFactory.parseURILenient("https://www.example.com/#heredoc").getPath());
+        Assertions.assertEquals("https://www.example.com/", EdgeUriFactory.parseURILenient("https://www.example.com/#heredoc").toString());
+        Assertions.assertEquals("https://www.example.com/", new EdgeUrl("https://www.example.com/#heredoc").toString());
+
+        Assertions.assertEquals("/trailingslash/", EdgeUriFactory.parseURILenient("https://www.example.com/trailingslash/").getPath());
+        Assertions.assertEquals("https://www.example.com/trailingslash/", EdgeUriFactory.parseURILenient("https://www.example.com/trailingslash/").toString());
+        Assertions.assertEquals("https://www.example.com/trailingslash/", new EdgeUrl("https://www.example.com/trailingslash/").toString());
+
+        Assertions.assertEquals("/%-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%-sign").getPath());
+        Assertions.assertEquals("https://www.example.com/%25-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%-sign").toString());
+        Assertions.assertEquals("https://www.example.com/%25-sign", new EdgeUrl("https://www.example.com/%-sign").toString());
+
+        Assertions.assertEquals("/\"-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%22-sign").getPath());
+        Assertions.assertEquals("https://www.example.com/%22-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%22-sign").toString());
+        Assertions.assertEquals("https://www.example.com/%22-sign", new EdgeUrl("https://www.example.com/%22-sign").toString());
+
+        Assertions.assertEquals("/\n \"huh\"", EdgeUriFactory.parseURILenient("https://www.example.com/\n \"huh\"").getPath());
+        Assertions.assertEquals("https://www.example.com/%0A%20%22huh%22", EdgeUriFactory.parseURILenient("https://www.example.com/\n \"huh\"").toString());
+        Assertions.assertEquals("https://www.example.com/%0A%20%22huh%22", new EdgeUrl("https://www.example.com/\n \"huh\"").toString());
+
+        Assertions.assertEquals("/wiki/Sámi", EdgeUriFactory.parseURILenient("https://en.wikipedia.org/wiki/Sámi").getPath());
+        Assertions.assertEquals("https://en.wikipedia.org/wiki/S%C3%A1mi", EdgeUriFactory.parseURILenient("https://en.wikipedia.org/wiki/Sámi").toString());
+        Assertions.assertEquals("https://en.wikipedia.org/wiki/S%C3%A1mi", new EdgeUrl("https://en.wikipedia.org/wiki/Sámi").toString());
     }
 
     @Test

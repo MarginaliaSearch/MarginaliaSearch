@@ -31,9 +31,21 @@ public class EdgeUrl implements Serializable {
 
     private static URI parseURI(String url) throws URISyntaxException {
         try {
-            return EdgeUriFactory.uriFromString(url);
-        } catch (URISyntaxException ex) {
-            throw new URISyntaxException("Failed to parse URI '" + url + "'", ex.getMessage());
+            return new URI(url);
+        } catch (URISyntaxException _) {
+            try {
+                /* Java's URI parser is a bit too strict in throwing exceptions when there's an error.
+
+                   Here on the Internet, standards are like the picture on the box of the frozen pizza,
+                   and what you get is more like what's on the inside, we try to patch things instead,
+                   just give it a best-effort attempt att cleaning out broken or unnecessary constructions
+                   like bad or missing URLEncoding
+                 */
+                return EdgeUriFactory.parseURILenient(url);
+            }
+            catch (URISyntaxException ex2) {
+                throw new URISyntaxException("Failed to parse URI '" + url + "'", ex2.getMessage());
+            }
         }
     }
 
@@ -112,11 +124,10 @@ public class EdgeUrl implements Serializable {
             sb.append(port);
         }
 
-        sb.append(path);
+        EdgeUriFactory.urlencodePath(sb, path);
 
         if (param != null) {
-            sb.append('?');
-            sb.append(param);
+            EdgeUriFactory.urlencodeQuery(sb, param);
         }
 
         return sb.toString();
@@ -194,15 +205,8 @@ public class EdgeUrl implements Serializable {
 
 }
 
-/* Java's URI parser is a bit too strict in throwing exceptions when there's an error.
-
-   Here on the Internet, standards are like the picture on the box of the frozen pizza,
-   and what you get is more like what's on the inside, we try to patch things instead,
-   just give it a best-effort attempt att cleaning out broken or unnecessary constructions
-   like bad or missing URLEncoding
- */
 class EdgeUriFactory {
-    public static URI uriFromString(String url) throws URISyntaxException {
+    public static URI parseURILenient(String url) throws URISyntaxException {
         var s = new StringBuilder();
 
         int pathIdx = findPathIdx(url);
@@ -218,14 +222,18 @@ class EdgeUriFactory {
         int queryIdx = url.indexOf('?');
         if (queryIdx < 0) queryIdx = end;
 
-        recombinePaths(s, url.substring(pathIdx, queryIdx));
+        urlencodePath(s, url.substring(pathIdx, queryIdx));
         if (queryIdx < end) {
-            recombineQueryString(s, url.substring(queryIdx + 1, end));
+            urlencodeQuery(s, url.substring(queryIdx + 1, end));
         }
         return new URI(s.toString());
     }
 
-    private static void recombinePaths(StringBuilder sb, String path) {
+    /** Break apart the path element of an URI into its components, and then
+     * urlencode any component that needs it, and recombine it into a single
+     * path element again.
+     */
+    public static void urlencodePath(StringBuilder sb, String path) {
         if (path == null || path.isEmpty()) {
             return;
         }
@@ -241,7 +249,7 @@ class EdgeUriFactory {
 
             if (needsUrlEncode(pathPart)) {
                 sb.append('/');
-                sb.append(URLEncoder.encode(pathPart, StandardCharsets.UTF_8));
+                sb.append(URLEncoder.encode(pathPart, StandardCharsets.UTF_8).replace("+", "%20"));
             } else {
                 sb.append('/');
                 sb.append(pathPart);
@@ -254,26 +262,31 @@ class EdgeUriFactory {
 
     }
 
-    private static void recombineQueryString(StringBuilder sb, String param) {
+    /** Break apart the query element of a URI into its components, and then
+     * urlencode any component that needs it, and recombine it into a single
+     * query element again.
+     */
+    public static void urlencodeQuery(StringBuilder sb, String param) {
         if (param == null || param.isEmpty()) {
             return;
         }
 
-        sb.append('?');
         String[] pathParts = StringUtils.split(param, '&');
         boolean first = true;
-        for (String pathPart : pathParts) {
-            if (pathPart.isEmpty()) continue;
+        for (String queryPart : pathParts) {
+            if (queryPart.isEmpty()) continue;
 
             if (first) {
+                sb.append('?');
                 first = false;
             } else {
                 sb.append('&');
             }
-            if (needsUrlEncode(pathPart)) {
-                sb.append(URLEncoder.encode(pathPart, StandardCharsets.UTF_8));
+
+            if (needsUrlEncode(queryPart)) {
+                sb.append(URLEncoder.encode(queryPart, StandardCharsets.UTF_8));
             } else {
-                sb.append(pathPart);
+                sb.append(queryPart);
             }
         }
     }
@@ -284,7 +297,7 @@ class EdgeUriFactory {
      * Note we may have been given an already encoded path element,
      * so we include % and + in the list of good characters
      */
-    private static boolean needsUrlEncode(String urlElement) {
+    static boolean needsUrlEncode(String urlElement) {
         for (int i = 0; i < urlElement.length(); i++) {
             char c = urlElement.charAt(i);
 
@@ -311,10 +324,15 @@ class EdgeUriFactory {
         return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
+    /** Find the index of the path element in a URL.
+     * <p></p>
+     * The path element starts after the scheme and authority part of the URL,
+     * which is everything up to and including the first slash after the colon.
+     */
     private static int findPathIdx(String url) throws URISyntaxException {
         int colonIdx = url.indexOf(':');
         if (colonIdx < 0 || colonIdx + 3 >= url.length()) {
-            throw new URISyntaxException(url, "Lacking protocol");
+            throw new URISyntaxException(url, "Lacking scheme");
         }
         return url.indexOf('/', colonIdx + 3);
     }
