@@ -244,10 +244,20 @@ class EdgeUriFactory {
             return;
         }
 
+        boolean shouldUrlEncode = false;
         for (String pathPart : pathParts) {
             if (pathPart.isEmpty()) continue;
 
             if (needsUrlEncode(pathPart)) {
+                shouldUrlEncode = true;
+                break;
+            }
+        }
+
+        for (String pathPart : pathParts) {
+            if (pathPart.isEmpty()) continue;
+
+            if (shouldUrlEncode) {
                 sb.append('/');
                 sb.append(URLEncoder.encode(pathPart, StandardCharsets.UTF_8).replace("+", "%20"));
             } else {
@@ -271,9 +281,20 @@ class EdgeUriFactory {
             return;
         }
 
-        String[] pathParts = StringUtils.split(param, '&');
+        String[] queryParts = StringUtils.split(param, '&');
+
+        boolean shouldUrlEncode = false;
+        for (String queryPart : queryParts) {
+            if (queryPart.isEmpty()) continue;
+
+            if (needsUrlEncode(queryPart)) {
+                shouldUrlEncode = true;
+                break;
+            }
+        }
+
         boolean first = true;
-        for (String queryPart : pathParts) {
+        for (String queryPart : queryParts) {
             if (queryPart.isEmpty()) continue;
 
             if (first) {
@@ -283,7 +304,7 @@ class EdgeUriFactory {
                 sb.append('&');
             }
 
-            if (needsUrlEncode(queryPart)) {
+            if (shouldUrlEncode) {
                 sb.append(URLEncoder.encode(queryPart, StandardCharsets.UTF_8));
             } else {
                 sb.append(queryPart);

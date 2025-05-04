@@ -43,6 +43,10 @@ class EdgeUrlTest {
         Assertions.assertEquals("https://www.example.com/%25-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%-sign").toString());
         Assertions.assertEquals("https://www.example.com/%25-sign", new EdgeUrl("https://www.example.com/%-sign").toString());
 
+        Assertions.assertEquals("/%-sign/\"-sign", EdgeUriFactory.parseURILenient("https://www.example.com//%-sign/\"-sign").getPath());
+        Assertions.assertEquals("https://www.example.com/%25-sign/%22-sign", EdgeUriFactory.parseURILenient("https://www.example.com//%-sign/\"-sign").toString());
+        Assertions.assertEquals("https://www.example.com/%25-sign/%22-sign", new EdgeUrl("https://www.example.com//%-sign/\"-sign").toString());
+
         Assertions.assertEquals("/\"-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%22-sign").getPath());
         Assertions.assertEquals("https://www.example.com/%22-sign", EdgeUriFactory.parseURILenient("https://www.example.com/%22-sign").toString());
         Assertions.assertEquals("https://www.example.com/%22-sign", new EdgeUrl("https://www.example.com/%22-sign").toString());
