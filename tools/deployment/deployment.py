@@ -314,6 +314,13 @@ if __name__ == '__main__':
             deploy_tier=0,
             groups={"all", "core"}
         ),
+        'status': ServiceConfig(
+            gradle_target=':code:services-application:status-service:docker',
+            docker_name='status-service',
+            instances=None,
+            deploy_tier=4,
+            groups={"all"}
+        ),
         'query': ServiceConfig(
             gradle_target=':code:services-core:query-service:docker',
             docker_name='query-service',
