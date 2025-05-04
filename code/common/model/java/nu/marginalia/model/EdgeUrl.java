@@ -31,21 +31,9 @@ public class EdgeUrl implements Serializable {
 
     private static URI parseURI(String url) throws URISyntaxException {
         try {
-            return new URI(url);
-        } catch (URISyntaxException _) {
-            try {
-                /* Java's URI parser is a bit too strict in throwing exceptions when there's an error.
-
-                   Here on the Internet, standards are like the picture on the box of the frozen pizza,
-                   and what you get is more like what's on the inside, we try to patch things instead,
-                   just give it a best-effort attempt att cleaning out broken or unnecessary constructions
-                   like bad or missing URLEncoding
-                 */
-                return EdgeUriFactory.parseURILenient(url);
-            }
-            catch (URISyntaxException ex2) {
-                throw new URISyntaxException("Failed to parse URI '" + url + "'", ex2.getMessage());
-            }
+            return EdgeUriFactory.parseURILenient(url);
+        } catch (URISyntaxException ex) {
+            throw new URISyntaxException("Failed to parse URI '" + url + "'", ex.getMessage());
         }
     }
 
@@ -207,7 +195,17 @@ public class EdgeUrl implements Serializable {
 
 class EdgeUriFactory {
     public static URI parseURILenient(String url) throws URISyntaxException {
-        var s = new StringBuilder();
+
+        if (shouldOmitUrlencodeRepair(url)) {
+            try {
+                return new URI(url);
+            }
+            catch (URISyntaxException ex) {
+                // ignore and run the lenient parser
+            }
+        }
+
+        var s = new StringBuilder(url.length()+8);
 
         int pathIdx = findPathIdx(url);
         if (pathIdx < 0) { // url looks like http://marginalia.nu
@@ -312,7 +310,6 @@ class EdgeUriFactory {
         }
     }
 
-
     /** Test if the url element needs URL encoding.
      * <p></p>
      * Note we may have been given an already encoded path element,
@@ -322,10 +319,8 @@ class EdgeUriFactory {
         for (int i = 0; i < urlElement.length(); i++) {
             char c = urlElement.charAt(i);
 
-            if (c >= 'a' && c <= 'z') continue;
-            if (c >= 'A' && c <= 'Z') continue;
-            if (c >= '0' && c <= '9') continue;
-            if ("-_.~+?=&".indexOf(c) >= 0) continue;
+            if (isUrlSafe(c)) continue;
+            if ("+".indexOf(c) >= 0) continue;
             if (c == '%' && i + 2 < urlElement.length()) {
                 char c1 = urlElement.charAt(i + 1);
                 char c2 = urlElement.charAt(i + 2);
@@ -341,7 +336,78 @@ class EdgeUriFactory {
         return false;
     }
 
-    private static boolean isHexDigit(char c) {
+
+    static boolean isUrlSafe(int c) {
+        if (c >= 'a' && c <= 'z') return true;
+        if (c >= 'A' && c <= 'Z') return true;
+        if (c >= '0' && c <= '9') return true;
+        if (c == '-' || c == '_' || c == '.' || c == '~') return true;
+
+        return false;
+    }
+
+    /** Test if the URL is a valid URL that does not need to be
+     * urlencoded.
+     * <p></p>
+     * This is a very simple heuristic test that does not guarantee
+     * that the URL is valid, but it will identify cases where we
+     * are fairly certain that the URL does not need encoding,
+     * so we can skip a bunch of allocations and string operations
+     * that would otherwise be needed to fix the URL.
+     */
+    static boolean shouldOmitUrlencodeRepair(String url) {
+        int idx = 0;
+        final int len = url.length();
+
+        // Validate the scheme
+        while (idx < len - 2) {
+            char c = url.charAt(idx++);
+            if (c == ':') break;
+            if (!isAsciiAlphabetic(c)) return false;
+        }
+        if (url.charAt(idx++) != '/') return false;
+        if (url.charAt(idx++) != '/') return false;
+
+        // Validate the authority
+        while (idx < len) {
+            char c = url.charAt(idx++);
+            if (c == '/') break;
+            if (c == ':') continue;
+            if (c == '@') continue;
+            if (!isUrlSafe(c)) return false;
+        }
+
+        // Validate the path
+        if (idx >= len) return true;
+
+        while (idx < len) {
+            char c = url.charAt(idx++);
+            if (c == '?') break;
+            if (c == '/') continue;
+            if (c == '#') return true;
+            if (!isUrlSafe(c)) return false;
+        }
+
+        if (idx >= len) return true;
+
+        // Validate the query
+        while (idx < len) {
+            char c = url.charAt(idx++);
+            if (c == '&') continue;
+            if (c == '=') continue;
+            if (c == '#') return true;
+            if (!isUrlSafe(c)) return false;
+        }
+
+        return true;
+    }
+
+
+    private static boolean isAsciiAlphabetic(int c) {
+        return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
+    private static boolean isHexDigit(int c) {
         return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
