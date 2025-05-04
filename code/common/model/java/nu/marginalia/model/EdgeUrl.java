@@ -121,6 +121,28 @@ public class EdgeUrl implements Serializable {
         return sb.toString();
     }
 
+
+    public String toDisplayString() {
+        StringBuilder sb = new StringBuilder(256);
+
+        sb.append(proto);
+        sb.append("://");
+        sb.append(domain);
+
+        if (port != null) {
+            sb.append(':');
+            sb.append(port);
+        }
+
+        sb.append(path);
+
+        if (param != null) {
+            sb.append('?').append(param);
+        }
+
+        return sb.toString();
+    }
+
     public String dir() {
         return path.replaceAll("/[^/]+$", "/");
     }

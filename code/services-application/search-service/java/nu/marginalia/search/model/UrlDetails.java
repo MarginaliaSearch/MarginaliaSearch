@@ -180,7 +180,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
      * semantically meaningful codepoints into entity codes */
     public String displayUrl() {
         StringBuilder sb = new StringBuilder();
-        String urlStr = url.toString();
+        String urlStr = url.toDisplayString();
         for (int i = 0; i < urlStr.length(); i++) {
             char c = urlStr.charAt(i);
 
