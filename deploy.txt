@@ -6,3 +6,4 @@
 2025-04-24:  Deploy assistant.
 2025-05-04:  Deploy qs, search and api-services.
 2025-05-05:  Deploy executor partition 4.
+2025-05-05:  Deploy control.
