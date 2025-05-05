@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class SampleDataExporter {
     private final FileStorageService storageService;
@@ -84,6 +85,9 @@ public class SampleDataExporter {
                         addFileToTar(stream, filteredData, item.relPath());
                         logWriter.write(item.id() + " " + item.ts() + " " + item.relPath() + " " + item.cnt() + "\n");
                     }
+                    catch (NoSuchElementException ex) {
+                        // Ignore
+                    }
                     finally {
                         if (filteredData != null) {
                             Files.deleteIfExists(filteredData);
@@ -104,7 +108,7 @@ public class SampleDataExporter {
     }
 
     /** Filters the entries in the crawl data file based on the content type. */
-    private Path filterEntries(Path crawlDataPath, String contentTypeFilter) throws IOException {
+    private Path filterEntries(Path crawlDataPath, String contentTypeFilter) throws IOException, NoSuchElementException {
         Path tempDir = crawlDataPath.resolveSibling(crawlDataPath.getFileName() + ".filtered");
         Path tempFile = crawlDataPath.resolveSibling(crawlDataPath.getFileName() + ".filtered.slop.zip");
 
@@ -134,7 +138,7 @@ public class SampleDataExporter {
             }
 
             if (!wroteEntry) {
-                throw new IOException("No relevant entries found");
+                throw new NoSuchElementException("No relevant entries");
             }
 
             SlopTablePacker.packToSlopZip(tempDir, tempFile);
