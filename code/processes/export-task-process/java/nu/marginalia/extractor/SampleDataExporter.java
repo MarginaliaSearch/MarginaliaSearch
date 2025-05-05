@@ -117,6 +117,10 @@ public class SampleDataExporter {
         Path tempDir = crawlDataPath.resolveSibling(crawlDataPath.getFileName() + ".filtered");
         Path tempFile = crawlDataPath.resolveSibling(crawlDataPath.getFileName() + ".filtered.slop.zip");
 
+        // We may have debris from a previous run, so let's clean it up
+        if (Files.isDirectory(tempDir)) {
+            FileUtils.deleteDirectory(tempDir.toFile());
+        }
         Files.createDirectory(tempDir);
 
         try (var writer = new SlopCrawlDataRecord.Writer(tempDir);
