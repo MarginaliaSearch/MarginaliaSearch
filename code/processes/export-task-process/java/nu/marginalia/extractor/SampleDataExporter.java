@@ -1,6 +1,7 @@
 package nu.marginalia.extractor;
 
 import com.google.inject.Inject;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.slop.SlopCrawlDataRecord;
@@ -27,11 +28,14 @@ import java.util.NoSuchElementException;
 
 public class SampleDataExporter {
     private final FileStorageService storageService;
+    private final ProcessHeartbeat processHeartbeat;
 
     @Inject
-    public SampleDataExporter(FileStorageService storageService) {
+    public SampleDataExporter(FileStorageService storageService, ProcessHeartbeat processHeartbeat) {
         this.storageService = storageService;
+        this.processHeartbeat = processHeartbeat;
     }
+
     public void export(FileStorageId crawlId, FileStorageId destId, int size, String ctFilter, String name) throws SQLException, IOException {
         FileStorage destStorage = storageService.getStorage(destId);
         Path inputDir = storageService.getStorage(crawlId).asPath();
@@ -68,9 +72,10 @@ public class SampleDataExporter {
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
 
         try (var stream = new TarArchiveOutputStream(Files.newOutputStream(tmpTarFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
-             var logWriter = Files.newBufferedWriter(newCrawlerLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+             var logWriter = Files.newBufferedWriter(newCrawlerLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+             var hb = processHeartbeat.createAdHocTaskHeartbeat("Generating Sample")
         ) {
-            for (var item : entriesAll) {
+            for (var item : hb.wrap("Scanning", entriesAll)) {
                 Path crawlDataPath = inputDir.resolve(item.relPath());
                 if (!Files.exists(crawlDataPath)) continue;
 
