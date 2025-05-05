@@ -59,12 +59,6 @@ public class SampleDataExporter {
         Path newCrawlerLogFile = Files.createTempFile(destStorage.asPath(), "crawler", ".log",
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
 
-        try (var bw = Files.newBufferedWriter(newCrawlerLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            for (var item : entriesAll) {
-                bw.write(item.id() + " " + item.ts() + " " + item.relPath() + " " + item.cnt() + "\n");
-            }
-        }
-
         Path newManifestJsonFile = Files.createTempFile(destStorage.asPath(), "manifest", ".json",
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
         Files.writeString(newManifestJsonFile, " { \"description\": \"" + name.replace("[\"\\]", "_") + "\",\n      \"type\": \"CRAWL_DATA\" }\n");
@@ -72,24 +66,27 @@ public class SampleDataExporter {
         var tmpTarFile = Files.createTempFile(destStorage.asPath(), "data", ".tar",
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
 
-        try (var stream = new TarArchiveOutputStream(Files.newOutputStream(tmpTarFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
+        try (var stream = new TarArchiveOutputStream(Files.newOutputStream(tmpTarFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
+             var logWriter = Files.newBufferedWriter(newCrawlerLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+        ) {
             for (var item : entriesAll) {
                 Path crawlDataPath = inputDir.resolve(item.relPath());
                 if (!Files.exists(crawlDataPath)) continue;
 
                 if (StringUtils.isBlank(ctFilter)) {
                     addFileToTar(stream, crawlDataPath, item.relPath());
+                    logWriter.write(item.id() + " " + item.ts() + " " + item.relPath() + " " + item.cnt() + "\n");
                 }
                 else /* filter != null */ {
-                    boolean didFilterData = false;
+                    Path filteredData = null;
                     try {
-                        crawlDataPath = filterEntries(crawlDataPath, ctFilter);
-                        didFilterData = true;
-                        addFileToTar(stream, crawlDataPath, item.relPath());
+                        filteredData = filterEntries(crawlDataPath, ctFilter);
+                        addFileToTar(stream, filteredData, item.relPath());
+                        logWriter.write(item.id() + " " + item.ts() + " " + item.relPath() + " " + item.cnt() + "\n");
                     }
                     finally {
-                        if (didFilterData) {
-                            Files.deleteIfExists(crawlDataPath);
+                        if (filteredData != null) {
+                            Files.deleteIfExists(filteredData);
                         }
                     }
                 }
@@ -106,11 +103,7 @@ public class SampleDataExporter {
         Files.move(tmpTarFile, destStorage.asPath().resolve("crawl-data.tar"), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    /** Filters the entries in the crawl data file based on the content type.
-     * @param crawlDataPath The path to the crawl data file.
-     * @param contentTypeFilter The content type to filter by.
-     * @return The path to the filtered crawl data file, or null if an error occurred.
-     */
+    /** Filters the entries in the crawl data file based on the content type. */
     private Path filterEntries(Path crawlDataPath, String contentTypeFilter) throws IOException {
         Path tempDir = crawlDataPath.resolveSibling(crawlDataPath.getFileName() + ".filtered");
         Path tempFile = crawlDataPath.resolveSibling(crawlDataPath.getFileName() + ".filtered.slop.zip");
@@ -132,8 +125,16 @@ public class SampleDataExporter {
                  }
              }
         ) {
+            boolean wroteEntry = false;
             while (reader.hasRemaining()) {
-                writer.write(reader.get());
+                var entry = reader.get();
+                writer.write(entry);
+
+                wroteEntry = wroteEntry || contentTypeFilter.equals(entry.contentType());
+            }
+
+            if (!wroteEntry) {
+                throw new IOException("No relevant entries found");
             }
 
             SlopTablePacker.packToSlopZip(tempDir, tempFile);
