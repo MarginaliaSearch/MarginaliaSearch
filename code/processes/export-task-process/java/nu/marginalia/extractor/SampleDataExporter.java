@@ -134,7 +134,7 @@ public class SampleDataExporter {
                 var entry = reader.get();
                 writer.write(entry);
 
-                wroteEntry = wroteEntry || contentTypeFilter.equals(entry.contentType());
+                wroteEntry = wroteEntry || Objects.equals(StringUtils.substringBefore(entry.contentType(), ';'), contentTypeFilter);
             }
 
             if (!wroteEntry) {
