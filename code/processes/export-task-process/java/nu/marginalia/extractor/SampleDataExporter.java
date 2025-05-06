@@ -98,6 +98,8 @@ public class SampleDataExporter {
                 }
             }
 
+            logWriter.flush();
+
             addFileToTar(stream, newCrawlerLogFile, "crawler.log");
             addFileToTar(stream, newManifestJsonFile, "marginalia-manifest.json");
         }
