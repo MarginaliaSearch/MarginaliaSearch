@@ -448,13 +448,7 @@ public class CrawlerMain extends ProcessMainClass {
             // We don't have a lock, so we can't run this task
             // we return to avoid blocking the pool for too long
             if (lock.isEmpty()) {
-                if (retryQueue.remainingCapacity() > 0) {
-                    // Sleep a moment to avoid busy looping via the retry queue
-                    // in the case when few tasks remain and almost all are ineligible for
-                    // immediate restart
-                    Thread.sleep(5);
-                }
-
+                pendingCrawlTasks.remove(domain);
                 retryQueue.put(this);
                 return;
             }
