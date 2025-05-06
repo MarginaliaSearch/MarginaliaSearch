@@ -107,7 +107,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         final PubDate pubDate = new PubDate(LocalDate.ofYearDay(1993, 1));
 
-        EnumSet<DocumentFlags> documentFlags = EnumSet.of(DocumentFlags.PlainText);
+        EnumSet<DocumentFlags> documentFlags = EnumSet.of(DocumentFlags.PdfFile);
 
         ret.metadata = new DocumentMetadata(documentLengthLogic.getEncodedAverageLength(dld),
                 pubDate.yearByte(), (int) -ret.quality, documentFlags);

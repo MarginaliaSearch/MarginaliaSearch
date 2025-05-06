@@ -78,6 +78,8 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 return "HTML 5";
             case "PLAIN":
                 return "Plain Text";
+            case "PDF":
+                return "PDF";
             default:
                 return "?";
         }

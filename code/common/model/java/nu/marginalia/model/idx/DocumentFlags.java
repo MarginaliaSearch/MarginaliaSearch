@@ -9,7 +9,7 @@ public enum DocumentFlags {
     GeneratorForum,
     GeneratorWiki,
     Sideloaded,
-    Unused7,
+    PdfFile,
     Unused8,
     ;
 
