@@ -117,6 +117,86 @@ class CrawlerRetreiverTest {
         }
     }
 
+
+    @Test
+    public void testWarcOutputPDF() throws IOException {
+        var specs = CrawlerMain.CrawlSpecRecord
+                .builder()
+                .crawlDepth(5)
+                .domain("www.marginalia.nu")
+                .urls(List.of("https://www.marginalia.nu/junk/test.pdf"))
+                .build();
+        Path tempFile = null;
+        Path slopFile = null;
+        try {
+            tempFile = Files.createTempFile("crawling-process", "warc");
+            slopFile = Files.createTempFile("crawling-process", ".slop.zip");
+
+            doCrawl(tempFile, specs);
+
+            Set<String> requests = new HashSet<>();
+            Set<String> responses = new HashSet<>();
+
+            // Inspect the WARC file
+            try (var reader = new WarcReader(tempFile)) {
+                reader.forEach(record -> {
+                    if (record instanceof WarcRequest req) {
+                        requests.add(req.target());
+                        System.out.println(req.type() + ":" + req.target());
+                    }
+                    else if (record instanceof WarcResponse rsp) {
+                        responses.add(rsp.target());
+                        System.out.println(rsp.type() + ":" + rsp.target());
+                    }
+                    else {
+                        System.out.println(record.type());
+                    }
+                });
+            }
+
+            assertTrue(requests.contains("https://www.marginalia.nu/junk/test.pdf"));
+            assertEquals(requests, responses);
+
+            // Convert the WARC file to a Slop file
+            SlopCrawlDataRecord
+                    .convertWarc("www.marginalia.nu", new UserAgent("test.marginalia.nu", "test.marginalia.nu"), tempFile, slopFile);
+
+            CrawledDomain domain = null;
+            Map<String, CrawledDocument> documents = new HashMap<>();
+
+            // Extract the contents of the Slop file
+            try (var stream = SerializableCrawlDataStream.openDataStream(slopFile)) {
+                while (stream.hasNext()) {
+                    var doc = stream.next();
+                    if (doc instanceof CrawledDomain dr) {
+                        assertNull(domain);
+                        domain = dr;
+                    }
+                    else if (doc instanceof CrawledDocument dc) {
+                        System.out.println(dc.url + "\t" + dc.crawlerStatus + "\t" + dc.httpStatus);
+                        documents.put(dc.url, dc);
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            // Verify we have a PDF in the Slop file
+            assertNotNull(domain);
+            var pdfDoc = documents.get("https://www.marginalia.nu/junk/test.pdf");
+            assertNotNull(pdfDoc);
+            assertEquals("https://www.marginalia.nu/junk/test.pdf", pdfDoc.url);
+            assertEquals(206, pdfDoc.httpStatus);
+            assertTrue(pdfDoc.documentBodyBytes.length > 100);
+        }
+        finally {
+            if (tempFile != null)
+                Files.deleteIfExists(tempFile);
+            if (slopFile != null)
+                Files.deleteIfExists(slopFile);
+        }
+    }
+
     @Test
     public void testWarcOutputNoKnownUrls() throws IOException {
         var specs = CrawlerMain.CrawlSpecRecord
