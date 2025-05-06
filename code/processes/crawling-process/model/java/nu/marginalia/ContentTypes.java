@@ -1,5 +1,7 @@
 package nu.marginalia;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Set;
 
 public class ContentTypes {
@@ -11,9 +13,9 @@ public class ContentTypes {
             "text/plain");
 
     public static boolean isAccepted(String contentTypeHeader) {
-        String lcHeader = contentTypeHeader.toLowerCase();
+        String lcHeader = StringUtils.substringBefore(contentTypeHeader.toLowerCase(), ';');
         for (var type : acceptedContentTypes) {
-            if (lcHeader.startsWith(type)) {
+            if (lcHeader.equals(type)) {
                 return true;
             }
         }
@@ -21,7 +23,7 @@ public class ContentTypes {
     }
 
     public static boolean isBinary(String contentTypeHeader) {
-        String lcHeader = contentTypeHeader.toLowerCase();
+        String lcHeader = StringUtils.substringBefore(contentTypeHeader.toLowerCase(), ';');
         return lcHeader.startsWith("application/pdf");
     }
 

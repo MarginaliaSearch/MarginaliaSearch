@@ -277,7 +277,8 @@ public record SlopCrawlDataRecord(String domain,
         try (var table = new SlopTable(path)) {
             ShortColumn.Reader statusReader = statusColumn.open(table);
             while (statusReader.hasRemaining()) {
-                if (statusReader.get() == 200) {
+                int status = statusReader.get();
+                if (status == 200 || status == 206) {
                     cnt++;
                 }
             }

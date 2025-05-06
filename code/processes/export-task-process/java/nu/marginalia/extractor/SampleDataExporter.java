@@ -21,10 +21,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class SampleDataExporter {
     private final FileStorageService storageService;
@@ -127,7 +124,7 @@ public class SampleDataExporter {
              var reader = new SlopCrawlDataRecord.FilteringReader(crawlDataPath) {
                  @Override
                  public boolean filter(String url, int status, String contentType) {
-                     return matchContentTypeHeaderWithMime(contentType, contentTypeFilter)
+                     return Objects.equals(StringUtils.substringBefore(contentType, ';'), contentTypeFilter)
                                 || contentType.startsWith("x-marginalia/"); // metadata records
                  }
              }
@@ -152,21 +149,6 @@ public class SampleDataExporter {
 
 
         return tempFile;
-    }
-
-    private boolean matchContentTypeHeaderWithMime(String contentType, String mime) {
-        if (null == contentType) {
-            return false;
-        }
-
-        /* The content type header may have a charset or other parameters, so we need to
-         * check if the mime type is a prefix of the content type. */
-
-        int semicolonIndex = contentType.indexOf(';');
-        if (semicolonIndex >= 0) {
-            return contentType.substring(0, semicolonIndex).equals(mime);
-        }
-        return contentType.equals(mime);
     }
 
     private void addFileToTar(TarArchiveOutputStream outputStream, Path file, String fileName) throws IOException {

@@ -58,7 +58,7 @@ public record DocumentWithReference(
         if (null == doc)
             return ContentTags.empty();
 
-        if (doc.documentBodyBytes.length == 0 || doc.httpStatus != 200)
+        if (doc.documentBodyBytes.length == 0 || (doc.httpStatus != 200 && doc.httpStatus != 206))
             return ContentTags.empty();
 
         String lastmod = doc.getLastModified();
