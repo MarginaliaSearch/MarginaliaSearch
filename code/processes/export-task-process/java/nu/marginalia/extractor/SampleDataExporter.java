@@ -122,6 +122,8 @@ public class SampleDataExporter {
         }
         Files.createDirectory(tempDir);
 
+        boolean wroteEntry = false;
+
         try (var writer = new SlopCrawlDataRecord.Writer(tempDir);
              var reader = new SlopCrawlDataRecord.FilteringReader(crawlDataPath) {
                  @Override
@@ -131,14 +133,20 @@ public class SampleDataExporter {
                  }
              }
         ) {
-            boolean wroteEntry = false;
+
             while (reader.hasRemaining()) {
                 var entry = reader.get();
                 writer.write(entry);
 
                 wroteEntry = wroteEntry || Objects.equals(StringUtils.substringBefore(entry.contentType(), ';'), contentTypeFilter);
             }
+        }
+        catch (Exception ex) {
+            FileUtils.deleteDirectory(tempDir.toFile());
+            throw ex;
+        }
 
+        try {
             if (!wroteEntry) {
                 throw new NoSuchElementException("No relevant entries");
             }
