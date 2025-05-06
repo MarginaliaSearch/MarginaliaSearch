@@ -27,10 +27,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 
 public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
@@ -86,7 +83,9 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         DocumentLanguageData dld;
         try (var doc = PDDocument.load(crawledDocument.documentBodyBytes)) {
-            dld = sentenceExtractorProvider.get().extractSentences(new PDFTextStripper().getText(doc), "");
+            String title = Objects.requireNonNullElse(doc.getDocumentInformation().getTitle(), "");
+
+            dld = sentenceExtractorProvider.get().extractSentences(new PDFTextStripper().getText(doc), title);
         }
 
         checkDocumentLanguage(dld);
