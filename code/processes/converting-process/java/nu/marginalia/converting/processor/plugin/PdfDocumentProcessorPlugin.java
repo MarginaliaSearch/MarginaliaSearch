@@ -7,7 +7,7 @@ import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.logic.PlainTextLogic;
-import nu.marginalia.converting.util.LineUtils;
+import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
@@ -23,6 +23,8 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,21 +39,23 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     private final PlainTextLogic plainTextLogic = new PlainTextLogic();
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
-
+    private final DefaultSpecialization defaultSpecialization;
 
     @Inject
     public PdfDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
                                       LanguageFilter languageFilter,
                                       ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                       DocumentKeywordExtractor keywordExtractor,
-                                      DocumentLengthLogic documentLengthLogic
-                                            )
+                                      DocumentLengthLogic documentLengthLogic,
+                                      DefaultSpecialization defaultSpecialization)
+
     {
         super(languageFilter);
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
         this.keywordExtractor = keywordExtractor;
+        this.defaultSpecialization = defaultSpecialization;
     }
 
     @Override
@@ -81,12 +85,8 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
 
-        DocumentLanguageData dld;
-        try (var doc = PDDocument.load(crawledDocument.documentBodyBytes)) {
-            String title = Objects.requireNonNullElse(doc.getDocumentInformation().getTitle(), "");
-
-            dld = sentenceExtractorProvider.get().extractSentences(new PDFTextStripper().getText(doc), title);
-        }
+        Document doc = convertPdfToHtml(crawledDocument.documentBodyBytes);
+        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(doc);
 
         checkDocumentLanguage(dld);
 
@@ -94,17 +94,15 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         var ret = new ProcessedDocumentDetails();
 
-        List<String> firstFewLines = LineUtils.firstNLines(documentBody, 40);
-
         ret.length = documentBody.length();
 
-        ret.standard = HtmlStandard.PLAIN;
-        ret.title = StringUtils.truncate(plainTextLogic.getTitle(url, firstFewLines), maxTitleLength);
+        ret.standard = HtmlStandard.PDF;
+        ret.title = StringUtils.truncate(defaultSpecialization.getTitle(doc, dld, url.toString()), maxTitleLength);
 
         ret.quality = -1;
 
         ret.features = new HashSet<>();
-        ret.description = StringUtils.truncate(plainTextLogic.getDescription(firstFewLines), 255);
+        ret.description = getDescription(doc);
         ret.hashCode = dld.localitySensitiveHashCode();
 
         final PubDate pubDate = new PubDate(LocalDate.ofYearDay(1993, 1));
@@ -136,5 +134,56 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         return new DetailsWithWords(ret, words);
     }
 
+    private String getDescription(Document doc) {
+        for (var ptag : doc.getElementsByTag("p")) {
+            String text = ptag.text();
+            if (text.length() > 256) {
+                return StringUtils.abbreviate(text, "...", 255);
+            }
+        }
+        return defaultSpecialization.getSummary(doc, Set.of());
+
+    }
+
+    /** Convert the provided PDF bytes into a HTML rendering that can be fed
+     * to the HTML processor.
+     */
+    private Document convertPdfToHtml(byte[] pdfBytes) throws IOException {
+        try (var doc = PDDocument.load(pdfBytes)) {
+            String docMetaTitle = Objects.requireNonNullElse(doc.getDocumentInformation().getTitle(), "");
+
+            var stripper = new PDFTextStripper();
+            stripper.setStartPage(1);
+            stripper.setSortByPosition(true);
+            stripper.setWordSeparator(" ");
+
+            stripper.setPageStart("<div>");
+            stripper.setParagraphStart("<p>");
+            stripper.setParagraphEnd("</p>\n");
+            stripper.setPageEnd("</div>\n");
+            stripper.setLineSeparator("\n");
+
+            String text = stripper.getText(doc);
+
+            StringBuilder htmlBuilder = new StringBuilder(text.length() + 1024);
+            htmlBuilder.append("<html><body>")
+                    .append(text)
+                    .append("</body></html>");
+
+            var parsed = Jsoup.parse(htmlBuilder.toString());
+
+            // Prefer setting the title to the first paragraph in the
+            // document, as this is almost always correct.  Otherwise,
+            // we fall back on the metadata title, which is almost always
+            // useless
+
+            var firstP = parsed.getElementsByTag("p").first();
+            if (firstP != null) parsed.title(firstP.text());
+            else parsed.title(docMetaTitle);
+
+            return parsed;
+        }
+
+    }
 
 }
