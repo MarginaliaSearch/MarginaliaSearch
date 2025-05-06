@@ -127,14 +127,8 @@ public class SampleDataExporter {
              var reader = new SlopCrawlDataRecord.FilteringReader(crawlDataPath) {
                  @Override
                  public boolean filter(String url, int status, String contentType) {
-                     if (contentTypeFilter.equals(contentType))
-                         return true;
-                     else if (contentType.startsWith("x-marginalia/"))
-                         // This is a metadata entry, typically domain or redirect information
-                         // let's keep those to not confuse the consumer of the data, which might
-                         // expect at least the domain summary
-                         return true;
-                     return false;
+                     return matchContentTypeHeaderWithMime(contentType, contentTypeFilter)
+                                || contentType.startsWith("x-marginalia/"); // metadata records
                  }
              }
         ) {
@@ -158,6 +152,21 @@ public class SampleDataExporter {
 
 
         return tempFile;
+    }
+
+    private boolean matchContentTypeHeaderWithMime(String contentType, String mime) {
+        if (null == contentType) {
+            return false;
+        }
+
+        /* The content type header may have a charset or other parameters, so we need to
+         * check if the mime type is a prefix of the content type. */
+
+        int semicolonIndex = contentType.indexOf(';');
+        if (semicolonIndex >= 0) {
+            return contentType.substring(0, semicolonIndex).equals(mime);
+        }
+        return contentType.equals(mime);
     }
 
     private void addFileToTar(TarArchiveOutputStream outputStream, Path file, String fileName) throws IOException {
