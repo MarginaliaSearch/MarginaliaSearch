@@ -7,6 +7,7 @@ public class PubDateFromHtmlStandard {
     public static int blindGuess(HtmlStandard standard) {
         return switch (standard) {
             case PLAIN -> 1993;
+            case PDF -> 2010;
             case HTML123 -> 1997;
             case HTML4, XHTML -> 2006;
             case HTML5 -> 2018;
