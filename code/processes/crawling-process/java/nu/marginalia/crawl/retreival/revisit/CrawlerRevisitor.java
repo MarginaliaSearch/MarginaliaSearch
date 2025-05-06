@@ -74,7 +74,7 @@ public class CrawlerRevisitor {
 
             // If the reference document is empty or the HTTP status is not 200, we'll skip it since it's
             // unlikely to produce anything meaningful for us.
-            if (doc.httpStatus != 200)
+            if (doc.httpStatus != 200 && doc.httpStatus != 206)
                 continue;
             if (!doc.hasBody())
                 continue;
