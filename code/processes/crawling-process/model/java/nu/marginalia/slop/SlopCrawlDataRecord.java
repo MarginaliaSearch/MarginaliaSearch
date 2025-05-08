@@ -158,11 +158,12 @@ public record SlopCrawlDataRecord(String domain,
                         // and is used to store old responses from previous crawls; in this part of the logic
                         // we treat them the same as a normal response
 
-                        if (!filterResponse(uaString, response)) {
+                        var filterStatus = filterResponse(uaString, response);
+                        if (filterStatus.isRejected()) {
                             continue;
                         }
 
-                        slopWriter.write(domain, response);
+                        slopWriter.write(domain, filterStatus, response);
                     } else if (record instanceof WarcXEntityRefused refused) {
                         slopWriter.write(domain, refused);
                     } else if (record instanceof Warcinfo warcinfo) {
@@ -187,25 +188,35 @@ public record SlopCrawlDataRecord(String domain,
         }
     }
 
-
+    sealed interface ResponseFilterResult {
+        default boolean isRejected() { return false; }
+        record Accept() implements ResponseFilterResult {}
+        record AcceptWithContentType(String contentType) implements ResponseFilterResult {}
+        record AcceptIfPlainText(String contentType) implements ResponseFilterResult {}
+        record Reject() implements ResponseFilterResult {
+            @Override
+            public boolean isRejected() { return true; }
+        }
+    }
 
     /** Return true if the WarcResponse should be excluded from conversion */
-    private static boolean filterResponse(String uaString, WarcResponse response) throws IOException {
+    private static ResponseFilterResult filterResponse(String uaString, WarcResponse response) throws IOException {
 
         // We don't want to store robots.txt files, as they are not
         // interesting for the analysis we want to do.  This is important
         // since txt-files in general are interesting, and we don't want to
         // exclude them as a class.
 
-        if (response.targetURI().getPath().equals("/robots.txt")) {
-            return false;
+        String uriPath = response.targetURI().getPath();
+        if (uriPath.equals("/robots.txt")) {
+            return new ResponseFilterResult.Reject();
         }
 
         var headers = response.http().headers();
         var robotsTags = headers.all("X-Robots-Tag");
 
         if (!isXRobotsTagsPermitted(robotsTags, uaString)) {
-            return false;
+            return new ResponseFilterResult.Reject();
         }
 
         // Strip out responses with content types we aren't interested in
@@ -213,15 +224,29 @@ public record SlopCrawlDataRecord(String domain,
         String contentType = headers.first("Content-Type").orElse("text/plain").toLowerCase();
 
         if (!ContentTypes.isAccepted(contentType)) {
-            return false;
+            String contentTypeWithoutParams = StringUtils.substringBefore(contentType, ";");
+
+            // Some servers don't understand what a markdown file is
+            if (contentTypeWithoutParams.equals("application/octet-stream")) {
+                if (uriPath.endsWith(".md")) {
+                    // This is a markdown file, which we want to keep
+                    return new ResponseFilterResult.AcceptIfPlainText("text/markdown");
+                }
+                else if (uriPath.endsWith(".pdf")) {
+                    // This is a text file, which we want to keep
+                    return new ResponseFilterResult.AcceptWithContentType("application/pdf");
+                }
+            }
+
+            return new ResponseFilterResult.Reject();
         }
 
         // If the format is binary, we don't want to translate it if the response is truncated
         if (response.truncated() != WarcTruncationReason.NOT_TRUNCATED && ContentTypes.isBinary(contentType)) {
-            return false;
+            return new ResponseFilterResult.Reject();
         }
 
-        return true;
+        return new ResponseFilterResult.Accept();
     }
 
     /**  Check X-Robots-Tag header tag to see if we are allowed to index this page.
@@ -324,7 +349,7 @@ public record SlopCrawlDataRecord(String domain,
             headerColumnWriter.put(record.headers);
         }
 
-        public void write(String domain, WarcResponse response) throws IOException {
+        public void write(String domain, ResponseFilterResult filterStatus, WarcResponse response) throws IOException {
 
             HttpFetchResult result = HttpFetchResult.importWarc(response);
             if (!(result instanceof HttpFetchResult.ResultOk fetchOk)) {
@@ -345,6 +370,21 @@ public record SlopCrawlDataRecord(String domain,
             else {
                 bodyBytes = new byte[0];
                 contentType = "";
+            }
+
+            switch (filterStatus) {
+                case ResponseFilterResult.AcceptWithContentType(String ct) -> contentType = ct;
+                case ResponseFilterResult.AcceptIfPlainText(String ct) -> {
+                    try {
+                        // Parse the body as UTF-8
+                        new String(bodyBytes, StandardCharsets.UTF_8);
+                        contentType = ct;
+                    }
+                    catch (RuntimeException ex) { // UTF-8 decoding failed
+                        return;
+                    }
+                }
+                default -> {}
             }
 
             boolean hasCookies = false;

@@ -8,6 +8,8 @@ public class ContentTypes {
     public static final Set<String> acceptedContentTypes = Set.of("application/xhtml+xml",
             "application/xhtml",
             "text/html",
+            "text/markdown",
+            "text/x-markdown",
             "application/pdf",
             "image/x-icon",
             "text/plain");
