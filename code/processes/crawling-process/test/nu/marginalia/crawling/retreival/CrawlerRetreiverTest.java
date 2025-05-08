@@ -119,12 +119,17 @@ class CrawlerRetreiverTest {
 
 
     @Test
-    public void testWarcOutputPDF() throws IOException {
+    public void verifyFileFormatSupport() throws IOException {
+        List<String> urls = List.of(
+                "https://www.marginalia.nu/junk/test.pdf",
+                "https://www.marginalia.nu/junk/test.md"
+        );
+
         var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
-                .urls(List.of("https://www.marginalia.nu/junk/test.pdf"))
+                .urls(urls)
                 .build();
         Path tempFile = null;
         Path slopFile = null;
@@ -146,7 +151,11 @@ class CrawlerRetreiverTest {
                     }
                     else if (record instanceof WarcResponse rsp) {
                         responses.add(rsp.target());
-                        System.out.println(rsp.type() + ":" + rsp.target());
+                        try {
+                            System.out.println(rsp.type() + ":" + rsp.target() + ":" + rsp.http().contentType());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     else {
                         System.out.println(record.type());
@@ -154,7 +163,9 @@ class CrawlerRetreiverTest {
                 });
             }
 
-            assertTrue(requests.contains("https://www.marginalia.nu/junk/test.pdf"));
+            for (var url : urls) {
+                assertTrue(requests.contains(url), "Should have requested " + url);
+            }
             assertEquals(requests, responses);
 
             // Convert the WARC file to a Slop file
@@ -181,15 +192,18 @@ class CrawlerRetreiverTest {
                 throw new RuntimeException(e);
             }
 
-            // Verify we have a PDF in the Slop file
-            assertNotNull(domain);
-            var pdfDoc = documents.get("https://www.marginalia.nu/junk/test.pdf");
-            assertNotNull(pdfDoc);
-            assertEquals("https://www.marginalia.nu/junk/test.pdf", pdfDoc.url);
-            assertEquals(206, pdfDoc.httpStatus);
-            assertTrue(pdfDoc.documentBodyBytes.length > 100);
-        }
-        finally {
+            for (var url : urls) {
+                // Verify we have the downloaded files in the Slop file
+                assertNotNull(domain);
+                var fetchedDoc = documents.get(url);
+                assertNotNull(fetchedDoc, "Should have a document for " + url);
+                assertEquals(url, fetchedDoc.url);
+                assertTrue(fetchedDoc.httpStatus == 200 || fetchedDoc.httpStatus == 206, "Should be 200 or 206 for " + url);
+                assertTrue(fetchedDoc.documentBodyBytes.length > 32, "Should have a body for " + url);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
             if (tempFile != null)
                 Files.deleteIfExists(tempFile);
             if (slopFile != null)
