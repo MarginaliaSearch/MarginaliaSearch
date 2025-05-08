@@ -28,6 +28,8 @@ public enum HtmlFeature {
 
     GA_SPAM("special:gaspam"),
 
+    PDF("format:pdf"),
+
     /** For fingerprinting and ranking */
     OPENGRAPH("special:opengraph"),
     OPENGRAPH_IMAGE("special:opengraph:image"),

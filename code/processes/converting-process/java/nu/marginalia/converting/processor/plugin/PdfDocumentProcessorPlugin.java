@@ -14,6 +14,7 @@ import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.html.HtmlStandard;
@@ -102,7 +103,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         ret.quality = -5;
 
-        ret.features = new HashSet<>();
+        ret.features = Set.of(HtmlFeature.PDF);
         ret.description = getDescription(doc);
         ret.hashCode = dld.localitySensitiveHashCode();
 
