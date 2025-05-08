@@ -21,10 +21,12 @@ import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -42,6 +44,8 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
     private final DefaultSpecialization defaultSpecialization;
+
+    private static final Logger logger = LoggerFactory.getLogger(PdfDocumentProcessorPlugin.class);
 
     @Inject
     public PdfDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
@@ -87,7 +91,14 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
 
-        Document doc = convertPdfToHtml(crawledDocument.documentBodyBytes);
+        Document doc;
+        try {
+            doc = convertPdfToHtml(crawledDocument.documentBodyBytes);
+        } catch (IOException e) {
+            logger.error("Failed to convert PDF file {} - {}", url, e.getMessage());
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.ERROR);
+        }
+
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(doc);
 
         checkDocumentLanguage(dld);
@@ -154,7 +165,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
      * to the HTML processor.
      */
     private Document convertPdfToHtml(byte[] pdfBytes) throws IOException {
-        try (var doc = PDDocument.load(pdfBytes)) {
+        try (var doc = Loader.loadPDF(pdfBytes)) {
             String docMetaTitle = Objects.requireNonNullElse(doc.getDocumentInformation().getTitle(), "");
 
             var stripper = new PDFTextStripper();
@@ -188,6 +199,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
             return parsed;
         }
+
 
     }
 
