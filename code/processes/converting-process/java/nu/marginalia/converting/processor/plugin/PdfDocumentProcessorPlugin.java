@@ -6,7 +6,6 @@ import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
-import nu.marginalia.converting.processor.logic.PlainTextLogic;
 import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
@@ -29,14 +28,16 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
 
 
 public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
     private final int maxTitleLength;
     private final DocumentKeywordExtractor keywordExtractor;
-    private final PlainTextLogic plainTextLogic = new PlainTextLogic();
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
     private final DefaultSpecialization defaultSpecialization;
@@ -99,7 +100,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         ret.standard = HtmlStandard.PDF;
         ret.title = StringUtils.truncate(defaultSpecialization.getTitle(doc, dld, url.toString()), maxTitleLength);
 
-        ret.quality = -1;
+        ret.quality = -5;
 
         ret.features = new HashSet<>();
         ret.description = getDescription(doc);
@@ -109,8 +110,11 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         EnumSet<DocumentFlags> documentFlags = EnumSet.of(DocumentFlags.PdfFile);
 
-        ret.metadata = new DocumentMetadata(documentLengthLogic.getEncodedAverageLength(dld),
-                pubDate.yearByte(), (int) -ret.quality, documentFlags);
+        ret.metadata = new DocumentMetadata(
+                documentLengthLogic.getEncodedAverageLength(dld),
+                pubDate.yearByte(),
+                (int) -ret.quality,
+                documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
