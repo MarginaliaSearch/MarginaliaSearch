@@ -3,9 +3,16 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss,SSS} %style{%-8markerSimpleName}{FG_Cyan} %highlight{%-5level}{FATAL=red, ERROR=red, WARN=yellow} %-24t %-20c{1}  --  %msg%n"/>
             <Filters>
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+            </Filters>
+        </Console>
+        <Console name="ProcessConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="%style{P}{FG_Cyan} %msg%n"/>
+            <Filters>
+                <MarkerFilter marker="PROCESS" onMatch="ALLOW" onMismatch="DENY" />
             </Filters>
         </Console>
         <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
@@ -15,6 +22,7 @@
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
             <SizeBasedTriggeringPolicy size="10MB" />
         </RollingFile>
@@ -34,6 +42,7 @@
 
         <Root level="info">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="ProcessConsole"/>
             <AppenderRef ref="LogToFile"/>
         </Root>
     </Loggers>

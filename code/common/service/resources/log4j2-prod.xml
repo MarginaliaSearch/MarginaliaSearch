@@ -1,11 +1,49 @@
 <Configuration xmlns="http://logging.apache.org/log4j/2.0/config" >
     <Appenders>
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss,SSS} %style{%-8markerSimpleName}{FG_Cyan} %highlight{%-5level}{FATAL=red, ERROR=red, WARN=yellow} %-24t %-20c{1}  --  %msg%n"/>
+        <Console name="ConsoleInfo" target="SYSTEM_OUT">
+            <PatternLayout pattern="- %d{HH:mm:ss,SSS} %-20c{1} -- %msg%n"/>
             <Filters>
+                <LevelMatchFilter level="INFO" onMatch="ALLOW" onMismatch="DENY"/>
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+            </Filters>
+        </Console>
+        <Console name="ConsoleWarn" target="SYSTEM_OUT">
+            <PatternLayout pattern="⚠ %d{HH:mm:ss,SSS} %-20c{1} -- %msg%n"/>
+            <Filters>
+                <LevelMatchFilter level="WARN" onMatch="ALLOW" onMismatch="DENY"/>
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+            </Filters>
+        </Console>
+        <Console name="ConsoleError" target="SYSTEM_OUT">
+            <PatternLayout pattern="🔥 %d{HH:mm:ss,SSS} %-20c{1} -- %msg%n"/>
+            <Filters>
+                <LevelMatchFilter level="ERROR" onMatch="ALLOW" onMismatch="DENY"/>
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+            </Filters>
+        </Console>
+        <Console name="ConsoleFatal" target="SYSTEM_OUT">
+            <PatternLayout pattern="💀 %d{HH:mm:ss,SSS} %-20c{1} -- %msg%n"/>
+            <Filters>
+                <LevelMatchFilter level="FATAL" onMatch="ALLOW" onMismatch="DENY"/>
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+            </Filters>
+        </Console>
+        <Console name="ProcessConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="%style{%msg%n}{FG_Cyan}"/>
+            <Filters>
+                <MarkerFilter marker="PROCESS" onMatch="ALLOW" onMismatch="DENY" />
             </Filters>
         </Console>
         <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
@@ -36,7 +74,11 @@
         <Logger name="org.apache.zookeeper" level="WARN" />
 
         <Root level="info">
-            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ConsoleInfo"/>
+            <AppenderRef ref="ConsoleWarn"/>
+            <AppenderRef ref="ConsoleError"/>
+            <AppenderRef ref="ConsoleFatal"/>
+            <AppenderRef ref="ProcessConsole"/>
             <AppenderRef ref="LogToFile"/>
         </Root>
     </Loggers>
