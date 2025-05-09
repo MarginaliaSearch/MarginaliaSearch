@@ -22,7 +22,7 @@ import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.HeadingAwarePDFTextStripper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -168,7 +168,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         try (var doc = Loader.loadPDF(pdfBytes)) {
             String docMetaTitle = Objects.requireNonNullElse(doc.getDocumentInformation().getTitle(), "");
 
-            var stripper = new PDFTextStripper();
+            var stripper = new HeadingAwarePDFTextStripper();
             stripper.setStartPage(1);
             stripper.setSortByPosition(true);
             stripper.setWordSeparator(" ");
@@ -177,6 +177,8 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
             stripper.setParagraphStart("<p>");
             stripper.setParagraphEnd("</p>\n");
             stripper.setPageEnd("</div>\n");
+            stripper.setHeadingStart("<h1>");
+            stripper.setHeadingEnd("</h1>\n");
             stripper.setLineSeparator("\n");
 
             String text = stripper.getText(doc);
@@ -188,15 +190,27 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
             var parsed = Jsoup.parse(htmlBuilder.toString());
 
-            // Prefer setting the title to the first paragraph in the
-            // document, as this is almost always correct.  Otherwise,
-            // we fall back on the metadata title, which is almost always
-            // useless
+            var firstPage = parsed.getElementsByTag("div").first();
+            if (null != firstPage) {
+                for (var heading : firstPage.getElementsByTag("h1")) {
+                    String headingText = heading.text();
+                    if (headingText.length() > 2) {
+                        parsed.title(headingText);
+                        break;
+                    }
+                }
+            }
 
-            var firstP = parsed.getElementsByTag("p").first();
-            if (firstP != null) parsed.title(firstP.text());
-            else parsed.title(docMetaTitle);
+            if (parsed.title().isEmpty()) {
+                // Prefer setting the title to the first paragraph in the
+                // document, as this is almost always correct.  Otherwise,
+                // we fall back on the metadata title, which is almost always
+                // useless
 
+                var firstP = parsed.getElementsByTag("p").first();
+                if (firstP != null) parsed.title(firstP.text());
+                else parsed.title(docMetaTitle);
+            }
             return parsed;
         }
 
