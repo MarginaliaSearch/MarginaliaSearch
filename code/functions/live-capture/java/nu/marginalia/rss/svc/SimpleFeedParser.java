@@ -79,9 +79,17 @@ public class SimpleFeedParser {
                 if (!link.isBlank())
                     break;
                 var tag = element.getElementsByTag(attr).first();
+
                 if (tag != null) {
-                    link = tag.text();
+                    String linkText = tag.text();
+
+                    if (linkText.isBlank()) {
+                        linkText = tag.attr("href");
+                    }
+
+                    link = linkText;
                 }
+
             }
 
             ret.add(new ItemData(title, description, link, pubDate));
