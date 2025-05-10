@@ -204,6 +204,10 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
             // <h1>...</h1><h1>...</h1> -> <h1>...</h1>
             parsed.getElementsByTag("h1").forEach(h1 -> {
+                var nextSibling = h1.nextElementSibling();
+                if (nextSibling == null || !"h1".equals(nextSibling.tagName())) {
+                    return; // Short-circuit to avoid unnecessary work
+                }
 
                 StringJoiner joiner = new StringJoiner(" ");
                 joiner.add(h1.text());

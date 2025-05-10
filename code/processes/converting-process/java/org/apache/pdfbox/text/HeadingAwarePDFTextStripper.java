@@ -1944,7 +1944,11 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
             return;
 
         double avgFontSize = getAverageFontSizeOfLine(line);
-        double ypos = line.getFirst().textPositions.getFirst().getY();
+
+        float ypos = getLineYPosition(line);
+        if (Float.isNaN(ypos))
+            return;
+
         boolean isHeading = avgFontSize >= headingBoundary
                 && (line.size() > 1 || line.getFirst().text.length() > 2)
                 && ypos < headingBreak;
@@ -1967,6 +1971,26 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         if (isHeading) {
             writeHeadingEnd();
         }
+    }
+
+    /** Get the Y position of the first TextPosition in the line.
+     *
+     * @return Y position of the first TextPosition in the line,
+     *         or NaN if the line is empty or has no TextPositions
+     */
+    private float getLineYPosition(List<WordWithTextPositions> line)
+    {
+        if (line.isEmpty()) {
+            return Float.NaN;
+        }
+
+        List<TextPosition> firstTextPosition = line.getFirst().getTextPositions();
+
+        if (firstTextPosition == null || firstTextPosition.isEmpty()) {
+            return Float.NaN;
+        }
+
+        return firstTextPosition.getFirst().getY();
     }
 
     /**
