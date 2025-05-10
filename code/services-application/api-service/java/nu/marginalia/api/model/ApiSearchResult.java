@@ -8,14 +8,16 @@ public class ApiSearchResult {
     public String title;
     public String description;
     public double quality;
+    public String format; // "pdf", "html", "text", etc.
 
     public List<List<ApiSearchResultQueryDetails>> details = new ArrayList<>();
 
-    public ApiSearchResult(String url, String title, String description, double quality, List<List<ApiSearchResultQueryDetails>> details) {
+    public ApiSearchResult(String url, String title, String description, double quality, String format, List<List<ApiSearchResultQueryDetails>> details) {
         this.url = url;
         this.title = title;
         this.description = description;
         this.quality = quality;
+        this.format = format;
         this.details = details;
     }
 
