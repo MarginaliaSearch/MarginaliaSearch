@@ -1,6 +1,7 @@
 package nu.marginalia.api.searchquery.model.results;
 
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import org.jetbrains.annotations.NotNull;
 
@@ -160,5 +161,15 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
 
     public String toString() {
         return "DecoratedSearchResultItem(rawIndexResult=" + this.getRawIndexResult() + ", url=" + this.getUrl() + ", title=" + this.getTitle() + ", description=" + this.getDescription() + ", urlQuality=" + this.getUrlQuality() + ", format=" + this.getFormat() + ", features=" + this.getFeatures() + ", pubYear=" + this.getPubYear() + ", dataHash=" + this.getDataHash() + ", wordsTotal=" + this.getWordsTotal() + ", bestPositions=" + this.getBestPositions() + ", rankingScore=" + this.getRankingScore() + ", resultsFromDomain=" + this.getResultsFromDomain() + ", rankingDetails=" + this.getRankingDetails() + ")";
+    }
+
+    public String getShortFormat() {
+        try {
+            var df = DocumentFormat.valueOf(format);
+            return df.shortFormat;
+        }
+        catch (IllegalArgumentException e) {
+            return DocumentFormat.UNKNOWN.shortFormat;
+        }
     }
 }

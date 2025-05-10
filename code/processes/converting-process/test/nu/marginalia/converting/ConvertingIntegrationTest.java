@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.io.SerializableCrawlDataStream;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.PubDate;
@@ -13,7 +14,6 @@ import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
-import nu.marginalia.model.html.HtmlStandard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -91,7 +91,7 @@ public class ConvertingIntegrationTest {
 
             assertTrue(details.title.length() > 4);
             assertTrue(details.description.length() > 4);
-            assertEquals(HtmlStandard.HTML5, details.standard);
+            assertEquals(DocumentFormat.HTML5, details.format);
 
         }
     }
@@ -125,7 +125,7 @@ public class ConvertingIntegrationTest {
             assertTrue(details.metadata.size() > 0);
             assertTrue(details.title.length() > 4);
             assertTrue(details.description.length() > 4);
-            assertEquals(HtmlStandard.HTML5, details.standard);
+            assertEquals(DocumentFormat.HTML5, details.format);
         }
     }
 

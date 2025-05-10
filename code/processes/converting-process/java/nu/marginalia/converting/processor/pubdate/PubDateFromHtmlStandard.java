@@ -1,12 +1,13 @@
 package nu.marginalia.converting.processor.pubdate;
 
-import nu.marginalia.model.html.HtmlStandard;
+import nu.marginalia.model.DocumentFormat;
 
 public class PubDateFromHtmlStandard {
     /** Used to bias pub date heuristics */
-    public static int blindGuess(HtmlStandard standard) {
-        return switch (standard) {
+    public static int blindGuess(DocumentFormat format) {
+        return switch (format) {
             case PLAIN -> 1993;
+            case PDF -> 2010;
             case HTML123 -> 1997;
             case HTML4, XHTML -> 2006;
             case HTML5 -> 2018;
@@ -21,8 +22,8 @@ public class PubDateFromHtmlStandard {
      * Discovering publication year involves a lot of guesswork, this helps
      * keep the guesses relatively sane.
      */
-    public static boolean isGuessPlausible(HtmlStandard standard, int year) {
-        switch (standard) {
+    public static boolean isGuessPlausible(DocumentFormat format, int year) {
+        switch (format) {
             case HTML123:
                 return year <= 2000;
             case XHTML:

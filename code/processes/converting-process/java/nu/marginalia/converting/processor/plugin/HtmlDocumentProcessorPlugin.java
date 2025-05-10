@@ -25,12 +25,12 @@ import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.link_parser.LinkParser;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.jsoup.nodes.Document;
@@ -137,8 +137,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
 
         final int length = getLength(doc);
-        final HtmlStandard standard = getHtmlStandard(doc);
-        final double quality = documentValuator.getQuality(crawledDocument, standard, doc, length);
+        final DocumentFormat format = getDocumentFormat(doc);
+        final double quality = documentValuator.getQuality(crawledDocument, format, doc, length);
 
         if (isDisqualified(documentClass, url, quality, doc.title())) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
@@ -152,7 +152,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         var ret = new ProcessedDocumentDetails();
 
         ret.length = length;
-        ret.standard = standard;
+        ret.format = format;
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
@@ -161,7 +161,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.quality = documentValuator.adjustQuality(quality, features);
         ret.hashCode = dld.localitySensitiveHashCode();
 
-        PubDate pubDate = pubDateSniffer.getPubDate(documentHeaders, url, doc, standard, true);
+        PubDate pubDate = pubDateSniffer.getPubDate(documentHeaders, url, doc, format, true);
 
         EnumSet<DocumentFlags> documentFlags = documentFlags(features, generatorParts.type());
 
@@ -180,7 +180,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addPubDate(pubDate)
                 .addUrl(url)
                 .addFeatures(features)
-                .addFormat(standard)
+                .addFormat(format)
                 .addGenerator(generatorParts.keywords())
                 .build();
 
@@ -316,12 +316,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         return linkTerms;
     }
 
-    private HtmlStandard getHtmlStandard(Document doc) {
-        HtmlStandard htmlStandard = HtmlStandardExtractor.parseDocType(doc.documentType());
-        if (HtmlStandard.UNKNOWN.equals(htmlStandard)) {
+    private DocumentFormat getDocumentFormat(Document doc) {
+        DocumentFormat format = HtmlStandardExtractor.parseDocType(doc.documentType());
+        if (DocumentFormat.UNKNOWN.equals(format)) {
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }
-        return htmlStandard;
+        return format;
     }
 
     private int getLength(Document doc) {

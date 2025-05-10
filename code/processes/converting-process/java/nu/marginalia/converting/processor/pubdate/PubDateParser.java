@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor.pubdate;
 
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.crawl.PubDate;
-import nu.marginalia.model.html.HtmlStandard;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -26,7 +26,7 @@ public class PubDateParser {
                 .filter(PubDateParser::validateDate);
     }
 
-    public static Optional<PubDate> attemptParseDate(String date, HtmlStandard standard) {
+    public static Optional<PubDate> attemptParseDate(String date, DocumentFormat standard) {
         return Optional.ofNullable(date)
                 .filter(str -> str.length() >= 4 && str.length() < 32)
                 .flatMap(str ->
@@ -81,7 +81,7 @@ public class PubDateParser {
     }
 
 
-    public static Optional<PubDate> dateFromHighestYearLookingSubstringWithGuess(String maybe, HtmlStandard standard) {
+    public static Optional<PubDate> dateFromHighestYearLookingSubstringWithGuess(String maybe, DocumentFormat standard) {
         int guess = PubDateFromHtmlStandard.blindGuess(standard);
 
         var matcher = yearPattern.matcher(maybe);
@@ -135,7 +135,7 @@ public class PubDateParser {
         return (max + min) / 2;
     }
 
-    public static int guessYear(HtmlStandard standard) {
+    public static int guessYear(DocumentFormat standard) {
         // Create some jitter to avoid having documents piling up in the same four years
         // as this would make searching in those years disproportionately useless
 

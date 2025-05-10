@@ -7,6 +7,7 @@ import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
+import nu.marginalia.converting.processor.plugin.PdfDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PlainTextDocumentProcessorPlugin;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
@@ -33,7 +34,8 @@ public class DocumentProcessor {
     private static final Set<String> acceptedContentTypes = Set.of("application/xhtml+xml",
             "application/xhtml",
             "text/html",
-            "text/plain");
+            "text/plain",
+            "application/pdf");
 
 
     private final List<AbstractDocumentProcessorPlugin> processorPlugins = new ArrayList<>();
@@ -42,12 +44,14 @@ public class DocumentProcessor {
     @Inject
     public DocumentProcessor(HtmlDocumentProcessorPlugin htmlDocumentProcessorPlugin,
                              PlainTextDocumentProcessorPlugin plainTextDocumentProcessorPlugin,
+                             PdfDocumentProcessorPlugin pdfDocumentProcessorPlugin,
                              AnchorTextKeywords anchorTextKeywords)
     {
         this.anchorTextKeywords = anchorTextKeywords;
 
         processorPlugins.add(htmlDocumentProcessorPlugin);
         processorPlugins.add(plainTextDocumentProcessorPlugin);
+        processorPlugins.add(pdfDocumentProcessorPlugin);
     }
 
     public ProcessedDocument process(CrawledDocument crawledDocument,

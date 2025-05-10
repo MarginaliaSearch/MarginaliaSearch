@@ -74,6 +74,9 @@
             @if (DocumentFlags.PlainText.isPresent(result.getFirst().resultItem.encodedDocMetadata))
                 <span class="px-1 bg-blue-100 text-blue-700 dark:border dark:border-blue-600 dark:text-blue-400 dark:bg-black  rounded">Plain text</span>
             @endif
+            @if (DocumentFlags.PdfFile.isPresent(result.getFirst().resultItem.encodedDocMetadata))
+                <span class="px-1 bg-blue-100 text-blue-700 dark:border dark:border-blue-600 dark:text-blue-400 dark:bg-black  rounded">PDF File</span>
+            @endif
             @if (DocumentFlags.GeneratorForum.isPresent(result.getFirst().resultItem.encodedDocMetadata))
                 <span class="px-1 bg-blue-100 text-blue-700 dark:border dark:border-blue-600 dark:text-blue-400 dark:bg-black  rounded">Forum</span>
             @endif

@@ -124,7 +124,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     document.details.title,
                     document.details.description,
                     HtmlFeature.encode(document.details.features),
-                    document.details.standard.name(),
+                    document.details.format.name(),
                     document.details.length,
                     document.details.hashCode,
                     (float) document.details.quality,

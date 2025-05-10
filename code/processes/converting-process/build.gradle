@@ -62,6 +62,7 @@ dependencies {
     implementation libs.jwarc
 
     implementation libs.jsoup
+    implementation libs.pdfbox
 
     implementation libs.guava
     implementation dependencies.create(libs.guice.get()) {

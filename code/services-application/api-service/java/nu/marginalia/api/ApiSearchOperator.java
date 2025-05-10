@@ -90,6 +90,7 @@ public class ApiSearchOperator {
                 url.getTitle(),
                 url.getDescription(),
                 sanitizeNaN(url.rankingScore, -100),
+                url.getShortFormat(),
                 details
         );
     }

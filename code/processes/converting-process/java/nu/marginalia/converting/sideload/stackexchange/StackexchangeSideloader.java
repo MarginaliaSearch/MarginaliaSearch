@@ -9,13 +9,13 @@ import nu.marginalia.integration.stackexchange.sqlite.StackExchangePostsDb;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawl.UrlIndexingState;
-import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
@@ -165,7 +165,7 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.details.description = StringUtils.truncate(doc.body().text(), 255);
             ret.details.length = 128;
 
-            ret.details.standard = HtmlStandard.HTML5;
+            ret.details.format = DocumentFormat.HTML5;
             ret.details.linksExternal = List.of();
             ret.details.linksInternal = List.of();
             ret.state = UrlIndexingState.OK;

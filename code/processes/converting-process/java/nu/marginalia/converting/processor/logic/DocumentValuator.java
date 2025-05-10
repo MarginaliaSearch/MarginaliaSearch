@@ -2,9 +2,9 @@ package nu.marginalia.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
 import nu.marginalia.converting.model.DisqualifiedException;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import nu.marginalia.model.html.HtmlStandard;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -17,7 +17,7 @@ import java.util.Set;
 public class DocumentValuator {
 
     public double getQuality(CrawledDocument crawledDocument,
-                             HtmlStandard htmlStandard,
+                             DocumentFormat htmlStandard,
                              Document parsedDocument,
                              int textLength) throws DisqualifiedException {
 
