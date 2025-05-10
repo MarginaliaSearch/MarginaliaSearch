@@ -152,6 +152,8 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
     private boolean firstActualTextPosition = false;
     private String actualText = null;
 
+    private double headingBreak = -1;
+
     /**
      * The charactersByArticle is used to extract text by article divisions. For example a PDF that has two columns like
      * a newspaper, we want to extract the first column and then the second column. In this example the PDF would have 2
@@ -365,6 +367,10 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
             }
             characterListMapping.clear();
             super.processPage(page);
+
+            // Set a highest y-coordinate we'll accept as a heading position
+            headingBreak = page.getBBox().getHeight() * 0.75;
+
             writePage();
             endPage(page);
             page.removePageResourceFromCache();
@@ -1938,7 +1944,10 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
             return;
 
         double avgFontSize = getAverageFontSizeOfLine(line);
-        boolean isHeading = avgFontSize >= headingBoundary && (line.size() > 1 || line.getFirst().text.length() > 2);
+        double ypos = line.getFirst().textPositions.getFirst().getY();
+        boolean isHeading = avgFontSize >= headingBoundary
+                && (line.size() > 1 || line.getFirst().text.length() > 2)
+                && ypos < headingBreak;
 
         if (isHeading) {
             writeHeadingStart();
