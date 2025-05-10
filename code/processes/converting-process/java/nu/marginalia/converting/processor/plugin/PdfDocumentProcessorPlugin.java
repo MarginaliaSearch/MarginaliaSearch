@@ -31,10 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 
 public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
@@ -191,20 +188,45 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                     .append(text)
                     .append("</body></html>");
 
-            System.out.println(htmlBuilder);
-
             var parsed = Jsoup.parse(htmlBuilder.toString());
 
-            var firstPage = parsed.getElementsByTag("div").first();
-            if (null != firstPage) {
-                for (var heading : firstPage.getElementsByTag("h1")) {
-                    String headingText = heading.text();
-                    if (headingText.length() > 2) {
-                        parsed.title(headingText);
+            // <p><h1>...</h1></p> -> <h1>...</h1>
+            parsed.getElementsByTag("h1").forEach(h1 -> {
+                var parent = h1.parent();
+                if (parent == null || !"p".equals(parent.tagName())) {
+                    return;
+                }
+
+                if (parent.childrenSize() == 1) {
+                    parent.replaceWith(h1);
+                }
+            });
+
+            // <h1>...</h1><h1>...</h1> -> <h1>...</h1>
+            parsed.getElementsByTag("h1").forEach(h1 -> {
+
+                StringJoiner joiner = new StringJoiner(" ");
+                joiner.add(h1.text());
+
+                for (var sibling : h1.nextElementSiblings()) {
+                    if (!"h1".equals(sibling.tagName()))
                         break;
-                    }
+                    joiner.add(sibling.text());
+                    sibling.remove();
+                }
+
+                h1.text(joiner.toString());
+            });
+
+
+            for (var heading : parsed.getElementsByTag("h1")) {
+                String headingText = heading.text();
+                if (headingText.length() > 2) {
+                    parsed.title(headingText);
+                    break;
                 }
             }
+
 
             if (parsed.title().isEmpty()) {
                 // Prefer setting the title to the first paragraph in the
