@@ -7,11 +7,11 @@ import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import nu.marginalia.model.html.HtmlStandard;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public abstract class AbstractDocumentProcessorPlugin {
             return this;
         }
 
-        public MetaTagsBuilder addFormat(HtmlStandard standard) {
+        public MetaTagsBuilder addFormat(DocumentFormat standard) {
 
             add("format", standard);
 

@@ -13,11 +13,11 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.apache.commons.lang3.StringUtils;
@@ -109,7 +109,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         ret.length = documentBody.length();
 
-        ret.standard = HtmlStandard.PDF;
+        ret.format = DocumentFormat.PDF;
         ret.title = StringUtils.truncate(defaultSpecialization.getTitle(doc, dld, url.toString()), maxTitleLength);
 
         ret.quality = -5;
@@ -134,7 +134,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                 .addPubDate(pubDate)
                 .addUrl(url)
                 .addFeatures(ret.features)
-                .addFormat(ret.standard)
+                .addFormat(ret.format)
                 .build();
 
         words.addAllSyntheticTerms(tagWords);

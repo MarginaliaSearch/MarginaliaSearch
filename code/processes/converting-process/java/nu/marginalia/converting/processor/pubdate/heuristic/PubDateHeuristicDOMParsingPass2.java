@@ -5,9 +5,9 @@ import nu.marginalia.converting.processor.pubdate.PubDateEffortLevel;
 import nu.marginalia.converting.processor.pubdate.PubDateFromHtmlStandard;
 import nu.marginalia.converting.processor.pubdate.PubDateHeuristic;
 import nu.marginalia.converting.processor.pubdate.PubDateParser;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.PubDate;
-import nu.marginalia.model.html.HtmlStandard;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
@@ -19,7 +19,7 @@ import java.util.Optional;
 public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
 
     @Override
-    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url, Document document, HtmlStandard htmlStandard) {
+    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard) {
         if (effortLevel == PubDateEffortLevel.LOW)
             return Optional.empty();
 
@@ -33,9 +33,9 @@ public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
 
     private static class DateExtractingNodeVisitor implements NodeFilter {
         public PubDate pubDate;
-        private final HtmlStandard htmlStandard;
+        private final DocumentFormat htmlStandard;
 
-        private DateExtractingNodeVisitor(HtmlStandard htmlStandard) {
+        private DateExtractingNodeVisitor(DocumentFormat htmlStandard) {
             this.htmlStandard = htmlStandard;
         }
 
@@ -73,7 +73,7 @@ public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
         }
 
         private void parse(String text) {
-            if (htmlStandard == HtmlStandard.UNKNOWN) {
+            if (htmlStandard == DocumentFormat.UNKNOWN) {
                 PubDateParser
                         .dateFromHighestYearLookingSubstring(text)
                         .ifPresent(this::setPubDate);

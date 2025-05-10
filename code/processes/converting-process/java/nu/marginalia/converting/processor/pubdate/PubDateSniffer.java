@@ -2,9 +2,9 @@ package nu.marginalia.converting.processor.pubdate;
 
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.pubdate.heuristic.*;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.PubDate;
-import nu.marginalia.model.html.HtmlStandard;
 import org.jsoup.nodes.Document;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class PubDateSniffer {
         heuristics.add(new PubDateHeuristicGuessFromHtmlStandard());
     }
 
-    public PubDate getPubDate(DocumentHeaders headers, EdgeUrl url, Document document, HtmlStandard htmlStandard, boolean runExpensive) {
+    public PubDate getPubDate(DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard, boolean runExpensive) {
         final PubDateEffortLevel effortLevel = runExpensive ? PubDateEffortLevel.HIGH : PubDateEffortLevel.LOW;
 
         for (var heuristic : heuristics) {

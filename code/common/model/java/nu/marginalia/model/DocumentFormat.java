@@ -1,7 +1,7 @@
-package nu.marginalia.model.html;
+package nu.marginalia.model;
 
 // This class really doesn't belong anywhere, but will squat here for now
-public enum HtmlStandard {
+public enum DocumentFormat {
     PLAIN(0, 1),
     PDF(0, 1),
     UNKNOWN(0, 1),
@@ -15,7 +15,7 @@ public enum HtmlStandard {
     /** Used to tune quality score */
     public final double scale;
 
-    HtmlStandard(double offset, double scale) {
+    DocumentFormat(double offset, double scale) {
         this.offset = offset;
         this.scale = scale;
     }

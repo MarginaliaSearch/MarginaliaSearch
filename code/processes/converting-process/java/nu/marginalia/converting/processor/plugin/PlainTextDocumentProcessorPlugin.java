@@ -13,10 +13,10 @@ import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawldata.CrawledDocument;
-import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.apache.commons.lang3.StringUtils;
@@ -91,7 +91,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         ret.length = documentBody.length();
 
-        ret.standard = HtmlStandard.PLAIN;
+        ret.format = DocumentFormat.PLAIN;
         ret.title = StringUtils.truncate(plainTextLogic.getTitle(url, firstFewLines), maxTitleLength);
 
         ret.quality = -1;
@@ -113,7 +113,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
                 .addPubDate(pubDate)
                 .addUrl(url)
                 .addFeatures(ret.features)
-                .addFormat(ret.standard)
+                .addFormat(ret.format)
                 .build();
 
         words.addAllSyntheticTerms(tagWords);
