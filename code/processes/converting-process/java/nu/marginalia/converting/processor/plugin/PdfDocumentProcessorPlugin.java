@@ -173,6 +173,9 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
             stripper.setSortByPosition(true);
             stripper.setWordSeparator(" ");
 
+            // Increase the tolerance for line spacing to deal better with paragraphs.
+            stripper.setDropThreshold(5f);
+
             stripper.setPageStart("<div>");
             stripper.setParagraphStart("<p>");
             stripper.setParagraphEnd("</p>\n");
@@ -187,6 +190,8 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
             htmlBuilder.append("<html><body>")
                     .append(text)
                     .append("</body></html>");
+
+            System.out.println(htmlBuilder);
 
             var parsed = Jsoup.parse(htmlBuilder.toString());
 
