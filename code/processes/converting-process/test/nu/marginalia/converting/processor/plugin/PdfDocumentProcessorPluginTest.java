@@ -1,7 +1,6 @@
 package nu.marginalia.converting.processor.plugin;
 
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
@@ -15,9 +14,12 @@ import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,13 +47,44 @@ class PdfDocumentProcessorPluginTest {
                         new TitleExtractor(255)
                         ));
     }
+    public AbstractDocumentProcessorPlugin.DetailsWithWords testPdfFile(byte[] pdfBytes) throws Exception {
+        var doc = new CrawledDocument("test", "https://www.example.com/sample.pdf", "application/pdf", Instant.now().toString(), 200, "OK", "OK", "", pdfBytes, false, null, null);
+        return plugin.createDetails(doc, new LinkTexts(), DocumentClass.NORMAL);
+    }
+
+    public AbstractDocumentProcessorPlugin.DetailsWithWords testPdfFile(Path file) throws Exception {
+        return testPdfFile(Files.readAllBytes(file));
+    }
+
+    private byte[] downloadPDF(String url) throws IOException, URISyntaxException {
+        HttpURLConnection conn = (HttpURLConnection) new URI(url).toURL().openConnection();
+        try {
+            return conn.getInputStream().readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            conn.disconnect();
+        }
+    }
 
     @Test
-    void createDetails() throws IOException, URISyntaxException, DisqualifiedException {
-        byte[] pdfBytes = Files.readAllBytes(Path.of("/home/st_work/Work/sample.pdf"));
-        var doc = new CrawledDocument("test", "https://www.example.com/sample.pdf", "application/pdf", Instant.now().toString(), 200, "OK", "OK", "", pdfBytes, false, null, null);
-        var details = plugin.createDetails(doc, new LinkTexts(), DocumentClass.NORMAL);
+    @Disabled // requires sample PDF files that are not included in the repository
+    void testingTool() throws Exception {
+        System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample.pdf")).details().title);
+        System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample2.pdf")).details().title);
+        System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample3.pdf")).details().title);
+        System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample4.pdf")).details().title);
+    }
 
-        System.out.println(details);
+    @Test
+    @Disabled
+    void testingTool2() throws Exception {
+        System.out.println(plugin.convertPdfToHtml(Files.readAllBytes(Path.of("/home/st_work/Work/sample2.pdf"))));
+    }
+
+    @Test
+    void testMarginaliaSample() throws Exception {
+        var doc = plugin.convertPdfToHtml(downloadPDF("https://www.marginalia.nu/junk/test.pdf"));
+        System.out.println(doc.html());
     }
 }

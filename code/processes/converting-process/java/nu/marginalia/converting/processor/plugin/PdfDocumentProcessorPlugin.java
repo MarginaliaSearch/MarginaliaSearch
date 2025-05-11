@@ -148,10 +148,28 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     }
 
     private String getDescription(Document doc) {
+        int cnt = 0;
+        boolean useNext = false;
         for (var ptag : doc.getElementsByTag("p")) {
             String text = ptag.text();
-            if (text.length() > 256) {
+
+            // Many academic documents have an abstract at the start of the document,
+            // which makes a nice summary.  Though they tend to bleed into the text,
+            // so we check for the word "Abstract" at the start of the paragraph.
+
+            if (text.startsWith("Abstract ")) {
+                return StringUtils.abbreviate(text.substring("Abstract ".length()), "...", 255);
+            }
+            else if (text.equals("Abstract")) {
+                useNext = true;
+            }
+            else if (useNext) {
+                useNext = false;
                 return StringUtils.abbreviate(text, "...", 255);
+            }
+
+            if (++cnt > 15) {
+                break;
             }
         }
         return defaultSpecialization.getSummary(doc, Set.of());
@@ -161,7 +179,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     /** Convert the provided PDF bytes into a HTML rendering that can be fed
      * to the HTML processor.
      */
-    private Document convertPdfToHtml(byte[] pdfBytes) throws IOException {
+    Document convertPdfToHtml(byte[] pdfBytes) throws IOException {
         try (var doc = Loader.loadPDF(pdfBytes)) {
             String docMetaTitle = Objects.requireNonNullElse(doc.getDocumentInformation().getTitle(), "");
 
