@@ -14,6 +14,7 @@ import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +69,8 @@ class PdfDocumentProcessorPluginTest {
         }
     }
 
+
+    @Disabled
     @Test
     void testingTool() throws Exception {
         System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample.pdf")).details().title);
@@ -78,6 +81,7 @@ class PdfDocumentProcessorPluginTest {
         System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample6.pdf")).details().title);
     }
 
+    @Disabled
     @Test
     void testingTool2() throws Exception {
         System.out.println(plugin.convertPdfToHtml(Files.readAllBytes(Path.of("/home/st_work/Work/sample6.pdf"))));
