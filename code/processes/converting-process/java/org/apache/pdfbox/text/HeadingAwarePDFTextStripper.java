@@ -17,7 +17,8 @@
 package org.apache.pdfbox.text;
 
 import it.unimi.dsi.fastutil.doubles.Double2IntAVLTreeMap;
-import it.unimi.dsi.fastutil.doubles.Double2IntSortedMap;
+import it.unimi.dsi.fastutil.doubles.DoubleAVLTreeSet;
+import it.unimi.dsi.fastutil.doubles.DoubleSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.contentstream.operator.markedcontent.BeginMarkedContentSequence;
@@ -504,6 +505,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         }
 
         double headingBoundary = calculateHeadingFontSizeBoundary(charactersByArticle);
+        double medianLineYDist = calculateMedianLineYDist(charactersByArticle);
 
         for (List<TextPosition> textList : charactersByArticle)
         {
@@ -654,7 +656,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
                         writeLine(normalize(line), headingBoundary);
                         line.clear();
                         lastLineStartPosition = handleLineSeparation(current, lastPosition,
-                                lastLineStartPosition, maxHeightForLine);
+                                lastLineStartPosition, medianLineYDist, maxHeightForLine);
                         expectedStartOfNextWordX = EXPECTED_START_OF_NEXT_WORD_X_RESET_VALUE;
                         maxYForLine = MAX_Y_FOR_LINE_RESET_VALUE;
                         maxHeightForLine = MAX_HEIGHT_FOR_LINE_RESET_VALUE;
@@ -723,10 +725,58 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         writePageEnd();
     }
 
+    private double calculateMedianLineYDist(ArrayList<List<TextPosition>> charactersByArticle) {
+
+        // Gather each y position and its count
+        Double2IntAVLTreeMap yPositionsWithCount = new Double2IntAVLTreeMap();
+        for (List<TextPosition> textList : charactersByArticle) {
+            for (var pos : textList) {
+                double y = pos.getYDirAdj();
+                yPositionsWithCount.merge(y, 1, Integer::sum);
+            }
+        }
+
+        IntSummaryStatistics yPositionsWithCountStats = yPositionsWithCount.values().intStream().summaryStatistics();
+
+        // Create a set of y positions, including any record with a count greater than the average * 0.8
+        // (we want to avoid superscripts, subscripts and other noise)
+
+        DoubleSet yPositions = new DoubleAVLTreeSet();
+        for (var entry : yPositionsWithCount.double2IntEntrySet()) {
+            double y = entry.getDoubleKey();
+            int count = entry.getIntValue();
+            for (int i = 0; i < count; i++) {
+                if (count > Math.max(yPositionsWithCountStats.getMin(), yPositionsWithCountStats.getAverage() * 0.8)) {
+                    yPositions.add(y);
+                }
+            }
+        }
+
+        // Calculate the distances between each y position
+        var yDistances = new Double2IntAVLTreeMap();
+        var iter = yPositions.iterator();
+        if (!iter.hasNext()) {
+            return 0;
+        }
+        double lastY = iter.nextDouble();
+        int count = 0;
+        while (iter.hasNext()) {
+            double y = iter.nextDouble();
+            double distance = Math.abs(y - lastY);
+            yDistances.mergeInt(distance, 1, Integer::sum);
+            lastY = y;
+            count++;
+        }
+
+        // Calculate the median distance
+        return findMedian(yDistances, count);
+    }
+
     private double calculateHeadingFontSizeBoundary(List<List<TextPosition>> charactersByArticle) {
 
-        DoubleSummaryStatistics stats = new DoubleSummaryStatistics();
-        Double2IntSortedMap fontSizeMap = new Double2IntAVLTreeMap();
+        var stats = new DoubleSummaryStatistics();
+        var fontSizeMap = new Double2IntAVLTreeMap();
+
         for (List<TextPosition> textList : charactersByArticle) {
             for (var pos : textList) {
                 double size = pos.getFontSize();
@@ -736,19 +786,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         }
 
         int total = (int) stats.getCount();
-        int taken = 0;
-        double median = 0;
-        while (!fontSizeMap.isEmpty()) {
-            var entry = fontSizeMap.pollFirstEntry();
-            if (taken + entry.getValue() >= total / 2) {
-                median = entry.getKey();
-                break;
-            }
-            else {
-                taken += entry.getValue();
-                fontSizeMap.remove((double) entry.getKey());
-            }
-        }
+        double median = findMedian(fontSizeMap, total);
 
         if (median * 1.5 < stats.getMax()) {
             return median * 1.5;
@@ -761,6 +799,25 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
                 return median * 1.5;
             }
         }
+    }
+
+    private double findMedian(Double2IntAVLTreeMap map, int total) {
+        int taken = 0;
+        double median = 0;
+
+        var iter = map.double2IntEntrySet().iterator();
+        while (iter.hasNext()) {
+
+            var entry = iter.next();
+            if (taken + entry.getIntValue() >= total / 2) {
+                median = entry.getDoubleKey();
+                break;
+            }
+            else {
+                taken += entry.getIntValue();
+            }
+        }
+        return median;
     }
 
     private boolean hasFontOrSizeChanged(TextPosition current, TextPosition last)
@@ -1613,11 +1670,13 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
      * @throws IOException if something went wrong
      */
     private PositionWrapper handleLineSeparation(PositionWrapper current,
-                                                 PositionWrapper lastPosition, PositionWrapper lastLineStartPosition,
+                                                 PositionWrapper lastPosition,
+                                                 PositionWrapper lastLineStartPosition,
+                                                 double medianLineYDist,
                                                  float maxHeightForLine) throws IOException
     {
         current.setLineStart();
-        isParagraphSeparation(current, lastPosition, lastLineStartPosition, maxHeightForLine);
+        isParagraphSeparation(current, lastPosition, lastLineStartPosition, medianLineYDist, maxHeightForLine);
         lastLineStartPosition = current;
         if (current.isParagraphStart())
         {
@@ -1658,14 +1717,18 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
      * This method sets the isParagraphStart and isHangingIndent flags on the current position object.
      * </p>
      *
-     * @param position the current text position. This may have its isParagraphStart or isHangingIndent flags set upon
-     * return.
-     * @param lastPosition the previous text position (should not be null).
+     * @param position              the current text position. This may have its isParagraphStart or isHangingIndent flags set upon
+     *                              return.
+     * @param lastPosition          the previous text position (should not be null).
      * @param lastLineStartPosition the last text position that followed a line separator, or null.
-     * @param maxHeightForLine max height for text positions since lasLineStartPosition.
+     * @param medianLineYDist
+     * @param maxHeightForLine      max height for text positions since lasLineStartPosition.
      */
-    private void isParagraphSeparation(PositionWrapper position, PositionWrapper lastPosition,
-                                       PositionWrapper lastLineStartPosition, float maxHeightForLine)
+    private void isParagraphSeparation(PositionWrapper position,
+                                       PositionWrapper lastPosition,
+                                       PositionWrapper lastLineStartPosition,
+                                       double medianLineYDist,
+                                       float maxHeightForLine)
     {
         boolean result = false;
         if (lastLineStartPosition == null)
@@ -1676,7 +1739,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         {
             float yGap = Math.abs(position.getTextPosition().getYDirAdj()
                     - lastPosition.getTextPosition().getYDirAdj());
-            float newYVal = multiplyFloat(getDropThreshold(), maxHeightForLine);
+            double newYVal = Math.min(medianLineYDist * 1.1, multiplyFloat(getDropThreshold(), maxHeightForLine));
             // do we need to flip this for rtl?
             float xGap = position.getTextPosition().getXDirAdj()
                     - lastLineStartPosition.getTextPosition().getXDirAdj();
