@@ -164,14 +164,15 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                 useNext = true;
             }
             else if (useNext) {
-                useNext = false;
                 return StringUtils.abbreviate(text, "...", 255);
             }
 
-            if (++cnt > 15) {
+            if (++cnt > 15) { // Don't scan the entire document
                 break;
             }
         }
+
+        // Fall back to the default specialization
         return defaultSpecialization.getSummary(doc, Set.of());
 
     }
@@ -208,45 +209,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
             var parsed = Jsoup.parse(htmlBuilder.toString());
 
-            // <p><h1>...</h1></p> -> <h1>...</h1>
-            parsed.getElementsByTag("h1").forEach(h1 -> {
-                var parent = h1.parent();
-                if (parent == null || !"p".equals(parent.tagName())) {
-                    return;
-                }
-
-                if (parent.childrenSize() == 1) {
-                    parent.replaceWith(h1);
-                }
-            });
-
-            // Remove empty <p> tags
-            parsed.getElementsByTag("p").forEach(p -> {
-                if (p.childrenSize() == 0 && !p.hasText()) {
-                    p.remove();
-                }
-            });
-
-            // <h1>...</h1><h1>...</h1> -> <h1>...</h1>
-            parsed.getElementsByTag("h1").forEach(h1 -> {
-                var nextSibling = h1.nextElementSibling();
-                if (nextSibling == null || !"h1".equals(nextSibling.tagName())) {
-                    return; // Short-circuit to avoid unnecessary work
-                }
-
-                StringJoiner joiner = new StringJoiner(" ");
-                joiner.add(h1.text());
-
-                for (var sibling : h1.nextElementSiblings()) {
-                    if (!"h1".equals(sibling.tagName()))
-                        break;
-                    joiner.add(sibling.text());
-                    sibling.remove();
-                }
-
-                h1.text(joiner.toString());
-            });
-
+            repairDOM(parsed);
 
             for (var heading : parsed.getElementsByTag("h1")) {
                 String headingText = heading.text();
@@ -270,6 +233,53 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
             return parsed;
         }
 
+
+    }
+
+    /** Repair the DOM to remove some common issues with PDF conversion,
+     * including empty paragraphs, and multiline headers that are split into multiple
+     * conescutive h1 tags.
+     */
+    private void repairDOM(Document parsed) {
+
+        // <p><h1>...</h1></p> -> <h1>...</h1>
+        parsed.getElementsByTag("h1").forEach(h1 -> {
+            var parent = h1.parent();
+            if (parent == null || !"p".equals(parent.tagName())) {
+                return;
+            }
+
+            if (parent.childrenSize() == 1) {
+                parent.replaceWith(h1);
+            }
+        });
+
+        // Remove empty <p> tags
+        parsed.getElementsByTag("p").forEach(p -> {
+            if (p.childrenSize() == 0 && !p.hasText()) {
+                p.remove();
+            }
+        });
+
+        // <h1>...</h1><h1>...</h1> -> <h1>...</h1>
+        parsed.getElementsByTag("h1").forEach(h1 -> {
+            var nextSibling = h1.nextElementSibling();
+            if (nextSibling == null || !"h1".equals(nextSibling.tagName())) {
+                return; // Short-circuit to avoid unnecessary work
+            }
+
+            StringJoiner joiner = new StringJoiner(" ");
+            joiner.add(h1.text());
+
+            for (var sibling : h1.nextElementSiblings()) {
+                if (!"h1".equals(sibling.tagName()))
+                    break;
+                joiner.add(sibling.text());
+                sibling.remove();
+            }
+
+            h1.text(joiner.toString());
+        });
 
     }
 
