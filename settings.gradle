@@ -244,6 +244,7 @@ dependencyResolutionManagement {
             library('wiremock', 'org.wiremock','wiremock').version('3.11.0')
             library('jte','gg.jte','jte').version('3.1.15')
 
+            library('pdfbox', 'org.apache.pdfbox', 'pdfbox').version('3.0.5')
             bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])

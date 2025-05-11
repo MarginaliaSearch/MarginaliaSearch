@@ -3,8 +3,8 @@ package nu.marginalia.converting.processor.pubdate;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.processor.pubdate.heuristic.PubDateHeuristicDOMParsingPass2;
+import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.html.HtmlStandard;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +74,7 @@ class PubDateSnifferTest {
                         <time pubdate="pubdate" datetime="2022-08-24">time</time>
                         Wow, sure lor 'em boss
                         </article>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2022-08-24", ret.dateIso8601());
@@ -90,7 +90,7 @@ class PubDateSnifferTest {
                         <time>2022-08-24</time>
                         Wow, sure lor 'em boss
                         </article>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2022-08-24", ret.dateIso8601());
@@ -106,7 +106,7 @@ class PubDateSnifferTest {
                         <time class="published" datetime="July 13, 2006">July 13, 2006</time>
                         Wow, sure lor 'em boss
                         </article>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals(2006, ret.year());
@@ -116,14 +116,14 @@ class PubDateSnifferTest {
     public void testProblemCases() throws IOException, URISyntaxException {
         var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
-                Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/The Switch to Linux Begins .html"))), HtmlStandard.HTML5, true);
+                Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/The Switch to Linux Begins .html"))), DocumentFormat.HTML5, true);
 
         assertFalse(ret.isEmpty());
         assertEquals(2006, ret.year());
 
         ret = dateSniffer.getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
-                Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/Black Hat USA 2010 Understanding and Deploying DNSSEC by Paul Wouters and Patrick Nauber.html"))), HtmlStandard.XHTML, true);
+                Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/Black Hat USA 2010 Understanding and Deploying DNSSEC by Paul Wouters and Patrick Nauber.html"))), DocumentFormat.XHTML, true);
 
         assertFalse(ret.isEmpty());
         assertEquals(2010, ret.year());
@@ -146,7 +146,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <meta itemprop="datePublished" content="2022-08-24" />
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2022-08-24", ret.dateIso8601());
@@ -160,7 +160,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <meta property="datePublished" content="2022-08-24" />
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2022-08-24", ret.dateIso8601());
@@ -174,7 +174,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <script type="application/ld+json">{"@context":"https:\\/\\/schema.org","@type":"Article","name":"In the Year 2525","url":"https:\\/\\/en.wikipedia.org\\/wiki\\/In_the_Year_2525","sameAs":"http:\\/\\/www.wikidata.org\\/entity\\/Q145269","mainEntity":"http:\\/\\/www.wikidata.org\\/entity\\/Q145269","author":{"@type":"Organization","name":"Contributors to Wikimedia projects"},"publisher":{"@type":"Organization","name":"Wikimedia Foundation, Inc.","logo":{"@type":"ImageObject","url":"https:\\/\\/www.wikimedia.org\\/static\\/images\\/wmf-hor-googpub.png"}},"datePublished":"2004-08-24T14:39:14Z","dateModified":"2022-10-20T11:54:37Z","image":"https:\\/\\/upload.wikimedia.org\\/wikipedia\\/commons\\/4\\/4a\\/In_the_Year_2525_by_Zager_and_Evans_US_vinyl_Side-A_RCA_release.png","headline":"song written and compsoed by Rick Evans, originally recorded by Zager and Evans and released in 1969"}</script><script type="application/ld+json">{"@context":"https:\\/\\/schema.org","@type":"Article","name":"In the Year 2525","url":"https:\\/\\/en.wikipedia.org\\/wiki\\/In_the_Year_2525","sameAs":"http:\\/\\/www.wikidata.org\\/entity\\/Q145269","mainEntity":"http:\\/\\/www.wikidata.org\\/entity\\/Q145269","author":{"@type":"Organization","name":"Contributors to Wikimedia projects"},"publisher":{"@type":"Organization","name":"Wikimedia Foundation, Inc.","logo":{"@type":"ImageObject","url":"https:\\/\\/www.wikimedia.org\\/static\\/images\\/wmf-hor-googpub.png"}},"datePublished":"2004-08-24T14:39:14Z","dateModified":"2022-10-20T11:54:37Z","image":"https:\\/\\/upload.wikimedia.org\\/wikipedia\\/commons\\/4\\/4a\\/In_the_Year_2525_by_Zager_and_Evans_US_vinyl_Side-A_RCA_release.png","headline":"song written and compsoed by Rick Evans, originally recorded by Zager and Evans and released in 1969"}</script>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2004-08-24", ret.dateIso8601());
@@ -188,7 +188,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <script type="application/ld+json" class="aioseop-schema">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://socialnomics.net/#organization","url":"https://socialnomics.net/","name":"Socialnomics","sameAs":[]},{"@type":"WebSite","@id":"https://socialnomics.net/#website","url":"https://socialnomics.net/","name":"Socialnomics","publisher":{"@id":"https://socialnomics.net/#organization"}},{"@type":"WebPage","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#webpage","url":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/","inLanguage":"en-US","name":"3 Reasons Why You Should Adopt Java-based Technology For Your Business","isPartOf":{"@id":"https://socialnomics.net/#website"},"breadcrumb":{"@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#breadcrumblist"},"datePublished":"2016-12-27T21:01:36-06:00","dateModified":"2016-12-22T21:02:32-06:00"},{"@type":"Article","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#article","isPartOf":{"@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#webpage"},"author":{"@id":"https://socialnomics.net/author/rahis-saifi/#author"},"headline":"3 Reasons Why You Should Adopt Java-based Technology For Your Business","datePublished":"2016-12-27T21:01:36-06:00","dateModified":"2016-12-22T21:02:32-06:00","commentCount":0,"mainEntityOfPage":{"@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#webpage"},"publisher":{"@id":"https://socialnomics.net/#organization"},"articleSection":"Business, business, java, Java Developers, programming languages"},{"@type":"Person","@id":"https://socialnomics.net/author/rahis-saifi/#author","name":"Rahis Saifi","sameAs":["https://www.facebook.com/RahisSaifiOfficial","https://www.twitter.com/57rahis"],"image":{"@type":"ImageObject","@id":"https://socialnomics.net/#personlogo","url":"https://secure.gravatar.com/avatar/e67f630f0b8bc87e59e111d5e955961d?s=96&d=mm&r=g","width":96,"height":96,"caption":"Rahis Saifi"}},{"@type":"BreadcrumbList","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#breadcrumblist","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"WebPage","@id":"https://socialnomics.net/","url":"https://socialnomics.net/","name":"Socialnomics Blog"}},{"@type":"ListItem","position":2,"item":{"@type":"WebPage","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/","url":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/","name":"3 Reasons Why You Should Adopt Java-based Technology For Your Business"}}]}]}</script>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2016-12-27", ret.dateIso8601());
@@ -202,7 +202,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <title>No date in the HTML</title>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertNull(ret.dateIso8601());
@@ -217,7 +217,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <title>No date in the HTML</title>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertEquals("2022-02-03", ret.dateIso8601());
@@ -232,7 +232,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <p>Published 2003, updated 2022</p>
-                        """), HtmlStandard.HTML5, true);
+                        """), DocumentFormat.HTML5, true);
 
         assertFalse(ret.isEmpty());
         assertNull(ret.dateIso8601());
@@ -258,7 +258,7 @@ class PubDateSnifferTest {
                         <!doctype html>
                         <html>
                         <div style="float: left;">&nbsp;<b>Post subject:</b> Keyboards.</div><div style="float: right;"><span class="postdetails"><b><img src="./styles/subsilver2/imageset/icon_post_target.gif" width="12" height="9" alt="Post" title="Post" /> <a  href="./viewtopic.php?p=34580&amp;sid=cf0c13dedebb4fea1f03fa73e510cd9f#p34580">#1</a></b></span>&nbsp;<b>Posted:</b> Sun Oct 03, 2010 5:37 pm&nbsp;</div>
-                        """), HtmlStandard.UNKNOWN, true);
+                        """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
         assertNull(ret.dateIso8601());
