@@ -21,6 +21,9 @@
                             </h2>
 
                             <div class="text-sm mt-1">
+                                @if ("PDF".equals(result.first.format))
+                                    <i title="PDF" class="fas fa-file-pdf text-red-500"></i>
+                                @endif
                                 <a class="text-liteblue dark:text-blue-200 underline break-all" href="${result.first.url.toString()}"
                                    rel="noopener noreferrer" tabindex="-1">$unsafe{result.first.displayUrl()}</a>
                             </div>
