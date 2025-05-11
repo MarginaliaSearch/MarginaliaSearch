@@ -14,7 +14,7 @@ import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 
+@Tag("flaky")
 class PdfDocumentProcessorPluginTest {
     static PdfDocumentProcessorPlugin plugin;
 
@@ -68,18 +69,18 @@ class PdfDocumentProcessorPluginTest {
     }
 
     @Test
-    @Disabled // requires sample PDF files that are not included in the repository
     void testingTool() throws Exception {
         System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample.pdf")).details().title);
         System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample2.pdf")).details().title);
         System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample3.pdf")).details().title);
         System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample4.pdf")).details().title);
+        System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample5.pdf")).details().title);
+        System.out.println(testPdfFile(Path.of("/home/st_work/Work/sample6.pdf")).details().title);
     }
 
     @Test
-    @Disabled
     void testingTool2() throws Exception {
-        System.out.println(plugin.convertPdfToHtml(Files.readAllBytes(Path.of("/home/st_work/Work/sample2.pdf"))));
+        System.out.println(plugin.convertPdfToHtml(Files.readAllBytes(Path.of("/home/st_work/Work/sample6.pdf"))));
     }
 
     @Test

@@ -501,7 +501,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         boolean startOfArticle;
         if (!charactersByArticle.isEmpty())
         {
-            writePageStart();
+            writePageStart(currentPageNo);
         }
 
         double headingBoundary = calculateHeadingFontSizeBoundary(charactersByArticle);
@@ -1855,9 +1855,9 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
      *
      * @throws IOException if something went wrong
      */
-    protected void writePageStart() throws IOException
+    protected void writePageStart(int pageNo) throws IOException
     {
-        output.write(getPageStart());
+        output.write(String.format("<div data-page=\"%d\">", pageNo));
     }
 
     /**
@@ -1867,18 +1867,18 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
      */
     protected void writePageEnd() throws IOException
     {
-        output.write(getPageEnd());
+        output.write("</div>");
     }
 
 
-    protected void writeHeadingStart() throws IOException
+    protected void writeHeadingStart(double avgFontSize) throws IOException
     {
-        output.write(getHeadingStart());
+        output.write(String.format("<h1 data-font-size=\"%.2f\">", avgFontSize));
     }
 
     protected void writeHeadingEnd() throws IOException
     {
-        output.write(getHeadingEnd());
+        output.write("</h1>");
     }
     /**
      * returns the list item Pattern object that matches the text at the specified PositionWrapper or null if the text
@@ -1994,6 +1994,26 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         return sum / count;
     }
 
+    private boolean isLineBold(List<WordWithTextPositions> line)
+    {
+        if (line.isEmpty()) return false;
+
+        float minFontWeight = Integer.MAX_VALUE;
+        for (var word : line)
+        {
+            for (var textPosition : word.getTextPositions())
+            {
+                var font = textPosition.getFont();
+                if (font == null) continue;
+                var descriptor = font.getFontDescriptor();
+                if (descriptor == null) continue;
+
+                minFontWeight = Math.min(minFontWeight, descriptor.getFontWeight());
+            }
+        }
+        return minFontWeight >= 600;
+    }
+
     /**
      * Write a list of string containing a whole line of a document.
      *
@@ -2012,12 +2032,12 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         if (Float.isNaN(ypos))
             return;
 
-        boolean isHeading = avgFontSize >= headingBoundary
+        boolean isHeading = (avgFontSize >= headingBoundary || isLineBold(line))
                 && (line.size() > 1 || line.getFirst().text.length() > 2)
                 && ypos < headingBreak;
 
         if (isHeading) {
-            writeHeadingStart();
+            writeHeadingStart(avgFontSize);
         }
 
         int numberOfStrings = line.size();
