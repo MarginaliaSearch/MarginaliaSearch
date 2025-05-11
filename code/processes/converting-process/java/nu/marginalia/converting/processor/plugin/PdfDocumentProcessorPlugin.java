@@ -220,6 +220,13 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                 }
             });
 
+            // Remove empty <p> tags
+            parsed.getElementsByTag("p").forEach(p -> {
+                if (p.childrenSize() == 0 && !p.hasText()) {
+                    p.remove();
+                }
+            });
+
             // <h1>...</h1><h1>...</h1> -> <h1>...</h1>
             parsed.getElementsByTag("h1").forEach(h1 -> {
                 var nextSibling = h1.nextElementSibling();
