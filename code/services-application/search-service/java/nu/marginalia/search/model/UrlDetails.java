@@ -94,13 +94,24 @@ public class UrlDetails implements Comparable<UrlDetails> {
     public String displayTitle() {
         StringBuilder sb = new StringBuilder();
 
+        buildDisplayTitle(sb, title);
+
+        if (sb.isEmpty()) {
+            buildDisplayTitle(sb, url.toDisplayString());
+        }
+
+        return sb.toString();
+    }
+
+    private void buildDisplayTitle(StringBuilder sb, String str) {
+
         int distSinceBreak = 0;
 
         char c = ' ';
         int prevC = ' ';
-        for (int i = 0; i < title.length(); i++) {
+        for (int i = 0; i < str.length(); i++) {
             prevC = c;
-            c = title.charAt(i);
+            c = str.charAt(i);
 
             if (Character.isSpaceChar(c)) {
                 distSinceBreak = 0;
@@ -137,8 +148,6 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append(c);
             }
         }
-
-        return sb.toString();
     }
 
     /** Helper that inserts hyphenation hints and escapes

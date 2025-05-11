@@ -56,10 +56,13 @@
             <div class="flex mt-2 text-sm flex flex-col space-y-2">
                 <p class="text-black dark:text-white ${result.colorScheme.backgroundColor}  p-1 rounded break-words hyphens-auto">Also from ${result.getDomain().toString()}:</p>
 
-                <ul class="pl-2 mt-2 underline text-liteblue dark:text-blue-200">
+                <ul class="pl-2 mt-2 text-liteblue dark:text-blue-200">
                     @for(UrlDetails item : result.rest)
                         <li class="-indent-4 pl-4 mb-1 break-words hyphens-auto">
-                            <a href="${item.url.toString()}" rel="noopener noreferrer">$unsafe{item.displayTitle()}</a>
+                            @if ("PDF".equals(item.format))
+                                <i title="PDF" class="fas fa-file-pdf text-red-500"></i>
+                            @endif
+                            <a href="${item.url.toString()}" class="underline" rel="noopener noreferrer">$unsafe{item.displayTitle()}</a>
                         </li>
                     @endfor
                 </ul>
