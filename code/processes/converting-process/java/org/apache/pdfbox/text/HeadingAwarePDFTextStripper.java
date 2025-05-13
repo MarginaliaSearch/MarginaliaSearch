@@ -779,7 +779,8 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
 
         for (List<TextPosition> textList : charactersByArticle) {
             for (var pos : textList) {
-                double size = pos.getFontSize();
+                double size = pos.getFontSizeInPt();
+
                 fontSizeMap.mergeInt(size, 1, Integer::sum);
                 stats.accept(size);
             }
@@ -827,7 +828,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
             return false;
         }
         // compare font sizes
-        if (Float.compare(current.getFontSize(), last.getFontSize()) != 0)
+        if (Float.compare(current.getFontSizeInPt(), last.getFontSizeInPt()) != 0)
         {
             return true;
         }
@@ -1982,7 +1983,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         {
             for (var textPosition : word.getTextPositions())
             {
-                sum += textPosition.getFontSize();
+                sum += textPosition.getFontSizeInPt();
                 count++;
             }
         }
@@ -2001,8 +2002,12 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         float minFontWeight = Integer.MAX_VALUE;
         for (var word : line)
         {
+            int i = 0;
             for (var textPosition : word.getTextPositions())
             {
+                if (word.text.charAt(i++) == ' ') {
+                    continue;
+                }
                 var font = textPosition.getFont();
                 if (font == null) continue;
                 var descriptor = font.getFontDescriptor();
@@ -2032,8 +2037,12 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         if (Float.isNaN(ypos))
             return;
 
+
+        int len = line.stream().map(WordWithTextPositions::getTextPositions)
+                .mapToInt(List::size).sum();
+
         boolean isHeading = (avgFontSize >= headingBoundary || isLineBold(line))
-                && (line.size() > 1 || line.getFirst().text.length() > 2)
+                && len > 2
                 && ypos < headingBreak;
 
         if (isHeading) {
@@ -2073,7 +2082,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
             return Float.NaN;
         }
 
-        return firstTextPosition.getFirst().getY();
+        return firstTextPosition.getFirst().getYDirAdj();
     }
 
     /**
@@ -2093,7 +2102,7 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
             lineBuilder = normalizeAdd(normalized, lineBuilder, wordPositions, item);
         }
 
-        if (lineBuilder.length() > 0)
+        if (!lineBuilder.isEmpty())
         {
             normalized.add(createWord(lineBuilder.toString(), wordPositions));
         }
