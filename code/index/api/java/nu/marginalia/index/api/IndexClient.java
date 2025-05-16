@@ -80,7 +80,12 @@ public class IndexClient {
                         .limit(pagination.pageSize)
                         .toList();
 
-        return new AggregateQueryResponse(results, pagination.page(), totalNumResults.get());
+        var result = new AggregateQueryResponse(results, pagination.page(), totalNumResults.get());
+        if (indexRequest.getHumanQuery().equals("slackware linux")) {
+            logger.info("Query: {}", indexRequest.getHumanQuery());
+            logger.info("Results: {}", result.results);
+        }
+        return result;
     }
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {
