@@ -17,7 +17,7 @@ public class SearchQueryParamFactory {
     static final RpcQueryLimits defaultLimits = RpcQueryLimits.newBuilder()
             .setResultsTotal(100)
             .setResultsByDomain(5)
-            .setTimeoutMs(200)
+            .setTimeoutMs(250)
             .setFetchSize(8192)
             .build();
 
