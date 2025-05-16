@@ -25,10 +25,10 @@ public class UrlDeduplicator {
     }
 
     public boolean shouldRemove(DecoratedSearchResultItem details) {
-//        if (!deduplicateOnSuperficialHash(details))
-//            return true;
-//        if (!deduplicateOnLSH(details))
-//            return true;
+        if (!deduplicateOnSuperficialHash(details))
+            return true;
+        if (!deduplicateOnLSH(details))
+            return true;
         if (!limitResultsPerDomain(details))
             return true;
 
