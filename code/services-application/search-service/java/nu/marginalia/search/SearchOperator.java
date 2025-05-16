@@ -112,6 +112,13 @@ public class SearchOperator {
                 .selectStrategy(queryResponse)
                 .clusterResults(queryResults, 25);
 
+        if (queryParams.humanQuery().equals("slackware linux")) {
+            logger.info("Query response: {}", queryResponse.results().subList(0, 5));
+            logger.info("Query results: {}", queryResults.subList(0, 5));
+            logger.info("Clustered results: {}", clusteredResults.subList(0, 5));
+        }
+
+
         // Log the query and results
 
         logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
