@@ -61,7 +61,7 @@ public class UrlDeduplicator {
 
     private boolean limitResultsPerDomain(DecoratedSearchResultItem details) {
         final var domain = details.getUrl().getDomain();
-        final String key = domain.getDomainKey();
+        final String key = domain.toString();
 
         return keyCount.adjustOrPutValue(key, 1, 1) <= resultsPerKey;
     }
