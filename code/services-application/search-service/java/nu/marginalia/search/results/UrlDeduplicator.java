@@ -25,28 +25,14 @@ public class UrlDeduplicator {
     }
 
     public boolean shouldRemove(DecoratedSearchResultItem details) {
-        if (details.url.domain.topDomain.equals("slackware.com")) {
-            if (!deduplicateOnSuperficialHash(details)) {
-                logger.info("Rejecting on superficial hash " + details.url);
-                return true;
-            }
-            if (!deduplicateOnLSH(details)) {
-                logger.info("Rejecting on LSH for " + details.url);
-                return true;
-            }
-            if (!limitResultsPerDomain(details)) {
-                logger.info("Rejecting on limitResultsPerDomain for " + details.url);
-                return true;
-            }
-        }
-        else {
-            if (!deduplicateOnSuperficialHash(details))
-                return true;
-            if (!deduplicateOnLSH(details))
-                return true;
-            if (!limitResultsPerDomain(details))
-                return true;
-        }
+
+        if (!deduplicateOnSuperficialHash(details))
+            return true;
+        if (!deduplicateOnLSH(details))
+            return true;
+        if (!limitResultsPerDomain(details))
+            return true;
+
         return false;
     }
 
@@ -76,7 +62,7 @@ public class UrlDeduplicator {
 
     private boolean limitResultsPerDomain(DecoratedSearchResultItem details) {
         final var domain = details.getUrl().getDomain();
-        final String key = domain.getDomainKey();
+        final String key = domain.toString();
 
         return keyCount.adjustOrPutValue(key, 1, 1) <= resultsPerKey;
     }
