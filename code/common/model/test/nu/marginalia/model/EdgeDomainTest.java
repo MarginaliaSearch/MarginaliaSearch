@@ -9,14 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class EdgeDomainTest {
 
     @Test
-    public void testSkepdic() throws URISyntaxException {
-        var domain = new EdgeUrl("http://www.skepdic.com/astrology.html");
-        assertEquals("skepdic", domain.getDomain().getDomainKey());
-        var domain2 = new EdgeUrl("http://skepdic.com/astrology.html");
-        assertEquals("skepdic", domain2.getDomain().getDomainKey());
-    }
-
-    @Test
     public void testHkDomain() throws URISyntaxException {
         var domain = new EdgeUrl("http://l7072i3.l7c.net");
         assertEquals("http", domain.proto);

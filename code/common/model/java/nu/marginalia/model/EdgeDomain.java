@@ -112,14 +112,6 @@ public class EdgeDomain implements Serializable {
         return topDomain;
     }
 
-    public String getDomainKey() {
-        int cutPoint = topDomain.indexOf('.');
-        if (cutPoint < 0) {
-            return topDomain;
-        }
-        return topDomain.substring(0, cutPoint).toLowerCase();
-    }
-
     /** If possible, try to provide an alias domain,
      * i.e. a domain name that is very likely to link to this one
      * */
