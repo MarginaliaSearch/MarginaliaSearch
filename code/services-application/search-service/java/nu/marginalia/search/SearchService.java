@@ -85,7 +85,6 @@ public class SearchService extends JoobyService {
         String emptySvg = "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>";
         jooby.get("/site/{domain}/favicon", ctx -> {
             String domain = ctx.path("domain").value();
-            logger.info("Finding icon for domain {}", domain);
             try {
                 DbDomainQueries.DomainIdWithNode domainIdWithNode = domainQueries.getDomainIdWithNode(new EdgeDomain(domain));
                 var faviconMaybe = faviconClient.getFavicon(domain, domainIdWithNode.nodeAffinity());
