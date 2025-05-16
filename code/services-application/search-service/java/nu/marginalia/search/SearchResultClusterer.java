@@ -23,7 +23,7 @@ public class SearchResultClusterer {
     }
 
     /** No clustering, just return the results as is */
-    private static List<ClusteredUrlDetails> noOp(List<UrlDetails> results, int total) {
+    public static List<ClusteredUrlDetails> noOp(List<UrlDetails> results, int total) {
         if (results.isEmpty())
             return List.of();
 

@@ -109,8 +109,7 @@ public class SearchOperator {
 
         // Cluster the results based on the query response
         List<ClusteredUrlDetails> clusteredResults = SearchResultClusterer
-                .selectStrategy(queryResponse)
-                .clusterResults(queryResults, 25);
+                .noOp(queryResults, 0);
 
         // Log the query and results
 
