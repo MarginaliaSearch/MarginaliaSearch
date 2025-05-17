@@ -8,3 +8,4 @@
 2025-05-05:  Deploy executor partition 4.
 2025-05-05:  Deploy control.
 2025-05-08:  Deploy assistant.
+2025-05-17:  Redeploy all.
