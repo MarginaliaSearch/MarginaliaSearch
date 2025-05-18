@@ -84,7 +84,7 @@ public class ForwardIndexConverter {
 
             LongArray docFileData = LongArrayFactory.mmapForWritingConfined(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
-            ByteBuffer workArea = ByteBuffer.allocate(65536);
+            ByteBuffer workArea = ByteBuffer.allocate(1024*1024*100);
             for (var instance : journal.pages()) {
                 try (var slopTable = new SlopTable(instance.baseDir(), instance.page()))
                 {
