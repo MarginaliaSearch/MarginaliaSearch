@@ -2002,12 +2002,11 @@ public class HeadingAwarePDFTextStripper extends LegacyPDFStreamEngine
         float minFontWeight = Integer.MAX_VALUE;
         for (var word : line)
         {
-            int i = 0;
             for (var textPosition : word.getTextPositions())
             {
-                if (word.text.charAt(i++) == ' ') {
-                    continue;
-                }
+                // Skip empty text positions as they may have a different font
+                if (word.text.isBlank()) continue;
+
                 var font = textPosition.getFont();
                 if (font == null) continue;
                 var descriptor = font.getFontDescriptor();
