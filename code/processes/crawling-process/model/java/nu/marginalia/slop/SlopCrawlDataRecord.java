@@ -556,8 +556,18 @@ public record SlopCrawlDataRecord(String domain,
             timestampColumnReader = timestampColumn.open(this);
             contentTypeColumnReader = contentTypeColumn.open(this);
             bodyColumnReader = bodyColumn.open(this);
-            requestTimeColumnReader = requestTimeColumn.open(this);
             headerColumnReader = headerColumn.open(this);
+
+            // FIXME: After 2025-06-XX, we can remove this migration workaround
+            ShortColumn.Reader timeColumnReader;
+            try {
+                timeColumnReader = requestTimeColumn.open(this);
+            }
+            catch (Exception ex) {
+                // Migration workaround
+                timeColumnReader = null;
+            }
+            requestTimeColumnReader = timeColumnReader;
         }
 
         public abstract boolean filter(String url, int status, String contentType);
@@ -584,7 +594,7 @@ public record SlopCrawlDataRecord(String domain,
                 boolean cookies = cookiesColumnReader.get() == 1;
                 int status = statusColumnReader.get();
                 long timestamp = timestampColumnReader.get();
-                int requestTimeMs = requestTimeColumnReader.get();
+                int requestTimeMs = requestTimeColumnReader != null ? requestTimeColumnReader.get() : -1;
                 String contentType = contentTypeColumnReader.get();
 
                 LargeItem<byte[]> body = bodyColumnReader.getLarge();
