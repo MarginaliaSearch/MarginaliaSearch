@@ -10,6 +10,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -90,8 +91,8 @@ public class WarcProtocolReconstructor {
         return "HTTP/" + version + " " + statusCode + " " + statusMessage + "\r\n" + headerString + "\r\n\r\n";
     }
 
-    static String getResponseHeader(ClassicHttpResponse response, long size) {
-        String headerString = getHeadersAsString(response.getHeaders(), size);
+    static String getResponseHeader(ClassicHttpResponse response, Duration responseDuration, long size) {
+        String headerString = getHeadersAsString(response.getHeaders(), responseDuration, size);
 
         return response.getVersion().format() + " " + response.getCode() + " " + response.getReasonPhrase() + "\r\n" + headerString + "\r\n\r\n";
     }
@@ -160,7 +161,7 @@ public class WarcProtocolReconstructor {
 
 
 
-    static private String getHeadersAsString(Header[] headers, long responseSize) {
+    static private String getHeadersAsString(Header[] headers, Duration responseDuration, long responseSize) {
         StringJoiner joiner = new StringJoiner("\r\n");
 
         for (var header : headers) {
@@ -176,6 +177,7 @@ public class WarcProtocolReconstructor {
             if (headerCapitalized.equals("Content-Encoding"))
                 continue;
 
+
             // Since we're transparently decoding gzip, we need to update the Content-Length header
             // to reflect the actual size of the response body. We'll do this at the end.
             if (headerCapitalized.equals("Content-Length"))
@@ -184,6 +186,7 @@ public class WarcProtocolReconstructor {
             joiner.add(headerCapitalized + ": " + header.getValue());
         }
 
+        joiner.add("X-Marginalia-Response-Time: " + responseDuration.toMillis());
         joiner.add("Content-Length: " + responseSize);
 
         return joiner.toString();

@@ -23,6 +23,7 @@ public final class CrawledDocument implements SerializableCrawlData {
 
     public String crawlerStatus;
     public String crawlerStatusDesc;
+    public int requestTimeMs;
 
     @Nullable
     public String headers;
@@ -82,7 +83,7 @@ public final class CrawledDocument implements SerializableCrawlData {
     public String lastModifiedMaybe;
     public String etagMaybe;
 
-    public CrawledDocument(String crawlId, String url, String contentType, String timestamp, int httpStatus, String crawlerStatus, String crawlerStatusDesc, @Nullable String headers, byte[] documentBodyBytes, Boolean hasCookies, String lastModifiedMaybe, String etagMaybe) {
+    public CrawledDocument(String crawlId, String url, String contentType, String timestamp, int httpStatus, String crawlerStatus, String crawlerStatusDesc, @Nullable String headers, byte[] documentBodyBytes, Boolean hasCookies, int requestTimeMs, String lastModifiedMaybe, String etagMaybe) {
         this.crawlId = crawlId;
         this.url = url;
         this.contentType = contentType;
@@ -94,6 +95,7 @@ public final class CrawledDocument implements SerializableCrawlData {
         this.documentBodyBytes = Objects.requireNonNullElse(documentBodyBytes, new byte[] {});
         this.hasCookies = hasCookies;
         this.lastModifiedMaybe = lastModifiedMaybe;
+        this.requestTimeMs = requestTimeMs;
         this.etagMaybe = etagMaybe;
     }
 
@@ -173,6 +175,7 @@ public final class CrawledDocument implements SerializableCrawlData {
         private byte[] documentBodyBytes = new byte[0];
         private String recrawlState;
         private Boolean hasCookies;
+        private int requestTimeMs;
         private String lastModifiedMaybe;
         private String etagMaybe;
 
@@ -248,8 +251,13 @@ public final class CrawledDocument implements SerializableCrawlData {
             return this;
         }
 
+        public CrawledDocumentBuilder requestTimeMs(int requestTimeMs) {
+            this.requestTimeMs = requestTimeMs;
+            return this;
+        }
+
         public CrawledDocument build() {
-            return new CrawledDocument(this.crawlId, this.url, this.contentType, this.timestamp, this.httpStatus, this.crawlerStatus, this.crawlerStatusDesc, this.headers, this.documentBodyBytes, this.hasCookies, this.lastModifiedMaybe, this.etagMaybe);
+            return new CrawledDocument(this.crawlId, this.url, this.contentType, this.timestamp, this.httpStatus, this.crawlerStatus, this.crawlerStatusDesc, this.headers, this.documentBodyBytes, this.hasCookies, this.requestTimeMs, this.lastModifiedMaybe, this.etagMaybe);
         }
 
         public String toString() {

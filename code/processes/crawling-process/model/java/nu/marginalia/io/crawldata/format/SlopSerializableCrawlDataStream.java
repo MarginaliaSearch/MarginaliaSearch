@@ -166,6 +166,7 @@ public class SlopSerializableCrawlDataStream implements AutoCloseable, Serializa
                 nextRecord.body(),
                 // this field isn't actually used, maybe we can skip calculating it?
                 nextRecord.cookies(),
+                nextRecord.requestTimeMs(),
                 null,
                 null));
     }

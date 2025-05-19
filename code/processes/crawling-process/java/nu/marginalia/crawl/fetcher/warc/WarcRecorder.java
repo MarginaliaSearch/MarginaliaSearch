@@ -93,7 +93,7 @@ public class WarcRecorder implements AutoCloseable {
         WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
         WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
 
-        Instant date = Instant.now();
+        Instant requestDate = Instant.now();
 
         // Not entirely sure why we need to do this, but keeping it due to Chesterton's Fence
         Map<String, List<String>> extraHeaders = new HashMap<>(request.getHeaders().length);
@@ -107,6 +107,8 @@ public class WarcRecorder implements AutoCloseable {
 
                 try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request, timeout);
                      InputStream inputStream = inputBuffer.read()) {
+
+                    Instant responseDate = Instant.now();
 
                     cookies.updateCookieStore(response);
 
@@ -126,7 +128,7 @@ public class WarcRecorder implements AutoCloseable {
 
                     WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
                             .blockDigest(requestDigestBuilder.build())
-                            .date(date)
+                            .date(requestDate)
                             .body(MediaType.HTTP_REQUEST, httpRequestString)
                             .build();
 
@@ -138,7 +140,9 @@ public class WarcRecorder implements AutoCloseable {
                         response.addHeader("X-Has-Cookies", 1);
                     }
 
-                    byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response, inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
+                    byte[] responseHeaders = WarcProtocolReconstructor.getResponseHeader(response,
+                            Duration.between(requestDate, responseDate),
+                            inputBuffer.size()).getBytes(StandardCharsets.UTF_8);
 
                     ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer(inputBuffer.size() + responseHeaders.length);
 
@@ -169,7 +173,7 @@ public class WarcRecorder implements AutoCloseable {
 
                     WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
                             .blockDigest(responseDigestBuilder.build())
-                            .date(date)
+                            .date(responseDate)
                             .concurrentTo(warcRequest.id())
                             .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
@@ -184,7 +188,7 @@ public class WarcRecorder implements AutoCloseable {
                     warcResponse.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
                     writer.write(warcResponse);
 
-                    if (Duration.between(date, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
+                    if (Duration.between(requestDate, Instant.now()).compareTo(Duration.ofSeconds(9)) > 0
                             && inputBuffer.size() < 2048
                             && !requestUri.getPath().endsWith("robots.txt")) // don't bail on robots.txt
                     {
@@ -196,7 +200,7 @@ public class WarcRecorder implements AutoCloseable {
 
                         logger.warn("URL {} took too long to fetch ({}s) and was too small for the effort ({}b)",
                                 requestUri,
-                                Duration.between(date, Instant.now()).getSeconds(),
+                                Duration.between(requestDate, Instant.now()).getSeconds(),
                                 inputBuffer.size()
                         );
 

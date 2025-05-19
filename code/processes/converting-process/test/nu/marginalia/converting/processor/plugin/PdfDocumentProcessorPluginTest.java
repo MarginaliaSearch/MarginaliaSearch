@@ -50,7 +50,7 @@ class PdfDocumentProcessorPluginTest {
                         ));
     }
     public AbstractDocumentProcessorPlugin.DetailsWithWords testPdfFile(byte[] pdfBytes) throws Exception {
-        var doc = new CrawledDocument("test", "https://www.example.com/sample.pdf", "application/pdf", Instant.now().toString(), 200, "OK", "OK", "", pdfBytes, false, null, null);
+        var doc = new CrawledDocument("test", "https://www.example.com/sample.pdf", "application/pdf", Instant.now().toString(), 200, "OK", "OK", "", pdfBytes, false, -1, null, null);
         return plugin.createDetails(doc, new LinkTexts(), DocumentClass.NORMAL);
     }
 

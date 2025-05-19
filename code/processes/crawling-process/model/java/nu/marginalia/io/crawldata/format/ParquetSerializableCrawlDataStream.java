@@ -148,6 +148,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 nextRecord.body,
                 // this field isn't actually used, maybe we can skip calculating it?
                 nextRecord.cookies,
+                -1,
                 lastModified,
                 etag));
     }

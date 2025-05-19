@@ -148,6 +148,7 @@ public class ConvertingIntegrationTest {
                     "",
                     readClassPathFile(p.toString()).getBytes(),
                     false,
+                    -1,
                     null,
                     null
                     );

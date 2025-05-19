@@ -9,6 +9,7 @@ import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecord;
 import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileReader;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.primitive.ByteColumn;
+import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
 import nu.marginalia.slop.column.primitive.ShortColumn;
 import nu.marginalia.slop.column.string.EnumColumn;
@@ -39,6 +40,7 @@ public record SlopCrawlDataRecord(String domain,
                                   long timestamp,
                                   String contentType,
                                   byte[] body,
+                                  int requestTimeMs,
                                   String headers)
 {
     private static final EnumColumn domainColumn = new EnumColumn("domain", StandardCharsets.UTF_8, StorageType.ZSTD);
@@ -49,6 +51,7 @@ public record SlopCrawlDataRecord(String domain,
     private static final LongColumn timestampColumn = new LongColumn("timestamp");
     private static final EnumColumn contentTypeColumn = new EnumColumn("contentType", StandardCharsets.UTF_8);
     private static final ByteArrayColumn bodyColumn = new ByteArrayColumn("body", StorageType.ZSTD);
+    private static final ShortColumn requestTimeColumn = new ShortColumn("requestTimeMs");
     private static final StringColumn headerColumn = new StringColumn("header", StandardCharsets.UTF_8, StorageType.ZSTD);
 
     public SlopCrawlDataRecord(CrawledDocumentParquetRecord parquetRecord) {
@@ -60,6 +63,7 @@ public record SlopCrawlDataRecord(String domain,
                 parquetRecord.timestamp.toEpochMilli(),
                 parquetRecord.contentType,
                 parquetRecord.body,
+                -1,
                 parquetRecord.headers
                 );
     }
@@ -74,6 +78,7 @@ public record SlopCrawlDataRecord(String domain,
                 date.toEpochMilli(),
                 "x-marginalia/advisory;state=redirect",
                 new byte[0],
+                -1,
                 ""
         );
     }
@@ -87,6 +92,7 @@ public record SlopCrawlDataRecord(String domain,
                 date.toEpochMilli(),
                 "x-marginalia/advisory;state=error",
                 errorStatus.getBytes(),
+                -1,
                 ""
         );
     }
@@ -100,6 +106,7 @@ public record SlopCrawlDataRecord(String domain,
                 date.toEpochMilli(),
                 errorStatus,
                 new byte[0],
+                -1,
                 ""
         );
     }
@@ -391,9 +398,19 @@ public record SlopCrawlDataRecord(String domain,
 
             String headersStr;
             StringJoiner headersStrBuilder = new StringJoiner("\n");
+            int requestTimeMs = -1;
             for (var header : headers) {
                 if (header.getName().equalsIgnoreCase("X-Cookies") && "1".equals(header.getValue())) {
                     hasCookies = true;
+                }
+                if (header.getName().equals("X-Marginalia-Response-Time")) {
+                    try {
+                        requestTimeMs = Integer.parseInt(header.getValue());
+                    }
+                    catch (NumberFormatException ex) {
+                        logger.warn("Failed to parse X-Marginalia-Response-Time header: {}", header.getValue());
+                    }
+                    continue;
                 }
                 headersStrBuilder.add(header.getName() + ": " + header.getValue());
             }
@@ -409,6 +426,7 @@ public record SlopCrawlDataRecord(String domain,
                     response.date().toEpochMilli(),
                     contentType,
                     bodyBytes,
+                    requestTimeMs,
                     headersStr
                 )
             );
@@ -461,6 +479,7 @@ public record SlopCrawlDataRecord(String domain,
         private final LongColumn.Reader timestampColumnReader;
         private final EnumColumn.Reader contentTypeColumnReader;
         private final ByteArrayColumn.Reader bodyColumnReader;
+        private final ShortColumn.Reader requestTimeColumnReader;
         private final StringColumn.Reader headerColumnReader;
 
         public Reader(Path path) throws IOException {
@@ -474,6 +493,7 @@ public record SlopCrawlDataRecord(String domain,
             timestampColumnReader = timestampColumn.open(this);
             contentTypeColumnReader = contentTypeColumn.open(this);
             bodyColumnReader = bodyColumn.open(this);
+            requestTimeColumnReader = requestTimeColumn.open(this);
             headerColumnReader = headerColumn.open(this);
         }
 
@@ -487,6 +507,7 @@ public record SlopCrawlDataRecord(String domain,
                     timestampColumnReader.get(),
                     contentTypeColumnReader.get(),
                     bodyColumnReader.get(),
+                    requestTimeColumnReader.get(),
                     headerColumnReader.get()
             );
         }
@@ -506,6 +527,7 @@ public record SlopCrawlDataRecord(String domain,
         private final LongColumn.Reader timestampColumnReader;
         private final EnumColumn.Reader contentTypeColumnReader;
         private final ByteArrayColumn.Reader bodyColumnReader;
+        private final ShortColumn.Reader requestTimeColumnReader;
         private final StringColumn.Reader headerColumnReader;
 
         private SlopCrawlDataRecord next = null;
@@ -521,6 +543,7 @@ public record SlopCrawlDataRecord(String domain,
             timestampColumnReader = timestampColumn.open(this);
             contentTypeColumnReader = contentTypeColumn.open(this);
             bodyColumnReader = bodyColumn.open(this);
+            requestTimeColumnReader = requestTimeColumn.open(this);
             headerColumnReader = headerColumn.open(this);
         }
 
@@ -548,6 +571,7 @@ public record SlopCrawlDataRecord(String domain,
                 boolean cookies = cookiesColumnReader.get() == 1;
                 int status = statusColumnReader.get();
                 long timestamp = timestampColumnReader.get();
+                int requestTimeMs = requestTimeColumnReader.get();
                 String contentType = contentTypeColumnReader.get();
 
                 LargeItem<byte[]> body = bodyColumnReader.getLarge();
@@ -555,7 +579,7 @@ public record SlopCrawlDataRecord(String domain,
 
                 if (filter(url, status, contentType)) {
                     next = new SlopCrawlDataRecord(
-                            domain, url, ip, cookies, status, timestamp, contentType, body.get(), headers.get()
+                            domain, url, ip, cookies, status, timestamp, contentType, body.get(), requestTimeMs, headers.get()
                     );
                     return true;
                 }
