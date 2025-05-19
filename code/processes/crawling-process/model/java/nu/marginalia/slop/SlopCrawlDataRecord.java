@@ -496,8 +496,18 @@ public record SlopCrawlDataRecord(String domain,
             timestampColumnReader = timestampColumn.open(this);
             contentTypeColumnReader = contentTypeColumn.open(this);
             bodyColumnReader = bodyColumn.open(this);
-            requestTimeColumnReader = requestTimeColumn.open(this);
             headerColumnReader = headerColumn.open(this);
+
+            // FIXME: After 2025-06-XX, we can remove this migration workaround
+            ShortColumn.Reader timeColumnReader;
+            try {
+                timeColumnReader = requestTimeColumn.open(this);
+            }
+            catch (Exception ex) {
+                // Migration workaround
+                timeColumnReader = null;
+            }
+            requestTimeColumnReader = timeColumnReader;
         }
 
         public SlopCrawlDataRecord get() throws IOException {
@@ -510,7 +520,7 @@ public record SlopCrawlDataRecord(String domain,
                     timestampColumnReader.get(),
                     contentTypeColumnReader.get(),
                     bodyColumnReader.get(),
-                    requestTimeColumnReader.get(),
+                    requestTimeColumnReader != null ? requestTimeColumnReader.get() : -1,
                     headerColumnReader.get()
             );
         }
