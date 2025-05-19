@@ -2,6 +2,8 @@ package nu.marginalia.livecapture;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Playwright;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import org.junit.jupiter.api.Assertions;
@@ -14,6 +16,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -22,7 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 @Testcontainers
 @Tag("slow")
 public class BrowserlessClientTest {
-    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("browserless/chrome"))
+    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("ghcr.io/browserless/chromium"))
             .withEnv(Map.of("TOKEN", "BROWSERLESS_TOKEN"))
             .withNetworkMode("bridge")
             .withExposedPorts(3000);
@@ -34,6 +37,7 @@ public class BrowserlessClientTest {
     static String localIp;
 
     static URI browserlessURI;
+    static URI browserlessWssURI;
 
     @BeforeAll
     public static void setup() throws IOException {
@@ -43,6 +47,12 @@ public class BrowserlessClientTest {
                 container.getHost(),
                 container.getMappedPort(3000))
         );
+
+        browserlessWssURI = URI.create(String.format("wss://%s:%d/?TOKEN=BROWSERLESS_TOKEN",
+                container.getHost(),
+                container.getMappedPort(3000))
+        );
+
 
         wireMockServer.start();
         wireMockServer.stubFor(get("/").willReturn(aResponse().withStatus(200).withBody("Ok")));
@@ -81,6 +91,14 @@ public class BrowserlessClientTest {
         try (var client = new BrowserlessClient(browserlessURI)) {
             var content = client.content("https://www.marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
 
+            Assertions.assertFalse(content.isBlank(), "Content should not be empty");
+        }
+    }
+
+    @Test
+    public void testAnnotatedContent() throws Exception {
+        try (var client = new BrowserlessClient(browserlessURI)) {
+            var content = client.annotatedContent("https://www.marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
             Assertions.assertFalse(content.isBlank(), "Content should not be empty");
         }
     }

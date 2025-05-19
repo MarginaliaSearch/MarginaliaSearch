@@ -25,9 +25,9 @@ dependencies {
 
     implementation project(':code:execution:api')
     implementation project(':code:processes:crawling-process:ft-content-type')
+    implementation project(':third-party:rssreader')
 
     implementation libs.jsoup
-    implementation project(':third-party:rssreader')
     implementation libs.opencsv
     implementation libs.slop
     implementation libs.sqlite
@@ -56,7 +56,7 @@ dependencies {
     implementation libs.bundles.jetty
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
-
+    implementation libs.playwright
 
 
     testImplementation libs.bundles.slf4j.test
