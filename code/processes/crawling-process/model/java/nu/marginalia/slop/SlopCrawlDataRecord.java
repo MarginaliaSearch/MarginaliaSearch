@@ -328,6 +328,7 @@ public record SlopCrawlDataRecord(String domain,
         private final LongColumn.Writer timestampColumnWriter;
         private final EnumColumn.Writer contentTypeColumnWriter;
         private final ByteArrayColumn.Writer bodyColumnWriter;
+        private final ShortColumn.Writer requestTimeColumnWriter;
         private final StringColumn.Writer headerColumnWriter;
 
         public Writer(Path path) throws IOException {
@@ -341,6 +342,7 @@ public record SlopCrawlDataRecord(String domain,
             timestampColumnWriter = timestampColumn.create(this);
             contentTypeColumnWriter = contentTypeColumn.create(this);
             bodyColumnWriter = bodyColumn.create(this);
+            requestTimeColumnWriter = requestTimeColumn.create(this);
             headerColumnWriter = headerColumn.create(this);
         }
 
@@ -353,6 +355,7 @@ public record SlopCrawlDataRecord(String domain,
             timestampColumnWriter.put(record.timestamp);
             contentTypeColumnWriter.put(record.contentType);
             bodyColumnWriter.put(record.body);
+            requestTimeColumnWriter.put((short) record.requestTimeMs);
             headerColumnWriter.put(record.headers);
         }
 
