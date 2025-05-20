@@ -2,8 +2,6 @@ package nu.marginalia.livecapture;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.microsoft.playwright.BrowserType;
-import com.microsoft.playwright.Playwright;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +14,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
