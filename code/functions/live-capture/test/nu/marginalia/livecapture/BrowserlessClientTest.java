@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.images.PullPolicy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
@@ -22,9 +23,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 @Testcontainers
 @Tag("slow")
 public class BrowserlessClientTest {
-    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("ghcr.io/browserless/chromium"))
+    // Run gradle docker if this image is not available
+    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-browserless"))
             .withEnv(Map.of("TOKEN", "BROWSERLESS_TOKEN"))
+            .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkMode("bridge")
+            .withLogConsumer(frame -> {
+                System.out.print(frame.getUtf8String());
+            })
             .withExposedPorts(3000);
 
     static WireMockServer wireMockServer =
@@ -45,7 +51,7 @@ public class BrowserlessClientTest {
                 container.getMappedPort(3000))
         );
 
-        browserlessWssURI = URI.create(String.format("wss://%s:%d/?TOKEN=BROWSERLESS_TOKEN",
+        browserlessWssURI = URI.create(String.format("ws://%s:%d/?token=BROWSERLESS_TOKEN",
                 container.getHost(),
                 container.getMappedPort(3000))
         );
@@ -95,7 +101,7 @@ public class BrowserlessClientTest {
     @Test
     public void testAnnotatedContent() throws Exception {
         try (var client = new BrowserlessClient(browserlessURI)) {
-            var content = client.annotatedContent("https://www.marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
+            var content = client.annotatedContent("https://www.marginalia-search.com/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
             Assertions.assertFalse(content.isBlank(), "Content should not be empty");
         }
     }

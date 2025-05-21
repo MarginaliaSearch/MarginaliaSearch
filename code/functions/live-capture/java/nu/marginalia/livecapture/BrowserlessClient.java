@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -22,7 +23,6 @@ public class BrowserlessClient implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(BrowserlessClient.class);
     private static final String BROWSERLESS_TOKEN = System.getProperty("live-capture.browserless-token", "BROWSERLESS_TOKEN");
-    private final String attributesJs;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
@@ -36,7 +36,6 @@ public class BrowserlessClient implements AutoCloseable {
 
     public BrowserlessClient(URI browserlessURI) throws IOException {
         this.browserlessURI = browserlessURI;
-        this.attributesJs = new String(ClassLoader.getSystemResourceAsStream("live-capture/attributes.js").readAllBytes(), StandardCharsets.UTF_8);
     }
 
     public Optional<String> content(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
@@ -72,12 +71,17 @@ public class BrowserlessClient implements AutoCloseable {
                 "url", url,
                 "userAgent", userAgent,
                 "gotoOptions", gotoOptions,
-                "addScriptTag", List.of(Map.of("content", attributesJs)),
                 "waitForSelector", Map.of("selector", "#marginaliahack", "timeout", 15000)
         );
 
+        Map<String, Object> launchParameters = Map.of(
+                "args", List.of("--load-extension=/dom-export", "--disable-web-security")
+        );
+
+        String launchParametersStr = URLEncoder.encode(gson.toJson(launchParameters), StandardCharsets.UTF_8);
+
         var request = HttpRequest.newBuilder()
-                .uri(browserlessURI.resolve("/content?token="+BROWSERLESS_TOKEN))
+                .uri(browserlessURI.resolve("/content?token="+BROWSERLESS_TOKEN+"&launch="+launchParametersStr))
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))
