@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Marginalia DOM Interceptor",
+  "version": "1.0",
+  "description": "Makes DOM export better",
+  "run_at": "document_start",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "register.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "js": ["inject.js"],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

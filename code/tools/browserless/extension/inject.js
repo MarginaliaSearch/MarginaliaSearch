@@ -1,13 +1,5 @@
 
 
-/// Hijack the console to log messages to the page
-var logElem = document.createElement('div');
-logElem.setAttribute('id', 'x-marginalia-log');
-document.body.appendChild(logElem);
-console.log = function(message) {
-    logElem.innerHTML += message + '<br>\n';
-}
-
 function addStylesAsDataAttributes(propertyToAttrMap = {
     'display': 'data-display',
     'position': 'data-position',
@@ -151,94 +143,94 @@ class EventSimulator {
             const targetX = window.innerWidth / 2; // Center horizontally
             const targetY = -50; // Above the viewport (simulating URL bar position)
 
-            const deltaX = targetX - startX;
-            const deltaY = targetY - startY;
+        const deltaX = targetX - startX;
+        const deltaY = targetY - startY;
 
-            let lastMouseEvent = null;
+        let lastMouseEvent = null;
 
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
 
-                // Ease-in-out function for natural mouse movement
-                const easeInOut = progress < 0.5
-                    ? 2 * progress * progress
-                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            // Ease-in-out function for natural mouse movement
+            const easeInOut = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-                const currentX = startX + (deltaX * easeInOut);
-                const currentY = startY + (deltaY * easeInOut);
+            const currentX = startX + (deltaX * easeInOut);
+            const currentY = startY + (deltaY * easeInOut);
 
-                // Create mouse move event
-                const mouseMoveEvent = new MouseEvent('mousemove', {
-                    bubbles: true,
-                    cancelable: true,
-                    clientX: currentX,
-                    clientY: currentY,
-                    screenX: currentX,
-                    screenY: currentY,
-                    movementX: lastMouseEvent ? currentX - lastMouseEvent.clientX : 0,
-                    movementY: lastMouseEvent ? currentY - lastMouseEvent.clientY : 0,
-                    buttons: 0,
-                    button: -1
-                });
+            // Create mouse move event
+            const mouseMoveEvent = new MouseEvent('mousemove', {
+                bubbles: true,
+                cancelable: true,
+                clientX: currentX,
+                clientY: currentY,
+                screenX: currentX,
+                screenY: currentY,
+                movementX: lastMouseEvent ? currentX - lastMouseEvent.clientX : 0,
+                movementY: lastMouseEvent ? currentY - lastMouseEvent.clientY : 0,
+                buttons: 0,
+                button: -1
+            });
 
-                // Add custom properties to track simulation
-                mouseMoveEvent.simulated = true;
-                mouseMoveEvent.progress = progress;
-                mouseMoveEvent.targetType = 'urlbar';
+            // Add custom properties to track simulation
+            mouseMoveEvent.simulated = true;
+            mouseMoveEvent.progress = progress;
+            mouseMoveEvent.targetType = 'urlbar';
 
-                // Find element under mouse and dispatch event
-                const elementUnderMouse = document.elementFromPoint(currentX, currentY);
-                if (elementUnderMouse) {
-                    elementUnderMouse.dispatchEvent(mouseMoveEvent);
+            // Find element under mouse and dispatch event
+            const elementUnderMouse = document.elementFromPoint(currentX, currentY);
+            if (elementUnderMouse) {
+                elementUnderMouse.dispatchEvent(mouseMoveEvent);
 
-                    // Also fire mouseenter/mouseleave events if element changed
-                    if (lastMouseEvent) {
-                        const lastElement = document.elementFromPoint(
-                            lastMouseEvent.clientX,
-                            lastMouseEvent.clientY
-                        );
+                // Also fire mouseenter/mouseleave events if element changed
+                if (lastMouseEvent) {
+                    const lastElement = document.elementFromPoint(
+                        lastMouseEvent.clientX,
+                        lastMouseEvent.clientY
+                    );
 
-                        if (lastElement && lastElement !== elementUnderMouse) {
-                            // Mouse left previous element
-                            const mouseLeaveEvent = new MouseEvent('mouseleave', {
-                                bubbles: false, // mouseleave doesn't bubble
-                                cancelable: true,
-                                clientX: currentX,
-                                clientY: currentY,
-                                relatedTarget: elementUnderMouse
-                            });
-                            mouseLeaveEvent.simulated = true;
-                            lastElement.dispatchEvent(mouseLeaveEvent);
+                    if (lastElement && lastElement !== elementUnderMouse) {
+                        // Mouse left previous element
+                        const mouseLeaveEvent = new MouseEvent('mouseleave', {
+                            bubbles: false, // mouseleave doesn't bubble
+                            cancelable: true,
+                            clientX: currentX,
+                            clientY: currentY,
+                            relatedTarget: elementUnderMouse
+                        });
+                        mouseLeaveEvent.simulated = true;
+                        lastElement.dispatchEvent(mouseLeaveEvent);
 
-                            // Mouse entered new element
-                            const mouseEnterEvent = new MouseEvent('mouseenter', {
-                                bubbles: false, // mouseenter doesn't bubble
-                                cancelable: true,
-                                clientX: currentX,
-                                clientY: currentY,
-                                relatedTarget: lastElement
-                            });
-                            mouseEnterEvent.simulated = true;
-                            elementUnderMouse.dispatchEvent(mouseEnterEvent);
-                        }
+                        // Mouse entered new element
+                        const mouseEnterEvent = new MouseEvent('mouseenter', {
+                            bubbles: false, // mouseenter doesn't bubble
+                            cancelable: true,
+                            clientX: currentX,
+                            clientY: currentY,
+                            relatedTarget: lastElement
+                        });
+                        mouseEnterEvent.simulated = true;
+                        elementUnderMouse.dispatchEvent(mouseEnterEvent);
                     }
                 }
+            }
 
-                // Also dispatch on document and window
-                document.dispatchEvent(mouseMoveEvent);
-                window.dispatchEvent(mouseMoveEvent);
+            // Also dispatch on document and window
+            document.dispatchEvent(mouseMoveEvent);
+            window.dispatchEvent(mouseMoveEvent);
 
-                lastMouseEvent = mouseMoveEvent;
+            lastMouseEvent = mouseMoveEvent;
 
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    resolve();
-                }
-            };
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                resolve();
+            }
+        };
 
-            requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
         });
     }
 
@@ -375,10 +367,5 @@ function simulateUserBehavior() {
     });
 }
 
-// Simulate user behavior such as scrolling and mouse movement to try to trigger popovers and other nuisances
 setTimeout(simulateUserBehavior, 500);
-
-// Add a delay and then capture the page
-var deferredScript = document.createElement("script");
-deferredScript.innerText = "setTimeout(finalizeMarginaliaHack, 2000);"
-document.body.appendChild(deferredScript);
+document.addEventListener("load", setTimeout(finalizeMarginaliaHack, 2000));

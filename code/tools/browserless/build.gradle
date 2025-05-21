@@ -1,0 +1,44 @@
+plugins {
+    id 'base'
+}
+
+def imageName = 'marginalia-browserless'
+def imageTag = project.hasProperty('imageTag') ? project.getProperty('imageTag') : 'latest'
+
+tasks.register('docker', Exec) {
+    group = 'Docker'
+    description = 'Builds a Docker image using the Dockerfile in project root'
+
+    workingDir = projectDir
+
+    // Build the Docker command
+    commandLine 'docker', 'build',
+            '-t', "${imageName}:${imageTag}",
+            '-f', 'Dockerfile',
+            '--build-arg', "BASE_DIR=.",
+            '.'
+
+    // Add optional parameters if specified
+    if (project.hasProperty('noCache') && project.getProperty('noCache').toBoolean()) {
+        commandLine += '--no-cache'
+    }
+
+    doFirst {
+        println "Building Docker image '${imageName}:${imageTag}'..."
+    }
+
+    doLast {
+        println "Docker image '${imageName}:${imageTag}' has been built successfully."
+    }
+}
+
+// Add task to ensure the extension folder is included in the Docker context
+tasks.register('prepareExtension', Copy) {
+    from 'extension'
+    into "${buildDir}/docker/extension"
+}
+
+// Make the docker task depend on prepareExtension
+tasks.named('docker').configure {
+    dependsOn 'prepareExtension'
+}
