@@ -63,8 +63,8 @@ public class BrowserlessClient implements AutoCloseable {
         return Optional.of(rsp.body());
     }
 
-    /** Fetches content and injects attributes.js script into the page, allowing us to
-     * capture popovers and other nuisances
+    /** Fetches content with a marginalia hack extension loaded that decorates the DOM with attributes for
+     * certain CSS attributes, to be able to easier identify popovers and other nuisance elements.
      */
     public Optional<String> annotatedContent(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
         Map<String, Object> requestData = Map.of(
@@ -74,8 +74,9 @@ public class BrowserlessClient implements AutoCloseable {
                 "waitForSelector", Map.of("selector", "#marginaliahack", "timeout", 15000)
         );
 
+        // Launch parameters for the browserless instance to load the extension
         Map<String, Object> launchParameters = Map.of(
-                "args", List.of("--load-extension=/dom-export", "--disable-web-security")
+                "args", List.of("--load-extension=/dom-export")
         );
 
         String launchParametersStr = URLEncoder.encode(gson.toJson(launchParameters), StandardCharsets.UTF_8);
