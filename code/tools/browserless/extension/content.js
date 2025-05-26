@@ -1,4 +1,23 @@
+// This script runs in the context of web pages loaded by the browser extension
 
+
+
+// Listen to messages from the background script
+var networkRequests = document.createElement('div')
+networkRequests.setAttribute('id', 'marginalia-network-requests');
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'URL_INTERCEPTED') {
+        var request = document.createElement('div');
+        request.setAttribute('class', 'network-request');
+        request.setAttribute('data-url', message.url);
+        request.setAttribute('data-method', message.method);
+        request.setAttribute('data-timestamp', message.timestamp);
+        networkRequests.appendChild(request)
+    }
+});
+
+// Function to add styles as data attributes based on specified properties
 
 function addStylesAsDataAttributes(propertyToAttrMap = {
     'display': 'data-display',
@@ -58,19 +77,9 @@ function addStylesAsDataAttributes(propertyToAttrMap = {
 function finalizeMarginaliaHack() {
     addStylesAsDataAttributes();
 
+    // Add a container for network requests
+    document.body.appendChild(networkRequests);
     document.body.setAttribute('id', 'marginaliahack');
-
-    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-
-    var observer = new MutationObserver(function(mutations, observer) {
-        addStylesAsDataAttributes();
-    });
-
-    observer.observe(document, {
-        subtree: true,
-        attributes: true
-        //...
-    });
 }
 
 class EventSimulator {
@@ -368,4 +377,4 @@ function simulateUserBehavior() {
 }
 
 setTimeout(simulateUserBehavior, 500);
-document.addEventListener("load", setTimeout(finalizeMarginaliaHack, 2000));
+window.addEventListener("load", (e) => setTimeout(finalizeMarginaliaHack, 2000));
