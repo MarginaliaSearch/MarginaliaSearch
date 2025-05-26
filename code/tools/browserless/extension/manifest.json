@@ -9,12 +9,12 @@
     "scripting"
   ],
   "background": {
-    "service_worker": "register.js",
+    "service_worker": "background.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "js": ["inject.js"],
+      "js": ["content.js"],
       "matches": [
         "<all_urls>"
       ]
