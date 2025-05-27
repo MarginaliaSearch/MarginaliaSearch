@@ -374,6 +374,12 @@ function finalizeMarginaliaHack() {
         handlePopover(element);
     });
 
+    if (agreedToPopover) {
+        var notice = document.createElement('div');
+        notice.setAttribute('class', 'marginalia-agreed-cookies');
+        networkRequests.appendChild(notice);
+    }
+
     var finalize = () => {
         // Add a container for network requests
         document.body.appendChild(networkRequests);
