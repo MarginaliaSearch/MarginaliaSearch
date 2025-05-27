@@ -1,7 +1,5 @@
 // This script runs in the context of web pages loaded by the browser extension
 
-
-
 // Listen to messages from the background script
 var networkRequests = document.createElement('div')
 networkRequests.setAttribute('id', 'marginalia-network-requests');
@@ -74,13 +72,324 @@ function addStylesAsDataAttributes(propertyToAttrMap = {
     }
 }
 
+
+class CookieConsentHandler {
+    constructor() {
+        // Keywords that strongly indicate cookie consent
+        this.cookieKeywords = [
+            'cookie', 'cookies', 'consent', 'gdpr', 'privacy policy', 'privacy notice',
+            'data protection', 'tracking', 'analytics', 'personalization', 'advertising',
+            'essential cookies', 'functional cookies', 'performance cookies'
+        ];
+
+        // Keywords that indicate newsletter/subscription popups
+        this.newsletterKeywords = [
+            'newsletter', 'subscribe', 'email', 'signup', 'sign up', 'updates',
+            'notifications', 'discount', 'offer', 'deal', 'promo', 'exclusive'
+        ];
+
+        // Common button text for accepting cookies
+        this.acceptButtonTexts = [
+            'accept', 'accept all', 'allow all', 'agree', 'ok', 'got it',
+            'i agree', 'continue', 'yes', 'enable', 'allow cookies',
+            'accept cookies', 'accept all cookies', 'i understand'
+        ];
+
+        // Common button text for rejecting (to avoid clicking these)
+        this.rejectButtonTexts = [
+            'reject', 'decline', 'deny', 'refuse', 'no thanks', 'no',
+            'reject all', 'decline all', 'manage preferences', 'customize',
+            'settings', 'options', 'learn more'
+        ];
+
+        // Special patterns that strongly indicate cookie consent
+        this.acceptButtonStyles = [
+            /primary/,
+        ];
+    }
+
+    analyzePopover(element) {
+        if (!element || !element.textContent) {
+            return { category: 'unknown', action: 'none', reason: 'Invalid element' };
+        }
+
+        const textContent = element.textContent.toLowerCase();
+        const category = this.categorizePopover(textContent, element);
+
+        let result = {
+            category: category,
+            action: 'none',
+            reason: '',
+            element: element
+        };
+
+        if (category === 'cookie_consent') {
+            const acceptResult = this.tryAcceptCookies(element);
+            result.action = acceptResult.action;
+            result.reason = acceptResult.reason;
+            result.buttonClicked = acceptResult.buttonClicked;
+        }
+
+        return result;
+    }
+
+    categorizePopover(textContent, element) {
+        let cookieScore = 0;
+        let newsletterScore = 0;
+
+        // Score based on keyword presence
+        this.cookieKeywords.forEach(keyword => {
+            if (textContent.includes(keyword)) {
+                cookieScore += keyword === 'cookie' || keyword === 'cookies' ? 3 : 1;
+            }
+        });
+
+        this.newsletterKeywords.forEach(keyword => {
+            if (textContent.includes(keyword)) {
+                newsletterScore += keyword === 'newsletter' || keyword === 'subscribe' ? 3 : 1;
+            }
+        });
+
+        // Additional heuristics
+        if (this.hasPrivacyPolicyLink(element)) cookieScore += 2;
+        if (this.hasManagePreferencesButton(element)) cookieScore += 2;
+        if (this.hasEmailInput(element)) newsletterScore += 3;
+        if (this.hasDiscountMention(textContent)) newsletterScore += 2;
+
+        // Special patterns that strongly indicate cookie consent
+        const strongCookiePatterns = [
+            /we use cookies/,
+            /this website uses cookies/,
+            /by continuing to use/,
+            /essential.*cookies/,
+            /improve.*experience/,
+            /gdpr/,
+            /data protection/
+        ];
+
+        if (strongCookiePatterns.some(pattern => pattern.test(textContent))) {
+            cookieScore += 5;
+        }
+
+        // Determine category
+        if (cookieScore > newsletterScore && cookieScore >= 2) {
+            return 'cookie_consent';
+        } else if (newsletterScore > cookieScore && newsletterScore >= 2) {
+            return 'newsletter';
+        } else {
+            return 'other';
+        }
+    }
+
+    tryAcceptCookies(element) {
+        const buttons = this.findButtons(element);
+
+        if (buttons.length === 0) {
+            return { action: 'no_buttons_found', reason: 'No clickable buttons found' };
+        }
+
+        // First, try to find explicit accept buttons
+        const acceptButton = this.findAcceptButton(buttons);
+        if (acceptButton) {
+            try {
+                acceptButton.click();
+                return {
+                    action: 'clicked_accept',
+                    reason: 'Found and clicked accept button',
+                    buttonClicked: acceptButton.textContent.trim()
+                };
+            } catch (error) {
+                return {
+                    action: 'click_failed',
+                    reason: `Failed to click button: ${error.message}`,
+                    buttonClicked: acceptButton.textContent.trim()
+                };
+            }
+        }
+
+        // If no explicit accept button, try to find the most likely candidate
+        const likelyButton = this.findMostLikelyAcceptButton(buttons);
+        if (likelyButton) {
+            try {
+                likelyButton.click();
+                return {
+                    action: 'clicked_likely',
+                    reason: 'Clicked most likely accept button',
+                    buttonClicked: likelyButton.textContent.trim()
+                };
+            } catch (error) {
+                return {
+                    action: 'click_failed',
+                    reason: `Failed to click button: ${error.message}`,
+                    buttonClicked: likelyButton.textContent.trim()
+                };
+            }
+        }
+
+        return {
+            action: 'no_accept_button',
+            reason: 'Could not identify accept button',
+            availableButtons: buttons.map(btn => btn.textContent.trim())
+        };
+    }
+
+    findButtons(element) {
+        const selectors = [
+            'button',
+            'input[type="button"]',
+            'input[type="submit"]',
+            '[role="button"]',
+            'a[href="#"]',
+            '.button',
+            '.btn'
+        ];
+
+        const buttons = [];
+        selectors.forEach(selector => {
+            const found = element.querySelectorAll(selector);
+            buttons.push(...Array.from(found));
+        });
+
+        // Remove duplicates and filter visible buttons
+        return [...new Set(buttons)].filter(btn =>
+            btn.offsetWidth > 0 && btn.offsetHeight > 0
+        );
+    }
+
+    findAcceptButton(buttons) {
+        var byClass = buttons.find(button => {
+            var classes = button.className.toLowerCase();
+
+            if (this.acceptButtonStyles.some(pattern => pattern.test(classes))) {
+                return true;
+            }
+        });
+
+        if (byClass != null) {
+            return byClass;
+        }
+
+        return buttons.find(button => {
+            const text = button.textContent.toLowerCase().trim();
+
+            return this.acceptButtonTexts.some(acceptText =>
+                text === acceptText || text.includes(acceptText)
+            ) && !this.rejectButtonTexts.some(rejectText =>
+                text.includes(rejectText)
+            );
+        });
+    }
+
+    findMostLikelyAcceptButton(buttons) {
+        if (buttons.length === 1) {
+            const text = buttons[0].textContent.toLowerCase();
+            // If there's only one button and it's not explicitly a reject button, assume it's accept
+            if (!this.rejectButtonTexts.some(rejectText => text.includes(rejectText))) {
+                return buttons[0];
+            }
+        }
+
+        // Look for buttons with positive styling (often green, primary, etc.)
+        const positiveButton = buttons.find(button => {
+            const classes = button.className.toLowerCase();
+            const styles = window.getComputedStyle(button);
+            const bgColor = styles.backgroundColor;
+
+            return classes.includes('primary') ||
+                classes.includes('accept') ||
+                classes.includes('green') ||
+                bgColor.includes('rgb(0, 128, 0)') || // green variations
+                bgColor.includes('rgb(40, 167, 69)'); // bootstrap success
+        });
+
+        return positiveButton || null;
+    }
+
+    hasPrivacyPolicyLink(element) {
+        const links = element.querySelectorAll('a');
+        return Array.from(links).some(link =>
+            link.textContent.toLowerCase().includes('privacy') ||
+            link.href.toLowerCase().includes('privacy')
+        );
+    }
+
+    hasManagePreferencesButton(element) {
+        const buttons = this.findButtons(element);
+        return buttons.some(button => {
+            const text = button.textContent.toLowerCase();
+            return text.includes('manage') || text.includes('preferences') ||
+                text.includes('settings') || text.includes('customize');
+        });
+    }
+
+    hasEmailInput(element) {
+        const inputs = element.querySelectorAll('input[type="email"], input[placeholder*="email" i]');
+        return inputs.length > 0;
+    }
+
+    hasDiscountMention(textContent) {
+        const discountTerms = ['discount', 'off', '%', 'save', 'deal', 'offer'];
+        return discountTerms.some(term => textContent.includes(term));
+    }
+}
+
+
+var agreedToPopover = false;
+// Usage example:
+function handlePopover(popoverElement) {
+    const handler = new CookieConsentHandler();
+    const result = handler.analyzePopover(popoverElement);
+
+    console.log('Popover analysis result:', result);
+
+    switch (result.category) {
+        case 'cookie_consent':
+            console.log('Detected cookie consent popover');
+            if (result.action === 'clicked_accept') {
+                console.log('Successfully accepted cookies');
+                agreedToPopover = true;
+            } else {
+                console.log('Could not accept cookies:', result.reason);
+            }
+            break;
+        case 'newsletter':
+            console.log('Detected newsletter popover - no action taken');
+            break;
+        default:
+            console.log('Unknown popover type - no action taken');
+    }
+
+    return result;
+}
+
+
 function finalizeMarginaliaHack() {
     addStylesAsDataAttributes();
 
-    // Add a container for network requests
-    document.body.appendChild(networkRequests);
-    document.body.setAttribute('id', 'marginaliahack');
+    // find all elements with the data-position attribute set to 'fixed'
+
+    const fixedElements = document.querySelectorAll('[data-position="fixed"]');
+
+    fixedElements.forEach(element => {
+        handlePopover(element);
+    });
+
+    var finalize = () => {
+        // Add a container for network requests
+        document.body.appendChild(networkRequests);
+        document.body.setAttribute('id', 'marginaliahack');
+    }
+
+    if (agreedToPopover) {
+        // If we agreed to the popover, wait a bit before finalizing to let ad networks load
+        setTimeout(finalize, 2500);
+    }
+    else {
+        finalize();
+    }
 }
+
+
 
 class EventSimulator {
     constructor() {

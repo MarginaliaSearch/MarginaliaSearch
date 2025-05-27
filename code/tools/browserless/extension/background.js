@@ -24,8 +24,9 @@ chrome.webRequest.onBeforeRequest.addListener(
 chrome.webNavigation.onCommitted.addListener(function(details) {
     if (details.transitionType === 'reload' || details.transitionType === 'auto_subframe') {
         chrome.scripting.registerContentScripts([{
+            id: "content-script",
             matches : [ "<all_urls>" ],
-            js : [ "content.js" ],
+            js : [ "content.js" ]
         }]);
     }
 });
