@@ -241,7 +241,8 @@ class CookieConsentHandler {
             '[role="button"]',
             'a[href="#"]',
             '.button',
-            '.btn'
+            '.btn',
+            '.btn-primary'
         ];
 
         const buttons = [];
@@ -366,14 +367,15 @@ function handlePopover(popoverElement) {
 function finalizeMarginaliaHack() {
     addStylesAsDataAttributes();
 
-    // find all elements with the data-position attribute set to 'fixed'
-
+    // Find all likely popover elements
     const fixedElements = document.querySelectorAll('[data-position="fixed"]');
 
+    // Attempt to agree to cookie consent popups
     fixedElements.forEach(element => {
         handlePopover(element);
     });
 
+    // If we found a popover and agreed to it, add a notice
     if (agreedToPopover) {
         var notice = document.createElement('div');
         notice.setAttribute('class', 'marginalia-agreed-cookies');
@@ -386,8 +388,9 @@ function finalizeMarginaliaHack() {
         document.body.setAttribute('id', 'marginaliahack');
     }
 
+    // If we have a popover and agreed to it, wait a bit before finalizing
+    // to let the ad networks load so we can capture their requests
     if (agreedToPopover) {
-        // If we agreed to the popover, wait a bit before finalizing to let ad networks load
         setTimeout(finalize, 2500);
     }
     else {
@@ -398,9 +401,7 @@ function finalizeMarginaliaHack() {
 
 
 class EventSimulator {
-    constructor() {
-        this.isSimulating = false;
-    }
+    constructor() {}
 
     // Simulate smooth scrolling down the page
     simulateScrollDown(duration = 2000, distance = null) {
@@ -558,51 +559,6 @@ class EventSimulator {
         });
     }
 
-    // Simulate progressive page scroll with multiple scroll events
-    simulateProgressiveScroll(scrollSteps = 10, stepDelay = 100) {
-        return new Promise(async (resolve) => {
-            const totalScrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPerStep = totalScrollHeight / scrollSteps;
-
-            for (let i = 0; i < scrollSteps; i++) {
-                const targetScroll = scrollPerStep * (i + 1);
-
-                // Scroll to position
-                window.scrollTo(0, targetScroll);
-
-                // Create and dispatch wheel event (as if user is scrolling)
-                const wheelEvent = new WheelEvent('wheel', {
-                    deltaY: scrollPerStep,
-                    deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-                    bubbles: true,
-                    cancelable: true,
-                    clientX: window.innerWidth / 2,
-                    clientY: window.innerHeight / 2
-                });
-                wheelEvent.simulated = true;
-
-                document.dispatchEvent(wheelEvent);
-
-                // Create and dispatch scroll event
-                const scrollEvent = new Event('scroll', {
-                    bubbles: true,
-                    cancelable: true
-                });
-                scrollEvent.simulated = true;
-                scrollEvent.step = i + 1;
-                scrollEvent.totalSteps = scrollSteps;
-
-                window.dispatchEvent(scrollEvent);
-                document.dispatchEvent(scrollEvent);
-
-                // Wait before next step
-                await new Promise(resolve => setTimeout(resolve, stepDelay));
-            }
-
-            resolve();
-        });
-    }
-
     // Simulate realistic mouse movement with slight randomness
     simulateNaturalMouseMovement(targetX, targetY, duration = 1000) {
         return new Promise((resolve) => {
@@ -655,30 +611,25 @@ class EventSimulator {
 
     // Combined simulation: scroll down while moving mouse toward URL bar
     async simulateBrowsingBehavior() {
-        this.isSimulating = true;
 
-        try {
-            // Start both animations simultaneously
-            const scrollPromise = this.simulateScrollDown(300);
-            const mousePromise = this.simulateMouseToURLBar(200);
+        // Start both animations simultaneously
+        const scrollPromise = this.simulateScrollDown(300);
+        const mousePromise = this.simulateMouseToURLBar(200);
 
-            // Wait for both to complete
-            await Promise.all([scrollPromise, mousePromise]);
+        // Wait for both to complete
+        await Promise.all([scrollPromise, mousePromise]);
 
-            // Add a small pause
-            await new Promise(resolve => setTimeout(resolve, 100));
+        // Add a small pause
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Simulate some additional natural mouse movement
-            await this.simulateNaturalMouseMovement(
-                window.innerWidth * 0.3,
-                window.innerHeight * 0.1,
-                100
-            );
+        // Simulate some additional natural mouse movement
+        await this.simulateNaturalMouseMovement(
+            window.innerWidth * 0.3,
+            window.innerHeight * 0.1,
+            100
+        );
 
-            console.log('Browsing behavior simulation completed');
-        } finally {
-            this.isSimulating = false;
-        }
+        console.log('Browsing behavior simulation completed');
     }
 }
 
@@ -691,5 +642,5 @@ function simulateUserBehavior() {
     });
 }
 
-setTimeout(simulateUserBehavior, 500);
+window.addEventListener("load", (e) => simulateUserBehavior());
 window.addEventListener("load", (e) => setTimeout(finalizeMarginaliaHack, 2000));
