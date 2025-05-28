@@ -34,7 +34,7 @@ public class BrowserlessClient implements AutoCloseable {
 
     private final String userAgent = WmsaHome.getUserAgent().uaString();
 
-    public BrowserlessClient(URI browserlessURI) throws IOException {
+    public BrowserlessClient(URI browserlessURI) {
         this.browserlessURI = browserlessURI;
     }
 

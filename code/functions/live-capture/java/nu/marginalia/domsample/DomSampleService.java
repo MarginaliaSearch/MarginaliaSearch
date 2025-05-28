@@ -2,11 +2,16 @@ package nu.marginalia.domsample;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.inject.Named;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.livecapture.BrowserlessClient;
+import nu.marginalia.service.module.ServiceConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -14,19 +19,29 @@ import java.util.concurrent.TimeUnit;
 public class DomSampleService {
     private final DomSampleDb db;
     private final HikariDataSource mariadbDataSource;
-    private final BrowserlessClient browserlessClient;
+    private final URI browserlessURI;
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
 
     @Inject
     public DomSampleService(DomSampleDb db,
                             HikariDataSource mariadbDataSource,
-                            BrowserlessClient browserlessClient) {
+                            @Named("browserless-uri") String browserlessAddress,
+                            ServiceConfiguration serviceConfiguration)
+            throws URISyntaxException
+    {
         this.db = db;
         this.mariadbDataSource = mariadbDataSource;
-        this.browserlessClient = browserlessClient;
 
-        Thread.ofPlatform().daemon().start(this::run);
+        if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
+            logger.warn("Live capture service will not run");
+            browserlessURI = null; // satisfy final
+        }
+        else {
+            browserlessURI = new URI(browserlessAddress);
+
+            Thread.ofPlatform().daemon().start(this::run);
+        }
     }
 
     public void syncDomains() {
@@ -57,33 +72,37 @@ public class DomSampleService {
     }
 
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                // Grace sleep in case we're operating on an empty domain list
-                TimeUnit.SECONDS.sleep(15);
 
-                syncDomains();
-                var domains = db.getScheduledDomains();
+        try (var client = new BrowserlessClient(browserlessURI)) {
 
-                for (var domain : domains) {
-                    updateDomain(domain);
+            while (!Thread.currentThread().isInterrupted()) {
+
+                try {
+                    // Grace sleep in case we're operating on an empty domain list
+                    TimeUnit.SECONDS.sleep(15);
+
+                    syncDomains();
+                    var domains = db.getScheduledDomains();
+
+                    for (var domain : domains) {
+                        updateDomain(client, domain);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    logger.info("DomSampleService interrupted, stopping...");
+                    return;
+                } catch (Exception e) {
+                    logger.error("Error in DomSampleService run loop", e);
                 }
             }
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.info("DomSampleService interrupted, stopping...");
-                return;
-            }
-            catch (Exception e) {
-                logger.error("Error in DomSampleService run loop", e);
-            }
+
         }
     }
 
-    private void updateDomain(String domain) {
+    private void updateDomain(BrowserlessClient client, String domain) {
         var rootUrl = "https://" + domain + "/";
         try {
-            var content = browserlessClient.annotatedContent(rootUrl,
+            var content = client.annotatedContent(rootUrl,
                     BrowserlessClient.GotoOptions.defaultValues());
 
             if (content.isPresent()) {
