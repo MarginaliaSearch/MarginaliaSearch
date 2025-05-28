@@ -108,7 +108,7 @@ public class BrowserlessClientTest {
              DomSampleDb dbop = new DomSampleDb(Path.of("/tmp/dom-sample.db"))
         ) {
             var content = client.annotatedContent("https://marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
-            dbop.saveSampleRaw("marginalia.nu", "https://marginalia.nu/", content);
+            dbop.saveSample("marginalia.nu", "https://www.thesodacanstove.com/alcohol-stove/how-to-build/", content);
             System.out.println(content);
             Assertions.assertFalse(content.isBlank(), "Content should not be empty");
 
@@ -116,6 +116,7 @@ public class BrowserlessClientTest {
                 System.out.println("Sample URL: " + sample.url());
                 System.out.println("Sample Content: " + sample.sample());
                 System.out.println("Sample Requests: " + sample.requests());
+                System.out.println("Accepted Popover: " + sample.acceptedPopover());
             });
         }
         finally {

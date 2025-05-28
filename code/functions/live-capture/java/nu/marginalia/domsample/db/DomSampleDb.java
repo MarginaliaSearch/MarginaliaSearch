@@ -24,19 +24,19 @@ public class DomSampleDb implements AutoCloseable {
         connection = DriverManager.getConnection(dbUrl);
 
         try (var stmt = connection.createStatement()) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS samples (url TEXT PRIMARY KEY, domain TEXT, sample BLOB, requests BLOB)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS samples (url TEXT PRIMARY KEY, domain TEXT, sample BLOB, requests BLOB, accepted_popover BOOLEAN DEFAULT FALSE)");
             stmt.executeUpdate("CREATE INDEX IF NOT EXISTS domain_index ON samples (domain)");
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS schedule (domain TEXT PRIMARY KEY, last_fetch TIMESTAMP DEFAULT NULL)");
         }
     }
 
-    public record Sample(String url, String domain, String sample, String requests) {}
+    public record Sample(String url, String domain, String sample, String requests, boolean acceptedPopover) {}
 
     public List<Sample> getSamples(String domain) throws SQLException {
         List<Sample> samples = new ArrayList<>();
 
         try (var stmt = connection.prepareStatement("""
-                SELECT url, sample, requests 
+                SELECT url, sample, requests, accepted_popover
                 FROM samples 
                 WHERE domain = ?
                 """))
@@ -45,20 +45,31 @@ public class DomSampleDb implements AutoCloseable {
             var rs = stmt.executeQuery();
             while (rs.next()) {
                 samples.add(
-                        new Sample(rs.getString("url"), domain, rs.getString("sample"), rs.getString("requests"))
+                        new Sample(
+                                rs.getString("url"),
+                                domain,
+                                rs.getString("sample"),
+                                rs.getString("requests"),
+                                rs.getBoolean("accepted_popover")
+                        )
                 );
             }
         }
         return samples;
     }
 
-    public void saveSampleRaw(String domain, String url, String rawContent) throws SQLException {
+    public void saveSample(String domain, String url, String rawContent) throws SQLException {
         var doc = Jsoup.parse(rawContent);
 
         var networkRequests = doc.getElementById("marginalia-network-requests");
 
+        boolean acceptedPopover = false;
+
         StringBuilder requestTsv = new StringBuilder();
         if (networkRequests != null) {
+
+            acceptedPopover = !networkRequests.getElementsByClass("marginalia-agreed-cookies").isEmpty();
+
             for (var request : networkRequests.getElementsByClass("network-request")) {
                 String method = request.attr("data-method");
                 String urlAttr = request.attr("data-url");
@@ -80,22 +91,23 @@ public class DomSampleDb implements AutoCloseable {
 
         String sample = doc.html();
 
-        saveSampleRaw(domain, url, sample, requestTsv.toString().trim());
+        saveSampleRaw(domain, url, sample, requestTsv.toString().trim(), acceptedPopover);
 
     }
 
-    record Request(String url, String method, String timestamp) {}
+    record Request(String url, String method, String timestamp, boolean acceptedPopover) {}
 
-    public void saveSampleRaw(String domain, String url, String sample, String requests) throws SQLException {
+    public void saveSampleRaw(String domain, String url, String sample, String requests, boolean acceptedPopover) throws SQLException {
         try (var stmt = connection.prepareStatement("""
                 INSERT OR REPLACE 
-                INTO samples (domain, url, sample, requests) 
-                VALUES (?, ?, ?, ?)
+                INTO samples (domain, url, sample, requests, accepted_popover) 
+                VALUES (?, ?, ?, ?, ?)
                 """)) {
             stmt.setString(1, domain);
             stmt.setString(2, url);
             stmt.setString(3, sample);
             stmt.setString(4, requests);
+            stmt.setBoolean(5, acceptedPopover);
             stmt.executeUpdate();
         }
     }

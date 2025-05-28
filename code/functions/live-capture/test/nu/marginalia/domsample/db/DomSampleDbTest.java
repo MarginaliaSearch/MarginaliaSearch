@@ -40,7 +40,7 @@ class DomSampleDbTest {
     public void saveLoadSingle() {
         var dbPath = tempDir.resolve("test.db");
         try (var db = new DomSampleDb(dbPath)) {
-            db.saveSampleRaw("example.com", "http://example.com/sample", "sample data", "requests data");
+            db.saveSampleRaw("example.com", "http://example.com/sample", "sample data", "requests data", true);
             var samples = db.getSamples("example.com");
             assertEquals(1, samples.size());
             var sample = samples.getFirst();
@@ -48,6 +48,7 @@ class DomSampleDbTest {
             assertEquals("http://example.com/sample", sample.url());
             assertEquals("sample data", sample.sample());
             assertEquals("requests data", sample.requests());
+            assertTrue(sample.acceptedPopover());
         }
         catch (Exception e) {
             fail("Failed to save/load sample: " + e.getMessage());
@@ -58,8 +59,8 @@ class DomSampleDbTest {
     public void saveLoadTwo() {
         var dbPath = tempDir.resolve("test.db");
         try (var db = new DomSampleDb(dbPath)) {
-            db.saveSampleRaw("example.com", "http://example.com/sample", "sample data", "r1");
-            db.saveSampleRaw("example.com", "http://example.com/sample2", "sample data2", "r2");
+            db.saveSampleRaw("example.com", "http://example.com/sample", "sample data", "r1", true);
+            db.saveSampleRaw("example.com", "http://example.com/sample2", "sample data2", "r2", false);
             var samples = db.getSamples("example.com");
             assertEquals(2, samples.size());
 
