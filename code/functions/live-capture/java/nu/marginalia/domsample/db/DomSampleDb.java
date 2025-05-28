@@ -26,7 +26,9 @@ public class DomSampleDb implements AutoCloseable {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS samples (url TEXT PRIMARY KEY, domain TEXT, sample BLOB, requests BLOB, accepted_popover BOOLEAN DEFAULT FALSE)");
             stmt.executeUpdate("CREATE INDEX IF NOT EXISTS domain_index ON samples (domain)");
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS schedule (domain TEXT PRIMARY KEY, last_fetch TIMESTAMP DEFAULT NULL)");
+            stmt.execute("PRAGMA journal_mode=WAL");
         }
+
     }
 
     public void syncDomains(Set<String> domains) {
