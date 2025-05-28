@@ -15,6 +15,7 @@ tasks.register('docker', Exec) {
     commandLine 'docker', 'build',
             '-t', "${imageName}:${imageTag}",
             '-f', 'Dockerfile',
+            '--pull',
             '--build-arg', "BASE_DIR=.",
             '.'
 
