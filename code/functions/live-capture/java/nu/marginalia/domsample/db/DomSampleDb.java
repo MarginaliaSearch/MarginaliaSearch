@@ -153,8 +153,6 @@ public class DomSampleDb implements AutoCloseable {
 
     }
 
-    record Request(String url, String method, String timestamp, boolean acceptedPopover) {}
-
     public void saveSampleRaw(String domain, String url, String sample, String requests, boolean acceptedPopover) throws SQLException {
         try (var stmt = connection.prepareStatement("""
                 INSERT OR REPLACE 

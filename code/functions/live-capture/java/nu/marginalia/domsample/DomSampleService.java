@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -109,8 +110,7 @@ public class DomSampleService {
     private void updateDomain(BrowserlessClient client, String domain) {
         var rootUrl = "https://" + domain + "/";
         try {
-            var content = client.annotatedContent(rootUrl,
-                    BrowserlessClient.GotoOptions.defaultValues());
+            var content = client.annotatedContent(rootUrl, new BrowserlessClient.GotoOptions("load", Duration.ofSeconds(10).toMillis()));
 
             if (content.isPresent()) {
                 db.saveSample(domain, rootUrl, content.get());

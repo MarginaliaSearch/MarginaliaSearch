@@ -141,7 +141,7 @@ public class BrowserlessClient implements AutoCloseable {
 
     public record GotoOptions(String waitUntil, long timeout) {
         public static GotoOptions defaultValues() {
-            return new GotoOptions("load", Duration.ofSeconds(10).toMillis());
+            return new GotoOptions("networkidle2", Duration.ofSeconds(10).toMillis());
         }
     }
 

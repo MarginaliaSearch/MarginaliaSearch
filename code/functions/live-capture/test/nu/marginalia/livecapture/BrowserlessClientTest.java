@@ -108,7 +108,7 @@ public class BrowserlessClientTest {
              DomSampleDb dbop = new DomSampleDb(Path.of("/tmp/dom-sample.db"))
         ) {
             var content = client.annotatedContent("https://marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
-            dbop.saveSample("marginalia.nu", "https://www.thesodacanstove.com/alcohol-stove/how-to-build/", content);
+            dbop.saveSample("marginalia.nu", "https://marginalia.nu/", content);
             System.out.println(content);
             Assertions.assertFalse(content.isBlank(), "Content should not be empty");
 
