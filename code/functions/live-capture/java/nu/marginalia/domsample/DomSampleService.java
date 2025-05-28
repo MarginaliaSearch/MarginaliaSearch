@@ -35,13 +35,20 @@ public class DomSampleService {
 
         if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
             logger.warn("Live capture service will not run");
-            browserlessURI = null; // satisfy final
+            browserlessURI = null;
         }
         else {
             browserlessURI = new URI(browserlessAddress);
-
-            Thread.ofPlatform().daemon().start(this::run);
         }
+    }
+
+    public void start() {
+        if (browserlessURI == null) {
+            logger.warn("DomSampleService is not enabled due to missing browserless URI or multi-node configuration");
+            return;
+        }
+
+        Thread.ofPlatform().daemon().start(this::run);
     }
 
     public void syncDomains() {

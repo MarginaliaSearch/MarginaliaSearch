@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.jooby.Context;
 import io.jooby.Jooby;
 import nu.marginalia.assistant.suggest.Suggestions;
+import nu.marginalia.domsample.DomSampleService;
 import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
 import nu.marginalia.livecapture.LiveCaptureGrpcService;
@@ -30,6 +31,7 @@ public class AssistantService extends JoobyService {
                             ScreenshotService screenshotService,
                             DomainInfoGrpcService domainInfoGrpcService,
                             LiveCaptureGrpcService liveCaptureGrpcService,
+                            DomSampleService domSampleService,
                             FeedsGrpcService feedsGrpcService,
                             MathGrpcService mathGrpcService,
                             Suggestions suggestions)
@@ -41,10 +43,11 @@ public class AssistantService extends JoobyService {
                         liveCaptureGrpcService,
                         feedsGrpcService),
                 List.of());
-        this.screenshotService = screenshotService;
 
+        this.screenshotService = screenshotService;
         this.suggestions = suggestions;
 
+        domSampleService.start();
     }
 
     public void startJooby(Jooby jooby) {
