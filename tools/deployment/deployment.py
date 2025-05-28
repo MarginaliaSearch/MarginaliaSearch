@@ -272,6 +272,13 @@ if __name__ == '__main__':
             deploy_tier=1,
             groups={"all", "core"}
         ),
+        'browserless': ServiceConfig(
+            gradle_target=':code:tools:browserless:docker',
+            docker_name='browserless',
+            instances=None,
+            deploy_tier=2,
+            groups={"all", "core"}
+        ),
         'assistant': ServiceConfig(
             gradle_target=':code:services-core:assistant-service:docker',
             docker_name='assistant-service',
