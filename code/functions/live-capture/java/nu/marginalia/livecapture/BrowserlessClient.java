@@ -8,10 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -60,6 +63,42 @@ public class BrowserlessClient implements AutoCloseable {
         return Optional.of(rsp.body());
     }
 
+    /** Fetches content with a marginalia hack extension loaded that decorates the DOM with attributes for
+     * certain CSS attributes, to be able to easier identify popovers and other nuisance elements.
+     */
+    public Optional<String> annotatedContent(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
+        Map<String, Object> requestData = Map.of(
+                "url", url,
+                "userAgent", userAgent,
+                "gotoOptions", gotoOptions,
+                "waitForSelector", Map.of("selector", "#marginaliahack", "timeout", 15000)
+        );
+
+        // Launch parameters for the browserless instance to load the extension
+        Map<String, Object> launchParameters = Map.of(
+                "args", List.of("--load-extension=/dom-export")
+        );
+
+        String launchParametersStr = URLEncoder.encode(gson.toJson(launchParameters), StandardCharsets.UTF_8);
+
+        var request = HttpRequest.newBuilder()
+                .uri(browserlessURI.resolve("/content?token="+BROWSERLESS_TOKEN+"&launch="+launchParametersStr))
+                .method("POST", HttpRequest.BodyPublishers.ofString(
+                        gson.toJson(requestData)
+                ))
+                .header("Content-type", "application/json")
+                .build();
+
+        var rsp = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (rsp.statusCode() >= 300) {
+            logger.info("Failed to fetch annotated content for {}, status {}", url, rsp.statusCode());
+            return Optional.empty();
+        }
+
+        return Optional.of(rsp.body());
+    }
+
     public byte[] screenshot(String url, GotoOptions gotoOptions, ScreenshotOptions screenshotOptions)
             throws IOException, InterruptedException {
 
@@ -102,7 +141,7 @@ public class BrowserlessClient implements AutoCloseable {
 
     public record GotoOptions(String waitUntil, long timeout) {
         public static GotoOptions defaultValues() {
-            return new GotoOptions("networkidle2", Duration.ofSeconds(10).toMillis());
+            return new GotoOptions("load", Duration.ofSeconds(10).toMillis());
         }
     }
 

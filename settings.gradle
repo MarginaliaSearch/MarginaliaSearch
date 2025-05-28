@@ -93,6 +93,7 @@ include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
 include 'code:tools:integration-test'
+include 'code:tools:browserless'
 
 include 'third-party:porterstemmer'
 include 'third-party:symspell'
