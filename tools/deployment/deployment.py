@@ -272,9 +272,9 @@ if __name__ == '__main__':
             deploy_tier=1,
             groups={"all", "core"}
         ),
-        'browserless': ServiceConfig(
+        'headlesschrome': ServiceConfig(
             gradle_target=':code:tools:browserless:docker',
-            docker_name='browserless',
+            docker_name='headlesschrome',
             instances=None,
             deploy_tier=2,
             groups={"all", "core"}
