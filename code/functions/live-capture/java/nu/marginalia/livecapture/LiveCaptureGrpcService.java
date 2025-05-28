@@ -126,7 +126,6 @@ public class LiveCaptureGrpcService
                 }
                 else {
                     EdgeDomain domain = domainNameOpt.get();
-                    String domainNameStr = domain.toString();
 
                     if (!isValidDomainForCapture(domain)) {
                         ScreenshotDbOperations.flagDomainAsFetched(conn, domain);
