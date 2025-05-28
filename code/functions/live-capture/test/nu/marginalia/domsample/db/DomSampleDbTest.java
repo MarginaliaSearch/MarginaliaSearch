@@ -40,31 +40,32 @@ class DomSampleDbTest {
     public void saveLoadSingle() {
         var dbPath = tempDir.resolve("test.db");
         try (var db = new DomSampleDb(dbPath)) {
-            db.saveSample("example.com", "http://example.com/sample", "sample data");
+            db.saveSampleRaw("example.com", "http://example.com/sample", "sample data", "requests data");
             var samples = db.getSamples("example.com");
             assertEquals(1, samples.size());
             var sample = samples.getFirst();
-            assertEquals("http://example.com/sample", sample.getKey());
-            assertEquals("sample data", sample.getValue());
+            assertEquals("example.com", sample.domain());
+            assertEquals("http://example.com/sample", sample.url());
+            assertEquals("sample data", sample.sample());
+            assertEquals("requests data", sample.requests());
         }
         catch (Exception e) {
             fail("Failed to save/load sample: " + e.getMessage());
         }
     }
 
-
     @Test
     public void saveLoadTwo() {
         var dbPath = tempDir.resolve("test.db");
         try (var db = new DomSampleDb(dbPath)) {
-            db.saveSample("example.com", "http://example.com/sample", "sample data");
-            db.saveSample("example.com", "http://example.com/sample2", "sample data2");
+            db.saveSampleRaw("example.com", "http://example.com/sample", "sample data", "r1");
+            db.saveSampleRaw("example.com", "http://example.com/sample2", "sample data2", "r2");
             var samples = db.getSamples("example.com");
             assertEquals(2, samples.size());
 
             Map<String, String> samplesByUrl = new HashMap<>();
             for (var sample : samples) {
-                samplesByUrl.put(sample.getKey(), sample.getValue());
+                samplesByUrl.put(sample.url(), sample.sample());
             }
 
             assertEquals("sample data", samplesByUrl.get("http://example.com/sample"));

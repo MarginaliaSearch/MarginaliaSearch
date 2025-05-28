@@ -3,6 +3,7 @@ package nu.marginalia.livecapture;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,6 +16,8 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -100,10 +103,25 @@ public class BrowserlessClientTest {
 
     @Test
     public void testAnnotatedContent() throws Exception {
-        try (var client = new BrowserlessClient(browserlessURI)) {
-            var content = client.annotatedContent("https://www.marginalia-search.com/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
+
+        try (var client = new BrowserlessClient(browserlessURI);
+             DomSampleDb dbop = new DomSampleDb(Path.of("/tmp/dom-sample.db"))
+        ) {
+            var content = client.annotatedContent("https://marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
+            dbop.saveSampleRaw("marginalia.nu", "https://marginalia.nu/", content);
+            System.out.println(content);
             Assertions.assertFalse(content.isBlank(), "Content should not be empty");
+
+            dbop.getSamples("marginalia.nu").forEach(sample -> {
+                System.out.println("Sample URL: " + sample.url());
+                System.out.println("Sample Content: " + sample.sample());
+                System.out.println("Sample Requests: " + sample.requests());
+            });
         }
+        finally {
+            Files.deleteIfExists(Path.of("/tmp/dom-sample.db"));
+        }
+
     }
 
     @Test
