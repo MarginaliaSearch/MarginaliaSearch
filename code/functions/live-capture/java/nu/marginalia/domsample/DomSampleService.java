@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class DomSampleService {
     private final DomSampleDb db;
@@ -18,7 +19,9 @@ public class DomSampleService {
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
 
     @Inject
-    public DomSampleService(DomSampleDb db, HikariDataSource mariadbDataSource, BrowserlessClient browserlessClient) {
+    public DomSampleService(DomSampleDb db,
+                            HikariDataSource mariadbDataSource,
+                            BrowserlessClient browserlessClient) {
         this.db = db;
         this.mariadbDataSource = mariadbDataSource;
         this.browserlessClient = browserlessClient;
@@ -55,11 +58,24 @@ public class DomSampleService {
 
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            syncDomains();
-            var domains = db.getScheduledDomains();
+            try {
+                // Grace sleep in case we're operating on an empty domain list
+                TimeUnit.SECONDS.sleep(15);
 
-            for (var domain : domains) {
-                updateDomain(domain);
+                syncDomains();
+                var domains = db.getScheduledDomains();
+
+                for (var domain : domains) {
+                    updateDomain(domain);
+                }
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.info("DomSampleService interrupted, stopping...");
+                return;
+            }
+            catch (Exception e) {
+                logger.error("Error in DomSampleService run loop", e);
             }
         }
     }
@@ -67,7 +83,9 @@ public class DomSampleService {
     private void updateDomain(String domain) {
         var rootUrl = "https://" + domain + "/";
         try {
-            var content = browserlessClient.annotatedContent(rootUrl, BrowserlessClient.GotoOptions.defaultValues());
+            var content = browserlessClient.annotatedContent(rootUrl,
+                    BrowserlessClient.GotoOptions.defaultValues());
+
             if (content.isPresent()) {
                 db.saveSample(domain, rootUrl, content.get());
             }
