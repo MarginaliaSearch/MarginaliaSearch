@@ -3,7 +3,7 @@
   "name": "Marginalia DOM Interceptor",
   "version": "1.0",
   "description": "Makes DOM export better",
-  "run_at": "document_start",
+
   "permissions": [
     "activeTab",
     "scripting",
@@ -20,6 +20,7 @@
   "content_scripts": [
     {
       "js": ["content.js"],
+      "run_at": "document_start",
       "matches": [
         "<all_urls>"
       ]
