@@ -8,8 +8,7 @@ import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,6 +32,41 @@ class DomSampleDbTest {
         }
         catch (Exception e) {
             fail("Failed to set up database: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSyncDomains() {
+        var dbPath = tempDir.resolve("test.db");
+        try (var db = new DomSampleDb(dbPath)) {
+
+            db.syncDomains(Set.of("example.com", "test.com", "foobar.com"));
+            assertEquals(Set.of("example.com", "test.com", "foobar.com"), new HashSet<>(db.getScheduledDomains()));
+            db.syncDomains(Set.of("example.com", "test.com"));
+            assertEquals(Set.of("example.com", "test.com"), new HashSet<>(db.getScheduledDomains()));
+            db.syncDomains(Set.of("foobar.com", "test.com"));
+            assertEquals(Set.of("foobar.com", "test.com"), new HashSet<>(db.getScheduledDomains()));
+        }
+        catch (Exception e) {
+            fail("Failed to sync domains: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testFetchDomains() {
+        var dbPath = tempDir.resolve("test.db");
+        try (var db = new DomSampleDb(dbPath)) {
+
+            db.syncDomains(Set.of("example.com", "test.com", "foobar.com"));
+            db.flagDomainAsFetched("example.com");
+            db.flagDomainAsFetched("test.com");
+            db.flagDomainAsFetched("foobar.com");
+            assertEquals(List.of("example.com", "test.com", "foobar.com"), db.getScheduledDomains());
+            db.flagDomainAsFetched("test.com");
+            assertEquals(List.of("example.com", "foobar.com", "test.com"), db.getScheduledDomains());
+        }
+        catch (Exception e) {
+            fail("Failed to sync domains: " + e.getMessage());
         }
     }
 

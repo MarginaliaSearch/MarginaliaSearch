@@ -7,8 +7,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DomSampleDb implements AutoCloseable {
     private static final String dbFileName = "dom-sample.db";
@@ -29,6 +28,63 @@ public class DomSampleDb implements AutoCloseable {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS schedule (domain TEXT PRIMARY KEY, last_fetch TIMESTAMP DEFAULT NULL)");
         }
     }
+
+    public void syncDomains(Set<String> domains) {
+        Set<String> currentDomains = new HashSet<>();
+        try (var stmt = connection.prepareStatement("SELECT domain FROM schedule")) {
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                currentDomains.add(rs.getString("domain"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to sync domains", e);
+        }
+
+        Set<String> toRemove = new HashSet<>(currentDomains);
+        Set<String> toAdd = new HashSet<>(domains);
+
+        toRemove.removeAll(domains);
+        toAdd.removeAll(currentDomains);
+
+        try (var removeStmt = connection.prepareStatement("DELETE FROM schedule WHERE domain = ?");
+                var addStmt = connection.prepareStatement("INSERT OR IGNORE INTO schedule (domain) VALUES (?)")
+        ) {
+            for (String domain : toRemove) {
+                removeStmt.setString(1, domain);
+                removeStmt.executeUpdate();
+            }
+
+            for (String domain : toAdd) {
+                addStmt.setString(1, domain);
+                addStmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to remove domains", e);
+        }
+    }
+
+    public List<String> getScheduledDomains() {
+        List<String> domains = new ArrayList<>();
+        try (var stmt = connection.prepareStatement("SELECT domain FROM schedule ORDER BY last_fetch IS NULL DESC, last_fetch ASC")) {
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                domains.add(rs.getString("domain"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to get scheduled domains", e);
+        }
+        return domains;
+    }
+
+    public void flagDomainAsFetched(String domain) {
+        try (var stmt = connection.prepareStatement("INSERT OR REPLACE INTO schedule (domain, last_fetch) VALUES (?, CURRENT_TIMESTAMP)")) {
+            stmt.setString(1, domain);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to flag domain as fetched", e);
+        }
+    }
+
 
     public record Sample(String url, String domain, String sample, String requests, boolean acceptedPopover) {}
 
