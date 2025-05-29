@@ -18,6 +18,7 @@ import nu.marginalia.service.server.JoobyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -40,6 +41,8 @@ public class SearchService extends JoobyService {
             .labelNames("matchedPath", "method")
             .help("Search service error count")
             .register();
+
+    private final String openSearchXML;
 
     @Inject
     public SearchService(BaseServiceParams params,
@@ -69,6 +72,13 @@ public class SearchService extends JoobyService {
         this.siteSubscriptionService = siteSubscriptionService;
         this.faviconClient = faviconClient;
         this.domainQueries = domainQueries;
+
+        try (var is = ClassLoader.getSystemResourceAsStream("static/opensearch.xml")) {
+            openSearchXML = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to load OpenSearch XML", e);
+        }
     }
 
     @Override
@@ -81,6 +91,11 @@ public class SearchService extends JoobyService {
 
         jooby.get("/site/https://*", this::handleSiteUrlRedirect);
         jooby.get("/site/http://*", this::handleSiteUrlRedirect);
+
+        jooby.get("/opensearch.xml", ctx -> {
+            ctx.setResponseType(MediaType.valueOf("application/opensearchdescription+xml"));
+            return openSearchXML;
+        });
 
         String emptySvg = "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>";
         jooby.get("/site/{domain}/favicon", ctx -> {
