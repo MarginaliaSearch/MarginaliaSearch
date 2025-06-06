@@ -19,6 +19,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
 
+    implementation project(':code:functions:nsfw-domain-filter')
     implementation project(':code:functions:search-query:api')
 
     implementation project(':code:index:query')
