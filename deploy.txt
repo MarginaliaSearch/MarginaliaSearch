@@ -10,3 +10,4 @@
 2025-05-08:  Deploy assistant.
 2025-05-17:  Redeploy all.
 2025-05-28:  Deploy assistant and browserless.
+2025-06-06:  Deploy assistant and browserless.
