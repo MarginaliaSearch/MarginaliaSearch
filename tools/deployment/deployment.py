@@ -344,7 +344,7 @@ if __name__ == '__main__':
 
         parser.add_argument('-v', '--verify', help='Verify the tags are valid, if present', action='store_true')
         parser.add_argument('-a', '--add', help='Add the tags provided as a new deployment tag, usually combined with -t', action='store_true')
-        parser.add_argument('-t', '--tag', help='Use the specified tag value instead of the head git tag starting with deploy-')
+        parser.add_argument('-t', '--tag', help='Use the specified tag value instead of the head git tag starting with deploy-; Expecting tags on the format "+service", "-service", or "group"')
 
         args = parser.parse_args()
         tags = args.tag
@@ -372,7 +372,7 @@ if __name__ == '__main__':
 
                 build_and_deploy(plan, SERVICE_CONFIG)
         else:
-            print("No tags found")
+            print("No tags found.")
 
     except ValueError as e:
         print(f"Error: {e}")
