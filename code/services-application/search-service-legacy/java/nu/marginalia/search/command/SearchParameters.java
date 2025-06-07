@@ -2,6 +2,7 @@ package nu.marginalia.search.command;
 
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.search.model.SearchProfile;
@@ -22,6 +23,10 @@ public record SearchParameters(String query,
                                boolean newFilter,
                                int page
                                ) {
+
+    public NsfwFilterTier filterTier() {
+        return NsfwFilterTier.DANGER;
+    }
 
     public SearchParameters(String queryString, Request request) {
         this(

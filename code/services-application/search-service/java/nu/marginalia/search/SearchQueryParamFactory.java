@@ -2,6 +2,7 @@ package nu.marginalia.search;
 
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
@@ -53,6 +54,7 @@ public class SearchQueryParamFactory {
                 profile.searchSetIdentifier.name(),
                 userParams.strategy(),
                 userParams.temporalBias(),
+                userParams.filterTier(),
                 userParams.page()
         );
 
@@ -79,6 +81,7 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
+                NsfwFilterTier.OFF,
                 page
         );
     }
@@ -99,6 +102,7 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
+                NsfwFilterTier.DANGER,
                 page
         );
     }
@@ -119,6 +123,7 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE.name(),
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
+                NsfwFilterTier.DANGER,
                 1
         );
     }

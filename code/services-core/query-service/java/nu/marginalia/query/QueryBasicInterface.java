@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
@@ -61,7 +62,7 @@ public class QueryBasicInterface {
                         .setTimeoutMs(250)
                         .setFetchSize(8192)
                         .build()
-        , set);
+        , set, NsfwFilterTier.OFF);
 
         var pagination = new IndexClient.Pagination(page, count);
 
@@ -114,7 +115,7 @@ public class QueryBasicInterface {
                     .setTimeoutMs(250)
                     .setFetchSize(8192)
                     .build(),
-                set);
+                set, NsfwFilterTier.OFF);
 
         var pagination = new IndexClient.Pagination(page, count);
 

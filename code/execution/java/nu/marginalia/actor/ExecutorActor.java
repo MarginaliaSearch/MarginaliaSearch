@@ -6,6 +6,7 @@ import java.util.Set;
 
 public enum ExecutorActor {
     PREC_EXPORT_ALL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    SYNC_NSFW_LISTS(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
 
     CRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     RECRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
@@ -35,7 +36,8 @@ public enum ExecutorActor {
     LIVE_CRAWL(NodeProfile.REALTIME),
     PROC_LIVE_CRAWL_SPAWNER(NodeProfile.REALTIME),
     SCRAPE_FEEDS(NodeProfile.REALTIME),
-    UPDATE_RSS(NodeProfile.REALTIME);
+    UPDATE_RSS(NodeProfile.REALTIME)
+    ;
 
     public String id() {
         return "fsm:" + name().toLowerCase();

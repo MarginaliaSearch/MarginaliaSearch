@@ -6,6 +6,7 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiSearchResults;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
 import nu.marginalia.api.svc.ResponseCache;
@@ -119,6 +120,16 @@ public class ApiService extends SparkService {
 
         int count = intParam(request, "count", 20);
         int index = intParam(request, "index", 3);
+        int nsfw = intParam(request, "nsfw", 1);
+
+        NsfwFilterTier nsfwFilterTier;
+        try {
+             nsfwFilterTier = NsfwFilterTier.fromCodedValue(nsfw);
+        }
+        catch (IllegalArgumentException e) {
+            Spark.halt(400, "Invalid nsfw parameter value");
+            return null; // Unreachable, but required to satisfy the compiler
+        }
 
         logger.info(queryMarker, "{} Search {}", license.key, query);
 
@@ -126,7 +137,7 @@ public class ApiService extends SparkService {
                 .labels(license.key)
                 .time(() ->
                         searchOperator
-                        .query(query, count, index)
+                        .query(query, count, index, nsfwFilterTier)
                         .withLicense(license.getLicense())
                 );
     }

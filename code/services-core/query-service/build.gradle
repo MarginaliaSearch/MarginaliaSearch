@@ -37,6 +37,7 @@ dependencies {
     implementation project(':code:functions:search-query:api')
     implementation project(':code:functions:link-graph:api')
     implementation project(':code:functions:link-graph:aggregate')
+    implementation project(':code:functions:nsfw-domain-filter')
 
     implementation libs.bundles.slf4j
 

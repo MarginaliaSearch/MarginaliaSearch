@@ -11,6 +11,7 @@ import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.api.IndexClient;
+import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,13 +35,16 @@ public class QueryGRPCService
 
 
     private final QueryFactory queryFactory;
+    private final NsfwDomainFilter nsfwDomainFilter;
     private final IndexClient indexClient;
 
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
+                            NsfwDomainFilter nsfwDomainFilter,
                             IndexClient indexClient)
     {
         this.queryFactory = queryFactory;
+        this.nsfwDomainFilter = nsfwDomainFilter;
         this.indexClient = indexClient;
     }
 

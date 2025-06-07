@@ -12,39 +12,32 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation project(':code:common:model')
+
     implementation project(':code:common:config')
-    implementation project(':code:common:service')
+    implementation project(':code:common:model')
     implementation project(':code:common:db')
-    implementation project(':code:libraries:message-queue')
-    implementation project(':code:functions:nsfw-domain-filter')
-    implementation project(':code:functions:search-query:api')
+
 
     implementation libs.bundles.slf4j
-
     implementation libs.prometheus
-    implementation libs.notnull
     implementation libs.guava
+    implementation libs.commons.lang3
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }
-    implementation libs.bundles.protobuf
+    implementation libs.notnull
     implementation libs.fastutil
-    implementation libs.javax.annotation
-    implementation libs.bundles.gson
-    implementation libs.guava
-    libs.bundles.grpc.get().each {
-        implementation dependencies.create(it) {
-            exclude group: 'com.google.guava'
-        }
-    }
-
+    implementation libs.bundles.mariadb
 
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation libs.commons.codec
+    testImplementation project(':code:common:service')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
 }
-
-
-

@@ -20,6 +20,7 @@ include 'code:functions:favicon'
 include 'code:functions:favicon:api'
 include 'code:functions:domain-info'
 include 'code:functions:domain-info:api'
+include 'code:functions:nsfw-domain-filter'
 
 include 'code:functions:link-graph:partition'
 include 'code:functions:link-graph:aggregate'
@@ -153,9 +154,9 @@ dependencyResolutionManagement {
             library('guice', 'com.google.inject', 'guice').version('7.0.0')
             library('guava', 'com.google.guava', 'guava').version('32.0.1-jre')
             library('protobuf', 'com.google.protobuf', 'protobuf-java').version('3.16.3')
-            library('grpc-protobuf', 'io.grpc', 'grpc-protobuf').version('1.49.2')
-            library('grpc-stub', 'io.grpc', 'grpc-stub').version('1.49.2')
-            library('grpc-netty', 'io.grpc', 'grpc-netty-shaded').version('1.49.2')
+            library('grpc-protobuf', 'io.grpc', 'grpc-protobuf').version('1.73.0')
+            library('grpc-stub', 'io.grpc', 'grpc-stub').version('1.73.0')
+            library('grpc-netty', 'io.grpc', 'grpc-netty-shaded').version('1.73.0')
 
             library('prometheus', 'io.prometheus', 'simpleclient').version('0.16.0')
             library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
