@@ -3,6 +3,7 @@ package nu.marginalia.control.app.svc;
 import com.google.inject.Inject;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeUrl;
@@ -81,7 +82,8 @@ public class SearchToBanService {
                         .setFetchSize(8192)
                         .build()
                 ,
-                "NONE"
+                "NONE",
+                NsfwFilterTier.OFF
         ));
     }
 }

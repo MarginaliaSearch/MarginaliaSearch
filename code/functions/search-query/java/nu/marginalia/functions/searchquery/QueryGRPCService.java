@@ -11,13 +11,11 @@ import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.api.IndexClient;
-import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -74,18 +72,9 @@ public class QueryGRPCService
                 // Execute the query on the index partitions
                 IndexClient.AggregateQueryResponse response = indexClient.executeQueries(indexRequest, pagination);
 
-                List<RpcDecoratedResultItem> results = new ArrayList<>(response.results().size());
-
-                for (var result : response.results()) {
-                    final int domainId = UrlIdCodec.getDomainId(result.getRawItem().getCombinedId());
-                    if (!nsfwDomainFilter.isBlocked(domainId, NsfwDomainFilter.NSFW_BLOCK_DANGER)) {
-                        results.add(result);
-                    }
-                }
-
                  // Convert results to response and send it back
                 var responseBuilder = RpcQsResponse.newBuilder()
-                        .addAllResults(results)
+                        .addAllResults(response.results())
                         .setPagination(
                                 RpcQsResultPagination.newBuilder()
                                         .setPage(requestPagination.getPage())

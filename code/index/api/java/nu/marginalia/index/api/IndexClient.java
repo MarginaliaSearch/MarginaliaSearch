@@ -7,6 +7,7 @@ import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -28,14 +29,19 @@ public class IndexClient {
     private static final Logger logger = LoggerFactory.getLogger(IndexClient.class);
     private final GrpcMultiNodeChannelPool<IndexApiGrpc.IndexApiBlockingStub> channelPool;
     private final DomainBlacklistImpl blacklist;
+    private final NsfwDomainFilter nsfwDomainFilter;
     private static final ExecutorService executor = Executors.newCachedThreadPool();
 
     @Inject
-    public IndexClient(GrpcChannelPoolFactory channelPoolFactory, DomainBlacklistImpl blacklist) {
+    public IndexClient(GrpcChannelPoolFactory channelPoolFactory,
+                       DomainBlacklistImpl blacklist,
+                       NsfwDomainFilter nsfwDomainFilter
+                       ) {
         this.channelPool = channelPoolFactory.createMulti(
                 ServiceKey.forGrpcApi(IndexApiGrpc.class, ServicePartition.multi()),
                 IndexApiGrpc::newBlockingStub);
         this.blacklist = blacklist;
+        this.nsfwDomainFilter = nsfwDomainFilter;
     }
 
     private static final Comparator<RpcDecoratedResultItem> comparator =
@@ -52,7 +58,7 @@ public class IndexClient {
     public AggregateQueryResponse executeQueries(RpcIndexQuery indexRequest, Pagination pagination) {
 
         final int requestedMaxResults = indexRequest.getQueryLimits().getResultsTotal();
-
+        int filterTier = indexRequest.getNsfwFilterTierValue();
         AtomicInteger totalNumResults = new AtomicInteger(0);
 
         List<RpcDecoratedResultItem> results =
@@ -74,7 +80,7 @@ public class IndexClient {
                             }
                         })
                         .flatMap(List::stream)
-                        .filter(item -> !isBlacklisted(item))
+                        .filter(item -> !isBlacklisted(item, filterTier))
                         .sorted(comparator)
                         .skip(Math.max(0, (pagination.page - 1) * pagination.pageSize))
                         .limit(pagination.pageSize)
@@ -83,8 +89,13 @@ public class IndexClient {
         return new AggregateQueryResponse(results, pagination.page(), totalNumResults.get());
     }
 
-    private boolean isBlacklisted(RpcDecoratedResultItem item) {
-        return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));
+    private boolean isBlacklisted(RpcDecoratedResultItem item, int filterTier) {
+        int domainId = UrlIdCodec.getDomainId(item.getRawItem().getCombinedId());
+
+        if (blacklist.isBlacklisted(domainId)) {
+            return true;
+        }
+        return nsfwDomainFilter.isBlocked(domainId, filterTier);
     }
 
 }

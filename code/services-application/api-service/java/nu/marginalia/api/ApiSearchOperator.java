@@ -7,6 +7,7 @@ import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
@@ -29,9 +30,10 @@ public class ApiSearchOperator {
 
     public ApiSearchResults query(String query,
                                   int count,
-                                  int index)
+                                  int index,
+                                  NsfwFilterTier filterTier)
     {
-        var rsp = queryClient.search(createParams(query, count, index));
+        var rsp = queryClient.search(createParams(query, count, index, filterTier));
 
         return new ApiSearchResults("RESTRICTED", query,
                 rsp.results()
@@ -42,7 +44,7 @@ public class ApiSearchOperator {
                 .collect(Collectors.toList()));
     }
 
-    private QueryParams createParams(String query, int count, int index) {
+    private QueryParams createParams(String query, int count, int index, NsfwFilterTier filterTirer) {
         SearchSetIdentifier searchSet = selectSearchSet(index);
 
         return new QueryParams(
@@ -53,7 +55,8 @@ public class ApiSearchOperator {
                         .setTimeoutMs(150)
                         .setFetchSize(8192)
                         .build(),
-                searchSet.name());
+                searchSet.name(),
+                filterTirer);
     }
 
     private SearchSetIdentifier selectSearchSet(int index) {

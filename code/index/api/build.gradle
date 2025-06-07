@@ -17,6 +17,7 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:db')
     implementation project(':code:libraries:message-queue')
+    implementation project(':code:functions:nsfw-domain-filter')
     implementation project(':code:functions:search-query:api')
 
     implementation libs.bundles.slf4j

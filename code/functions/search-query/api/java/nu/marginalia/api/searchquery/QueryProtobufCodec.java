@@ -1,9 +1,6 @@
 package nu.marginalia.api.searchquery;
 
-import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.QueryResponse;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -31,6 +28,8 @@ public class QueryProtobufCodec {
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(request.getHumanQuery());
+
+        builder.setNsfwFilterTierValue(request.getNsfwFilterTierValue());
 
         builder.setQuality(IndexProtobufCodec.convertSpecLimit(query.specs.quality));
         builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
@@ -78,6 +77,8 @@ public class QueryProtobufCodec {
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(humanQuery);
 
+        builder.setNsfwFilterTier(RpcIndexQuery.NSFW_FILTER_TIER.DANGER);
+
         builder.setQuality(IndexProtobufCodec.convertSpecLimit(query.specs.quality));
         builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
         builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
@@ -112,6 +113,7 @@ public class QueryProtobufCodec {
                 request.getSearchSetIdentifier(),
                 QueryStrategy.valueOf(request.getQueryStrategy()),
                 RpcTemporalBias.Bias.valueOf(request.getTemporalBias().getBias().name()),
+                NsfwFilterTier.fromCodedValue(request.getNsfwFilterTierValue()),
                 request.getPagination().getPage()
         );
     }
@@ -327,6 +329,7 @@ public class QueryProtobufCodec {
                 .setRank(IndexProtobufCodec.convertSpecLimit(params.rank()))
                 .setSearchSetIdentifier(params.identifier())
                 .setQueryStrategy(params.queryStrategy().name())
+                .setNsfwFilterTierValue(params.filterTier().getCodedValue())
                 .setTemporalBias(RpcTemporalBias.newBuilder()
                         .setBias(RpcTemporalBias.Bias.valueOf(params.temporalBias().name()))
                         .build())

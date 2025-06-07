@@ -32,6 +32,14 @@ message RpcQsQuery {
   RpcTemporalBias temporalBias = 16;
 
   RpcQsQueryPagination pagination = 17;
+
+  NSFW_FILTER_TIER nsfwFilterTier = 18;
+
+  enum NSFW_FILTER_TIER {
+    NONE = 0;
+    DANGER = 1;
+    PORN_AND_GAMBLING = 2;
+  };
 }
 
 /* Query service query response */
@@ -78,7 +86,16 @@ message RpcIndexQuery {
   RpcQueryLimits queryLimits = 10;
   string queryStrategy = 11;      // Named query configuration
   RpcResultRankingParameters parameters = 12;
+
+  NSFW_FILTER_TIER nsfwFilterTier = 13;
+
+  enum NSFW_FILTER_TIER {
+    NONE = 0;
+    DANGER = 1;
+    PORN_AND_GAMBLING = 2;
+  };
 }
+
 
 /* A tagged union encoding some limit on a field */
 message RpcSpecLimit {

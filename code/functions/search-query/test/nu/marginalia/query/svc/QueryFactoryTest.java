@@ -3,6 +3,7 @@ package nu.marginalia.query.svc;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.functions.searchquery.QueryFactory;
@@ -58,6 +59,7 @@ public class QueryFactoryTest {
                         "NONE",
                         QueryStrategy.AUTO,
                         RpcTemporalBias.Bias.NONE,
+                        NsfwFilterTier.OFF,
                         0), null).specs;
     }
 

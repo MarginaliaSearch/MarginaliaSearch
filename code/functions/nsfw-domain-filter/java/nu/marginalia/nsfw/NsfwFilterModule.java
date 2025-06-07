@@ -26,6 +26,5 @@ public class NsfwFilterModule extends AbstractModule {
         );
     }
 
-    public void configure() {
-    }
+    public void configure() {}
 }
