@@ -1,13 +1,15 @@
 package nu.marginalia.service.discovery;
 
-import nu.marginalia.service.discovery.monitor.*;
+import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
+import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
-import static nu.marginalia.service.discovery.property.ServiceEndpoint.*;
-
 import nu.marginalia.service.discovery.property.ServiceKey;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 
 import java.util.List;
 import java.util.UUID;
+
+import static nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 
 /** A service registry that allows services to register themselves and
  * be discovered by other services on the network.
@@ -57,4 +59,16 @@ public interface ServiceRegistryIf {
      * </ul>
      * */
     void registerMonitor(ServiceMonitorIf monitor) throws Exception;
+
+    /** Create an inter-process mutex for the given process name and node ID.
+     * <p></p>
+     * This is useful for coordinating actions across multiple nodes in a distributed system.
+     * The mutex will be created in ZooKeeper and can be used to ensure that only one instance
+     * of the process is running at a time across JVMs.
+     *
+     * @param processName the name of the process
+     * @param nodeId      the ID of the node
+     * @return an InterProcessMutex that can be used to lock the process
+     */
+    InterProcessMutex createProcessMutex(String processName, int nodeId);
 }

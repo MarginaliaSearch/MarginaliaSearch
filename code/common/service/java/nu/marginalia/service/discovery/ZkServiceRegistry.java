@@ -6,6 +6,7 @@ import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher;
@@ -254,6 +255,10 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                     }
                 })
                 .forPath("/running-instances");
+    }
+
+    public InterProcessMutex createProcessMutex(String processName, int nodeId) {
+        return new InterProcessMutex(curatorFramework, "/process-locks/" + processName + "/" + nodeId);
     }
 
     /* Exposed for tests */
