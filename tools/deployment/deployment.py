@@ -5,9 +5,6 @@ import subprocess, os
 from typing import List, Set, Dict, Optional
 import argparse
 
-build_dir = "/app/search.marginalia.nu/build"
-docker_dir = "/app/search.marginalia.nu/docker"
-
 @dataclass
 class ServiceConfig:
     """Configuration for a service"""
@@ -16,6 +13,99 @@ class ServiceConfig:
     instances: int | None
     deploy_tier: int
     groups: Set[str]
+
+# Define the service configurations
+
+build_dir = "/app/search.marginalia.nu/build"
+docker_dir = "/app/search.marginalia.nu/docker"
+
+SERVICE_CONFIG = {
+        'search': ServiceConfig(
+            gradle_target=':code:services-application:search-service:docker',
+            docker_name='search-service',
+            instances=2,
+            deploy_tier=2,
+            groups={"all", "frontend", "core"}
+        ),
+        'search-legacy': ServiceConfig(
+            gradle_target=':code:services-application:search-service-legacy:docker',
+            docker_name='search-service-legacy',
+            instances=None,
+            deploy_tier=3,
+            groups={"all", "frontend", "core"}
+        ),
+        'api': ServiceConfig(
+            gradle_target=':code:services-application:api-service:docker',
+            docker_name='api-service',
+            instances=2,
+            deploy_tier=1,
+            groups={"all", "core"}
+        ),
+        'browserless': ServiceConfig(
+            gradle_target=':code:tools:browserless:docker',
+            docker_name='browserless',
+            instances=None,
+            deploy_tier=2,
+            groups={"all", "core"}
+        ),
+        'assistant': ServiceConfig(
+            gradle_target=':code:services-core:assistant-service:docker',
+            docker_name='assistant-service',
+            instances=2,
+            deploy_tier=2,
+            groups={"all", "core"}
+        ),
+        'explorer': ServiceConfig(
+            gradle_target=':code:services-application:explorer-service:docker',
+            docker_name='explorer-service',
+            instances=None,
+            deploy_tier=1,
+            groups={"all", "extra"}
+        ),
+        'dating': ServiceConfig(
+            gradle_target=':code:services-application:dating-service:docker',
+            docker_name='dating-service',
+            instances=None,
+            deploy_tier=1,
+            groups={"all", "extra"}
+        ),
+        'index': ServiceConfig(
+            gradle_target=':code:services-core:index-service:docker',
+            docker_name='index-service',
+            instances=10,
+            deploy_tier=3,
+            groups={"all", "index"}
+        ),
+        'executor': ServiceConfig(
+            gradle_target=':code:services-core:executor-service:docker',
+            docker_name='executor-service',
+            instances=10,
+            deploy_tier=3,
+            groups={"all", "executor"}
+        ),
+        'control': ServiceConfig(
+            gradle_target=':code:services-core:control-service:docker',
+            docker_name='control-service',
+            instances=None,
+            deploy_tier=0,
+            groups={"all", "core"}
+        ),
+        'status': ServiceConfig(
+            gradle_target=':code:services-application:status-service:docker',
+            docker_name='status-service',
+            instances=None,
+            deploy_tier=4,
+            groups={"all"}
+        ),
+        'query': ServiceConfig(
+            gradle_target=':code:services-core:query-service:docker',
+            docker_name='query-service',
+            instances=2,
+            deploy_tier=2,
+            groups={"all", "query"}
+        ),
+    }
+
 
 @dataclass
 class DeploymentPlan:
@@ -76,7 +166,7 @@ def parse_deployment_tags(
     instances_to_hold = set()
 
     available_services = set(service_config.keys())
-    available_groups = set()
+    available_groups = set.union(*[service.groups for service in service_config.values()])
 
     partitions = set()
 
@@ -89,7 +179,6 @@ def parse_deployment_tags(
                 partitions.add(int(p))
         if tag.startswith('deploy:'):
             parts = tag[7:].strip().split(',')
-
             for part in parts:
                 part = part.strip()
 
@@ -250,92 +339,7 @@ def add_tags(tags: str) -> None:
 # Example usage:
 if __name__ == '__main__':
     # Define service configuration
-    SERVICE_CONFIG = {
-        'search': ServiceConfig(
-            gradle_target=':code:services-application:search-service:docker',
-            docker_name='search-service',
-            instances=2,
-            deploy_tier=2,
-            groups={"all", "frontend", "core"}
-        ),
-        'search-legacy': ServiceConfig(
-            gradle_target=':code:services-application:search-service-legacy:docker',
-            docker_name='search-service-legacy',
-            instances=None,
-            deploy_tier=3,
-            groups={"all", "frontend", "core"}
-        ),
-        'api': ServiceConfig(
-            gradle_target=':code:services-application:api-service:docker',
-            docker_name='api-service',
-            instances=2,
-            deploy_tier=1,
-            groups={"all", "core"}
-        ),
-        'browserless': ServiceConfig(
-            gradle_target=':code:tools:browserless:docker',
-            docker_name='browserless',
-            instances=None,
-            deploy_tier=2,
-            groups={"all", "core"}
-        ),
-        'assistant': ServiceConfig(
-            gradle_target=':code:services-core:assistant-service:docker',
-            docker_name='assistant-service',
-            instances=2,
-            deploy_tier=2,
-            groups={"all", "core"}
-        ),
-        'explorer': ServiceConfig(
-            gradle_target=':code:services-application:explorer-service:docker',
-            docker_name='explorer-service',
-            instances=None,
-            deploy_tier=1,
-            groups={"all", "extra"}
-        ),
-        'dating': ServiceConfig(
-            gradle_target=':code:services-application:dating-service:docker',
-            docker_name='dating-service',
-            instances=None,
-            deploy_tier=1,
-            groups={"all", "extra"}
-        ),
-        'index': ServiceConfig(
-            gradle_target=':code:services-core:index-service:docker',
-            docker_name='index-service',
-            instances=10,
-            deploy_tier=3,
-            groups={"all", "index"}
-        ),
-        'executor': ServiceConfig(
-            gradle_target=':code:services-core:executor-service:docker',
-            docker_name='executor-service',
-            instances=10,
-            deploy_tier=3,
-            groups={"all", "executor"}
-        ),
-        'control': ServiceConfig(
-            gradle_target=':code:services-core:control-service:docker',
-            docker_name='control-service',
-            instances=None,
-            deploy_tier=0,
-            groups={"all", "core"}
-        ),
-        'status': ServiceConfig(
-            gradle_target=':code:services-application:status-service:docker',
-            docker_name='status-service',
-            instances=None,
-            deploy_tier=4,
-            groups={"all"}
-        ),
-        'query': ServiceConfig(
-            gradle_target=':code:services-core:query-service:docker',
-            docker_name='query-service',
-            instances=2,
-            deploy_tier=2,
-            groups={"all", "query"}
-        ),
-    }
+
 
     try:
         parser = argparse.ArgumentParser(
