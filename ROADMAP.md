@@ -38,14 +38,6 @@ associated with each language added, at least a models file or two, as well as s
 
 It would be very helpful to find a speaker of a large language other than English to help in the fine tuning.
 
-## Support for binary formats like PDF
-
-The crawler needs to be modified to retain them, and the conversion logic needs to parse them.  
-The documents database probably should have some sort of flag indicating it's a PDF as well.
-
-PDF parsing is known to be a bit of a security liability so some thought needs to be put in
-that direction as well.
-
 ## Custom ranking logic
 
 Stract does an interesting thing where they have configurable search filters.
@@ -65,6 +57,14 @@ This is expected from search engines.  Basic proof of concept sketch of fetching
 One of the search engine's biggest limitations right now is that it does not index github at all.   A specialized crawler that fetches at least the readme.md would go a long way toward providing search capabilities in this domain.
 
 # Completed
+
+## Support for binary formats like PDF (COMPLETED 2025-05)
+
+The crawler needs to be modified to retain them, and the conversion logic needs to parse them.  
+The documents database probably should have some sort of flag indicating it's a PDF as well.
+
+PDF parsing is known to be a bit of a security liability so some thought needs to be put in
+that direction as well.
 
 ## Web Design Overhaul (COMPLETED 2025-01)
 
