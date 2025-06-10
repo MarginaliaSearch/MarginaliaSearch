@@ -49,6 +49,7 @@ public class ExecutorActorControlService {
                                        RecrawlSingleDomainActor recrawlSingleDomainActor,
                                        RestoreBackupActor restoreBackupActor,
                                        ConverterMonitorActor converterMonitorFSM,
+                                       PingMonitorActor pingMonitorActor,
                                        CrawlerMonitorActor crawlerMonitorActor,
                                        LiveCrawlerMonitorActor liveCrawlerMonitorActor,
                                        LoaderMonitorActor loaderMonitor,
@@ -89,6 +90,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.PROC_CONVERTER_SPAWNER, converterMonitorFSM);
         register(ExecutorActor.PROC_LOADER_SPAWNER, loaderMonitor);
         register(ExecutorActor.PROC_CRAWLER_SPAWNER, crawlerMonitorActor);
+        register(ExecutorActor.PROC_PING_SPAWNER, pingMonitorActor);
         register(ExecutorActor.PROC_LIVE_CRAWL_SPAWNER, liveCrawlerMonitorActor);
         register(ExecutorActor.PROC_EXPORT_TASKS_SPAWNER, exportTasksMonitorActor);
 

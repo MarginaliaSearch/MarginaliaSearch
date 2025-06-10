@@ -1,5 +1,6 @@
 package nu.marginalia.geoip;
 
+import com.google.inject.Singleton;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.geoip.sources.AsnMapping;
 import nu.marginalia.geoip.sources.AsnTable;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.util.Optional;
 
+@Singleton
 public class GeoIpDictionary {
     private volatile IP2LocationMapping ip2locMapping = null;
     private volatile AsnTable asnTable = null;
@@ -76,7 +78,7 @@ public class GeoIpDictionary {
     }
 
     public Optional<AsnTable.AsnInfo> getAsnInfo(int ipAddress) {
-        if (null == asnTable) { // not loaded yet or failed to load
+        if (null == asnMapping || null == asnTable) { // not loaded yet or failed to load
             return Optional.empty();
         }
 

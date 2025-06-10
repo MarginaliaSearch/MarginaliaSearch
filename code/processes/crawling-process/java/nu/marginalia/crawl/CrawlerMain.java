@@ -30,6 +30,7 @@ import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -155,18 +156,14 @@ public class CrawlerMain extends ProcessMainClass {
             Injector injector = Guice.createInjector(
                     new CrawlerModule(),
                     new ProcessConfigurationModule("crawler"),
+                    new ServiceDiscoveryModule(),
                     new DatabaseModule(false)
             );
             var crawler = injector.getInstance(CrawlerMain.class);
 
             var instructions = crawler.fetchInstructions(nu.marginalia.mqapi.crawling.CrawlRequest.class);
 
-            var lock = crawler.serviceRegistry.createProcessMutex("crawler", crawler.node);
-
-            if (!lock.acquire(10, TimeUnit.MINUTES)) {
-                crawler.eventLog.logEvent("CRAWLER-ERROR", "Failed to acquire process lock, another crawler is ostensibly already running");
-                System.exit(1);
-            }
+            crawler.serviceRegistry.registerProcess("crawler", crawler.node);
 
             try {
                 crawler.eventLog.logEvent("CRAWLER-INFO", "Crawling started");
@@ -184,7 +181,7 @@ public class CrawlerMain extends ProcessMainClass {
                 instructions.err();
             }
             finally {
-                lock.release();
+                crawler.serviceRegistry.deregisterProcess("crawler", crawler.node);
             }
 
             TimeUnit.SECONDS.sleep(5);

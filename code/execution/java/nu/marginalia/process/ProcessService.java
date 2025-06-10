@@ -8,6 +8,7 @@ import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.index.IndexConstructorMain;
 import nu.marginalia.livecrawler.LiveCrawlerMain;
 import nu.marginalia.loading.LoaderMain;
+import nu.marginalia.ping.PingMain;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.task.ExportTasksMain;
@@ -41,6 +42,7 @@ public class ProcessService {
         return switch (id) {
             case "converter" -> ProcessId.CONVERTER;
             case "crawler" -> ProcessId.CRAWLER;
+            case "ping" -> ProcessId.PING;
             case "loader" -> ProcessId.LOADER;
             case "export-tasks" -> ProcessId.EXPORT_TASKS;
             case "index-constructor" -> ProcessId.INDEX_CONSTRUCTOR;
@@ -50,6 +52,7 @@ public class ProcessService {
 
     public enum ProcessId {
         CRAWLER(CrawlerMain.class),
+        PING(PingMain.class),
         LIVE_CRAWLER(LiveCrawlerMain.class),
         CONVERTER(ConverterMain.class),
         LOADER(LoaderMain.class),
@@ -68,6 +71,7 @@ public class ProcessService {
                 case LIVE_CRAWLER -> "LIVE_CRAWLER_PROCESS_OPTS";
                 case CONVERTER -> "CONVERTER_PROCESS_OPTS";
                 case LOADER -> "LOADER_PROCESS_OPTS";
+                case PING -> "PING_PROCESS_OPTS";
                 case INDEX_CONSTRUCTOR -> "INDEX_CONSTRUCTION_PROCESS_OPTS";
                 case EXPORT_TASKS -> "EXPORT_TASKS_PROCESS_OPTS";
             };

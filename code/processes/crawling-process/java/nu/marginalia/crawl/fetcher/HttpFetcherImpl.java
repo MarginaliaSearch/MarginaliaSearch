@@ -36,6 +36,7 @@ import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.MessageSupport;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.pool.PoolStats;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.jsoup.Jsoup;
@@ -48,11 +49,15 @@ import org.slf4j.MarkerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -87,18 +92,49 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         return connectionManager.getTotalStats();
     }
 
-    private CloseableHttpClient createClient() throws NoSuchAlgorithmException {
+    private CloseableHttpClient createClient() throws NoSuchAlgorithmException, KeyManagementException {
         final ConnectionConfig connectionConfig = ConnectionConfig.custom()
                 .setSocketTimeout(10, TimeUnit.SECONDS)
                 .setConnectTimeout(30, TimeUnit.SECONDS)
                 .setValidateAfterInactivity(TimeValue.ofSeconds(5))
                 .build();
 
+        // No-op up front validation of server certificates.
+        //
+        // We will validate certificates later, after the connection is established
+        // as we want to store the certificate chain and validation
+        // outcome to the database.
+
+        var trustMeBro = new X509TrustManager() {
+            private X509Certificate[] lastServerCertChain;
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                this.lastServerCertChain = chain.clone();
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+
+            public X509Certificate[] getLastServerCertChain() {
+                return lastServerCertChain != null ? lastServerCertChain.clone() : null;
+            }
+        };
+
+        SSLContext sslContext = SSLContextBuilder.create().build();
+        sslContext.init(null, new TrustManager[]{trustMeBro}, null);
+
         connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                 .setMaxConnPerRoute(2)
                 .setMaxConnTotal(5000)
                 .setDefaultConnectionConfig(connectionConfig)
-                .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()))
+                .setTlsSocketStrategy(new DefaultClientTlsStrategy(sslContext))
                 .build();
 
         connectionManager.setDefaultSocketConfig(SocketConfig.custom()
@@ -183,6 +219,8 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             this.client = createClient();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
+        } catch (KeyManagementException e) {
+            throw new RuntimeException(e);
         }
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
@@ -192,6 +230,8 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         try {
             this.client = createClient();
         } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (KeyManagementException e) {
             throw new RuntimeException(e);
         }
         this.userAgentString = userAgent;
