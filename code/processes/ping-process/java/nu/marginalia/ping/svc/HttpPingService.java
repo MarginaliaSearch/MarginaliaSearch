@@ -18,7 +18,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -101,35 +100,74 @@ public class HttpPingService {
         final DomainAvailabilityRecord newPingStatus;
         final DomainSecurityRecord newSecurityInformation;
 
-        int errorCount = oldPingStatus != null ? oldPingStatus.backoffConsecutiveFailures() : 0;
-        Duration currentRefreshInterval = oldPingStatus != null ? oldPingStatus.backoffFetchInterval() : null;
-
         switch (result) {
             case UnknownHostError rsp -> {
-                newPingStatus = domainPingStatusFactory.createUnknownHost(domainReference.domainId(), domainReference.nodeId(), currentRefreshInterval, errorCount);
+                newPingStatus = domainPingStatusFactory.createError(
+                        domainReference.domainId(),
+                        domainReference.nodeId(),
+                        oldPingStatus,
+                        ErrorClassification.DNS_ERROR,
+                        null);
                 newSecurityInformation = null;
             }
             case ConnectionError rsp -> {
-                newPingStatus = domainPingStatusFactory.createConnectionError(domainReference.domainId(), domainReference.nodeId(), currentRefreshInterval, errorCount, rsp);
+                newPingStatus = domainPingStatusFactory.createError(
+                        domainReference.domainId(),
+                        domainReference.nodeId(),
+                        oldPingStatus,
+                        ErrorClassification.CONNECTION_ERROR,
+                        null);
                 newSecurityInformation = null;
             }
             case TimeoutResponse rsp -> {
-                newPingStatus = domainPingStatusFactory.createTimeoutResponse(domainReference.domainId(), domainReference.nodeId(), currentRefreshInterval, errorCount, rsp);
+                newPingStatus = domainPingStatusFactory.createError(
+                        domainReference.domainId(),
+                        domainReference.nodeId(),
+                        oldPingStatus,
+                        ErrorClassification.TIMEOUT,
+                        null);
                 newSecurityInformation = null;
             }
             case ProtocolError rsp -> {
-                newPingStatus = domainPingStatusFactory.createProtocolError(domainReference.domainId(), domainReference.nodeId(), currentRefreshInterval, errorCount, rsp);
+                newPingStatus = domainPingStatusFactory.createError(
+                        domainReference.domainId(),
+                        domainReference.nodeId(),
+                        oldPingStatus,
+                        ErrorClassification.HTTP_CLIENT_ERROR,
+                        null);
                 newSecurityInformation = null;
             }
             case HttpResponse httpResponse -> {
-                newPingStatus = domainPingStatusFactory.createHttpResponse(domainReference.domainId(), domainReference.nodeId(), lowestIpAddress, httpResponse);
-                newSecurityInformation = domainSecurityInformationFactory.createHttpSecurityInformation(httpResponse, domainReference.domainId(), domainReference.nodeId());
+                newPingStatus = domainPingStatusFactory.createHttpResponse(
+                        domainReference.domainId(),
+                        domainReference.nodeId(),
+                        lowestIpAddress,
+                        oldPingStatus,
+                        httpResponse);
+
+                newSecurityInformation = domainSecurityInformationFactory.createHttpSecurityInformation(
+                        httpResponse,
+                        domainReference.domainId(),
+                        domainReference.nodeId()
+                );
             }
             case HttpsResponse httpsResponse -> {
                 PKIXValidationResult validationResult = validator.validateCertificateChain(domainReference.domainName(), (X509Certificate[]) httpsResponse.sslCertificates());
 
-                newPingStatus = domainPingStatusFactory.createHttpsResponse(domainReference.domainId(), domainReference.nodeId(), lowestIpAddress, validationResult, httpsResponse);
-                newSecurityInformation = domainSecurityInformationFactory.createHttpsSecurityInformation(httpsResponse, validationResult, domainReference.domainId(), domainReference.nodeId());
+                newPingStatus = domainPingStatusFactory.createHttpsResponse(
+                        domainReference.domainId(),
+                        domainReference.nodeId(),
+                        lowestIpAddress,
+                        oldPingStatus,
+                        validationResult,
+                        httpsResponse);
+
+                newSecurityInformation = domainSecurityInformationFactory.createHttpsSecurityInformation(
+                        httpsResponse,
+                        validationResult,
+                        domainReference.domainId(),
+                        domainReference.nodeId()
+                );
             }
         }
 
@@ -210,8 +248,6 @@ public class HttpPingService {
 
         if (!change.isChanged())
             return;
-
-        logger.info("Security information change detected for {}: {}", newPingStatus.domainId(), change);
 
         generatedRecords.add(new DomainSecurityEvent(
                 newSecurityInformation.domainId(),

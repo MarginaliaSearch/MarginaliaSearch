@@ -4,7 +4,8 @@ import com.google.inject.Inject;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.geoip.sources.AsnTable;
 import nu.marginalia.ping.BackoffStrategy;
-import nu.marginalia.ping.fetcher.response.*;
+import nu.marginalia.ping.fetcher.response.HttpResponse;
+import nu.marginalia.ping.fetcher.response.HttpsResponse;
 import nu.marginalia.ping.model.DomainAvailabilityRecord;
 import nu.marginalia.ping.model.ErrorClassification;
 import nu.marginalia.ping.model.HttpSchema;
@@ -12,6 +13,7 @@ import nu.marginalia.ping.ssl.PKIXValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
@@ -32,100 +34,45 @@ public class DomainPingStatusFactory {
     }
 
 
-    public DomainAvailabilityRecord createUnknownHost(int domainId,
+    public DomainAvailabilityRecord createError(int domainId,
                                                       int nodeId,
-                                                      Duration currentRefreshInterval,
-                                                      int errorCount) {
+                                                      @Nullable DomainAvailabilityRecord previousRecord,
+                                                      ErrorClassification errorClassification,
+                                                      @Nullable String errorMessage
+                                                      ) {
+
+        Duration currentRefreshInterval = previousRecord != null ? previousRecord.backoffFetchInterval() : null;
+        int errorCount = previousRecord != null ? previousRecord.backoffConsecutiveFailures() : 0;
+        Instant lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
 
         Duration refreshInterval = backoffStrategy.getUpdateTime(
                 currentRefreshInterval,
-                ErrorClassification.DNS_ERROR,
+                errorClassification,
                 errorCount);
 
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
                 .serverAvailable(false)
-                .errorClassification(ErrorClassification.DNS_ERROR)
-                .errorMessage("Unknown host")
+                .errorClassification(errorClassification)
+                .errorMessage(errorMessage)
+                .tsLastAvailable(lastAvailable)
                 .tsLastPing(Instant.now())
+                .tsLastError(Instant.now())
                 .nextScheduledUpdate(Instant.now().plus(refreshInterval))
                 .backoffFetchInterval(refreshInterval)
                 .backoffConsecutiveFailures(errorCount+1)
                 .build();
     }
 
-    public DomainAvailabilityRecord createConnectionError(int domainId,
-                                                          int nodeId,
-                                                          Duration currentRefreshInterval,
-                                                          int errorCount,
-                                                          ConnectionError rsp) {
-        Duration refreshInterval = backoffStrategy.getUpdateTime(
-                currentRefreshInterval,
-                ErrorClassification.CONNECTION_ERROR,
-                errorCount);
+    public DomainAvailabilityRecord createHttpResponse(int domainId,
+                                                       int nodeId,
+                                                       InetAddress address,
+                                                       @Nullable DomainAvailabilityRecord previousRecord,
+                                                       HttpResponse rsp) {
 
-        return DomainAvailabilityRecord.builder()
-                    .domainId(domainId)
-                    .nodeId(nodeId)
-                    .serverAvailable(false)
-                    .errorClassification(ErrorClassification.CONNECTION_ERROR)
-                    .errorMessage(rsp.errorMessage())
-                    .tsLastPing(Instant.now())
-                    .nextScheduledUpdate(Instant.now().plus(refreshInterval))
-                    .backoffFetchInterval(refreshInterval)
-                    .backoffConsecutiveFailures(errorCount+1)
-                    .build();
-    }
+        Instant lastError = previousRecord != null ? previousRecord.tsLastAvailable() : null;
 
-    public DomainAvailabilityRecord createTimeoutResponse(int domainId,
-                                                          int nodeId,
-                                                          Duration currentRefreshInterval,
-                                                          int errorCount,
-                                                          TimeoutResponse rsp) {
-        Duration refreshInterval = backoffStrategy.getUpdateTime(
-                currentRefreshInterval,
-                ErrorClassification.TIMEOUT,
-                errorCount);
-
-        return DomainAvailabilityRecord.builder()
-                    .domainId(domainId)
-                    .nodeId(nodeId)
-                    .serverAvailable(false)
-                    .errorClassification(ErrorClassification.TIMEOUT)
-                    .errorMessage(rsp.errorMessage())
-                    .tsLastPing(Instant.now())
-                    .nextScheduledUpdate(Instant.now().plus(refreshInterval))
-                    .backoffFetchInterval(refreshInterval)
-                    .backoffConsecutiveFailures(errorCount+1)
-                    .build();
-    }
-
-    public DomainAvailabilityRecord createProtocolError(int domainId,
-                                                        int nodeId,
-                                                        Duration currentRefreshInterval,
-                                                        int errorCount,
-                                                        ProtocolError rsp) {
-
-        Duration refreshInterval = backoffStrategy.getUpdateTime(
-                currentRefreshInterval,
-                ErrorClassification.HTTP_CLIENT_ERROR,
-                errorCount);
-
-        return DomainAvailabilityRecord.builder()
-                .domainId(domainId)
-                .nodeId(nodeId)
-                .serverAvailable(false)
-                .errorClassification(ErrorClassification.HTTP_CLIENT_ERROR)
-                .errorMessage(rsp.errorMessage())
-                .tsLastPing(Instant.now())
-                .nextScheduledUpdate(Instant.now().plus(refreshInterval))
-                .backoffFetchInterval(refreshInterval)
-                .backoffConsecutiveFailures(errorCount+1)
-                .build();
-    }
-
-    public DomainAvailabilityRecord createHttpResponse(int domainId, int nodeId, InetAddress address, HttpResponse rsp) {
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
@@ -139,6 +86,7 @@ public class DomainPingStatusFactory {
                 .httpLastModified(rsp.headers().getFirst("Last-Modified"))
                 .tsLastPing(Instant.now())
                 .tsLastAvailable(Instant.now())
+                .tsLastError(lastError)
                 .nextScheduledUpdate(Instant.now().plus(backoffStrategy.getOkInterval()))
                 .backoffFetchInterval(backoffStrategy.getOkInterval())
                 .build();
@@ -151,7 +99,12 @@ public class DomainPingStatusFactory {
     }
 
 
-    public DomainAvailabilityRecord createHttpsResponse(int domainId, int nodeId, InetAddress address, PKIXValidationResult validationResult, HttpsResponse rsp) {
+    public DomainAvailabilityRecord createHttpsResponse(int domainId,
+                                                        int nodeId,
+                                                        InetAddress address,
+                                                        @Nullable DomainAvailabilityRecord previousRecord,
+                                                        PKIXValidationResult validationResult,
+                                                        HttpsResponse rsp) {
         Instant updateTime;
 
         if (validationResult.isValid()) {
@@ -160,6 +113,8 @@ public class DomainPingStatusFactory {
         else {
             updateTime = Instant.now().plus(backoffStrategy.getOkInterval());
         }
+
+        Instant lastError = previousRecord != null ? previousRecord.tsLastAvailable() : null;
 
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
@@ -174,6 +129,7 @@ public class DomainPingStatusFactory {
                 .httpEtag(rsp.headers().getFirst("ETag"))
                 .httpLastModified(rsp.headers().getFirst("Last-Modified"))
                 .tsLastPing(Instant.now())
+                .tsLastError(lastError)
                 .tsLastAvailable(Instant.now())
                 .nextScheduledUpdate(updateTime)
                 .backoffFetchInterval(backoffStrategy.getOkInterval())
