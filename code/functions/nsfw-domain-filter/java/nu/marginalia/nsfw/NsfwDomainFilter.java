@@ -108,7 +108,7 @@ public class NsfwDomainFilter {
                      .followRedirects(HttpClient.Redirect.ALWAYS)
                      .build();
              var stmt = conn.createStatement();
-             var insertStmt = conn.prepareStatement("INSERT INTO NSFW_DOMAINS_TMP (ID, TIER) SELECT ID, ? FROM EC_DOMAIN WHERE DOMAIN_NAME = ?")) {
+             var insertStmt = conn.prepareStatement("INSERT IGNORE INTO NSFW_DOMAINS_TMP (ID, TIER) SELECT ID, ? FROM EC_DOMAIN WHERE DOMAIN_NAME = ?")) {
 
             stmt.execute("DROP TABLE IF EXISTS NSFW_DOMAINS_TMP");
             stmt.execute("CREATE TABLE NSFW_DOMAINS_TMP LIKE NSFW_DOMAINS");
