@@ -32,6 +32,7 @@ public class PingHttpFetcher {
 
         var builder = ClassicRequestBuilder.create(method.name())
                 .setUri(url)
+                .addHeader("Accept", "text/*, */*;q=0.9")
                 .addHeader("User-Agent", userAgent.uaString())
                 .addHeader("Accept-Encoding", "gzip");
         if (etag != null) {

@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Testcontainers
 @Execution(ExecutionMode.SAME_THREAD)
 @Tag("slow")
-class PingJobSchedulerTest {
+class AvailabilityJobSchedulerTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
             .withDatabaseName("WMSA_prod")
