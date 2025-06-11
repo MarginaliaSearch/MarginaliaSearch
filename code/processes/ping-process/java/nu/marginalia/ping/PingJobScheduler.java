@@ -96,14 +96,14 @@ public class PingJobScheduler {
         running = true;
 
         allThreads.add(Thread.ofPlatform().daemon().name("new-dns").start(this::fetchNewDnsRecords));
-        allThreads.add(Thread.ofPlatform().daemon().name("new-pings").start(this::fetchNewAvailabilityJobs));
-        allThreads.add(Thread.ofPlatform().daemon().name("update-pings").start(this::updateAvailabilityJobs));
+        allThreads.add(Thread.ofPlatform().daemon().name("new-availability").start(this::fetchNewAvailabilityJobs));
+        allThreads.add(Thread.ofPlatform().daemon().name("update-availability").start(this::updateAvailabilityJobs));
         allThreads.add(Thread.ofPlatform().daemon().name("update-dns").start(this::updateDnsJobs));
 
-        for (int i = 0; i < 4; i++) {
-            allThreads.add(Thread.ofPlatform().daemon().name("ping-job-consumer-" + i).start(this::availabilityJobConsumer));
+        for (int i = 0; i < 8; i++) {
+            allThreads.add(Thread.ofPlatform().daemon().name("availability-job-consumer-" + i).start(this::availabilityJobConsumer));
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 2; i++) {
             allThreads.add(Thread.ofPlatform().daemon().name("dns-job-consumer-" + i).start(this::dnsJobConsumer));
         }
     }
