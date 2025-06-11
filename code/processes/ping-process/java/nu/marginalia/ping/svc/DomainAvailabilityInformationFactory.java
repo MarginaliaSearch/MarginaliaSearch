@@ -71,7 +71,20 @@ public class DomainAvailabilityInformationFactory {
                                                        @Nullable DomainAvailabilityRecord previousRecord,
                                                        HttpResponse rsp) {
 
-        Instant lastError = previousRecord != null ? previousRecord.tsLastAvailable() : null;
+        final Instant now = Instant.now();
+        final Instant lastAvailable;
+        final Instant lastError;
+        final ErrorClassification errorClassification;
+
+        if (rsp.httpStatus() >= 400) {
+            lastError = now;
+            lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
+            errorClassification = ErrorClassification.HTTP_SERVER_ERROR;
+        } else {
+            lastAvailable = now;
+            lastError = previousRecord != null ? previousRecord.tsLastError() : null;
+            errorClassification = ErrorClassification.NONE;
+        }
 
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
@@ -81,13 +94,14 @@ public class DomainAvailabilityInformationFactory {
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTP)
                 .httpStatus(rsp.httpStatus())
+                .errorClassification(errorClassification)
                 .httpResponseTime(rsp.httpResponseTime())
                 .httpEtag(rsp.headers().getFirst("ETag"))
                 .httpLastModified(rsp.headers().getFirst("Last-Modified"))
-                .tsLastPing(Instant.now())
-                .tsLastAvailable(Instant.now())
+                .tsLastPing(now)
+                .tsLastAvailable(lastAvailable)
                 .tsLastError(lastError)
-                .nextScheduledUpdate(Instant.now().plus(backoffStrategy.getOkInterval()))
+                .nextScheduledUpdate(now.plus(backoffStrategy.getOkInterval()))
                 .backoffFetchInterval(backoffStrategy.getOkInterval())
                 .build();
 
@@ -117,7 +131,24 @@ public class DomainAvailabilityInformationFactory {
             updateTime = Instant.now().plus(backoffStrategy.getOkInterval());
         }
 
-        Instant lastError = previousRecord != null ? previousRecord.tsLastAvailable() : null;
+        final Instant now = Instant.now();
+        final Instant lastAvailable;
+        final Instant lastError;
+        final ErrorClassification errorClassification;
+
+        if (!validationResult.isValid()) {
+            lastError = now;
+            lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
+            errorClassification = ErrorClassification.SSL_ERROR;
+        } else if (rsp.httpStatus() >= 400) {
+            lastError = now;
+            lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
+            errorClassification = ErrorClassification.HTTP_SERVER_ERROR;
+        } else {
+            lastAvailable = Instant.now();
+            lastError = previousRecord != null ? previousRecord.tsLastError() : null;
+            errorClassification = ErrorClassification.NONE;
+        }
 
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
@@ -127,13 +158,13 @@ public class DomainAvailabilityInformationFactory {
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTPS)
                 .httpStatus(rsp.httpStatus())
-                .errorClassification(!validationResult.isValid() ? ErrorClassification.SSL_ERROR : ErrorClassification.NONE)
+                .errorClassification(errorClassification)
                 .httpResponseTime(rsp.httpResponseTime()) // Placeholder, actual timing not implemented
                 .httpEtag(rsp.headers().getFirst("ETag"))
                 .httpLastModified(rsp.headers().getFirst("Last-Modified"))
-                .tsLastPing(Instant.now())
+                .tsLastPing(now)
                 .tsLastError(lastError)
-                .tsLastAvailable(Instant.now())
+                .tsLastAvailable(lastAvailable)
                 .nextScheduledUpdate(updateTime)
                 .backoffFetchInterval(backoffStrategy.getOkInterval())
                 .build();
