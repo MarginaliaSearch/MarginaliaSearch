@@ -71,16 +71,19 @@ public class DomainAvailabilityInformationFactory {
                                                        @Nullable DomainAvailabilityRecord previousRecord,
                                                        HttpResponse rsp) {
 
+        final boolean isAvailable;
         final Instant now = Instant.now();
         final Instant lastAvailable;
         final Instant lastError;
         final ErrorClassification errorClassification;
 
         if (rsp.httpStatus() >= 400) {
+            isAvailable = false;
             lastError = now;
             lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
             errorClassification = ErrorClassification.HTTP_SERVER_ERROR;
         } else {
+            isAvailable = true;
             lastAvailable = now;
             lastError = previousRecord != null ? previousRecord.tsLastError() : null;
             errorClassification = ErrorClassification.NONE;
@@ -89,7 +92,7 @@ public class DomainAvailabilityInformationFactory {
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
-                .serverAvailable(true)
+                .serverAvailable(isAvailable)
                 .serverIp(address != null ? address.getAddress() : null)
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTP)
@@ -131,20 +134,24 @@ public class DomainAvailabilityInformationFactory {
             updateTime = Instant.now().plus(backoffStrategy.getOkInterval());
         }
 
+        final boolean isAvailable;
         final Instant now = Instant.now();
         final Instant lastAvailable;
         final Instant lastError;
         final ErrorClassification errorClassification;
 
         if (!validationResult.isValid()) {
+            isAvailable = false;
             lastError = now;
             lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
             errorClassification = ErrorClassification.SSL_ERROR;
         } else if (rsp.httpStatus() >= 400) {
+            isAvailable = false;
             lastError = now;
             lastAvailable = previousRecord != null ? previousRecord.tsLastAvailable() : null;
             errorClassification = ErrorClassification.HTTP_SERVER_ERROR;
         } else {
+            isAvailable = true;
             lastAvailable = Instant.now();
             lastError = previousRecord != null ? previousRecord.tsLastError() : null;
             errorClassification = ErrorClassification.NONE;
@@ -153,7 +160,7 @@ public class DomainAvailabilityInformationFactory {
         return DomainAvailabilityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
-                .serverAvailable(validationResult.isValid())
+                .serverAvailable(isAvailable)
                 .serverIp(address != null ? address.getAddress() : null)
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTPS)
