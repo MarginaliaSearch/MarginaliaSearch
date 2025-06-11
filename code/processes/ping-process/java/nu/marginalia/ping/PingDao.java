@@ -202,7 +202,7 @@ public class PingDao {
         var query = """
             SELECT * FROM DOMAIN_DNS_INFORMATION
             WHERE TS_NEXT_DNS_CHECK <= ? AND NODE_AFFINITY = ?
-            ORDER BY DNS_CHECK_PRIORITY ASC, TS_NEXT_DNS_CHECK ASC
+            ORDER BY DNS_CHECK_PRIORITY DESC, TS_NEXT_DNS_CHECK ASC
             LIMIT ?
             """;
         try (var conn = dataSource.getConnection();
