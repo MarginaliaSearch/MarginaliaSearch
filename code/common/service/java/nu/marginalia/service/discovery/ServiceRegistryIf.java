@@ -1,17 +1,23 @@
 package nu.marginalia.service.discovery;
 
-import nu.marginalia.service.discovery.monitor.*;
+import com.google.inject.ImplementedBy;
+import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
+import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
-import static nu.marginalia.service.discovery.property.ServiceEndpoint.*;
-
 import nu.marginalia.service.discovery.property.ServiceKey;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import static nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 
 /** A service registry that allows services to register themselves and
  * be discovered by other services on the network.
  */
+@ImplementedBy(ZkServiceRegistry.class)
 public interface ServiceRegistryIf {
     /**
      * Register a service with the registry.
@@ -57,4 +63,9 @@ public interface ServiceRegistryIf {
      * </ul>
      * */
     void registerMonitor(ServiceMonitorIf monitor) throws Exception;
+
+    void registerProcess(String processName, int nodeId);
+    void deregisterProcess(String processName, int nodeId);
+    void watchProcess(String processName, int nodeId, Consumer<Boolean> callback) throws Exception;
+    void watchProcessAnyNode(String processName, Collection<Integer> nodes, BiConsumer<Boolean, Integer> callback) throws Exception;
 }

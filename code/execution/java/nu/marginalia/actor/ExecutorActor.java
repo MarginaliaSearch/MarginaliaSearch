@@ -12,6 +12,7 @@ public enum ExecutorActor {
     RECRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     RECRAWL_SINGLE_DOMAIN(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     PROC_CRAWLER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    PROC_PING_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
     PROC_EXPORT_TASKS_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     ADJACENCY_CALCULATION(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),

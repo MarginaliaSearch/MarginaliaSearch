@@ -13,11 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 
@@ -254,6 +253,90 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                     }
                 })
                 .forPath("/running-instances");
+    }
+
+    @Override
+    public void registerProcess(String processName, int nodeId) {
+        String path = "/process-locks/" + processName + "/" + nodeId;
+        try {
+            curatorFramework.create()
+                    .creatingParentsIfNeeded()
+                    .withMode(CreateMode.EPHEMERAL)
+                    .forPath(path);
+            livenessPaths.add(path);
+        }
+        catch (Exception ex) {
+            logger.error("Failed to register process {} on node {}", processName, nodeId, ex);
+        }
+    }
+
+    @Override
+    public void deregisterProcess(String processName, int nodeId) {
+        String path = "/process-locks/" + processName + "/" + nodeId;
+        try {
+            curatorFramework.delete().forPath(path);
+            livenessPaths.remove(path);
+        }
+        catch (Exception ex) {
+            logger.error("Failed to deregister process {} on node {}", processName, nodeId, ex);
+        }
+    }
+
+    @Override
+    public void watchProcess(String processName, int nodeId, Consumer<Boolean> callback) throws Exception {
+        String path = "/process-locks/" + processName + "/" + nodeId;
+
+        // first check if the path exists and call the callback accordingly
+
+        if (curatorFramework.checkExists().forPath(path) != null) {
+            callback.accept(true);
+        }
+        else {
+            callback.accept(false);
+        }
+
+        curatorFramework.watchers().add()
+                .usingWatcher((Watcher) change -> {
+                    Watcher.Event.EventType type = change.getType();
+
+                    if (type == Watcher.Event.EventType.NodeCreated) {
+                        callback.accept(true);
+                    }
+                    if (type == Watcher.Event.EventType.NodeDeleted) {
+                        callback.accept(false);
+                    }
+                })
+                .forPath(path);
+
+    }
+
+    @Override
+    public void watchProcessAnyNode(String processName, Collection<Integer> nodes, BiConsumer<Boolean, Integer> callback) throws Exception {
+
+        for (int node : nodes) {
+            String path = "/process-locks/" + processName + "/" + node;
+
+            // first check if the path exists and call the callback accordingly
+            if (curatorFramework.checkExists().forPath(path) != null) {
+                callback.accept(true, node);
+            }
+            else {
+                callback.accept(false, node);
+            }
+
+            curatorFramework.watchers().add()
+                    .usingWatcher((Watcher) change -> {
+                        Watcher.Event.EventType type = change.getType();
+
+                        if (type == Watcher.Event.EventType.NodeCreated) {
+                            callback.accept(true, node);
+                        }
+                        if (type == Watcher.Event.EventType.NodeDeleted) {
+                            callback.accept(false, node);
+                        }
+                    })
+                    .forPath(path);
+        }
     }
 
     /* Exposed for tests */

@@ -19,6 +19,7 @@ dependencies {
     implementation project(':code:processes:crawling-process')
     implementation project(':code:processes:live-crawling-process')
     implementation project(':code:processes:loading-process')
+    implementation project(':code:processes:ping-process')
     implementation project(':code:processes:converting-process')
     implementation project(':code:processes:index-constructor-process')
 

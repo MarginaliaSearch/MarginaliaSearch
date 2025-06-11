@@ -25,9 +25,12 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
+import nu.marginalia.process.control.ProcessEventLog;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -54,6 +57,7 @@ public class CrawlerMain extends ProcessMainClass {
 
     private final UserAgent userAgent;
     private final ProcessHeartbeatImpl heartbeat;
+    private final ProcessEventLog eventLog;
     private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
@@ -61,6 +65,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final HikariDataSource dataSource;
     private final DomainBlacklist blacklist;
     private final int node;
+    private final ServiceRegistryIf serviceRegistry;
     private final SimpleBlockingThreadPool pool;
 
     private final DomainLocks domainLocks = new DomainLocks();
@@ -84,6 +89,7 @@ public class CrawlerMain extends ProcessMainClass {
     public CrawlerMain(UserAgent userAgent,
                        HttpFetcherImpl httpFetcher,
                        ProcessHeartbeatImpl heartbeat,
+                       ProcessEventLog eventLog,
                        MessageQueueFactory messageQueueFactory, DomainProber domainProber,
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
@@ -91,6 +97,7 @@ public class CrawlerMain extends ProcessMainClass {
                        WarcArchiverFactory warcArchiverFactory,
                        HikariDataSource dataSource,
                        DomainBlacklist blacklist,
+                       ServiceRegistryIf serviceRegistry,
                        Gson gson) throws InterruptedException {
 
         super(messageQueueFactory, processConfiguration, gson, CRAWLER_INBOX);
@@ -98,6 +105,7 @@ public class CrawlerMain extends ProcessMainClass {
         this.userAgent = userAgent;
         this.fetcher = httpFetcher;
         this.heartbeat = heartbeat;
+        this.eventLog = eventLog;
         this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
@@ -105,6 +113,7 @@ public class CrawlerMain extends ProcessMainClass {
         this.dataSource = dataSource;
         this.blacklist = blacklist;
         this.node = processConfiguration.node();
+        this.serviceRegistry = serviceRegistry;
 
         SimpleBlockingThreadPool.ThreadType threadType;
         if (Boolean.getBoolean("crawler.useVirtualThreads")) {
@@ -147,12 +156,17 @@ public class CrawlerMain extends ProcessMainClass {
             Injector injector = Guice.createInjector(
                     new CrawlerModule(),
                     new ProcessConfigurationModule("crawler"),
+                    new ServiceDiscoveryModule(),
                     new DatabaseModule(false)
             );
             var crawler = injector.getInstance(CrawlerMain.class);
 
             var instructions = crawler.fetchInstructions(nu.marginalia.mqapi.crawling.CrawlRequest.class);
+
+            crawler.serviceRegistry.registerProcess("crawler", crawler.node);
+
             try {
+                crawler.eventLog.logEvent("CRAWLER-INFO", "Crawling started");
                 var req = instructions.value();
                 if (req.targetDomainName != null) {
                     crawler.runForSingleDomain(req.targetDomainName, req.crawlStorage);
@@ -160,10 +174,14 @@ public class CrawlerMain extends ProcessMainClass {
                 else {
                     crawler.runForDatabaseDomains(req.crawlStorage);
                 }
+                crawler.eventLog.logEvent("CRAWLER-INFO", "Crawl completed successfully");
                 instructions.ok();
             } catch (Exception ex) {
                 logger.error("Crawler failed", ex);
                 instructions.err();
+            }
+            finally {
+                crawler.serviceRegistry.deregisterProcess("crawler", crawler.node);
             }
 
             TimeUnit.SECONDS.sleep(5);

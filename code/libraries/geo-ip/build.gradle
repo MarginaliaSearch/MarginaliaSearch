@@ -15,6 +15,10 @@ dependencies {
 
     implementation libs.bundles.slf4j
     implementation libs.opencsv
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
