@@ -1,5 +1,7 @@
 package nu.marginalia.ping.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javax.annotation.Nullable;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -255,7 +257,7 @@ public record DomainSecurityRecord(
             if (headerXFrameOptions() == null) {
                 ps.setNull(25, java.sql.Types.VARCHAR);
             } else {
-                ps.setString(25, headerXFrameOptions());
+                ps.setString(25, StringUtils.truncate(headerXFrameOptions(), 50));
             }
             if (headerXContentTypeOptions() == null) {
                 ps.setNull(26, java.sql.Types.VARCHAR);
