@@ -6,7 +6,7 @@ import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.ping.fetcher.PingHttpFetcher;
 import nu.marginalia.ping.io.HttpClientProvider;
 import nu.marginalia.ping.model.DomainReference;
-import nu.marginalia.ping.svc.DomainPingStatusFactory;
+import nu.marginalia.ping.svc.DomainAvailabilityInformationFactory;
 import nu.marginalia.ping.svc.DomainSecurityInformationFactory;
 import nu.marginalia.ping.svc.HttpPingService;
 import nu.marginalia.test.TestMigrationLoader;
@@ -64,7 +64,7 @@ class PingHttpServiceTest {
         var provider = new HttpClientProvider();
         var pingService = new HttpPingService(
                 new PingHttpFetcher(provider.get()),
-                new DomainPingStatusFactory(new GeoIpDictionary(),
+                new DomainAvailabilityInformationFactory(new GeoIpDictionary(),
                         new BackoffStrategy(PingModule.createPingIntervalsConfiguration())
                         ),
                 new DomainSecurityInformationFactory());

@@ -37,28 +37,28 @@ implements WritableModel
 {
     public DomainAvailabilityRecord(ResultSet rs) throws SQLException {
         this(
-                rs.getInt("DOMAIN_PING_STATUS.DOMAIN_ID"),
-                rs.getInt("DOMAIN_PING_STATUS.NODE_ID"),
-                rs.getBoolean("DOMAIN_PING_STATUS.SERVER_AVAILABLE"),
-                rs.getBytes("DOMAIN_PING_STATUS.SERVER_IP"),
-                rs.getObject("DOMAIN_PING_STATUS.SERVER_IP_ASN", Integer.class),
-                rs.getObject("DOMAIN_PING_STATUS.DATA_HASH", Long.class),
-                rs.getObject("DOMAIN_PING_STATUS.SECURITY_CONFIG_HASH", Long.class),
-                httpSchemaFromString(rs.getObject("DOMAIN_PING_STATUS.HTTP_SCHEMA", String.class)),
-                rs.getString("DOMAIN_PING_STATUS.HTTP_ETAG"),
-                rs.getString("DOMAIN_PING_STATUS.HTTP_LAST_MODIFIED"),
-                rs.getObject("DOMAIN_PING_STATUS.HTTP_STATUS", Integer.class),
-                rs.getString("DOMAIN_PING_STATUS.HTTP_LOCATION"),
-                durationFromMillis(rs.getObject("DOMAIN_PING_STATUS.HTTP_RESPONSE_TIME_MS", Integer.class)),
-                durationFromMillis(rs.getObject("DOMAIN_PING_STATUS.ICMP_PING_TIME_MS", Integer.class)),
-                errorClassificationFromString(rs.getObject("DOMAIN_PING_STATUS.ERROR_CLASSIFICATION", String.class)),
-                rs.getString("DOMAIN_PING_STATUS.ERROR_MESSAGE"),
-                rs.getObject("DOMAIN_PING_STATUS.TS_LAST_PING", Instant.class),
-                rs.getObject("DOMAIN_PING_STATUS.TS_LAST_AVAILABLE", Instant.class),
-                rs.getObject("DOMAIN_PING_STATUS.TS_LAST_ERROR", Instant.class),
-                rs.getObject("DOMAIN_PING_STATUS.NEXT_SCHEDULED_UPDATE", Instant.class),
-                rs.getInt("DOMAIN_PING_STATUS.BACKOFF_CONSECUTIVE_FAILURES"),
-                Duration.ofSeconds(rs.getInt("DOMAIN_PING_STATUS.BACKOFF_FETCH_INTERVAL"))
+                rs.getInt("DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID"),
+                rs.getInt("DOMAIN_AVAILABILITY_INFORMATION.NODE_ID"),
+                rs.getBoolean("DOMAIN_AVAILABILITY_INFORMATION.SERVER_AVAILABLE"),
+                rs.getBytes("DOMAIN_AVAILABILITY_INFORMATION.SERVER_IP"),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.SERVER_IP_ASN", Integer.class),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.DATA_HASH", Long.class),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.SECURITY_CONFIG_HASH", Long.class),
+                httpSchemaFromString(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.HTTP_SCHEMA", String.class)),
+                rs.getString("DOMAIN_AVAILABILITY_INFORMATION.HTTP_ETAG"),
+                rs.getString("DOMAIN_AVAILABILITY_INFORMATION.HTTP_LAST_MODIFIED"),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.HTTP_STATUS", Integer.class),
+                rs.getString("DOMAIN_AVAILABILITY_INFORMATION.HTTP_LOCATION"),
+                durationFromMillis(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.HTTP_RESPONSE_TIME_MS", Integer.class)),
+                durationFromMillis(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.ICMP_PING_TIME_MS", Integer.class)),
+                errorClassificationFromString(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.ERROR_CLASSIFICATION", String.class)),
+                rs.getString("DOMAIN_AVAILABILITY_INFORMATION.ERROR_MESSAGE"),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.TS_LAST_PING", Instant.class),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.TS_LAST_AVAILABLE", Instant.class),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.TS_LAST_ERROR", Instant.class),
+                rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.NEXT_SCHEDULED_UPDATE", Instant.class),
+                rs.getInt("DOMAIN_AVAILABILITY_INFORMATION.BACKOFF_CONSECUTIVE_FAILURES"),
+                Duration.ofSeconds(rs.getInt("DOMAIN_AVAILABILITY_INFORMATION.BACKOFF_FETCH_INTERVAL"))
         );
     }
 
@@ -76,7 +76,7 @@ implements WritableModel
     public void write(Connection connection) throws SQLException {
         try (var ps = connection.prepareStatement(
                      """
-                         REPLACE INTO DOMAIN_PING_STATUS (
+                         REPLACE INTO DOMAIN_AVAILABILITY_INFORMATION (
                                                          domain_id,
                                                          node_id,
                                                          server_available,

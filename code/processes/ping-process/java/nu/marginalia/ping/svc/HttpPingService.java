@@ -27,7 +27,7 @@ public class HttpPingService {
 
     private final PingHttpFetcher pingHttpFetcher;
 
-    private final DomainPingStatusFactory domainPingStatusFactory;
+    private final DomainAvailabilityInformationFactory domainAvailabilityInformationFactory;
     private final DomainSecurityInformationFactory domainSecurityInformationFactory;
 
     private static final Logger logger = LoggerFactory.getLogger(HttpPingService.class);
@@ -36,10 +36,10 @@ public class HttpPingService {
     @Inject
     public HttpPingService(
             PingHttpFetcher pingHttpFetcher,
-            DomainPingStatusFactory domainPingStatusFactory,
+            DomainAvailabilityInformationFactory domainAvailabilityInformationFactory,
             DomainSecurityInformationFactory domainSecurityInformationFactory) throws Exception {
         this.pingHttpFetcher = pingHttpFetcher;
-        this.domainPingStatusFactory = domainPingStatusFactory;
+        this.domainAvailabilityInformationFactory = domainAvailabilityInformationFactory;
         this.domainSecurityInformationFactory = domainSecurityInformationFactory;
         this.validator = new CustomPKIXValidator();
     }
@@ -102,7 +102,7 @@ public class HttpPingService {
 
         switch (result) {
             case UnknownHostError rsp -> {
-                newPingStatus = domainPingStatusFactory.createError(
+                newPingStatus = domainAvailabilityInformationFactory.createError(
                         domainReference.domainId(),
                         domainReference.nodeId(),
                         oldPingStatus,
@@ -111,7 +111,7 @@ public class HttpPingService {
                 newSecurityInformation = null;
             }
             case ConnectionError rsp -> {
-                newPingStatus = domainPingStatusFactory.createError(
+                newPingStatus = domainAvailabilityInformationFactory.createError(
                         domainReference.domainId(),
                         domainReference.nodeId(),
                         oldPingStatus,
@@ -120,7 +120,7 @@ public class HttpPingService {
                 newSecurityInformation = null;
             }
             case TimeoutResponse rsp -> {
-                newPingStatus = domainPingStatusFactory.createError(
+                newPingStatus = domainAvailabilityInformationFactory.createError(
                         domainReference.domainId(),
                         domainReference.nodeId(),
                         oldPingStatus,
@@ -129,7 +129,7 @@ public class HttpPingService {
                 newSecurityInformation = null;
             }
             case ProtocolError rsp -> {
-                newPingStatus = domainPingStatusFactory.createError(
+                newPingStatus = domainAvailabilityInformationFactory.createError(
                         domainReference.domainId(),
                         domainReference.nodeId(),
                         oldPingStatus,
@@ -138,7 +138,7 @@ public class HttpPingService {
                 newSecurityInformation = null;
             }
             case HttpResponse httpResponse -> {
-                newPingStatus = domainPingStatusFactory.createHttpResponse(
+                newPingStatus = domainAvailabilityInformationFactory.createHttpResponse(
                         domainReference.domainId(),
                         domainReference.nodeId(),
                         lowestIpAddress,
@@ -154,7 +154,7 @@ public class HttpPingService {
             case HttpsResponse httpsResponse -> {
                 PKIXValidationResult validationResult = validator.validateCertificateChain(domainReference.domainName(), (X509Certificate[]) httpsResponse.sslCertificates());
 
-                newPingStatus = domainPingStatusFactory.createHttpsResponse(
+                newPingStatus = domainAvailabilityInformationFactory.createHttpsResponse(
                         domainReference.domainId(),
                         domainReference.nodeId(),
                         lowestIpAddress,

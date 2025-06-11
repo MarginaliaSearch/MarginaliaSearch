@@ -59,7 +59,7 @@ class PingDaoTest {
         // Reset the database state before each test if needed
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement()) {
-            stmt.execute("TRUNCATE TABLE  DOMAIN_PING_STATUS");
+            stmt.execute("TRUNCATE TABLE  DOMAIN_AVAILABILITY_INFORMATION");
             stmt.execute("TRUNCATE TABLE  DOMAIN_DNS_INFORMATION");
             stmt.execute("TRUNCATE TABLE  DOMAIN_SECURITY_INFORMATION");
             stmt.execute("TRUNCATE TABLE  DOMAIN_AVAILABILITY_EVENTS");

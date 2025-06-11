@@ -86,7 +86,7 @@ class PingJobSchedulerTest {
 
         PingJobScheduler pingJobScheduler = new PingJobScheduler(
                 new HttpPingService(pingHttpFetcher,
-                        new DomainPingStatusFactory(new GeoIpDictionary(), new BackoffStrategy(pic)),
+                        new DomainAvailabilityInformationFactory(new GeoIpDictionary(), new BackoffStrategy(pic)),
                         new DomainSecurityInformationFactory()),
                 new DnsPingService(new PingDnsFetcher(List.of("8.8.8.8", "8.8.4.4")),
                         dnsDomainInformationFactory),

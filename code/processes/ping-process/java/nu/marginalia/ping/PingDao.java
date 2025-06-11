@@ -77,9 +77,9 @@ public class PingDao {
              var ps = conn.prepareStatement("""
             SELECT domain_id, domain_name
             FROM EC_DOMAIN 
-            LEFT JOIN DOMAIN_PING_STATUS 
-            ON EC_DOMAIN.domain_id = DOMAIN_PING_STATUS.domain_id
-            WHERE DOMAIN_PING_STATUS.server_available IS NULL
+            LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION 
+            ON EC_DOMAIN.domain_id = DOMAIN_AVAILABILITY_INFORMATION.domain_id
+            WHERE DOMAIN_AVAILABILITY_INFORMATION.server_available IS NULL
             AND EC_DOMAIN.NODE_ID = ?
             LIMIT ?
             """))
@@ -100,7 +100,7 @@ public class PingDao {
     public DomainAvailabilityRecord getDomainPingStatus(int domainId) throws SQLException {
 
         try (var conn = dataSource.getConnection();
-             var ps = conn.prepareStatement("SELECT * FROM DOMAIN_PING_STATUS WHERE domain_id = ?")) {
+             var ps = conn.prepareStatement("SELECT * FROM DOMAIN_AVAILABILITY_INFORMATION WHERE domain_id = ?")) {
 
             ps.setInt(1, domainId);
             ResultSet rs = ps.executeQuery();
@@ -155,15 +155,15 @@ public class PingDao {
         }
     }
 
-    public List<HistoricalPingData> getNextDomainPingStatuses(int count, int nodeId) throws SQLException {
-        List<HistoricalPingData> domainAvailabilityRecords = new ArrayList<>(count);
+    public List<HistoricalAvailabilityData> getNextDomainPingStatuses(int count, int nodeId) throws SQLException {
+        List<HistoricalAvailabilityData> domainAvailabilityRecords = new ArrayList<>(count);
 
         var query = """
-            SELECT DOMAIN_PING_STATUS.*, DOMAIN_SECURITY_INFORMATION.*, EC_DOMAIN.DOMAIN_NAME FROM DOMAIN_PING_STATUS
+            SELECT DOMAIN_AVAILABILITY_INFORMATION.*, DOMAIN_SECURITY_INFORMATION.*, EC_DOMAIN.DOMAIN_NAME FROM DOMAIN_AVAILABILITY_INFORMATION
                 LEFT JOIN DOMAIN_SECURITY_INFORMATION
-                ON DOMAIN_PING_STATUS.DOMAIN_ID = DOMAIN_SECURITY_INFORMATION.DOMAIN_ID
-                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID = DOMAIN_PING_STATUS.DOMAIN_ID
-            WHERE NEXT_SCHEDULED_UPDATE <= ? AND DOMAIN_PING_STATUS.NODE_ID = ?
+                ON DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID = DOMAIN_SECURITY_INFORMATION.DOMAIN_ID
+                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
+            WHERE NEXT_SCHEDULED_UPDATE <= ? AND DOMAIN_AVAILABILITY_INFORMATION.NODE_ID = ?
             ORDER BY NEXT_SCHEDULED_UPDATE ASC
             LIMIT ?
             """;
@@ -181,10 +181,10 @@ public class PingDao {
                 if (rs.getObject("DOMAIN_SECURITY_INFORMATION.DOMAIN_ID", Integer.class) != null) {
                     var securityRecord = new DomainSecurityRecord(rs);
                     domainAvailabilityRecords.add(
-                        new HistoricalPingData.AvailabilityAndSecurity(domainName, domainAvailabilityRecord, securityRecord)
+                        new HistoricalAvailabilityData.AvailabilityAndSecurity(domainName, domainAvailabilityRecord, securityRecord)
                     );
                 } else {
-                    domainAvailabilityRecords.add(new HistoricalPingData.JustAvailability(domainName, domainAvailabilityRecord));
+                    domainAvailabilityRecords.add(new HistoricalAvailabilityData.JustAvailability(domainName, domainAvailabilityRecord));
                 }
             }
         }
@@ -219,7 +219,7 @@ public class PingDao {
             var stmt = conn.prepareStatement("""
                 SELECT e.DOMAIN_NAME, e.ID
                 FROM EC_DOMAIN e
-                LEFT JOIN DOMAIN_PING_STATUS d ON e.ID = d.DOMAIN_ID
+                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION d ON e.ID = d.DOMAIN_ID
                 WHERE d.DOMAIN_ID IS NULL AND e.NODE_AFFINITY = ?;
                 """)) {
             stmt.setInt(1, nodeId);

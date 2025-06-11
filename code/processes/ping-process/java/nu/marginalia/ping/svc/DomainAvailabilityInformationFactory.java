@@ -20,15 +20,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-public class DomainPingStatusFactory {
-    private static final Logger logger = LoggerFactory.getLogger(DomainPingStatusFactory.class);
+public class DomainAvailabilityInformationFactory {
+    private static final Logger logger = LoggerFactory.getLogger(DomainAvailabilityInformationFactory.class);
 
     private final GeoIpDictionary geoIpDictionary;
     private final BackoffStrategy backoffStrategy;
 
     @Inject
-    public DomainPingStatusFactory(GeoIpDictionary geoIpDictionary,
-                                   BackoffStrategy backoffStrategy) {
+    public DomainAvailabilityInformationFactory(GeoIpDictionary geoIpDictionary,
+                                                BackoffStrategy backoffStrategy) {
         this.geoIpDictionary = geoIpDictionary;
         this.backoffStrategy = backoffStrategy;
     }

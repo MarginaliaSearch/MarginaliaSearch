@@ -315,9 +315,9 @@ public class PingJobScheduler {
 
                 for (var status : statuses) {
                     var job = switch (status) {
-                        case HistoricalPingData.JustAvailability(String domain, DomainAvailabilityRecord record)
+                        case HistoricalAvailabilityData.JustAvailability(String domain, DomainAvailabilityRecord record)
                                 -> new PingJob.PingRefresh(domain, record, null);
-                        case HistoricalPingData.AvailabilityAndSecurity(String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security)
+                        case HistoricalAvailabilityData.AvailabilityAndSecurity(String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security)
                                 -> new PingJob.PingRefresh(domain, availability, security);
                     };
 
