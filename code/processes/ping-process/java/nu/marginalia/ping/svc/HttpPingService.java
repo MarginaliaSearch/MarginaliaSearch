@@ -94,7 +94,7 @@ public class HttpPingService {
 
         // For a consistent picture, we always use the "binary-smallest" IP IPv4 address returned by InetAddress.getAllByName,
         // for resolving ASN and similar information.
-        final InetAddress lowestIpAddress = ipAddress.stream().min(this::compareInetAddresses).orElseThrow();
+        final InetAddress lowestIpAddress = ipAddress.stream().min(this::compareInetAddresses).orElse(null);
 
 
         final DomainAvailabilityRecord newPingStatus;

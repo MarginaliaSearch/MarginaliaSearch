@@ -67,7 +67,7 @@ public class DomainAvailabilityInformationFactory {
 
     public DomainAvailabilityRecord createHttpResponse(int domainId,
                                                        int nodeId,
-                                                       InetAddress address,
+                                                       @Nullable InetAddress address,
                                                        @Nullable DomainAvailabilityRecord previousRecord,
                                                        HttpResponse rsp) {
 
@@ -77,7 +77,7 @@ public class DomainAvailabilityInformationFactory {
                 .domainId(domainId)
                 .nodeId(nodeId)
                 .serverAvailable(true)
-                .serverIp(address.getAddress())
+                .serverIp(address != null ? address.getAddress() : null)
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTP)
                 .httpStatus(rsp.httpStatus())
@@ -93,7 +93,10 @@ public class DomainAvailabilityInformationFactory {
 
     }
 
-    private Integer getAsn(InetAddress address) {
+    private Integer getAsn(@Nullable InetAddress address) {
+        if (address == null) {
+            return null;
+        }
         // Placeholder for ASN lookup logic
         return geoIpDictionary.getAsnInfo(address).map(AsnTable.AsnInfo::asn).orElse(null);
     }
@@ -101,7 +104,7 @@ public class DomainAvailabilityInformationFactory {
 
     public DomainAvailabilityRecord createHttpsResponse(int domainId,
                                                         int nodeId,
-                                                        InetAddress address,
+                                                        @Nullable InetAddress address,
                                                         @Nullable DomainAvailabilityRecord previousRecord,
                                                         PKIXValidationResult validationResult,
                                                         HttpsResponse rsp) {
@@ -120,7 +123,7 @@ public class DomainAvailabilityInformationFactory {
                 .domainId(domainId)
                 .nodeId(nodeId)
                 .serverAvailable(validationResult.isValid())
-                .serverIp(address.getAddress())
+                .serverIp(address != null ? address.getAddress() : null)
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTPS)
                 .httpStatus(rsp.httpStatus())

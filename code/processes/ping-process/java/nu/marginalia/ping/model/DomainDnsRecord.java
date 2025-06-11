@@ -69,7 +69,7 @@ public record DomainDnsRecord(
         }
 
         try (var ps = connection.prepareStatement("""
-            INSERT INTO DOMAIN_DNS_INFORMATION (
+            REPLACE INTO DOMAIN_DNS_INFORMATION (
                 ROOT_DOMAIN_NAME,
                 NODE_AFFINITY,
                 DNS_A_RECORDS,

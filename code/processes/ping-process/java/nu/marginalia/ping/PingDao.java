@@ -6,6 +6,8 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.ping.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,6 +20,7 @@ import java.util.List;
 public class PingDao {
     private final HikariDataSource dataSource;
     private static final Gson gson = GsonFactory.get();
+    private static final Logger logger = LoggerFactory.getLogger(PingDao.class);
 
     @Inject
     public PingDao(HikariDataSource dataSource) {
@@ -29,6 +32,8 @@ public class PingDao {
     }
 
     public void write(Collection<WritableModel> models) {
+        logger.debug("Writing: {}", models);
+
         try (var conn = dataSource.getConnection()) {
 
             // Don't bother with a transaction if there's only one model to write.
@@ -229,7 +234,7 @@ public class PingDao {
                 String domainName = rs.getString("DOMAIN_NAME");
                 int domainId = rs.getInt("ID");
 
-                orphanedDomains.add(new DomainReference(nodeId, domainId, domainName));
+                orphanedDomains.add(new DomainReference(domainId, nodeId, domainName));
             }
         }
         catch (SQLException e) {
@@ -243,7 +248,7 @@ public class PingDao {
         List<String> orphanedDomains = new ArrayList<>();
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT DOMAIN_TOP
+                SELECT DISTINCT(DOMAIN_TOP)
                 FROM EC_DOMAIN e
                 LEFT JOIN DOMAIN_DNS_INFORMATION d ON e.DOMAIN_TOP = d.ROOT_DOMAIN_NAME
                 WHERE d.ROOT_DOMAIN_NAME IS NULL AND e.NODE_AFFINITY = ?;
