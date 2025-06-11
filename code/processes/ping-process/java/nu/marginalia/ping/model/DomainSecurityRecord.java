@@ -257,7 +257,7 @@ public record DomainSecurityRecord(
             if (headerXFrameOptions() == null) {
                 ps.setNull(25, java.sql.Types.VARCHAR);
             } else {
-                ps.setString(25, StringUtils.truncate(headerXFrameOptions(), 50));
+                ps.setString(25, headerXFrameOptions());
             }
             if (headerXContentTypeOptions() == null) {
                 ps.setNull(26, java.sql.Types.VARCHAR);
@@ -466,22 +466,22 @@ public record DomainSecurityRecord(
         }
 
         public Builder headerReferrerPolicy(String headerReferrerPolicy) {
-            this.headerReferrerPolicy = headerReferrerPolicy;
+            this.headerReferrerPolicy = StringUtils.truncate(headerReferrerPolicy, 50);
             return this;
         }
 
         public Builder headerXFrameOptions(String headerXFrameOptions) {
-            this.headerXFrameOptions = headerXFrameOptions;
+            this.headerXFrameOptions = StringUtils.truncate(headerXFrameOptions, 50);
             return this;
         }
 
         public Builder headerXContentTypeOptions(String headerXContentTypeOptions) {
-            this.headerXContentTypeOptions = headerXContentTypeOptions;
+            this.headerXContentTypeOptions = StringUtils.truncate(headerXContentTypeOptions, 50);
             return this;
         }
 
         public Builder headerXXssProtection(String headerXXssProtection) {
-            this.headerXXssProtection = headerXXssProtection;
+            this.headerXXssProtection = StringUtils.truncate(headerXXssProtection, 50);
             return this;
         }
 
