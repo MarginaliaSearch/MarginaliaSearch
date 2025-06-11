@@ -24,7 +24,7 @@ public record DomainAvailabilityEvent(
                 outage_type,
                 http_status_code,
                 error_message,
-                ts_update
+                ts_change
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """))
         {
