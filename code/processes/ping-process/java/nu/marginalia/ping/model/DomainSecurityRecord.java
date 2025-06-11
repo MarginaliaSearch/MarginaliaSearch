@@ -361,12 +361,12 @@ public record DomainSecurityRecord(
         }
 
         public Builder httpVersion(String httpVersion) {
-            this.httpVersion = httpVersion;
+            this.httpVersion = StringUtils.truncate(httpVersion, 10);
             return this;
         }
 
         public Builder httpCompression(String httpCompression) {
-            this.httpCompression = httpCompression;
+            this.httpCompression = StringUtils.truncate(httpCompression, 50);
             return this;
         }
 
@@ -386,12 +386,12 @@ public record DomainSecurityRecord(
         }
 
         public Builder sslCertIssuer(String sslCertIssuer) {
-            this.sslCertIssuer = sslCertIssuer;
+            this.sslCertIssuer = StringUtils.truncate(sslCertIssuer, 255);
             return this;
         }
 
         public Builder sslCertSubject(String sslCertSubject) {
-            this.sslCertSubject = sslCertSubject;
+            this.sslCertSubject = StringUtils.truncate(sslCertSubject, 255);
             return this;
         }
 
@@ -461,7 +461,7 @@ public record DomainSecurityRecord(
         }
 
         public Builder headerStrictTransportSecurity(String headerStrictTransportSecurity) {
-            this.headerStrictTransportSecurity = headerStrictTransportSecurity;
+            this.headerStrictTransportSecurity = StringUtils.truncate(headerStrictTransportSecurity, 255);
             return this;
         }
 
@@ -486,12 +486,12 @@ public record DomainSecurityRecord(
         }
 
         public Builder headerServer(String headerServer) {
-            this.headerServer = headerServer;
+            this.headerServer = StringUtils.truncate(headerServer, 255);
             return this;
         }
 
         public Builder headerXPoweredBy(String headerXPoweredBy) {
-            this.headerXPoweredBy = headerXPoweredBy;
+            this.headerXPoweredBy = StringUtils.truncate(headerXPoweredBy, 255);
             return this;
         }
 
