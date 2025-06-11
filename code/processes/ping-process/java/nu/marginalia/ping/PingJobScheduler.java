@@ -322,7 +322,7 @@ public class PingJobScheduler {
                     };
 
                     if (processingDomainsAvailability.putIfAbsent(job.reference(), true) == null) {
-                        availabilityJobQueue.add(job);
+                        availabilityJobQueue.put(job);
                     }
 
                 }
