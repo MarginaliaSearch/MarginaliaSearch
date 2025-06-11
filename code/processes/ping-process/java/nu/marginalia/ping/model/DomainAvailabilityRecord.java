@@ -21,7 +21,6 @@ public record DomainAvailabilityRecord(
         @Nullable Integer httpStatus,
         @Nullable String httpLocation,
         @Nullable Duration httpResponseTime,
-        @Nullable Duration icmpPingTime,
         @Nullable ErrorClassification errorClassification,
         @Nullable String errorMessage,
 
@@ -50,7 +49,6 @@ implements WritableModel
                 rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.HTTP_STATUS", Integer.class),
                 rs.getString("DOMAIN_AVAILABILITY_INFORMATION.HTTP_LOCATION"),
                 durationFromMillis(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.HTTP_RESPONSE_TIME_MS", Integer.class)),
-                durationFromMillis(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.ICMP_PING_TIME_MS", Integer.class)),
                 errorClassificationFromString(rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.ERROR_CLASSIFICATION", String.class)),
                 rs.getString("DOMAIN_AVAILABILITY_INFORMATION.ERROR_MESSAGE"),
                 rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.TS_LAST_PING", Instant.class),
@@ -94,12 +92,11 @@ implements WritableModel
                                                          ts_last_ping,
                                                          ts_last_available,
                                                          ts_last_error,
-                                                         icmp_ping_time_ms,
                                                          next_scheduled_update,
                                                          backoff_consecutive_failures,
                                                          backoff_fetch_interval,
                                                          server_ip_asn)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
                      """)) {
 
             ps.setInt(1, domainId());
@@ -184,21 +181,14 @@ implements WritableModel
                 ps.setTimestamp(17, java.sql.Timestamp.from(tsLastError()));
             }
 
-            if (icmpPingTime() == null) {
-                ps.setNull(18, java.sql.Types.SMALLINT);
-            }
-            else {
-                ps.setShort(18, (short) icmpPingTime().toMillis());
-            }
-
-            ps.setTimestamp(19, java.sql.Timestamp.from(nextScheduledUpdate()));
-            ps.setInt(20, backoffConsecutiveFailures());
-            ps.setInt(21, (int) backoffFetchInterval().getSeconds());
+            ps.setTimestamp(18, java.sql.Timestamp.from(nextScheduledUpdate()));
+            ps.setInt(19, backoffConsecutiveFailures());
+            ps.setInt(20, (int) backoffFetchInterval().getSeconds());
 
             if (asn() == null) {
-                ps.setNull(22, java.sql.Types.INTEGER);
+                ps.setNull(21, java.sql.Types.INTEGER);
             } else {
-                ps.setInt(22, asn());
+                ps.setInt(21, asn());
             }
 
             ps.executeUpdate();
@@ -219,7 +209,6 @@ implements WritableModel
         private Integer httpStatus;
         private String httpLocation;
         private Duration httpResponseTime;
-        private Duration icmpPingTime;
         private ErrorClassification errorClassification;
         private String errorMessage;
         private Instant tsLastPing;
@@ -294,11 +283,6 @@ implements WritableModel
             return this;
         }
 
-        public Builder icmpPingTime(Duration icmpPingTime) {
-            this.icmpPingTime = icmpPingTime;
-            return this;
-        }
-
         public Builder errorClassification(ErrorClassification errorClassification) {
             this.errorClassification = errorClassification;
             return this;
@@ -354,7 +338,6 @@ implements WritableModel
                     httpStatus,
                     httpLocation,
                     httpResponseTime,
-                    icmpPingTime,
                     errorClassification,
                     errorMessage,
                     tsLastPing,

@@ -94,7 +94,6 @@ class PingDaoTest {
                 501,
                 "http://example.com/redirect",
                 Duration.ofMillis(150),
-                Duration.ofMillis(100),
                 ErrorClassification.DNS_ERROR,
                 "DNS resolution failed",
                 Instant.now(),
@@ -123,7 +122,6 @@ class PingDaoTest {
         assertEquals(writeStatus.httpStatus(), readStatus.httpStatus());
         assertEquals(writeStatus.httpLocation(), readStatus.httpLocation());
         assertEquals(writeStatus.httpResponseTime(), readStatus.httpResponseTime());
-        assertEquals(writeStatus.icmpPingTime(), readStatus.icmpPingTime());
         assertEquals(writeStatus.errorClassification(), readStatus.errorClassification());
         assertEquals(writeStatus.errorMessage(), readStatus.errorMessage());
         assertEquals(writeStatus.backoffConsecutiveFailures(), readStatus.backoffConsecutiveFailures());
@@ -351,7 +349,6 @@ class PingDaoTest {
                 200,
                 "http://example.com/redirect",
                 Duration.ofMillis(150),
-                Duration.ofMillis(100),
                 ErrorClassification.NONE,
                 "No error",
                 Instant.now().minus(30, ChronoUnit.SECONDS),

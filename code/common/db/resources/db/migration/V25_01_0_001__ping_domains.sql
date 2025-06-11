@@ -27,8 +27,6 @@ CREATE TABLE IF NOT EXISTS DOMAIN_AVAILABILITY_INFORMATION (
     HTTP_LOCATION VARCHAR(255),         -- If the server redirects, this is the location of the redirect
     HTTP_RESPONSE_TIME_MS SMALLINT UNSIGNED, -- Response time in milliseconds
 
-    ICMP_PING_TIME_MS SMALLINT UNSIGNED, -- ICMP ping time in milliseconds (if available)
-
     ERROR_CLASSIFICATION ENUM('NONE', 'TIMEOUT', 'SSL_ERROR', 'DNS_ERROR', 'CONNECTION_ERROR', 'HTTP_CLIENT_ERROR', 'HTTP_SERVER_ERROR', 'UNKNOWN'), -- Classification of the error if the server is not available
     ERROR_MESSAGE VARCHAR(255),         -- Error message if the server is not available
 
