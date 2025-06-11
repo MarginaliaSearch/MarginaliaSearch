@@ -103,7 +103,7 @@ public class PingJobScheduler {
         for (int i = 0; i < 8; i++) {
             allThreads.add(Thread.ofPlatform().daemon().name("availability-job-consumer-" + i).start(this::availabilityJobConsumer));
         }
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 1; i++) {
             allThreads.add(Thread.ofPlatform().daemon().name("dns-job-consumer-" + i).start(this::dnsJobConsumer));
         }
     }

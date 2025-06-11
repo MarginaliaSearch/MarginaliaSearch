@@ -44,8 +44,8 @@ public class HttpClientProvider implements Provider<HttpClient> {
 
     private static CloseableHttpClient createClient() throws NoSuchAlgorithmException {
         final ConnectionConfig connectionConfig = ConnectionConfig.custom()
-                .setSocketTimeout(30, TimeUnit.SECONDS)
-                .setConnectTimeout(30, TimeUnit.SECONDS)
+                .setSocketTimeout(15, TimeUnit.SECONDS)
+                .setConnectTimeout(15, TimeUnit.SECONDS)
                 .setValidateAfterInactivity(TimeValue.ofSeconds(5))
                 .build();
 
