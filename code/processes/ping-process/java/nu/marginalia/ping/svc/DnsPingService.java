@@ -48,7 +48,6 @@ public class DnsPingService {
             switch (changes) {
                 case DnsRecordChange.None _ -> {}
                 case DnsRecordChange.Changed changed -> {
-                    logger.info("DNS record for {} changed: {}", newRecord.dnsRootDomainId(), changed);
                     generatedRecords.add(DomainDnsEvent.builder()
                             .rootDomainId(newRecord.dnsRootDomainId())
                             .nodeId(newRecord.nodeAffinity())
