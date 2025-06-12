@@ -60,11 +60,13 @@ public class PingJobScheduler {
         allThreads.add(Thread.ofPlatform().daemon().name("sync-dns").start(this::syncAvailabilityJobs));
         allThreads.add(Thread.ofPlatform().daemon().name("sync-availability").start(this::syncDnsRecords));
 
+        int availabilityThreads = Integer.getInteger("ping.availabilityThreads", 8);
+        int pingThreads = Integer.getInteger("ping.dnsThreads", 2);
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < availabilityThreads; i++) {
             allThreads.add(Thread.ofPlatform().daemon().name("availability-job-consumer-" + i).start(this::availabilityJobConsumer));
         }
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < pingThreads; i++) {
             allThreads.add(Thread.ofPlatform().daemon().name("dns-job-consumer-" + i).start(this::dnsJobConsumer));
         }
     }
