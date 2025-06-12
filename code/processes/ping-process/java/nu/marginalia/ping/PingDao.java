@@ -137,7 +137,7 @@ public class PingDao {
 
     public HistoricalAvailabilityData getHistoricalAvailabilityData(long domainId) throws SQLException {
         var query = """
-            SELECT EC_DOMAIN.ID, EC_DOMAIN.DOMAIN_NAME, DOMAIN_AVAILABILITY_INFORMATION.*, DOMAIN_SECURITY_INFORMATION.*
+            SELECT EC_DOMAIN.ID, EC_DOMAIN.DOMAIN_NAME, EC_DOMAIN.NODE_AFFINITY, DOMAIN_AVAILABILITY_INFORMATION.*, DOMAIN_SECURITY_INFORMATION.*
                 FROM EC_DOMAIN
                 LEFT JOIN DOMAIN_SECURITY_INFORMATION ON DOMAIN_SECURITY_INFORMATION.DOMAIN_ID = EC_DOMAIN.ID
                 LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION ON DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID = EC_DOMAIN.ID
@@ -168,7 +168,7 @@ public class PingDao {
                 if (dar == null) {
                     return new HistoricalAvailabilityData.JustDomainReference(new DomainReference(
                             rs.getInt("EC_DOMAIN.ID"),
-                            rs.getInt("EC_DOMAIN.NODE_ID"),
+                            rs.getInt("EC_DOMAIN.NODE_AFFINITY"),
                             domainName.toLowerCase()
                     ));
                 }
