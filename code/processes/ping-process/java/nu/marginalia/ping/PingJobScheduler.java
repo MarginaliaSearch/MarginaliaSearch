@@ -7,6 +7,7 @@ import nu.marginalia.ping.svc.HttpPingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -194,8 +195,8 @@ public class PingJobScheduler {
                             yield dnsPingService.pingDomain(oldRecord.rootDomainName(), oldRecord);
                         }
                         case RootDomainReference.ByName(String name) -> {
-                            var oldRecord = pingDao.getDomainDnsRecord(name);
-                            yield dnsPingService.pingDomain(oldRecord.rootDomainName(), oldRecord);
+                            @Nullable var oldRecord = pingDao.getDomainDnsRecord(name);
+                            yield dnsPingService.pingDomain(name, oldRecord);
                         }
                     };
 
