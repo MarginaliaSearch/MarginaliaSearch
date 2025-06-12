@@ -71,6 +71,11 @@ implements WritableModel
     }
 
     @Override
+    public Instant nextUpdateTime() {
+        return nextScheduledUpdate;
+    }
+
+    @Override
     public void write(Connection connection) throws SQLException {
         try (var ps = connection.prepareStatement(
                      """

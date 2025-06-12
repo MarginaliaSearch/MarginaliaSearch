@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Singleton
 public class PingDao {
@@ -76,32 +77,6 @@ public class PingDao {
         }
     }
 
-    public List<DomainReference> getNewDomains(int nodeId, int cnt) throws SQLException {
-        List<DomainReference> domains = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var ps = conn.prepareStatement("""
-            SELECT domain_id, domain_name
-            FROM EC_DOMAIN 
-            LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION 
-            ON EC_DOMAIN.domain_id = DOMAIN_AVAILABILITY_INFORMATION.domain_id
-            WHERE DOMAIN_AVAILABILITY_INFORMATION.server_available IS NULL
-            AND EC_DOMAIN.NODE_ID = ?
-            LIMIT ?
-            """))
-        {
-            ps.setInt(1, nodeId);
-            ps.setInt(2, cnt);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                domains.add(new DomainReference(rs.getInt("domain_id"), nodeId, rs.getString("domain_name").toLowerCase()));
-            }
-        }
-
-        return domains;
-    }
-
     public DomainAvailabilityRecord getDomainPingStatus(int domainId) throws SQLException {
 
         try (var conn = dataSource.getConnection();
@@ -132,7 +107,7 @@ public class PingDao {
         }
     }
 
-    public DomainDnsRecord getDomainDnsRecord(int dnsRootDomainId) throws SQLException {
+    public DomainDnsRecord getDomainDnsRecord(long dnsRootDomainId) throws SQLException {
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("SELECT * FROM DOMAIN_DNS_INFORMATION WHERE DNS_ROOT_DOMAIN_ID = ?")) {
 
@@ -160,111 +135,123 @@ public class PingDao {
         }
     }
 
-    public List<HistoricalAvailabilityData> getNextDomainPingStatuses(int count, int nodeId) throws SQLException {
-        List<HistoricalAvailabilityData> domainAvailabilityRecords = new ArrayList<>(count);
-
+    public HistoricalAvailabilityData getHistoricalAvailabilityData(long domainId) throws SQLException {
         var query = """
-            SELECT DOMAIN_AVAILABILITY_INFORMATION.*, DOMAIN_SECURITY_INFORMATION.*, EC_DOMAIN.DOMAIN_NAME FROM DOMAIN_AVAILABILITY_INFORMATION
-                LEFT JOIN DOMAIN_SECURITY_INFORMATION
-                ON DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID = DOMAIN_SECURITY_INFORMATION.DOMAIN_ID
-                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
-            WHERE NEXT_SCHEDULED_UPDATE <= ? AND DOMAIN_AVAILABILITY_INFORMATION.NODE_ID = ?
-            ORDER BY NEXT_SCHEDULED_UPDATE ASC
-            LIMIT ?
+            SELECT EC_DOMAIN.ID, EC_DOMAIN.DOMAIN_NAME, DOMAIN_AVAILABILITY_INFORMATION.*, DOMAIN_SECURITY_INFORMATION.*
+                FROM EC_DOMAIN
+                LEFT JOIN DOMAIN_SECURITY_INFORMATION ON DOMAIN_SECURITY_INFORMATION.DOMAIN_ID = EC_DOMAIN.ID
+                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION ON DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID = EC_DOMAIN.ID
+                WHERE EC_DOMAIN.ID = ?
             """;
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement(query)) {
-            // Use Java time since this is how we generate the timestamps in the ping process
-            // to avoid timezone weirdness.
-            ps.setTimestamp(1, java.sql.Timestamp.from(Instant.now()));
-            ps.setInt(2, nodeId);
-            ps.setInt(3, count);
+
+            ps.setLong(1, domainId);
+
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 String domainName = rs.getString("EC_DOMAIN.DOMAIN_NAME");
-                var domainAvailabilityRecord = new DomainAvailabilityRecord(rs);
-                if (rs.getObject("DOMAIN_SECURITY_INFORMATION.DOMAIN_ID", Integer.class) != null) {
-                    var securityRecord = new DomainSecurityRecord(rs);
-                    domainAvailabilityRecords.add(
-                        new HistoricalAvailabilityData.AvailabilityAndSecurity(domainName, domainAvailabilityRecord, securityRecord)
-                    );
-                } else {
-                    domainAvailabilityRecords.add(new HistoricalAvailabilityData.JustAvailability(domainName, domainAvailabilityRecord));
+
+                DomainAvailabilityRecord dar;
+                DomainSecurityRecord dsr;
+
+                if (rs.getObject("DOMAIN_SECURITY_INFORMATION.DOMAIN_ID", Integer.class) != null)
+                    dsr = new DomainSecurityRecord(rs);
+                else
+                    dsr = null;
+
+                if (rs.getObject("DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID", Integer.class) != null)
+                    dar = new DomainAvailabilityRecord(rs);
+                else
+                    dar = null;
+
+                if (dar == null) {
+                    return new HistoricalAvailabilityData.JustDomainReference(new DomainReference(
+                            rs.getInt("EC_DOMAIN.ID"),
+                            rs.getInt("EC_DOMAIN.NODE_ID"),
+                            domainName.toLowerCase()
+                    ));
+                }
+                else {
+                    if (dsr != null) {
+                        return new HistoricalAvailabilityData.AvailabilityAndSecurity(domainName, dar, dsr);
+                    } else {
+                        return new HistoricalAvailabilityData.JustAvailability(domainName, dar);
+                    }
                 }
             }
         }
-        return domainAvailabilityRecords;
+
+        return null;
     }
 
-    public List<DomainDnsRecord> getNextDnsDomainRecords(int count, int nodeId) throws SQLException {
-        List<DomainDnsRecord> domainDnsRecords = new ArrayList<>(count);
+    public List<UpdateSchedule.UpdateJob<Long, HistoricalAvailabilityData>> getDomainUpdateSchedule(int nodeId) {
+        List<UpdateSchedule.UpdateJob<Long, HistoricalAvailabilityData>> updateJobs = new ArrayList<>();
 
-        var query = """
-            SELECT * FROM DOMAIN_DNS_INFORMATION
-            WHERE TS_NEXT_DNS_CHECK <= ? AND NODE_AFFINITY = ?
-            ORDER BY DNS_CHECK_PRIORITY DESC, TS_NEXT_DNS_CHECK ASC
-            LIMIT ?
-            """;
         try (var conn = dataSource.getConnection();
-             var ps = conn.prepareStatement(query)) {
-            ps.setTimestamp(1, java.sql.Timestamp.from(Instant.now()));
-            ps.setInt(2, nodeId);
-            ps.setInt(3, count);
+             var ps = conn.prepareStatement("""
+                SELECT ID, NEXT_SCHEDULED_UPDATE
+                FROM EC_DOMAIN
+                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION
+                ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
+                WHERE NODE_AFFINITY = ?
+                """)) {
+            ps.setFetchSize(10_000);
+            ps.setInt(1, nodeId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                domainDnsRecords.add(new DomainDnsRecord(rs));
+                long domainId = rs.getLong("ID");
+                var ts = rs.getTimestamp("NEXT_SCHEDULED_UPDATE");
+                Instant nextUpdate = ts == null ? Instant.now() : ts.toInstant();
+
+                updateJobs.add(new UpdateSchedule.UpdateJob<>(domainId, nextUpdate));
             }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to retrieve domain update schedule", e);
         }
-        return domainDnsRecords;
+
+        logger.info("Found {} availability update jobs for node {}", updateJobs.size(), nodeId);
+
+        return updateJobs;
     }
 
-    public List<DomainReference> getOrphanedDomains(int nodeId) {
-        List<DomainReference> orphanedDomains = new ArrayList<>();
+    public List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> getDnsUpdateSchedule(int nodeId) {
+        List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> updateJobs = new ArrayList<>();
+
         try (var conn = dataSource.getConnection();
-            var stmt = conn.prepareStatement("""
-                SELECT e.DOMAIN_NAME, e.ID
-                FROM EC_DOMAIN e
-                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION d ON e.ID = d.DOMAIN_ID
-                WHERE d.DOMAIN_ID IS NULL AND e.NODE_AFFINITY = ?;
+             var ps = conn.prepareStatement("""
+                SELECT DISTINCT(DOMAIN_TOP),DOMAIN_DNS_INFORMATION.* FROM EC_DOMAIN
+                LEFT JOIN DOMAIN_DNS_INFORMATION ON ROOT_DOMAIN_NAME = DOMAIN_TOP
+                WHERE EC_DOMAIN.NODE_AFFINITY = ?
                 """)) {
-            stmt.setInt(1, nodeId);
-            stmt.setFetchSize(10_000);
-            ResultSet rs = stmt.executeQuery();
+            ps.setFetchSize(10_000);
+            ps.setInt(1, nodeId);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                String domainName = rs.getString("DOMAIN_NAME");
-                int domainId = rs.getInt("ID");
+                Long dnsRootDomainId = rs.getObject("DOMAIN_DNS_INFORMATION.DNS_ROOT_DOMAIN_ID", Long.class);
+                String rootDomainName = rs.getString("DOMAIN_TOP");
 
-                orphanedDomains.add(new DomainReference(domainId, nodeId, domainName));
+                if (dnsRootDomainId == null) {
+                    updateJobs.add(
+                            new UpdateSchedule.UpdateJob<>(
+                            new RootDomainReference.ByName(rootDomainName),
+                            Instant.now())
+                    );
+                }
+                else {
+                    var record = new DomainDnsRecord(rs);
+                    updateJobs.add(new UpdateSchedule.UpdateJob<>(
+                            new RootDomainReference.ById(dnsRootDomainId),
+                            Objects.requireNonNullElseGet(record.tsNextScheduledUpdate(), Instant::now))
+                    );
+                }
             }
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve orphaned domains", e);
-        }
-
-        return orphanedDomains;
-    }
-
-    public List<String> getOrphanedRootDomains(int nodeId) {
-        List<String> orphanedDomains = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                SELECT DISTINCT(DOMAIN_TOP)
-                FROM EC_DOMAIN e
-                LEFT JOIN DOMAIN_DNS_INFORMATION d ON e.DOMAIN_TOP = d.ROOT_DOMAIN_NAME
-                WHERE d.ROOT_DOMAIN_NAME IS NULL AND e.NODE_AFFINITY = ?;
-                """)) {
-            stmt.setInt(1, nodeId);
-            stmt.setFetchSize(10_000);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                String domainName = rs.getString("DOMAIN_TOP");
-                orphanedDomains.add(domainName.toLowerCase());
-            }
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve orphaned domains", e);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to retrieve DNS update schedule", e);
         }
 
-        return orphanedDomains;
+        logger.info("Found {} dns update jobs for node {}", updateJobs.size(), nodeId);
+
+        return updateJobs;
     }
 }

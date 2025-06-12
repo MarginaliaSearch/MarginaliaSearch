@@ -203,7 +203,6 @@ public record DomainSecurityRecord(
             if (sslCertFingerprintSha256() == null) {
                 ps.setNull(12, java.sql.Types.BINARY);
             } else {
-                System.out.println(sslCertFingerprintSha256().length);
                 ps.setBytes(12, sslCertFingerprintSha256());
             }
             if (sslCertSan() == null) {

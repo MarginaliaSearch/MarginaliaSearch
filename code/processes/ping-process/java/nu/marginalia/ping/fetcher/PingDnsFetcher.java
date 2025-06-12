@@ -3,6 +3,8 @@ package nu.marginalia.ping.fetcher;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.ping.model.SingleDnsRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.TextParseException;
@@ -17,6 +19,7 @@ import java.util.concurrent.*;
 public class PingDnsFetcher {
     private final ThreadLocal<ExtendedResolver> resolver;
     private static final ExecutorService digExecutor = Executors.newFixedThreadPool(100);
+    private static final Logger logger = LoggerFactory.getLogger(PingDnsFetcher.class);
 
     private static final int[] RECORD_TYPES = {
             Type.A, Type.AAAA, Type.NS, Type.MX, Type.TXT,
@@ -25,8 +28,7 @@ public class PingDnsFetcher {
 
     @Inject
     public PingDnsFetcher(@Named("ping.nameservers")
-                      List<String> nameservers) throws UnknownHostException
-    {
+                      List<String> nameservers) {
         resolver = ThreadLocal.withInitial(() -> createResolver(nameservers));
     }
 
@@ -81,13 +83,12 @@ public class PingDnsFetcher {
                 try {
                     results.addAll(future.get(1, TimeUnit.MINUTES));
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    System.err.println("Error fetching DNS records: " + e.getMessage());
+                    logger.error("Error fetching DNS records", e);
                 }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("DNS query interrupted: " + e.getMessage());
+            logger.error("DNS query interrupted", e);
         }
         return results;
     }

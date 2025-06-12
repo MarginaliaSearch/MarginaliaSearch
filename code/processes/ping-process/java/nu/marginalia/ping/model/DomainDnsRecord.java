@@ -61,6 +61,11 @@ public record DomainDnsRecord(
     }
 
     @Override
+    public Instant nextUpdateTime() {
+        return tsNextScheduledUpdate;
+    }
+
+    @Override
     public void write(Connection connection) throws SQLException {
 
         if (dnsRootDomainId() != null) {
