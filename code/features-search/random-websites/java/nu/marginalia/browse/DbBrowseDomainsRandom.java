@@ -27,10 +27,12 @@ public class DbBrowseDomainsRandom {
     public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, int set) {
 
         final String q = """
-                SELECT DOMAIN_ID, DOMAIN_NAME, INDEXED
+                SELECT EC_RANDOM_DOMAINS.DOMAIN_ID, DOMAIN_NAME, INDEXED
                 FROM EC_RANDOM_DOMAINS
                 INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
+                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION DAI ON DAI.DOMAIN_ID=EC_RANDOM_DOMAINS.DOMAIN_ID
                 WHERE STATE<2
+                AND SERVER_AVAILABLE
                 AND DOMAIN_SET=?
                 AND DOMAIN_ALIAS IS NULL
                 ORDER BY RAND()
