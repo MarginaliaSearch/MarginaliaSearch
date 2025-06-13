@@ -83,7 +83,7 @@ public class PingHttpFetcher {
         } catch (SocketTimeoutException ex) {
             return new TimeoutResponse(ex.getMessage());
         } catch (IOException e) {
-            return new ConnectionError(e.getMessage());
+            return new ConnectionError(e.getClass().getSimpleName());
         }
     }
 

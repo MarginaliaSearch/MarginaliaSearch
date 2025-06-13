@@ -18,6 +18,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,8 +76,8 @@ public class HttpPingService {
 
             result = pingHttpFetcher.fetchUrl(url, Method.HEAD, null, null);
 
-            if (result instanceof HttpsResponse response && response.httpStatus() == 405) {
-                // If we get a 405, we try the GET method instead as not all servers support HEAD requests
+            if (result instanceof HttpsResponse response && shouldTryGET(response.httpStatus())) {
+                sleep(Duration.ofSeconds(2));
                 result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
             }
             else if (result instanceof ConnectionError) {
@@ -84,8 +85,8 @@ public class HttpPingService {
                 if (!(result2 instanceof ConnectionError)) {
                     result = result2;
                 }
-                if (result instanceof HttpResponse response && response.httpStatus() == 405) {
-                    // If we get a 405, we try the GET method instead as not all servers support HEAD requests
+                if (result instanceof HttpResponse response && shouldTryGET(response.httpStatus())) {
+                    sleep(Duration.ofSeconds(2));
                     result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
                 }
             }
@@ -116,7 +117,7 @@ public class HttpPingService {
                         domainReference.nodeId(),
                         oldPingStatus,
                         ErrorClassification.CONNECTION_ERROR,
-                        null);
+                        rsp.errorMessage());
                 newSecurityInformation = null;
             }
             case TimeoutResponse rsp -> {
@@ -188,6 +189,29 @@ public class HttpPingService {
         }
 
         return generatedRecords;
+    }
+
+    private boolean shouldTryGET(int statusCode) {
+        if (statusCode < 400) {
+            return false;
+        }
+        if (statusCode == 429) { // Too many requests, we should not retry with GET
+            return false;
+        }
+
+        // For all other status codes, we can try a GET request, as many severs do not
+        // cope with HEAD requests properly.
+
+        return statusCode < 600;
+    }
+
+    private void sleep(Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore the interrupted status
+            logger.warn("Sleep interrupted", e);
+        }
     }
 
     private void comparePingStatuses(List<WritableModel> generatedRecords,
