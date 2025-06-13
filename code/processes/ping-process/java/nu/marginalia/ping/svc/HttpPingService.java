@@ -149,7 +149,8 @@ public class HttpPingService {
                 newSecurityInformation = domainSecurityInformationFactory.createHttpSecurityInformation(
                         httpResponse,
                         domainReference.domainId(),
-                        domainReference.nodeId()
+                        domainReference.nodeId(),
+                        newPingStatus.asn()
                 );
             }
             case HttpsResponse httpsResponse -> {
@@ -167,7 +168,8 @@ public class HttpPingService {
                         httpsResponse,
                         validationResult,
                         domainReference.domainId(),
-                        domainReference.nodeId()
+                        domainReference.nodeId(),
+                        newPingStatus.asn()
                 );
             }
         }

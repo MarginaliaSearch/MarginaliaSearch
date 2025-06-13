@@ -8,6 +8,7 @@ import nu.marginalia.ping.ssl.PKIXValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
@@ -21,13 +22,17 @@ public class DomainSecurityInformationFactory {
     private static final Logger logger = LoggerFactory.getLogger(DomainSecurityInformationFactory.class);
 
     // Vanilla HTTP (not HTTPS) response does not have SSL session information, so we return null
-    public DomainSecurityRecord createHttpSecurityInformation(HttpResponse httpResponse, int domainId, int nodeId) {
+    public DomainSecurityRecord createHttpSecurityInformation(HttpResponse httpResponse,
+                                                              int domainId, int nodeId,
+                                                              @Nullable Integer asn
+                                                              ) {
 
         var headers = httpResponse.headers();
 
         return DomainSecurityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
+                .asn(asn)
                 .httpSchema(HttpSchema.HTTP)
                 .httpVersion(httpResponse.version())
                 .headerServer(headers.getFirst("Server"))
@@ -47,7 +52,13 @@ public class DomainSecurityInformationFactory {
     }
 
     // HTTPS response
-    public DomainSecurityRecord createHttpsSecurityInformation(HttpsResponse httpResponse, PKIXValidationResult validationResult, int domainId, int nodeId) {
+    public DomainSecurityRecord createHttpsSecurityInformation(
+            HttpsResponse httpResponse,
+            PKIXValidationResult validationResult,
+            int domainId,
+            int nodeId,
+            @Nullable Integer asn
+            ) {
 
 
         var headers = httpResponse.headers();
@@ -86,6 +97,7 @@ public class DomainSecurityInformationFactory {
         return DomainSecurityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
+                .asn(asn)
                 .httpSchema(HttpSchema.HTTPS)
                 .headerServer(headers.getFirst("Server"))
                 .headerCorsAllowOrigin(headers.getFirst("Access-Control-Allow-Origin"))
