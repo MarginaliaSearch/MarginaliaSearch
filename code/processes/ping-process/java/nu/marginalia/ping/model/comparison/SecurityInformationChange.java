@@ -15,6 +15,8 @@ public record SecurityInformationChange(
         boolean isCertificateProfileChanged,
         boolean isCertificateSanChanged,
         boolean isCertificatePublicKeyChanged,
+        boolean isCertificateSerialNumberChanged,
+        boolean isCertificateIssuerChanged,
         Duration oldCertificateTimeToExpiry,
         boolean isSecurityHeadersChanged,
         boolean isIpAddressChanged,
@@ -30,8 +32,10 @@ public record SecurityInformationChange(
 
         boolean certificateFingerprintChanged = 0 != Arrays.compare(before.sslCertFingerprintSha256(), after.sslCertFingerprintSha256());
         boolean certificateProfileChanged = before.certificateProfileHash() != after.certificateProfileHash();
+        boolean certificateSerialNumberChanged = !Objects.equals(before.sslCertSerialNumber(), after.sslCertSerialNumber());
         boolean certificatePublicKeyChanged = 0 != Arrays.compare(before.sslCertPublicKeyHash(), after.sslCertPublicKeyHash());
         boolean certificateSanChanged =  !Objects.equals(before.sslCertSan(), after.sslCertSan());
+        boolean certificateIssuerChanged = !Objects.equals(before.sslCertIssuer(), after.sslCertIssuer());
 
         Duration oldCertificateTimeToExpiry = before.sslCertNotAfter() == null ? null : Duration.between(
                 Instant.now(),
@@ -50,6 +54,7 @@ public record SecurityInformationChange(
         boolean isChanged = asnChanged
                 || certificateFingerprintChanged
                 || securityHeadersChanged
+                || certificateProfileChanged
                 || softwareChanged;
 
         return new SecurityInformationChange(
@@ -59,6 +64,8 @@ public record SecurityInformationChange(
                 certificateProfileChanged,
                 certificateSanChanged,
                 certificatePublicKeyChanged,
+                certificateSerialNumberChanged,
+                certificateIssuerChanged,
                 oldCertificateTimeToExpiry,
                 securityHeadersChanged,
                 ipChanged,

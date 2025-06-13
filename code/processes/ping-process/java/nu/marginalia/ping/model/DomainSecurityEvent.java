@@ -16,6 +16,8 @@ public record DomainSecurityEvent(
         boolean certificateProfileChanged,
         boolean certificateSanChanged,
         boolean certificatePublicKeyChanged,
+        boolean certificateSerialNumberChanged,
+        boolean certificateIssuerChanged,
         Duration oldCertificateTimeToExpiry,
         boolean securityHeadersChanged,
         boolean ipChanged,
@@ -41,8 +43,10 @@ public record DomainSecurityEvent(
                 change_software,
                 old_cert_time_to_expiry,
                 security_signature_before,
-                security_signature_after
-                ) VALUES    (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                security_signature_after,
+                change_certificate_serial_number,
+                change_certificate_issuer
+                ) VALUES    (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """))
         {
 
@@ -74,6 +78,9 @@ public record DomainSecurityEvent(
             } else {
                 ps.setBytes(14, securitySignatureAfter().compressed());
             }
+
+            ps.setBoolean(15, certificateSerialNumberChanged());
+            ps.setBoolean(16, certificateIssuerChanged());
 
             ps.executeUpdate();
         }

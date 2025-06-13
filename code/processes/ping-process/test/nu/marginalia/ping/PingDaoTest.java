@@ -318,6 +318,8 @@ class PingDaoTest {
                 true,
                 false,
                 true,
+                true,
+                false,
                 Duration.ofDays(30),
                 false,
                 false,
