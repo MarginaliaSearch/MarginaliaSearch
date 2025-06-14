@@ -50,7 +50,12 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
 
         if (statusCode == 429) {
             // get the Retry-After header
-            String retryAfter = response.getFirstHeader("Retry-After").getValue();
+            var retryAfterHeader = response.getFirstHeader("Retry-After");
+            if (retryAfterHeader == null) {
+                return TimeValue.ofSeconds(3);
+            }
+
+            String retryAfter = retryAfterHeader.getValue();
             if (retryAfter == null) {
                 return TimeValue.ofSeconds(2);
             }
