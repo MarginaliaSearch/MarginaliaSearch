@@ -2,6 +2,7 @@ package nu.marginalia.ping;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.coordination.LocalDomainCoordinator;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.ping.fetcher.PingDnsFetcher;
 import nu.marginalia.ping.fetcher.PingHttpFetcher;
@@ -90,6 +91,7 @@ class AvailabilityJobSchedulerTest {
                         new DomainSecurityInformationFactory()),
                 new DnsPingService(new PingDnsFetcher(List.of("8.8.8.8", "8.8.4.4")),
                         dnsDomainInformationFactory),
+                new LocalDomainCoordinator(),
                 pingDao
         );
 

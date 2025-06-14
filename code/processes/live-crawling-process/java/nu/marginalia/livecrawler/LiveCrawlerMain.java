@@ -10,6 +10,8 @@ import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
+import nu.marginalia.coordination.DomainCoordinationModule;
+import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.io.SerializableCrawlDataStream;
@@ -58,6 +60,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
     private final FileStorageService fileStorageService;
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
+    private final DomainCoordinator domainCoordinator;
     private final HikariDataSource dataSource;
 
     @Inject
@@ -71,7 +74,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
                            DomainProcessor domainProcessor,
                            FileStorageService fileStorageService,
                            KeywordLoaderService keywordLoaderService,
-                           DocumentLoaderService documentLoaderService, HikariDataSource dataSource)
+                           DocumentLoaderService documentLoaderService, DomainCoordinator domainCoordinator, HikariDataSource dataSource)
             throws Exception
     {
         super(messageQueueFactory, config, gson, LIVE_CRAWLER_INBOX);
@@ -84,6 +87,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
         this.fileStorageService = fileStorageService;
         this.keywordLoaderService = keywordLoaderService;
         this.documentLoaderService = documentLoaderService;
+        this.domainCoordinator = domainCoordinator;
         this.dataSource = dataSource;
 
         domainBlacklist.waitUntilLoaded();
@@ -107,6 +111,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
         try {
             Injector injector = Guice.createInjector(
                     new LiveCrawlerModule(),
+                    new DomainCoordinationModule(), // 2 hours lease timeout is enough for the live crawler
                     new ProcessConfigurationModule("crawler"),
                     new ConverterModule(),
                     new ServiceDiscoveryModule(),
@@ -172,7 +177,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
 
             processHeartbeat.progress(LiveCrawlState.CRAWLING);
 
-            try (SimpleLinkScraper fetcher = new SimpleLinkScraper(dataSet, domainQueries, domainBlacklist);
+            try (SimpleLinkScraper fetcher = new SimpleLinkScraper(dataSet, domainCoordinator, domainQueries, domainBlacklist);
                  var hb = heartbeat.createAdHocTaskHeartbeat("Live Crawling"))
             {
                 for (Map.Entry<String, List<String>> entry : hb.wrap("Fetching", urlsPerDomain.entrySet())) {

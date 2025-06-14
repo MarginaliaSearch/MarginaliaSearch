@@ -5,6 +5,8 @@ import com.opencsv.CSVReader;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
+import nu.marginalia.coordination.DomainCoordinator;
+import nu.marginalia.coordination.DomainLock;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
@@ -51,12 +53,13 @@ public class FeedFetcherService {
     private final ServiceHeartbeat serviceHeartbeat;
     private final ExecutorClient executorClient;
 
-    private final DomainLocks domainLocks = new DomainLocks();
+    private final DomainCoordinator domainCoordinator;
 
     private volatile boolean updating;
 
     @Inject
     public FeedFetcherService(FeedDb feedDb,
+                              DomainCoordinator domainCoordinator,
                               FileStorageService fileStorageService,
                               NodeConfigurationService nodeConfigurationService,
                               ServiceHeartbeat serviceHeartbeat,
@@ -67,6 +70,7 @@ public class FeedFetcherService {
         this.nodeConfigurationService = nodeConfigurationService;
         this.serviceHeartbeat = serviceHeartbeat;
         this.executorClient = executorClient;
+        this.domainCoordinator = domainCoordinator;
     }
 
     public enum UpdateMode {
@@ -132,7 +136,7 @@ public class FeedFetcherService {
                         };
 
                         FetchResult feedData;
-                        try (DomainLocks.DomainLock domainLock = domainLocks.lockDomain(new EdgeDomain(feed.domain()))) {
+                        try (DomainLock domainLock = domainCoordinator.lockDomain(new EdgeDomain(feed.domain()))) {
                             feedData = fetchFeedData(feed, client, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
                         } catch (Exception ex) {
                             feedData = new FetchResult.TransientError();

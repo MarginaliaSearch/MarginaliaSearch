@@ -10,9 +10,11 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
+import nu.marginalia.coordination.DomainCoordinationModule;
+import nu.marginalia.coordination.DomainCoordinator;
+import nu.marginalia.coordination.DomainLock;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawl.logic.DomainLocks;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
@@ -68,7 +70,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final ServiceRegistryIf serviceRegistry;
     private final SimpleBlockingThreadPool pool;
 
-    private final DomainLocks domainLocks = new DomainLocks();
+    private final DomainCoordinator domainCoordinator;
 
     private final Map<String, CrawlTask> pendingCrawlTasks = new ConcurrentHashMap<>();
 
@@ -97,6 +99,7 @@ public class CrawlerMain extends ProcessMainClass {
                        WarcArchiverFactory warcArchiverFactory,
                        HikariDataSource dataSource,
                        DomainBlacklist blacklist,
+                       DomainCoordinator domainCoordinator,
                        ServiceRegistryIf serviceRegistry,
                        Gson gson) throws InterruptedException {
 
@@ -114,6 +117,7 @@ public class CrawlerMain extends ProcessMainClass {
         this.blacklist = blacklist;
         this.node = processConfiguration.node();
         this.serviceRegistry = serviceRegistry;
+        this.domainCoordinator = domainCoordinator;
 
         SimpleBlockingThreadPool.ThreadType threadType;
         if (Boolean.getBoolean("crawler.useVirtualThreads")) {
@@ -157,6 +161,7 @@ public class CrawlerMain extends ProcessMainClass {
                     new CrawlerModule(),
                     new ProcessConfigurationModule("crawler"),
                     new ServiceDiscoveryModule(),
+                    new DomainCoordinationModule(),
                     new DatabaseModule(false)
             );
             var crawler = injector.getInstance(CrawlerMain.class);
@@ -451,7 +456,7 @@ public class CrawlerMain extends ProcessMainClass {
         /** Best effort indicator whether we could start this now without getting stuck in
          * DomainLocks purgatory */
         public boolean canRun() {
-            return domainLocks.isLockableHint(new EdgeDomain(domain));
+            return domainCoordinator.isLockableHint(new EdgeDomain(domain));
         }
 
         @Override
@@ -462,7 +467,7 @@ public class CrawlerMain extends ProcessMainClass {
                 return;
             }
 
-            Optional<DomainLocks.DomainLock> lock = domainLocks.tryLockDomain(new EdgeDomain(domain));
+            Optional<DomainLock> lock = domainCoordinator.tryLockDomain(new EdgeDomain(domain));
             // We don't have a lock, so we can't run this task
             // we return to avoid blocking the pool for too long
             if (lock.isEmpty()) {
@@ -470,7 +475,7 @@ public class CrawlerMain extends ProcessMainClass {
                 retryQueue.put(this);
                 return;
             }
-            DomainLocks.DomainLock domainLock = lock.get();
+            DomainLock domainLock = lock.get();
 
             try (domainLock) {
                 Thread.currentThread().setName("crawling:" + domain);

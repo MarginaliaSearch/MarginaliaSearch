@@ -37,6 +37,7 @@ dependencies {
     implementation project(':code:functions:domain-info')
     implementation project(':code:functions:domain-info:api')
 
+    implementation project(':code:libraries:domain-lock')
     implementation project(':code:libraries:geo-ip')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')

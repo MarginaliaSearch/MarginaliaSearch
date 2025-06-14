@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation libs.bundles.slf4j
+    implementation project(':code:common:model')
+    implementation project(':code:common:config')
+    implementation project(':code:common:service')
+
+    implementation libs.bundles.curator
+
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    useJUnitPlatform()
+}

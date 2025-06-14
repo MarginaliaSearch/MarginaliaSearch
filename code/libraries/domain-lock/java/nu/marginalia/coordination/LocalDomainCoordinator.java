@@ -1,16 +1,15 @@
-package nu.marginalia.crawl.logic;
+package nu.marginalia.coordination;
 
 import nu.marginalia.model.EdgeDomain;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
-/** Holds lock objects for each domain, to prevent multiple threads from
- * crawling the same domain at the same time.
- */
-public class DomainLocks {
+public class LocalDomainCoordinator implements DomainCoordinator {
     // The locks are stored in a map, with the domain name as the key.  This map will grow
     // relatively big, but should be manageable since the number of domains is limited to
     // a few hundred thousand typically.
@@ -24,13 +23,25 @@ public class DomainLocks {
 
         sem.acquire();
 
-        return new DomainLock(sem);
+        return new LocalDomainLock(sem);
     }
 
     public Optional<DomainLock> tryLockDomain(EdgeDomain domain) {
         var sem = locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits);
         if (sem.tryAcquire(1)) {
-            return Optional.of(new DomainLock(sem));
+            return Optional.of(new LocalDomainLock(sem));
+        }
+        else {
+            // We don't have a lock, so we return an empty optional
+            return Optional.empty();
+        }
+    }
+
+
+    public Optional<DomainLock> tryLockDomain(EdgeDomain domain, Duration timeout) throws InterruptedException {
+        var sem = locks.computeIfAbsent(domain.topDomain.toLowerCase(), this::defaultPermits);
+        if (sem.tryAcquire(1, timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+            return Optional.of(new LocalDomainLock(sem));
         }
         else {
             // We don't have a lock, so we return an empty optional
@@ -39,24 +50,7 @@ public class DomainLocks {
     }
 
     private Semaphore defaultPermits(String topDomain) {
-        if (topDomain.equals("wordpress.com"))
-            return new Semaphore(16);
-        if (topDomain.equals("blogspot.com"))
-            return new Semaphore(8);
-        if (topDomain.equals("tumblr.com"))
-            return new Semaphore(8);
-        if (topDomain.equals("neocities.org"))
-            return new Semaphore(8);
-        if (topDomain.equals("github.io"))
-            return new Semaphore(8);
-
-        // Substack really dislikes broad-scale crawlers, so we need to be careful
-        // to not get blocked.
-        if (topDomain.equals("substack.com")) {
-            return new Semaphore(1);
-        }
-
-        return new Semaphore(2);
+        return new Semaphore(DefaultDomainPermits.defaultPermits(topDomain));
     }
 
     /** Returns true if the domain is lockable, i.e. if it is not already locked by another thread.
@@ -71,15 +65,15 @@ public class DomainLocks {
             return sem.availablePermits() > 0;
     }
 
-    public static class DomainLock implements AutoCloseable {
+    public static class LocalDomainLock implements DomainLock {
         private final Semaphore semaphore;
 
-        DomainLock(Semaphore semaphore) {
+        LocalDomainLock(Semaphore semaphore) {
             this.semaphore = semaphore;
         }
 
         @Override
-        public void close() throws Exception {
+        public void close() {
             semaphore.release();
             Thread.currentThread().setName("[idle]");
         }

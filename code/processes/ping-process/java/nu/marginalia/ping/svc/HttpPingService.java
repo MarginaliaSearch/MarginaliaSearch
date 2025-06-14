@@ -2,6 +2,7 @@ package nu.marginalia.ping.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.ping.fetcher.PingHttpFetcher;
 import nu.marginalia.ping.fetcher.response.*;
 import nu.marginalia.ping.model.*;
@@ -26,6 +27,7 @@ import java.util.List;
 @Singleton
 public class HttpPingService {
 
+    private final DomainCoordinator domainCoordinator;
     private final PingHttpFetcher pingHttpFetcher;
 
     private final DomainAvailabilityInformationFactory domainAvailabilityInformationFactory;
@@ -36,9 +38,11 @@ public class HttpPingService {
 
     @Inject
     public HttpPingService(
+            DomainCoordinator domainCoordinator,
             PingHttpFetcher pingHttpFetcher,
             DomainAvailabilityInformationFactory domainAvailabilityInformationFactory,
             DomainSecurityInformationFactory domainSecurityInformationFactory) throws Exception {
+        this.domainCoordinator = domainCoordinator;
         this.pingHttpFetcher = pingHttpFetcher;
         this.domainAvailabilityInformationFactory = domainAvailabilityInformationFactory;
         this.domainSecurityInformationFactory = domainSecurityInformationFactory;
@@ -59,7 +63,8 @@ public class HttpPingService {
 
     public List<WritableModel> pingDomain(DomainReference domainReference,
                            @Nullable DomainAvailabilityRecord oldPingStatus,
-                           @Nullable DomainSecurityRecord oldSecurityInformation) throws SQLException {
+                           @Nullable DomainSecurityRecord oldSecurityInformation) throws SQLException, InterruptedException {
+
         // First we figure out if the domain maps to an IP address
 
         List<WritableModel> generatedRecords = new ArrayList<>();
@@ -69,26 +74,31 @@ public class HttpPingService {
 
         if (ipAddress.isEmpty()) {
             result = new UnknownHostError();
-        }
-        else {
-            String url = "https://" + domainReference.domainName() + "/";
-            String alternateUrl = "http://" + domainReference.domainName() + "/";
+        } else {
+            // lock the domain to prevent concurrent pings
+            try (var _ = domainCoordinator.lockDomain(domainReference.asEdgeDomain())) {
+                String url = "https://" + domainReference.domainName() + "/";
+                String alternateUrl = "http://" + domainReference.domainName() + "/";
 
-            result = pingHttpFetcher.fetchUrl(url, Method.HEAD, null, null);
+                result = pingHttpFetcher.fetchUrl(url, Method.HEAD, null, null);
 
-            if (result instanceof HttpsResponse response && shouldTryGET(response.httpStatus())) {
-                sleep(Duration.ofSeconds(2));
-                result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
-            }
-            else if (result instanceof ConnectionError) {
-                var result2 = pingHttpFetcher.fetchUrl(alternateUrl, Method.HEAD, null, null);
-                if (!(result2 instanceof ConnectionError)) {
-                    result = result2;
-                }
-                if (result instanceof HttpResponse response && shouldTryGET(response.httpStatus())) {
+                if (result instanceof HttpsResponse response && shouldTryGET(response.httpStatus())) {
                     sleep(Duration.ofSeconds(2));
-                    result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
+                    result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
+                } else if (result instanceof ConnectionError) {
+                    var result2 = pingHttpFetcher.fetchUrl(alternateUrl, Method.HEAD, null, null);
+                    if (!(result2 instanceof ConnectionError)) {
+                        result = result2;
+                    }
+                    if (result instanceof HttpResponse response && shouldTryGET(response.httpStatus())) {
+                        sleep(Duration.ofSeconds(2));
+                        result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
+                    }
                 }
+
+                // Add a grace sleep before we yield the semaphore, so that another thread doesn't
+                // immediately hammer the same domain after it's released.
+                sleep(Duration.ofSeconds(1));
             }
         }
 
@@ -186,8 +196,8 @@ public class HttpPingService {
         }
         if (oldSecurityInformation != null && newSecurityInformation != null) {
             compareSecurityInformation(generatedRecords,
-                                       oldSecurityInformation, oldPingStatus,
-                                       newSecurityInformation, newPingStatus);
+                    oldSecurityInformation, oldPingStatus,
+                    newSecurityInformation, newPingStatus);
         }
 
         return generatedRecords;

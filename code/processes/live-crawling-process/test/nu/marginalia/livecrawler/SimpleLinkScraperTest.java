@@ -1,5 +1,6 @@
 package nu.marginalia.livecrawler;
 
+import nu.marginalia.coordination.LocalDomainCoordinator;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
@@ -37,7 +38,7 @@ class SimpleLinkScraperTest {
 
     @Test
     public void testRetrieveNow() throws Exception {
-        var scraper = new SimpleLinkScraper(dataSet, null, Mockito.mock(DomainBlacklistImpl.class));
+        var scraper = new SimpleLinkScraper(dataSet, new LocalDomainCoordinator(),  null, Mockito.mock(DomainBlacklistImpl.class));
         int fetched = scraper.retrieveNow(new EdgeDomain("www.marginalia.nu"), 1, List.of("https://www.marginalia.nu/"));
         Assertions.assertEquals(1, fetched);
 
@@ -57,7 +58,7 @@ class SimpleLinkScraperTest {
     @Test
     public void testRetrieveNow_Redundant() throws Exception {
         dataSet.saveDocument(1, new EdgeUrl("https://www.marginalia.nu/"), "<html>", "", "127.0.0.1");
-        var scraper = new SimpleLinkScraper(dataSet, null, Mockito.mock(DomainBlacklistImpl.class));
+        var scraper = new SimpleLinkScraper(dataSet, new LocalDomainCoordinator(),null, Mockito.mock(DomainBlacklistImpl.class));
 
         // If the requested URL is already in the dataSet, we retrieveNow should shortcircuit and not fetch anything
         int fetched = scraper.retrieveNow(new EdgeDomain("www.marginalia.nu"), 1, List.of("https://www.marginalia.nu/"));

@@ -1,6 +1,7 @@
 package nu.marginalia.ping;
 
 import com.google.inject.Inject;
+import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.ping.model.*;
 import nu.marginalia.ping.svc.DnsPingService;
 import nu.marginalia.ping.svc.HttpPingService;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class PingJobScheduler {
     private final HttpPingService httpPingService;
     private final DnsPingService dnsPingService;
+    private final DomainCoordinator domainCoordinator;
     private final PingDao pingDao;
 
     private static final Logger logger = LoggerFactory.getLogger(PingJobScheduler.class);
@@ -43,10 +45,12 @@ public class PingJobScheduler {
     @Inject
     public PingJobScheduler(HttpPingService httpPingService,
                             DnsPingService dnsPingService,
+                            DomainCoordinator domainCoordinator,
                             PingDao pingDao)
     {
         this.httpPingService = httpPingService;
         this.dnsPingService = dnsPingService;
+        this.domainCoordinator = domainCoordinator;
         this.pingDao = pingDao;
     }
 

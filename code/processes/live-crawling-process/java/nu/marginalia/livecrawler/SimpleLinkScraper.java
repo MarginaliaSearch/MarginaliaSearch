@@ -5,8 +5,9 @@ import crawlercommons.robots.SimpleRobotRulesParser;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
+import nu.marginalia.coordination.DomainCoordinator;
+import nu.marginalia.coordination.DomainLock;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.logic.DomainLocks;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
@@ -46,14 +47,16 @@ public class SimpleLinkScraper implements AutoCloseable {
     private final DomainBlacklist domainBlacklist;
     private final Duration connectTimeout = Duration.ofSeconds(10);
     private final Duration readTimeout = Duration.ofSeconds(10);
-    private final DomainLocks domainLocks = new DomainLocks();
+    private final DomainCoordinator domainCoordinator;
 
     private final static int MAX_SIZE = Integer.getInteger("crawler.maxFetchSize", 10 * 1024 * 1024);
 
     public SimpleLinkScraper(LiveCrawlDataSet dataSet,
+                             DomainCoordinator domainCoordinator,
                              DbDomainQueries domainQueries,
                              DomainBlacklist domainBlacklist) {
         this.dataSet = dataSet;
+        this.domainCoordinator = domainCoordinator;
         this.domainQueries = domainQueries;
         this.domainBlacklist = domainBlacklist;
     }
@@ -98,7 +101,7 @@ public class SimpleLinkScraper implements AutoCloseable {
                 .version(HttpClient.Version.HTTP_2)
                 .build();
              // throttle concurrent access per domain; IDE will complain it's not used, but it holds a semaphore -- do not remove:
-             DomainLocks.DomainLock lock = domainLocks.lockDomain(domain)
+             DomainLock lock = domainCoordinator.lockDomain(domain)
         ) {
             SimpleRobotRules rules = fetchRobotsRules(rootUrl, client);
 

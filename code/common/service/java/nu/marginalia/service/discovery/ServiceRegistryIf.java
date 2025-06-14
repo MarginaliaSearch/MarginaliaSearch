@@ -5,12 +5,10 @@ import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
 import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
+import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreV2;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 
@@ -66,6 +64,6 @@ public interface ServiceRegistryIf {
 
     void registerProcess(String processName, int nodeId);
     void deregisterProcess(String processName, int nodeId);
-    void watchProcess(String processName, int nodeId, Consumer<Boolean> callback) throws Exception;
-    void watchProcessAnyNode(String processName, Collection<Integer> nodes, BiConsumer<Boolean, Integer> callback) throws Exception;
+
+    InterProcessSemaphoreV2 getSemaphore(String name, int permits) throws Exception;
 }
