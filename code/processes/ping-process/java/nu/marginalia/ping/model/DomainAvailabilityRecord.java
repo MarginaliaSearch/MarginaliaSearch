@@ -154,7 +154,7 @@ implements WritableModel
                 ps.setNull(12, java.sql.Types.SMALLINT);
             }
             else {
-                ps.setShort(12, (short) httpResponseTime().toMillis());
+                ps.setInt(12, Math.clamp(httpResponseTime().toMillis(), 0, 0xFFFF)); // "unsigned short" in SQL
             }
 
             if (errorClassification() == null) {
