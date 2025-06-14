@@ -50,7 +50,7 @@ public class PingJobScheduler {
         this.pingDao = pingDao;
     }
 
-    public synchronized void start(boolean startPaused) {
+    public synchronized void start() {
         if (running)
             return;
 
@@ -100,7 +100,7 @@ public class PingJobScheduler {
         logger.info("PingJobScheduler paused");
     }
 
-    public synchronized void resume(int nodeId) {
+    public synchronized void enableForNode(int nodeId) {
         logger.info("Resuming PingJobScheduler for nodeId: {}", nodeId);
         if (this.nodeId != null) {
             logger.warn("Attempted to resume PingJobScheduler with mismatched nodeId: expected {}, got {}", this.nodeId, nodeId);

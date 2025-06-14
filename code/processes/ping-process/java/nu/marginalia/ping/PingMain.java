@@ -52,7 +52,8 @@ public class PingMain extends ProcessMainClass {
         log.info("Starting PingMain...");
 
         // Start the ping job scheduler
-        pingJobScheduler.start(true);
+        pingJobScheduler.start();
+        pingJobScheduler.enableForNode(node);
 
         log.info("PingMain started successfully.");
     }
