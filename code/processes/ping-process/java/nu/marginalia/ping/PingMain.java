@@ -93,7 +93,10 @@ public class PingMain extends ProcessMainClass {
 
         try {
             main.runPrimary();
-            for(;;) main.wait(); // Wait on the object lock to avoid busy-looping
+            for(;;)
+                synchronized (main) { // Wait on the object lock to avoid busy-looping
+                    main.wait();
+                }
         }
         catch (Throwable ex) {
             logger.error("Error running ping process", ex);
