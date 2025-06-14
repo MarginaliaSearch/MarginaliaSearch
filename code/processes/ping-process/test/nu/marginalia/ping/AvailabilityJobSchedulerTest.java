@@ -86,7 +86,9 @@ class AvailabilityJobSchedulerTest {
         DomainDnsInformationFactory dnsDomainInformationFactory = new DomainDnsInformationFactory(processConfig, pic);
 
         PingJobScheduler pingJobScheduler = new PingJobScheduler(
-                new HttpPingService(pingHttpFetcher,
+                new HttpPingService(
+                        new LocalDomainCoordinator(),
+                        pingHttpFetcher,
                         new DomainAvailabilityInformationFactory(new GeoIpDictionary(), new BackoffStrategy(pic)),
                         new DomainSecurityInformationFactory()),
                 new DnsPingService(new PingDnsFetcher(List.of("8.8.8.8", "8.8.4.4")),

@@ -2,6 +2,7 @@ package nu.marginalia.ping;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.coordination.LocalDomainCoordinator;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.ping.fetcher.PingHttpFetcher;
 import nu.marginalia.ping.io.HttpClientProvider;
@@ -63,6 +64,7 @@ class PingHttpServiceTest {
     public void testGetSslInfo() throws Exception {
         var provider = new HttpClientProvider();
         var pingService = new HttpPingService(
+                new LocalDomainCoordinator(),
                 new PingHttpFetcher(provider.get()),
                 new DomainAvailabilityInformationFactory(new GeoIpDictionary(),
                         new BackoffStrategy(PingModule.createPingIntervalsConfiguration())
