@@ -10,7 +10,6 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.ping.PingRequest;
 import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
@@ -21,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.Security;
-import java.util.List;
 
 public class PingMain extends ProcessMainClass {
     private static final Logger log = LoggerFactory.getLogger(PingMain.class);
@@ -55,56 +53,6 @@ public class PingMain extends ProcessMainClass {
 
         // Start the ping job scheduler
         pingJobScheduler.start(true);
-
-        // Watch the crawler process to suspend/resume the ping job scheduler
-        try {
-            serviceRegistry.watchProcess("crawler", node, (running) -> {
-                if (running) {
-                    log.info("Crawler process is running, suspending ping job scheduler.");
-                    pingJobScheduler.pause(node);
-                } else {
-                    log.warn("Crawler process is not running, resuming ping job scheduler.");
-                    pingJobScheduler.resume(node);
-                }
-            });
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Failed to watch crawler process", e);
-        }
-
-        log.info("PingMain started successfully.");
-    }
-
-
-    public void runSecondary() {
-        log.info("Starting PingMain...");
-
-        List<Integer> crawlerNodes = nodeConfigurationService.getAll()
-                .stream()
-                .filter(node -> !node.disabled())
-                .filter(node -> node.profile().permitBatchCrawl())
-                .map(NodeConfiguration::node)
-                .toList()
-                ;
-
-        // Start the ping job scheduler
-        pingJobScheduler.start(true);
-
-        // Watch the crawler process to suspend/resume the ping job scheduler
-        try {
-            serviceRegistry.watchProcessAnyNode("crawler", crawlerNodes, (running, n) -> {
-                if (running) {
-                    log.info("Crawler process is running on node {} taking over ", n);
-                    pingJobScheduler.resume(n);
-                } else {
-                    log.warn("Crawler process stopped, resuming ping job scheduler.");
-                    pingJobScheduler.pause(n);
-                }
-            });
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Failed to watch crawler process", e);
-        }
 
         log.info("PingMain started successfully.");
     }
@@ -144,19 +92,8 @@ public class PingMain extends ProcessMainClass {
         var instructions = main.fetchInstructions(PingRequest.class);
 
         try {
-            switch (instructions.value().runClass) {
-                case "primary":
-                    log.info("Running as primary node");
-                    main.runPrimary();
-                    break;
-                case "secondary":
-                    log.info("Running as secondary node");
-                    main.runSecondary();
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid runClass: " + instructions.value().runClass);
-            }
-            for(;;);
+            main.runPrimary();
+            for(;;) main.wait(); // Wait on the object lock to avoid busy-looping
         }
         catch (Throwable ex) {
             logger.error("Error running ping process", ex);

@@ -13,15 +13,12 @@ import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.ping.PingRequest;
-import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +38,6 @@ public class PingMonitorActor extends RecordActorPrototype {
     private final ProcessService.ProcessId processId;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final int node;
-    private final boolean isPrimaryNode;
     private final Gson gson;
 
     public record Initial() implements ActorStep {}
@@ -56,7 +52,7 @@ public class PingMonitorActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial i -> {
-                PingRequest request = new PingRequest(isPrimaryNode ? "primary": "secondary");
+                PingRequest request = new PingRequest();
 
                 persistence.sendNewMessage(inboxName, null, null,
                         "PingRequest",
@@ -129,7 +125,6 @@ public class PingMonitorActor extends RecordActorPrototype {
 
     @Inject
     public PingMonitorActor(Gson gson,
-                                       NodeConfigurationService nodeConfigurationService,
                                        ServiceConfiguration configuration,
                                        MqPersistence persistence,
                                        ProcessService processService) throws SQLException {
@@ -140,9 +135,6 @@ public class PingMonitorActor extends RecordActorPrototype {
         this.processService = processService;
         this.inboxName = ProcessInboxNames.PING_INBOX + ":" + node;
         this.processId = ProcessService.ProcessId.PING;
-
-        this.isPrimaryNode = Set.of(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED)
-                .contains(nodeConfigurationService.get(node).profile());
     }
 
     /** Sets the message to dead in the database to avoid
