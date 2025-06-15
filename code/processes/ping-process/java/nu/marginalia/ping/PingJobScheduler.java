@@ -2,6 +2,7 @@ package nu.marginalia.ping;
 
 import com.google.inject.Inject;
 import nu.marginalia.coordination.DomainCoordinator;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.ping.model.*;
 import nu.marginalia.ping.svc.DnsPingService;
 import nu.marginalia.ping.svc.HttpPingService;
@@ -31,7 +32,7 @@ public class PingJobScheduler {
 
     private static final UpdateSchedule<RootDomainReference, RootDomainReference> dnsUpdateSchedule
             = new UpdateSchedule<>(250_000);
-    private static final UpdateSchedule<Long, HistoricalAvailabilityData> availabilityUpdateSchedule
+    private static final UpdateSchedule<DomainReference, HistoricalAvailabilityData> availabilityUpdateSchedule
             = new UpdateSchedule<>(250_000);
 
     public volatile Instant dnsLastSync = Instant.now();
@@ -138,7 +139,15 @@ public class PingJobScheduler {
                     continue;
                 }
 
-                long nextId = availabilityUpdateSchedule.next();
+                DomainReference ref = availabilityUpdateSchedule.nextIf(domain -> {
+                    EdgeDomain domainObj = new EdgeDomain(domain.domainName());
+                    if (!domainCoordinator.isLockableHint(domainObj)) {
+                        return false; // Skip locked domains
+                    }
+                    return true; // Process this domain
+                });
+
+                long nextId = ref.domainId();
                 var data = pingDao.getHistoricalAvailabilityData(nextId);
                 if (data == null) {
                     logger.warn("No availability data found for ID: {}", nextId);
@@ -163,7 +172,7 @@ public class PingJobScheduler {
                     for (var object : objects) {
                         var ts = object.nextUpdateTime();
                         if (ts != null) {
-                            availabilityUpdateSchedule.add(nextId, ts);
+                            availabilityUpdateSchedule.add(ref, ts);
                             break;
                         }
                     }
@@ -194,7 +203,7 @@ public class PingJobScheduler {
 
                 try {
                     List<WritableModel> objects = switch(ref) {
-                        case RootDomainReference.ById(long id) -> {
+                        case RootDomainReference.ByIdAndName(long id, String name) -> {
                             var oldRecord = Objects.requireNonNull(pingDao.getDomainDnsRecord(id));
                             yield dnsPingService.pingDomain(oldRecord.rootDomainName(), oldRecord);
                         }

@@ -1,5 +1,6 @@
 package nu.marginalia.coordination;
 
+import com.google.inject.Singleton;
 import nu.marginalia.model.EdgeDomain;
 
 import java.time.Duration;
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+@Singleton
 public class LocalDomainCoordinator implements DomainCoordinator {
     // The locks are stored in a map, with the domain name as the key.  This map will grow
     // relatively big, but should be manageable since the number of domains is limited to

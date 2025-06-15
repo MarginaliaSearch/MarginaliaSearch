@@ -185,12 +185,12 @@ public class PingDao {
         return null;
     }
 
-    public List<UpdateSchedule.UpdateJob<Long, HistoricalAvailabilityData>> getDomainUpdateSchedule(int nodeId) {
-        List<UpdateSchedule.UpdateJob<Long, HistoricalAvailabilityData>> updateJobs = new ArrayList<>();
+    public List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> getDomainUpdateSchedule(int nodeId) {
+        List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> updateJobs = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
-                SELECT ID, NEXT_SCHEDULED_UPDATE
+                SELECT ID, DOMAIN_NAME, NEXT_SCHEDULED_UPDATE
                 FROM EC_DOMAIN
                 LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION
                 ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
@@ -200,11 +200,13 @@ public class PingDao {
             ps.setInt(1, nodeId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                long domainId = rs.getLong("ID");
+                int domainId = rs.getInt("ID");
+                String domainName = rs.getString("DOMAIN_NAME");
                 var ts = rs.getTimestamp("NEXT_SCHEDULED_UPDATE");
                 Instant nextUpdate = ts == null ? Instant.now() : ts.toInstant();
 
-                updateJobs.add(new UpdateSchedule.UpdateJob<>(domainId, nextUpdate));
+                var ref = new DomainReference(domainId, nodeId, domainName.toLowerCase());
+                updateJobs.add(new UpdateSchedule.UpdateJob<>(ref, nextUpdate));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to retrieve domain update schedule", e);
@@ -241,7 +243,7 @@ public class PingDao {
                 else {
                     var record = new DomainDnsRecord(rs);
                     updateJobs.add(new UpdateSchedule.UpdateJob<>(
-                            new RootDomainReference.ById(dnsRootDomainId),
+                            new RootDomainReference.ByIdAndName(dnsRootDomainId, rootDomainName),
                             Objects.requireNonNullElseGet(record.tsNextScheduledUpdate(), Instant::now))
                     );
                 }
