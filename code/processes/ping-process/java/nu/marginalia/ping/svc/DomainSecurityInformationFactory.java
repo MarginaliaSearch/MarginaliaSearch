@@ -14,9 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class DomainSecurityInformationFactory {
     private static final Logger logger = LoggerFactory.getLogger(DomainSecurityInformationFactory.class);
@@ -69,8 +67,11 @@ public class DomainSecurityInformationFactory {
         boolean isWildcard = false;
         try {
             if (sslCertificates != null && sslCertificates.length > 0) {
-                for (var sanEntry : sslCertificates[0].getSubjectAlternativeNames()) {
-
+                Collection<List<?>> sans = sslCertificates[0].getSubjectAlternativeNames();
+                if (sans == null) {
+                    sans = Collections.emptyList();
+                }
+                for (var sanEntry : sans) {
 
                     if (sanEntry != null && sanEntry.size() >= 2) {
                         // Check if the SAN entry is a DNS or IP address
