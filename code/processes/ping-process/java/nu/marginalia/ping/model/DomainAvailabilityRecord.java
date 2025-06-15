@@ -1,5 +1,7 @@
 package nu.marginalia.ping.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javax.annotation.Nullable;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -279,7 +281,7 @@ implements WritableModel
         }
 
         public Builder httpLocation(String httpLocation) {
-            this.httpLocation = httpLocation;
+            this.httpLocation = StringUtils.abbreviate(httpLocation, "...",255);
             return this;
         }
 

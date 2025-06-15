@@ -96,6 +96,7 @@ public class DomainAvailabilityInformationFactory {
                 .serverIp(address != null ? address.getAddress() : null)
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTP)
+                .httpLocation(rsp.headers().getFirst("Location"))
                 .httpStatus(rsp.httpStatus())
                 .errorClassification(errorClassification)
                 .httpResponseTime(rsp.httpResponseTime())
@@ -164,6 +165,7 @@ public class DomainAvailabilityInformationFactory {
                 .serverIp(address != null ? address.getAddress() : null)
                 .serverIpAsn(getAsn(address))
                 .httpSchema(HttpSchema.HTTPS)
+                .httpLocation(rsp.headers().getFirst("Location"))
                 .httpStatus(rsp.httpStatus())
                 .errorClassification(errorClassification)
                 .httpResponseTime(rsp.httpResponseTime()) // Placeholder, actual timing not implemented
