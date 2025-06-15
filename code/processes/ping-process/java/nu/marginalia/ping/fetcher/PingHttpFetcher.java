@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.ping.fetcher.response.*;
+import org.apache.hc.client5.http.HttpHostConnectException;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.Header;
@@ -82,9 +83,12 @@ public class PingHttpFetcher {
             });
         } catch (SocketTimeoutException ex) {
             return new TimeoutResponse(ex.getMessage());
-        } catch (IOException e) {
+        } catch (HttpHostConnectException e) {
             return new ConnectionError(e.getClass().getSimpleName());
+        } catch (IOException e) {
+            return new ProtocolError(e.getClass().getSimpleName());
         }
+
     }
 
 }
