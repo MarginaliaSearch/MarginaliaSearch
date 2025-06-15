@@ -93,9 +93,9 @@ public record SecurityInformationChange(
         SchemaChange schemaChange;
 
         if (beforeIsHttp && afterIsHttp) {
-            schemaChange = SchemaChange.NO_CHANGE;
+            schemaChange = SchemaChange.NONE;
         } else if (beforeIsHttps && afterIsHttps) {
-            schemaChange = SchemaChange.NO_CHANGE;
+            schemaChange = SchemaChange.NONE;
         } else if (beforeIsHttp && afterIsHttps) {
             schemaChange = SchemaChange.HTTP_TO_HTTPS;
         } else if (beforeIsHttps && afterIsHttp) {
