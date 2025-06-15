@@ -145,7 +145,7 @@ public class HttpPingService {
                         domainReference.nodeId(),
                         oldPingStatus,
                         ErrorClassification.HTTP_CLIENT_ERROR,
-                        null);
+                        rsp.errorMessage());
                 newSecurityInformation = null;
             }
             case HttpResponse httpResponse -> {
