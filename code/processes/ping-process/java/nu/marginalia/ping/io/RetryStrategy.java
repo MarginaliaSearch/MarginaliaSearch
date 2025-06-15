@@ -1,5 +1,6 @@
 package nu.marginalia.ping.io;
 
+import org.apache.hc.client5.http.HttpHostConnectException;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
@@ -22,6 +23,7 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
             case SocketTimeoutException ste -> false;
             case SSLException ssle -> false;
             case UnknownHostException uhe -> false;
+            case HttpHostConnectException ex -> executionCount <= 2; // Only retry once for connection errors
             default -> executionCount <= 3;
         };
     }
