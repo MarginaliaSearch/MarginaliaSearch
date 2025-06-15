@@ -332,6 +332,8 @@ public record DomainSecurityRecord(
         private String headerXPoweredBy;
         private Instant tsLastUpdate;
 
+        private static Instant MAX_UNIX_TIMESTAMP = Instant.ofEpochSecond(Integer.MAX_VALUE);
+
         public Builder() {
             // Default values for boolean fields
             this.sslCertWildcard = false;
@@ -375,11 +377,17 @@ public record DomainSecurityRecord(
         }
 
         public Builder sslCertNotBefore(Instant sslCertNotBefore) {
+            if (sslCertNotBefore.isAfter(MAX_UNIX_TIMESTAMP)) {
+                sslCertNotBefore = MAX_UNIX_TIMESTAMP;
+            }
             this.sslCertNotBefore = sslCertNotBefore;
             return this;
         }
 
         public Builder sslCertNotAfter(Instant sslCertNotAfter) {
+            if (sslCertNotAfter.isAfter(MAX_UNIX_TIMESTAMP)) {
+                sslCertNotAfter = MAX_UNIX_TIMESTAMP;
+            }
             this.sslCertNotAfter = sslCertNotAfter;
             return this;
         }
