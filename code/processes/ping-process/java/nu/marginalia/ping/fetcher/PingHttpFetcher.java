@@ -11,6 +11,7 @@ import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -83,7 +84,7 @@ public class PingHttpFetcher {
             });
         } catch (SocketTimeoutException ex) {
             return new TimeoutResponse(ex.getMessage());
-        } catch (HttpHostConnectException e) {
+        } catch (HttpHostConnectException | SSLHandshakeException e) {
             return new ConnectionError(e.getClass().getSimpleName());
         } catch (IOException e) {
             return new ProtocolError(e.getClass().getSimpleName());
