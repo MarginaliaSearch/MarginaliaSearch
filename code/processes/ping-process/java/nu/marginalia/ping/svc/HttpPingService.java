@@ -296,6 +296,7 @@ public class HttpPingService {
                 change.isCertificatePublicKeyChanged(),
                 change.isCertificateSerialNumberChanged(),
                 change.isCertificateIssuerChanged(),
+                change.schemaChange(),
                 change.oldCertificateTimeToExpiry(),
                 change.isSecurityHeadersChanged(),
                 change.isIpAddressChanged(),

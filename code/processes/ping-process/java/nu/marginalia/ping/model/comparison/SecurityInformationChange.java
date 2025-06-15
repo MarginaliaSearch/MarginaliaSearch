@@ -2,6 +2,9 @@ package nu.marginalia.ping.model.comparison;
 
 import nu.marginalia.ping.model.DomainAvailabilityRecord;
 import nu.marginalia.ping.model.DomainSecurityRecord;
+import nu.marginalia.ping.model.HttpSchema;
+import nu.marginalia.ping.model.SchemaChange;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -20,7 +23,8 @@ public record SecurityInformationChange(
         Duration oldCertificateTimeToExpiry,
         boolean isSecurityHeadersChanged,
         boolean isIpAddressChanged,
-        boolean isSoftwareHeaderChanged
+        boolean isSoftwareHeaderChanged,
+        SchemaChange schemaChange
 ) {
     public static SecurityInformationChange between(
             DomainSecurityRecord before, DomainAvailabilityRecord availabilityBefore,
@@ -43,8 +47,9 @@ public record SecurityInformationChange(
         );
 
         boolean securityHeadersChanged = before.securityHeadersHash() != after.securityHeadersHash();
-
         boolean softwareChanged = !Objects.equals(before.headerServer(), after.headerServer());
+
+        SchemaChange schemaChange = getSchemaChange(before, after);
 
         // Note we don't include IP address changes in the overall change status,
         // as this is not alone considered a change in security information; we may have
@@ -55,7 +60,8 @@ public record SecurityInformationChange(
                 || certificateFingerprintChanged
                 || securityHeadersChanged
                 || certificateProfileChanged
-                || softwareChanged;
+                || softwareChanged
+                || schemaChange.isSignificant();
 
         return new SecurityInformationChange(
                 isChanged,
@@ -69,8 +75,35 @@ public record SecurityInformationChange(
                 oldCertificateTimeToExpiry,
                 securityHeadersChanged,
                 ipChanged,
-                softwareChanged
+                softwareChanged,
+                schemaChange
         );
+    }
+
+    private static @NotNull SchemaChange getSchemaChange(DomainSecurityRecord before, DomainSecurityRecord after) {
+        if (before.httpSchema() == null || after.httpSchema() == null) {
+            return SchemaChange.UNKNOWN;
+        }
+
+        boolean beforeIsHttp = before.httpSchema() == HttpSchema.HTTP;
+        boolean afterIsHttp = after.httpSchema() == HttpSchema.HTTP;
+        boolean beforeIsHttps = before.httpSchema() == HttpSchema.HTTPS;
+        boolean afterIsHttps = after.httpSchema() == HttpSchema.HTTPS;
+
+        SchemaChange schemaChange;
+
+        if (beforeIsHttp && afterIsHttp) {
+            schemaChange = SchemaChange.NO_CHANGE;
+        } else if (beforeIsHttps && afterIsHttps) {
+            schemaChange = SchemaChange.NO_CHANGE;
+        } else if (beforeIsHttp && afterIsHttps) {
+            schemaChange = SchemaChange.HTTP_TO_HTTPS;
+        } else if (beforeIsHttps && afterIsHttp) {
+            schemaChange = SchemaChange.HTTPS_TO_HTTP;
+        } else {
+            schemaChange = SchemaChange.UNKNOWN;
+        }
+        return schemaChange;
     }
 
 

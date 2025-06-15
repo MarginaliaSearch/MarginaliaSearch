@@ -320,6 +320,7 @@ class PingDaoTest {
                 true,
                 true,
                 false,
+                SchemaChange.NO_CHANGE,
                 Duration.ofDays(30),
                 false,
                 false,
