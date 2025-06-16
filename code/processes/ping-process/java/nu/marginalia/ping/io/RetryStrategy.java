@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
@@ -23,7 +24,8 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
             case SocketTimeoutException ste -> false;
             case SSLException ssle -> false;
             case UnknownHostException uhe -> false;
-            case HttpHostConnectException ex -> executionCount <= 2; // Only retry once for connection errors
+            case HttpHostConnectException ex -> executionCount < 2;
+            case SocketException ex -> executionCount < 2;
             default -> executionCount <= 3;
         };
     }
