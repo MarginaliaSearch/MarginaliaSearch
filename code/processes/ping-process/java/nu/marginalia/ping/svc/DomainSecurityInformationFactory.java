@@ -4,7 +4,7 @@ import nu.marginalia.ping.fetcher.response.HttpResponse;
 import nu.marginalia.ping.fetcher.response.HttpsResponse;
 import nu.marginalia.ping.model.DomainSecurityRecord;
 import nu.marginalia.ping.model.HttpSchema;
-import nu.marginalia.ping.ssl.PKIXValidationResult;
+import nu.marginalia.ping.ssl.CertificateValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ public class DomainSecurityInformationFactory {
     // HTTPS response
     public DomainSecurityRecord createHttpsSecurityInformation(
             HttpsResponse httpResponse,
-            PKIXValidationResult validationResult,
+            CertificateValidator.ValidationResult validationResult,
             int domainId,
             int nodeId,
             @Nullable Integer asn

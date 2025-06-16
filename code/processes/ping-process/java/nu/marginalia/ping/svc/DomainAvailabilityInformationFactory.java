@@ -9,7 +9,7 @@ import nu.marginalia.ping.fetcher.response.HttpsResponse;
 import nu.marginalia.ping.model.DomainAvailabilityRecord;
 import nu.marginalia.ping.model.ErrorClassification;
 import nu.marginalia.ping.model.HttpSchema;
-import nu.marginalia.ping.ssl.PKIXValidationResult;
+import nu.marginalia.ping.ssl.CertificateValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +124,7 @@ public class DomainAvailabilityInformationFactory {
                                                         int nodeId,
                                                         @Nullable InetAddress address,
                                                         @Nullable DomainAvailabilityRecord previousRecord,
-                                                        PKIXValidationResult validationResult,
+                                                        CertificateValidator.ValidationResult validationResult,
                                                         HttpsResponse rsp) {
         Instant updateTime;
 

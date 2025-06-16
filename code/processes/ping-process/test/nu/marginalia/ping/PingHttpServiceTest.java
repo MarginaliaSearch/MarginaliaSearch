@@ -71,7 +71,7 @@ class PingHttpServiceTest {
                         ),
                 new DomainSecurityInformationFactory());
 
-        var output = pingService.pingDomain(new DomainReference(1, 1, "www.marginalia.nu"), null, null);
+        var output = pingService.pingDomain(new DomainReference(1, 1, "thecavalierclub.co.uk"), null, null);
         for (var model : output) {
             System.out.println(model);
         }

@@ -8,8 +8,7 @@ import nu.marginalia.ping.fetcher.response.*;
 import nu.marginalia.ping.model.*;
 import nu.marginalia.ping.model.comparison.DomainAvailabilityChange;
 import nu.marginalia.ping.model.comparison.SecurityInformationChange;
-import nu.marginalia.ping.ssl.CustomPKIXValidator;
-import nu.marginalia.ping.ssl.PKIXValidationResult;
+import nu.marginalia.ping.ssl.CertificateValidator;
 import nu.marginalia.ping.util.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +31,7 @@ public class HttpPingService {
 
     private final DomainAvailabilityInformationFactory domainAvailabilityInformationFactory;
     private final DomainSecurityInformationFactory domainSecurityInformationFactory;
-
     private static final Logger logger = LoggerFactory.getLogger(HttpPingService.class);
-    CustomPKIXValidator validator;
 
     @Inject
     public HttpPingService(
@@ -46,7 +43,6 @@ public class HttpPingService {
         this.pingHttpFetcher = pingHttpFetcher;
         this.domainAvailabilityInformationFactory = domainAvailabilityInformationFactory;
         this.domainSecurityInformationFactory = domainSecurityInformationFactory;
-        this.validator = new CustomPKIXValidator();
     }
 
     private int compareInetAddresses(InetAddress a, InetAddress b) {
@@ -164,7 +160,11 @@ public class HttpPingService {
                 );
             }
             case HttpsResponse httpsResponse -> {
-                PKIXValidationResult validationResult = validator.validateCertificateChain(domainReference.domainName(), (X509Certificate[]) httpsResponse.sslCertificates());
+                var validationResult = CertificateValidator.validateCertificate(
+                        (X509Certificate[]) httpsResponse.sslCertificates(),
+                        domainReference.domainName(),
+                        true
+                        );
 
                 newPingStatus = domainAvailabilityInformationFactory.createHttpsResponse(
                         domainReference.domainId(),

@@ -1,6 +1,7 @@
 package nu.marginalia.ping.model;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.sql.Connection;
@@ -376,7 +377,7 @@ public record DomainSecurityRecord(
             return this;
         }
 
-        public Builder sslCertNotBefore(Instant sslCertNotBefore) {
+        public Builder sslCertNotBefore(@NotNull Instant sslCertNotBefore) {
             if (sslCertNotBefore.isAfter(MAX_UNIX_TIMESTAMP)) {
                 sslCertNotBefore = MAX_UNIX_TIMESTAMP;
             }
@@ -384,7 +385,7 @@ public record DomainSecurityRecord(
             return this;
         }
 
-        public Builder sslCertNotAfter(Instant sslCertNotAfter) {
+        public Builder sslCertNotAfter(@NotNull Instant sslCertNotAfter) {
             if (sslCertNotAfter.isAfter(MAX_UNIX_TIMESTAMP)) {
                 sslCertNotAfter = MAX_UNIX_TIMESTAMP;
             }
