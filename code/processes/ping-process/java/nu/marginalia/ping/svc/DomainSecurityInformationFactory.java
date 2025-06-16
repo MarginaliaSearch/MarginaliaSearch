@@ -126,6 +126,9 @@ public class DomainSecurityInformationFactory {
                 .sslCertWildcard(isWildcard)
                 .sslCertificateChainLength(sslCertificates.length)
                 .sslCertificateValid(validationResult.isValid())
+                .sslHostValid(validationResult.hostnameValid)
+                .sslChainValid(validationResult.chainValid)
+                .sslDateValid(!validationResult.certificateExpired)
                 .httpVersion(httpResponse.version())
                 .tsLastUpdate(Instant.now())
                 .build();

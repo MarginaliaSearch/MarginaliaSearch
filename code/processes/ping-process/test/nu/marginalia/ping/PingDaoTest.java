@@ -243,6 +243,7 @@ class PingDaoTest {
                 .headerServer("Apache/2.4.41 (Ubuntu)")
                 .headerXPoweredBy("PHP/7.4.3")
                 .tsLastUpdate(Instant.now())
+                .sslHostValid(true)
                 .build();
         var svc = new PingDao(dataSource);
         svc.write(foo);

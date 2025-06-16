@@ -12,16 +12,21 @@ import java.util.*;
 /** Utility class for validating X.509 certificates.
  * This class provides methods to validate certificate chains, check expiration,
  * hostname validity, and revocation status.
+ * <p></p>
+ * This is extremely unsuitable for actual SSL/TLS validation,
+ * and is only to be used in analyzing certificates for fingerprinting
+ * and diagnosing servers!
  */
 public class CertificateValidator {
     public static class ValidationResult {
         public boolean chainValid = false;
         public boolean certificateExpired = false;
         public boolean certificateRevoked = false;
+        public boolean selfSigned = false;
         public boolean hostnameValid = false;
 
         public boolean isValid() {
-            return chainValid && !certificateExpired && !certificateRevoked && hostnameValid;
+            return !selfSigned && !certificateExpired && !certificateRevoked && hostnameValid;
         }
 
         public List<String> errors = new ArrayList<>();
@@ -36,6 +41,7 @@ public class CertificateValidator {
             sb.append("Not Expired: ").append(!certificateExpired ? "✓" : "✗").append("\n");
             sb.append("Not Revoked: ").append(!certificateRevoked ? "✓" : "✗").append("\n");
             sb.append("Hostname Valid: ").append(hostnameValid ? "✓" : "✗").append("\n");
+            sb.append("Self-Signed: ").append(selfSigned ? "✓" : "✗").append("\n");
 
             if (!errors.isEmpty()) {
                 sb.append("\nErrors:\n");
@@ -84,6 +90,8 @@ public class CertificateValidator {
 
         // 2. Check hostname validity
         result.hostnameValid = checkHostname(leafCert, hostname, result);
+
+        result.selfSigned = certChain.length <= 1;
 
         // 3. Check certificate chain validity (with AIA fetching)
         result.chainValid = checkChainValidity(certChain, RootCerts.getTrustAnchors(), result, autoTrustFetchedRoots);

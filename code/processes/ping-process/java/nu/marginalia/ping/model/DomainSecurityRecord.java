@@ -43,7 +43,10 @@ public record DomainSecurityRecord(
         @Nullable String headerXXssProtection,
         @Nullable String headerServer,
         @Nullable String headerXPoweredBy,
-        @Nullable Instant tsLastUpdate
+        @Nullable Instant tsLastUpdate,
+        @Nullable Boolean sslChainValid,
+        @Nullable Boolean sslHostValid,
+        @Nullable Boolean sslDateValid
         )
     implements WritableModel
 {
@@ -103,7 +106,11 @@ public record DomainSecurityRecord(
              rs.getString("DOMAIN_SECURITY_INFORMATION.HEADER_X_XSS_PROTECTION"),
              rs.getString("DOMAIN_SECURITY_INFORMATION.HEADER_SERVER"),
              rs.getString("DOMAIN_SECURITY_INFORMATION.HEADER_X_POWERED_BY"),
-             rs.getObject("DOMAIN_SECURITY_INFORMATION.TS_LAST_UPDATE", Instant.class));
+             rs.getObject("DOMAIN_SECURITY_INFORMATION.TS_LAST_UPDATE", Instant.class),
+             rs.getObject("SSL_CHAIN_VALID", Boolean.class),
+             rs.getObject("SSL_HOST_VALID", Boolean.class),
+             rs.getObject("SSL_DATE_VALID", Boolean.class)
+                );
     }
 
     private static HttpSchema httpSchemaFromString(@Nullable String schema) {
@@ -150,8 +157,11 @@ public record DomainSecurityRecord(
                              header_x_powered_by,
                              ssl_cert_public_key_hash,
                              asn,
-                             ts_last_update)
-                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                             ts_last_update,
+                             ssl_chain_valid,
+                             ssl_host_valid,
+                             ssl_date_valid)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                         """))
         {
             ps.setInt(1, domainId());
@@ -295,6 +305,25 @@ public record DomainSecurityRecord(
             } else {
                 ps.setTimestamp(32, java.sql.Timestamp.from(tsLastUpdate()));
             }
+
+            if (sslChainValid() == null) {
+                ps.setNull(33, java.sql.Types.BOOLEAN);
+            } else {
+                ps.setBoolean(33, sslChainValid());
+            }
+
+            if (sslHostValid() == null) {
+                ps.setNull(34, java.sql.Types.BOOLEAN);
+            } else {
+                ps.setBoolean(34, sslHostValid());
+            }
+
+            if (sslDateValid() == null) {
+                ps.setNull(35, java.sql.Types.BOOLEAN);
+            } else {
+                ps.setBoolean(35, sslDateValid());
+            }
+
             ps.executeUpdate();
         }
     }
@@ -332,6 +361,11 @@ public record DomainSecurityRecord(
         private String headerServer;
         private String headerXPoweredBy;
         private Instant tsLastUpdate;
+
+        private Boolean isCertChainValid;
+        private Boolean isCertHostValid;
+        private Boolean isCertDateValid;
+
 
         private static Instant MAX_UNIX_TIMESTAMP = Instant.ofEpochSecond(Integer.MAX_VALUE);
 
@@ -508,6 +542,21 @@ public record DomainSecurityRecord(
             return this;
         }
 
+        public Builder sslChainValid(@Nullable Boolean isCertChainValid) {
+            this.isCertChainValid = isCertChainValid;
+            return this;
+        }
+
+        public Builder sslHostValid(@Nullable Boolean isCertHostValid) {
+            this.isCertHostValid = isCertHostValid;
+            return this;
+        }
+
+        public Builder sslDateValid(@Nullable Boolean isCertDateValid) {
+            this.isCertDateValid = isCertDateValid;
+            return this;
+        }
+
         public DomainSecurityRecord build() {
             return new DomainSecurityRecord(
                     domainId,
@@ -541,7 +590,10 @@ public record DomainSecurityRecord(
                     headerXXssProtection,
                     headerServer,
                     headerXPoweredBy,
-                    tsLastUpdate
+                    tsLastUpdate,
+                    isCertChainValid,
+                    isCertHostValid,
+                    isCertDateValid
             );
         }
     }
