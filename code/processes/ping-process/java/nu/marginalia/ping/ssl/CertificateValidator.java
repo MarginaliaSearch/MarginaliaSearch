@@ -4,11 +4,7 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.x509.*;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
-import java.security.KeyStore;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -66,32 +62,6 @@ public class CertificateValidator {
         }
     }
 
-    private static final Set<TrustAnchor> trustAnchors = loadDefaultTrustAnchors();
-
-    private static Set<TrustAnchor> loadDefaultTrustAnchors() {
-
-        try {
-            Set<TrustAnchor> trustAnchors = new HashSet<>();
-
-            TrustManagerFactory tmf = TrustManagerFactory
-                    .getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init((KeyStore) null);
-
-            for (TrustManager tm : tmf.getTrustManagers()) {
-                if (tm instanceof X509TrustManager x509tm) {
-                    for (X509Certificate cert : x509tm.getAcceptedIssuers()) {
-                        trustAnchors.add(new TrustAnchor(cert, null));
-                    }
-                }
-            }
-
-            return trustAnchors;
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static ValidationResult validateCertificate(X509Certificate[] certChain,
                                                        String hostname) {
         return validateCertificate(certChain, hostname, false);
@@ -116,7 +86,7 @@ public class CertificateValidator {
         result.hostnameValid = checkHostname(leafCert, hostname, result);
 
         // 3. Check certificate chain validity (with AIA fetching)
-        result.chainValid = checkChainValidity(certChain, trustAnchors, result, autoTrustFetchedRoots);
+        result.chainValid = checkChainValidity(certChain, RootCerts.getTrustAnchors(), result, autoTrustFetchedRoots);
 
         // 4. Check revocation status
         result.certificateRevoked = checkRevocation(leafCert, result);
@@ -200,7 +170,7 @@ public class CertificateValidator {
             }
 
             try {
-                List<X509Certificate> repairedChain = AIACertificateFetcher.buildCompleteChain(originalChain[0]);
+                List<X509Certificate> repairedChain = CertificateFetcher.buildCompleteChain(originalChain[0]);
 
                 if (!repairedChain.isEmpty()) {
 
@@ -397,7 +367,7 @@ public class CertificateValidator {
     private static boolean checkOCSP(X509Certificate cert, ValidationResult result) {
         // For now, just extract OCSP URL and note that we found it
         try {
-            List<String> ocspUrls = AIACertificateFetcher.getOCSPUrls(cert);
+            List<String> ocspUrls = CertificateFetcher.getOCSPUrls(cert);
             if (!ocspUrls.isEmpty()) {
                 result.details.put("ocspUrls", ocspUrls);
                 result.warnings.add("OCSP checking not implemented - found OCSP URLs: " + ocspUrls);

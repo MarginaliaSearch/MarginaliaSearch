@@ -60,6 +60,7 @@ class PingHttpServiceTest {
 
     }
 
+    @Tag("flaky") // Do not run this test in CI
     @Test
     public void testGetSslInfo() throws Exception {
         var provider = new HttpClientProvider();

@@ -13,20 +13,25 @@ import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateFactory;
+import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-public class AIACertificateFetcher {
+public class CertificateFetcher {
 
-    private static final Logger logger = LoggerFactory.getLogger(AIACertificateFetcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(CertificateFetcher.class);
 
     private static HttpClient client = HttpClientBuilder.create()
             .build();
@@ -107,6 +112,27 @@ public class AIACertificateFetcher {
         }
     }
 
+    private static List<X509Certificate> parseMultiplePEM(byte[] data) throws Exception {
+        List<X509Certificate> certificates = new ArrayList<>();
+
+        try (StringReader stringReader = new StringReader(new String(data, StandardCharsets.UTF_8));
+             PEMParser pemParser = new PEMParser(stringReader)) {
+
+            JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
+            Object object;
+
+            while ((object = pemParser.readObject()) != null) {
+                if (object instanceof X509CertificateHolder) {
+                    X509CertificateHolder certHolder = (X509CertificateHolder) object;
+                    certificates.add(converter.getCertificate(certHolder));
+                } else if (object instanceof X509Certificate) {
+                    certificates.add((X509Certificate) object);
+                }
+            }
+        }
+
+        return certificates;
+    }
     private static X509Certificate parseX509(byte[] data) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(data));
@@ -214,5 +240,34 @@ public class AIACertificateFetcher {
         }
 
         return ocspUrls;
+    }
+
+    public static Set<TrustAnchor> getRootCerts(String bundleUrl) throws Exception {
+        ClassicHttpRequest request =  ClassicRequestBuilder.create("GET")
+                .addHeader("User-Agent", WmsaHome.getUserAgent() + " (Certificate Fetcher)")
+                .setUri(bundleUrl)
+                .build();
+
+        byte[] data = client.execute(request, rsp -> {
+            var entity = rsp.getEntity();
+            if (entity == null) {
+                logger.warn("GET request returned no content for {}", bundleUrl);
+                return null;
+            }
+            return entity.getContent().readAllBytes();
+        });
+
+        List<TrustAnchor> anchors = new ArrayList<>();
+        for (var cert : parseMultiplePEM(data)) {
+            try {
+                anchors.add(new TrustAnchor(cert, null));
+            } catch (Exception e) {
+                logger.warn("Failed to create TrustAnchor for certificate: {}", e.getMessage());
+            }
+        }
+
+        logger.info("Loaded {} root certificates from {}", anchors.size(), bundleUrl);
+
+        return Set.copyOf(anchors);
     }
 }
