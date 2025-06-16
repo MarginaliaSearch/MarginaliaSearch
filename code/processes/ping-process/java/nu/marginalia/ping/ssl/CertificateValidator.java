@@ -18,6 +18,9 @@ import java.util.*;
  * and diagnosing servers!
  */
 public class CertificateValidator {
+    // If true, will attempt to fetch missing intermediate certificates via AIA urls.
+    private static final boolean TRY_FETCH_MISSING_CERTS = false;
+
     public static class ValidationResult {
         public boolean chainValid = false;
         public boolean certificateExpired = false;
@@ -91,13 +94,15 @@ public class CertificateValidator {
         // 2. Check hostname validity
         result.hostnameValid = checkHostname(leafCert, hostname, result);
 
+        // 3. Not really checking if it's self-signed, but if the chain is incomplete (and likely self-signed)
         result.selfSigned = certChain.length <= 1;
 
-        // 3. Check certificate chain validity (with AIA fetching)
+        // 4. Check certificate chain validity (optionally with AIA fetching)
         result.chainValid = checkChainValidity(certChain, RootCerts.getTrustAnchors(), result, autoTrustFetchedRoots);
 
-        // 4. Check revocation status
-        result.certificateRevoked = checkRevocation(leafCert, result);
+        // 5. Check revocation status
+        result.certificateRevoked = false; // not implemented
+        // checkRevocation(leafCert, result);
 
         return result;
     }
@@ -175,6 +180,13 @@ public class CertificateValidator {
                 result.details.put("chainLength", originalChain.length);
                 result.details.put("chainExtended", false);
                 return true;
+            }
+
+            else if (!TRY_FETCH_MISSING_CERTS) {
+                result.errors.addAll(originalResult.issues);
+                result.details.put("chainLength", originalChain.length);
+                result.details.put("chainExtended", false);
+                return false;
             }
 
             try {
