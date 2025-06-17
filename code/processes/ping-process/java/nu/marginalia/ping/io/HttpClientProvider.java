@@ -112,7 +112,7 @@ public class HttpClientProvider implements Provider<HttpClient> {
         });
 
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
-                .setCookieSpec(StandardCookieSpec.RELAXED)
+                .setCookieSpec(StandardCookieSpec.IGNORE)
                 .setResponseTimeout(10, TimeUnit.SECONDS)
                 .setConnectionRequestTimeout(5, TimeUnit.MINUTES)
                 .build();
