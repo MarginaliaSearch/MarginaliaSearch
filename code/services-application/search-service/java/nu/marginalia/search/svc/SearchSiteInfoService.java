@@ -248,17 +248,17 @@ public class SearchSiteInfoService {
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             feedItemsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
         }
-        else if (rateLimited) {
-            domainInfoFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
-            similarSetFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
-            linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
-            feedItemsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
-        }
         else if (!domainInfoClient.isAccepting()) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
             feedItemsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
+        }
+        else if (rateLimited) {
+            domainInfoFuture = domainInfoClient.domainInformation(domainId);
+            similarSetFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
+            linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
+            feedItemsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
         }
         else {
             domainInfoFuture = domainInfoClient.domainInformation(domainId);
@@ -293,8 +293,9 @@ public class SearchSiteInfoService {
                 sampleResults
         );
 
-        requestMissingScreenshots(result);
-
+        if (!rateLimited) {
+            requestMissingScreenshots(result);
+        }
         return result;
     }
 
