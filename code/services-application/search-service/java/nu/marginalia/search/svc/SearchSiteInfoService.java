@@ -22,6 +22,7 @@ import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.model.ResultsPage;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
+import nu.marginalia.service.server.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,8 @@ public class SearchSiteInfoService {
 
     private final HikariDataSource dataSource;
     private final SearchSiteSubscriptionService searchSiteSubscriptions;
+
+    private final RateLimiter rateLimiter = RateLimiter.custom(60);
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
@@ -142,6 +145,10 @@ public class SearchSiteInfoService {
         if (null == domainName || domainName.isBlank()) {
             // If we don't get a domain name, we redirect to the /site endpoint
             return new MapModelAndView("redirect.jte", Map.of("url", "/site"));
+        }
+
+        if (!rateLimiter.isAllowed()) {
+            return new MapModelAndView("unavailable.jte", Map.of("message", "Due to aggressive bot scraping, this feature is temporarily unavailable. Please try again later."));
         }
 
         page = Objects.requireNonNullElse(page, 1);
