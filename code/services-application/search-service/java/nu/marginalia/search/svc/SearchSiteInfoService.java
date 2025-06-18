@@ -241,13 +241,14 @@ public class SearchSiteInfoService {
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
         boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
+        boolean rateLimited = !rateLimiter.isAllowed();
         if (domainId < 0) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             feedItemsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
         }
-        else if (!rateLimiter.isAllowed()) {
+        else if (rateLimited) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
@@ -266,7 +267,14 @@ public class SearchSiteInfoService {
             feedItemsFuture = feedsClient.getFeed(domainId);
         }
 
-        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, domainId,5, 1).results;
+        List<UrlDetails> sampleResults;
+        if (rateLimited) {
+            sampleResults = List.of();
+        }
+        else {
+            sampleResults = searchOperator.doSiteSearch(domainName, domainId, 5, 1).results;
+        }
+
         if (!sampleResults.isEmpty()) {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
