@@ -147,10 +147,6 @@ public class SearchSiteInfoService {
             return new MapModelAndView("redirect.jte", Map.of("url", "/site"));
         }
 
-        if (!rateLimiter.isAllowed()) {
-            return new MapModelAndView("unavailable.jte", Map.of("message", "Due to aggressive bot scraping, this feature is temporarily unavailable. Please try again later."));
-        }
-
         page = Objects.requireNonNullElse(page, 1);
         view = Objects.requireNonNullElse(view, "info");
 
@@ -250,6 +246,12 @@ public class SearchSiteInfoService {
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             feedItemsFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
+        }
+        else if (!rateLimiter.isAllowed()) {
+            domainInfoFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
+            similarSetFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
+            linkingDomainsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
+            feedItemsFuture = CompletableFuture.failedFuture(new Exception("Rate limit exceeded"));
         }
         else if (!domainInfoClient.isAccepting()) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
