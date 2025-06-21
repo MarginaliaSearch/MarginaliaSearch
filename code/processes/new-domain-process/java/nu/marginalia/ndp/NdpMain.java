@@ -81,7 +81,7 @@ public class NdpMain extends ProcessMainClass {
             int cnt;
             while ((cnt = domainCount.get()) < toInsertCount) {
                 if (cnt % 100 == 0) {
-                    hb.progress("Discovered Domains", domainCount.get(), cnt);
+                    hb.progress("Discovery Process", cnt, toInsertCount);
                 }
 
                 var nextDomain = domainTestingQueue.next();
