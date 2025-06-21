@@ -69,6 +69,7 @@ include 'code:processes:crawling-process:ft-link-parser'
 include 'code:processes:crawling-process:ft-content-type'
 include 'code:processes:live-crawling-process'
 include 'code:processes:ping-process'
+include 'code:processes:new-domain-process'
 
 include 'code:processes:process-mq-api'
 

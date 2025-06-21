@@ -8,6 +8,7 @@ import nu.marginalia.crawl.CrawlerMain;
 import nu.marginalia.index.IndexConstructorMain;
 import nu.marginalia.livecrawler.LiveCrawlerMain;
 import nu.marginalia.loading.LoaderMain;
+import nu.marginalia.ndp.NdpMain;
 import nu.marginalia.ping.PingMain;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -57,6 +58,7 @@ public class ProcessService {
         CONVERTER(ConverterMain.class),
         LOADER(LoaderMain.class),
         INDEX_CONSTRUCTOR(IndexConstructorMain.class),
+        NDP(NdpMain.class),
         EXPORT_TASKS(ExportTasksMain.class),
         ;
 
@@ -72,6 +74,7 @@ public class ProcessService {
                 case CONVERTER -> "CONVERTER_PROCESS_OPTS";
                 case LOADER -> "LOADER_PROCESS_OPTS";
                 case PING -> "PING_PROCESS_OPTS";
+                case NDP -> "NDP_PROCESS_OPTS";
                 case INDEX_CONSTRUCTOR -> "INDEX_CONSTRUCTION_PROCESS_OPTS";
                 case EXPORT_TASKS -> "EXPORT_TASKS_PROCESS_OPTS";
             };

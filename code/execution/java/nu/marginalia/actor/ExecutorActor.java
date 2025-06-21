@@ -14,6 +14,7 @@ public enum ExecutorActor {
     PROC_CRAWLER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     PROC_PING_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.REALTIME),
     PROC_EXPORT_TASKS_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    PROC_NDP_SPAWNER(NodeProfile.MIXED, NodeProfile.REALTIME),
     ADJACENCY_CALCULATION(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_SEGMENTATION_MODEL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),

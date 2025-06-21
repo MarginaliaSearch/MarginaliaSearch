@@ -1,0 +1,73 @@
+plugins {
+    id 'java'
+
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.ping.PingMain'
+    applicationName = 'ping-process'
+}
+
+tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+    implementation project(':code:common:config')
+    implementation project(':code:common:service')
+
+    implementation project(':code:libraries:domain-lock')
+    implementation project(':code:libraries:geo-ip')
+    implementation project(':code:libraries:message-queue')
+    implementation project(':code:libraries:blocking-thread-pool')
+
+    implementation project(':code:processes:process-mq-api')
+    implementation project(':code:processes:crawling-process:ft-content-type')
+    implementation project(':code:processes:crawling-process:ft-link-parser')
+
+
+    implementation libs.bundles.slf4j
+    implementation libs.notnull
+    implementation libs.guava
+
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation libs.gson
+    implementation libs.zstd
+    implementation libs.bucket4j
+    implementation libs.crawlercommons
+    implementation libs.jsoup
+    implementation libs.fastutil
+    implementation libs.bundles.curator
+    implementation libs.bundles.mariadb
+    implementation libs.bundles.httpcomponents
+    implementation libs.commons.lang3
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+    testImplementation libs.wiremock
+
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation libs.commons.codec
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
+
+    testImplementation project(':code:processes:test-data')
+}
+

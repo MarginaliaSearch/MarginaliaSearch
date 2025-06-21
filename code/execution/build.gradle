@@ -20,6 +20,7 @@ dependencies {
     implementation project(':code:processes:live-crawling-process')
     implementation project(':code:processes:loading-process')
     implementation project(':code:processes:ping-process')
+    implementation project(':code:processes:new-domain-process')
     implementation project(':code:processes:converting-process')
     implementation project(':code:processes:index-constructor-process')
 
@@ -41,7 +42,6 @@ dependencies {
     implementation project(':code:functions:nsfw-domain-filter')
     implementation project(':code:execution:api')
 
-    implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:ft-link-parser')
     implementation project(':code:index:index-journal')
