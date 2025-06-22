@@ -115,9 +115,13 @@ public class CrawlerRetreiver implements AutoCloseable {
                     final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(probedUrl.domain, warcRecorder);
                     final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
+                    if (!robotsRules.isAllowed(probedUrl.toString())) {
+                        warcRecorder.flagAsRobotsTxtError(probedUrl);
+                        yield 1; // Nothing we can do here, we aren't allowed to fetch the root URL
+                    }
                     delayTimer.waitFetchDelay(0); // initial delay after robots.txt
 
-                    DomainStateDb.SummaryRecord summaryRecord = sniffRootDocument(probedUrl, delayTimer);
+                    DomainStateDb.SummaryRecord summaryRecord = sniffRootDocument(probedUrl, robotsRules, delayTimer);
                     domainStateDb.save(summaryRecord);
 
                     if (Thread.interrupted()) {
@@ -270,11 +274,11 @@ public class CrawlerRetreiver implements AutoCloseable {
 
 
 
-    private DomainStateDb.SummaryRecord sniffRootDocument(EdgeUrl rootUrl, CrawlDelayTimer timer) {
+    private DomainStateDb.SummaryRecord sniffRootDocument(EdgeUrl rootUrl, SimpleRobotRules robotsRules, CrawlDelayTimer timer) {
         Optional<String> feedLink = Optional.empty();
 
         try {
-            var url = rootUrl.withPathAndParam("/", null);
+            EdgeUrl url = rootUrl.withPathAndParam("/", null);
 
             HttpFetchResult result = fetcher.fetchContent(url, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
             timer.waitFetchDelay(0);
@@ -331,7 +335,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
 
             if (feedLink.isEmpty()) {
-                feedLink = guessFeedUrl(timer);
+                feedLink = guessFeedUrl(timer, robotsRules);
             }
 
             // Download the sitemap if available
@@ -339,14 +343,18 @@ public class CrawlerRetreiver implements AutoCloseable {
 
             // Grab the favicon if it exists
 
-            if (fetcher.fetchContent(faviconUrl, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED) instanceof HttpFetchResult.ResultOk iconResult) {
-                String contentType = iconResult.header("Content-Type");
-                byte[] iconData = iconResult.getBodyBytes();
+            if (robotsRules.isAllowed(faviconUrl.toString())) {
+                if (fetcher.fetchContent(faviconUrl, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED)
+                        instanceof HttpFetchResult.ResultOk iconResult)
+                {
+                    String contentType = iconResult.header("Content-Type");
+                    byte[] iconData = iconResult.getBodyBytes();
 
-                domainStateDb.saveIcon(
-                        domain,
-                        new DomainStateDb.FaviconRecord(contentType, iconData)
-                );
+                    domainStateDb.saveIcon(
+                            domain,
+                            new DomainStateDb.FaviconRecord(contentType, iconData)
+                    );
+                }
             }
             timer.waitFetchDelay(0);
 
@@ -383,7 +391,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             "blog/rss"
     );
 
-    private Optional<String> guessFeedUrl(CrawlDelayTimer timer) throws InterruptedException {
+    private Optional<String> guessFeedUrl(CrawlDelayTimer timer, SimpleRobotRules robotsRules) throws InterruptedException {
         var oldDomainStateRecord = domainStateDb.getSummary(domain);
 
         // If we are already aware of an old feed URL, then we can just revalidate it
@@ -396,6 +404,9 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         for (String endpoint : likelyFeedEndpoints) {
             String url = "https://" + domain + "/" + endpoint;
+            if (!robotsRules.isAllowed(url)) {
+                continue;
+            }
             if (validateFeedUrl(url, timer)) {
                 return Optional.of(url);
             }
