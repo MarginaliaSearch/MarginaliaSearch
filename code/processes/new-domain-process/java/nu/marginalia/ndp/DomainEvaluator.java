@@ -2,40 +2,41 @@ package nu.marginalia.ndp;
 
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.ndp.io.HttpClientProvider;
-import nu.marginalia.ndp.model.DomainToTest;
 import org.apache.hc.client5.http.classic.HttpClient;
-import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.InputStream;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-
+/**  Evaluates a domain to determine if it is worth indexing.
+ *  This class fetches the root document, checks the response code, content type,
+ *  and parses the HTML to ensure it smells alright.
+ */
+@Singleton
 public class DomainEvaluator {
     private final HttpClient client;
     private final String userAgentString = WmsaHome.getUserAgent().uaString();
 
     private final LinkParser linkParser = new LinkParser();
     private final DomainCoordinator domainCoordinator;
-    sealed interface FetchResult permits FetchSuccess, FetchFailure {}
-    record FetchSuccess(Document content) implements FetchResult {}
-    record FetchFailure(String reason) implements FetchResult {}
 
     @Inject
     public DomainEvaluator(DomainCoordinator domainCoordinator) throws NoSuchAlgorithmException, KeyManagementException {
@@ -43,100 +44,103 @@ public class DomainEvaluator {
         client = HttpClientProvider.createClient();
     }
 
-    public boolean evaluateDomain(DomainToTest domain) throws Exception {
-        var edgeDomain = new EdgeDomain(domain.domainName());
+    public boolean evaluateDomain(String domainName) {
+        var edgeDomain = new EdgeDomain(domainName);
+
+        // Grab a lock on the domain to prevent concurrent evaluations between processes
         try (var lock = domainCoordinator.lockDomain(edgeDomain)) {
-            var result = fetch(domain.domainName());
+            var rootUrl = edgeDomain.toRootUrlHttps();
 
-            Instant start = Instant.now();
+            var request = ClassicRequestBuilder.get(rootUrl.asURI())
+                    .addHeader("User-Agent", userAgentString)
+                    .addHeader("Accept-Encoding", "gzip")
+                    .addHeader("Accept", "text/html,application/xhtml+xml;q=0.9")
+                    .build();
 
-            var ret = switch(result) {
-                case FetchSuccess(Document content) -> validateHtml(content, edgeDomain);
-                case FetchFailure failure -> false;
-            };
+            return client.execute(request, (rsp) -> {
+                if (rsp.getEntity() == null)
+                    return false;
 
-            // Sleep for up to 1 second before we yield the lock to respect rate limits reasonably well
-            Instant end = Instant.now();
-            Duration sleepDuration = Duration.ofSeconds(1).minus(Duration.between(start, end));
+                try {
+                    // Check if the response code indicates a successful fetch
+                    if (200 != rsp.getCode()) {
+                        return false;
+                    }
 
-            if (sleepDuration.isPositive()) {
-                TimeUnit.MILLISECONDS.sleep(sleepDuration.toMillis());
-            }
+                    byte[] content;
+                    // Read the content from the response entity
+                    try (InputStream contentStream = rsp.getEntity().getContent()) {
+                        content = contentStream.readNBytes(8192);
+                    }
 
-            return ret;
+                    // Parse the content (if it's valid)
+                    ContentType contentType = ContentType.parse(rsp.getEntity().getContentType());
+
+                    // Validate the content type
+                    if (!contentType.contentType().startsWith("text/html") && !contentType.contentType().startsWith("application/xhtml+xml"))
+                        return false;
+
+                    // Parse the document body to a Jsoup Document
+                    final Document document = Jsoup.parse(DocumentBodyToString.getStringData(contentType, content));
+                    final String text = document.body().text();
+
+                    if (text.length() < 100)
+                        return false;
+                    if (text.contains("404 Not Found") || text.contains("Page not found"))
+                        return false;
+                    if (hasMetaRefresh(document))
+                        return false; // This almost always indicates a parked domain
+                    if (!hasInternalLink(document, edgeDomain, rootUrl))
+                        return false; // No internal links means it's not worth indexing
+
+                    return true;
+                }
+                catch (Exception e) {
+                    return false;
+                }
+                finally {
+                    // May or may not be necessary, but let's ensure we clean up the response entity
+                    // to avoid resource leaks
+                    EntityUtils.consumeQuietly(rsp.getEntity());
+
+                    // Sleep for a while before yielding the lock, to avoid immediately hammering the domain
+                    // from another process
+                    sleepQuietly(Duration.ofSeconds(1));
+                }
+            });
+        }
+        catch (Exception ex) {
+            return false; // If we fail to fetch or parse the domain, we consider it invalid
         }
     }
 
-    private boolean validateHtml(Document content, EdgeDomain domain) {
-        var rootUrl = domain.toRootUrlHttps();
-        var text = content.body().text();
+    private boolean hasInternalLink(Document document, EdgeDomain currentDomain, EdgeUrl rootUrl) {
+        for (Element atag : document.select("a")) {
+            Optional<EdgeDomain> destDomain = linkParser
+                    .parseLink(rootUrl, atag)
+                    .map(EdgeUrl::getDomain);
 
-        if (text.length() < 100) {
-            return false; // Too short to be a valid page
+            if (destDomain.isPresent() && Objects.equals(currentDomain, destDomain.get()))
+                return true;
         }
-
-        if (text.contains("404 Not Found") || text.contains("Page not found")) {
-            return false; // Common indicators of a 404 page
-        }
-
-        for (var metaTag : content.select("meta")) {
-            if ("refresh".equalsIgnoreCase(metaTag.attr("http-equiv"))) {
-                return false; // Page has a refresh tag, very likely a parked domain
-            }
-        }
-
-        boolean hasInternalLink = false;
-
-        for (var atag : content.select("a")) {
-            var link = linkParser.parseLink(rootUrl, atag);
-            if (link.isEmpty()) {
-                continue; // Skip invalid links
-            }
-            var edgeUrl = link.get();
-            if (Objects.equals(domain, edgeUrl.getDomain())) {
-                hasInternalLink = true;
-            }
-        }
-
-        return hasInternalLink;
+        return false;
     }
 
-    private FetchResult fetch(String domain) throws URISyntaxException {
-        var uri = new URI("https://" + domain + "/");
+    private boolean hasMetaRefresh(Document document) {
+        for (Element metaTag : document.select("meta")) {
+            if ("refresh".equalsIgnoreCase(metaTag.attr("http-equiv")))
+                return true;
+        }
+        return false;
+    }
 
-        var request = ClassicRequestBuilder.get(uri)
-                .addHeader("User-Agent", userAgentString)
-                .addHeader("Accept-Encoding", "gzip")
-                .addHeader("Accept", "text/html,application/xhtml+xml;q=0.9")
-                .build();
-
+    private void sleepQuietly(Duration duration) {
         try {
-            return client.execute(request, (rsp) -> responseHandler(rsp, domain));
-        } catch (Exception e) {
-            return new FetchFailure("Failed to fetch domain: " + e.getMessage());
+            TimeUnit.MILLISECONDS.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private FetchResult responseHandler(ClassicHttpResponse rsp, String domain) {
-        if (rsp.getEntity() == null)
-            return new FetchFailure("No content returned from " + domain);
-
-        try {
-            int code = rsp.getCode();
-            byte[] content = rsp.getEntity().getContent().readAllBytes();
-
-            if (code >= 300) {
-                return new FetchFailure("Received HTTP " + code + " from " + domain);
-            }
-
-            ContentType contentType = ContentType.parse(rsp.getEntity().getContentType());
-            var html = DocumentBodyToString.getStringData(contentType, content);
-            return new FetchSuccess(Jsoup.parse(html));
-        }
-        catch (Exception e) {
-            EntityUtils.consumeQuietly(rsp.getEntity());
-            return new FetchFailure("Failed to read content from " + domain + ": " + e.getMessage());
-        }
-    }
 
 }

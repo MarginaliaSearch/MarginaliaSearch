@@ -16,6 +16,9 @@ public class DomainNodeAllocator {
 
     private final NodeConfigurationService nodeConfigurationService;
     private final HikariDataSource dataSource;
+    private final PriorityQueue<NodeCount> countPerNode = new PriorityQueue<>();
+
+    private volatile boolean initialized = false;
 
     private record NodeCount(int nodeId, int count)
         implements Comparable<NodeCount>
@@ -30,8 +33,6 @@ public class DomainNodeAllocator {
         }
     }
 
-    private final PriorityQueue<NodeCount> countPerNode = new PriorityQueue<>();
-    volatile boolean initialized = false;
 
     @Inject
     public DomainNodeAllocator(NodeConfigurationService nodeConfigurationService, HikariDataSource dataSource) {
@@ -41,6 +42,43 @@ public class DomainNodeAllocator {
         Thread.ofPlatform()
                 .name("DomainNodeAllocator::initialize()")
                 .start(this::initialize);
+    }
+
+    public synchronized int totalCount() {
+        ensureInitialized();
+        return countPerNode.stream().mapToInt(NodeCount::count).sum();
+    }
+
+    /** Returns the next node ID to assign a domain to.
+     * This method is synchronized to ensure thread safety when multiple threads are allocating domains.
+     * The node ID returned is guaranteed to be one of the viable nodes configured in the system.
+     */
+    public synchronized int nextNodeId() {
+        ensureInitialized();
+
+        // Synchronized is fine here as this is not a hot path
+        // (and PriorityBlockingQueue won't help since we're re-adding the same element with a new count all the time)
+
+        NodeCount allocation = countPerNode.remove();
+        countPerNode.add(allocation.incrementCount());
+        return allocation.nodeId();
+    }
+
+
+    private void ensureInitialized() {
+        if (initialized) return;
+
+        synchronized (this) {
+            while (!initialized) {
+                try {
+                    // Wait until the initialization is complete
+                    this.wait(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("DomainAllocator initialization interrupted", e);
+                }
+            }
+        }
     }
 
 
@@ -89,39 +127,5 @@ public class DomainNodeAllocator {
         initialized = true;
     }
 
-    private void ensureInitialized() {
-        if (initialized) return;
 
-        synchronized (this) {
-            while (!initialized) {
-                try {
-                    // Wait until the initialization is complete
-                    this.wait(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException("DomainAllocator initialization interrupted", e);
-                }
-            }
-        }
-    }
-
-    public synchronized int totalCount() {
-        ensureInitialized();
-        return countPerNode.stream().mapToInt(NodeCount::count).sum();
-    }
-
-    /** Returns the next node ID to assign a domain to.
-     * This method is synchronized to ensure thread safety when multiple threads are allocating domains.
-     * The node ID returned is guaranteed to be one of the viable nodes configured in the system.
-     */
-    public synchronized int nextNodeId() {
-        ensureInitialized();
-
-        // Synchronized is fine here as this is not a hot path
-        // (and PriorityBlockingQueue won't help since we're re-adding the same element with a new count all the time)
-
-        NodeCount allocation = countPerNode.remove();
-        countPerNode.add(allocation.incrementCount());
-        return allocation.nodeId();
-    }
 }

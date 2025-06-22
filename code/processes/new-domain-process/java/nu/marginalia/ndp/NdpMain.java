@@ -84,8 +84,23 @@ public class NdpMain extends ProcessMainClass {
                     hb.progress("Discovery Process", cnt, toInsertCount);
                 }
 
-                var nextDomain = domainTestingQueue.next();
-                threadPool.submit(() -> evaluateDomain(nextDomain));
+                final DomainToTest nextDomain = domainTestingQueue.next();
+                threadPool.submit(() -> {
+                    try {
+                        if (domainEvaluator.evaluateDomain(nextDomain.domainName())) {
+                            logger.info("Accepting: {}", nextDomain.domainName());
+                            domainCount.incrementAndGet();
+                            domainTestingQueue.accept(nextDomain, domainNodeAllocator.nextNodeId());
+                        } else {
+                            logger.info("Rejecting: {}", nextDomain.domainName());
+                            domainTestingQueue.reject(nextDomain);
+                        }
+                    }
+                    catch (Exception e) {
+                        domainTestingQueue.reject(nextDomain);
+                        logger.error("Error evaluating domain: " + nextDomain.domainId(), e);
+                    }
+                });
             }
         }
 
@@ -95,24 +110,6 @@ public class NdpMain extends ProcessMainClass {
 
         logger.info("NDP process completed. Total domains processed: " + domainCount.get());
 
-    }
-
-
-    private void evaluateDomain(DomainToTest nextDomain) {
-        try {
-            if (domainEvaluator.evaluateDomain(nextDomain)) {
-                logger.info("Accepting: {}", nextDomain.domainName());
-                domainCount.incrementAndGet();
-                domainTestingQueue.accept(nextDomain, domainNodeAllocator.nextNodeId());
-            } else {
-                logger.info("Rejecting: {}", nextDomain.domainName());
-                domainTestingQueue.reject(nextDomain);
-            }
-        }
-        catch (Exception e) {
-            domainTestingQueue.reject(nextDomain);
-            logger.error("Error evaluating domain: " + nextDomain.domainId(), e);
-        }
     }
 
     public static void main(String[] args) throws Exception {

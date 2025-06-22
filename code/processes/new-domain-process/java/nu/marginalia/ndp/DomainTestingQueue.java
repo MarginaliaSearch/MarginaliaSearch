@@ -13,7 +13,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DomainTestingQueue {
-    private final ArrayBlockingQueue<DomainToTest> queue = new ArrayBlockingQueue<>(1000);
+    private static Logger logger = LoggerFactory.getLogger(DomainTestingQueue.class);
+
+    private final ArrayBlockingQueue<DomainToTest> queue = new ArrayBlockingQueue<>(2);
 
     // This will grow quite large, but should be manageable in memory, as theoretical maximum is around 100M domains,
     // order of 2 GB in memory.
@@ -21,7 +23,6 @@ public class DomainTestingQueue {
 
     private final HikariDataSource dataSource;
 
-    private static Logger logger = LoggerFactory.getLogger(DomainTestingQueue.class);
 
     @Inject
     public DomainTestingQueue(HikariDataSource dataSource) {
