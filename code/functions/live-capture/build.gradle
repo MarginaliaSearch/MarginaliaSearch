@@ -35,6 +35,7 @@ dependencies {
     implementation libs.bundles.slf4j
     implementation libs.commons.lang3
     implementation libs.commons.io
+    implementation libs.httpclient
     implementation libs.wiremock
 
     implementation libs.prometheus

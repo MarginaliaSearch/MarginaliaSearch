@@ -5,6 +5,8 @@ import com.google.inject.Guice;
 import com.google.inject.name.Names;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.coordination.DomainCoordinator;
+import nu.marginalia.coordination.LocalDomainCoordinator;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.rss.db.FeedDb;
 import nu.marginalia.rss.model.FeedItems;
@@ -82,6 +84,7 @@ class FeedFetcherServiceTest extends AbstractModule {
     }
 
     public void configure() {
+        bind(DomainCoordinator.class).to(LocalDomainCoordinator.class);
         bind(HikariDataSource.class).toInstance(dataSource);
         bind(ServiceRegistryIf.class).toInstance(Mockito.mock(ServiceRegistryIf.class));
         bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(ServiceId.Executor, 1, "", "", 0, UUID.randomUUID()));
