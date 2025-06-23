@@ -20,9 +20,7 @@ public enum NodeProfile {
     }
 
     public boolean permitBatchCrawl() {
-        return isBatchCrawl() ||isMixed();
+        return isBatchCrawl() || isMixed();
     }
-    public boolean permitSideload() {
-        return isMixed() || isSideload();
-    }
+    public boolean permitSideload() {  return isSideload() || isMixed(); }
 }
