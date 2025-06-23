@@ -5,6 +5,7 @@ public record NodeConfiguration(int node,
                                 boolean acceptQueries,
                                 boolean autoClean,
                                 boolean includeInPrecession,
+                                boolean autoAssignDomains,
                                 boolean keepWarcs,
                                 NodeProfile profile,
                                 boolean disabled

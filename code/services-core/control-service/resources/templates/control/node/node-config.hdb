@@ -67,12 +67,22 @@
             </div>
 
             <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="autoAssignDomains" {{#if config.autoAssignDomains}}checked{{/if}}>
+                <label class="form-check-label" for="autoClean">Auto-Assign Domains</label>
+
+                <div class="form-text">If true, the New Domain Process will assign new domains to this node and all other nodes with this setting enabled.
+                                       This is the default behavior, but can be overridden if you want one node with a specific manual domain assignment.
+                                       </div>
+            </div>
+
+<!--  This is not currently used, but may be in the future
+            <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" name="includeInPrecession" {{#if config.includeInPrecession}}checked{{/if}}>
                 <label class="form-check-label" for="includeInPrecession">Include in crawling precession</label>
 
                 <div class="form-text">If true, this node will be included in the crawling precession.</div>
             </div>
-
+-->
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" name="keepWarcs" {{#if config.keepWarcs}}checked{{/if}}>
                 <label class="form-check-label" for="includeInPrecession">Keep WARC files during crawling</label>

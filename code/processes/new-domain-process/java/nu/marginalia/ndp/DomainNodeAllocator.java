@@ -91,6 +91,9 @@ public class DomainNodeAllocator {
         for (var node : nodeConfigurationService.getAll()) {
             if (node.disabled())
                 continue;
+            if (!node.autoAssignDomains())
+                continue;
+
             if (node.profile().permitBatchCrawl())
                 viableNodes.add(node.node());
         }

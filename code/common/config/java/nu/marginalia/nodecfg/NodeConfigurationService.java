@@ -45,7 +45,7 @@ public class NodeConfigurationService {
     public List<NodeConfiguration> getAll() {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, NODE_PROFILE, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, AUTO_ASSIGN_DOMAINS, KEEP_WARCS, NODE_PROFILE, DISABLED
                      FROM NODE_CONFIGURATION
                      """)) {
             var rs = qs.executeQuery();
@@ -59,6 +59,7 @@ public class NodeConfigurationService {
                         rs.getBoolean("ACCEPT_QUERIES"),
                         rs.getBoolean("AUTO_CLEAN"),
                         rs.getBoolean("PRECESSION"),
+                        rs.getBoolean("AUTO_ASSIGN_DOMAINS"),
                         rs.getBoolean("KEEP_WARCS"),
                         NodeProfile.valueOf(rs.getString("NODE_PROFILE")),
                         rs.getBoolean("DISABLED")
@@ -75,7 +76,7 @@ public class NodeConfigurationService {
     public NodeConfiguration get(int nodeId) throws SQLException {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, NODE_PROFILE, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, AUTO_ASSIGN_DOMAINS, KEEP_WARCS, NODE_PROFILE, DISABLED
                      FROM NODE_CONFIGURATION
                      WHERE ID=?
                      """)) {
@@ -88,6 +89,7 @@ public class NodeConfigurationService {
                         rs.getBoolean("ACCEPT_QUERIES"),
                         rs.getBoolean("AUTO_CLEAN"),
                         rs.getBoolean("PRECESSION"),
+                        rs.getBoolean("AUTO_ASSIGN_DOMAINS"),
                         rs.getBoolean("KEEP_WARCS"),
                         NodeProfile.valueOf(rs.getString("NODE_PROFILE")),
                         rs.getBoolean("DISABLED")
@@ -102,7 +104,7 @@ public class NodeConfigurationService {
         try (var conn = dataSource.getConnection();
              var us = conn.prepareStatement("""
                      UPDATE NODE_CONFIGURATION
-                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, KEEP_WARCS=?, DISABLED=?, NODE_PROFILE=?
+                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, AUTO_ASSIGN_DOMAINS=?, KEEP_WARCS=?, DISABLED=?, NODE_PROFILE=?
                      WHERE ID=?
                      """))
         {
@@ -110,10 +112,11 @@ public class NodeConfigurationService {
             us.setBoolean(2, config.acceptQueries());
             us.setBoolean(3, config.autoClean());
             us.setBoolean(4, config.includeInPrecession());
-            us.setBoolean(5, config.keepWarcs());
-            us.setBoolean(6, config.disabled());
-            us.setString(7, config.profile().name());
-            us.setInt(8, config.node());
+            us.setBoolean(5, config.autoAssignDomains());
+            us.setBoolean(6, config.keepWarcs());
+            us.setBoolean(7, config.disabled());
+            us.setString(8, config.profile().name());
+            us.setInt(9, config.node());
 
             if (us.executeUpdate() <= 0)
                 throw new IllegalStateException("Failed to update configuration");

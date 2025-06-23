@@ -280,6 +280,7 @@ public class ControlNodeService {
                     "on".equalsIgnoreCase(request.queryParams("autoClean")),
                     "on".equalsIgnoreCase(request.queryParams("includeInPrecession")),
                     "on".equalsIgnoreCase(request.queryParams("keepWarcs")),
+                    "on".equalsIgnoreCase(request.queryParams("autoAssignDomains")),
                     NodeProfile.valueOf(request.queryParams("profile")),
                     "on".equalsIgnoreCase(request.queryParams("disabled"))
             );
