@@ -50,6 +50,7 @@ dependencies {
 
     implementation libs.notnull
     implementation libs.guava
+    implementation libs.httpclient
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }

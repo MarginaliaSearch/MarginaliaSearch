@@ -15,6 +15,7 @@ import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.io.SerializableCrawlDataStream;
+import nu.marginalia.livecrawler.io.HttpClientProvider;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
@@ -32,12 +33,15 @@ import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import org.apache.commons.io.FileUtils;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.io.CloseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Security;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -74,7 +78,9 @@ public class LiveCrawlerMain extends ProcessMainClass {
                            DomainProcessor domainProcessor,
                            FileStorageService fileStorageService,
                            KeywordLoaderService keywordLoaderService,
-                           DocumentLoaderService documentLoaderService, DomainCoordinator domainCoordinator, HikariDataSource dataSource)
+                           DocumentLoaderService documentLoaderService,
+                           DomainCoordinator domainCoordinator,
+                           HikariDataSource dataSource)
             throws Exception
     {
         super(messageQueueFactory, config, gson, LIVE_CRAWLER_INBOX);
@@ -148,7 +154,10 @@ public class LiveCrawlerMain extends ProcessMainClass {
     }
 
     private void run() throws Exception {
-        Path basePath = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE).asPath().resolve("live-crawl-data");
+        Path basePath = fileStorageService
+                .getStorageBase(FileStorageBaseType.STORAGE)
+                .asPath()
+                .resolve("live-crawl-data");
 
         if (!Files.isDirectory(basePath)) {
             Files.createDirectories(basePath);
@@ -163,6 +172,10 @@ public class LiveCrawlerMain extends ProcessMainClass {
         {
             final Instant cutoff = Instant.now().minus(60, ChronoUnit.DAYS);
 
+            /* ------------------------------------------------ */
+            /* Fetch the latest domains from the feeds database */
+            /* ------------------------------------------------ */
+
             processHeartbeat.progress(LiveCrawlState.FETCH_LINKS);
 
             Map<String, List<String>> urlsPerDomain = new HashMap<>(10_000);
@@ -173,14 +186,24 @@ public class LiveCrawlerMain extends ProcessMainClass {
 
             logger.info("Fetched data for {} domains", urlsPerDomain.size());
 
+
+            /* ------------------------------------- */
+            /* Prune the database from old entries   */
+            /* ------------------------------------- */
+
             processHeartbeat.progress(LiveCrawlState.PRUNE_DB);
 
-            // Remove data that is too old
             dataSet.prune(cutoff);
+
+
+            /* ------------------------------------- */
+            /* Fetch the links for each domain       */
+            /* ------------------------------------- */
 
             processHeartbeat.progress(LiveCrawlState.CRAWLING);
 
-            try (SimpleLinkScraper fetcher = new SimpleLinkScraper(dataSet, domainCoordinator, domainQueries, domainBlacklist);
+            CloseableHttpClient client = HttpClientProvider.createClient();
+            try (SimpleLinkScraper fetcher = new SimpleLinkScraper(dataSet, domainCoordinator, domainQueries, client, domainBlacklist);
                  var hb = heartbeat.createAdHocTaskHeartbeat("Live Crawling"))
             {
                 for (Map.Entry<String, List<String>> entry : hb.wrap("Fetching", urlsPerDomain.entrySet())) {
@@ -193,18 +216,29 @@ public class LiveCrawlerMain extends ProcessMainClass {
                     fetcher.scheduleRetrieval(domain, urls);
                 }
             }
+            finally {
+                client.close(CloseMode.GRACEFUL);
+            }
 
             Path tempPath = dataSet.createWorkDir();
 
+
             try {
+                /* ------------------------------------- */
+                /* Process the fetched links             */
+                /* ------------------------------------- */
+
                 processHeartbeat.progress(LiveCrawlState.PROCESSING);
 
                 try (var hb = heartbeat.createAdHocTaskHeartbeat("Processing");
                      var writer = new ConverterBatchWriter(tempPath, 0)
                 ) {
-                    // Offset the documents' ordinals toward the upper range, to avoid an ID collisions with the
-                    // main indexes (the maximum permissible for doc ordinal is  value is 67_108_863, so this
-                    // leaves us with a lot of headroom still)
+                    // We need unique document ids that do not collide with the document id from the main index,
+                    // so we offset the documents' ordinals toward the upper range.
+                    //
+                    // The maximum permissible for doc ordinal is value is 67_108_863,
+                    // so this leaves us with a lot of headroom still!
+                    // Expected document count here is order of 10 :^)
                     writer.setOrdinalOffset(67_000_000);
 
                     for (SerializableCrawlDataStream stream : hb.wrap("Processing", dataSet.getDataStreams())) {
@@ -212,10 +246,15 @@ public class LiveCrawlerMain extends ProcessMainClass {
                     }
                 }
 
+
+                /* ---------------------------------------------- */
+                /* Load the processed data into the link database */
+                /* and construct an index journal for the docs    */
+                /* ---------------------------------------------- */
+
                 processHeartbeat.progress(LiveCrawlState.LOADING);
 
                 LoaderInputData lid = new LoaderInputData(tempPath, 1);
-
                 DomainIdRegistry domainIdRegistry = new DbDomainIdRegistry(dataSource);
 
                 keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, lid);
@@ -227,9 +266,16 @@ public class LiveCrawlerMain extends ProcessMainClass {
                 FileUtils.deleteDirectory(tempPath.toFile());
             }
 
-            // Construct the index
+
+            /* ------------------------------------- */
+            /*  Finish up                            */
+            /* ------------------------------------- */
 
             processHeartbeat.progress(LiveCrawlState.DONE);
+
+            // After we return from here, the LiveCrawlActor will trigger an index construction
+            // job.  Unlike all the stuff we did in this process, it's identical to the real job
+            // so we don't need to do anything special from this process
         }
     }
 
