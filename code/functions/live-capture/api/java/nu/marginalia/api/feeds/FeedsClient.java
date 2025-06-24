@@ -11,6 +11,7 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 import javax.annotation.CheckReturnValue;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,11 @@ public class FeedsClient {
                 .run(RpcUpdatedLinksRequest.newBuilder().setSinceEpochMillis(since.toEpochMilli()).build())
                 .forEachRemaining(rsp -> consumer.accept(rsp.getDomain(), new ArrayList<>(rsp.getUrlList())));
     }
+
+    public boolean waitReady(Duration duration) throws InterruptedException {
+        return channelPool.awaitChannel(duration);
+    }
+
 
     /** Get the hash of the feed data, for identifying when the data has been updated */
     public String getFeedDataHash() {

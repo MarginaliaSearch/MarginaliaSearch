@@ -166,6 +166,9 @@ public class LiveCrawlerMain extends ProcessMainClass {
             processHeartbeat.progress(LiveCrawlState.FETCH_LINKS);
 
             Map<String, List<String>> urlsPerDomain = new HashMap<>(10_000);
+            if (!feedsClient.waitReady(Duration.ofHours(1))) {
+                throw new RuntimeException("Feeds client never became ready, cannot proceed with live crawling");
+            }
             feedsClient.getUpdatedDomains(cutoff, urlsPerDomain::put);
 
             logger.info("Fetched data for {} domains", urlsPerDomain.size());
