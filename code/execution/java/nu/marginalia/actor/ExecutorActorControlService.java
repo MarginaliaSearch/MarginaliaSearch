@@ -113,7 +113,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.UPDATE_RSS, updateRssActor);
 
         register(ExecutorActor.MIGRATE_CRAWL_DATA, migrateCrawlDataActor);
-        register(ExecutorActor.SYNC_NSFW_LISTS, updateNsfwFiltersActor);
+        register(ExecutorActor.UPDATE_NSFW_LISTS, updateNsfwFiltersActor);
 
         if (serviceConfiguration.node() == 1) {
             register(ExecutorActor.PREC_EXPORT_ALL, exportAllPrecessionActor);

@@ -44,7 +44,6 @@ public class LiveCrawlActor extends RecordActorPrototype {
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
-        logger.info("{}", self);
         return switch (self) {
             case Initial() -> {
                 yield new Monitor("-");

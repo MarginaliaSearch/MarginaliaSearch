@@ -9,6 +9,7 @@ import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.executor.upload.UploadDirItem;
 import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
@@ -25,26 +26,36 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 
 import static nu.marginalia.functions.execution.api.ExecutorApiGrpc.ExecutorApiBlockingStub;
 
 @Singleton
 public class ExecutorClient {
+    private final MqPersistence persistence;
     private final GrpcMultiNodeChannelPool<ExecutorApiBlockingStub> channelPool;
     private static final Logger logger = LoggerFactory.getLogger(ExecutorClient.class);
     private final ServiceRegistryIf registry;
 
     @Inject
     public ExecutorClient(ServiceRegistryIf registry,
+                          MqPersistence persistence,
                           GrpcChannelPoolFactory grpcChannelPoolFactory)
     {
         this.registry = registry;
+        this.persistence = persistence;
         this.channelPool = grpcChannelPoolFactory
                 .createMulti(
                         ServiceKey.forGrpcApi(ExecutorApiGrpc.class, ServicePartition.multi()),
                         ExecutorApiGrpc::newBlockingStub);
     }
+
+    private long createTrackingTokenMsg(String task, int node, Duration ttl) throws Exception {
+        return persistence.sendNewMessage("task-tracking[" + node + "]", "export-client", null, task, "", ttl);
+    }
+
+
 
     public void startFsm(int node, String actorName) {
         channelPool.call(ExecutorApiBlockingStub::startFsm)
@@ -94,6 +105,16 @@ public class ExecutorClient {
                 .run(RpcFileStorageId.newBuilder()
                         .setFileStorageId(toLoad.id())
                         .build());
+    }
+
+    public long updateNsfwFilters() throws Exception {
+        long msgId = createTrackingTokenMsg("nsfw-filters", 1, Duration.ofHours(6));
+
+        channelPool.call(ExecutorApiBlockingStub::updateNsfwFilters)
+                .forNode(1)
+                .run(RpcUpdateNsfwFilters.newBuilder().setMsgId(msgId).build());
+
+        return msgId;
     }
 
     public ActorRunStates getActorStates(int node) {

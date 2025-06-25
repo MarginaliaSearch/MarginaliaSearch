@@ -74,6 +74,8 @@ public class ControlSysActionsService {
             Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
             Spark.post("/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
             Spark.post("/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
+
+            Spark.post("/actions/update-nsfw-filters", this::updateNsfwFilters, Redirects.redirectToOverview);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -128,6 +130,14 @@ public class ControlSysActionsService {
         eventLog.logEvent("USER-ACTION", "RELOAD-BLOGS-LIST");
 
         domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
+
+        return "";
+    }
+
+    public Object updateNsfwFilters(Request request, Response response) throws Exception {
+        eventLog.logEvent("USER-ACTION", "UPDATE-NSFW-FILTERS");
+
+        executorClient.updateNsfwFilters();
 
         return "";
     }

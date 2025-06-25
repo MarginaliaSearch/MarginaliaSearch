@@ -10,6 +10,7 @@ import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.actor.task.DownloadSampleActor;
 import nu.marginalia.actor.task.RestoreBackupActor;
 import nu.marginalia.actor.task.TriggerAdjacencyCalculationActor;
+import nu.marginalia.actor.task.UpdateNsfwFiltersActor;
 import nu.marginalia.functions.execution.api.*;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
@@ -263,4 +264,19 @@ public class ExecutorGrpcService
         System.exit(0);
     }
 
+    @Override
+    public void updateNsfwFilters(RpcUpdateNsfwFilters request, StreamObserver<Empty> responseObserver) {
+        logger.info("Got request {}", request);
+        try {
+            actorControlService.startFrom(ExecutorActor.UPDATE_NSFW_LISTS,
+                    new UpdateNsfwFiltersActor.Initial(request.getMsgId()));
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            logger.error("Failed to update nsfw filters", e);
+            responseObserver.onError(e);
+        }
+    }
 }

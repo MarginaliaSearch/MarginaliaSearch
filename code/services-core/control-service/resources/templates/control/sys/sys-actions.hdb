@@ -58,6 +58,31 @@
                 <button class="accordion-button collapsed"
                         type="button"
                         data-bs-toggle="collapse"
+                        data-bs-target="#collapseNsfwFilters"
+                        aria-expanded="false"
+                        aria-controls="collapseNsfwFilters">
+                    Update NSFW Filters Definitions
+                </button>
+            </h2>
+            <div id="collapseNsfwFilters" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <div class="mb-3">
+                    This will fetch NSFW filter definitions.
+                </div>
+                <form method="post" action="actions/update-nsfw-filters">
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm update NSFW filters');"
+                            type="submit">
+                        Update NSFW Filter</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
                         data-bs-target="#collapseCalculateExportAll"
                         aria-expanded="false"
                         aria-controls="collapseCalculateExportAll">

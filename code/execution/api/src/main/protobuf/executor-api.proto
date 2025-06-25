@@ -18,6 +18,8 @@ service ExecutorApi {
   rpc calculateAdjacencies(Empty) returns (Empty) {}
   rpc restoreBackup(RpcFileStorageId) returns (Empty) {}
 
+  rpc updateNsfwFilters(RpcUpdateNsfwFilters) returns (Empty) {}
+
   rpc restartExecutorService(Empty) returns (Empty) {}
 }
 
@@ -65,6 +67,9 @@ message RpcFileStorageId {
 message RpcExportRequest {
   int64 fileStorageId = 1;
   int64 msgId = 2;
+}
+message RpcUpdateNsfwFilters {
+  int64 msgId = 1;
 }
 message RpcFileStorageIdWithDomainName {
   int64 fileStorageId = 1;

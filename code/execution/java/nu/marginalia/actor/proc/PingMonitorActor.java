@@ -25,6 +25,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+
+// Unlike other monitor actors, the ping monitor will not merely wait for a request
+// to be sent, but send one itself,  hence we can't extend AbstractProcessSpawnerActor
+// but have to reimplement a lot of the same logic ourselves.
 @Singleton
 public class PingMonitorActor extends RecordActorPrototype {
 
@@ -53,7 +57,6 @@ public class PingMonitorActor extends RecordActorPrototype {
         return switch (self) {
             case Initial i -> {
                 PingRequest request = new PingRequest();
-
                 persistence.sendNewMessage(inboxName, null, null,
                         "PingRequest",
                         gson.toJson(request),

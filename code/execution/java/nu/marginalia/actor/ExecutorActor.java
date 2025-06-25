@@ -6,7 +6,7 @@ import java.util.Set;
 
 public enum ExecutorActor {
     PREC_EXPORT_ALL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
-    SYNC_NSFW_LISTS(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    UPDATE_NSFW_LISTS(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.REALTIME),
 
     CRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     RECRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
