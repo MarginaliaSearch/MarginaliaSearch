@@ -4,11 +4,14 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
-import nu.marginalia.actor.state.*;
-import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.actor.state.ActorResumeBehavior;
+import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.actor.state.Resume;
+import nu.marginalia.actor.state.Terminal;
 import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +27,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AbstractProcessSpawnerActor extends RecordActorPrototype {
 
     private final MqPersistence persistence;
-    private final ProcessService processService;
+    private final ProcessSpawnerService processSpawnerService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final int MAX_ATTEMPTS = 3;
     private final String inboxName;
-    private final ProcessService.ProcessId processId;
+    private final ProcessSpawnerService.ProcessId processId;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final int node;
 
@@ -50,7 +53,7 @@ public class AbstractProcessSpawnerActor extends RecordActorPrototype {
                 for (;;) {
                     var messages = persistence.eavesdrop(inboxName, 1);
 
-                    if (messages.isEmpty() && !processService.isRunning(processId)) {
+                    if (messages.isEmpty() && !processSpawnerService.isRunning(processId)) {
                         synchronized (processId) {
                             processId.wait(5000);
                         }
@@ -92,7 +95,7 @@ public class AbstractProcessSpawnerActor extends RecordActorPrototype {
                 catch (InterruptedException ex) {
                     // We get this exception when the process is cancelled by the user
 
-                    processService.kill(processId);
+                    processSpawnerService.kill(processId);
                     setCurrentMessageToDead();
 
                     yield new Aborted();
@@ -112,13 +115,13 @@ public class AbstractProcessSpawnerActor extends RecordActorPrototype {
     public AbstractProcessSpawnerActor(Gson gson,
                                        ServiceConfiguration configuration,
                                        MqPersistence persistence,
-                                       ProcessService processService,
+                                       ProcessSpawnerService processSpawnerService,
                                        String inboxName,
-                                       ProcessService.ProcessId processId) {
+                                       ProcessSpawnerService.ProcessId processId) {
         super(gson);
         this.node = configuration.node();
         this.persistence = persistence;
-        this.processService = processService;
+        this.processSpawnerService = processSpawnerService;
         this.inboxName = inboxName + ":" + node;
         this.processId = processId;
     }
@@ -149,7 +152,7 @@ public class AbstractProcessSpawnerActor extends RecordActorPrototype {
             // Run this call in a separate thread so that this thread can be interrupted waiting for it
             executorService.submit(() -> {
                 try {
-                    processService.trigger(processId);
+                    processSpawnerService.trigger(processId);
                 } catch (Exception e) {
                     logger.warn("Error in triggering process", e);
                     error.set(true);

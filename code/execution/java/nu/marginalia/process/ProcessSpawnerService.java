@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
-public class ProcessService {
+public class ProcessSpawnerService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Marker processMarker = MarkerFactory.getMarker("PROCESS");
 
@@ -88,7 +88,7 @@ public class ProcessService {
     }
 
     @Inject
-    public ProcessService(BaseServiceParams params) {
+    public ProcessSpawnerService(BaseServiceParams params) {
         this.eventLog = params.eventLog;
         this.node = params.configuration.node();
     }

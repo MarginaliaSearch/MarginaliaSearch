@@ -13,7 +13,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.CrawlRequest;
 import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
@@ -76,7 +76,7 @@ public class CrawlActor extends RecordActorPrototype {
             case Crawl (long msgId, FileStorageId fid, boolean cascadeLoad) -> {
                 var rsp = processWatcher.waitResponse(
                         mqCrawlerOutbox,
-                        ProcessService.ProcessId.CRAWLER,
+                        ProcessSpawnerService.ProcessId.CRAWLER,
                         msgId);
 
                 if (rsp.state() != MqMessageState.OK) {

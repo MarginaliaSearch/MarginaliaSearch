@@ -13,7 +13,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.LiveCrawlRequest;
 import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.storage.FileStorageService;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 yield new LiveCrawl(feedsHash, id);
             }
             case LiveCrawl(String feedsHash, long msgId) -> {
-                var rsp = processWatcher.waitResponse(mqLiveCrawlerOutbox, ProcessService.ProcessId.LIVE_CRAWLER, msgId);
+                var rsp = processWatcher.waitResponse(mqLiveCrawlerOutbox, ProcessSpawnerService.ProcessId.LIVE_CRAWLER, msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Crawler failed");

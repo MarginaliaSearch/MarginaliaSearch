@@ -9,7 +9,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.tasks.ExportTaskRequest;
 import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageState;
@@ -52,7 +52,7 @@ public class ExportSampleDataActor extends RecordActorPrototype {
                 yield new Run(crawlId, destId, size, ctFilter, name, newMsgId);
             }
             case Run(_, FileStorageId destId, _, _, _, long msgId) -> {
-                var rsp = processWatcher.waitResponse(exportTasksOutbox, ProcessService.ProcessId.EXPORT_TASKS, msgId);
+                var rsp = processWatcher.waitResponse(exportTasksOutbox, ProcessSpawnerService.ProcessId.EXPORT_TASKS, msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
                     storageService.flagFileForDeletion(destId);

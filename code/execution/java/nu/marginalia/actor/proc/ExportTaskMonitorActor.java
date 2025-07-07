@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.actor.monitor.AbstractProcessSpawnerActor;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqapi.ProcessInboxNames;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 @Singleton
@@ -16,13 +16,13 @@ public class ExportTaskMonitorActor extends AbstractProcessSpawnerActor {
     public ExportTaskMonitorActor(Gson gson,
                                   ServiceConfiguration configuration,
                                   MqPersistence persistence,
-                                  ProcessService processService) {
+                                  ProcessSpawnerService processSpawnerService) {
         super(gson,
                 configuration,
                 persistence,
-                processService,
+                processSpawnerService,
                 ProcessInboxNames.EXPORT_TASK_INBOX,
-                ProcessService.ProcessId.EXPORT_TASKS);
+                ProcessSpawnerService.ProcessId.EXPORT_TASKS);
     }
 
 

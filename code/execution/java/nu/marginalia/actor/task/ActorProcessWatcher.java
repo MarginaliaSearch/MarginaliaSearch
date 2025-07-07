@@ -3,11 +3,11 @@ package nu.marginalia.actor.task;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.state.ActorControlFlowException;
-import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.process.ProcessSpawnerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +20,13 @@ public class ActorProcessWatcher {
 
     private static final Logger logger = LoggerFactory.getLogger(ActorProcessWatcher.class);
     private final MqPersistence persistence;
-    private final ProcessService processService;
+    private final ProcessSpawnerService processSpawnerService;
 
     @Inject
     public ActorProcessWatcher(MqPersistence persistence,
-                               ProcessService processService) {
+                               ProcessSpawnerService processSpawnerService) {
         this.persistence = persistence;
-        this.processService = processService;
+        this.processSpawnerService = processSpawnerService;
     }
 
     /** Wait for a process to start, and then wait for a response from the process,
@@ -36,7 +36,7 @@ public class ActorProcessWatcher {
      * <p>
      * When interrupted, the process is killed and the message is marked as dead.
      */
-    public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long msgId)
+    public MqMessage waitResponse(MqOutbox outbox, ProcessSpawnerService.ProcessId processId, long msgId)
             throws ActorControlFlowException, InterruptedException, SQLException
     {
         // enums values only have a single instance,
@@ -65,7 +65,7 @@ public class ActorProcessWatcher {
                 // This will prevent the monitor process from attempting to respawn the process as we kill it
 
                 outbox.flagAsDead(msgId);
-                processService.kill(processId);
+                processSpawnerService.kill(processId);
 
                 logger.info("Process {} killed due to interrupt", processId);
             }
@@ -94,12 +94,12 @@ public class ActorProcessWatcher {
     }
 
     /** Wait the specified time for the specified process to start running (does not start the process) */
-    private boolean waitForProcess(ProcessService.ProcessId processId, TimeUnit unit, int duration) throws InterruptedException {
+    private boolean waitForProcess(ProcessSpawnerService.ProcessId processId, TimeUnit unit, int duration) throws InterruptedException {
 
         // Wait for process to start
         long deadline = System.currentTimeMillis() + unit.toMillis(duration);
         while (System.currentTimeMillis() < deadline) {
-            if (processService.isRunning(processId))
+            if (processSpawnerService.isRunning(processId))
                 return true;
 
             TimeUnit.MILLISECONDS.sleep(100);

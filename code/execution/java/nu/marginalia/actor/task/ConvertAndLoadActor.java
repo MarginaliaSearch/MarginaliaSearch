@@ -18,7 +18,7 @@ import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.mqapi.loading.LoadRequest;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -95,7 +95,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) when msgId < 0 ->
                     new Convert(crawlId, processedId, mqConverterOutbox.sendAsync(ConvertRequest.forCrawlData(crawlId, processedId)));
             case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) -> {
-                var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, msgId);
+                var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessSpawnerService.ProcessId.CONVERTER, msgId);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Converter failed");
@@ -129,7 +129,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 yield new Load(processedIds, id);
             }
             case Load(List<FileStorageId> processedIds, long msgId) -> {
-                var rsp = processWatcher.waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, msgId);
+                var rsp = processWatcher.waitResponse(mqLoaderOutbox, ProcessSpawnerService.ProcessId.LOADER, msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Loader failed");
@@ -165,7 +165,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case ReindexFwd(long id) when id < 0 -> new ReindexFwd(createIndex(IndexName.FORWARD));
             case ReindexFwd(long id) -> {
-                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
+                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessSpawnerService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Forward index construction failed");
@@ -174,7 +174,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case ReindexFull(long id) when id < 0 -> new ReindexFull(createIndex(IndexName.REVERSE_FULL));
             case ReindexFull(long id) -> {
-                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
+                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessSpawnerService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Full index construction failed");
@@ -183,7 +183,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case ReindexPrio(long id) when id < 0 -> new ReindexPrio(createIndex(IndexName.REVERSE_PRIO));
             case ReindexPrio(long id) -> {
-                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
+                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessSpawnerService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Prio index construction failed");

@@ -13,7 +13,7 @@ import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.ping.PingRequest;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,13 +33,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class PingMonitorActor extends RecordActorPrototype {
 
     private final MqPersistence persistence;
-    private final ProcessService processService;
+    private final ProcessSpawnerService processSpawnerService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final int MAX_ATTEMPTS = 3;
     private final String inboxName;
-    private final ProcessService.ProcessId processId;
+    private final ProcessSpawnerService.ProcessId processId;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final int node;
     private final Gson gson;
@@ -68,7 +68,7 @@ public class PingMonitorActor extends RecordActorPrototype {
                 for (;;) {
                     var messages = persistence.eavesdrop(inboxName, 1);
 
-                    if (messages.isEmpty() && !processService.isRunning(processId)) {
+                    if (messages.isEmpty() && !processSpawnerService.isRunning(processId)) {
                         synchronized (processId) {
                             processId.wait(5000);
                         }
@@ -110,7 +110,7 @@ public class PingMonitorActor extends RecordActorPrototype {
                 catch (InterruptedException ex) {
                     // We get this exception when the process is cancelled by the user
 
-                    processService.kill(processId);
+                    processSpawnerService.kill(processId);
                     setCurrentMessageToDead();
 
                     yield new Aborted();
@@ -130,14 +130,14 @@ public class PingMonitorActor extends RecordActorPrototype {
     public PingMonitorActor(Gson gson,
                                        ServiceConfiguration configuration,
                                        MqPersistence persistence,
-                                       ProcessService processService) throws SQLException {
+                                       ProcessSpawnerService processSpawnerService) throws SQLException {
         super(gson);
         this.gson = gson;
         this.node = configuration.node();
         this.persistence = persistence;
-        this.processService = processService;
+        this.processSpawnerService = processSpawnerService;
         this.inboxName = ProcessInboxNames.PING_INBOX + ":" + node;
-        this.processId = ProcessService.ProcessId.PING;
+        this.processId = ProcessSpawnerService.ProcessId.PING;
     }
 
     /** Sets the message to dead in the database to avoid
@@ -166,7 +166,7 @@ public class PingMonitorActor extends RecordActorPrototype {
             // Run this call in a separate thread so that this thread can be interrupted waiting for it
             executorService.submit(() -> {
                 try {
-                    processService.trigger(processId);
+                    processSpawnerService.trigger(processId);
                 } catch (Exception e) {
                     logger.warn("Error in triggering process", e);
                     error.set(true);

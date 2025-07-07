@@ -12,7 +12,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.sideload.RedditSideloadHelper;
 import nu.marginalia.sideload.SideloadHelper;
 import nu.marginalia.sideload.StackExchangeSideloadHelper;
@@ -218,7 +218,7 @@ public class ConvertActor extends RecordActorPrototype {
                 );
             }
             case ConvertWait(FileStorageId destFid, long msgId) -> {
-                var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, msgId);
+                var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessSpawnerService.ProcessId.CONVERTER, msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Converter failed");

@@ -8,7 +8,7 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class ProcessLivenessMonitorActor extends RecordActorPrototype {
 
     private final ServiceEventLog eventLogService;
-    private final ProcessService processService;
+    private final ProcessSpawnerService processSpawnerService;
     private final HikariDataSource dataSource;
 
     private final int node;
@@ -49,7 +49,7 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
                         var processId = heartbeat.getProcessId();
                         if (null == processId) continue;
 
-                        if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000)
+                        if (processSpawnerService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000)
                             continue;
 
                         flagProcessAsStopped(heartbeat);
@@ -72,12 +72,12 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
     public ProcessLivenessMonitorActor(Gson gson,
                                        ServiceEventLog eventLogService,
                                        ServiceConfiguration configuration,
-                                       ProcessService processService,
+                                       ProcessSpawnerService processSpawnerService,
                                        HikariDataSource dataSource) {
         super(gson);
         this.node = configuration.node();
         this.eventLogService = eventLogService;
-        this.processService = processService;
+        this.processSpawnerService = processSpawnerService;
         this.dataSource = dataSource;
     }
 
@@ -208,8 +208,8 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
         public boolean isRunning() {
             return "RUNNING".equals(status);
         }
-        public ProcessService.ProcessId getProcessId() {
-            return ProcessService.translateExternalIdBase(processBase);
+        public ProcessSpawnerService.ProcessId getProcessId() {
+            return ProcessSpawnerService.translateExternalIdBase(processBase);
         }
     }
 

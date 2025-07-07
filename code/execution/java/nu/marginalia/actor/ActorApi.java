@@ -2,10 +2,11 @@ package nu.marginalia.actor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.functions.execution.api.RpcFsmName;
+import nu.marginalia.functions.execution.api.RpcProcessId;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.process.ProcessService;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,18 +15,18 @@ import spark.Spark;
 @Singleton
 public class ActorApi {
     private final ExecutorActorControlService actors;
-    private final ProcessService processService;
+    private final ProcessSpawnerService processSpawnerService;
     private final MqPersistence mqPersistence;
     private final ServiceConfiguration serviceConfiguration;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Inject
     public ActorApi(ExecutorActorControlService actors,
-                    ProcessService processService,
+                    ProcessSpawnerService processSpawnerService,
                     MqPersistence mqPersistence,
                     ServiceConfiguration serviceConfiguration)
     {
         this.actors = actors;
-        this.processService = processService;
+        this.processSpawnerService = processSpawnerService;
         this.mqPersistence = mqPersistence;
         this.serviceConfiguration = serviceConfiguration;
     }
@@ -43,7 +44,7 @@ public class ActorApi {
     }
 
     public Object stopProcess(RpcProcessId processId) {
-        ProcessService.ProcessId id = ProcessService.translateExternalIdBase(processId.getProcessId());
+        ProcessSpawnerService.ProcessId id = ProcessSpawnerService.translateExternalIdBase(processId.getProcessId());
 
         try {
             String inbox = id.name().toLowerCase() + ":" + serviceConfiguration.node();
@@ -60,7 +61,7 @@ public class ActorApi {
                 }
 
             }
-            processService.kill(id);
+            processSpawnerService.kill(id);
         }
         catch (Exception ex) {
             logger.error("Failed to stop process {}", id, ex);

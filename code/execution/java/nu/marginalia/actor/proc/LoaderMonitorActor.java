@@ -4,9 +4,9 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.monitor.AbstractProcessSpawnerActor;
-import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqapi.ProcessInboxNames;
+import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 @Singleton
@@ -17,13 +17,13 @@ public class LoaderMonitorActor extends AbstractProcessSpawnerActor {
     public LoaderMonitorActor(Gson gson,
                               ServiceConfiguration configuration,
                               MqPersistence persistence,
-                              ProcessService processService) {
+                              ProcessSpawnerService processSpawnerService) {
 
         super(gson,
                 configuration,
-                persistence, processService,
+                persistence, processSpawnerService,
                 ProcessInboxNames.LOADER_INBOX,
-                ProcessService.ProcessId.LOADER);
+                ProcessSpawnerService.ProcessId.LOADER);
     }
 
 }
