@@ -68,6 +68,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final HtmlProcessorSpecializations htmlProcessorSpecializations;
 
     private static final int MAX_DOCUMENT_LENGTH_BYTES = Integer.getInteger("converter.max-body-length",128_000);
+    private static boolean lenientProcessing = Boolean.getBoolean("converter.lenientProcessing");
 
     @Inject
     public HtmlDocumentProcessorPlugin(
@@ -108,13 +109,13 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                                           DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException, IOException {
 
-        if (languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
+        if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
         }
 
         Document doc = crawledDocument.parseBody();
 
-        if (AcceptableAds.hasAcceptableAdsTag(doc)) {
+        if (!lenientProcessing && AcceptableAds.hasAcceptableAdsTag(doc)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.ACCEPTABLE_ADS);
         }
 
@@ -129,18 +130,17 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final var specialization = htmlProcessorSpecializations.select(generatorParts, url);
 
-        if (!specialization.shouldIndex(url)) {
+        if (!lenientProcessing && !specialization.shouldIndex(url)) {
             throw new DisqualifiedException(DisqualificationReason.IRRELEVANT);
         }
 
         var prunedDoc = specialization.prune(doc);
 
-
         final int length = getLength(doc);
         final DocumentFormat format = getDocumentFormat(doc);
         final double quality = documentValuator.getQuality(crawledDocument, format, doc, length);
 
-        if (isDisqualified(documentClass, url, quality, doc.title())) {
+        if (!lenientProcessing && isDisqualified(documentClass, url, quality, doc.title())) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 

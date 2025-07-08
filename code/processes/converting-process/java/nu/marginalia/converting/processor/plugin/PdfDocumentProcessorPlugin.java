@@ -43,6 +43,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     private final DefaultSpecialization defaultSpecialization;
 
     private static final Logger logger = LoggerFactory.getLogger(PdfDocumentProcessorPlugin.class);
+    private static boolean lenientProcessing = Boolean.getBoolean("converter.lenientProcessing");
 
     @Inject
     public PdfDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
@@ -81,7 +82,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         String documentBody = crawledDocument.documentBody();
 
-        if (languageFilter.isBlockedUnicodeRange(documentBody)) {
+        if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(documentBody)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
         }
 

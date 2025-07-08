@@ -37,6 +37,8 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
 
+    private static boolean lenientProcessing = Boolean.getBoolean("converter.lenientProcessing");
+
 
     @Inject
     public PlainTextDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
@@ -73,7 +75,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         String documentBody = crawledDocument.documentBody();
 
-        if (languageFilter.isBlockedUnicodeRange(documentBody)) {
+        if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(documentBody)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
         }
 
