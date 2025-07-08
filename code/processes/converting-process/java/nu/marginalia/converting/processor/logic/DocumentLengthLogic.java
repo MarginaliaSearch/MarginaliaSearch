@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.logic;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.language.model.DocumentLanguageData;
 
 @Singleton
@@ -26,12 +25,9 @@ public class DocumentLengthLogic {
         return (int) Math.round((totalWords / (double) numSentences) / 4.);
     }
 
-    public void validateLength(DocumentLanguageData dld,
-                               double modifier) throws DisqualifiedException
+    public boolean validateLength(DocumentLanguageData dld, double modifier)
     {
-        if (modifier * dld.totalNumWords() < minDocumentLength) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
-        }
+        return modifier * dld.totalNumWords() >= minDocumentLength;
     }
 
 }

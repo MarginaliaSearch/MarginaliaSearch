@@ -147,7 +147,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(prunedDoc);
 
         checkDocumentLanguage(dld);
-        documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
+
+        if (!lenientProcessing && !documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
+        }
 
         var ret = new ProcessedDocumentDetails();
 

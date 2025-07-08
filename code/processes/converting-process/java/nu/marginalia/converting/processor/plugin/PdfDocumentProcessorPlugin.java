@@ -101,7 +101,9 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         checkDocumentLanguage(dld);
 
-        documentLengthLogic.validateLength(dld, 1.0);
+        if (!lenientProcessing && !documentLengthLogic.validateLength(dld, 1.0)) {
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
+        }
 
         var ret = new ProcessedDocumentDetails();
 
