@@ -19,6 +19,8 @@ import nu.marginalia.model.crawldata.CrawlerDocumentStatus;
 import nu.marginalia.model.idx.WordFlags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,6 +39,7 @@ public class DocumentProcessor {
             "text/plain",
             "application/pdf");
 
+    private final Marker converterAuditMarker = MarkerFactory.getMarker("CONVERTER");
 
     private final List<AbstractDocumentProcessorPlugin> processorPlugins = new ArrayList<>();
     private final AnchorTextKeywords anchorTextKeywords;
@@ -81,12 +84,13 @@ public class DocumentProcessor {
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = ex.reason.toString();
-            logger.debug("Disqualified {}: {}", ret.url, ex.reason);
+            logger.info(converterAuditMarker, "Disqualified {}: {}", ret.url, ex.reason);
         }
         catch (Exception ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = DisqualifiedException.DisqualificationReason.PROCESSING_EXCEPTION.toString();
-            logger.info("Failed to convert " + crawledDocument.url, ex);
+            logger.info(converterAuditMarker, "Failed to convert {}: {}", crawledDocument.url, ex.getClass().getSimpleName());
+            logger.warn(converterAuditMarker, "Failed to convert " + crawledDocument.url, ex);
         }
 
         return ret;

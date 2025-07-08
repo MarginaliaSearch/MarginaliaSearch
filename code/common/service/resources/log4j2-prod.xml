@@ -8,6 +8,7 @@
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CONVERTER" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </Console>
         <Console name="ConsoleWarn" target="SYSTEM_OUT">
@@ -18,6 +19,7 @@
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CONVERTER" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </Console>
         <Console name="ConsoleError" target="SYSTEM_OUT">
@@ -28,6 +30,7 @@
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CONVERTER" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </Console>
         <Console name="ConsoleFatal" target="SYSTEM_OUT">
@@ -38,6 +41,7 @@
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CONVERTER" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </Console>
         <Console name="ProcessConsole" target="SYSTEM_OUT">
@@ -57,6 +61,7 @@
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="CONVERTER" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </RollingFile>
         <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/crawler-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
@@ -67,6 +72,16 @@
             <SizeBasedTriggeringPolicy size="100MB" />
             <Filters>
                 <MarkerFilter marker="CRAWLER" onMatch="ALLOW" onMismatch="DENY" />
+            </Filters>
+        </RollingFile>
+        <RollingFile name="LogToFile" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/converter-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/converter-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss,SSS}: %msg{nolookups}%n</Pattern>
+            </PatternLayout>
+            <SizeBasedTriggeringPolicy size="100MB" />
+            <Filters>
+                <MarkerFilter marker="CONVERTER" onMatch="ALLOW" onMismatch="DENY" />
             </Filters>
         </RollingFile>
     </Appenders>
