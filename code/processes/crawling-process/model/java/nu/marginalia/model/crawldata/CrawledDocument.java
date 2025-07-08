@@ -28,6 +28,8 @@ public final class CrawledDocument implements SerializableCrawlData {
     @Nullable
     public String headers;
 
+    private static int MAX_LENGTH_BYTES = 500_000;
+
     public String documentBody() {
         return DocumentBodyToString.getStringData(
                 ContentType.parse(contentType),
@@ -65,7 +67,7 @@ public final class CrawledDocument implements SerializableCrawlData {
         return DocumentBodyToString.getParsedData(
                 ContentType.parse(contentType),
                 documentBodyBytes,
-                200_000,
+                MAX_LENGTH_BYTES,
                 url);
     }
 
