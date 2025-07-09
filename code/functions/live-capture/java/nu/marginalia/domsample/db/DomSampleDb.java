@@ -1,17 +1,28 @@
 package nu.marginalia.domsample.db;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.model.EdgeUrl;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 
 public class DomSampleDb implements AutoCloseable {
     private static final String dbFileName = "dom-sample.db";
     private final Connection connection;
+    private static final Logger logger = LoggerFactory.getLogger(DomSampleDb.class);
 
     public DomSampleDb() throws SQLException{
         this(WmsaHome.getDataPath().resolve(dbFileName));
@@ -88,7 +99,71 @@ public class DomSampleDb implements AutoCloseable {
     }
 
 
-    public record Sample(String url, String domain, String sample, String requests, boolean acceptedPopover) {}
+    public record Sample(String url, String domain, String sample, String requests, boolean acceptedPopover) {
+
+        public List<SampleRequest> parseRequests() {
+            List<SampleRequest> requests = new ArrayList<>();
+
+            // Request format is METHOD\tTIMESTAMP\tURI\n
+
+            for (var line : StringUtils.split(this.requests, '\n')) {
+                String[] parts = StringUtils.split(line, "\t", 3);
+                if (parts.length != 3) continue;
+
+                try {
+                    String method =  parts[0];
+                    long ts = Long.parseLong(parts[1]);
+                    String linkUrl = parts[2];
+
+                    URI uri = parseURI(linkUrl);
+
+                    requests.add(new SampleRequest(method, ts, uri));
+                }
+                catch (Exception e) {
+                    logger.warn("Failed to parse requests", e);
+                }
+            }
+
+            return requests;
+        }
+
+
+        private static URI parseURI(String uri) throws URISyntaxException {
+            try {
+                return new URI(uri);
+            }
+            catch (URISyntaxException ex) {
+                return new EdgeUrl(uri).asURI();
+            }
+        }
+    }
+
+    public record SampleRequest(String method, long timestamp, URI uri) {}
+
+    /**
+     * @param consumer - consume the sample, return true to continue consumption
+     * @throws SQLException
+     */
+    public void forEachSample(Predicate<Sample> consumer) throws SQLException {
+        try (var stmt = connection.prepareStatement("""
+                SELECT url, domain, sample, requests, accepted_popover
+                FROM samples
+                """))
+        {
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                var sample = new Sample(
+                        rs.getString("url"),
+                        rs.getString("domain"),
+                        rs.getString("sample"),
+                        rs.getString("requests"),
+                        rs.getBoolean("accepted_popover")
+                );
+
+                if (!consumer.test(sample)) break;
+            }
+        }
+    }
 
     public List<Sample> getSamples(String domain) throws SQLException {
         List<Sample> samples = new ArrayList<>();
