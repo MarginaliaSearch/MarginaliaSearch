@@ -40,6 +40,8 @@ public class LoaderMain extends ProcessMainClass {
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
 
+    private static boolean insertFoundDomains = Boolean.getBoolean("converter.insertFoundDomains");
+
     public static void main(String... args) {
         try {
             new org.mariadb.jdbc.Driver();
@@ -99,14 +101,29 @@ public class LoaderMain extends ProcessMainClass {
 
         try {
             var results = ForkJoinPool.commonPool()
-                    .invokeAll(
-                        List.of(
-                            () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData),
-                            () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
-                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData),
-                            () -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)
-                        )
-            );
+                .invokeAll(List.of());
+
+            if ( true == insertFoundDomains ) {
+                results = ForkJoinPool.commonPool()
+                        .invokeAll(
+                            List.of(
+                                () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData),
+                                () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
+                                () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData),
+                                () -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)
+                            )
+                );
+            }
+            else {
+                results = ForkJoinPool.commonPool()
+                        .invokeAll(
+                            List.of(
+                                () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
+                                () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData),
+                                () -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)
+                            )
+                );
+            }
 
             for (var result : results) {
                 if (result.state() == Future.State.FAILED) {

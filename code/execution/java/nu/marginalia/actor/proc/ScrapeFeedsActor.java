@@ -47,6 +47,8 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
 
     private final Path feedPath = WmsaHome.getHomePath().resolve("data/scrape-urls.txt");
 
+    private static boolean insertFoundDomains = Boolean.getBoolean("converter.insertFoundDomains");
+
     public record Initial() implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Wait(String ts) implements ActorStep {}
@@ -138,7 +140,12 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
                 validDomains.add(new EdgeDomain(host));
             }
 
-            insertDomains(validDomains, 0 /* node affinity = 0 means the next index node to run grabs these domains */);
+            if ( true == insertFoundDomains ) {
+                logger.info("Adding found domains");
+                insertDomains(validDomains, 0 /* node affinity = 0 means the next index node to run grabs these domains */);
+            } else {
+                logger.info("Skipping found domains");
+            }
 
             eventLog.logEvent("ScrapeFeedsActor", "Polled " + domainsUrl + " for new domains");
         }
