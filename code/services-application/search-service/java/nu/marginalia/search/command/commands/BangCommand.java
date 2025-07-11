@@ -34,7 +34,7 @@ public class BangCommand implements SearchCommandInterface {
 
             if (match.isPresent()) {
                 var url = String.format(redirectPattern, URLEncoder.encode(match.get(), StandardCharsets.UTF_8));
-                new MapModelAndView("redirect.jte", Map.of("url", url));
+                return Optional.of(new MapModelAndView("redirect.jte", Map.of("url", url)));
             }
         }
 
