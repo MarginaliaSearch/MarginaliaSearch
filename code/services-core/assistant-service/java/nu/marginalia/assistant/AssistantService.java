@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.jooby.Context;
 import io.jooby.Jooby;
 import nu.marginalia.assistant.suggest.Suggestions;
+import nu.marginalia.domsample.DomSampleGrpcService;
 import nu.marginalia.domsample.DomSampleService;
 import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
@@ -22,7 +23,6 @@ import java.util.List;
 public class AssistantService extends JoobyService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
-    @org.jetbrains.annotations.NotNull
     private final ScreenshotService screenshotService;
     private final Suggestions suggestions;
 
@@ -32,6 +32,7 @@ public class AssistantService extends JoobyService {
                             DomainInfoGrpcService domainInfoGrpcService,
                             LiveCaptureGrpcService liveCaptureGrpcService,
                             DomSampleService domSampleService,
+                            DomSampleGrpcService domSampleGrpcService,
                             FeedsGrpcService feedsGrpcService,
                             MathGrpcService mathGrpcService,
                             Suggestions suggestions)
@@ -41,7 +42,9 @@ public class AssistantService extends JoobyService {
                 List.of(domainInfoGrpcService,
                         mathGrpcService,
                         liveCaptureGrpcService,
-                        feedsGrpcService),
+                        feedsGrpcService,
+                        domSampleGrpcService
+                        ),
                 List.of());
 
         this.screenshotService = screenshotService;

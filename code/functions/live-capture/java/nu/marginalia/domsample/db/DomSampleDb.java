@@ -170,7 +170,7 @@ public class DomSampleDb implements AutoCloseable {
 
         try (var stmt = connection.prepareStatement("""
                 SELECT url, sample, requests, accepted_popover
-                FROM samples 
+                FROM samples
                 WHERE domain = ?
                 """))
         {
