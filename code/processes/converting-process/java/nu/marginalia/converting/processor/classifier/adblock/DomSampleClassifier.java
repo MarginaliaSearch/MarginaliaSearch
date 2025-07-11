@@ -1,6 +1,7 @@
-package nu.marginalia.domsample;
+package nu.marginalia.converting.processor.classifier.adblock;
 
-import nu.marginalia.domsample.db.DomSampleDb;
+import com.google.inject.Inject;
+import nu.marginalia.api.domsample.RpcDomainSample;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class DomSampleClassifier {
-    public enum Classification {
+    public enum DomSampleClassification {
         ADS,
         TRACKING,
         CONSENT,
@@ -30,10 +31,15 @@ public class DomSampleClassifier {
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleClassifier.class);
 
-    private final List<Map.Entry<Predicate<String>, Classification>> regexClassification = new ArrayList<>();
-    private final Map<String, Classification> urlClassification = new HashMap<>();
-    private final Map<String, Classification> topDomainClassification = new HashMap<>();
-    private final Map<String, Classification> fullDomainClassification = new HashMap<>();
+    private final List<Map.Entry<Predicate<String>, DomSampleClassification>> regexClassification = new ArrayList<>();
+    private final Map<String, DomSampleClassification> urlClassification = new HashMap<>();
+    private final Map<String, DomSampleClassification> topDomainClassification = new HashMap<>();
+    private final Map<String, DomSampleClassification> fullDomainClassification = new HashMap<>();
+
+    @Inject
+    public DomSampleClassifier() throws ParserConfigurationException, IOException, SAXException {
+        this(DomSampleClassifier.class.getResourceAsStream("request-classifier.xml"));
+    }
 
     public DomSampleClassifier(InputStream specificationXmlData) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -50,7 +56,7 @@ public class DomSampleClassifier {
             String content = classifier.getTextContent().trim();
 
             // Convert rule to Classification enum
-            Classification classification = Classification.valueOf(rule.toUpperCase());
+            DomSampleClassification classification = DomSampleClassification.valueOf(rule.toUpperCase());
 
             // Add to appropriate map based on target
             switch (target) {
@@ -73,27 +79,27 @@ public class DomSampleClassifier {
 
     }
 
-    public Set<Classification> classify(DomSampleDb.Sample sample) {
-        Set<Classification> classifications = new HashSet<>();
+    public Set<DomSampleClassification> classify(RpcDomainSample sample) {
+        Set<DomSampleClassification> classifications = new HashSet<>();
 
         // Look at DOM
 
         try {
-            var parsedDoc = Jsoup.parse(sample.sample());
+            var parsedDoc = Jsoup.parse(sample.getHtmlSample());
             var fixedElements = parsedDoc.select("*[data-position=fixed]");
 
-            if (sample.acceptedPopover()) {
-                classifications.add(Classification.POPOVER);
+            if (sample.getAcceptedPopover()) {
+                classifications.add(DomSampleClassification.POPOVER);
             }
             else if (!fixedElements.isEmpty()) {
                 String fixedText = fixedElements.text().toLowerCase();
                 if (fixedText.contains("cookie") ||
-                    fixedText.contains("subscribe") ||
-                    fixedText.contains("consent") ||
-                    fixedText.contains("newsletter") ||
-                    fixedText.contains("gdpr"))
+                        fixedText.contains("subscribe") ||
+                        fixedText.contains("consent") ||
+                        fixedText.contains("newsletter") ||
+                        fixedText.contains("gdpr"))
                 {
-                    classifications.add(Classification.POPOVER);
+                    classifications.add(DomSampleClassification.POPOVER);
                 }
             }
         }
@@ -103,25 +109,25 @@ public class DomSampleClassifier {
 
         // Classify outgoing requests
         outer:
-        for (var req : sample.parseRequests()) {
+        for (var req : sample.getOutgoingRequestsList()) {
             try {
-                EdgeUrl edgeUrl = new EdgeUrl(req.uri());
+                EdgeUrl edgeUrl = new EdgeUrl(req.getUrl());
 
-                for (Map.Entry<Predicate<String>, Classification> regexMatcher : regexClassification) {
+                for (Map.Entry<Predicate<String>, DomSampleClassification> regexMatcher : regexClassification) {
                     if (regexMatcher.getKey().test(edgeUrl.toDisplayString())) {
                         var clazz = regexMatcher.getValue();
 
-                        if (clazz != Classification.IGNORE) {
+                        if (clazz != DomSampleClassification.IGNORE) {
                             classifications.add(clazz);
                         }
                         continue outer;
                     }
                 }
 
-                Classification clazz = urlClassification.get(edgeUrl.toDisplayString());
+                DomSampleClassification clazz = urlClassification.get(edgeUrl.toDisplayString());
 
                 if (clazz != null) {
-                    if (clazz != Classification.IGNORE) {
+                    if (clazz != DomSampleClassification.IGNORE) {
                         classifications.add(clazz);
                     }
                     continue;
@@ -130,7 +136,7 @@ public class DomSampleClassifier {
                 clazz = fullDomainClassification.get(edgeUrl.domain.toString());
 
                 if (clazz != null) {
-                    if (clazz != Classification.IGNORE) {
+                    if (clazz != DomSampleClassification.IGNORE) {
                         classifications.add(clazz);
                     }
                     continue;
@@ -139,7 +145,7 @@ public class DomSampleClassifier {
                 clazz = topDomainClassification.get(edgeUrl.domain.topDomain);
 
                 if (clazz != null) {
-                    if (clazz != Classification.IGNORE) {
+                    if (clazz != DomSampleClassification.IGNORE) {
                         classifications.add(clazz);
                     }
                     continue;
