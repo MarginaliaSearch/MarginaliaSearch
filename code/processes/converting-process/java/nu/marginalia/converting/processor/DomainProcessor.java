@@ -17,6 +17,7 @@ import nu.marginalia.geoip.sources.AsnTable;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
@@ -80,7 +81,6 @@ public class DomainProcessor {
                 return null;
             }
 
-            List<ProcessedDocument> docs = new ArrayList<>();
             Set<String> processedUrls = new HashSet<>();
 
             if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
@@ -94,7 +94,7 @@ public class DomainProcessor {
 
             ProcessedDomain ret = new ProcessedDomain();
             processDomain(crawledDomain, ret, documentDecorator);
-            ret.documents = docs;
+            ret.documents = new ArrayList<>();
 
             // Process Documents
 
@@ -111,8 +111,13 @@ public class DomainProcessor {
 
                     try {
                         var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
-                        deduplicator.markIfDuplicate(processedDoc);
-                        docs.add(processedDoc);
+
+                        if (deduplicator.isDocumentDuplicate(processedDoc)) {
+                            processedDoc.state = UrlIndexingState.DISQUALIFIED;
+                            processedDoc.stateReason = "Duplicate";
+                        }
+
+                        ret.documents.add(processedDoc);
                     } catch (Exception ex) {
                         logger.warn("Failed to process " + doc.url, ex);
                     }
@@ -190,7 +195,10 @@ public class DomainProcessor {
                         var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, documentDecorator);
 
                         synchronized (deduplicator) {
-                            deduplicator.markIfDuplicate(processedDoc);
+                            if (deduplicator.isDocumentDuplicate(processedDoc)) {
+                                processedDoc.state = UrlIndexingState.DISQUALIFIED;
+                                processedDoc.stateReason = "Duplicate";
+                            }
                         }
 
                         if (processedDoc.isProcessedFully()) {
