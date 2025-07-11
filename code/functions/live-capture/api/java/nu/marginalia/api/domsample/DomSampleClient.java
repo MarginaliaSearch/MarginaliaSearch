@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Singleton
 public class DomSampleClient {
@@ -43,6 +45,12 @@ public class DomSampleClient {
             }
             return Optional.empty();
         }
+    }
+
+    public CompletableFuture<RpcDomainSample> getSampleAsync(String domainName, ExecutorService executorService) {
+        return channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::getSample)
+                .async(executorService)
+                .run(RpcDomainName.newBuilder().setDomainName(domainName).build());
     }
 
     public List<RpcDomainSample> getAllSamples(String domainName) {

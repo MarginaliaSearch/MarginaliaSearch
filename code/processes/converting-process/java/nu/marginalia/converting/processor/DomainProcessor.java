@@ -1,11 +1,13 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
+import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
@@ -29,7 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 public class DomainProcessor {
@@ -37,6 +44,9 @@ public class DomainProcessor {
     private final SiteWords siteWords;
     private final AnchorTagsSource anchorTagsSource;
     private final GeoIpDictionary geoIpDictionary;
+    private final DomSampleClient domSampleClient;
+    private final DomSampleClassifier domSampleClassifier;
+    private final ExecutorService domSampleExecutor = Executors.newCachedThreadPool();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -44,14 +54,18 @@ public class DomainProcessor {
     public DomainProcessor(DocumentProcessor documentProcessor,
                            SiteWords siteWords,
                            AnchorTagsSourceFactory anchorTagsSourceFactory,
-                           GeoIpDictionary geoIpDictionary) throws SQLException
-    {
+                           DomSampleClient domSampleClient,
+                           GeoIpDictionary geoIpDictionary,
+                           DomSampleClassifier domSampleClassifier) throws SQLException, InterruptedException {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
         this.anchorTagsSource = anchorTagsSourceFactory.create();
         this.geoIpDictionary = geoIpDictionary;
+        this.domSampleClient = domSampleClient;
+        this.domSampleClassifier = domSampleClassifier;
 
         geoIpDictionary.waitReady();
+        domSampleClient.waitReady(Duration.ofMinutes(5));
     }
 
     public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
@@ -87,6 +101,10 @@ public class DomainProcessor {
                 throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
             }
 
+            CompletableFuture<Set<DomSampleClassifier.DomSampleClassification>> domSample =
+                    domSampleClient.getSampleAsync(crawledDomain.domain, domSampleExecutor)
+                            .thenApply(domSampleClassifier::classify);
+
             DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
             DocumentDecorator documentDecorator = new DocumentDecorator();
 
@@ -97,6 +115,8 @@ public class DomainProcessor {
             ret.documents = new ArrayList<>();
 
             // Process Documents
+
+            List<DomSampleClassifier.DomSampleClassification> classifiers = null;
 
             try (var deduplicator = new LshDocumentDeduplicator()) {
                 while (dataStream.hasNext()) {
@@ -115,6 +135,21 @@ public class DomainProcessor {
                         if (deduplicator.isDocumentDuplicate(processedDoc)) {
                             processedDoc.state = UrlIndexingState.DISQUALIFIED;
                             processedDoc.stateReason = "Duplicate";
+                        }
+
+                        if (processedDoc.isOk()) {
+                            if (null == classifiers) {
+                                try {
+                                    classifiers = new ArrayList<>(domSample.get());
+                                }
+                                catch (Exception ex) {
+                                    classifiers = List.of();
+                                }
+                            }
+
+                            classifiers.forEach(classifier -> {
+                                classifier.apply(processedDoc.details, processedDoc.words);
+                            });
                         }
 
                         ret.documents.add(processedDoc);
@@ -147,6 +182,9 @@ public class DomainProcessor {
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
 
+        CompletableFuture<Set<DomSampleClassifier.DomSampleClassification>> domSample;
+        AtomicReference<List<DomSampleClassifier.DomSampleClassification>> classification;
+
         private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
                 Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
         );
@@ -170,6 +208,9 @@ public class DomainProcessor {
             documentDecorator.addTerms(extraKeywords);
 
             processDomain(crawledDomain, domain, documentDecorator);
+
+            domSample = domSampleClient.getSampleAsync(crawledDomain.domain, domSampleExecutor)
+                            .thenApply(domSampleClassifier::classify);
 
             externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
         }
@@ -205,6 +246,15 @@ public class DomainProcessor {
                             // This is a bit sketchy, but we need to set the size and topology to something
                             processedDoc.details.metadata = processedDoc.details.metadata.withSizeAndTopology(
                                     10_000, externalDomainLinks.countForUrl(processedDoc.url));
+
+                            // Apply classifications
+                            try {
+                                domSample.get().forEach(classification -> {
+                                    classification.apply(processedDoc.details, processedDoc.words);
+                                });
+                            }
+                            catch (Exception ex) {
+                            }
                         }
 
                         return processedDoc;
@@ -225,6 +275,10 @@ public class DomainProcessor {
 
         @Override
         public void close() throws Exception {
+            if (!domSample.isDone()) { // Cancel in the case there were nothing to try to consume this
+                domSample.cancel(true);
+            }
+
             dataStream.close();
             deduplicator.close();
         }

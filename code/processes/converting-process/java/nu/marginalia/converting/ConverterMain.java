@@ -23,6 +23,7 @@ import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import nu.marginalia.worklog.BatchingWorkLog;
@@ -59,6 +60,7 @@ public class ConverterMain extends ProcessMainClass {
             Injector injector = Guice.createInjector(
                     new ConverterModule(),
                     new ProcessConfigurationModule("converter"),
+                    new ServiceDiscoveryModule(),
                     new DatabaseModule(false)
             );
 

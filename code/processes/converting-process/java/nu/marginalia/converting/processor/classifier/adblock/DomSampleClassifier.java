@@ -2,7 +2,10 @@ package nu.marginalia.converting.processor.classifier.adblock;
 
 import com.google.inject.Inject;
 import nu.marginalia.api.domsample.RpcDomainSample;
+import nu.marginalia.converting.model.ProcessedDocumentDetails;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawl.HtmlFeature;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +14,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,11 +26,26 @@ import java.util.regex.Pattern;
 
 public class DomSampleClassifier {
     public enum DomSampleClassification {
-        ADS,
-        TRACKING,
-        CONSENT,
-        POPOVER,
-        IGNORE
+        ADS(HtmlFeature.ADVERTISEMENT),
+        TRACKING(HtmlFeature.TRACKING),
+        CONSENT(HtmlFeature.CONSENT),
+        POPOVER(HtmlFeature.POPOVER),
+        IGNORE(null);
+
+        @Nullable
+        public final HtmlFeature htmlFeature;
+
+        DomSampleClassification(@Nullable HtmlFeature feature) {
+            this.htmlFeature = feature;
+        }
+
+        public void apply(ProcessedDocumentDetails details, DocumentKeywordsBuilder words) {
+            if (null == htmlFeature)
+                return;
+
+            details.features.add(htmlFeature);
+            words.addSyntheticTerm(htmlFeature.getKeyword());
+        }
     }
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleClassifier.class);
@@ -38,10 +57,11 @@ public class DomSampleClassifier {
 
     @Inject
     public DomSampleClassifier() throws ParserConfigurationException, IOException, SAXException {
-        this(DomSampleClassifier.class.getResourceAsStream("request-classifier.xml"));
+        this(ClassLoader.getSystemResourceAsStream("request-classifier.xml"));
     }
 
     public DomSampleClassifier(InputStream specificationXmlData) throws ParserConfigurationException, IOException, SAXException {
+        Objects.requireNonNull(specificationXmlData, "specificationXmlData is null");
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(specificationXmlData);
