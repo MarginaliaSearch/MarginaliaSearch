@@ -11,7 +11,7 @@ public enum HtmlFeature {
     JS("special:scripts"),
     AFFILIATE_LINK( "special:affiliate"),
     TRACKING("special:tracking"),
-    TRACKING_ADTECH("special:ads"), // We'll call this ads for now
+    TRACKING_ADTECH("special:adtech"),
 
     KEBAB_CASE_URL("special:kcurl"), // https://www.example.com/urls-that-look-like-this/
     LONG_URL("special:longurl"),

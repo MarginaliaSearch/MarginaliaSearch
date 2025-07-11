@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 public class DomSampleClassifier {
     public enum DomSampleClassification {
         ADS(HtmlFeature.ADVERTISEMENT),
-        TRACKING(HtmlFeature.TRACKING),
+        TRACKING(HtmlFeature.TRACKING_ADTECH),
         CONSENT(HtmlFeature.CONSENT),
         POPOVER(HtmlFeature.POPOVER),
         IGNORE(null);
