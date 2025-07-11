@@ -25,6 +25,8 @@ import java.util.Set;
 @Singleton
 public class DomainLoaderService {
 
+    private static boolean insertFoundDomains = Boolean.getBoolean("loader.insertFoundDomains");
+
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(DomainLoaderService.class);
     private final int nodeId;
@@ -84,25 +86,34 @@ public class DomainLoaderService {
 
             // Add domains that are linked to from the domains we've just crawled, but with -1 affinity meaning they
             // can be grabbed by any index node
-            try (var inserter = new DomainInserter(conn, -1);
-                 var processHeartbeat = heartbeat.createAdHocTaskHeartbeat("INSERT_LINKED_DOMAINS")) {
-                // Add linked domains, but with -1 affinity meaning they can be grabbed by any index node
-                int pageIdx = 0;
+            if ( true == insertFoundDomains ) {
+                logger.info("Adding found domains");
 
-                for (SlopTable.Ref<SlopDomainLinkRecord> page : inputData.listDomainLinkPages()) {
-                    processHeartbeat.progress("INSERT", pageIdx++, domainLinkPageRefs.size());
+                try (var inserter = new DomainInserter(conn, -1);
+                     var processHeartbeat = heartbeat.createAdHocTaskHeartbeat("INSERT_LINKED_DOMAINS")) {
+                    // Add linked domains, but with -1 affinity meaning they can be grabbed by any index node
+                    int pageIdx = 0;
 
-                    try (var reader = new SlopDomainLinkRecord.Reader(page)) {
-                        while (reader.hasMore()) {
-                            SlopDomainLinkRecord record = reader.next();
-                            String domainName = record.dest();
-                            if (domainNamesAll.add(domainName)) {
-                                inserter.accept(new EdgeDomain(domainName));
+                    for (SlopTable.Ref<SlopDomainLinkRecord> page : inputData.listDomainLinkPages()) {
+                        processHeartbeat.progress("INSERT", pageIdx++, domainLinkPageRefs.size());
+
+                        try (var reader = new SlopDomainLinkRecord.Reader(page)) {
+                            while (reader.hasMore()) {
+                                SlopDomainLinkRecord record = reader.next();
+                                String domainName = record.dest();
+                                if (domainNamesAll.add(domainName)) {
+                                    inserter.accept(new EdgeDomain(domainName));
+                                }
                             }
                         }
+   
                     }
                 }
             }
+            else {
+                logger.info("Skipping found domains");
+            }
+
 
             taskHeartbeat.progress(Steps.UPDATE_AFFINITY_AND_IP);
 
