@@ -40,7 +40,7 @@ public class LoaderMain extends ProcessMainClass {
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
 
-    private static boolean insertFoundDomains = Boolean.getBoolean("converter.insertFoundDomains");
+    private static boolean insertFoundDomains = Boolean.getBoolean("loader.insertFoundDomains");
 
     public static void main(String... args) {
         try {

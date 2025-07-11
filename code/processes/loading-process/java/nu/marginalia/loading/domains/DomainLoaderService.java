@@ -25,7 +25,7 @@ import java.util.Set;
 @Singleton
 public class DomainLoaderService {
 
-    private static boolean insertFoundDomains = Boolean.getBoolean("converter.insertFoundDomains");
+    private static boolean insertFoundDomains = Boolean.getBoolean("loader.insertFoundDomains");
 
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(DomainLoaderService.class);
