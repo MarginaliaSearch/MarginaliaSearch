@@ -20,7 +20,7 @@ public class BangCommand implements SearchCommandInterface {
     {
         bangsToPattern.put("!g", "https://www.google.com/search?q=%s");
         bangsToPattern.put("!ddg", "https://duckduckgo.com/?q=%s");
-        bangsToPattern.put("!w", "https://search.marginalia.nu/search?query=%s+site:en.wikipedia.org&profile=wiki");
+        bangsToPattern.put("!w", "/search?query=%s+site:en.wikipedia.org");
     }
 
     @Override
