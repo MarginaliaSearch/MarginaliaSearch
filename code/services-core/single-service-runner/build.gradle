@@ -28,8 +28,8 @@ dependencies {
 
     implementation project(':code:services-core:assistant-service')
 
-    implementation project(':code:services-application:assistant-search')
-    implementation project(':code:services-application:assistant-api')
+    implementation project(':code:services-application:search-service')
+    implementation project(':code:services-application:api-service')
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
