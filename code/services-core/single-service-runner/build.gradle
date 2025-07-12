@@ -28,7 +28,7 @@ dependencies {
 
     implementation project(':code:services-core:assistant-service')
 
-    implementation project(':code:services-application:assistant-sarch')
+    implementation project(':code:services-application:assistant-search')
     implementation project(':code:services-application:assistant-api')
 
     testImplementation libs.bundles.slf4j.test
