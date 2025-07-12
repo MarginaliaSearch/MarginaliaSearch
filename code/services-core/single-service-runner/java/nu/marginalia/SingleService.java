@@ -86,6 +86,9 @@ public class SingleService {
         QueryService("query", "nu.marginalia.query.QueryMain"),
 
         AssitantService("assistant", "nu.marginalia.assistant.AssistantMain"),
+
+        SearchService("search", "nu.marginalia.search.SearchMain"),
+        ApiService("api", "nu.marginalia.api.ApiMain"),
         ;
 
         public final String name;
