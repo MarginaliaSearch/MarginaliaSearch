@@ -20,7 +20,7 @@ public class BangCommand implements SearchCommandInterface {
     {
         bangsToPattern.put("!g", "https://www.google.com/search?q=%s");
         bangsToPattern.put("!ddg", "https://duckduckgo.com/?q=%s");
-        bangsToPattern.put("!w", "https://search.marginalia.nu/search?query=%s+site:en.wikipedia.org&profile=wiki");
+        bangsToPattern.put("!w", "/search?query=%s+site:en.wikipedia.org");
     }
 
     @Override
@@ -34,7 +34,7 @@ public class BangCommand implements SearchCommandInterface {
 
             if (match.isPresent()) {
                 var url = String.format(redirectPattern, URLEncoder.encode(match.get(), StandardCharsets.UTF_8));
-                new MapModelAndView("redirect.jte", Map.of("url", url));
+                return Optional.of(new MapModelAndView("redirect.jte", Map.of("url", url)));
             }
         }
 
