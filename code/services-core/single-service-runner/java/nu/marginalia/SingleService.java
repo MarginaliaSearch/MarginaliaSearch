@@ -85,7 +85,7 @@ public class SingleService {
         ExecutorService("executor", "nu.marginalia.executor.ExecutorMain"),
         QueryService("query", "nu.marginalia.query.QueryMain"),
 
-        QueryService("assistant", "nu.marginalia.assistant.AssistantMain"),
+        AssitantService("assistant", "nu.marginalia.assistant.AssistantMain"),
         ;
 
         public final String name;
