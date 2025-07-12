@@ -25,11 +25,14 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class DomSampleClassifier {
+
+    /** Feature classifications for the DOM sample */
     public enum DomSampleClassification {
         ADS(HtmlFeature.ADVERTISEMENT),
         TRACKING(HtmlFeature.TRACKING_ADTECH),
         CONSENT(HtmlFeature.CONSENT),
         POPOVER(HtmlFeature.POPOVER),
+        UNCLASSIFIED(HtmlFeature.MISSING_DOM_SAMPLE),
         IGNORE(null);
 
         @Nullable
@@ -39,6 +42,7 @@ public class DomSampleClassifier {
             this.htmlFeature = feature;
         }
 
+        /** Add keywords and metadata */
         public void apply(ProcessedDocumentDetails details, DocumentKeywordsBuilder words) {
             if (null == htmlFeature)
                 return;

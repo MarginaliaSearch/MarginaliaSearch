@@ -9,6 +9,7 @@ import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.AcceptableAds;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
+import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.logic.*;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
@@ -106,7 +107,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     @Override
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
-                                          DocumentClass documentClass)
+                                          Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException, IOException {
 
         if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
@@ -138,7 +139,14 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final int length = getLength(doc);
         final DocumentFormat format = getDocumentFormat(doc);
-        final double quality = documentValuator.getQuality(crawledDocument, format, doc, length);
+        final double quality;
+
+        if (domSampleClassifications.contains(DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)) {
+            quality = documentValuator.getQuality(crawledDocument, format, doc, length);
+        }
+        else {
+            quality = documentValuator.getQuality(domSampleClassifications);
+        }
 
         if (!lenientProcessing && isDisqualified(documentClass, url, quality, doc.title())) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);

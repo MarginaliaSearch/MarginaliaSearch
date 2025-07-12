@@ -33,10 +33,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 public class DomainProcessor {
@@ -88,6 +87,17 @@ public class DomainProcessor {
         }
     }
 
+    /** Fetch and process the DOM sample and extract classifications */
+    private Set<DomSampleClassifier.DomSampleClassification> getDomainClassifications(String domainName) throws ExecutionException, InterruptedException {
+        return domSampleClient
+                .getSampleAsync(domainName, domSampleExecutor)
+                .thenApply(domSampleClassifier::classify)
+                .handle((a,b) ->
+                        Objects.requireNonNullElseGet(a,
+                                () -> EnumSet.of(DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)))
+                .get();
+    }
+
     @Nullable
     public ProcessedDomain fullProcessing(SerializableCrawlDataStream dataStream) {
         try {
@@ -101,10 +111,6 @@ public class DomainProcessor {
                 throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
             }
 
-            CompletableFuture<Set<DomSampleClassifier.DomSampleClassification>> domSample =
-                    domSampleClient.getSampleAsync(crawledDomain.domain, domSampleExecutor)
-                            .thenApply(domSampleClassifier::classify);
-
             DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
             DocumentDecorator documentDecorator = new DocumentDecorator();
 
@@ -116,7 +122,7 @@ public class DomainProcessor {
 
             // Process Documents
 
-            List<DomSampleClassifier.DomSampleClassification> classifiers = null;
+            Set<DomSampleClassifier.DomSampleClassification> classifications = getDomainClassifications(crawledDomain.getDomain());
 
             try (var deduplicator = new LshDocumentDeduplicator()) {
                 while (dataStream.hasNext()) {
@@ -130,7 +136,7 @@ public class DomainProcessor {
                         continue;
 
                     try {
-                        var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
+                        var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, classifications, documentDecorator);
 
                         if (deduplicator.isDocumentDuplicate(processedDoc)) {
                             processedDoc.state = UrlIndexingState.DISQUALIFIED;
@@ -138,16 +144,7 @@ public class DomainProcessor {
                         }
 
                         if (processedDoc.isOk()) {
-                            if (null == classifiers) {
-                                try {
-                                    classifiers = new ArrayList<>(domSample.get());
-                                }
-                                catch (Exception ex) {
-                                    classifiers = List.of();
-                                }
-                            }
-
-                            classifiers.forEach(classifier -> {
+                            classifications.forEach(classifier -> {
                                 classifier.apply(processedDoc.details, processedDoc.words);
                             });
                         }
@@ -182,18 +179,17 @@ public class DomainProcessor {
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
 
-        CompletableFuture<Set<DomSampleClassifier.DomSampleClassification>> domSample;
-        AtomicReference<List<DomSampleClassifier.DomSampleClassification>> classification;
+        Set<DomSampleClassifier.DomSampleClassification> domSample;
 
         private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
                 Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
         );
 
-        SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
+        SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws Exception {
             this(dataStream, sizeHint, List.of());
         }
 
-        SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) throws IOException {
+        SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) throws Exception {
             this.dataStream = dataStream;
 
             if (!dataStream.hasNext() || !(dataStream.next() instanceof CrawledDomain crawledDomain))
@@ -209,8 +205,7 @@ public class DomainProcessor {
 
             processDomain(crawledDomain, domain, documentDecorator);
 
-            domSample = domSampleClient.getSampleAsync(crawledDomain.domain, domSampleExecutor)
-                            .thenApply(domSampleClassifier::classify);
+            domSample = getDomainClassifications(crawledDomain.getDomain());
 
             externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
         }
@@ -233,7 +228,7 @@ public class DomainProcessor {
 
 
                     taskConsumer.accept(() -> {
-                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, documentDecorator);
+                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, domSample, documentDecorator);
 
                         synchronized (deduplicator) {
                             if (deduplicator.isDocumentDuplicate(processedDoc)) {
@@ -249,7 +244,7 @@ public class DomainProcessor {
 
                             // Apply classifications
                             try {
-                                domSample.get().forEach(classification -> {
+                                domSample.forEach(classification -> {
                                     classification.apply(processedDoc.details, processedDoc.words);
                                 });
                             }
@@ -275,10 +270,6 @@ public class DomainProcessor {
 
         @Override
         public void close() throws Exception {
-            if (!domSample.isDone()) { // Cancel in the case there were nothing to try to consume this
-                domSample.cancel(true);
-            }
-
             dataStream.close();
             deduplicator.close();
         }

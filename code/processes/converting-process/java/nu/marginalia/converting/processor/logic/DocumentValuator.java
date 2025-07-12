@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
 import nu.marginalia.converting.model.DisqualifiedException;
+import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawldata.CrawledDocument;
@@ -13,6 +14,8 @@ import org.jsoup.select.NodeVisitor;
 
 import java.util.List;
 import java.util.Set;
+
+import static nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier.DomSampleClassification.*;
 
 public class DocumentValuator {
 
@@ -124,6 +127,25 @@ public class DocumentValuator {
         }
 
         return quality + adjustment;
+    }
+
+    public double getQuality(Set<DomSampleClassifier.DomSampleClassification> classifications) {
+        double quality = 0;
+        if (classifications.contains(ADS)) {
+            quality -= 6;
+        }
+        if (classifications.contains(TRACKING)) {
+            quality -= 4;
+        }
+
+        if (classifications.contains(CONSENT)) {
+            quality -= 4;
+        }
+        else if (classifications.contains(POPOVER)) {
+            quality -= 4;
+        }
+
+        return quality;
     }
 
     public static class ScriptVisitor implements NodeVisitor {

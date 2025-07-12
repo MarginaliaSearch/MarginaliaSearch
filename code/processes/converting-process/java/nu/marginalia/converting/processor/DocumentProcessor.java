@@ -5,6 +5,7 @@ import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PdfDocumentProcessorPlugin;
@@ -59,6 +60,7 @@ public class DocumentProcessor {
     public ProcessedDocument process(CrawledDocument crawledDocument,
                                      EdgeDomain domain,
                                      DomainLinks externalDomainLinks,
+                                     Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications,
                                      DocumentDecorator documentDecorator) {
         ProcessedDocument ret = new ProcessedDocument();
 
@@ -93,7 +95,7 @@ public class DocumentProcessor {
 
             var detailsWithWords =
                     findPlugin(crawledDocument)
-                            .createDetails(crawledDocument, linkTexts, documentClass);
+                            .createDetails(crawledDocument, linkTexts, domSampleClassifications, documentClass);
 
             ret.details = detailsWithWords.details();
             ret.words = detailsWithWords.words();

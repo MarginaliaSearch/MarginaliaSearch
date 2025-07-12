@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
+import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.logic.PlainTextLogic;
 import nu.marginalia.converting.util.LineUtils;
@@ -23,10 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.net.URISyntaxException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 
 public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
@@ -70,7 +68,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     @Override
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
-                                          DocumentClass documentClass)
+                                          Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException {
 
         String documentBody = crawledDocument.documentBody();

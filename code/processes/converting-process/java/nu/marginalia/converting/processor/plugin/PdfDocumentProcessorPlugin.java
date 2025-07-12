@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
+import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -77,7 +78,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     @Override
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
-                                          DocumentClass documentClass)
+                                          Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException, IOException {
 
         String documentBody = crawledDocument.documentBody();
