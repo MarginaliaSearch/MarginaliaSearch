@@ -5,7 +5,9 @@ import java.util.Collection;
 public enum HtmlFeature {
     // Note, the first 32 of these features are bit encoded in the database
     // so be sure to keep anything that's potentially important toward the top
-    // of the list
+    // of the list; but adding new values will shift the encoded values and break
+    // binary compatibility!  Scroll down for a marker where you should add new values
+    // if they need to be accessible from DocumentValuator!
 
     MEDIA( "special:media"),
     JS("special:scripts"),
@@ -29,8 +31,13 @@ public enum HtmlFeature {
     GA_SPAM("special:gaspam"),
 
     PDF("format:pdf"),
+
     POPOVER("special:popover"),
     CONSENT("special:consent"),
+
+    // Here!  It is generally safe to add additional values here without
+    // disrupting the encoded values used by the DocumentValuator
+    // class in the index!
 
     /** For fingerprinting and ranking */
     OPENGRAPH("special:opengraph"),
