@@ -1,4 +1,4 @@
-package nu.marginalia.ranking.domains.data;
+package nu.marginalia.domainranking.data;
 
 import org.jgrapht.Graph;
 

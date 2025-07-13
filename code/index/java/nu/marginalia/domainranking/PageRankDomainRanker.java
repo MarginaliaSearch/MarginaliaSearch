@@ -1,10 +1,10 @@
-package nu.marginalia.ranking.domains;
+package nu.marginalia.domainranking;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
-import nu.marginalia.ranking.domains.accumulator.RankingResultAccumulator;
-import nu.marginalia.ranking.domains.data.GraphSource;
-import nu.marginalia.ranking.domains.jgrapht.PersonalizedPageRank;
+import nu.marginalia.domainranking.accumulator.RankingResultAccumulator;
+import nu.marginalia.domainranking.data.GraphSource;
+import nu.marginalia.domainranking.jgrapht.PersonalizedPageRank;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 import org.jgrapht.alg.scoring.PageRank;

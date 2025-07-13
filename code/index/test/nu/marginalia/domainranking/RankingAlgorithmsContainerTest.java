@@ -1,12 +1,12 @@
-package nu.marginalia.ranking.domains;
+package nu.marginalia.domainranking;
 
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
-import nu.marginalia.ranking.domains.data.InvertedLinkGraphSource;
-import nu.marginalia.ranking.domains.data.LinkGraphSource;
-import nu.marginalia.ranking.domains.data.SimilarityGraphSource;
+import nu.marginalia.domainranking.data.InvertedLinkGraphSource;
+import nu.marginalia.domainranking.data.LinkGraphSource;
+import nu.marginalia.domainranking.data.SimilarityGraphSource;
 import nu.marginalia.test.TestMigrationLoader;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultWeightedEdge;

@@ -1,4 +1,4 @@
-package nu.marginalia.ranking.domains.accumulator;
+package nu.marginalia.domainranking.accumulator;
 
 import gnu.trove.list.array.TIntArrayList;
 

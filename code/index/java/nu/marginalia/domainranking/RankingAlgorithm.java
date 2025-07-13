@@ -1,6 +1,6 @@
-package nu.marginalia.ranking.domains;
+package nu.marginalia.domainranking;
 
-import nu.marginalia.ranking.domains.accumulator.RankingResultAccumulator;
+import nu.marginalia.domainranking.accumulator.RankingResultAccumulator;
 
 import java.util.function.Supplier;
 

@@ -1,4 +1,4 @@
-package nu.marginalia.ranking.domains.jgrapht;
+package nu.marginalia.domainranking.jgrapht;
 
 /*
  * (C) Copyright 2016-2023, by Dimitrios Michail and Contributors.
@@ -21,8 +21,9 @@ package nu.marginalia.ranking.domains.jgrapht;
 
 /* (modified by @vlofgren to add personalization) */
 
-import org.jgrapht.*;
-import org.jgrapht.alg.interfaces.*;
+import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
+import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 
 import java.util.*;
 

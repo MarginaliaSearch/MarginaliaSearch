@@ -1,7 +1,7 @@
-package nu.marginalia.ranking.domains;
+package nu.marginalia.domainranking;
 
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.ranking.domains.data.GraphSource;
+import nu.marginalia.domainranking.data.GraphSource;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
