@@ -1,6 +1,7 @@
 package nu.marginalia.rss.svc;
 
 import com.google.inject.Inject;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.feeds.*;
 import nu.marginalia.db.DbDomainQueries;
@@ -69,7 +70,7 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
     @Override
     public void getFeedDataHash(Empty request, StreamObserver<RpcFeedDataHash> responseObserver) {
         if (!feedDb.isEnabled()) {
-            responseObserver.onError(new IllegalStateException("Feed database is disabled on this node"));
+            responseObserver.onError(Status.INTERNAL.withDescription("Feed database is disabled on this node").asRuntimeException());
             return;
         }
 
@@ -80,7 +81,7 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
         }
         catch (Exception e) {
             logger.error("Error getting feed data hash", e);
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -101,7 +102,7 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
         }
         catch (Exception e) {
             logger.error("Error getting updated links", e);
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -109,13 +110,13 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
     public void getFeed(RpcDomainId request,
                         StreamObserver<RpcFeed> responseObserver) {
         if (!feedDb.isEnabled()) {
-            responseObserver.onError(new IllegalStateException("Feed database is disabled on this node"));
+            responseObserver.onError(Status.INTERNAL.withDescription("Feed database is disabled on this node").asRuntimeException());
             return;
         }
 
         Optional<EdgeDomain> domainName = domainQueries.getDomain(request.getDomainId());
         if (domainName.isEmpty()) {
-            responseObserver.onError(new IllegalArgumentException("Domain not found"));
+            responseObserver.onError(Status.NOT_FOUND.withDescription("Domain not found").asRuntimeException());
             return;
         }
 

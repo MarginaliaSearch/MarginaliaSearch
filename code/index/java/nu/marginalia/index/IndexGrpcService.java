@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
@@ -148,7 +149,7 @@ public class IndexGrpcService
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);
-            responseObserver.onError(ex);
+            responseObserver.onError(Status.INTERNAL.withCause(ex).asRuntimeException());
         }
     }
 

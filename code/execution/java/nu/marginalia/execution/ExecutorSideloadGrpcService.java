@@ -1,6 +1,7 @@
 package nu.marginalia.execution;
 
 import com.google.inject.Inject;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
@@ -33,7 +34,7 @@ public class ExecutorSideloadGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -48,7 +49,7 @@ public class ExecutorSideloadGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -63,7 +64,7 @@ public class ExecutorSideloadGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -78,7 +79,7 @@ public class ExecutorSideloadGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -93,7 +94,7 @@ public class ExecutorSideloadGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
