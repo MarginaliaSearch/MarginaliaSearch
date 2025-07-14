@@ -24,7 +24,6 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
-import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeDomain;
@@ -63,12 +62,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final DocumentValuator documentValuator = new DocumentValuator();
 
     private static final LinkParser linkParser = new LinkParser();
-    private static final FeedExtractor feedExtractor = new FeedExtractor(linkParser);
 
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final HtmlProcessorSpecializations htmlProcessorSpecializations;
 
-    private static final int MAX_DOCUMENT_LENGTH_BYTES = Integer.getInteger("converter.max-body-length",128_000);
     private static boolean lenientProcessing = Boolean.getBoolean("converter.lenientProcessing");
 
     @Inject
@@ -156,10 +153,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         checkDocumentLanguage(dld);
 
-        if (!lenientProcessing && !documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
-        }
-
         var ret = new ProcessedDocumentDetails();
 
         ret.length = length;
@@ -167,6 +160,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
+
+
+        if (!documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
+            features.add(HtmlFeature.SHORT_DOCUMENT);
+        }
+
 
         ret.features = features;
         ret.quality = documentValuator.adjustQuality(quality, features);

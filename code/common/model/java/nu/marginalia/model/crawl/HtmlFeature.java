@@ -7,7 +7,7 @@ public enum HtmlFeature {
     // so be sure to keep anything that's potentially important toward the top
     // of the list; but adding new values will shift the encoded values and break
     // binary compatibility!  Scroll down for a marker where you should add new values
-    // if they need to be accessible from DocumentValuator!
+    // if they need to be accessible from IndexResultScoreCalculator!
 
     MEDIA( "special:media"),
     JS("special:scripts"),
@@ -34,6 +34,7 @@ public enum HtmlFeature {
 
     POPOVER("special:popover"),
     CONSENT("special:consent"),
+    SHORT_DOCUMENT("special:shorty"),
 
     // Here!  It is generally safe to add additional values here without
     // disrupting the encoded values used by the DocumentValuator
@@ -103,6 +104,8 @@ public enum HtmlFeature {
     }
 
     public int getFeatureBit() {
+        if (getClass().desiredAssertionStatus() && ordinal() >= 32)
+            throw new IllegalStateException("Attempting to extract feature bit of " + name() + ", with ordinal " + ordinal());
         return (1<< ordinal());
     }
 }
