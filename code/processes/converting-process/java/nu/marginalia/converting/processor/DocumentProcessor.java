@@ -5,6 +5,7 @@ import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.processor.classifier.AcceptableAds;
 import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;

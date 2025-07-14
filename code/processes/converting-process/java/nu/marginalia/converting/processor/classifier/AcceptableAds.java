@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor;
+package nu.marginalia.converting.processor.classifier;
 
 import nu.marginalia.model.crawldata.CrawledDocument;
 import org.jsoup.nodes.Document;
