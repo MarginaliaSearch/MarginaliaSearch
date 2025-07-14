@@ -119,6 +119,7 @@ public class ApiService extends SparkService {
         }
 
         int count = intParam(request, "count", 20);
+        int domainCount = intParam(request, "dc", 2);
         int index = intParam(request, "index", 3);
         int nsfw = intParam(request, "nsfw", 1);
 
@@ -137,7 +138,7 @@ public class ApiService extends SparkService {
                 .labels(license.key)
                 .time(() ->
                         searchOperator
-                        .query(query, count, index, nsfwFilterTier)
+                        .query(query, count, domainCount, index, nsfwFilterTier)
                         .withLicense(license.getLicense())
                 );
     }

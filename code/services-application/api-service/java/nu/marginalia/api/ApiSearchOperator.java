@@ -30,10 +30,11 @@ public class ApiSearchOperator {
 
     public ApiSearchResults query(String query,
                                   int count,
+                                  int domainCount,
                                   int index,
                                   NsfwFilterTier filterTier)
     {
-        var rsp = queryClient.search(createParams(query, count, index, filterTier));
+        var rsp = queryClient.search(createParams(query, count, domainCount, index, filterTier));
 
         return new ApiSearchResults("RESTRICTED", query,
                 rsp.results()
@@ -44,13 +45,13 @@ public class ApiSearchOperator {
                 .collect(Collectors.toList()));
     }
 
-    private QueryParams createParams(String query, int count, int index, NsfwFilterTier filterTirer) {
+    private QueryParams createParams(String query, int count, int domainCount, int index, NsfwFilterTier filterTirer) {
         SearchSetIdentifier searchSet = selectSearchSet(index);
 
         return new QueryParams(
                 query,
                 RpcQueryLimits.newBuilder()
-                        .setResultsByDomain(2)
+                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
                         .setResultsTotal(Math.min(100, count))
                         .setTimeoutMs(150)
                         .setFetchSize(8192)
