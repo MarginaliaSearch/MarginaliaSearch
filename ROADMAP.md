@@ -48,10 +48,6 @@ filter for any API consumer.
 
 I've talked to the stract dev and he does not think it's a good idea to mimic their optics language, which is quite ad-hoc, but instead to work together to find some new common description language for this. 
 
-## Show favicons next to search results
-
-This is expected from search engines.  Basic proof of concept sketch of fetching this data has been done, but the feature is some way from being reality. 
-
 ## Specialized crawler for github
 
 One of the search engine's biggest limitations right now is that it does not index github at all.   A specialized crawler that fetches at least the readme.md would go a long way toward providing search capabilities in this domain.
@@ -65,6 +61,10 @@ The documents database probably should have some sort of flag indicating it's a 
 
 PDF parsing is known to be a bit of a security liability so some thought needs to be put in
 that direction as well.
+
+## Show favicons next to search results (COMPLETED 2025-03)
+
+This is expected from search engines.  Basic proof of concept sketch of fetching this data has been done, but the feature is some way from being reality.
 
 ## Web Design Overhaul (COMPLETED 2025-01)
 
