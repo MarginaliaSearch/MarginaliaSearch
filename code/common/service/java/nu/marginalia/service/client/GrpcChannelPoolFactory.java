@@ -27,8 +27,9 @@ public class GrpcChannelPoolFactory {
     private static final Executor executor = useLoom
             ? Executors.newVirtualThreadPerTaskExecutor()
             : NamedExecutorFactory.createFixed("gRPC-Channel-Pool", Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
-    private static final Executor offloadExecutor = NamedExecutorFactory.createFixed("gRPC-Offload-Pool",
-            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
+    private static final Executor offloadExecutor =  useLoom
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : NamedExecutorFactory.createFixed("gRPC-Offload-Pool", Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
 
     @Inject
     public GrpcChannelPoolFactory(NodeConfigurationWatcher nodeConfigurationWatcher,
