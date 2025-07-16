@@ -63,12 +63,12 @@ public class BackoffStrategy {
         double backoffMinutes = baseInterval.toMinutes()
                 * Math.pow(multiplier, Math.clamp(backoffConsecutiveFailures, 1, 10));
 
-        Duration newDuration = Duration.ofMinutes(Math.round(0.5+backoffMinutes));
-        if (newDuration.compareTo(maxInterval) > 0) {
+        var backoffVal = Math.round(0.5+backoffMinutes);
+        if (backoffVal > maxInterval.toMinutes()) {
             return maxInterval;
         }
 
-        return newDuration;
+        return Duration.ofMinutes(backoffVal);
     }
 
     private Duration addJitter(Duration duration) {
