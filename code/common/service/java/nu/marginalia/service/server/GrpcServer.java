@@ -13,9 +13,14 @@ import nu.marginalia.util.NamedExecutorFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GrpcServer {
     private final Server server;
+
+    private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
+
     public GrpcServer(ServiceConfiguration config,
                       ServiceRegistryIf serviceRegistry,
                       ServicePartition partition,
@@ -26,8 +31,13 @@ public class GrpcServer {
         int nThreads = Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16);
 
         // Start the gRPC server
+
+        ExecutorService workExecutor = useLoom ?
+                Executors.newVirtualThreadPerTaskExecutor() :
+                NamedExecutorFactory.createFixed("nettyExecutor", nThreads);
+
         var grpcServerBuilder = NettyServerBuilder.forAddress(new InetSocketAddress(config.bindAddress(), port))
-                .executor(NamedExecutorFactory.createFixed("nettyExecutor", nThreads))
+                .executor(workExecutor)
                 .workerEventLoopGroup(new NioEventLoopGroup(nThreads, NamedExecutorFactory.createFixed("Worker-ELG", nThreads)))
                 .bossEventLoopGroup(new NioEventLoopGroup(nThreads, NamedExecutorFactory.createFixed("Boss-ELG", nThreads)))
                 .channelType(NioServerSocketChannel.class);
