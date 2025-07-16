@@ -13,6 +13,7 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.util.NamedExecutorFactory;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 @Singleton
@@ -20,8 +21,12 @@ public class GrpcChannelPoolFactory {
 
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
     private final ServiceRegistryIf serviceRegistryIf;
-    private static final Executor executor = NamedExecutorFactory.createFixed("gRPC-Channel-Pool",
-            Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
+
+    private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
+
+    private static final Executor executor = useLoom
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : NamedExecutorFactory.createFixed("gRPC-Channel-Pool", Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
     private static final Executor offloadExecutor = NamedExecutorFactory.createFixed("gRPC-Offload-Pool",
             Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 32));
 
