@@ -3,7 +3,7 @@ package nu.marginalia.converting.processor.plugin;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
-import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
+import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;

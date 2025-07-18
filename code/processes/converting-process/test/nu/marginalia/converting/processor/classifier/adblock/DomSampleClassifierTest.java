@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.classifier.adblock;
 
+import nu.marginalia.domclassifier.DomSampleClassifier;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 

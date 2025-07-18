@@ -1,9 +1,9 @@
-package nu.marginalia.converting.processor.classifier.adblock;
+package nu.marginalia.domclassifier;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import nu.marginalia.api.domsample.RpcDomainSample;
-import nu.marginalia.converting.model.ProcessedDocumentDetails;
-import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.api.domsample.RpcOutgoingRequest;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import org.jsoup.Jsoup;
@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+@Singleton
 public class DomSampleClassifier {
 
     /** Feature classifications for the DOM sample */
@@ -40,15 +41,6 @@ public class DomSampleClassifier {
 
         DomSampleClassification(@Nullable HtmlFeature feature) {
             this.htmlFeature = feature;
-        }
-
-        /** Add keywords and metadata */
-        public void apply(ProcessedDocumentDetails details, DocumentKeywordsBuilder words) {
-            if (null == htmlFeature)
-                return;
-
-            details.features.add(htmlFeature);
-            words.addSyntheticTerm(htmlFeature.getKeyword());
         }
     }
 
@@ -103,6 +95,45 @@ public class DomSampleClassifier {
 
     }
 
+    public DomSampleClassification classifyRequest(RpcOutgoingRequest request) {
+        try {
+            EdgeUrl edgeUrl = new EdgeUrl(request.getUrl());
+
+            for (Map.Entry<Predicate<String>, DomSampleClassification> regexMatcher : regexClassification) {
+                if (regexMatcher.getKey().test(edgeUrl.toDisplayString())) {
+                    var clazz = regexMatcher.getValue();
+
+                    if (clazz != DomSampleClassification.IGNORE) {
+                        return clazz;
+                    }
+                }
+            }
+
+            DomSampleClassification clazz = urlClassification.get(edgeUrl.toDisplayString());
+
+            if (clazz != null && clazz != DomSampleClassification.IGNORE) {
+                return clazz;
+            }
+
+            clazz = fullDomainClassification.get(edgeUrl.domain.toString());
+
+            if (clazz != null && clazz != DomSampleClassification.IGNORE) {
+                return clazz;
+            }
+
+            clazz = topDomainClassification.get(edgeUrl.domain.topDomain);
+
+            if (clazz != null && clazz != DomSampleClassification.IGNORE) {
+                return clazz;
+            }
+        }
+        catch (Exception e) {
+            // Ignore parsing errors
+        }
+
+        return DomSampleClassification.UNCLASSIFIED;
+    }
+
     public Set<DomSampleClassification> classify(RpcDomainSample sample) {
         Set<DomSampleClassification> classifications = new HashSet<>();
 
@@ -132,51 +163,10 @@ public class DomSampleClassifier {
         }
 
         // Classify outgoing requests
-        outer:
         for (var req : sample.getOutgoingRequestsList()) {
-            try {
-                EdgeUrl edgeUrl = new EdgeUrl(req.getUrl());
-
-                for (Map.Entry<Predicate<String>, DomSampleClassification> regexMatcher : regexClassification) {
-                    if (regexMatcher.getKey().test(edgeUrl.toDisplayString())) {
-                        var clazz = regexMatcher.getValue();
-
-                        if (clazz != DomSampleClassification.IGNORE) {
-                            classifications.add(clazz);
-                        }
-                        continue outer;
-                    }
-                }
-
-                DomSampleClassification clazz = urlClassification.get(edgeUrl.toDisplayString());
-
-                if (clazz != null) {
-                    if (clazz != DomSampleClassification.IGNORE) {
-                        classifications.add(clazz);
-                    }
-                    continue;
-                }
-
-                clazz = fullDomainClassification.get(edgeUrl.domain.toString());
-
-                if (clazz != null) {
-                    if (clazz != DomSampleClassification.IGNORE) {
-                        classifications.add(clazz);
-                    }
-                    continue;
-                }
-
-                clazz = topDomainClassification.get(edgeUrl.domain.topDomain);
-
-                if (clazz != null) {
-                    if (clazz != DomSampleClassification.IGNORE) {
-                        classifications.add(clazz);
-                    }
-                    continue;
-                }
-            }
-            catch (Exception e) {
-                // Ignore parsing errors
+            var clazz = classifyRequest(req);
+            if (clazz != DomSampleClassification.IGNORE && clazz != DomSampleClassification.UNCLASSIFIED) {
+                classifications.add(clazz);
             }
         }
 

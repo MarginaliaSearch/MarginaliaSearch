@@ -126,6 +126,8 @@
         @template.siteinfo.view.backlinks(backlinks = backlinks)
     @elseif (model instanceof SearchSiteInfoService.Docs docs)
         @template.siteinfo.view.docs(docs = docs)
+    @elseif (model instanceof SearchSiteInfoService.SiteGeneratedRequestsReport report)
+        @template.siteinfo.view.traffic(report = report)
     @endif
 
 </div>

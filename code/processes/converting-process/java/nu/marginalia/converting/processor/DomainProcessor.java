@@ -7,13 +7,13 @@ import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
-import nu.marginalia.converting.processor.classifier.adblock.DomSampleClassifier;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
+import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.geoip.sources.AsnTable;
 import nu.marginalia.io.SerializableCrawlDataStream;
@@ -143,9 +143,12 @@ public class DomainProcessor {
                             processedDoc.stateReason = "Duplicate";
                         }
 
-                        if (processedDoc.isOk()) {
-                            classifications.forEach(classifier -> {
-                                classifier.apply(processedDoc.details, processedDoc.words);
+                        if (processedDoc.isOk() && processedDoc.words != null && processedDoc.details != null) {
+                            classifications.forEach(classification -> {
+                                if (classification.htmlFeature == null) return;
+
+                                processedDoc.words.addSyntheticTerm(classification.htmlFeature.getKeyword());
+                                processedDoc.details.features.add(classification.htmlFeature);
                             });
                         }
 
@@ -179,7 +182,7 @@ public class DomainProcessor {
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
 
-        Set<DomSampleClassifier.DomSampleClassification> domSample;
+        Set<DomSampleClassifier.DomSampleClassification> classifications;
 
         private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
                 Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
@@ -205,7 +208,7 @@ public class DomainProcessor {
 
             processDomain(crawledDomain, domain, documentDecorator);
 
-            domSample = getDomainClassifications(crawledDomain.getDomain());
+            classifications = getDomainClassifications(crawledDomain.getDomain());
 
             externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
         }
@@ -228,7 +231,7 @@ public class DomainProcessor {
 
 
                     taskConsumer.accept(() -> {
-                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, domSample, documentDecorator);
+                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, classifications, documentDecorator);
 
                         synchronized (deduplicator) {
                             if (deduplicator.isDocumentDuplicate(processedDoc)) {
@@ -244,8 +247,11 @@ public class DomainProcessor {
 
                             // Apply classifications
                             try {
-                                domSample.forEach(classification -> {
-                                    classification.apply(processedDoc.details, processedDoc.words);
+                                classifications.forEach(classification -> {
+                                    if (classification.htmlFeature == null) return;
+
+                                    processedDoc.words.addSyntheticTerm(classification.htmlFeature.getKeyword());
+                                    processedDoc.details.features.add(classification.htmlFeature);
                                 });
                             }
                             catch (Exception ex) {

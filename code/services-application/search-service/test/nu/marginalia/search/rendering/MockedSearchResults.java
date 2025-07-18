@@ -7,6 +7,9 @@ import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.ddtrackergradar.model.DDGTDomain;
+import nu.marginalia.ddtrackergradar.model.DDGTOwner;
+import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -19,6 +22,7 @@ import nu.marginalia.search.svc.SearchSiteInfoService;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MockedSearchResults {
@@ -270,5 +274,50 @@ public class MockedSearchResults {
                 "other.example.com",
                 List.of(mockUrlDetails("https://www.example.com/some-incredibly-long-address-that-goes-on-and-on", "One document")),
                 List.of(mockUrlDetails("https://other.example.com/", "Other document")));
+    }
+
+    public static Object mockTrafficReport() {
+        List<SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain> requests = new ArrayList<>();
+        requests.add(new SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain(
+                new EdgeDomain("hotjar.com"),
+                List.of(new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/foo.js", "POST", DomSampleClassifier.DomSampleClassification.TRACKING)),
+                new DDGTDomain(
+                        "hotjar.com",
+                        new DDGTOwner("Hotjar Ltd", "Hotjar", "https://www.example.com/", "https://www.hotjar.com/"),
+                        List.of("Tracking", "Session Replay"),
+                        List.of()
+                )
+        ));
+        requests.add(new SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain(
+                new EdgeDomain("doubleclick.net"),
+                List.of(new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/foo.js", "GET", DomSampleClassifier.DomSampleClassification.TRACKING),
+                        new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/bar.js", "GET", DomSampleClassifier.DomSampleClassification.TRACKING)),
+                new DDGTDomain(
+                        "doubleclick.net",
+                        new DDGTOwner("Doubleclick Inc", "Doubleclick", "https://www.example.com/", "https://www.hotjar.com/"),
+                        List.of("CDN", "Advertising"),
+                        List.of()
+                )
+        ));
+        requests.add(new SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain(
+                new EdgeDomain("sketchy.org"),
+                List.of(new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/foo.js", "GET", DomSampleClassifier.DomSampleClassification.ADS),
+                        new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/bar.js", "GET", DomSampleClassifier.DomSampleClassification.CONSENT)),
+                new DDGTDomain(
+                        "sketchy.org",
+                        new DDGTOwner("Doubious AB", "Legit Enterprises", "https://www.example.com/", "https://www.hotjar.com/"),
+                        List.of("Malware", "Social - Comment"),
+                        List.of()
+                )
+        ));
+        return new SearchSiteInfoService.SiteGeneratedRequestsReport(
+                "example.com",
+                Map.of(
+                        DomSampleClassifier.DomSampleClassification.ADS, 3,
+                        DomSampleClassifier.DomSampleClassification.TRACKING, 10
+                ),
+                requests
+        );
+
     }
 }

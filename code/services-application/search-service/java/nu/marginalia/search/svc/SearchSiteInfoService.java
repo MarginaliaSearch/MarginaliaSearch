@@ -1,6 +1,7 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import io.jooby.Context;
 import io.jooby.MapModelAndView;
@@ -9,12 +10,19 @@ import io.jooby.annotation.*;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
+import nu.marginalia.api.domsample.DomSampleClient;
+import nu.marginalia.api.domsample.RpcDomainSample;
+import nu.marginalia.api.domsample.RpcOutgoingRequest;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.api.feeds.RpcFeed;
 import nu.marginalia.api.feeds.RpcFeedItem;
 import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.ddtrackergradar.DDGTrackerData;
+import nu.marginalia.ddtrackergradar.model.DDGTDomain;
+import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.GroupedUrlDetails;
@@ -26,6 +34,7 @@ import nu.marginalia.service.server.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +43,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static nu.marginalia.search.svc.SearchSiteInfoService.SiteGeneratedRequestsReport.*;
+
+@Singleton
 public class SearchSiteInfoService {
     private static final Logger logger = LoggerFactory.getLogger(SearchSiteInfoService.class);
 
@@ -43,12 +55,17 @@ public class SearchSiteInfoService {
     private final DbDomainQueries domainQueries;
     private final FeedsClient feedsClient;
     private final LiveCaptureClient liveCaptureClient;
+    private final DomSampleClient domSampleClient;
     private final ScreenshotService screenshotService;
 
     private final HikariDataSource dataSource;
+    private final DDGTrackerData ddgTrackerData;
     private final SearchSiteSubscriptionService searchSiteSubscriptions;
 
     private final RateLimiter rateLimiter = RateLimiter.custom(60);
+
+    private final DomSampleClassifier domSampleClassifier;
+
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
@@ -59,6 +76,9 @@ public class SearchSiteInfoService {
                                  LiveCaptureClient liveCaptureClient,
                                  ScreenshotService screenshotService,
                                  HikariDataSource dataSource,
+                                 DomSampleClient domSampleClient,
+                                 DomSampleClassifier domSampleClassifier,
+                                 DDGTrackerData ddgTrackerData,
                                  SearchSiteSubscriptionService searchSiteSubscriptions)
     {
         this.searchOperator = searchOperator;
@@ -70,6 +90,9 @@ public class SearchSiteInfoService {
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
         this.dataSource = dataSource;
+        this.domSampleClient = domSampleClient;
+        this.domSampleClassifier = domSampleClassifier;
+        this.ddgTrackerData = ddgTrackerData;
         this.searchSiteSubscriptions = searchSiteSubscriptions;
 
         Thread.ofPlatform().name("Recently Added Domains Model Updater").start(this::modelUpdater);
@@ -154,12 +177,83 @@ public class SearchSiteInfoService {
             case "links" -> listLinks(domainName, page);
             case "docs" -> listDocs(domainName, page);
             case "info" -> listInfo(context, domainName);
+            case "traffic" -> siteTraffic(context, domainName);
             case "report" -> reportSite(domainName);
             default -> listInfo(context, domainName);
         };
 
         return new MapModelAndView("siteinfo/main.jte",
                 Map.of("model", model, "navbar", NavbarModel.SITEINFO));
+    }
+
+    private SiteInfoModel siteTraffic(Context context, String domainName) {
+        if (!rateLimiter.isAllowed()) {
+            return forServiceUnavailable(domainName);
+        }
+
+
+        Optional<RpcDomainSample> sample = domSampleClient.getSample(domainName.toLowerCase());
+        if (sample.isEmpty()) {
+            return forNoData(domainName);
+        }
+
+        final EdgeDomain currentDomain = new EdgeDomain(domainName);
+        final List<OutgoingRequestsForDomain> requests = new ArrayList<>();
+        final List<RequestedEndpoint> endpoints = new ArrayList<>();
+        final Map<EdgeDomain, List<Map.Entry<EdgeUrl, RpcOutgoingRequest>>> urlsPerDomain = new HashMap<>();
+
+        for (RpcOutgoingRequest rpcOutgoingRequest : sample.get().getOutgoingRequestsList()) {
+            Optional<EdgeUrl> parsedUrl = EdgeUrl.parse(rpcOutgoingRequest.getUrl());
+            if (parsedUrl.isEmpty())
+                continue;
+
+            final EdgeUrl url = parsedUrl.get();
+
+            if (url.domain.hasSameTopDomain(currentDomain))
+                continue;
+
+            urlsPerDomain
+                    .computeIfAbsent(url.getDomain(), k -> new ArrayList<>())
+                    .add(Map.entry(url, rpcOutgoingRequest));
+        }
+
+        Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary = new HashMap<>();
+
+        urlsPerDomain.forEach((requestDomain, urlsAndReqs) -> {
+
+            for (Map.Entry<EdgeUrl, RpcOutgoingRequest> urlAndReq : urlsAndReqs) {
+                final EdgeUrl url =  urlAndReq.getKey();
+                final RpcOutgoingRequest outgoingRequest = urlAndReq.getValue();
+
+                final DomSampleClassifier.DomSampleClassification clazz = domSampleClassifier.classifyRequest(outgoingRequest);
+
+                requestSummary.merge(clazz, 1, Integer::sum);
+
+                endpoints.add(
+                        new RequestedEndpoint(
+                            url.path + (url.param == null ? "" : "?" +  url.param),
+                            outgoingRequest.getMethod().name(),
+                            clazz
+                    )
+                );
+            }
+
+            @Nullable
+            final DDGTDomain trackerData =
+                    ddgTrackerData
+                        .getDomainInfo(domainName)
+                        .orElse(null);
+
+            requests.add(
+                new OutgoingRequestsForDomain(
+                    requestDomain,
+                    endpoints,
+                    trackerData
+                )
+            );
+        });
+
+        return new SiteGeneratedRequestsReport(domainName, requestSummary, requests);
     }
 
     @POST
@@ -368,6 +462,113 @@ public class SearchSiteInfoService {
                 );
     }
 
+    public interface SiteInfoModel {
+        String domain();
+    }
+
+    public record SiteGeneratedRequestsReport(String domain,
+                                              boolean hasData,
+                                              boolean serviceAvailable,
+                                              Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary,
+                                              List<OutgoingRequestsForDomain> requests) implements SiteInfoModel {
+
+        public static String classificationIcon(DomSampleClassifier.DomSampleClassification clazz) {
+            return switch (clazz) {
+                case ADS -> "fa-ad";
+                case TRACKING -> "fa-crosshairs";
+                case CONSENT -> "fa-shield-alt";
+                default -> "";
+            };
+        }
+        public static String classificationColor(DomSampleClassifier.DomSampleClassification clazz) {
+            return switch (clazz) {
+                case ADS -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
+                case TRACKING -> "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200";
+                case CONSENT -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200 dark:border dark:border-yellow-200";
+                default -> "";
+            };
+        }
+        public static String categoryColor(String category) {
+            return switch (category) {
+                case "Ad Motivated Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
+                case "CDN", "Fraud Prevention", "Online Payment", "Consent Management Platform", "SSO" -> "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200  dark:border dark:border-green-200";
+                case "Social - Comment", "Social - Share", "Social Network", "Federated Login" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200  dark:border dark:border-yellow-200";
+                case "Session Replay", "Audience Measurement", "Analytics", "Tag Manager" -> "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200";
+                case "Malware", "Ad Fraud", "Unknown High Risk Behavior", "Obscure Ownership" -> "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200  dark:border dark:border-blue-200";
+                default -> "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200  dark:border dark:border-gray-200";
+            };
+
+        }
+
+        public record RequestedEndpoint(String path, String method, DomSampleClassifier.DomSampleClassification classification) {}
+
+        public record OutgoingRequestsForDomain(EdgeDomain domain,
+                                                List<RequestedEndpoint> endpoints,
+                                                @Nullable DDGTDomain ddgtTrackerInfo)
+        {
+            public List<String> ownerCategories() {
+                if (ddgtTrackerInfo == null) return List.of();
+                if (ddgtTrackerInfo.categories() == null)  return List.of();
+                return ddgtTrackerInfo.categories();
+            }
+
+            @Nullable
+            public String ownerName() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().name();
+            }
+
+            @Nullable
+            public String ownerDisplayName() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().displayName();
+            }
+
+            @Nullable
+            public String ownerUrl() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().url();
+            }
+
+
+
+            @Nullable
+            public String ownerPolicy() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().privacyPolicy();
+            }
+
+        }
+
+        public SiteGeneratedRequestsReport(String domain,
+                                           Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary,
+                                           List<OutgoingRequestsForDomain> requests
+                                           ) {
+            this(domain, true, true, requestSummary, requests);
+        }
+
+        static SiteGeneratedRequestsReport forNoData(String domain) {
+            return new SiteGeneratedRequestsReport(domain, false, true, Map.of(), List.of());
+        }
+
+        static SiteGeneratedRequestsReport forServiceUnavailable(String domain) {
+            return new SiteGeneratedRequestsReport(domain, true, false, Map.of(), List.of());
+        }
+
+    }
+
     public record Docs(String domain,
                        long domainId,
                        List<UrlDetails> results,
@@ -393,10 +594,6 @@ public class SearchSiteInfoService {
         public boolean isKnown() {
             return domainId > 0;
         }
-    }
-
-    public interface SiteInfoModel {
-        String domain();
     }
 
     public record SiteInfoWithContext(String domain,
