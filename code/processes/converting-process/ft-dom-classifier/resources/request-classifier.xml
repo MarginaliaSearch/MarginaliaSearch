@@ -11,6 +11,8 @@
 <rules>
     <!-- URL-specific classifications -->
     <classifier target="url-regex" rule="tracking">/ads/ga-audiences</classifier>
+    <classifier target="url-regex" rule="ads">/pagead/</classifier>
+
     <classifier target="url" rule="tracking">https://googleads.g.doubleclick.net/pagead/id</classifier>
     <classifier target="url" rule="tracking">https://securepubads.g.doubleclick.net/tag/js/gpt.js</classifier>
     <classifier target="url" rule="tracking">https://pagead2.googlesyndication.com/ccm/collect</classifier>
