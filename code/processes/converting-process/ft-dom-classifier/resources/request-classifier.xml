@@ -11,8 +11,9 @@
 <rules>
     <!-- URL-specific classifications -->
     <classifier target="url-regex" rule="tracking">/ads/ga-audiences</classifier>
+    <classifier target="url-regex" rule="tracking">/google_top_exp.js$</classifier>
+    <classifier target="url-regex" rule="tracking">/ccm/collect$</classifier>
     <classifier target="url-regex" rule="ads">/pagead/</classifier>
-    <classifier target="url-regex" rule="ads">/ccm/collect$</classifier>
 
     <classifier target="url" rule="tracking">https://googleads.g.doubleclick.net/pagead/id</classifier>
     <classifier target="url" rule="tracking">https://securepubads.g.doubleclick.net/tag/js/gpt.js</classifier>
@@ -23,6 +24,7 @@
     <classifier target="domain" rule="ads">securepubads.g.doubleclick.net</classifier>
     <classifier target="domain" rule="ads">googleads.g.doubleclick.net</classifier>
     <classifier target="domain" rule="tracking">stats.g.doubleclick.net</classifier>
+    <classifier target="domain" rule="tracking">insight.adsrvr.org</classifier>
 
     <classifier target="domain" rule="tracking">pixel.wp.com</classifier>
     <classifier target="domain" rule="tracking">connect.facebook.net</classifier>
