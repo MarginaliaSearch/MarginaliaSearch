@@ -66,8 +66,10 @@
 
                         <h3 class="text-lg font-semibold dark:text-gray-100 text-gray-900 font-mono">${request.domain().toString()}</h3>
 
-                        @if (request.ownerName() != null)
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${request.ownerName()}</p>
+                        @if (request.ownerDisplayName() != null)
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${request.ownerDisplayName()}</p>
+                        @elseif (request.ownerName() != null)
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${request.ownerName()}</p>
                         @endif
                         <div class="flex items-center gap-4 mt-3">
                             @if (request.ownerUrl() != null)
