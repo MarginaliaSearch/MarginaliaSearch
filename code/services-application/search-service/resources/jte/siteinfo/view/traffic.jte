@@ -100,7 +100,7 @@
                     <div class="flex items-center justify-between py-2 px-3 bg-gray-100 dark:bg-gray-600 rounded-lg">
                         <div class="flex items-center gap-3">
                             <div class="text-xs text-gray-500 dark:text-gray-100 font-mono">${req.method()}</div>
-                            <span class="text-sm text-gray-600 dark:text-white font-mono">${req.path()}</span>
+                            <span class="text-sm text-gray-600 dark:text-white font-mono break-all">${req.path()}</span>
                         </div>
                         @if (req.classification() != DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)
                         <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded ${SiteGeneratedRequestsReport.classificationColor(req.classification())}">
