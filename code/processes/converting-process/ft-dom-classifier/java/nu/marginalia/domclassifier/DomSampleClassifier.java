@@ -80,7 +80,7 @@ public class DomSampleClassifier {
                     urlClassification.put(content, classification);
                     break;
                 case "url-regex":
-                    regexClassification.add(Map.entry(Pattern.compile(content).asMatchPredicate(), classification));
+                    regexClassification.add(Map.entry(Pattern.compile(content).asPredicate(), classification));
                     break;
                 case "top":
                     topDomainClassification.put(content, classification);
