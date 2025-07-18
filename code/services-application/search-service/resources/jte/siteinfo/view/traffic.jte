@@ -102,9 +102,11 @@
                             <div class="text-xs text-gray-500 dark:text-gray-100 font-mono">${req.method()}</div>
                             <span class="text-sm text-gray-600 dark:text-white font-mono">${req.path()}</span>
                         </div>
+                        @if (req.classification() != DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)
                         <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded ${SiteGeneratedRequestsReport.classificationColor(req.classification())}">
                             <i class="fa ${SiteGeneratedRequestsReport.classificationIcon(req.classification())}"></i>
                             ${req.classification().name()}</span>
+                        @endif
                     </div>
                     @endfor
                 </div>
