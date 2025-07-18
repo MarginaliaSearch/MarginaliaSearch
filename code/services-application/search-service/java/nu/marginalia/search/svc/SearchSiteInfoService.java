@@ -253,7 +253,9 @@ public class SearchSiteInfoService {
             );
         });
 
-        requests.sort(Comparator.comparing(req -> req.endpoints.getFirst().classification.ordinal()));
+        requests.sort(Comparator
+                .comparing((OutgoingRequestsForDomain req) -> req.endpoints.getFirst().classification.ordinal())
+                .thenComparing(req -> req.ownerDisplayName() == null));  // Show items with a display name before those without
 
         return new SiteGeneratedRequestsReport(domainName, requestSummary, requests);
     }
