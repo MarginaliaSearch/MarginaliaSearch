@@ -199,8 +199,9 @@ public class SearchSiteInfoService {
 
         final EdgeDomain currentDomain = new EdgeDomain(domainName);
         final List<OutgoingRequestsForDomain> requests = new ArrayList<>();
-        final List<RequestedEndpoint> endpoints = new ArrayList<>();
         final Map<EdgeDomain, List<Map.Entry<EdgeUrl, RpcOutgoingRequest>>> urlsPerDomain = new HashMap<>();
+
+        final Set<EdgeUrl> seenUrls = new HashSet<>();
 
         for (RpcOutgoingRequest rpcOutgoingRequest : sample.get().getOutgoingRequestsList()) {
             Optional<EdgeUrl> parsedUrl = EdgeUrl.parse(rpcOutgoingRequest.getUrl());
@@ -211,6 +212,8 @@ public class SearchSiteInfoService {
 
             if (url.domain.hasSameTopDomain(currentDomain))
                 continue;
+            if (!seenUrls.add(url))
+                continue;
 
             urlsPerDomain
                     .computeIfAbsent(url.getDomain(), k -> new ArrayList<>())
@@ -220,6 +223,7 @@ public class SearchSiteInfoService {
         Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary = new HashMap<>();
 
         urlsPerDomain.forEach((requestDomain, urlsAndReqs) -> {
+            final List<RequestedEndpoint> endpoints = new ArrayList<>();
 
             for (Map.Entry<EdgeUrl, RpcOutgoingRequest> urlAndReq : urlsAndReqs) {
                 final EdgeUrl url =  urlAndReq.getKey();
