@@ -30,7 +30,12 @@ public class DDGTrackerData {
             return;
         }
 
-        loadDomainDir(dataDir.resolve("domains/US"));
+        try (var sources = Files.list(dataDir.resolve("domains"))) {
+            sources.filter(Files::isDirectory).forEach(this::loadDomainDir);
+        }
+        catch (IOException e) {
+            logger.error("Failed to read tracker radar data dir", e);
+        }
     }
 
     /** Tries to fetch available information about tracking coming from the specified domain
