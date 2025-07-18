@@ -1,14 +1,12 @@
 @import nu.marginalia.domclassifier.DomSampleClassifier
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.svc.SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain
-@import java.util.List
-@import java.util.Objects
 
 @param SiteGeneratedRequestsReport report
 
 <!-- Main content -->
 
-<div class="flex flex-col space-y-2 w-[800px]">
+<div class="flex flex-col space-y-2 w-full">
 <div class="flex flex-col space-y-4 my-4">
 
     @if (!report.serviceAvailable())
@@ -73,12 +71,12 @@
                         @endif
                         <div class="flex items-center gap-4 mt-3">
                             @if (request.ownerUrl() != null)
-                            <a href="${request.ownerUrl()}" rel="external" class="text-blue-600 dark:text-blue-200 text-sm flex flex-row place-items-baseline gap-1">
+                            <a href="${request.ownerUrl()}" rel="external nofollow" class="text-blue-600 dark:text-blue-200 text-sm flex flex-row place-items-baseline gap-1">
                                 <i class="fas fa-external-link-alt text-xs"></i> Visit Site
                             </a>
                             @endif
                             @if (request.ownerPolicy() != null)
-                            <a href="${request.ownerPolicy()}" rel="external"  class="text-blue-600 dark:text-blue-200 text-sm flex flex-row place-items-baseline gap-1">
+                            <a href="${request.ownerPolicy()}" rel="external nofollow"  class="text-blue-600 dark:text-blue-200 text-sm flex flex-row place-items-baseline gap-1">
                                 <i class="fas fa-shield-alt text-xs"></i> Privacy Policy
                             </a>
                             @endif
