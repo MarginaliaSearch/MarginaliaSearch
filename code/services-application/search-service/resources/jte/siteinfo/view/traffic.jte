@@ -36,7 +36,7 @@
     <div class="grid grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
             <div class="text-2xl font-bold text-red-600 dark:text-red-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.ADS, 0)}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Advertisement</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Ads</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
             <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.TRACKING, 0)}</div>
@@ -48,7 +48,7 @@
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
             <div class="text-2xl font-bold text-gray-600 dark:text-gray-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.UNCLASSIFIED, 0)}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Unclassified</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Other</div>
         </div>
     </div>
 </div>
@@ -60,8 +60,8 @@
         @for (OutgoingRequestsForDomain request : report.requests())
         <!-- Google Analytics Domain -->
         <div class="bg-white rounded shadow-sm border border-gray-200  dark:bg-gray-800 dark:border-gray-600">
-            <div class="p-6 border-b border-gray-100 dark:border-gray-600">
-                <div class="flex items-start justify-between">
+            <div class="p-2 md:p-6 border-b border-gray-100 dark:border-gray-600">
+                <div class="flex items-start justify-between flex-col md:flex-row gap-2">
                     <div class="flex-1">
 
                         <h3 class="text-lg font-semibold dark:text-gray-100 text-gray-900 font-mono">${request.domain().toString()}</h3>
@@ -84,7 +84,7 @@
                             @endif
                         </div>
                     </div>
-                    <div class="flex flex-wrap justify-end gap-2 ml-2">
+                    <div class="flex flex-wrap justify-end gap-2 md:ml-2">
                         @for (String tag : request.ownerCategories())
                             <span class="px-2 py-1 ${SiteGeneratedRequestsReport.categoryColor(tag)} text-xs rounded">${tag}</span>
                         @endfor
