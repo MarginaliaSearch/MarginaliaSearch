@@ -253,6 +253,8 @@ public class SearchSiteInfoService {
             );
         });
 
+        requests.sort(Comparator.comparing(req -> req.endpoints.getFirst().classification.ordinal()));
+
         return new SiteGeneratedRequestsReport(domainName, requestSummary, requests);
     }
 
