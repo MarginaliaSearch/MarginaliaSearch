@@ -41,11 +41,11 @@
             <div class="text-sm text-gray-600 dark:text-gray-400">Advertisement</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
-            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.TRACKING, 0)}</div>
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.TRACKING, 0)}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Tracking</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
-            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.CONSENT, 0)}</div>
+            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.CONSENT, 0)}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Consent</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
@@ -73,24 +73,22 @@
                         @endif
                         <div class="flex items-center gap-4 mt-3">
                             @if (request.ownerUrl() != null)
-                            <a href="${request.ownerUrl()}" rel="external" class="text-blue-600 dark:text-blue-200 text-sm">
-                                <i class="fas fa-external-link-alt text-xs"></i>
-                                Visit Site
+                            <a href="${request.ownerUrl()}" rel="external" class="text-blue-600 dark:text-blue-200 text-sm flex flex-row place-items-baseline gap-1">
+                                <i class="fas fa-external-link-alt text-xs"></i> Visit Site
                             </a>
                             @endif
                             @if (request.ownerPolicy() != null)
-                            <a href="${request.ownerPolicy()}" rel="external"  class="text-blue-600 dark:text-blue-200 text-sm">
-                                <i class="fas fa-shield-alt text-xs"></i>
-                                Privacy Policy
+                            <a href="${request.ownerPolicy()}" rel="external"  class="text-blue-600 dark:text-blue-200 text-sm flex flex-row place-items-baseline gap-1">
+                                <i class="fas fa-shield-alt text-xs"></i> Privacy Policy
                             </a>
                             @endif
                         </div>
                     </div>
-                    @for (String tag : request.ownerCategories())
-                    <div class="flex flex-wrap gap-2 ml-4">
-                        <span class="px-2 py-1 ${SiteGeneratedRequestsReport.categoryColor(tag)} text-xs rounded-full">${tag}</span>
+                    <div class="flex flex-wrap justify-end gap-2 ml-2">
+                        @for (String tag : request.ownerCategories())
+                            <span class="px-2 py-1 ${SiteGeneratedRequestsReport.categoryColor(tag)} text-xs rounded">${tag}</span>
+                        @endfor
                     </div>
-                    @endfor
                 </div>
             </div>
 
@@ -103,9 +101,8 @@
                             <span class="text-sm text-gray-600 dark:text-white font-mono break-all">${req.path()}</span>
                         </div>
                         @if (req.classification() != DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)
-                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded ${SiteGeneratedRequestsReport.classificationColor(req.classification())}">
-                            <i class="fa ${SiteGeneratedRequestsReport.classificationIcon(req.classification())}"></i>
-                            ${req.classification().name()}</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded flex flex-row place-items-baseline gap-1 ${SiteGeneratedRequestsReport.classificationColor(req.classification())}">
+                            <i class="fa ${SiteGeneratedRequestsReport.classificationIcon(req.classification())}"></i> ${req.classification().name()}</span>
                         @endif
                     </div>
                     @endfor

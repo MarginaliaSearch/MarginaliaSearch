@@ -259,7 +259,9 @@ public class SearchSiteInfoService {
 
         requests.sort(Comparator
                 .comparing((OutgoingRequestsForDomain req) -> req.endpoints.getFirst().classification.ordinal())
-                .thenComparing(req -> req.ownerDisplayName() == null));  // Show items with a display name before those without
+                .thenComparing(req -> req.ownerDisplayName() == null)
+                .thenComparing(req -> req.domain.topDomain)
+                .thenComparing(req -> req.domain.toString()));
 
         return new SiteGeneratedRequestsReport(domainName, requestSummary, requests);
     }
@@ -498,7 +500,7 @@ public class SearchSiteInfoService {
         }
         public static String categoryColor(String category) {
             return switch (category) {
-                case "Ad Motivated Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
+                case "Ad Motivated Tracking", "Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
                 case "CDN", "Fraud Prevention", "Online Payment", "Consent Management Platform", "SSO" -> "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200  dark:border dark:border-green-200";
                 case "Social - Comment", "Social - Share", "Social Network", "Federated Login" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200  dark:border dark:border-yellow-200";
                 case "Session Replay", "Audience Measurement", "Analytics", "Tag Manager" -> "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200";
