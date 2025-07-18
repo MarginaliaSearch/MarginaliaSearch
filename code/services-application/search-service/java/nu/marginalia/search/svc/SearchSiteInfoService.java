@@ -241,7 +241,7 @@ public class SearchSiteInfoService {
             @Nullable
             final DDGTDomain trackerData =
                     ddgTrackerData
-                        .getDomainInfo(domainName)
+                        .getDomainInfo(requestDomain.toString())
                         .orElse(null);
 
             requests.add(
