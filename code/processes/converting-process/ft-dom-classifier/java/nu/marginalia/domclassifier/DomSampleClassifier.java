@@ -3,7 +3,7 @@ package nu.marginalia.domclassifier;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.api.domsample.RpcDomainSample;
-import nu.marginalia.api.domsample.RpcOutgoingRequest;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
@@ -18,6 +18,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -81,6 +82,8 @@ public class DomSampleClassifier {
 
         // Look at DOM
 
+        EdgeDomain sampleDomain = new EdgeDomain(sample.getDomainName());
+
         try {
             var parsedDoc = Jsoup.parse(sample.getHtmlSample());
             var fixedElements = parsedDoc.select("*[data-position=fixed]");
@@ -106,7 +109,20 @@ public class DomSampleClassifier {
 
         // Classify outgoing requests
         for (var req : sample.getOutgoingRequestsList()) {
-            var clazz = classifyRequest(req);
+            EdgeUrl url;
+
+            try {
+                url = new EdgeUrl(req.getUrl());
+            }
+            catch (URISyntaxException ex) {
+                continue;
+            }
+
+            if (!url.domain.hasSameTopDomain(sampleDomain)) {
+                classifications.add(DomSampleClassification.THIRD_PARTY_REQUESTS);
+            }
+
+            var clazz = classifyRequest(url);
             if (clazz != DomSampleClassification.IGNORE && clazz != DomSampleClassification.UNCLASSIFIED) {
                 classifications.add(clazz);
             }
@@ -115,40 +131,33 @@ public class DomSampleClassifier {
         return classifications;
     }
 
-    public DomSampleClassification classifyRequest(RpcOutgoingRequest request) {
-        try {
-            EdgeUrl edgeUrl = new EdgeUrl(request.getUrl());
+    public DomSampleClassification classifyRequest(EdgeUrl edgeUrl) {
+        for (Map.Entry<Predicate<String>, DomSampleClassification> regexMatcher : regexClassification) {
+            if (regexMatcher.getKey().test(edgeUrl.toDisplayString())) {
+                var clazz = regexMatcher.getValue();
 
-            for (Map.Entry<Predicate<String>, DomSampleClassification> regexMatcher : regexClassification) {
-                if (regexMatcher.getKey().test(edgeUrl.toDisplayString())) {
-                    var clazz = regexMatcher.getValue();
-
-                    if (clazz != DomSampleClassification.IGNORE) {
-                        return clazz;
-                    }
+                if (clazz != DomSampleClassification.IGNORE) {
+                    return clazz;
                 }
             }
-
-            DomSampleClassification clazz = urlClassification.get(edgeUrl.toDisplayString());
-
-            if (clazz != null && clazz != DomSampleClassification.IGNORE) {
-                return clazz;
-            }
-
-            clazz = fullDomainClassification.get(edgeUrl.domain.toString());
-
-            if (clazz != null && clazz != DomSampleClassification.IGNORE) {
-                return clazz;
-            }
-
-            clazz = topDomainClassification.get(edgeUrl.domain.topDomain);
-
-            if (clazz != null && clazz != DomSampleClassification.IGNORE) {
-                return clazz;
-            }
         }
-        catch (Exception e) {
-            // Ignore parsing errors
+
+        DomSampleClassification clazz = urlClassification.get(edgeUrl.toDisplayString());
+
+        if (clazz != null && clazz != DomSampleClassification.IGNORE) {
+            return clazz;
+        }
+
+        clazz = fullDomainClassification.get(edgeUrl.domain.toString());
+
+        if (clazz != null && clazz != DomSampleClassification.IGNORE) {
+            return clazz;
+        }
+
+        clazz = topDomainClassification.get(edgeUrl.domain.topDomain);
+
+        if (clazz != null && clazz != DomSampleClassification.IGNORE) {
+            return clazz;
         }
 
         return DomSampleClassification.UNCLASSIFIED;

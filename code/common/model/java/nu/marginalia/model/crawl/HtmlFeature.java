@@ -35,6 +35,7 @@ public enum HtmlFeature {
     POPOVER("special:popover"),
     CONSENT("special:consent"),
     SHORT_DOCUMENT("special:shorty"),
+    THIRD_PARTY_REQUESTS("special:3pr"),
 
     // Here!  It is generally safe to add additional values here without
     // disrupting the encoded values used by the DocumentValuator

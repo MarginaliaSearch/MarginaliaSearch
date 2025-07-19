@@ -230,7 +230,7 @@ public class SearchSiteInfoService {
                 final EdgeUrl url =  urlAndReq.getKey();
                 final RpcOutgoingRequest outgoingRequest = urlAndReq.getValue();
 
-                final DomSampleClassification clazz = domSampleClassifier.classifyRequest(outgoingRequest);
+                final DomSampleClassification clazz = domSampleClassifier.classifyRequest(url);
 
                 requestSummary.merge(clazz, 1, Integer::sum);
 

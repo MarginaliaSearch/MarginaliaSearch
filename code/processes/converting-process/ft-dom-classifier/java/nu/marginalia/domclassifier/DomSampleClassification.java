@@ -12,6 +12,7 @@ public enum DomSampleClassification {
     TRACKING(HtmlFeature.TRACKING_ADTECH),
     CONSENT(HtmlFeature.CONSENT),
     POPOVER(HtmlFeature.POPOVER),
+    THIRD_PARTY_REQUESTS(HtmlFeature.THIRD_PARTY_REQUESTS),
     UNCLASSIFIED(HtmlFeature.MISSING_DOM_SAMPLE),
     IGNORE(null);
 
