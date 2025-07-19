@@ -3,10 +3,7 @@ package nu.marginalia.domsample;
 import com.google.inject.Inject;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import nu.marginalia.api.domsample.DomSampleApiGrpc;
-import nu.marginalia.api.domsample.RpcDomainName;
-import nu.marginalia.api.domsample.RpcDomainSample;
-import nu.marginalia.api.domsample.RpcOutgoingRequest;
+import nu.marginalia.api.domsample.*;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
@@ -52,6 +49,26 @@ public class DomSampleGrpcService
         }
         catch (Exception e) {
             logger.error("Error in getSample()", e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void hasSample(RpcDomainName request, StreamObserver<RpcBooleanRsp> responseObserver) {
+        String domainName = request.getDomainName();
+        if (domainName.isBlank()) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Invalid domain name")
+                    .asRuntimeException());
+            return;
+        }
+
+        try {
+            responseObserver.onNext(RpcBooleanRsp.newBuilder()
+                    .setAnswer(domSampleDb.hasSample(domainName)).build());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
             responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }

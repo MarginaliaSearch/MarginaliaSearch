@@ -191,6 +191,21 @@ public class DomSampleDb implements AutoCloseable {
         return samples;
     }
 
+
+    public boolean hasSample(String domain) throws SQLException {
+
+        try (var stmt = connection.prepareStatement("""
+                SELECT 1
+                FROM samples
+                WHERE domain = ?
+                """))
+        {
+            stmt.setString(1, domain);
+            var rs = stmt.executeQuery();
+            return rs.next();
+        }
+    }
+
     public void saveSample(String domain, String url, String rawContent) throws SQLException {
         var doc = Jsoup.parse(rawContent);
 

@@ -47,6 +47,29 @@ public class DomSampleClient {
         }
     }
 
+    public boolean hasSample(String domainName) {
+        try {
+            return channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::hasSample)
+                    .run(RpcDomainName.newBuilder().setDomainName(domainName).build())
+                    .getAnswer();
+        }
+        catch (StatusRuntimeException sre) {
+            return false;
+        }
+    }
+
+    public CompletableFuture<Boolean> hasSample(String domainName, ExecutorService executor) {
+        try {
+            return channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::hasSample)
+                    .async(executor)
+                    .run(RpcDomainName.newBuilder().setDomainName(domainName).build())
+                    .thenApply(RpcBooleanRsp::getAnswer);
+        }
+        catch (StatusRuntimeException sre) {
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
     public CompletableFuture<RpcDomainSample> getSampleAsync(String domainName, ExecutorService executorService) {
         return channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::getSample)
                 .async(executorService)

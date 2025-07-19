@@ -7,11 +7,16 @@ option java_multiple_files=true;
 
 service DomSampleApi {
   rpc getSample(RpcDomainName) returns (RpcDomainSample) {}
+  rpc hasSample(RpcDomainName) returns (RpcBooleanRsp) {}
   rpc getAllSamples(RpcDomainName) returns (stream RpcDomainSample) {}
 }
 
 message RpcDomainName {
   string domainName = 1;
+}
+
+message RpcBooleanRsp {
+  bool answer = 1;
 }
 
 message RpcDomainSample {

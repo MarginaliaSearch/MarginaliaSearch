@@ -81,7 +81,8 @@
 
                     <i class="fa-regular fa-file"></i>
 
-                    <span>Documents</span>
+                    <span class="hidden sm:inline">Documents</span>
+                    <span class="inline sm:hidden">Docs</span>
                 </a>
             </div>
 
@@ -95,7 +96,22 @@
 
                     <i class="fas fa-link"></i>
 
-                    <span>Backlinks</span>
+                    <span class="hidden sm:inline">Backlinks</span>
+                    <span class="inline sm:hidden">Links</span>
+                </a>
+            </div>
+            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
+                <a href="?view=traffic" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-200">
+                    @if (model instanceof SearchSiteInfoService.SiteGeneratedRequestsReport)
+                        <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                    @else
+                        <span></span>
+                    @endif
+
+                    <i class="fas fa-crosshairs"></i>
+
+                    <span class="hidden sm:inline">Requests</span>
+                    <span class="inline sm:hidden">Reqs</span>
                 </a>
             </div>
             <div class="grow"></div>

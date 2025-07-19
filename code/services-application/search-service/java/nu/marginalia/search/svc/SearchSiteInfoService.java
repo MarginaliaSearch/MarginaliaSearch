@@ -67,7 +67,6 @@ public class SearchSiteInfoService {
 
     private final DomSampleClassifier domSampleClassifier;
 
-
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
                                  DomainInfoClient domainInfoClient,
@@ -344,6 +343,7 @@ public class SearchSiteInfoService {
         String url = "https://" + domainName + "/";
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
+
         boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
         boolean rateLimited = !rateLimiter.isAllowed();
