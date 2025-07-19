@@ -132,8 +132,16 @@ public class DomSampleClassifier {
     }
 
     public DomSampleClassification classifyRequest(EdgeUrl edgeUrl) {
+        StringBuilder pathSb = new StringBuilder(edgeUrl.path);
+        if (edgeUrl.param != null) {
+            pathSb.append("?").append(edgeUrl.param);
+        }
+        String pathMatchString = pathSb.toString();
+        String urlDisplayString = edgeUrl.toDisplayString();
+
         for (Map.Entry<Predicate<String>, DomSampleClassification> regexMatcher : regexClassification) {
-            if (regexMatcher.getKey().test(edgeUrl.toDisplayString())) {
+            var matcher =  regexMatcher.getKey();
+            if (matcher.test(pathMatchString) || matcher.test(urlDisplayString)) {
                 var clazz = regexMatcher.getValue();
 
                 if (clazz != DomSampleClassification.IGNORE) {
