@@ -79,6 +79,9 @@
     <classifier target="top" rule="tracking">omtrdc.net</classifier>
     <classifier target="top" rule="tracking">ggpht.com</classifier>
 
+    <classifier target="top" rule="tracking">doubleclick.net</classifier>
+    <classifier target="top" rule="tracking">google.com</classifier>
+    <classifier target="top" rule="tracking">google.se</classifier>
     <classifier target="top" rule="tracking">google-analytics.com</classifier>
     <classifier target="top" rule="tracking">googletagmanager.com</classifier>
     <classifier target="top" rule="tracking">cloudflareinsights.com</classifier>
