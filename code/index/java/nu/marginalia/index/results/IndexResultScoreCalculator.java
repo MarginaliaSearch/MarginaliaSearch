@@ -551,8 +551,17 @@ public class IndexResultScoreCalculator {
             largeSiteFactor = 2;
         }
 
-        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING_ADTECH.getFeatureBit()))
+        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.ADVERTISEMENT.getFeatureBit()))
             penalty += 7.5 * largeSiteFactor;
+
+        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.CONSENT.getFeatureBit()))
+            penalty += 2.5 * largeSiteFactor;
+
+        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.POPOVER.getFeatureBit()))
+            penalty += 2.5 * largeSiteFactor;
+
+        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING_ADTECH.getFeatureBit()))
+            penalty += 5.0 * largeSiteFactor;
 
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.AFFILIATE_LINK.getFeatureBit()))
             penalty += 5.0 * largeSiteFactor;
@@ -562,6 +571,9 @@ public class IndexResultScoreCalculator {
 
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING.getFeatureBit()))
             penalty += 2.5 * largeSiteFactor;
+
+        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.SHORT_DOCUMENT.getFeatureBit()))
+            penalty += 2.5  * largeSiteFactor;
 
         if (isForum || isWiki) {
             penalty = Math.min(0, penalty - 2);

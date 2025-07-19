@@ -9,6 +9,7 @@ import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
@@ -37,6 +38,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
@@ -85,6 +87,9 @@ public class IntegrationTestModule extends AbstractModule {
             bind(FileStorageService.class).toInstance(fileStorageServiceMock);
             bind(ServiceHeartbeat.class).toInstance(new FakeServiceHeartbeat());
             bind(ProcessHeartbeat.class).toInstance(new FakeProcessHeartbeat());
+            DomSampleClient domSampleClientMock = Mockito.mock(DomSampleClient.class);
+            when(domSampleClientMock.getSampleAsync(any(), any())).thenReturn(CompletableFuture.failedFuture(new RuntimeException()));
+            bind(DomSampleClient.class).toInstance(domSampleClientMock);
 
             SearchSetsService setsServiceMock = Mockito.mock(SearchSetsService.class);
             when(setsServiceMock.getSearchSetByName("NONE")).thenReturn(new SearchSetAny());

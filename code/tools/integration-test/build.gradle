@@ -36,6 +36,7 @@ dependencies {
     implementation project(':code:common:linkdb')
     implementation project(':code:common:service')
     implementation project(':code:common:model')
+    implementation project(':code:functions:live-capture:api')
 
     implementation libs.bundles.slf4j
     implementation libs.bundles.grpc

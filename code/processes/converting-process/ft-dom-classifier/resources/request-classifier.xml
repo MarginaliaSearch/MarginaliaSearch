@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rules [
+        <!ELEMENT rules (classifier*)>
+        <!ELEMENT classifier (#PCDATA)>
+        <!ATTLIST classifier
+                target (url-regex|url|domain|top) #REQUIRED
+                rule (ads|tracking|consent|ignore) #REQUIRED>
+        ]>
+
+<!-- Contains rules for mapping outgoing requests during DOM Sampling to website classification -->
+<rules>
+    <!-- Regex rules -->
+    <classifier target="url-regex" rule="tracking">/ads/ga-audiences</classifier>
+    <classifier target="url-regex" rule="tracking">/google_top_exp.js$</classifier>
+    <classifier target="url-regex" rule="tracking">/ccm/collect$</classifier>
+    <classifier target="url-regex" rule="tracking">^/[0-9]+\.js$</classifier>
+    <classifier target="url-regex" rule="tracking">^/[a-z0-9]\.gif$</classifier>
+    <classifier target="url-regex" rule="ads">/pagead/</classifier>
+    <classifier target="url-regex" rule="ads">/google-ads/</classifier>
+
+    <!-- URL classifications TRACKING -->
+    <classifier target="url" rule="tracking">https://googleads.g.doubleclick.net/pagead/id</classifier>
+    <classifier target="url" rule="tracking">https://securepubads.g.doubleclick.net/tag/js/gpt.js</classifier>
+    <classifier target="url" rule="tracking">https://pagead2.googlesyndication.com/ccm/collect</classifier>
+    <classifier target="url" rule="tracking">https://z-na.amazon-adsystem.com/widgets/onejs</classifier>
+
+    <!-- Full domain classifications ADS -->
+
+    <classifier target="domain" rule="ads">securepubads.g.doubleclick.net</classifier>
+    <classifier target="domain" rule="ads">googleads.g.doubleclick.net</classifier>
+
+    <!-- Full domain classifications TRACKING -->
+    <classifier target="domain" rule="tracking">stats.g.doubleclick.net</classifier>
+    <classifier target="domain" rule="tracking">insight.adsrvr.org</classifier>
+
+    <classifier target="domain" rule="tracking">pixel.wp.com</classifier>
+    <classifier target="domain" rule="tracking">connect.facebook.net</classifier>
+    <classifier target="domain" rule="tracking">stats.wp.com</classifier>
+    <classifier target="domain" rule="tracking">track.hubspot.com</classifier>
+    <classifier target="domain" rule="tracking">analytics.tiktok.com</classifier>
+    <classifier target="domain" rule="tracking">analytics-ipv6.tiktokw.us</classifier>
+    <classifier target="domain" rule="tracking">tr6.snapchat.com</classifier>
+    <classifier target="domain" rule="tracking">tr.snapchat.com</classifier>
+    <classifier target="domain" rule="tracking">geo-location.prebid.cloud</classifier>
+    <classifier target="domain" rule="tracking">px.ads.linkedin.com</classifier>
+    <classifier target="domain" rule="tracking">region1.analytics.google.com</classifier>
+    <classifier target="domain" rule="tracking">api.hubapi.com</classifier>
+    <classifier target="domain" rule="tracking">bat.bing.com</classifier>
+    <classifier target="domain" rule="tracking">bat.bing.net</classifier>
+    <classifier target="domain" rule="tracking">c.bing.com</classifier>
+    <classifier target="domain" rule="tracking">c.bing.net</classifier>
+    <classifier target="domain" rule="tracking">analytics.twitter.com</classifier>
+    <classifier target="domain" rule="tracking">play.google.com</classifier>
+    <classifier target="domain" rule="tracking">www.youtube.com</classifier>
+
+    <!-- Full domain classifications CONSENT -->
+    <classifier target="domain" rule="consent">cdnconsents.websitepolicies.com</classifier>
+
+    <!-- Top-level domain classifications - ADS -->
+    <classifier target="top" rule="ads">googlesyndication.com</classifier>
+    <classifier target="top" rule="ads">amazon-adsystem.com</classifier>
+    <classifier target="top" rule="ads">smartadserver.com</classifier>
+    <classifier target="top" rule="ads">googleadservices.com</classifier>
+
+    <classifier target="top" rule="ads">prebid.cloud</classifier>
+    <classifier target="top" rule="ads">pubmine.com</classifier>
+    <classifier target="top" rule="ads">adtrafficquality.google</classifier>
+    <classifier target="top" rule="ads">syndicatedsearch.goog</classifier>
+    <classifier target="top" rule="ads">adsrvr.org</classifier>
+    <classifier target="top" rule="ads">adnxs.net</classifier>
+    <classifier target="top" rule="ads">aditude.io</classifier>
+    <classifier target="top" rule="ads">buysellads.net</classifier>
+
+    <!-- Top-level domain classifications - TRACKING -->
+    <classifier target="top" rule="tracking">plausible.io</classifier>
+    <classifier target="top" rule="tracking">amplitude.com</classifier>
+    <classifier target="top" rule="tracking">hsadspixel.net</classifier>
+    <classifier target="top" rule="tracking">demdex.net</classifier>
+    <classifier target="top" rule="tracking">omtrdc.net</classifier>
+    <classifier target="top" rule="tracking">ggpht.com</classifier>
+
+    <classifier target="top" rule="tracking">doubleclick.net</classifier>
+    <classifier target="top" rule="tracking">google.com</classifier>
+    <classifier target="top" rule="tracking">google.se</classifier>
+    <classifier target="top" rule="tracking">google-analytics.com</classifier>
+    <classifier target="top" rule="tracking">googletagmanager.com</classifier>
+    <classifier target="top" rule="tracking">cloudflareinsights.com</classifier>
+    <classifier target="top" rule="tracking">branch.io</classifier>
+    <classifier target="top" rule="tracking">clarity.ms</classifier>
+    <classifier target="top" rule="tracking">hotjar.com</classifier>
+    <classifier target="top" rule="tracking">hotjar.io</classifier>
+    <classifier target="top" rule="tracking">nr-data.net</classifier>
+    <classifier target="top" rule="tracking">newrelic.com</classifier>
+    <classifier target="top" rule="tracking">siteimproveanalytics.com</classifier>
+    <classifier target="top" rule="tracking">siteimproveanalytics.io</classifier>
+    <classifier target="top" rule="tracking">hs-analytics.net</classifier>
+    <classifier target="top" rule="tracking">sentry.io</classifier>
+    <classifier target="top" rule="tracking">hs-scripts.com</classifier>
+    <classifier target="top" rule="tracking">addtoany.com</classifier>
+    <classifier target="top" rule="tracking">facebook.com</classifier>
+    <classifier target="top" rule="tracking">scorecardresearch.com</classifier>
+
+    <!-- Top-level domain classifications - CONSENT -->
+    <classifier target="top" rule="consent">trustarc.com</classifier>
+    <classifier target="top" rule="consent">truste.com</classifier>
+    <classifier target="top" rule="consent">onetrust.com</classifier>
+    <classifier target="top" rule="consent">cookielaw.org</classifier>
+    <classifier target="top" rule="consent">hs-banner.com</classifier>
+    <classifier target="top" rule="consent">fundingchoicesmessages.google.com</classifier>
+
+</rules>

@@ -7,6 +7,7 @@ import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
@@ -64,7 +65,7 @@ public class SideloaderProcessing {
 
         var ret = new ProcessedDocument();
         try {
-            var details = htmlProcessorPlugin.createDetails(crawledDoc, linkTexts, documentClass);
+            var details = htmlProcessorPlugin.createDetails(crawledDoc, linkTexts, EnumSet.noneOf(DomSampleClassification.class), documentClass);
 
             ret.words = details.words();
 

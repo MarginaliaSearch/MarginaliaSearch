@@ -6,15 +6,16 @@ import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
-import nu.marginalia.converting.processor.AcceptableAds;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
+import nu.marginalia.converting.processor.classifier.AcceptableAds;
 import nu.marginalia.converting.processor.logic.*;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecializations;
 import nu.marginalia.converting.processor.pubdate.PubDateSniffer;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -23,7 +24,6 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
-import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeDomain;
@@ -62,12 +62,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final DocumentValuator documentValuator = new DocumentValuator();
 
     private static final LinkParser linkParser = new LinkParser();
-    private static final FeedExtractor feedExtractor = new FeedExtractor(linkParser);
 
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final HtmlProcessorSpecializations htmlProcessorSpecializations;
 
-    private static final int MAX_DOCUMENT_LENGTH_BYTES = Integer.getInteger("converter.max-body-length",128_000);
     private static boolean lenientProcessing = Boolean.getBoolean("converter.lenientProcessing");
 
     @Inject
@@ -106,7 +104,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     @Override
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
-                                          DocumentClass documentClass)
+                                          Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException, IOException {
 
         if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
@@ -138,7 +136,14 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final int length = getLength(doc);
         final DocumentFormat format = getDocumentFormat(doc);
-        final double quality = documentValuator.getQuality(crawledDocument, format, doc, length);
+        final double quality;
+
+        if (domSampleClassifications.contains(DomSampleClassification.UNCLASSIFIED)) {
+            quality = documentValuator.getQuality(crawledDocument, format, doc, length);
+        }
+        else {
+            quality = documentValuator.getQuality(domSampleClassifications);
+        }
 
         if (!lenientProcessing && isDisqualified(documentClass, url, quality, doc.title())) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
@@ -148,10 +153,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         checkDocumentLanguage(dld);
 
-        if (!lenientProcessing && !documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
-        }
-
         var ret = new ProcessedDocumentDetails();
 
         ret.length = length;
@@ -159,6 +160,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
+
+
+        if (!documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
+            features.add(HtmlFeature.SHORT_DOCUMENT);
+        }
+
 
         ret.features = features;
         ret.quality = documentValuator.adjustQuality(quality, features);

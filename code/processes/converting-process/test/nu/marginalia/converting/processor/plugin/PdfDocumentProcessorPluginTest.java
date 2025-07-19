@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Set;
 
 @Tag("flaky")
 class PdfDocumentProcessorPluginTest {
@@ -51,7 +52,7 @@ class PdfDocumentProcessorPluginTest {
     }
     public AbstractDocumentProcessorPlugin.DetailsWithWords testPdfFile(byte[] pdfBytes) throws Exception {
         var doc = new CrawledDocument("test", "https://www.example.com/sample.pdf", "application/pdf", Instant.now().toString(), 200, "OK", "OK", "", pdfBytes, false, -1, null, null);
-        return plugin.createDetails(doc, new LinkTexts(), DocumentClass.NORMAL);
+        return plugin.createDetails(doc, new LinkTexts(), Set.of(), DocumentClass.NORMAL);
     }
 
     public AbstractDocumentProcessorPlugin.DetailsWithWords testPdfFile(Path file) throws Exception {
