@@ -13,7 +13,10 @@
     <classifier target="url-regex" rule="tracking">/ads/ga-audiences</classifier>
     <classifier target="url-regex" rule="tracking">/google_top_exp.js$</classifier>
     <classifier target="url-regex" rule="tracking">/ccm/collect$</classifier>
+    <classifier target="url-regex" rule="tracking">^/[0-9]+\.js$</classifier>
+    <classifier target="url-regex" rule="tracking">^/[a-z0-9]\.gif$</classifier>
     <classifier target="url-regex" rule="ads">/pagead/</classifier>
+    <classifier target="url-regex" rule="ads">/google-ads/</classifier>
 
     <!-- URL classifications TRACKING -->
     <classifier target="url" rule="tracking">https://googleads.g.doubleclick.net/pagead/id</classifier>
@@ -44,6 +47,11 @@
     <classifier target="domain" rule="tracking">api.hubapi.com</classifier>
     <classifier target="domain" rule="tracking">bat.bing.com</classifier>
     <classifier target="domain" rule="tracking">bat.bing.net</classifier>
+    <classifier target="domain" rule="tracking">c.bing.com</classifier>
+    <classifier target="domain" rule="tracking">c.bing.net</classifier>
+    <classifier target="domain" rule="tracking">analytics.twitter.com</classifier>
+    <classifier target="domain" rule="tracking">play.google.com</classifier>
+    <classifier target="domain" rule="tracking">www.youtube.com</classifier>
 
     <!-- Full domain classifications CONSENT -->
     <classifier target="domain" rule="consent">cdnconsents.websitepolicies.com</classifier>
@@ -61,11 +69,15 @@
     <classifier target="top" rule="ads">adsrvr.org</classifier>
     <classifier target="top" rule="ads">adnxs.net</classifier>
     <classifier target="top" rule="ads">aditude.io</classifier>
+    <classifier target="top" rule="ads">buysellads.net</classifier>
 
     <!-- Top-level domain classifications - TRACKING -->
+    <classifier target="top" rule="tracking">plausible.io</classifier>
+    <classifier target="top" rule="tracking">amplitude.com</classifier>
     <classifier target="top" rule="tracking">hsadspixel.net</classifier>
     <classifier target="top" rule="tracking">demdex.net</classifier>
     <classifier target="top" rule="tracking">omtrdc.net</classifier>
+    <classifier target="top" rule="tracking">ggpht.com</classifier>
 
     <classifier target="top" rule="tracking">google-analytics.com</classifier>
     <classifier target="top" rule="tracking">googletagmanager.com</classifier>
