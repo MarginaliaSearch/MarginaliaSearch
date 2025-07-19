@@ -9,20 +9,24 @@
 
 <!-- Contains rules for mapping outgoing requests during DOM Sampling to website classification -->
 <rules>
-    <!-- URL-specific classifications -->
+    <!-- Regex rules -->
     <classifier target="url-regex" rule="tracking">/ads/ga-audiences</classifier>
     <classifier target="url-regex" rule="tracking">/google_top_exp.js$</classifier>
     <classifier target="url-regex" rule="tracking">/ccm/collect$</classifier>
     <classifier target="url-regex" rule="ads">/pagead/</classifier>
 
+    <!-- URL classifications TRACKING -->
     <classifier target="url" rule="tracking">https://googleads.g.doubleclick.net/pagead/id</classifier>
     <classifier target="url" rule="tracking">https://securepubads.g.doubleclick.net/tag/js/gpt.js</classifier>
     <classifier target="url" rule="tracking">https://pagead2.googlesyndication.com/ccm/collect</classifier>
     <classifier target="url" rule="tracking">https://z-na.amazon-adsystem.com/widgets/onejs</classifier>
 
-    <!-- Full domain classifications -->
+    <!-- Full domain classifications ADS -->
+
     <classifier target="domain" rule="ads">securepubads.g.doubleclick.net</classifier>
     <classifier target="domain" rule="ads">googleads.g.doubleclick.net</classifier>
+
+    <!-- Full domain classifications TRACKING -->
     <classifier target="domain" rule="tracking">stats.g.doubleclick.net</classifier>
     <classifier target="domain" rule="tracking">insight.adsrvr.org</classifier>
 
@@ -38,9 +42,12 @@
     <classifier target="domain" rule="tracking">px.ads.linkedin.com</classifier>
     <classifier target="domain" rule="tracking">region1.analytics.google.com</classifier>
     <classifier target="domain" rule="tracking">api.hubapi.com</classifier>
-
     <classifier target="domain" rule="tracking">bat.bing.com</classifier>
     <classifier target="domain" rule="tracking">bat.bing.net</classifier>
+
+    <!-- Full domain classifications CONSENT -->
+    <classifier target="domain" rule="consent">cdnconsents.websitepolicies.com</classifier>
+
     <!-- Top-level domain classifications - ADS -->
     <classifier target="top" rule="ads">googlesyndication.com</classifier>
     <classifier target="top" rule="ads">amazon-adsystem.com</classifier>
@@ -77,6 +84,7 @@
     <classifier target="top" rule="tracking">addtoany.com</classifier>
     <classifier target="top" rule="tracking">facebook.com</classifier>
     <classifier target="top" rule="tracking">scorecardresearch.com</classifier>
+
     <!-- Top-level domain classifications - CONSENT -->
     <classifier target="top" rule="consent">trustarc.com</classifier>
     <classifier target="top" rule="consent">truste.com</classifier>
@@ -84,5 +92,5 @@
     <classifier target="top" rule="consent">cookielaw.org</classifier>
     <classifier target="top" rule="consent">hs-banner.com</classifier>
     <classifier target="top" rule="consent">fundingchoicesmessages.google.com</classifier>
-    <classifier target="domain" rule="consent">cdnconsents.websitepolicies.com</classifier>
+
 </rules>
