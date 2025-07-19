@@ -9,22 +9,27 @@
 <div class="flex flex-col space-y-2 w-full">
     <div class="flex flex-col space-y-4 my-4">
         @if (!report.serviceAvailable())
-            <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
+            <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
                 <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
                     <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
-                    This service is currently being relentlessly scraped by bots and is disabled until they give up.
+                    This service is currently being relentlessly scraped by bots and access
+                    is disabled until they give up.
                 </div>
             </div>
         @elseif (!report.hasData())
-            <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
+            <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
                 <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
                     <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
                     The database of third party requests is still being assembled, and the
-                    search engine doesn't yet have any information about ${report.domain()}.
+                    search engine doesn't yet have any information about <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span>.
+                    <p class="mt-4"></p>
+                    Be patient.  Several million websites need to be visited and assessed,
+                    each visit taking up to 30 seconds.  At the current rate, it is expected
+                    the full database will be complete around the end of 2025, or early 2026.
                 </div>
             </div>
         @else
@@ -33,14 +38,14 @@
                     <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
-                    To better understand what websites like <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span> are doing,
-                    the search engine records which third-party servers the websites communicate with when visited, and produces a report which can be inspected below.
+                    To better understand what <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span> is doing
+                    in the background as you visit the website, the search engine records which third-party servers it talks to.
                     <p class="mt-2"></p>
                     To help make sense of the recorded network traffic, the report is supplemented with information from
                     <a href="https://github.com/duckduckgo/tracker-radar/" class="text-blue-800 dark:text-blue-200 underline" rel="external">DuckDuckGo's Tracker Radar</a>,
                     subject to the CC BY-NC-SA 4.0 license.
                     <details class="mt-2">
-                    <summary>
+                    <summary class="text-gray-600 hover:text-gray-700 dark:text-gray-400 hover:dark:text-gray-300 cursor-pointer select-none">
                         Learn More
                     </summary>
                     <p class="mt-2">
