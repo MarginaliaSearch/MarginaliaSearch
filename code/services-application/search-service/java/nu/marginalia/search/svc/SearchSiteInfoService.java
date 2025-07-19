@@ -493,19 +493,19 @@ public class SearchSiteInfoService {
         }
         public static String classificationColor(DomSampleClassification clazz) {
             return switch (clazz) {
-                case ADS -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
-                case TRACKING -> "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200";
-                case CONSENT -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200 dark:border dark:border-yellow-200";
+                case ADS -> "bg-red-100 text-red-800 dark:bg-red-900 dark:text-white  dark:border dark:border-red-400";
+                case TRACKING -> "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-white  dark:border dark:border-purple-400";
+                case CONSENT -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-white dark:border dark:border-yellow-400";
                 default -> "";
             };
         }
         public static String categoryColor(String category) {
             return switch (category) {
-                case "Ad Motivated Tracking", "Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
-                case "CDN", "Fraud Prevention", "Online Payment", "Consent Management Platform", "SSO" -> "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200  dark:border dark:border-green-200";
-                case "Social - Comment", "Social - Share", "Social Network", "Federated Login" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200  dark:border dark:border-yellow-200";
-                case "Session Replay", "Audience Measurement", "Analytics", "Tag Manager" -> "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200";
-                case "Malware", "Ad Fraud", "Unknown High Risk Behavior", "Obscure Ownership" -> "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200  dark:border dark:border-blue-200";
+                case "Ad Motivated Tracking", "Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-900 dark:text-white  dark:border dark:border-red-400";
+                case "CDN", "Fraud Prevention", "Online Payment", "Consent Management Platform", "SSO" -> "bg-green-100 text-green-800 dark:bg-green-900 dark:text-white  dark:border dark:border-green-400";
+                case "Social - Comment", "Social - Share", "Social Network", "Federated Login" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-white  dark:border dark:border-yellow-400";
+                case "Session Replay", "Audience Measurement", "Analytics", "Tag Manager" -> "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-white  dark:border dark:border-purple-400";
+                case "Malware", "Ad Fraud", "Unknown High Risk Behavior", "Obscure Ownership" -> "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200  dark:border dark:border-blue-400";
                 default -> "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200  dark:border dark:border-gray-200";
             };
 

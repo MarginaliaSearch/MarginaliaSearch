@@ -22,12 +22,12 @@ default -> "";
 };
 }
 
-<i class="bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200"></i>
-<i class="bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200"></i>
-<i class="bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200 dark:border dark:border-yellow-200"></i>
+<i class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200  dark:border dark:border-red-400"></i>
+<i class="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200  dark:border dark:border-purple-400"></i>
+<i class="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 dark:border dark:border-yellow-400"></i>
 
-<i class="bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200"></i>
-<i class="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200  dark:border dark:border-green-200"></i>
-<i class="bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200"></i>
-<i class="bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200  dark:border dark:border-blue-200"></i>
+<i class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200  dark:border dark:border-red-400"></i>
+<i class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200  dark:border dark:border-green-400"></i>
+<i class="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200  dark:border dark:border-purple-400"></i>
+<i class="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200  dark:border dark:border-blue-400"></i>
 <i class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200  dark:border dark:border-gray-200"></i>
