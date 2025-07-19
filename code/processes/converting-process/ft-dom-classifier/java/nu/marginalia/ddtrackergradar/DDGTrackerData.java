@@ -24,6 +24,11 @@ public class DDGTrackerData {
     private static final Logger logger = LoggerFactory.getLogger(DDGTrackerData.class);
 
     public DDGTrackerData() {
+
+        // Data is assumed to be in ${WMSA_HOME}/data/tracker-radar
+        // ... do a shallow clone of the repo
+        // https://github.com/duckduckgo/tracker-radar/
+
         Path dataDir = WmsaHome.getDataPath().resolve("tracker-radar");
         if (!Files.exists(dataDir)) {
             logger.info("tracker-radar data absent from expected path {}, loading nothing", dataDir);
@@ -52,14 +57,14 @@ public class DDGTrackerData {
             dirContent
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".json"))
-                    .forEach(this::loadDomain);
+                    .forEach(this::loadDomainModel);
         }
         catch (IOException e) {
             logger.error("Error while loading DDGT tracker data", e);
         }
     }
 
-    void loadDomain(Path jsonFile) {
+    void loadDomainModel(Path jsonFile) {
         try {
             var model = gson.fromJson(Files.readString(jsonFile), DDGTDomain.class);
 
@@ -83,6 +88,7 @@ public class DDGTrackerData {
         }
     }
 
+    // Export all classifications in the data set
     public Set<String> getAllClassifications() {
         Set<String> ret = new HashSet<>();
         for (var domain: domains.values()) {
