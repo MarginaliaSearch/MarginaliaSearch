@@ -11,7 +11,7 @@
         @if (!report.serviceAvailable())
             <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
                 <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
-                    <span>Third Party Requests</span>
+                    <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
                     This service is currently being relentlessly scraped by bots and is disabled until they give up.
@@ -20,7 +20,7 @@
         @elseif (!report.hasData())
             <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
                 <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
-                    <span>Third Party Requests</span>
+                    <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
                     The search engine doesn't yet have any information about ${report.domain()}.
@@ -29,15 +29,48 @@
         @else
             <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
                 <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
-                    <span>Third Party Requests</span>
+                    <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
-                    To better understand what websites like <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span> is doing, the search engine records which
-                    third party servers websites talk to when visited, and produces a report which can be inspected below.
+                    To better understand what websites like <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span> are doing,
+                    the search engine records which third-party servers the websites communicate with when visited, and produces a report which can be inspected below.
                     <p class="mt-2"></p>
-                    To help make sense of the recorded network traffic, the report is decorated with supplemental information from
+                    To help make sense of the recorded network traffic, the report is supplemented with information from
                     <a href="https://github.com/duckduckgo/tracker-radar/" class="text-blue-800 dark:text-blue-200 underline" rel="external">DuckDuckGo's Tracker Radar</a>,
                     subject to the CC BY-NC-SA 4.0 license.
+                    <details class="mt-2">
+                    <summary>
+                        Learn More
+                    </summary>
+                    <p class="mt-2">
+                    The search engine classifies third party requests into four buckets, based on their apparent purpose.
+                    </p>
+                    <p class="mt-2">
+                        <span class="text-red-600 dark:text-red-400"><i class="fa fa-ad"></i> Advertisement</span> requests are involved in the bidding or display of advertisements, or the tracking
+                        of ad impressions.  They do not guarantee ads will be present on the website, as the advertisement
+                        broker may decide it's not economic to place an ad for any particular visitor, but it is on the other hand virtually
+                        impossible for ads to be present if this type of activity is not found.
+                    </p>
+                    <p class="mt-2">
+                        <span class="text-purple-600 dark:text-purple-400"><i class="fa fa-crosshairs"></i> Tracking</span> requests analyze user behavior on the web, sometimes with the purpose of building a profile
+                        for advertisement using cookies or browser fingerprinting technologies, other times the traffic exists only to help understand what visitors are doing on a website
+                        for the benefit of the webmasters.
+                    </p>
+                    <p class="mt-2">
+                        <span class="text-orange-600 dark:text-orange-400"><i class="fa fa-shield-alt"></i>  Consent</span> requests manage GDPR or cookie consent popups, and similar nuisances.
+                        In general, tracking and advertisement scripts are not run until a consent popup is dismissed.  The system will try to automatically
+                        agree to tracking consent popups when it can identify them in order to also capture these deferred requests, but this is not always successful,
+                        so the presence of consent requests alone is a weak indicator a website may intend to load tracking or advertisement scripts.
+                    </p>
+                    <p class="mt-2">
+                        <span class="text-gray-600 dark:text-gray-400"><i class="fa fa-question-circle"></i> Unclassified</span> requests are requests the system doesn't know what they are.  Often these are
+                        requests to content-delivery networks intended to reduce the network traffic to the server hosting the website and speed up page loads.
+                    </p>
+
+                    <p class="mt-2"></p>
+                    This data is continuously updated, but updates are fairly
+                    slow so the information may not be fully up to date.
+                </details>
                 </div>
             </div>
         @endif
@@ -72,7 +105,7 @@
 
     @if (report.requests().isEmpty())
         <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
-            No third party requests were made!
+            No third-party requests were made!
         </div>
     @endif
 
