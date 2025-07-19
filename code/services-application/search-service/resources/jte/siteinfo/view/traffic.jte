@@ -8,23 +8,37 @@
 
 <div class="flex flex-col space-y-2 w-full">
     <div class="flex flex-col space-y-4 my-4">
-
         @if (!report.serviceAvailable())
             <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
-                This service is currently being relentlessly scraped by bots and is disabled until they give up.
+                <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
+                    <span>Third Party Requests</span>
+                </div>
+                <div class="p-4">
+                    This service is currently being relentlessly scraped by bots and is disabled until they give up.
+                </div>
             </div>
         @elseif (!report.hasData())
             <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
-                The search engine doesn't yet have any information about ${report.domain()}.
+                <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
+                    <span>Third Party Requests</span>
+                </div>
+                <div class="p-4">
+                    The search engine doesn't yet have any information about ${report.domain()}.
+                </div>
             </div>
         @else
-            <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden p-4 mx-2 text-gray-800 text-sm">
-                To better understand what <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span> is doing, the search engine records which servers
-                it talks to when visiting the website, and produces a report which can be inspected below.
-                <p class="mt-2"></p>
-                To help make sense of the network traffic, the report is decorated with supplemental information from
-                <a href="https://github.com/duckduckgo/tracker-radar/" class="text-blue-800 dark:text-blue-200 underline" rel="external">DuckDuckGo's Tracker Radar</a>,
-                subject to the CC BY-NC-SA 4.0 license.
+            <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
+                <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
+                    <span>Third Party Requests</span>
+                </div>
+                <div class="p-4">
+                    To better understand what websites like <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span> is doing, the search engine records which
+                    third party servers websites talk to when visited, and produces a report which can be inspected below.
+                    <p class="mt-2"></p>
+                    To help make sense of the recorded network traffic, the report is decorated with supplemental information from
+                    <a href="https://github.com/duckduckgo/tracker-radar/" class="text-blue-800 dark:text-blue-200 underline" rel="external">DuckDuckGo's Tracker Radar</a>,
+                    subject to the CC BY-NC-SA 4.0 license.
+                </div>
             </div>
         @endif
 
@@ -32,7 +46,9 @@
 
     @if (report.hasData())
     <div class="mx-2">
-
+        <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white rounded border mb-4">
+            <span>Summary</span>
+        </div>
         <!-- Summary Stats -->
         <div class="grid grid-cols-4 gap-4 mb-8">
             <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
@@ -62,6 +78,10 @@
 
     <!-- Domain Groups -->
     <div class="space-y-4 mx-2">
+        <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white rounded border">
+            <span>Breakdown</span>
+        </div>
+
         @for (OutgoingRequestsForDomain request : report.requests())
         <!-- Google Analytics Domain -->
         <div class="bg-white rounded shadow-sm border border-gray-200  dark:bg-gray-800 dark:border-gray-600">
