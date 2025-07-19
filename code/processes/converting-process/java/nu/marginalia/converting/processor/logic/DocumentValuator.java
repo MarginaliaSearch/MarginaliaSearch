@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
 import nu.marginalia.converting.model.DisqualifiedException;
-import nu.marginalia.domclassifier.DomSampleClassifier;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawldata.CrawledDocument;
@@ -15,7 +15,7 @@ import org.jsoup.select.NodeVisitor;
 import java.util.List;
 import java.util.Set;
 
-import static nu.marginalia.domclassifier.DomSampleClassifier.DomSampleClassification.*;
+import static nu.marginalia.domclassifier.DomSampleClassification.*;
 
 public class DocumentValuator {
 
@@ -129,7 +129,7 @@ public class DocumentValuator {
         return quality + adjustment;
     }
 
-    public double getQuality(Set<DomSampleClassifier.DomSampleClassification> classifications) {
+    public double getQuality(Set<DomSampleClassification> classifications) {
         double quality = 0;
         if (classifications.contains(ADS)) {
             quality -= 6;

@@ -7,7 +7,7 @@ import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
-import nu.marginalia.domclassifier.DomSampleClassifier;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
@@ -78,7 +78,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     @Override
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
-                                          Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
+                                          Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException, IOException {
 
         String documentBody = crawledDocument.documentBody();

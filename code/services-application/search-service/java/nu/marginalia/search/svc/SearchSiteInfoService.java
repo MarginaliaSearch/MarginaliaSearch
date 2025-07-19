@@ -20,6 +20,7 @@ import nu.marginalia.api.livecapture.LiveCaptureClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.ddtrackergradar.DDGTrackerData;
 import nu.marginalia.ddtrackergradar.model.DDGTDomain;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -220,7 +221,7 @@ public class SearchSiteInfoService {
                     .add(Map.entry(url, rpcOutgoingRequest));
         }
 
-        Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary = new HashMap<>();
+        Map<DomSampleClassification, Integer> requestSummary = new HashMap<>();
 
         urlsPerDomain.forEach((requestDomain, urlsAndReqs) -> {
             final List<RequestedEndpoint> endpoints = new ArrayList<>();
@@ -229,7 +230,7 @@ public class SearchSiteInfoService {
                 final EdgeUrl url =  urlAndReq.getKey();
                 final RpcOutgoingRequest outgoingRequest = urlAndReq.getValue();
 
-                final DomSampleClassifier.DomSampleClassification clazz = domSampleClassifier.classifyRequest(outgoingRequest);
+                final DomSampleClassification clazz = domSampleClassifier.classifyRequest(outgoingRequest);
 
                 requestSummary.merge(clazz, 1, Integer::sum);
 
@@ -479,10 +480,10 @@ public class SearchSiteInfoService {
     public record SiteGeneratedRequestsReport(String domain,
                                               boolean hasData,
                                               boolean serviceAvailable,
-                                              Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary,
+                                              Map<DomSampleClassification, Integer> requestSummary,
                                               List<OutgoingRequestsForDomain> requests) implements SiteInfoModel {
 
-        public static String classificationIcon(DomSampleClassifier.DomSampleClassification clazz) {
+        public static String classificationIcon(DomSampleClassification clazz) {
             return switch (clazz) {
                 case ADS -> "fa-ad";
                 case TRACKING -> "fa-crosshairs";
@@ -490,7 +491,7 @@ public class SearchSiteInfoService {
                 default -> "";
             };
         }
-        public static String classificationColor(DomSampleClassifier.DomSampleClassification clazz) {
+        public static String classificationColor(DomSampleClassification clazz) {
             return switch (clazz) {
                 case ADS -> "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200  dark:border dark:border-red-200";
                 case TRACKING -> "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200  dark:border dark:border-purple-200";
@@ -510,7 +511,7 @@ public class SearchSiteInfoService {
 
         }
 
-        public record RequestedEndpoint(String path, String method, DomSampleClassifier.DomSampleClassification classification) {}
+        public record RequestedEndpoint(String path, String method, DomSampleClassification classification) {}
 
         public record OutgoingRequestsForDomain(EdgeDomain domain,
                                                 List<RequestedEndpoint> endpoints,
@@ -563,7 +564,7 @@ public class SearchSiteInfoService {
         }
 
         public SiteGeneratedRequestsReport(String domain,
-                                           Map<DomSampleClassifier.DomSampleClassification, Integer> requestSummary,
+                                           Map<DomSampleClassification, Integer> requestSummary,
                                            List<OutgoingRequestsForDomain> requests
                                            ) {
             this(domain, true, true, requestSummary, requests);

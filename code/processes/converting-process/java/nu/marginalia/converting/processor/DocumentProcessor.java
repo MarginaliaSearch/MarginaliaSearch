@@ -10,7 +10,7 @@ import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PdfDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PlainTextDocumentProcessorPlugin;
-import nu.marginalia.domclassifier.DomSampleClassifier;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -61,7 +61,7 @@ public class DocumentProcessor {
     public ProcessedDocument process(CrawledDocument crawledDocument,
                                      EdgeDomain domain,
                                      DomainLinks externalDomainLinks,
-                                     Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications,
+                                     Set<DomSampleClassification> domSampleClassifications,
                                      DocumentDecorator documentDecorator) {
         ProcessedDocument ret = new ProcessedDocument();
 

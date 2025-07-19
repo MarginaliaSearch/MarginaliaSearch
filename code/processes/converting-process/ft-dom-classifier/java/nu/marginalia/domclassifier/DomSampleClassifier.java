@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import nu.marginalia.api.domsample.RpcDomainSample;
 import nu.marginalia.api.domsample.RpcOutgoingRequest;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.HtmlFeature;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,23 +24,6 @@ import java.util.regex.Pattern;
 
 @Singleton
 public class DomSampleClassifier {
-
-    /** Feature classifications for the DOM sample */
-    public enum DomSampleClassification {
-        ADS(HtmlFeature.ADVERTISEMENT),
-        TRACKING(HtmlFeature.TRACKING_ADTECH),
-        CONSENT(HtmlFeature.CONSENT),
-        POPOVER(HtmlFeature.POPOVER),
-        UNCLASSIFIED(HtmlFeature.MISSING_DOM_SAMPLE),
-        IGNORE(null);
-
-        @Nullable
-        public final HtmlFeature htmlFeature;
-
-        DomSampleClassification(@Nullable HtmlFeature feature) {
-            this.htmlFeature = feature;
-        }
-    }
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleClassifier.class);
 
@@ -95,6 +76,45 @@ public class DomSampleClassifier {
 
     }
 
+    public Set<DomSampleClassification> classifySample(RpcDomainSample sample) {
+        Set<DomSampleClassification> classifications = new HashSet<>();
+
+        // Look at DOM
+
+        try {
+            var parsedDoc = Jsoup.parse(sample.getHtmlSample());
+            var fixedElements = parsedDoc.select("*[data-position=fixed]");
+
+            if (sample.getAcceptedPopover()) {
+                classifications.add(DomSampleClassification.POPOVER);
+            }
+            else if (!fixedElements.isEmpty()) {
+                String fixedText = fixedElements.text().toLowerCase();
+                if (fixedText.contains("cookie") ||
+                        fixedText.contains("subscribe") ||
+                        fixedText.contains("consent") ||
+                        fixedText.contains("newsletter") ||
+                        fixedText.contains("gdpr"))
+                {
+                    classifications.add(DomSampleClassification.POPOVER);
+                }
+            }
+        }
+        catch (Exception ex) {
+            logger.warn("Error when parsing DOM HTML sample");
+        }
+
+        // Classify outgoing requests
+        for (var req : sample.getOutgoingRequestsList()) {
+            var clazz = classifyRequest(req);
+            if (clazz != DomSampleClassification.IGNORE && clazz != DomSampleClassification.UNCLASSIFIED) {
+                classifications.add(clazz);
+            }
+        }
+
+        return classifications;
+    }
+
     public DomSampleClassification classifyRequest(RpcOutgoingRequest request) {
         try {
             EdgeUrl edgeUrl = new EdgeUrl(request.getUrl());
@@ -134,42 +154,4 @@ public class DomSampleClassifier {
         return DomSampleClassification.UNCLASSIFIED;
     }
 
-    public Set<DomSampleClassification> classify(RpcDomainSample sample) {
-        Set<DomSampleClassification> classifications = new HashSet<>();
-
-        // Look at DOM
-
-        try {
-            var parsedDoc = Jsoup.parse(sample.getHtmlSample());
-            var fixedElements = parsedDoc.select("*[data-position=fixed]");
-
-            if (sample.getAcceptedPopover()) {
-                classifications.add(DomSampleClassification.POPOVER);
-            }
-            else if (!fixedElements.isEmpty()) {
-                String fixedText = fixedElements.text().toLowerCase();
-                if (fixedText.contains("cookie") ||
-                        fixedText.contains("subscribe") ||
-                        fixedText.contains("consent") ||
-                        fixedText.contains("newsletter") ||
-                        fixedText.contains("gdpr"))
-                {
-                    classifications.add(DomSampleClassification.POPOVER);
-                }
-            }
-        }
-        catch (Exception ex) {
-            logger.warn("Error when parsing DOM HTML sample");
-        }
-
-        // Classify outgoing requests
-        for (var req : sample.getOutgoingRequestsList()) {
-            var clazz = classifyRequest(req);
-            if (clazz != DomSampleClassification.IGNORE && clazz != DomSampleClassification.UNCLASSIFIED) {
-                classifications.add(clazz);
-            }
-        }
-
-        return classifications;
-    }
 }

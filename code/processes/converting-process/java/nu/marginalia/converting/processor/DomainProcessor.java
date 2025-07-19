@@ -13,6 +13,7 @@ import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.geoip.sources.AsnTable;
@@ -88,13 +89,13 @@ public class DomainProcessor {
     }
 
     /** Fetch and process the DOM sample and extract classifications */
-    private Set<DomSampleClassifier.DomSampleClassification> getDomainClassifications(String domainName) throws ExecutionException, InterruptedException {
+    private Set<DomSampleClassification> getDomainClassifications(String domainName) throws ExecutionException, InterruptedException {
         return domSampleClient
                 .getSampleAsync(domainName, domSampleExecutor)
-                .thenApply(domSampleClassifier::classify)
+                .thenApply(domSampleClassifier::classifySample)
                 .handle((a,b) ->
                         Objects.requireNonNullElseGet(a,
-                                () -> EnumSet.of(DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)))
+                                () -> EnumSet.of(DomSampleClassification.UNCLASSIFIED)))
                 .get();
     }
 
@@ -122,7 +123,7 @@ public class DomainProcessor {
 
             // Process Documents
 
-            Set<DomSampleClassifier.DomSampleClassification> classifications = getDomainClassifications(crawledDomain.getDomain());
+            Set<DomSampleClassification> classifications = getDomainClassifications(crawledDomain.getDomain());
 
             try (var deduplicator = new LshDocumentDeduplicator()) {
                 while (dataStream.hasNext()) {
@@ -182,7 +183,7 @@ public class DomainProcessor {
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
 
-        Set<DomSampleClassifier.DomSampleClassification> classifications;
+        Set<DomSampleClassification> classifications;
 
         private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
                 Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())

@@ -15,7 +15,7 @@ import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecializations;
 import nu.marginalia.converting.processor.pubdate.PubDateSniffer;
-import nu.marginalia.domclassifier.DomSampleClassifier;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -104,7 +104,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     @Override
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
-                                          Set<DomSampleClassifier.DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
+                                          Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException, IOException {
 
         if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
@@ -138,7 +138,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         final DocumentFormat format = getDocumentFormat(doc);
         final double quality;
 
-        if (domSampleClassifications.contains(DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)) {
+        if (domSampleClassifications.contains(DomSampleClassification.UNCLASSIFIED)) {
             quality = documentValuator.getQuality(crawledDocument, format, doc, length);
         }
         else {

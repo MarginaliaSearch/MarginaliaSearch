@@ -1,4 +1,4 @@
-@import nu.marginalia.domclassifier.DomSampleClassifier
+@import nu.marginalia.domclassifier.DomSampleClassification
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.svc.SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain
 
@@ -35,19 +35,19 @@
     <!-- Summary Stats -->
     <div class="grid grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
-            <div class="text-2xl font-bold text-red-600 dark:text-red-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.ADS, 0)}</div>
+            <div class="text-2xl font-bold text-red-600 dark:text-red-400">${report.requestSummary().getOrDefault(DomSampleClassification.ADS, 0)}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Ads</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
-            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.TRACKING, 0)}</div>
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${report.requestSummary().getOrDefault(DomSampleClassification.TRACKING, 0)}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Tracking</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
-            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.CONSENT, 0)}</div>
+            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">${report.requestSummary().getOrDefault(DomSampleClassification.CONSENT, 0)}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Consent</div>
         </div>
         <div class="bg-white rounded p-4 shadow-sm border dark:bg-gray-800 dark:border-gray-600 place-items-center">
-            <div class="text-2xl font-bold text-gray-600 dark:text-gray-400">${report.requestSummary().getOrDefault(DomSampleClassifier.DomSampleClassification.UNCLASSIFIED, 0)}</div>
+            <div class="text-2xl font-bold text-gray-600 dark:text-gray-400">${report.requestSummary().getOrDefault(DomSampleClassification.UNCLASSIFIED, 0)}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Other</div>
         </div>
     </div>
@@ -100,7 +100,7 @@
                             <div class="text-xs text-gray-500 dark:text-gray-100 font-mono">${req.method()}</div>
                             <span class="text-sm text-gray-600 dark:text-white font-mono break-all">${req.path()}</span>
                         </div>
-                        @if (req.classification() != DomSampleClassifier.DomSampleClassification.UNCLASSIFIED)
+                        @if (req.classification() != DomSampleClassification.UNCLASSIFIED)
                         <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded flex flex-row place-items-baseline gap-1 ${SiteGeneratedRequestsReport.classificationColor(req.classification())}">
                             <i class="fa ${SiteGeneratedRequestsReport.classificationIcon(req.classification())}"></i> ${req.classification().name()}</span>
                         @endif
