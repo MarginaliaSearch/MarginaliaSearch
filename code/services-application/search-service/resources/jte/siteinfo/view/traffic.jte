@@ -23,7 +23,8 @@
                     <span>Third-Party Requests</span>
                 </div>
                 <div class="p-4">
-                    The search engine doesn't yet have any information about ${report.domain()}.
+                    The database of third party requests is still being assembled, and the
+                    search engine doesn't yet have any information about ${report.domain()}.
                 </div>
             </div>
         @else
@@ -103,18 +104,18 @@
         </div>
     </div>
 
-    @if (report.requests().isEmpty())
-        <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
-            No third-party requests were made!
-        </div>
-    @endif
+
 
     <!-- Domain Groups -->
     <div class="space-y-4 mx-2">
         <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white rounded border">
             <span>Breakdown</span>
         </div>
-
+        @if (report.requests().isEmpty())
+            <div class="border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden p-4 mx-2 text-gray-800 text-sm">
+                No third-party requests were made!
+            </div>
+        @endif
         @for (OutgoingRequestsForDomain request : report.requests())
         <!-- Google Analytics Domain -->
         <div class="bg-white rounded shadow-sm border border-gray-200  dark:bg-gray-800 dark:border-gray-600">
