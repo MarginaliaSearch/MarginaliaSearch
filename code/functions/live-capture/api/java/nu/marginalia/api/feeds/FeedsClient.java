@@ -24,7 +24,9 @@ import java.util.function.BiConsumer;
 
 @Singleton
 public class FeedsClient {
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
+    private static final ExecutorService executorService = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool();
+
     private final GrpcSingleNodeChannelPool<FeedApiGrpc.FeedApiBlockingStub> channelPool;
     private final MqOutbox updateFeedsOutbox;
 

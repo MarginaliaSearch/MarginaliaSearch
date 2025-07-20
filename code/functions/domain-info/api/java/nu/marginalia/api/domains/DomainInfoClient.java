@@ -2,6 +2,8 @@ package nu.marginalia.api.domains;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.api.domains.model.DomainInformation;
+import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -10,16 +12,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.*;
-
-import nu.marginalia.api.domains.model.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Singleton
 public class DomainInfoClient {
     private static final Logger logger = LoggerFactory.getLogger(DomainInfoClient.class);
 
     private final GrpcSingleNodeChannelPool<DomainInfoAPIGrpc.DomainInfoAPIBlockingStub> channelPool;
-    private final ExecutorService executor = Executors.newWorkStealingPool(8);
+
+
+    private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
+    private static final ExecutorService executor = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newWorkStealingPool(8);
 
     @Inject
     public DomainInfoClient(GrpcChannelPoolFactory factory) {

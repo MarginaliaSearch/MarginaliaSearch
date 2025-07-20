@@ -26,7 +26,9 @@ public class MathClient {
     private static final Logger logger = LoggerFactory.getLogger(MathClient.class);
 
     private final GrpcSingleNodeChannelPool<MathApiGrpc.MathApiBlockingStub> channelPool;
-    private final ExecutorService executor = Executors.newWorkStealingPool(8);
+
+    private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
+    private static final ExecutorService executor = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newWorkStealingPool(8);
 
     @Inject
     public MathClient(GrpcChannelPoolFactory factory) {

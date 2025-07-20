@@ -38,7 +38,9 @@ public class IndexClient {
             .help("Count of results filtered by NSFW tier")
             .register();
 
-    private static final ExecutorService executor = Executors.newCachedThreadPool();
+
+    private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
+    private static final ExecutorService executor = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool();
 
     @Inject
     public IndexClient(GrpcChannelPoolFactory channelPoolFactory,
