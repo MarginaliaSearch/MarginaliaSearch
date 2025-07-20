@@ -277,10 +277,10 @@ public class MockedSearchResults {
     }
 
     public static Object mockTrafficReport() {
-        List<SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain> requests = new ArrayList<>();
-        requests.add(new SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain(
+        List<SearchSiteInfoService.TrafficSample.RequestsForTargetDomain> requests = new ArrayList<>();
+        requests.add(new SearchSiteInfoService.TrafficSample.RequestsForTargetDomain(
                 new EdgeDomain("hotjar.com"),
-                List.of(new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/foo.js", "POST", DomSampleClassification.TRACKING)),
+                List.of(new SearchSiteInfoService.TrafficSample.RequestEndpoint("/foo.js", "POST", DomSampleClassification.TRACKING)),
                 new DDGTDomain(
                         "hotjar.com",
                         new DDGTOwner("Hotjar Ltd", "Hotjar", "https://www.example.com/", "https://www.hotjar.com/"),
@@ -288,10 +288,10 @@ public class MockedSearchResults {
                         List.of()
                 )
         ));
-        requests.add(new SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain(
+        requests.add(new SearchSiteInfoService.TrafficSample.RequestsForTargetDomain(
                 new EdgeDomain("doubleclick.net"),
-                List.of(new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/foo.js", "GET", DomSampleClassification.TRACKING),
-                        new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/bar.js", "GET", DomSampleClassification.TRACKING)),
+                List.of(new SearchSiteInfoService.TrafficSample.RequestEndpoint("/foo.js", "GET", DomSampleClassification.TRACKING),
+                        new SearchSiteInfoService.TrafficSample.RequestEndpoint("/bar.js", "GET", DomSampleClassification.TRACKING)),
                 new DDGTDomain(
                         "doubleclick.net",
                         new DDGTOwner("Doubleclick Inc", "Doubleclick", "https://www.example.com/", "https://www.hotjar.com/"),
@@ -299,10 +299,10 @@ public class MockedSearchResults {
                         List.of()
                 )
         ));
-        requests.add(new SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain(
+        requests.add(new SearchSiteInfoService.TrafficSample.RequestsForTargetDomain(
                 new EdgeDomain("sketchy.org"),
-                List.of(new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/foo.js", "GET", DomSampleClassification.ADS),
-                        new SearchSiteInfoService.SiteGeneratedRequestsReport.RequestedEndpoint("/bar.js", "GET", DomSampleClassification.CONSENT)),
+                List.of(new SearchSiteInfoService.TrafficSample.RequestEndpoint("/foo.js", "GET", DomSampleClassification.ADS),
+                        new SearchSiteInfoService.TrafficSample.RequestEndpoint("/bar.js", "GET", DomSampleClassification.CONSENT)),
                 new DDGTDomain(
                         "sketchy.org",
                         new DDGTOwner("Doubious AB", "Legit Enterprises", "https://www.example.com/", "https://www.hotjar.com/"),
@@ -310,7 +310,7 @@ public class MockedSearchResults {
                         List.of()
                 )
         ));
-        return new SearchSiteInfoService.SiteGeneratedRequestsReport(
+        return new SearchSiteInfoService.TrafficSample(
                 "example.com",
                 Map.of(
                         DomSampleClassification.ADS, 3,

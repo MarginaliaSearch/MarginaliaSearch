@@ -1,8 +1,8 @@
 @import nu.marginalia.domclassifier.DomSampleClassification
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
-@import nu.marginalia.search.svc.SearchSiteInfoService.SiteGeneratedRequestsReport.OutgoingRequestsForDomain
+@import nu.marginalia.search.svc.SearchSiteInfoService.TrafficSample.RequestsForTargetDomain
 
-@param SiteGeneratedRequestsReport report
+@param TrafficSample report
 
 <!-- Main content -->
 
@@ -121,7 +121,7 @@
                 No third-party requests were made!
             </div>
         @endif
-        @for (OutgoingRequestsForDomain request : report.requests())
+        @for (RequestsForTargetDomain request : report.requests())
         <!-- Google Analytics Domain -->
         <div class="bg-white rounded shadow-sm border border-gray-200  dark:bg-gray-800 dark:border-gray-600">
             <div class="p-2 md:p-6 border-b border-gray-100 dark:border-gray-600">
@@ -150,7 +150,7 @@
                     </div>
                     <div class="flex flex-wrap justify-end gap-2 md:ml-2">
                         @for (String tag : request.ownerCategories())
-                            <span class="px-2 py-1 ${SiteGeneratedRequestsReport.categoryColor(tag)} text-xs rounded">${tag}</span>
+                            <span class="px-2 py-1 ${TrafficSample.categoryColor(tag)} text-xs rounded">${tag}</span>
                         @endfor
                     </div>
                 </div>
@@ -165,8 +165,8 @@
                             <span class="text-sm text-gray-600 dark:text-white font-mono break-all">${req.path()}</span>
                         </div>
                         @if (req.classification() != DomSampleClassification.UNCLASSIFIED)
-                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded flex flex-row place-items-baseline gap-1 ${SiteGeneratedRequestsReport.classificationColor(req.classification())}">
-                            <i class="fa ${SiteGeneratedRequestsReport.classificationIcon(req.classification())}"></i> ${req.classification().name()}</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded flex flex-row place-items-baseline gap-1 ${TrafficSample.classificationColor(req.classification())}">
+                            <i class="fa ${TrafficSample.classificationIcon(req.classification())}"></i> ${req.classification().name()}</span>
                         @endif
                     </div>
                     @endfor

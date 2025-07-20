@@ -102,7 +102,7 @@
             </div>
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
                 <a href="?view=traffic" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-200">
-                    @if (model instanceof SearchSiteInfoService.SiteGeneratedRequestsReport)
+                    @if (model instanceof SearchSiteInfoService.TrafficSample)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
                         <span></span>
@@ -142,7 +142,7 @@
         @template.siteinfo.view.backlinks(backlinks = backlinks)
     @elseif (model instanceof SearchSiteInfoService.Docs docs)
         @template.siteinfo.view.docs(docs = docs)
-    @elseif (model instanceof SearchSiteInfoService.SiteGeneratedRequestsReport report)
+    @elseif (model instanceof SearchSiteInfoService.TrafficSample report)
         @template.siteinfo.view.traffic(report = report)
     @endif
 

@@ -44,7 +44,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static nu.marginalia.search.svc.SearchSiteInfoService.SiteGeneratedRequestsReport.*;
+import static nu.marginalia.search.svc.SearchSiteInfoService.TrafficSample.*;
 
 @Singleton
 public class SearchSiteInfoService {
@@ -191,14 +191,13 @@ public class SearchSiteInfoService {
             return forServiceUnavailable(domainName);
         }
 
-
         Optional<RpcDomainSample> sample = domSampleClient.getSample(domainName.toLowerCase());
         if (sample.isEmpty()) {
             return forNoData(domainName);
         }
 
         final EdgeDomain currentDomain = new EdgeDomain(domainName);
-        final List<OutgoingRequestsForDomain> requests = new ArrayList<>();
+        final List<RequestsForTargetDomain> requests = new ArrayList<>();
         final Map<EdgeDomain, List<Map.Entry<EdgeUrl, RpcOutgoingRequest>>> urlsPerDomain = new HashMap<>();
 
         final Set<EdgeUrl> seenUrls = new HashSet<>();
@@ -223,7 +222,7 @@ public class SearchSiteInfoService {
         Map<DomSampleClassification, Integer> requestSummary = new HashMap<>();
 
         urlsPerDomain.forEach((requestDomain, urlsAndReqs) -> {
-            final List<RequestedEndpoint> endpoints = new ArrayList<>();
+            final List<RequestEndpoint> endpoints = new ArrayList<>();
 
             for (Map.Entry<EdgeUrl, RpcOutgoingRequest> urlAndReq : urlsAndReqs) {
                 final EdgeUrl url =  urlAndReq.getKey();
@@ -234,7 +233,7 @@ public class SearchSiteInfoService {
                 requestSummary.merge(clazz, 1, Integer::sum);
 
                 endpoints.add(
-                        new RequestedEndpoint(
+                        new RequestEndpoint(
                             url.path + (url.param == null ? "" : "?" +  url.param),
                             outgoingRequest.getMethod().name(),
                             clazz
@@ -249,7 +248,7 @@ public class SearchSiteInfoService {
                         .orElse(null);
 
             requests.add(
-                new OutgoingRequestsForDomain(
+                new RequestsForTargetDomain(
                     requestDomain,
                     endpoints,
                     trackerData
@@ -258,12 +257,12 @@ public class SearchSiteInfoService {
         });
 
         requests.sort(Comparator
-                .comparing((OutgoingRequestsForDomain req) -> req.endpoints.getFirst().classification.ordinal())
+                .comparing((RequestsForTargetDomain req) -> req.endpoints.getFirst().classification.ordinal())
                 .thenComparing(req -> req.ownerDisplayName() == null)
                 .thenComparing(req -> req.domain.topDomain)
                 .thenComparing(req -> req.domain.toString()));
 
-        return new SiteGeneratedRequestsReport(domainName, requestSummary, requests);
+        return new TrafficSample(domainName, requestSummary, requests);
     }
 
     @POST
@@ -477,109 +476,6 @@ public class SearchSiteInfoService {
         String domain();
     }
 
-    public record SiteGeneratedRequestsReport(String domain,
-                                              boolean hasData,
-                                              boolean serviceAvailable,
-                                              Map<DomSampleClassification, Integer> requestSummary,
-                                              List<OutgoingRequestsForDomain> requests) implements SiteInfoModel {
-
-        public static String classificationIcon(DomSampleClassification clazz) {
-            return switch (clazz) {
-                case ADS -> "fa-ad";
-                case TRACKING -> "fa-crosshairs";
-                case CONSENT -> "fa-shield-alt";
-                default -> "";
-            };
-        }
-        public static String classificationColor(DomSampleClassification clazz) {
-            return switch (clazz) {
-                case ADS -> "bg-red-100 text-red-800 dark:bg-red-900 dark:text-white  dark:border dark:border-red-400";
-                case TRACKING -> "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-white  dark:border dark:border-purple-400";
-                case CONSENT -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-white dark:border dark:border-yellow-400";
-                default -> "";
-            };
-        }
-        public static String categoryColor(String category) {
-            return switch (category) {
-                case "Ad Motivated Tracking", "Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-900 dark:text-white  dark:border dark:border-red-400";
-                case "CDN", "Fraud Prevention", "Online Payment", "Consent Management Platform", "SSO" -> "bg-green-100 text-green-800 dark:bg-green-900 dark:text-white  dark:border dark:border-green-400";
-                case "Social - Comment", "Social - Share", "Social Network", "Federated Login" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-white  dark:border dark:border-yellow-400";
-                case "Session Replay", "Audience Measurement", "Analytics", "Tag Manager" -> "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-white  dark:border dark:border-purple-400";
-                case "Malware", "Ad Fraud", "Unknown High Risk Behavior", "Obscure Ownership" -> "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200  dark:border dark:border-blue-400";
-                default -> "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200  dark:border dark:border-gray-200";
-            };
-
-        }
-
-        public record RequestedEndpoint(String path, String method, DomSampleClassification classification) {}
-
-        public record OutgoingRequestsForDomain(EdgeDomain domain,
-                                                List<RequestedEndpoint> endpoints,
-                                                @Nullable DDGTDomain ddgtTrackerInfo)
-        {
-            public List<String> ownerCategories() {
-                if (ddgtTrackerInfo == null) return List.of();
-                if (ddgtTrackerInfo.categories() == null)  return List.of();
-                return ddgtTrackerInfo.categories();
-            }
-
-            @Nullable
-            public String ownerName() {
-                if (ddgtTrackerInfo == null)
-                    return null;
-                if (ddgtTrackerInfo.owner() == null)
-                    return null;
-                return ddgtTrackerInfo.owner().name();
-            }
-
-            @Nullable
-            public String ownerDisplayName() {
-                if (ddgtTrackerInfo == null)
-                    return null;
-                if (ddgtTrackerInfo.owner() == null)
-                    return null;
-                return ddgtTrackerInfo.owner().displayName();
-            }
-
-            @Nullable
-            public String ownerUrl() {
-                if (ddgtTrackerInfo == null)
-                    return null;
-                if (ddgtTrackerInfo.owner() == null)
-                    return null;
-                return ddgtTrackerInfo.owner().url();
-            }
-
-
-
-            @Nullable
-            public String ownerPolicy() {
-                if (ddgtTrackerInfo == null)
-                    return null;
-                if (ddgtTrackerInfo.owner() == null)
-                    return null;
-                return ddgtTrackerInfo.owner().privacyPolicy();
-            }
-
-        }
-
-        public SiteGeneratedRequestsReport(String domain,
-                                           Map<DomSampleClassification, Integer> requestSummary,
-                                           List<OutgoingRequestsForDomain> requests
-                                           ) {
-            this(domain, true, true, requestSummary, requests);
-        }
-
-        static SiteGeneratedRequestsReport forNoData(String domain) {
-            return new SiteGeneratedRequestsReport(domain, false, true, Map.of(), List.of());
-        }
-
-        static SiteGeneratedRequestsReport forServiceUnavailable(String domain) {
-            return new SiteGeneratedRequestsReport(domain, true, false, Map.of(), List.of());
-        }
-
-    }
-
     public record Docs(String domain,
                        long domainId,
                        List<UrlDetails> results,
@@ -697,6 +593,110 @@ public class SearchSiteInfoService {
 
         public boolean isKnown() {
             return domainId > 0;
+        }
+    }
+
+    public record TrafficSample(String domain,
+                                boolean hasData,
+                                boolean serviceAvailable,
+                                Map<DomSampleClassification, Integer> requestSummary,
+                                List<RequestsForTargetDomain> requests) implements SiteInfoModel {
+
+        public static String classificationIcon(DomSampleClassification clazz) {
+            return switch (clazz) {
+                case ADS -> "fa-ad";
+                case TRACKING -> "fa-crosshairs";
+                case CONSENT -> "fa-shield-alt";
+                default -> "";
+            };
+        }
+
+        public static String classificationColor(DomSampleClassification clazz) {
+            return switch (clazz) {
+                case ADS -> "bg-red-100 text-red-800 dark:bg-red-900 dark:text-white  dark:border dark:border-red-400";
+                case TRACKING -> "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-white  dark:border dark:border-purple-400";
+                case CONSENT -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-white dark:border dark:border-yellow-400";
+                default -> "";
+            };
+        }
+
+        public static String categoryColor(String category) {
+            return switch (category) {
+                case "Ad Motivated Tracking", "Tracking", "Advertising", "Third-Party Analytics Marketing", "Action Pixels", "Badge" -> "bg-red-100 text-red-800 dark:bg-red-900 dark:text-white  dark:border dark:border-red-400";
+                case "CDN", "Fraud Prevention", "Online Payment", "Consent Management Platform", "SSO" -> "bg-green-100 text-green-800 dark:bg-green-900 dark:text-white  dark:border dark:border-green-400";
+                case "Social - Comment", "Social - Share", "Social Network", "Federated Login" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-white  dark:border dark:border-yellow-400";
+                case "Session Replay", "Audience Measurement", "Analytics", "Tag Manager" -> "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-white  dark:border dark:border-purple-400";
+                case "Malware", "Ad Fraud", "Unknown High Risk Behavior", "Obscure Ownership" -> "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200  dark:border dark:border-blue-400";
+                default -> "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200  dark:border dark:border-gray-200";
+            };
+
+        }
+
+        public TrafficSample(String domain,
+                             Map<DomSampleClassification, Integer> requestSummary,
+                             List<RequestsForTargetDomain> requests
+        ) {
+            this(domain, true, true, requestSummary, requests);
+        }
+
+        static TrafficSample forNoData(String domain) {
+            return new TrafficSample(domain, false, true, Map.of(), List.of());
+        }
+
+        static TrafficSample forServiceUnavailable(String domain) {
+            return new TrafficSample(domain, true, false, Map.of(), List.of());
+        }
+
+
+        public record RequestEndpoint(String path,
+                                      String method,
+                                      DomSampleClassification classification) {
+
+        }
+
+        public record RequestsForTargetDomain(EdgeDomain domain, List<RequestEndpoint> endpoints, @Nullable DDGTDomain ddgtTrackerInfo)
+        {
+            public List<String> ownerCategories() {
+                if (ddgtTrackerInfo == null) return List.of();
+                if (ddgtTrackerInfo.categories() == null)  return List.of();
+                return ddgtTrackerInfo.categories();
+            }
+
+            @Nullable
+            public String ownerName() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().name();
+            }
+
+            @Nullable
+            public String ownerDisplayName() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().displayName();
+            }
+
+            @Nullable
+            public String ownerUrl() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().url();
+            }
+
+            @Nullable
+            public String ownerPolicy() {
+                if (ddgtTrackerInfo == null)
+                    return null;
+                if (ddgtTrackerInfo.owner() == null)
+                    return null;
+                return ddgtTrackerInfo.owner().privacyPolicy();
+            }
         }
     }
 
