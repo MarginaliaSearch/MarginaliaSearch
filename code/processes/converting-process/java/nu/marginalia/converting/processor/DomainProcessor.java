@@ -49,6 +49,7 @@ public class DomainProcessor {
     private final ExecutorService domSampleExecutor = Executors.newCachedThreadPool();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final boolean hasDomSamples;
 
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
@@ -65,7 +66,7 @@ public class DomainProcessor {
         this.domSampleClassifier = domSampleClassifier;
 
         geoIpDictionary.waitReady();
-        domSampleClient.waitReady(Duration.ofMinutes(5));
+        hasDomSamples = !Boolean.getBoolean("converter.ignoreDomSampleData") && domSampleClient.waitReady(Duration.ofSeconds(15));
     }
 
     public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
@@ -90,6 +91,10 @@ public class DomainProcessor {
 
     /** Fetch and process the DOM sample and extract classifications */
     private Set<DomSampleClassification> getDomainClassifications(String domainName) throws ExecutionException, InterruptedException {
+        if (!hasDomSamples) {
+            return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
+        }
+
         return domSampleClient
                 .getSampleAsync(domainName, domSampleExecutor)
                 .thenApply(domSampleClassifier::classifySample)
