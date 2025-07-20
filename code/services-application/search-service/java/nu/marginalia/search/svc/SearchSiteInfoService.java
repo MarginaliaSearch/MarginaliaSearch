@@ -177,92 +177,13 @@ public class SearchSiteInfoService {
             case "links" -> listLinks(domainName, page);
             case "docs" -> listDocs(domainName, page);
             case "info" -> listInfo(context, domainName);
-            case "traffic" -> siteTraffic(context, domainName);
+            case "traffic" -> listSiteRequests(context, domainName);
             case "report" -> reportSite(domainName);
             default -> listInfo(context, domainName);
         };
 
         return new MapModelAndView("siteinfo/main.jte",
                 Map.of("model", model, "navbar", NavbarModel.SITEINFO));
-    }
-
-    private SiteInfoModel siteTraffic(Context context, String domainName) {
-        if (!rateLimiter.isAllowed()) {
-            return forServiceUnavailable(domainName);
-        }
-
-        Optional<RpcDomainSample> sample = domSampleClient.getSample(domainName.toLowerCase());
-        if (sample.isEmpty()) {
-            return forNoData(domainName);
-        }
-
-        final EdgeDomain currentDomain = new EdgeDomain(domainName);
-        final List<RequestsForTargetDomain> requests = new ArrayList<>();
-        final Map<EdgeDomain, List<Map.Entry<EdgeUrl, RpcOutgoingRequest>>> urlsPerDomain = new HashMap<>();
-
-        final Set<EdgeUrl> seenUrls = new HashSet<>();
-
-        for (RpcOutgoingRequest rpcOutgoingRequest : sample.get().getOutgoingRequestsList()) {
-            Optional<EdgeUrl> parsedUrl = EdgeUrl.parse(rpcOutgoingRequest.getUrl());
-            if (parsedUrl.isEmpty())
-                continue;
-
-            final EdgeUrl url = parsedUrl.get();
-
-            if (url.domain.hasSameTopDomain(currentDomain))
-                continue;
-            if (!seenUrls.add(url))
-                continue;
-
-            urlsPerDomain
-                    .computeIfAbsent(url.getDomain(), k -> new ArrayList<>())
-                    .add(Map.entry(url, rpcOutgoingRequest));
-        }
-
-        Map<DomSampleClassification, Integer> requestSummary = new HashMap<>();
-
-        urlsPerDomain.forEach((requestDomain, urlsAndReqs) -> {
-            final List<RequestEndpoint> endpoints = new ArrayList<>();
-
-            for (Map.Entry<EdgeUrl, RpcOutgoingRequest> urlAndReq : urlsAndReqs) {
-                final EdgeUrl url =  urlAndReq.getKey();
-                final RpcOutgoingRequest outgoingRequest = urlAndReq.getValue();
-
-                final DomSampleClassification clazz = domSampleClassifier.classifyRequest(url);
-
-                requestSummary.merge(clazz, 1, Integer::sum);
-
-                endpoints.add(
-                        new RequestEndpoint(
-                            url.path + (url.param == null ? "" : "?" +  url.param),
-                            outgoingRequest.getMethod().name(),
-                            clazz
-                    )
-                );
-            }
-
-            @Nullable
-            final DDGTDomain trackerData =
-                    ddgTrackerData
-                        .getDomainInfo(requestDomain.toString())
-                        .orElse(null);
-
-            requests.add(
-                new RequestsForTargetDomain(
-                    requestDomain,
-                    endpoints,
-                    trackerData
-                )
-            );
-        });
-
-        requests.sort(Comparator
-                .comparing((RequestsForTargetDomain req) -> req.endpoints.getFirst().classification.ordinal())
-                .thenComparing(req -> req.ownerDisplayName() == null)
-                .thenComparing(req -> req.domain.topDomain)
-                .thenComparing(req -> req.domain.toString()));
-
-        return new TrafficSample(domainName, requestSummary, requests);
     }
 
     @POST
@@ -471,6 +392,87 @@ public class SearchSiteInfoService {
                 results.resultPages
                 );
     }
+
+
+    private SiteInfoModel listSiteRequests(Context context, String domainName) {
+        if (!rateLimiter.isAllowed()) {
+            return forServiceUnavailable(domainName);
+        }
+
+        Optional<RpcDomainSample> sample = domSampleClient.getSample(domainName.toLowerCase());
+        if (sample.isEmpty()) {
+            return forNoData(domainName);
+        }
+
+        final EdgeDomain currentDomain = new EdgeDomain(domainName);
+        final List<RequestsForTargetDomain> requests = new ArrayList<>();
+        final Map<EdgeDomain, List<Map.Entry<EdgeUrl, RpcOutgoingRequest>>> urlsPerDomain = new HashMap<>();
+
+        final Set<EdgeUrl> seenUrls = new HashSet<>();
+
+        for (RpcOutgoingRequest rpcOutgoingRequest : sample.get().getOutgoingRequestsList()) {
+            Optional<EdgeUrl> parsedUrl = EdgeUrl.parse(rpcOutgoingRequest.getUrl());
+            if (parsedUrl.isEmpty())
+                continue;
+
+            final EdgeUrl url = parsedUrl.get();
+
+            if (url.domain.hasSameTopDomain(currentDomain))
+                continue;
+            if (!seenUrls.add(url))
+                continue;
+
+            urlsPerDomain
+                    .computeIfAbsent(url.getDomain(), k -> new ArrayList<>())
+                    .add(Map.entry(url, rpcOutgoingRequest));
+        }
+
+        Map<DomSampleClassification, Integer> requestSummary = new HashMap<>();
+
+        urlsPerDomain.forEach((requestDomain, urlsAndReqs) -> {
+            final List<RequestEndpoint> endpoints = new ArrayList<>();
+
+            for (Map.Entry<EdgeUrl, RpcOutgoingRequest> urlAndReq : urlsAndReqs) {
+                final EdgeUrl url =  urlAndReq.getKey();
+                final RpcOutgoingRequest outgoingRequest = urlAndReq.getValue();
+
+                final DomSampleClassification clazz = domSampleClassifier.classifyRequest(url);
+
+                requestSummary.merge(clazz, 1, Integer::sum);
+
+                endpoints.add(
+                        new RequestEndpoint(
+                                url.path + (url.param == null ? "" : "?" +  url.param),
+                                outgoingRequest.getMethod().name(),
+                                clazz
+                        )
+                );
+            }
+
+            @Nullable
+            final DDGTDomain trackerData =
+                    ddgTrackerData
+                            .getDomainInfo(requestDomain.toString())
+                            .orElse(null);
+
+            requests.add(
+                    new RequestsForTargetDomain(
+                            requestDomain,
+                            endpoints,
+                            trackerData
+                    )
+            );
+        });
+
+        requests.sort(Comparator
+                .comparing((RequestsForTargetDomain req) -> req.endpoints.getFirst().classification.ordinal())
+                .thenComparing(req -> req.ownerDisplayName() == null)
+                .thenComparing(req -> req.domain.topDomain)
+                .thenComparing(req -> req.domain.toString()));
+
+        return new TrafficSample(domainName, requestSummary, requests);
+    }
+
 
     public interface SiteInfoModel {
         String domain();
