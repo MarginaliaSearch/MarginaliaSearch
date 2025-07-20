@@ -125,8 +125,7 @@ public class JoobyService {
         // Set a cap on the number of worker threads, as Jooby's default value does not seem to consider
         // multi-tenant servers with high thread counts, and spins up an exorbitant number of threads in that
         // scenario
-        options.setWorkerThreads(Math.min(128, options.getWorkerThreads()));
-
+        options.setWorkerThreads(Math.min(16, options.getWorkerThreads()));
 
         jooby.setServerOptions(options);
 
