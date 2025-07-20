@@ -43,6 +43,7 @@ public class GrpcServer {
                 .channelType(NioServerSocketChannel.class);
 
         for (var grpcService : grpcServices) {
+
             if (!grpcService.shouldRegisterService()) {
                 continue;
             }
