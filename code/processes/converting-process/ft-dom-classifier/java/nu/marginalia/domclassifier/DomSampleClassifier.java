@@ -87,7 +87,14 @@ public class DomSampleClassifier {
 
         EdgeDomain sampleDomain = new EdgeDomain(sample.getDomainName());
 
-        try (var compressedStream = new ZstdInputStream(new ByteArrayInputStream(sample.getHtmlSampleZstd().toByteArray()))) {
+        byte[] sampleBytes = sample.getHtmlSampleZstd().toByteArray();
+        if (sampleBytes.length >= 8) {
+            logger.info("sampleBytes magic fingerprint: {}", Arrays.toString(Arrays.copyOf(sampleBytes, 8)));
+        }
+        else {
+            logger.info("sampleBytes too short! Was {}", Arrays.toString(sampleBytes));
+        }
+        try (var compressedStream = new ZstdInputStream(new ByteArrayInputStream(sampleBytes))) {
             String html = new String(compressedStream.readAllBytes(), StandardCharsets.UTF_8);
             var parsedDoc = Jsoup.parse(html);
             var fixedElements = parsedDoc.select("*[data-position=fixed]");
