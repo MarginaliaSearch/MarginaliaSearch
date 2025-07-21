@@ -17,7 +17,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -87,14 +86,7 @@ public class DomSampleClassifier {
 
         EdgeDomain sampleDomain = new EdgeDomain(sample.getDomainName());
 
-        byte[] sampleBytes = sample.getHtmlSampleZstd().toByteArray();
-        if (sampleBytes.length >= 8) {
-            logger.info("sampleBytes magic fingerprint: {}", Arrays.toString(Arrays.copyOf(sampleBytes, 8)));
-        }
-        else {
-            logger.info("sampleBytes too short! Was {}", Arrays.toString(sampleBytes));
-        }
-        try (var compressedStream = new ZstdInputStream(new ByteArrayInputStream(sampleBytes))) {
+        try (var compressedStream = new ZstdInputStream(sample.getHtmlSampleZstd().newInput())) {
             String html = new String(compressedStream.readAllBytes(), StandardCharsets.UTF_8);
             var parsedDoc = Jsoup.parse(html);
             var fixedElements = parsedDoc.select("*[data-position=fixed]");
@@ -115,7 +107,7 @@ public class DomSampleClassifier {
             }
         }
         catch (Exception ex) {
-            logger.warn("Error when parsing DOM HTML sample for size" + sample.getHtmlSampleZstd().size(), ex);
+            logger.warn("Error when parsing DOM HTML sample", ex);
         }
 
         // Classify outgoing requests
