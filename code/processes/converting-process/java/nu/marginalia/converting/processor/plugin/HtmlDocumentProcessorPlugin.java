@@ -161,7 +161,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
 
-
         if (!documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
             features.add(HtmlFeature.SHORT_DOCUMENT);
         }

@@ -115,7 +115,9 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         ret.quality = -5;
 
-        ret.features = Set.of(HtmlFeature.PDF);
+        ret.features = new HashSet<>(); // must be mutable!
+        ret.features.add(HtmlFeature.PDF);
+
         ret.description = getDescription(doc);
         ret.hashCode = dld.localitySensitiveHashCode();
 
