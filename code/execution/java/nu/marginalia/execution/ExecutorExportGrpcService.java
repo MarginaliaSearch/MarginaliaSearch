@@ -2,6 +2,7 @@ package nu.marginalia.execution;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
@@ -38,7 +39,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -57,7 +58,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -73,7 +74,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -87,7 +88,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -99,7 +100,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -114,14 +115,14 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
     @Override
     public void exportAllAtags(Empty request, StreamObserver<Empty> responseObserver) {
         if (serviceConfiguration.node() != 1) {
-            responseObserver.onError(new IllegalArgumentException("Export all atags is only available on node 1"));
+            responseObserver.onError(Status.UNAVAILABLE.withDescription("Export all atags is only available on node 1").asRuntimeException());
         }
         try {
             actorControlService.startFrom(ExecutorActor.PREC_EXPORT_ALL,
@@ -131,7 +132,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -145,7 +146,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -159,7 +160,7 @@ public class ExecutorExportGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 }

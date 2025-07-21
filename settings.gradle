@@ -83,6 +83,7 @@ include 'code:common:renderer'
 include 'code:processes:converting-process'
 include 'code:processes:converting-process:model'
 include 'code:processes:converting-process:ft-keyword-extraction'
+include 'code:processes:converting-process:ft-dom-classifier'
 
 include 'code:processes:crawling-process'
 include 'code:processes:crawling-process:model'

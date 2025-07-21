@@ -16,7 +16,7 @@
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto p-4">
         <div class="flex place-items-baseline space-x-2">
-            <span class="text-gray-900 dark:text-white text-md font-mono rounded-sm block p-2.5">
+            <span class="text-gray-900 dark:text-white break-none text-sm sm:text-md font-mono rounded-sm block p-2.5">
                 ${model.domain()}
             </span>
             <span class="grow"></span>
@@ -57,8 +57,8 @@
     </div>
     <div class="mx-auto md:px-4 border dark:border-gray-600 bg-slate-50 dark:bg-gray-600">
         <div class="flex md:space-x-2 max-w-[1000px] mx-auto">
-            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
-                <a href="?view=info" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-200">
+            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
+                <a href="?view=info" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white  text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                     @if (model instanceof SearchSiteInfoService.SiteInfoWithContext)
                     <input type="checkbox" class="sr-only hidden " checked readonly />
                     @else
@@ -71,8 +71,8 @@
                 </a>
             </div>
 
-            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
-                <a href="?view=docs" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-200">
+            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
+                <a href="?view=docs" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white  text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                     @if (model instanceof SearchSiteInfoService.Docs)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -81,12 +81,13 @@
 
                     <i class="fa-regular fa-file"></i>
 
-                    <span>Documents</span>
+                    <span class="hidden sm:inline">Documents</span>
+                    <span class="inline sm:hidden">Docs</span>
                 </a>
             </div>
 
-            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
-                <a href="?view=links" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-sm hover:text-gray-900 dark:hover:text-gray-200">
+            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
+                <a href="?view=links" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white  text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                     @if (model instanceof SearchSiteInfoService.Backlinks)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -95,12 +96,27 @@
 
                     <i class="fas fa-link"></i>
 
-                    <span>Backlinks</span>
+                    <span class="hidden sm:inline">Backlinks</span>
+                    <span class="inline sm:hidden">Links</span>
+                </a>
+            </div>
+            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
+                <a href="?view=traffic" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
+                    @if (model instanceof SearchSiteInfoService.TrafficSample)
+                        <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                    @else
+                        <span></span>
+                    @endif
+
+                    <i class="fas fa-crosshairs"></i>
+
+                    <span class="hidden sm:inline">Requests</span>
+                    <span class="inline sm:hidden">Reqs</span>
                 </a>
             </div>
             <div class="grow"></div>
-            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 sm:px-2 px-1">
-                <a href="?view=report" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 dark:text-red-200 text-sm hover:text-red-600 dark:hover:text-red-300">
+            <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
+                <a href="?view=report" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 dark:text-red-200  text-xs sm:text-sm hover:text-red-600 dark:hover:text-red-300">
                     @if (model instanceof SearchSiteInfoService.ReportDomain)
                         <input type="checkbox" class="sr-only hidden absolute" checked readonly />
                     @else
@@ -126,6 +142,8 @@
         @template.siteinfo.view.backlinks(backlinks = backlinks)
     @elseif (model instanceof SearchSiteInfoService.Docs docs)
         @template.siteinfo.view.docs(docs = docs)
+    @elseif (model instanceof SearchSiteInfoService.TrafficSample report)
+        @template.siteinfo.view.traffic(report = report)
     @endif
 
 </div>

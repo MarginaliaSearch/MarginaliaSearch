@@ -113,6 +113,13 @@ public class DocumentKeywordsBuilder {
         newWords.forEach(word -> wordToMeta.putIfAbsent(word, meta));
     }
 
+    public void addSyntheticTerm(String newWord) {
+        byte meta = WordFlags.Synthetic.asBit();
+
+        wordToMeta.putIfAbsent(newWord, meta);
+    }
+
+
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 

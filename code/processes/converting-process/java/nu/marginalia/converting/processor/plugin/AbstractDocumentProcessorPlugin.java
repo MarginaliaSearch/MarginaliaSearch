@@ -3,6 +3,7 @@ package nu.marginalia.converting.processor.plugin;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.filter.LanguageFilter;
@@ -26,7 +27,7 @@ public abstract class AbstractDocumentProcessorPlugin {
         this.languageFilter = languageFilter;
     }
 
-    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, LinkTexts linkTexts, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException, IOException;
+    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, LinkTexts linkTexts, Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException, IOException;
     public abstract boolean isApplicable(CrawledDocument doc);
 
     protected void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {

@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.logic;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.model.DocumentHeaders;
-import nu.marginalia.converting.processor.classifier.adblock.AdblockSimulator;
 import nu.marginalia.converting.processor.classifier.adblock.GoogleAnwersSpamDetector;
 import nu.marginalia.converting.processor.classifier.topic.RecipeDetector;
 import nu.marginalia.converting.processor.classifier.topic.TextileCraftDetector;
@@ -65,20 +64,17 @@ public class FeatureExtractor {
             "counter.yadro.ru"
     );
 
-    private final AdblockSimulator adblockSimulator;
     private final RecipeDetector recipeDetector;
     private final TextileCraftDetector textileCraftDetector;
     private final WoodworkingDetector woodworkingDetector;
     private final GoogleAnwersSpamDetector googleAnwersSpamDetector;
 
     @Inject
-    public FeatureExtractor(AdblockSimulator adblockSimulator,
-                            RecipeDetector recipeDetector,
+    public FeatureExtractor(RecipeDetector recipeDetector,
                             TextileCraftDetector textileCraftDetector,
                             WoodworkingDetector woodworkingDetector,
                             GoogleAnwersSpamDetector googleAnwersSpamDetector)
     {
-        this.adblockSimulator = adblockSimulator;
         this.recipeDetector = recipeDetector;
         this.textileCraftDetector = textileCraftDetector;
         this.woodworkingDetector = woodworkingDetector;
@@ -216,13 +212,6 @@ public class FeatureExtractor {
             if (meta.attr("http-equiv").equals("origin-trial")) {
                 features.add(HtmlFeature.ORIGIN_TRIAL);
             }
-        }
-
-        if (features.contains(HtmlFeature.JS)
-            // remove while disabled to get rid of expensive clone() call:
-            // adblockSimulator.hasAds(doc.clone())
-            ) {
-            features.add(HtmlFeature.ADVERTISEMENT);
         }
 
         if (!doc.getElementsByTag("object").isEmpty()

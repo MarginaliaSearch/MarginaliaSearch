@@ -1,6 +1,7 @@
 package nu.marginalia.execution;
 
 import com.google.inject.Inject;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.actor.ActorApi;
@@ -58,7 +59,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -70,7 +71,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -82,7 +83,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -96,7 +97,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -112,7 +113,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -128,7 +129,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -203,7 +204,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -229,7 +230,7 @@ public class ExecutorGrpcService
             responseObserver.onCompleted();
         }
         catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 
@@ -276,7 +277,7 @@ public class ExecutorGrpcService
         }
         catch (Exception e) {
             logger.error("Failed to update nsfw filters", e);
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
 }

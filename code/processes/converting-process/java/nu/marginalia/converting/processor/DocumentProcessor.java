@@ -5,10 +5,12 @@ import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.processor.classifier.AcceptableAds;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PdfDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PlainTextDocumentProcessorPlugin;
+import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,7 @@ public class DocumentProcessor {
     public ProcessedDocument process(CrawledDocument crawledDocument,
                                      EdgeDomain domain,
                                      DomainLinks externalDomainLinks,
+                                     Set<DomSampleClassification> domSampleClassifications,
                                      DocumentDecorator documentDecorator) {
         ProcessedDocument ret = new ProcessedDocument();
 
@@ -79,7 +81,38 @@ public class DocumentProcessor {
                 default -> DocumentClass.EXTERNALLY_LINKED_MULTI;
             };
 
-            processDocument(crawledDocument, documentClass, documentDecorator, externalDomainLinks, ret);
+            var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
+
+            if (crawlerStatus != CrawlerDocumentStatus.OK)
+                throw new DisqualifiedException(crawlerStatus);
+            if (AcceptableAds.hasAcceptableAdsHeader(crawledDocument))
+                throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.ACCEPTABLE_ADS);
+            if (!isAcceptedContentType(crawledDocument))
+                throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.CONTENT_TYPE);
+
+            ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
+
+            LinkTexts linkTexts = anchorTextKeywords.getAnchorTextKeywords(externalDomainLinks, ret.url);
+
+            var detailsWithWords =
+                    findPlugin(crawledDocument)
+                            .createDetails(crawledDocument, linkTexts, domSampleClassifications, documentClass);
+
+            ret.details = detailsWithWords.details();
+            ret.words = detailsWithWords.words();
+
+            if (ret.url.path.equals("/")) {
+                ret.words.addMeta("special:root", WordFlags.Synthetic.asBit());
+            }
+
+            documentDecorator.apply(ret);
+
+            if (Boolean.TRUE.equals(crawledDocument.hasCookies)
+                    && ret.details != null
+                    && ret.details.features != null)
+            {
+                ret.details.features.add(HtmlFeature.COOKIES);
+            }
         }
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
@@ -89,58 +122,10 @@ public class DocumentProcessor {
         catch (Exception ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = DisqualifiedException.DisqualificationReason.PROCESSING_EXCEPTION.toString();
-            logger.info(converterAuditMarker, "Failed to convert {}: {}", crawledDocument.url, ex.getClass().getSimpleName());
-            logger.warn(converterAuditMarker, "Failed to convert " + crawledDocument.url, ex);
+            logger.warn(converterAuditMarker, "Failed to convert {}: {}", crawledDocument.url, ex.getClass().getSimpleName());
         }
 
         return ret;
-    }
-
-    private void processDocument(CrawledDocument crawledDocument,
-                                 DocumentClass documentClass,
-                                 DocumentDecorator documentDecorator,
-                                 DomainLinks externalDomainLinks,
-                                 ProcessedDocument ret) throws URISyntaxException, IOException, DisqualifiedException
-    {
-
-        var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
-        if (crawlerStatus != CrawlerDocumentStatus.OK) {
-            throw new DisqualifiedException(crawlerStatus);
-        }
-
-        if (AcceptableAds.hasAcceptableAdsHeader(crawledDocument)) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.ACCEPTABLE_ADS);
-        }
-
-        if (!isAcceptedContentType(crawledDocument)) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.CONTENT_TYPE);
-        }
-
-        ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
-
-        AbstractDocumentProcessorPlugin plugin = findPlugin(crawledDocument);
-
-        EdgeUrl url = new EdgeUrl(crawledDocument.url);
-        LinkTexts linkTexts = anchorTextKeywords.getAnchorTextKeywords(externalDomainLinks, url);
-
-        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDocument, linkTexts, documentClass);
-
-        ret.details = detailsWithWords.details();
-        ret.words = detailsWithWords.words();
-
-        if (url.path.equals("/")) {
-            ret.words.addMeta("special:root", WordFlags.Synthetic.asBit());
-        }
-
-        documentDecorator.apply(ret);
-
-        if (Boolean.TRUE.equals(crawledDocument.hasCookies)
-         && ret.details != null
-         && ret.details.features != null)
-        {
-            ret.details.features.add(HtmlFeature.COOKIES);
-        }
-
     }
 
     private AbstractDocumentProcessorPlugin findPlugin(CrawledDocument crawledDocument) throws DisqualifiedException {

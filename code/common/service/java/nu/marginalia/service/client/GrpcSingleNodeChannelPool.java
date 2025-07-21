@@ -2,6 +2,7 @@ package nu.marginalia.service.client;
 
 import com.google.common.collect.Sets;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
 import nu.marginalia.service.discovery.property.PartitionTraits;
@@ -206,6 +207,11 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         }
 
         for (var e : exceptions) {
+            if (e instanceof StatusRuntimeException se) {
+                throw se; // Re-throw SRE as-is
+            }
+
+            // If there are other exceptions, log them
             logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
         }
 

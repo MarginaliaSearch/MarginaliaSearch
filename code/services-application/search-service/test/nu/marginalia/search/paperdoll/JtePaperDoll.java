@@ -87,6 +87,7 @@ public class JtePaperDoll {
                         "results", ret)
                 )
         );
+
         Spark.get("/site-info",
                 (rq, rs) ->  {
                     if ("links".equals(rq.queryParams("view"))) {
@@ -97,6 +98,9 @@ public class JtePaperDoll {
                     }
                     else if ("report".equals(rq.queryParams("view"))) {
                         return MockedSearchResults.mockReportDomain();
+                    }
+                    else if ("traffic".equals(rq.queryParams("view"))) {
+                        return MockedSearchResults.mockTrafficReport();
                     }
                     else return MockedSearchResults.mockSiteInfoData();
 

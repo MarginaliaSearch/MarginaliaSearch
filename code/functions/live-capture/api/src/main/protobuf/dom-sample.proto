@@ -1,0 +1,40 @@
+syntax="proto3";
+package nu.marginalia.api.domsample;
+
+option java_package="nu.marginalia.api.domsample";
+option java_multiple_files=true;
+
+
+service DomSampleApi {
+  rpc getSample(RpcDomainName) returns (RpcDomainSample) {}
+  rpc hasSample(RpcDomainName) returns (RpcBooleanRsp) {}
+  rpc getAllSamples(RpcDomainName) returns (stream RpcDomainSample) {}
+}
+
+message RpcDomainName {
+  string domainName = 1;
+}
+
+message RpcBooleanRsp {
+  bool answer = 1;
+}
+
+message RpcDomainSample {
+  string domainName = 1;
+  string url = 2;
+  string htmlSample = 3;
+  bool accepted_popover = 4;
+  repeated RpcOutgoingRequest outgoingRequests = 5;
+}
+
+message RpcOutgoingRequest {
+  RequestMethod method = 1;
+  int64 timestamp = 2;
+  string url = 3;
+
+  enum RequestMethod {
+    GET = 0;
+    POST = 1;
+    OTHER = 2;
+  };
+}
