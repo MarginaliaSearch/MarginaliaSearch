@@ -15,6 +15,7 @@
     <classifier target="url-regex" rule="tracking">/ccm/collect$</classifier>
     <classifier target="url-regex" rule="tracking">^/[0-9]+\.js$</classifier>
     <classifier target="url-regex" rule="tracking">^/[a-z0-9]\.gif$</classifier>
+    <classifier target="url-regex" rule="tracking">^/pixel\.gif$</classifier>
     <classifier target="url-regex" rule="ads">/pagead/</classifier>
     <classifier target="url-regex" rule="ads">/google-ads/</classifier>
 
