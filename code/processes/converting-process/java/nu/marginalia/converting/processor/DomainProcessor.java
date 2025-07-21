@@ -1,6 +1,8 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
@@ -100,7 +102,9 @@ public class DomainProcessor {
                 .thenApply(domSampleClassifier::classifySample)
                 .handle((a,b) -> {
                     if (b != null) {
-                        logger.warn("Exception when fetching sample data", b);
+                        if (!(b instanceof StatusRuntimeException sre && sre.getStatus() != Status.NOT_FOUND)) {
+                            logger.warn("Exception when fetching sample data", b);
+                        }
                         return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
                     }
                     return a;

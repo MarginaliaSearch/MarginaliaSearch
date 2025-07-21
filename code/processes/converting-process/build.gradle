@@ -90,6 +90,7 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.commons.compress
     implementation libs.sqlite
+    implementation libs.bundles.grpc
 
     implementation libs.bundles.httpcomponents
 
