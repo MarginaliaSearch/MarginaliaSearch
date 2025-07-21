@@ -41,7 +41,7 @@ public class DomSampleClient {
         }
         catch (StatusRuntimeException sre) {
             if (sre.getStatus() != Status.NOT_FOUND) {
-                logger.error("Failed to fetch DOM sample");
+                logger.error("Failed to fetch DOM sample", sre);
             }
             return Optional.empty();
         }

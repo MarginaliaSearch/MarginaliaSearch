@@ -98,10 +98,13 @@ public class DomainProcessor {
         return domSampleClient
                 .getSampleAsync(domainName, domSampleExecutor)
                 .thenApply(domSampleClassifier::classifySample)
-                .handle((a,b) ->
-                        Objects.requireNonNullElseGet(a,
-                                () -> EnumSet.of(DomSampleClassification.UNCLASSIFIED)))
-                .get();
+                .handle((a,b) -> {
+                    if (b != null) {
+                        logger.warn("Exception when fetching sample data", b);
+                        return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
+                    }
+                    return a;
+                }).get();
     }
 
     @Nullable
