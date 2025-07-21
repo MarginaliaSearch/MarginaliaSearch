@@ -11,7 +11,7 @@ import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.domsample.DomSampleClient;
-import nu.marginalia.api.domsample.RpcDomainSample;
+import nu.marginalia.api.domsample.RpcDomainSampleRequests;
 import nu.marginalia.api.domsample.RpcOutgoingRequest;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.api.feeds.RpcFeed;
@@ -399,7 +399,7 @@ public class SearchSiteInfoService {
             return forServiceUnavailable(domainName);
         }
 
-        Optional<RpcDomainSample> sample = domSampleClient.getSample(domainName.toLowerCase());
+        Optional<RpcDomainSampleRequests> sample = domSampleClient.getSampleRequests(domainName.toLowerCase());
         if (sample.isEmpty()) {
             return forNoData(domainName);
         }

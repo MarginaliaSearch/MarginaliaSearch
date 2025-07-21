@@ -1,5 +1,6 @@
 package nu.marginalia.domclassifier;
 
+import com.github.luben.zstd.ZstdInputStream;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.api.domsample.RpcDomainSample;
@@ -19,6 +20,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -84,8 +86,9 @@ public class DomSampleClassifier {
 
         EdgeDomain sampleDomain = new EdgeDomain(sample.getDomainName());
 
-        try {
-            var parsedDoc = Jsoup.parse(sample.getHtmlSample());
+        try (var compressedStream = new ZstdInputStream(sample.getHtmlSampleZstd().newInput())) {
+            String html = new String(compressedStream.readAllBytes(), StandardCharsets.UTF_8);
+            var parsedDoc = Jsoup.parse(html);
             var fixedElements = parsedDoc.select("*[data-position=fixed]");
 
             if (sample.getAcceptedPopover()) {

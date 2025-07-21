@@ -7,6 +7,7 @@ option java_multiple_files=true;
 
 service DomSampleApi {
   rpc getSample(RpcDomainName) returns (RpcDomainSample) {}
+  rpc getSampleRequests(RpcDomainName) returns (RpcDomainSampleRequests) {}
   rpc hasSample(RpcDomainName) returns (RpcBooleanRsp) {}
   rpc getAllSamples(RpcDomainName) returns (stream RpcDomainSample) {}
 }
@@ -19,10 +20,16 @@ message RpcBooleanRsp {
   bool answer = 1;
 }
 
+message RpcDomainSampleRequests {
+  string domainName = 1;
+  string url = 2;
+  repeated RpcOutgoingRequest outgoingRequests = 5;
+}
+
 message RpcDomainSample {
   string domainName = 1;
   string url = 2;
-  string htmlSample = 3;
+  bytes htmlSampleZstd = 3;
   bool accepted_popover = 4;
   repeated RpcOutgoingRequest outgoingRequests = 5;
 }

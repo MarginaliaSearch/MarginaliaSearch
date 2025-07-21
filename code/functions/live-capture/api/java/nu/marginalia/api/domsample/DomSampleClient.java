@@ -47,6 +47,21 @@ public class DomSampleClient {
         }
     }
 
+    public Optional<RpcDomainSampleRequests> getSampleRequests(String domainName) {
+        try {
+            var val = channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::getSampleRequests)
+                    .run(RpcDomainName.newBuilder().setDomainName(domainName).build());
+
+            return Optional.of(val);
+        }
+        catch (StatusRuntimeException sre) {
+            if (sre.getStatus() != Status.NOT_FOUND) {
+                logger.error("Failed to fetch DOM sample", sre);
+            }
+            return Optional.empty();
+        }
+    }
+
     public boolean hasSample(String domainName) {
         try {
             return channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::hasSample)

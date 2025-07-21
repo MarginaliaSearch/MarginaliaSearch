@@ -102,7 +102,8 @@ public class DomainProcessor {
                 .thenApply(domSampleClassifier::classifySample)
                 .handle((a,b) -> {
                     if (b != null) {
-                        if (!(b instanceof StatusRuntimeException sre && sre.getStatus() != Status.NOT_FOUND)) {
+                        var cause = b.getCause();
+                        if (!(cause instanceof StatusRuntimeException sre && sre.getStatus() != Status.NOT_FOUND)) {
                             logger.warn("Exception when fetching sample data", b);
                         }
                         return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
