@@ -17,6 +17,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -86,7 +87,7 @@ public class DomSampleClassifier {
 
         EdgeDomain sampleDomain = new EdgeDomain(sample.getDomainName());
 
-        try (var compressedStream = new ZstdInputStream(sample.getHtmlSampleZstd().newInput())) {
+        try (var compressedStream = new ZstdInputStream(new ByteArrayInputStream(sample.getHtmlSampleZstd().toByteArray()))) {
             String html = new String(compressedStream.readAllBytes(), StandardCharsets.UTF_8);
             var parsedDoc = Jsoup.parse(html);
             var fixedElements = parsedDoc.select("*[data-position=fixed]");
@@ -107,7 +108,7 @@ public class DomSampleClassifier {
             }
         }
         catch (Exception ex) {
-            logger.warn("Error when parsing DOM HTML sample", ex);
+            logger.warn("Error when parsing DOM HTML sample for size" + sample.getHtmlSampleZstd().size(), ex);
         }
 
         // Classify outgoing requests
