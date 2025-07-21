@@ -160,7 +160,7 @@ dependencyResolutionManagement {
             library('protobuf', 'com.google.protobuf', 'protobuf-java').version('3.16.3')
             library('grpc-protobuf', 'io.grpc', 'grpc-protobuf').version('1.73.0')
             library('grpc-stub', 'io.grpc', 'grpc-stub').version('1.73.0')
-            library('grpc-netty', 'io.grpc', 'grpc-netty-shaded').version('1.73.0')
+            library('grpc-netty', 'io.grpc', 'grpc-netty').version('1.73.0')
 
             library('prometheus', 'io.prometheus', 'simpleclient').version('0.16.0')
             library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
