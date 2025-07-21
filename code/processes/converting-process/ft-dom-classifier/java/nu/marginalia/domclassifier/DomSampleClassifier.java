@@ -107,7 +107,7 @@ public class DomSampleClassifier {
             }
         }
         catch (Exception ex) {
-            logger.warn("Error when parsing DOM HTML sample");
+            logger.warn("Error when parsing DOM HTML sample", ex);
         }
 
         // Classify outgoing requests
