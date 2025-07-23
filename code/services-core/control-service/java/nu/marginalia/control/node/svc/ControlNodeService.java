@@ -338,7 +338,7 @@ public class ControlNodeService {
     }
 
     private List<EventLogEntry> getEvents(int nodeId) {
-        List<String> services = List.of(ServiceId.Index.serviceName +":"+nodeId, ServiceId.Executor.serviceName +":"+nodeId);
+        List<String> services = List.of(ServiceId.Index.serviceName +":"+nodeId);
         List<EventLogEntry> events = new ArrayList<>(20);
         for (var service :services) {
             events.addAll(eventLogService.getLastEntriesForService(service, Long.MAX_VALUE, 10));
@@ -358,8 +358,7 @@ public class ControlNodeService {
 
     public IndexNodeStatus getStatus(NodeConfiguration config) {
         return new IndexNodeStatus(config,
-                monitors.isServiceUp(ServiceId.Index, config.node()),
-                monitors.isServiceUp(ServiceId.Executor, config.node())
+                monitors.isServiceUp(ServiceId.Index, config.node())
         );
     }
 

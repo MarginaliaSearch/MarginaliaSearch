@@ -2,7 +2,7 @@
 <h2>Nodes</h2>
 <table class="table">
     <tr>
-        <th>Node</th><th>Profile</th><th>Queries</th><th>Enabled</th><th>Index</th><th>Executor</th>
+        <th>Node</th><th>Profile</th><th>Queries</th><th>Enabled</th><th>Index</th>
     </tr>
     {{#each .}}
         <tr>
@@ -24,9 +24,6 @@
             </td>
             {{#if indexServiceOnline}}<td>Online</td>{{/if}}
             {{#unless indexServiceOnline}}<td class="table-danger">Offline</td>{{/unless}}
-
-            {{#if executorServiceOnline}}<td>Online</td>{{/if}}
-            {{#unless executorServiceOnline}}<td class="table-warning">Offline</td>{{/unless}}
         </tr>
     {{/each}}
 </table>

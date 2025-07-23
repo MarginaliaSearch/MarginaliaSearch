@@ -30,10 +30,16 @@ dependencies {
     implementation project(':code:common:db')
     implementation project(':code:common:linkdb')
 
+    implementation project(':code:execution')
+    implementation project(':code:execution:api')
+    implementation project(':code:functions:favicon')
+    implementation project(':code:functions:favicon:api')
+
     implementation project(':code:index')
     implementation project(':code:functions:link-graph:partition')
     implementation project(':code:functions:link-graph:api')
     implementation project(':code:functions:search-query:api')
+    implementation project(':code:functions:nsfw-domain-filter')
     implementation project(':code:index:api')
 
     testImplementation project(path: ':code:services-core:control-service')

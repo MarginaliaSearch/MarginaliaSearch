@@ -1,4 +1,4 @@
-package nu.marginalia.executor;
+package nu.marginalia.svc;
 
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;

@@ -12,4 +12,5 @@ class DDGTrackerDataTest {
         data.getDomainInfo("hotjar.com").ifPresent(System.out::println);
         data.getAllClassifications().forEach(System.out::println);
     }
+
 }

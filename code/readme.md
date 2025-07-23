@@ -32,7 +32,6 @@ service, and for monitoring the health of the system.  It also offers a web inte
     * [index](services-core/index-service)
        * Exposes the [index](index) subsystem
        * Exposes the [functions/link-graph](functions/link-graph) subsystem
-    * [executor](services-core/executor-service)
        * Exposes the [execution](execution) subsystem
     * [assistant](services-core/assistant-service)
        * Exposes the [functions/math](functions/math) subsystem
