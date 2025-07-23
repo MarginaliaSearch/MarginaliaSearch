@@ -11,6 +11,9 @@ public class DocumentSpan {
     /** A list of the interlaced start and end positions of each span in the document of this type */
     private final IntList startsEnds;
 
+    public DocumentSpan(IntList startsEnds) {
+        this.startsEnds = startsEnds;
+    }
     public DocumentSpan(CodedSequence startsEnds) {
         this.startsEnds = startsEnds.values();
     }

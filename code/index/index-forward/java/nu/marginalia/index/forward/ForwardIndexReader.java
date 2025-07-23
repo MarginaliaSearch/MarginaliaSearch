@@ -4,6 +4,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
+import nu.marginalia.index.forward.spans.PlainForwardIndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class ForwardIndexReader {
 
         ids = loadIds(idsFile);
         data = loadData(dataFile);
-        spansReader = new ForwardIndexSpansReader(spansFile);
+        spansReader = new PlainForwardIndexSpansReader(spansFile);
     }
 
     private static LongArray loadIds(Path idsFile) throws IOException {

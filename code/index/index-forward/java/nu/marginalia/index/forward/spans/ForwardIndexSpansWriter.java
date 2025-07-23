@@ -1,5 +1,7 @@
 package nu.marginalia.index.forward.spans;
 
+import nu.marginalia.sequence.VarintCodedSequence;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -9,7 +11,7 @@ import java.nio.file.StandardOpenOption;
 
 public class ForwardIndexSpansWriter implements AutoCloseable {
     private final FileChannel outputChannel;
-    private final ByteBuffer work = ByteBuffer.allocate(32);
+    private final ByteBuffer work = ByteBuffer.allocate(65536);
 
     private long stateStartOffset = -1;
     private int stateLength = -1;
@@ -33,12 +35,16 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
     public void writeSpan(byte spanCode, ByteBuffer sequenceData) throws IOException {
         work.clear();
         work.put(spanCode);
-        work.putShort((short) sequenceData.remaining());
+        var sequence = new VarintCodedSequence(sequenceData);
+        work.putShort((short) sequence.valueCount());
+
+        var iter = sequence.iterator();
+        while (iter.hasNext()) {
+            work.putInt(iter.nextInt());
+        }
         work.flip();
 
-        while (work.hasRemaining() || sequenceData.hasRemaining()) {
-            stateLength += (int) outputChannel.write(new ByteBuffer[]{work, sequenceData});
-        }
+        stateLength += outputChannel.write(work);
     }
 
     public long endRecord() {
