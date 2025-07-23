@@ -76,13 +76,6 @@ SERVICE_CONFIG = {
             deploy_tier=3,
             groups={"all", "index"}
         ),
-        'executor': ServiceConfig(
-            gradle_target=':code:services-core:executor-service:docker',
-            docker_name='executor-service',
-            instances=10,
-            deploy_tier=3,
-            groups={"all", "executor"}
-        ),
         'control': ServiceConfig(
             gradle_target=':code:services-core:control-service:docker',
             docker_name='control-service',

@@ -2,6 +2,8 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.execution.*;
+import nu.marginalia.functions.favicon.FaviconGrpcService;
 import nu.marginalia.index.api.IndexMqEndpoints;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -14,9 +16,11 @@ import nu.marginalia.service.server.Initialization;
 import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.mq.MqRequest;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.svc.ExecutorFileTransferService;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Spark;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +42,7 @@ public class IndexService extends SparkService {
     private final DomainLinks domainLinks;
     private final ServiceEventLog eventLog;
 
+    private final ExecutionInit executionInit;
 
     @Inject
     public IndexService(BaseServiceParams params,
@@ -48,13 +53,25 @@ public class IndexService extends SparkService {
                         DocumentDbReader documentDbReader,
                         DomainLinks domainLinks,
                         PartitionLinkGraphService partitionLinkGraphService,
+                        ExecutorGrpcService executorGrpcService,
+                        ExecutorCrawlGrpcService executorCrawlGrpcService,
+                        ExecutorSideloadGrpcService executorSideloadGrpcService,
+                        ExecutorExportGrpcService executorExportGrpcService,
+                        FaviconGrpcService faviconGrpcService,
+                        ExecutionInit executionInit,
+                        ExecutorFileTransferService fileTransferService,
                         ServiceEventLog eventLog)
             throws Exception
     {
         super(params,
                 ServicePartition.partition(params.configuration.node()),
                 List.of(indexQueryService,
-                        partitionLinkGraphService)
+                        partitionLinkGraphService,
+                        executorGrpcService,
+                        executorCrawlGrpcService,
+                        executorSideloadGrpcService,
+                        executorExportGrpcService,
+                        faviconGrpcService)
         );
 
         this.opsService = opsService;
@@ -62,14 +79,25 @@ public class IndexService extends SparkService {
         this.fileStorageService = fileStorageService;
         this.documentDbReader = documentDbReader;
         this.domainLinks = domainLinks;
+        this.executionInit = executionInit;
         this.eventLog = eventLog;
 
         this.init = params.initialization;
+
+        Spark.get("/transfer/file/:fid", fileTransferService::transferFile);
+        Spark.head("/transfer/file/:fid", fileTransferService::transferFile);
 
         Thread.ofPlatform().name("initialize-index").start(this::initialize);
     }
 
     volatile boolean initialized = false;
+
+    @MqRequest(endpoint="FIRST-BOOT")
+    public void setUpDefaultActors(String message) throws Exception {
+        logger.info("Initializing default actors");
+
+        executionInit.initDefaultActors();
+    }
 
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_RERANK)
     public String rerank(String message) {

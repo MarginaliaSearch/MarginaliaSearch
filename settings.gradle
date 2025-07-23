@@ -4,7 +4,6 @@ include 'code:services-core:index-service'
 include 'code:services-core:assistant-service'
 include 'code:services-core:control-service'
 include 'code:services-core:query-service'
-include 'code:services-core:executor-service'
 include 'code:services-core:single-service-runner'
 
 include 'code:services-application:search-service'

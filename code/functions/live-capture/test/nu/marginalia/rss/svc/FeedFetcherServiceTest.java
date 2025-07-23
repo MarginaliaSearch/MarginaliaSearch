@@ -87,7 +87,7 @@ class FeedFetcherServiceTest extends AbstractModule {
         bind(DomainCoordinator.class).to(LocalDomainCoordinator.class);
         bind(HikariDataSource.class).toInstance(dataSource);
         bind(ServiceRegistryIf.class).toInstance(Mockito.mock(ServiceRegistryIf.class));
-        bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(ServiceId.Executor, 1, "", "", 0, UUID.randomUUID()));
+        bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(ServiceId.Index, 1, "", "", 0, UUID.randomUUID()));
         bind(Integer.class).annotatedWith(Names.named("wmsa-system-node")).toInstance(1);
     }
 

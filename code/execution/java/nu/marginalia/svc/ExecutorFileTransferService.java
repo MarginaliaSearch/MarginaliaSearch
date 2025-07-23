@@ -1,4 +1,4 @@
-package nu.marginalia.executor;
+package nu.marginalia.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.storage.FileStorageService;

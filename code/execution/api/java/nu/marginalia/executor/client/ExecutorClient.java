@@ -189,7 +189,7 @@ public class ExecutorClient {
         String uriPath = "/transfer/file/" + fileStorage.id();
         String uriQuery = "path=" + URLEncoder.encode(path, StandardCharsets.UTF_8);
 
-        var endpoints = registry.getEndpoints(ServiceKey.forRest(ServiceId.Executor, fileStorage.node()));
+        var endpoints = registry.getEndpoints(ServiceKey.forRest(ServiceId.Index, fileStorage.node()));
         if (endpoints.isEmpty()) {
             throw new RuntimeException("No endpoints for node " + fileStorage.node());
         }
