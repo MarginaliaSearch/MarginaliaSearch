@@ -82,7 +82,6 @@ public class SingleService {
     enum Service {
         IndexService("index", "nu.marginalia.index.IndexMain"),
         ControlService("control", "nu.marginalia.control.ControlMain"),
-        ExecutorService("executor", "nu.marginalia.executor.ExecutorMain"),
         QueryService("query", "nu.marginalia.query.QueryMain"),
         ;
 
