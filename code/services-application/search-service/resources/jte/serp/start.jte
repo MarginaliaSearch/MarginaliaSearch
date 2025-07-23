@@ -38,8 +38,8 @@
         <a href="https://old-search.marginalia.nu/" class="underline text-liteblue dark:text-blue-200">here</a>.
         </div>
     </div>
-    <div class="mx-auto flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto px-2  items-center sm:items-stretch">
-    <div class="flex flex-col border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-8 sm:p-4 space-y-3 w-96 sm:w-64">
+    <div class="mx-auto px-8 flex flex-col sm:flex-row my-4 sm:space-x-2 space-y-2 sm:space-y-0 w-full md:w-auto items-center sm:items-stretch">
+    <div class="flex flex-col items-center border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-8 sm:p-4 space-y-3 w-[300px] sm:w-64">
         <div><i class="fas fa-sailboat mx-2 text-margeblue dark:text-slate-200"></i>Explore the Web</div>
         <ul class="list-disc ml-8 sm:ml-6  text-slate-700 dark:text-white text-xs leading-5">
             <li>Prioritizes non-commercial content</li>
@@ -48,14 +48,14 @@
         </ul>
     </div>
 
-    <div class="flex flex-col border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-8 sm:p-4 space-y-3 w-96 sm:w-64">
+    <div class="flex flex-col items-center border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-8 sm:p-4 space-y-3 w-[300px] sm:w-64">
         <div><i class="fas fa-hand-holding-hand mx-2 text-margeblue dark:text-slate-200"></i>Open Source</div>
         <ul class="list-disc ml-8 sm:ml-6  text-slate-700 dark:text-white text-xs leading-5">
            <li>Custom index and crawler software</li>
            <li>Simple technology, no AI</li>
            <li>AGPL license</li>
         </ul>
-        <div class="flex pt-4 gap-2">
+        <div class="flex pt-4 gap-2 flex-col md:flex-row">
         <div class="text-xs text-liteblue dark:text-blue-200">
             <i class="fa-brands fa-github"></i>
             <a href="https://git.marginalia.nu/" class="underline">Git Repository</a>
@@ -67,7 +67,7 @@
         </div>
     </div>
 
-    <div class="flex flex-col border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-8 sm:p-4 space-y-3 w-96 sm:w-64">
+    <div class="flex flex-col items-center border border-gray-300 dark:border-gray-600 rounded overflow-hidden dark:bg-gray-800 bg-white p-8 sm:p-4 space-y-3 w-[300px] sm:w-64">
         <div><i class="fas fa-lock mx-2 text-margeblue dark:text-slate-200"></i> Privacy by default</div>
         <ul class="list-disc ml-8 sm:ml-6 text-slate-700 dark:text-white text-xs leading-5">
             <li>Filter out tracking </li>
