@@ -1,5 +1,5 @@
 The execution subsystem is responsible for the execution of long running tasks on each
-index node.  It lives in the [executor-service](../services-core/executor-service) module. 
+index node.  It lives in the [index-service](../services-core/index-service) module. 
 
 It accomplishes this using the [message queue and actor library](../libraries/message-queue/),
 which permits program state to survive crashes and reboots.

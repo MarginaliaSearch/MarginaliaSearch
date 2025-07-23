@@ -31,13 +31,11 @@ A working setup needs at all the services
 * control [ http port is the control GUI ]
 * query [ http port is the query GUI ]
 * index [ http port is internal ]
-* executor [ http port is internal ]
 
 Since you will need to manage ports yourself, you must assign distinct ports-pairs to each service.
 
-* An index and executor services should exist on the same partition e.g. index:1 and executor:1. The partition
-number is the last digit of the service name, and should be positive.  You can have multiple pairs of index
-and executor partitions, but the pair should run on the same physical machine with the same install directory.
+* An index service should exist on the same partition e.g. index:1. The partition
+number is the last digit of the service name, and should be positive.
 
 * The query service can use any partition number.
 

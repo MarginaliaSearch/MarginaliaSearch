@@ -13,13 +13,13 @@ A map of the most important components and how they relate can be found below.
 ![image](../doc/diagram/conceptual-overview.svg)
 
 The core part of the search engine is the index service, which is responsible for storing and retrieving
-the document data.  The index serive is partitioned, along with the executor service, which is responsible for executing 
-processes.  At least one instance of each service must be run, but more can be run
+the document data.  The index service is partitioned and is responsible for both index lookups and spawning
+per-partition processing tasks.  At least one instance of each service must be run, but more can be run
 alongside.  Multiple partitions is desirable in production to distribute load across multiple physical drives, 
 as well as reducing the impact of downtime.  
 
 Search queries are delegated via the query service, which is a proxy that fans out the query to all
-eligible index services.  The control service is responsible for distributing commands to the executor
+eligible index services.  The control service is responsible for distributing commands to the partitions
 service, and for monitoring the health of the system.  It also offers a web interface for operating the system.
 
 ### Services
@@ -56,7 +56,7 @@ Services that expose HTTP endpoints tend to have more code.  They are marked wit
 ### Processes
 
 Processes are batch jobs that deal with data retrieval, processing and loading.  These are spawned and orchestrated by 
-the executor service, which is controlled by the control service.  
+the index service, which is controlled by the control service.  
 
 * [processes](processes/)
     * [crawling-process](processes/crawling-process)
