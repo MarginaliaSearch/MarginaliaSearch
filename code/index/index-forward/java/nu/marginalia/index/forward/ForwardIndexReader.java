@@ -1,5 +1,6 @@
 package nu.marginalia.index.forward;
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.forward.spans.DocumentSpans;
@@ -31,6 +32,8 @@ import static nu.marginalia.index.forward.ForwardIndexParameters.*;
 public class ForwardIndexReader {
     private final LongArray ids;
     private final LongArray data;
+
+    private volatile Long2IntOpenHashMap idsMap;
 
     private final ForwardIndexSpansReader spansReader;
 
@@ -66,6 +69,16 @@ public class ForwardIndexReader {
         ids = loadIds(idsFile);
         data = loadData(dataFile);
         spansReader = new PlainForwardIndexSpansReader(spansFile);
+
+        Thread.ofPlatform().start(this::createIdsMap);
+    }
+
+    private void createIdsMap() {
+        Long2IntOpenHashMap idsMap = new Long2IntOpenHashMap((int) ids.size());
+        for (int i = 0; i < ids.size(); i++) {
+            idsMap.put(ids.get(i), i);
+        }
+        this.idsMap = idsMap;
     }
 
     private static LongArray loadIds(Path idsFile) throws IOException {
@@ -106,6 +119,10 @@ public class ForwardIndexReader {
 
     private int idxForDoc(long docId) {
         assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
+        if (idsMap != null) {
+            return idsMap.getOrDefault(docId, -1);
+        }
 
         long offset = ids.binarySearch(docId, 0, ids.size());
 
@@ -163,6 +180,8 @@ public class ForwardIndexReader {
     public void close() {
         if (data != null)
             data.close();
+        if (ids != null)
+            ids.close();
     }
 
     public boolean isLoaded() {
