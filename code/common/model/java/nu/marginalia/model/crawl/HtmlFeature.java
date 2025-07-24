@@ -105,8 +105,6 @@ public enum HtmlFeature {
     }
 
     public int getFeatureBit() {
-        if (getClass().desiredAssertionStatus() && ordinal() >= 32)
-            throw new IllegalStateException("Attempting to extract feature bit of " + name() + ", with ordinal " + ordinal());
         return (1<< ordinal());
     }
 }
