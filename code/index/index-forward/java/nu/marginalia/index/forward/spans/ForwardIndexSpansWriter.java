@@ -4,6 +4,7 @@ import nu.marginalia.sequence.VarintCodedSequence;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +12,7 @@ import java.nio.file.StandardOpenOption;
 
 public class ForwardIndexSpansWriter implements AutoCloseable {
     private final FileChannel outputChannel;
-    private final ByteBuffer work = ByteBuffer.allocate(65536);
+    private final ByteBuffer work = ByteBuffer.allocate(65536).order(ByteOrder.nativeOrder());
 
     private long stateStartOffset = -1;
     private int stateLength = -1;
@@ -25,7 +26,7 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
         stateLength = 0;
 
         work.clear();
-        work.put((byte) count);
+        work.putInt(count);
         work.flip();
 
         while (work.hasRemaining())

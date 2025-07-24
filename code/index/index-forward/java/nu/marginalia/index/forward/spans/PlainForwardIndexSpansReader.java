@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,8 +24,9 @@ public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
         long size = SpansCodec.decodeSize(encodedOffset);
         long offset = SpansCodec.decodeStartOffset(encodedOffset);
 
+        var ms = arena.allocate(size, 4);
         // Allocate a buffer from the arena
-        var buffer = arena.allocate(size, 4).asByteBuffer();
+        var buffer = ms.asByteBuffer();
         buffer.clear();
         while (buffer.hasRemaining()) {
             spansFileChannel.read(buffer, offset + buffer.position());
@@ -32,21 +34,23 @@ public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
         buffer.flip();
 
         // Read the number of spans in the document
-        int count = buffer.get();
-
+        int count = ms.get(ValueLayout.JAVA_INT, 0);
+        int pos = 4;
         DocumentSpans ret = new DocumentSpans();
 
         // Decode each span
         while (count-- > 0) {
-            byte code = buffer.get();
-            buffer.get(); // Consume alignment byte
-            short len = buffer.getShort();
+            byte code = ms.get(ValueLayout.JAVA_BYTE, pos);
+            short len = ms.get(ValueLayout.JAVA_SHORT, pos+2);
 
             IntArrayList values = new IntArrayList(len);
-            while (len-- > 0) {
-                values.add(buffer.getInt());
+
+            pos += 4;
+            for (int i = 0; i < len; i++) {
+                values.add(ms.get(ValueLayout.JAVA_INT, pos + 4*i));
             }
             ret.accept(code, values);
+            pos += 4*len;
         }
 
         return ret;
