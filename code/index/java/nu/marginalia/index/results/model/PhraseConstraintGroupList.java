@@ -58,6 +58,7 @@ public class PhraseConstraintGroupList {
         private final int[] offsets;
         private final BitSet present;
         private final BitSet termIdsMask;
+        private final int presentCardinality;
 
         public final int size;
         public PhraseConstraintGroup(List<String> terms, TermIdList termIdsAll) {
@@ -85,6 +86,8 @@ public class PhraseConstraintGroupList {
                     termIdsMask.set(idx);
                 }
             }
+
+            presentCardinality = present.cardinality();
         }
 
         /** Returns true if the term with index termIdx in the query is in the group */
@@ -93,7 +96,7 @@ public class PhraseConstraintGroupList {
         }
 
         public boolean test(CodedSequence[] positions) {
-            IntIterator[] sequences = new IntIterator[present.cardinality()];
+            IntIterator[] sequences = new IntIterator[presentCardinality];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
@@ -120,7 +123,7 @@ public class PhraseConstraintGroupList {
 
 
         public IntList findIntersections(IntList[] positions) {
-            IntList[] sequences = new IntList[present.cardinality()];
+            IntList[] sequences = new IntList[presentCardinality];
             int[] iterOffsets = new int[sequences.length];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
@@ -148,8 +151,8 @@ public class PhraseConstraintGroupList {
         }
 
         public int minDistance(IntList[] positions) {
-            List<IntList> sequences = new ArrayList<>(present.cardinality());
-            IntList iterOffsets = new IntArrayList(present.cardinality());
+            List<IntList> sequences = new ArrayList<>(presentCardinality);
+            IntList iterOffsets = new IntArrayList(presentCardinality);
 
             for (int oi = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
