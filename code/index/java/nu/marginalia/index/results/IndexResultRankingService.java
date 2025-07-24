@@ -74,7 +74,7 @@ public class IndexResultRankingService {
         // We use an arena for the position data to avoid gc pressure
         // from the gamma coded sequences, which can be large and have a lifetime
         // that matches the try block here
-        try (var arena = Arena.ofConfined()) {
+        try (var arena = Arena.ofShared()) {
 
             TermMetadataList[] termsForDocs = new TermMetadataList[termCount];
             for (int ti = 0; ti < termCount; ti++) {

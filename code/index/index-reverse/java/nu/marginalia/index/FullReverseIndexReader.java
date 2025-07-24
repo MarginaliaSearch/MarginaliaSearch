@@ -3,8 +3,8 @@ package nu.marginalia.index;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
-import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.positions.PositionsFileReader;
+import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.query.EmptyEntrySource;
 import nu.marginalia.index.query.EntrySource;
 import nu.marginalia.index.query.ReverseIndexRejectFilter;
@@ -161,12 +161,7 @@ public class FullReverseIndexReader {
         // Read the size and offset of the position data
         var offsets = reader.queryData(docIds, 1);
 
-        for (int i = 0; i < docIds.length; i++) {
-            if (offsets[i] == 0)
-                continue;
-            ret[i] = positionsFileReader.getTermData(arena, offsets[i]);
-        }
-        return ret;
+        return positionsFileReader.getTermData(arena, offsets);
     }
 
     public void close() {
