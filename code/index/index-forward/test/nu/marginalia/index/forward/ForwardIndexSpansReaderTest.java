@@ -1,8 +1,8 @@
 package nu.marginalia.index.forward;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.index.forward.spans.CompressedForwardIndexSpansReader;
 import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
+import nu.marginalia.index.forward.spans.PlainForwardIndexSpansReader;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +46,7 @@ class ForwardIndexSpansReaderTest {
             offset2 = writer.endRecord();
         }
 
-        try (var reader = new CompressedForwardIndexSpansReader(testFile);
+        try (var reader = new PlainForwardIndexSpansReader(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
@@ -83,7 +83,7 @@ class ForwardIndexSpansReaderTest {
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new CompressedForwardIndexSpansReader(testFile);
+        try (var reader = new PlainForwardIndexSpansReader(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
@@ -110,7 +110,7 @@ class ForwardIndexSpansReaderTest {
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new CompressedForwardIndexSpansReader(testFile);
+        try (var reader = new PlainForwardIndexSpansReader(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
@@ -137,7 +137,7 @@ class ForwardIndexSpansReaderTest {
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new CompressedForwardIndexSpansReader(testFile);
+        try (var reader = new PlainForwardIndexSpansReader(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
