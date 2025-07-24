@@ -1,10 +1,13 @@
 package nu.marginalia.index;
 
+import com.google.common.collect.MinMaxPriorityQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
 
 /** A priority queue for search results. This class is not thread-safe,
  * in general, except for concurrent use of the addAll method.
@@ -20,28 +23,27 @@ import java.util.*;
  */
 public class ResultPriorityQueue implements Iterable<SearchResultItem>,
         Collection<SearchResultItem> {
-    private final int limit;
-    private final ArrayList<SearchResultItem> backingList = new ArrayList<>();
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
+    private final MinMaxPriorityQueue<SearchResultItem> queue;
 
     public ResultPriorityQueue(int limit) {
-        this.limit = limit;
+        this.queue = MinMaxPriorityQueue.<SearchResultItem>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
     }
 
     public Iterator<SearchResultItem> iterator() {
-        return backingList.iterator();
+        return queue.iterator();
     }
 
     @NotNull
     @Override
     public Object[] toArray() {
-        return backingList.toArray();
+        return queue.toArray();
     }
 
     @NotNull
     @Override
     public <T> T[] toArray(@NotNull T[] a) {
-        return backingList.toArray(a);
+        return queue.toArray(a);
     }
 
     @Override
@@ -64,20 +66,11 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
      */
     @Override
     public synchronized boolean addAll(@NotNull Collection<? extends SearchResultItem> items) {
-        boolean itemsAdded = false;
-        for (var item: items) {
-            if (idsInSet.add(item.getDocumentId())) {
-                backingList.add(item);
-                itemsAdded = true;
-            }
-        }
-        if (!itemsAdded) {
-            return false;
-        }
 
-        backingList.sort(Comparator.naturalOrder());
-        if (backingList.size() > limit) {
-            backingList.subList(limit, backingList.size()).clear();
+        for (var item : items) {
+            if (idsInSet.add(item.getDocumentId())) {
+                queue.add(item);
+            }
         }
 
         return true;
@@ -95,22 +88,22 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
 
     @Override
     public void clear() {
-        backingList.clear();
+        queue.clear();
         idsInSet.clear();
     }
 
     public int size() {
-        return backingList.size();
+        return queue.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return backingList.isEmpty();
+        return queue.isEmpty();
     }
 
     @Override
     public boolean contains(Object o) {
-        return backingList.contains(o);
+        return queue.contains(o);
     }
 
 }
