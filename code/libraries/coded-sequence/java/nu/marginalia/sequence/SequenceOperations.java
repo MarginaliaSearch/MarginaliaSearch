@@ -77,6 +77,7 @@ public class SequenceOperations {
         // Initialize values and find the maximum value
         int[] values = new int[positions.length];
         int minLength = Integer.MAX_VALUE;
+        int largestValue = Integer.MAX_VALUE;
 
         for (int i = 0; i < positions.length; i++) {
             minLength = Math.min(minLength, positions[i].size());
@@ -85,44 +86,41 @@ public class SequenceOperations {
                 values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
             else
                 return IntList.of();
+
+            largestValue = Math.min(largestValue, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
         }
 
         // Intersect the sequences by advancing all values smaller than the maximum seen so far
         // until they are equal to the maximum value, or until the end of the sequence is reached
-        int max = Integer.MIN_VALUE;
-        int maxAll = Integer.MAX_VALUE;
-
-        for (int i = 0; i < positions.length; i++) {
-            maxAll = Math.min(maxAll, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
-        }
+        int currentMax = Integer.MIN_VALUE;
 
         int successes = 0;
 
         IntList ret = new IntArrayList(Math.max(1, minLength));
 
         outer:
-        for (int i = 0; max < maxAll; i = (i + 1) % positions.length)
+        for (int i = 0; currentMax < largestValue; i = (i + 1) % positions.length)
         {
             if (successes == positions.length) {
-                ret.add(max);
+                ret.add(currentMax);
                 successes = 1;
 
                 if (indexes[i] < positions[i].size()) {
                     values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
 
                     // Update the maximum value, if necessary
-                    max = Math.max(max, values[i]);
+                    currentMax = Math.max(currentMax, values[i]);
                 } else {
                     break;
                 }
-            } else if (values[i] == max) {
+            } else if (values[i] == currentMax) {
                 successes++;
             } else {
                 successes = 1;
 
                 // Discard values until we reach the maximum value seen so far,
                 // or until the end of the sequence is reached
-                while (values[i] < max) {
+                while (values[i] < currentMax) {
                     if (indexes[i] < positions[i].size()) {
                         values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
                     } else {
@@ -131,7 +129,7 @@ public class SequenceOperations {
                 }
 
                 // Update the maximum value, if necessary
-                max = Math.max(max, values[i]);
+                currentMax = Math.max(currentMax, values[i]);
             }
         }
 
