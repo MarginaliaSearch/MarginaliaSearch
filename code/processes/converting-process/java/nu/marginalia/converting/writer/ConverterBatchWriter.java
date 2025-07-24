@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -94,8 +93,6 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
 
         String domainName = domain.toString();
 
-        ByteBuffer workArea = ByteBuffer.allocate(16384);
-
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
 
@@ -103,7 +100,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                 continue;
             }
 
-            var wb = document.words.build(workArea);
+            var wb = document.words.build();
 
             List<VarintCodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
             byte[] spanCodes = new byte[wb.spans.size()];

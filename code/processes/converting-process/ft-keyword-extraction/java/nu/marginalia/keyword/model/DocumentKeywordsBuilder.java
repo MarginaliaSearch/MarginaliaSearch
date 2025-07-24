@@ -11,7 +11,6 @@ import nu.marginalia.sequence.VarintCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class DocumentKeywordsBuilder {
@@ -36,7 +35,7 @@ public class DocumentKeywordsBuilder {
         this(1600);
     }
 
-    public DocumentKeywords build(ByteBuffer workArea) {
+    public DocumentKeywords build() {
         final List<String> wordArray = new ArrayList<>(wordToMeta.size());
         final TByteArrayList meta = new TByteArrayList(wordToMeta.size());
         final List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
