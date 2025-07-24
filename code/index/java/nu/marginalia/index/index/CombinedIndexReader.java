@@ -257,12 +257,13 @@ public class CombinedIndexReader {
 class ParamMatchingQueryFilter implements QueryFilterStepIf {
     private final QueryParams params;
     private final ForwardIndexReader forwardIndexReader;
-
+    private final boolean imposesMetaConstraint;
     public ParamMatchingQueryFilter(QueryParams params,
                                     ForwardIndexReader forwardIndexReader)
     {
         this.params = params;
         this.forwardIndexReader = forwardIndexReader;
+        this.imposesMetaConstraint = params.imposesDomainMetadataConstraint();
     }
 
     @Override
@@ -270,11 +271,15 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
         long docId = UrlIdCodec.removeRank(combinedId);
         int domainId = UrlIdCodec.getDomainId(docId);
 
-        long meta = forwardIndexReader.getDocMeta(docId);
-
-        if (!validateDomain(domainId, meta)) {
+        if (!validateDomain(domainId)) {
             return false;
         }
+
+        if (!imposesMetaConstraint) {
+            return false;
+        }
+
+        long meta = forwardIndexReader.getDocMeta(docId);
 
         if (!validateQuality(meta)) {
             return false;
@@ -295,8 +300,8 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
         return true;
     }
 
-    private boolean validateDomain(int domainId, long meta) {
-        return params.searchSet().contains(domainId, meta);
+    private boolean validateDomain(int domainId) {
+        return params.searchSet().contains(domainId);
     }
 
     private boolean validateQuality(long meta) {
