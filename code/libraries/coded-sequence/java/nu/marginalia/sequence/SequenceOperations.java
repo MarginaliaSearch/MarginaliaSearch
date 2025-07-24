@@ -76,8 +76,11 @@ public class SequenceOperations {
         int[] indexes = new int[positions.length];
         // Initialize values and find the maximum value
         int[] values = new int[positions.length];
+        int minLength = Integer.MAX_VALUE;
 
         for (int i = 0; i < positions.length; i++) {
+            minLength = Math.min(minLength, positions[i].size());
+
             if (indexes[i] < positions[i].size())
                 values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
             else
@@ -89,7 +92,7 @@ public class SequenceOperations {
         int max = Integer.MIN_VALUE;
         int successes = 0;
 
-        IntList ret = new IntArrayList();
+        IntList ret = new IntArrayList(Math.max(1, minLength));
 
         outer:
         for (int i = 0;; i = (i + 1) % positions.length)
