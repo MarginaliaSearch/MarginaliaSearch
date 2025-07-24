@@ -24,7 +24,7 @@ public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
         long offset = SpansCodec.decodeStartOffset(encodedOffset);
 
         // Allocate a buffer from the arena
-        var buffer = arena.allocate(size).asByteBuffer();
+        var buffer = arena.allocate(size, 4).asByteBuffer();
         buffer.clear();
         while (buffer.hasRemaining()) {
             spansFileChannel.read(buffer, offset + buffer.position());
@@ -39,6 +39,7 @@ public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
         // Decode each span
         while (count-- > 0) {
             byte code = buffer.get();
+            buffer.get(); // Consume alignment byte
             short len = buffer.getShort();
 
             IntArrayList values = new IntArrayList(len);

@@ -35,6 +35,7 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
     public void writeSpan(byte spanCode, ByteBuffer sequenceData) throws IOException {
         work.clear();
         work.put(spanCode);
+        work.put((byte) 0); // Ensure we're byte aligned
         var sequence = new VarintCodedSequence(sequenceData);
         work.putShort((short) sequence.valueCount());
 
