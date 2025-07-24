@@ -4,18 +4,25 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ForkJoinPool;
 
 @SuppressWarnings("preview")
 public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
-    private final FileChannel spansFileChannel;
-
+    private final FileChannel[] spansFileChannels;
+    private final ForkJoinPool forkJoinPool;
     public PlainForwardIndexSpansReader(Path spansFile) throws IOException {
-        this.spansFileChannel = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
+        this.spansFileChannels = new FileChannel[8];
+        for (int i = 0; i < spansFileChannels.length; i++) {
+            spansFileChannels[i] = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
+        }
+        forkJoinPool = new ForkJoinPool(spansFileChannels.length);
     }
 
     @Override
@@ -27,19 +34,20 @@ public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
         var ms = arena.allocate(size, 4);
         // Allocate a buffer from the arena
         var buffer = ms.asByteBuffer();
-        buffer.clear();
         while (buffer.hasRemaining()) {
-            spansFileChannel.read(buffer, offset + buffer.position());
+            spansFileChannels[0].read(buffer, offset + buffer.position());
         }
-        buffer.flip();
 
-        // Read the number of spans in the document
+        return decode(ms);
+    }
+
+    public DocumentSpans decode(MemorySegment ms) {
         int count = ms.get(ValueLayout.JAVA_INT, 0);
         int pos = 4;
         DocumentSpans ret = new DocumentSpans();
 
         // Decode each span
-        while (count-- > 0) {
+        for (int spanIdx = 0; spanIdx < count; spanIdx++) {
             byte code = ms.get(ValueLayout.JAVA_BYTE, pos);
             short len = ms.get(ValueLayout.JAVA_SHORT, pos+2);
 
@@ -55,10 +63,60 @@ public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
 
         return ret;
     }
+    @Override
+    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
+        long totalSize = 0;
+        int numJobs = 0;
+        for (long offset : encodedOffsets) {
+            if (offset < 0)
+                continue;
+            totalSize += SpansCodec.decodeSize(offset);
+            numJobs++;
+        }
+
+        DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
+        if (numJobs == 0) return ret;
+
+        CountDownLatch latch = new CountDownLatch(numJobs);
+        MemorySegment segment = arena.allocate(totalSize, 8);
+
+        long bufferOffset = 0;
+        for (int idx = 0; idx < encodedOffsets.length; idx++) {
+            long size = SpansCodec.decodeSize(encodedOffsets[idx]);
+            long start = SpansCodec.decodeStartOffset(encodedOffsets[idx]);
+
+            MemorySegment slice = segment.asSlice(bufferOffset, size);
+            bufferOffset += size;
+
+            int i = idx;
+            forkJoinPool.execute(() -> {
+                var buffer = slice.asByteBuffer();
+                try {
+                    spansFileChannels[i% spansFileChannels.length].read(buffer, start);
+                    ret[i] = decode(slice);
+                }
+                catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                finally {
+                    latch.countDown();
+                }
+            });
+        }
+        try {
+            latch.await();
+        }
+        catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+        return ret;
+    }
 
     @Override
     public void close() throws IOException {
-        spansFileChannel.close();
+        for (var spansFileChannel : spansFileChannels) {
+            spansFileChannel.close();
+        }
     }
 
 }

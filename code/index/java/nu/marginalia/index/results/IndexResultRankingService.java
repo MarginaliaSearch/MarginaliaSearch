@@ -15,6 +15,8 @@ import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
+import nu.marginalia.index.ResultPriorityQueue;
+import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchParameters;
@@ -91,6 +93,8 @@ public class IndexResultRankingService {
             // Iterate over documents by their index in the combinedDocIds, as we need the index for the
             // term data arrays as well
 
+            DocumentSpans[] documentSpans = currentIndex.getDocumentSpans(arena, resultIds);
+
             for (int i = 0; i < resultIds.size(); i++) {
 
                 // Prepare term-level data for the document
@@ -109,14 +113,15 @@ public class IndexResultRankingService {
                 }
 
                 if (!exportDebugData) {
-                    var score = resultRanker.calculateScore(arena, null, resultIds.at(i), searchTerms, flags, positions);
+                    var score = resultRanker.calculateScore(arena, null, resultIds.at(i), searchTerms, flags, positions, documentSpans[i]);
                     if (score != null) {
                         results.add(score);
                     }
                 }
                 else {
                     var rankingFactors = new DebugRankingFactors();
-                    var score = resultRanker.calculateScore(arena, rankingFactors, resultIds.at(i), searchTerms, flags, positions);
+                    var score = resultRanker.calculateScore(arena, rankingFactors, resultIds.at(i), searchTerms, flags, positions, documentSpans[i]);
+
                     if (score != null) {
                         score.debugRankingFactors = rankingFactors;
                         results.add(score);

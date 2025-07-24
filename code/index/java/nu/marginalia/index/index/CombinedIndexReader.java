@@ -210,6 +210,15 @@ public class CombinedIndexReader {
         return forwardIndexReader.getDocumentSpans(arena, docId);
     }
 
+    public DocumentSpans[] getDocumentSpans(Arena arena, CombinedDocIdList docIds) {
+        long[] decodedIDs = docIds.array();
+        for (int i = 0; i < decodedIDs.length; i++) {
+            decodedIDs[i] = UrlIdCodec.removeRank(decodedIDs[i]);
+        }
+
+        return forwardIndexReader.getDocumentSpans(arena, decodedIDs);
+    }
+
     /** Close the indexes (this is not done immediately)
      * */
     public void close() throws InterruptedException {

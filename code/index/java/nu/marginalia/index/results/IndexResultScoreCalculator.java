@@ -64,7 +64,8 @@ public class IndexResultScoreCalculator {
                                            long combinedId,
                                            QuerySearchTerms searchTerms,
                                            long[] wordFlags,
-                                           CodedSequence[] positions)
+                                           CodedSequence[] positions,
+                                           DocumentSpans spans)
     {
 
         CompiledQuery<CodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
@@ -91,8 +92,6 @@ public class IndexResultScoreCalculator {
 
         int docSize = index.getDocumentSize(docId);
         if (docSize <= 0) docSize = 5000;
-
-        DocumentSpans spans = index.getDocumentSpans(arena, docId);
 
         if (debugRankingFactors != null) {
             debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(combinedId));

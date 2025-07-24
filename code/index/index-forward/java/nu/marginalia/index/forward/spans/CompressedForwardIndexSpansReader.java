@@ -52,6 +52,17 @@ public class CompressedForwardIndexSpansReader implements AutoCloseable, Forward
     }
 
     @Override
+    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
+        DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
+        for (int i = 0; i < encodedOffsets.length; i++) {
+            if (encodedOffsets[i] >= 0) {
+                ret[i] = readSpans(arena, encodedOffsets[i]);
+            }
+        }
+        return ret;
+    }
+
+    @Override
     public void close() throws IOException {
         spansFileChannel.close();
     }
