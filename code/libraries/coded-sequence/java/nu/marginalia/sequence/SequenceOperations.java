@@ -90,12 +90,18 @@ public class SequenceOperations {
         // Intersect the sequences by advancing all values smaller than the maximum seen so far
         // until they are equal to the maximum value, or until the end of the sequence is reached
         int max = Integer.MIN_VALUE;
+        int maxAll = Integer.MAX_VALUE;
+
+        for (int i = 0; i < positions.length; i++) {
+            maxAll = Math.min(maxAll, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
+        }
+
         int successes = 0;
 
         IntList ret = new IntArrayList(Math.max(1, minLength));
 
         outer:
-        for (int i = 0;; i = (i + 1) % positions.length)
+        for (int i = 0; max < maxAll; i = (i + 1) % positions.length)
         {
             if (successes == positions.length) {
                 ret.add(max);
