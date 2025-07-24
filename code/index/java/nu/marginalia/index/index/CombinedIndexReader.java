@@ -276,7 +276,7 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
         }
 
         if (!imposesMetaConstraint) {
-            return false;
+            return true;
         }
 
         long meta = forwardIndexReader.getDocMeta(docId);
