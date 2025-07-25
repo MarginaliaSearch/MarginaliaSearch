@@ -34,8 +34,6 @@ public class QueryFactory {
         this.queryExpansion = queryExpansion;
     }
 
-
-
     public ProcessedQuery createQuery(QueryParams params,
                                       @Nullable RpcResultRankingParameters rankingParams) {
         final var query = params.humanQuery();
