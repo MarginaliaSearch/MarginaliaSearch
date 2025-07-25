@@ -6,14 +6,13 @@ import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.QueryParams;
-import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.model.ResultRankingContext;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.results.model.PhraseConstraintGroupList;
 import nu.marginalia.index.results.model.QuerySearchTerms;
@@ -28,7 +27,6 @@ import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
 import javax.annotation.Nullable;
-import java.lang.foreign.Arena;
 import java.util.BitSet;
 
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
@@ -47,20 +45,18 @@ public class IndexResultScoreCalculator {
 
     public IndexResultScoreCalculator(StatefulIndex statefulIndex,
                                       DomainRankingOverrides domainRankingOverrides,
-                                      ResultRankingContext rankingContext,
-                                      SearchParameters params)
+                                      ResultRankingContext rankingContext)
     {
         this.index = statefulIndex.get();
         this.domainRankingOverrides = domainRankingOverrides;
         this.rankingContext = rankingContext;
 
-        this.queryParams = params.queryParams;
-        this.compiledQuery = params.compiledQuery;
+        this.queryParams = rankingContext.queryParams;
+        this.compiledQuery = rankingContext.compiledQuery;
     }
 
     @Nullable
-    public SearchResultItem calculateScore(Arena arena,
-                                           @Nullable DebugRankingFactors debugRankingFactors,
+    public SearchResultItem calculateScore(@Nullable DebugRankingFactors debugRankingFactors,
                                            long combinedId,
                                            QuerySearchTerms searchTerms,
                                            long[] wordFlags,

@@ -12,13 +12,12 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
-import nu.marginalia.index.ResultPriorityQueue;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.model.ResultRankingContext;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.PhraseConstraintGroupList;
@@ -54,15 +53,15 @@ public class IndexResultRankingService {
         this.domainRankingOverrides = domainRankingOverrides;
     }
 
-    public List<SearchResultItem> rankResults(SearchParameters params,
-                                              boolean exportDebugData,
+    public List<SearchResultItem> rankResults(
                                               ResultRankingContext rankingContext,
-                                              CombinedDocIdList resultIds)
+                                              CombinedDocIdList resultIds,
+                                              boolean exportDebugData)
     {
         if (resultIds.isEmpty())
             return List.of();
 
-        IndexResultScoreCalculator resultRanker = new IndexResultScoreCalculator(statefulIndex, domainRankingOverrides, rankingContext, params);
+        IndexResultScoreCalculator resultRanker = new IndexResultScoreCalculator(statefulIndex, domainRankingOverrides, rankingContext);
 
         List<SearchResultItem> results = new ArrayList<>(resultIds.size());
 
@@ -70,12 +69,10 @@ public class IndexResultRankingService {
         // this may change during the calculation, but we don't want to switch over mid-calculation
         final CombinedIndexReader currentIndex = statefulIndex.get();
 
-        final QuerySearchTerms searchTerms = getSearchTerms(params.compiledQuery, params.query);
+        final QuerySearchTerms searchTerms = getSearchTerms(rankingContext.compiledQuery, rankingContext.searchQuery);
         final int termCount = searchTerms.termIdsAll.size();
 
-        // We use an arena for the position data to avoid gc pressure
-        // from the gamma coded sequences, which can be large and have a lifetime
-        // that matches the try block here
+        // We use an arena for the position and spans data to limit gc pressure
         try (var arena = Arena.ofShared()) {
 
             TermMetadataList[] termsForDocs = new TermMetadataList[termCount];
@@ -89,11 +86,10 @@ public class IndexResultRankingService {
 
             long[] flags = new long[termCount];
             CodedSequence[] positions = new CodedSequence[termCount];
+            DocumentSpans[] documentSpans = currentIndex.getDocumentSpans(arena, resultIds);
 
             // Iterate over documents by their index in the combinedDocIds, as we need the index for the
             // term data arrays as well
-
-            DocumentSpans[] documentSpans = currentIndex.getDocumentSpans(arena, resultIds);
 
             for (int i = 0; i < resultIds.size(); i++) {
 
@@ -113,14 +109,14 @@ public class IndexResultRankingService {
                 }
 
                 if (!exportDebugData) {
-                    var score = resultRanker.calculateScore(arena, null, resultIds.at(i), searchTerms, flags, positions, documentSpans[i]);
+                    var score = resultRanker.calculateScore(null, resultIds.at(i), searchTerms, flags, positions, documentSpans[i]);
                     if (score != null) {
                         results.add(score);
                     }
                 }
                 else {
                     var rankingFactors = new DebugRankingFactors();
-                    var score = resultRanker.calculateScore(arena, rankingFactors, resultIds.at(i), searchTerms, flags, positions, documentSpans[i]);
+                    var score = resultRanker.calculateScore( rankingFactors, resultIds.at(i), searchTerms, flags, positions, documentSpans[i]);
 
                     if (score != null) {
                         score.debugRankingFactors = rankingFactors;
@@ -172,10 +168,9 @@ public class IndexResultRankingService {
 
             resultsList.clear();
             resultsList.addAll(this.rankResults(
-                    params,
-                    true,
                     resultRankingContext,
-                    new CombinedDocIdList(combinedIdsList))
+                    new CombinedDocIdList(combinedIdsList),
+                    true)
             );
         }
 

@@ -153,7 +153,6 @@ public class QueryFactory {
 
         var specsBuilder = SearchSpecification.builder()
                 .query(queryBuilder.build())
-                .humanQuery(query)
                 .quality(qualityLimit)
                 .year(year)
                 .size(size)

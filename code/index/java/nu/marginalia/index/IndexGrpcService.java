@@ -11,14 +11,10 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
-import nu.marginalia.api.searchquery.RpcResultRankingParameters;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.model.ResultRankingContext;
 import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
@@ -35,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
@@ -191,11 +186,8 @@ public class IndexGrpcService
             return List.of();
         }
 
-        ResultRankingContext rankingContext = createRankingContext(params.rankingParams,
-                params.compiledQuery,
-                params.compiledQueryIds);
-
-        var queryExecution = new QueryExecution(rankingContext, params.fetchSize);
+        ResultRankingContext rankingContext = ResultRankingContext.create(statefulIndex.get(), params);
+        QueryExecution queryExecution = new QueryExecution(rankingContext, params.fetchSize);
 
         List<RpcDecoratedResultItem> ret = queryExecution.run(params);
 
@@ -207,43 +199,6 @@ public class IndexGrpcService
                 .set(queryExecution.getStallTime() / 1000.);
 
         return ret;
-    }
-
-    /** This class is responsible for ranking the results and adding the best results to the
-     * resultHeap, which depending on the state of the indexLookup threads may or may not block
-     */
-    private ResultRankingContext createRankingContext(RpcResultRankingParameters rankingParams,
-                                                      CompiledQuery<String> compiledQuery,
-                                                      CompiledQueryLong compiledQueryIds)
-    {
-
-        int[] full = new int[compiledQueryIds.size()];
-        int[] prio = new int[compiledQueryIds.size()];
-
-        BitSet ngramsMask = new BitSet(compiledQuery.size());
-        BitSet regularMask = new BitSet(compiledQuery.size());
-
-        var currentIndex = statefulIndex.get();
-
-        for (int idx = 0; idx < compiledQueryIds.size(); idx++) {
-            long id = compiledQueryIds.at(idx);
-            full[idx] = currentIndex.numHits(id);
-            prio[idx] = currentIndex.numHitsPrio(id);
-
-            if (compiledQuery.at(idx).contains("_")) {
-                ngramsMask.set(idx);
-            }
-            else {
-                regularMask.set(idx);
-            }
-        }
-
-        return new ResultRankingContext(currentIndex.totalDocCount(),
-                rankingParams,
-                ngramsMask,
-                regularMask,
-                new CqDataInt(full),
-                new CqDataInt(prio));
     }
 
     /** This class is responsible for executing a search query. It uses a thread pool to
@@ -429,7 +384,7 @@ public class IndexGrpcService
                     stallTime.addAndGet(System.currentTimeMillis() - start);
 
                     resultHeap.addAll(
-                            resultValuator.rankResults(parameters, false, rankingContext, resultIds)
+                            resultValuator.rankResults(rankingContext, resultIds, false)
                     );
                 }
 

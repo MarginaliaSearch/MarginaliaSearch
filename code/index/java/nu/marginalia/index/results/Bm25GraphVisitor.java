@@ -2,7 +2,7 @@ package nu.marginalia.index.results;
 
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
-import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.index.model.ResultRankingContext;
 
 import java.util.BitSet;
 import java.util.List;

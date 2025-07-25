@@ -3,7 +3,7 @@ package nu.marginalia.index.results;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
-import nu.marginalia.api.searchquery.model.results.ResultRankingContext;
+import nu.marginalia.index.model.ResultRankingContext;
 import nu.marginalia.model.idx.WordFlags;
 
 import java.util.List;
