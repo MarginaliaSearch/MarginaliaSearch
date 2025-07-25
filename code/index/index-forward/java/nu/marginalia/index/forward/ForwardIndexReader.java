@@ -4,8 +4,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.forward.spans.DocumentSpans;
-import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
-import nu.marginalia.index.forward.spans.PlainForwardIndexSpansReader;
+import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ public class ForwardIndexReader {
 
     private volatile Long2IntOpenHashMap idsMap;
 
-    private final ForwardIndexSpansReader spansReader;
+    private final IndexSpansReader spansReader;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -68,7 +67,8 @@ public class ForwardIndexReader {
 
         ids = loadIds(idsFile);
         data = loadData(dataFile);
-        spansReader = new PlainForwardIndexSpansReader(spansFile);
+
+        spansReader = IndexSpansReader.open(spansFile);
 
         Thread.ofPlatform().start(this::createIdsMap);
     }

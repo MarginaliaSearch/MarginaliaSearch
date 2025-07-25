@@ -10,14 +10,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class ForwardIndexSpansWriter implements AutoCloseable {
+public class IndexSpansWriter implements AutoCloseable {
     private final FileChannel outputChannel;
     private final ByteBuffer work = ByteBuffer.allocate(65536).order(ByteOrder.nativeOrder());
 
     private long stateStartOffset = -1;
     private int stateLength = -1;
 
-    public ForwardIndexSpansWriter(Path outputFileSpansData) throws IOException {
+    public IndexSpansWriter(Path outputFileSpansData) throws IOException {
         this.outputChannel = (FileChannel) Files.newByteChannel(outputFileSpansData, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
     }
 
@@ -55,6 +55,11 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
+        ByteBuffer footer = SpansCodec.createSpanFilesFooter(SpansCodec.SpansCodecVersion.PLAIN);
+        outputChannel.position(outputChannel.size());
+        while (footer.hasRemaining()) {
+            outputChannel.write(footer, outputChannel.size());
+        }
         outputChannel.close();
     }
 }

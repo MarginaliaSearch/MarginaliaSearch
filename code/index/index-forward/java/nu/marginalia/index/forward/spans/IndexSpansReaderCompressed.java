@@ -10,11 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-@SuppressWarnings("preview")
-public class CompressedForwardIndexSpansReader implements AutoCloseable, ForwardIndexSpansReader {
+@Deprecated
+public class IndexSpansReaderCompressed implements AutoCloseable, IndexSpansReader {
     private final FileChannel spansFileChannel;
 
-    public CompressedForwardIndexSpansReader(Path spansFile) throws IOException {
+    public IndexSpansReaderCompressed(Path spansFile) throws IOException {
         this.spansFileChannel = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
     }
 

@@ -13,11 +13,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 
-@SuppressWarnings("preview")
-public class PlainForwardIndexSpansReader implements ForwardIndexSpansReader {
+public class IndexSpansReaderPlain implements IndexSpansReader {
     private final FileChannel[] spansFileChannels;
     private final ForkJoinPool forkJoinPool;
-    public PlainForwardIndexSpansReader(Path spansFile) throws IOException {
+
+    public IndexSpansReaderPlain(Path spansFile) throws IOException {
         this.spansFileChannels = new FileChannel[8];
         for (int i = 0; i < spansFileChannels.length; i++) {
             spansFileChannels[i] = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
