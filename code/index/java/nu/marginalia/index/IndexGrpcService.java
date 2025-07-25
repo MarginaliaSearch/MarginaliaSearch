@@ -7,7 +7,6 @@ import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
@@ -298,8 +297,6 @@ public class IndexGrpcService
             }
 
             private void executeSearch() {
-                final LongArrayList results = new LongArrayList(16);
-
                 // These queries are different indices for one subquery
                 final LongQueryBuffer buffer = new LongQueryBuffer(4096);
 
@@ -307,14 +304,7 @@ public class IndexGrpcService
                 {
                     buffer.reset();
                     query.getMoreResults(buffer);
-
-                    for (int i = 0; i < buffer.end; i+=16) {
-                        for (int j = 0; j < Math.min(buffer.end - i, 16); j++) {
-                            results.add(buffer.data.get(i+j));
-                        }
-                        enqueueResults(new CombinedDocIdList(results));
-                        results.clear();
-                    }
+                    enqueueResults(new CombinedDocIdList(buffer));
                 }
 
                 buffer.dispose();
