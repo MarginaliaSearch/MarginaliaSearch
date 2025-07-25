@@ -99,7 +99,7 @@ public class SequenceOperations {
         IntList ret = new IntArrayList(Math.max(1, minLength));
 
         outer:
-        for (int i = 0; currentMax < largestValue; i = (i + 1) % positions.length)
+        for (int i = 0; currentMax <= largestValue; i = (i + 1) % positions.length)
         {
             if (successes == positions.length) {
                 ret.add(currentMax);
