@@ -32,16 +32,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class PerfTestMain {
-
+    static Duration warmupTime = Duration.ofMinutes(2);
+    static Duration runTime = Duration.ofMinutes(10);
 
     public static void main(String[] args) {
-        if (args.length != 5) {
-            System.err.println("Arguments: home-dir index-dir query numWarmupIters numIters");
+        if (args.length != 3) {
+            System.err.println("Arguments: home-dir index-dir query");
             System.exit(255);
         }
 
@@ -53,13 +56,11 @@ public class PerfTestMain {
             }
             Path homeDir = Paths.get(args[1]);
             String query = args[2];
-            int numWarmupIters = Integer.parseInt(args[3]);
-            int numIters = Integer.parseInt(args[4]);
 
-            run(indexDir, homeDir, query, numWarmupIters, numIters);
+            run(indexDir, homeDir, query);
         }
         catch (NumberFormatException e) {
-            System.err.println("Arguments: data-dir  index-dir query numWarmupIters numIters");
+            System.err.println("Arguments: data-dir  index-dir query");
             System.exit(255);
         }
         catch (Exception ex) {
@@ -111,9 +112,7 @@ public class PerfTestMain {
 
     public static void run(Path homeDir,
                            Path indexDir,
-                           String rawQuery,
-                           int numWarmupIters,
-                           int numIters) throws IOException, SQLException
+                           String rawQuery) throws IOException, SQLException
     {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
@@ -155,19 +154,36 @@ public class PerfTestMain {
 
         System.out.println("Running warmup loop!");
         int sum = 0;
-        for (int iter = 0; iter < numWarmupIters; iter++) {
-            sum += rankingService.rankResults(rankingContext, docIds, true).size();
-        }
-        System.out.println("Warmup complete!");
 
+        Instant runEndTime = Instant.now().plus(warmupTime);
+
+        int iter;
+        for (iter = 0;; iter++) {
+            sum += rankingService.rankResults(rankingContext, docIds, false).size();
+            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
+                break;
+            }
+        }
+        System.out.println("Warmup complete after " + iter + " iters!");
+
+        runEndTime = Instant.now().plus(runTime);
+        Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
-        for (int iter = 0; iter < numIters; iter++) {
+        for (iter = 0;; iter++) {
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(rankingContext, docIds, true).size();
+            sum2 += rankingService.rankResults(rankingContext, docIds, false).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
+
+            if ((iter % 100) == 0) {
+                if (Instant.now().isAfter(runEndTime)) {
+                    break;
+                }
+                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+            }
         }
+        System.out.println("Benchmark complete after " + iter + " iters!");
         System.out.println("Best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
