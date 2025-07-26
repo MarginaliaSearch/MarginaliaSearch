@@ -1,20 +1,23 @@
 package nu.marginalia.index.forward.spans;
 
+import nu.marginalia.sequence.VarintCodedSequence;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class ForwardIndexSpansWriter implements AutoCloseable {
+public class IndexSpansWriter implements AutoCloseable {
     private final FileChannel outputChannel;
-    private final ByteBuffer work = ByteBuffer.allocate(32);
+    private final ByteBuffer work = ByteBuffer.allocate(65536).order(ByteOrder.nativeOrder());
 
     private long stateStartOffset = -1;
     private int stateLength = -1;
 
-    public ForwardIndexSpansWriter(Path outputFileSpansData) throws IOException {
+    public IndexSpansWriter(Path outputFileSpansData) throws IOException {
         this.outputChannel = (FileChannel) Files.newByteChannel(outputFileSpansData, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
     }
 
@@ -23,7 +26,7 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
         stateLength = 0;
 
         work.clear();
-        work.put((byte) count);
+        work.putInt(count);
         work.flip();
 
         while (work.hasRemaining())
@@ -33,12 +36,17 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
     public void writeSpan(byte spanCode, ByteBuffer sequenceData) throws IOException {
         work.clear();
         work.put(spanCode);
-        work.putShort((short) sequenceData.remaining());
+        work.put((byte) 0); // Ensure we're byte aligned
+        var sequence = new VarintCodedSequence(sequenceData);
+        work.putShort((short) sequence.valueCount());
+
+        var iter = sequence.iterator();
+        while (iter.hasNext()) {
+            work.putInt(iter.nextInt());
+        }
         work.flip();
 
-        while (work.hasRemaining() || sequenceData.hasRemaining()) {
-            stateLength += (int) outputChannel.write(new ByteBuffer[]{work, sequenceData});
-        }
+        stateLength += outputChannel.write(work);
     }
 
     public long endRecord() {
@@ -47,6 +55,11 @@ public class ForwardIndexSpansWriter implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
+        ByteBuffer footer = SpansCodec.createSpanFilesFooter(SpansCodec.SpansCodecVersion.PLAIN);
+        outputChannel.position(outputChannel.size());
+        while (footer.hasRemaining()) {
+            outputChannel.write(footer, outputChannel.size());
+        }
         outputChannel.close();
     }
 }

@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.index.perftest.PerfTestMain'
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:config')
+    implementation project(':code:common:db')
+
+    implementation project(':code:libraries:array')
+    implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:term-frequency-dict')
+    implementation project(':code:common:linkdb')
+    implementation project(':code:index')
+    implementation project(':code:index:query')
+    implementation project(':code:index:index-forward')
+    implementation project(':code:index:index-reverse')
+    implementation project(':third-party:commons-codec')
+    implementation project(':code:functions:search-query')
+    implementation project(':code:functions:search-query:api')
+
+    implementation libs.slop
+    implementation libs.roaringbitmap
+    implementation libs.bundles.slf4j
+    implementation libs.guava
+
+    libs.bundles.grpc.get().each {
+        implementation dependencies.create(it) {
+            exclude group: 'com.google.guava'
+        }
+    }
+
+
+    implementation libs.notnull
+    implementation libs.trove
+    implementation libs.fastutil
+    implementation libs.bundles.gson
+    implementation libs.bundles.mariadb
+
+}

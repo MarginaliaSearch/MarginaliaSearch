@@ -18,8 +18,6 @@ public class SearchSpecification {
 
     public String searchSetIdentifier;
 
-    public final String humanQuery;
-
     public SpecificationLimit quality;
     public SpecificationLimit year;
     public SpecificationLimit size;
@@ -35,7 +33,6 @@ public class SearchSpecification {
     public SearchSpecification(SearchQuery query,
                                List<Integer> domains,
                                String searchSetIdentifier,
-                               String humanQuery,
                                SpecificationLimit quality,
                                SpecificationLimit year,
                                SpecificationLimit size,
@@ -47,7 +44,6 @@ public class SearchSpecification {
         this.query = query;
         this.domains = domains;
         this.searchSetIdentifier = searchSetIdentifier;
-        this.humanQuery = humanQuery;
         this.quality = quality;
         this.year = year;
         this.size = size;
@@ -71,10 +67,6 @@ public class SearchSpecification {
 
     public String getSearchSetIdentifier() {
         return this.searchSetIdentifier;
-    }
-
-    public String getHumanQuery() {
-        return this.humanQuery;
     }
 
     public SpecificationLimit getQuality() {
@@ -106,14 +98,13 @@ public class SearchSpecification {
     }
 
     public String toString() {
-        return "SearchSpecification(query=" + this.getQuery() + ", domains=" + this.getDomains() + ", searchSetIdentifier=" + this.getSearchSetIdentifier() + ", humanQuery=" + this.getHumanQuery() + ", quality=" + this.getQuality() + ", year=" + this.getYear() + ", size=" + this.getSize() + ", rank=" + this.getRank() + ", queryLimits=" + this.getQueryLimits() + ", queryStrategy=" + this.getQueryStrategy() + ", rankingParams=" + this.getRankingParams() + ")";
+        return "SearchSpecification(query=" + this.getQuery() + ", domains=" + this.getDomains() + ", searchSetIdentifier=" + this.getSearchSetIdentifier() + ", quality=" + this.getQuality() + ", year=" + this.getYear() + ", size=" + this.getSize() + ", rank=" + this.getRank() + ", queryLimits=" + this.getQueryLimits() + ", queryStrategy=" + this.getQueryStrategy() + ", rankingParams=" + this.getRankingParams() + ")";
     }
 
     public static class SearchSpecificationBuilder {
         private SearchQuery query;
         private List<Integer> domains;
         private String searchSetIdentifier;
-        private String humanQuery;
         private SpecificationLimit quality$value;
         private boolean quality$set;
         private SpecificationLimit year$value;
@@ -141,11 +132,6 @@ public class SearchSpecification {
 
         public SearchSpecificationBuilder searchSetIdentifier(String searchSetIdentifier) {
             this.searchSetIdentifier = searchSetIdentifier;
-            return this;
-        }
-
-        public SearchSpecificationBuilder humanQuery(String humanQuery) {
-            this.humanQuery = humanQuery;
             return this;
         }
 
@@ -205,11 +191,7 @@ public class SearchSpecification {
             if (!this.rank$set) {
                 rank$value = SpecificationLimit.none();
             }
-            return new SearchSpecification(this.query, this.domains, this.searchSetIdentifier, this.humanQuery, quality$value, year$value, size$value, rank$value, this.queryLimits, this.queryStrategy, this.rankingParams);
-        }
-
-        public String toString() {
-            return "SearchSpecification.SearchSpecificationBuilder(query=" + this.query + ", domains=" + this.domains + ", searchSetIdentifier=" + this.searchSetIdentifier + ", humanQuery=" + this.humanQuery + ", quality$value=" + this.quality$value + ", year$value=" + this.year$value + ", size$value=" + this.size$value + ", rank$value=" + this.rank$value + ", queryLimits=" + this.queryLimits + ", queryStrategy=" + this.queryStrategy + ", rankingParams=" + this.rankingParams + ")";
+            return new SearchSpecification(this.query, this.domains, this.searchSetIdentifier, quality$value, year$value, size$value, rank$value, this.queryLimits, this.queryStrategy, this.rankingParams);
         }
     }
 }

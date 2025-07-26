@@ -10,11 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-@SuppressWarnings("preview")
-public class ForwardIndexSpansReader implements AutoCloseable {
+@Deprecated
+public class IndexSpansReaderCompressed implements AutoCloseable, IndexSpansReader {
     private final FileChannel spansFileChannel;
 
-    public ForwardIndexSpansReader(Path spansFile) throws IOException {
+    public IndexSpansReaderCompressed(Path spansFile) throws IOException {
         this.spansFileChannel = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
     }
 
@@ -48,6 +48,17 @@ public class ForwardIndexSpansReader implements AutoCloseable {
             buffer.position(buffer.position() + len);
         }
 
+        return ret;
+    }
+
+    @Override
+    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
+        DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
+        for (int i = 0; i < encodedOffsets.length; i++) {
+            if (encodedOffsets[i] >= 0) {
+                ret[i] = readSpans(arena, encodedOffsets[i]);
+            }
+        }
         return ret;
     }
 

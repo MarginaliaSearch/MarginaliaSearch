@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +55,7 @@ class DocumentKeywordExtractorTest {
                 new LinkTexts(), new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
         );
 
-        var keywordsBuilt = keywords.build(ByteBuffer.allocate(1024));
+        var keywordsBuilt = keywords.build();
 
         Map<String, Byte> flags = new HashMap<>();
         Map<String, CodedSequence> positions = new HashMap<>();

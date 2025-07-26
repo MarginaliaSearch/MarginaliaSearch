@@ -40,6 +40,7 @@ include 'code:index:index-journal'
 include 'code:index:query'
 include 'code:index:index-forward'
 include 'code:index:index-reverse'
+include 'code:index:index-perftest'
 
 include 'code:libraries:array'
 include 'code:libraries:array:cpp'

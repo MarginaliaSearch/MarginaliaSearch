@@ -5,7 +5,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.ForwardIndexParameters;
-import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
+import nu.marginalia.index.forward.spans.IndexSpansWriter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -65,7 +65,7 @@ public class ForwardIndexConverter {
         logger.info("Domain Rankings size = {}", domainRankings.size());
 
         try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "forwardIndexConverter");
-             var spansWriter = new ForwardIndexSpansWriter(outputFileSpansData)
+             var spansWriter = new IndexSpansWriter(outputFileSpansData)
         ) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 

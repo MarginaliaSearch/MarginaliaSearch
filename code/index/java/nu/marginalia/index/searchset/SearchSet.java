@@ -7,6 +7,6 @@ public interface SearchSet {
      *  or if the documentMetadata vibes with the set
      *
      */
-    boolean contains(int domainId, long documentMetadata);
+    boolean contains(int domainId);
 
 }

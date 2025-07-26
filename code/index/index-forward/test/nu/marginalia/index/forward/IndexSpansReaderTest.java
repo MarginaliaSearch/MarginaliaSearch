@@ -1,8 +1,9 @@
 package nu.marginalia.index.forward;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
-import nu.marginalia.index.forward.spans.ForwardIndexSpansWriter;
+import nu.marginalia.index.forward.spans.IndexSpansReader;
+import nu.marginalia.index.forward.spans.IndexSpansReaderPlain;
+import nu.marginalia.index.forward.spans.IndexSpansWriter;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
@@ -17,10 +18,10 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ForwardIndexSpansReaderTest {
+class IndexSpansReaderTest {
     Path testFile = Files.createTempFile("test", ".idx");
 
-    ForwardIndexSpansReaderTest() throws IOException {
+    IndexSpansReaderTest() throws IOException {
     }
 
     @AfterEach
@@ -34,7 +35,7 @@ class ForwardIndexSpansReaderTest {
 
         long offset1;
         long offset2;
-        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+        try (var writer = new IndexSpansWriter(testFile)) {
             writer.beginRecord(1);
             writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate(1, 3, 5, 8).buffer());
             offset1 = writer.endRecord();
@@ -46,7 +47,7 @@ class ForwardIndexSpansReaderTest {
             offset2 = writer.endRecord();
         }
 
-        try (var reader = new ForwardIndexSpansReader(testFile);
+        try (var reader = IndexSpansReader.open(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
@@ -77,13 +78,13 @@ class ForwardIndexSpansReaderTest {
     @Test
     void testContainsRange() throws IOException {
         long offset1;
-        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+        try (var writer = new IndexSpansWriter(testFile)) {
             writer.beginRecord(1);
             writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate( 1, 2, 10, 15, 20, 25).buffer());
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new ForwardIndexSpansReader(testFile);
+        try (var reader = new IndexSpansReaderPlain(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
@@ -104,13 +105,13 @@ class ForwardIndexSpansReaderTest {
     @Test
     void testContainsRangeExact() throws IOException {
         long offset1;
-        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+        try (var writer = new IndexSpansWriter(testFile)) {
             writer.beginRecord(1);
             writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate( 1, 2, 10, 15, 20, 25).buffer());
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new ForwardIndexSpansReader(testFile);
+        try (var reader = new IndexSpansReaderPlain(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);
@@ -131,13 +132,13 @@ class ForwardIndexSpansReaderTest {
     @Test
     void testCountRangeMatches() throws IOException {
         long offset1;
-        try (var writer = new ForwardIndexSpansWriter(testFile)) {
+        try (var writer = new IndexSpansWriter(testFile)) {
             writer.beginRecord(1);
             writer.writeSpan(HtmlTag.HEADING.code, VarintCodedSequence.generate( 1, 2, 10, 15, 20, 25).buffer());
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new ForwardIndexSpansReader(testFile);
+        try (var reader = new IndexSpansReaderPlain(testFile);
              var arena = Arena.ofConfined()
         ) {
             var spans1 = reader.readSpans(arena, offset1);

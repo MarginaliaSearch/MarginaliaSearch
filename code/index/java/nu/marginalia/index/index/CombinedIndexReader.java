@@ -210,6 +210,15 @@ public class CombinedIndexReader {
         return forwardIndexReader.getDocumentSpans(arena, docId);
     }
 
+    public DocumentSpans[] getDocumentSpans(Arena arena, CombinedDocIdList docIds) {
+        long[] decodedIDs = docIds.array();
+        for (int i = 0; i < decodedIDs.length; i++) {
+            decodedIDs[i] = UrlIdCodec.removeRank(decodedIDs[i]);
+        }
+
+        return forwardIndexReader.getDocumentSpans(arena, decodedIDs);
+    }
+
     /** Close the indexes (this is not done immediately)
      * */
     public void close() throws InterruptedException {
@@ -248,12 +257,13 @@ public class CombinedIndexReader {
 class ParamMatchingQueryFilter implements QueryFilterStepIf {
     private final QueryParams params;
     private final ForwardIndexReader forwardIndexReader;
-
+    private final boolean imposesMetaConstraint;
     public ParamMatchingQueryFilter(QueryParams params,
                                     ForwardIndexReader forwardIndexReader)
     {
         this.params = params;
         this.forwardIndexReader = forwardIndexReader;
+        this.imposesMetaConstraint = params.imposesDomainMetadataConstraint();
     }
 
     @Override
@@ -261,11 +271,15 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
         long docId = UrlIdCodec.removeRank(combinedId);
         int domainId = UrlIdCodec.getDomainId(docId);
 
-        long meta = forwardIndexReader.getDocMeta(docId);
-
-        if (!validateDomain(domainId, meta)) {
+        if (!validateDomain(domainId)) {
             return false;
         }
+
+        if (!imposesMetaConstraint) {
+            return true;
+        }
+
+        long meta = forwardIndexReader.getDocMeta(docId);
 
         if (!validateQuality(meta)) {
             return false;
@@ -286,8 +300,8 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
         return true;
     }
 
-    private boolean validateDomain(int domainId, long meta) {
-        return params.searchSet().contains(domainId, meta);
+    private boolean validateDomain(int domainId) {
+        return params.searchSet().contains(domainId);
     }
 
     private boolean validateQuality(long meta) {

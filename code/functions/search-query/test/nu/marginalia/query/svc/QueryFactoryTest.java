@@ -241,7 +241,6 @@ public class QueryFactoryTest {
 
         Assertions.assertTrue(subquery.query.compiledQuery.contains(" bob "));
         Assertions.assertFalse(subquery.query.compiledQuery.contains(" bob's "));
-        Assertions.assertEquals("\"bob's cars\"", subquery.humanQuery);
     }
 
     @Test

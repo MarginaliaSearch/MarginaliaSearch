@@ -304,7 +304,6 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertRpcQuery(specs.getQuery()),
                 specs.getDomainsList(),
                 specs.getSearchSetIdentifier(),
-                specs.getHumanQuery(),
                 IndexProtobufCodec.convertSpecLimit(specs.getQuality()),
                 IndexProtobufCodec.convertSpecLimit(specs.getYear()),
                 IndexProtobufCodec.convertSpecLimit(specs.getSize()),

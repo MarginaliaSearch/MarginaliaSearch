@@ -1,8 +1,9 @@
 package nu.marginalia.index.model;
 
-import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.index.query.limit.SpecificationLimitType;
+import nu.marginalia.index.searchset.SearchSet;
 
 import java.util.Objects;
 
@@ -39,6 +40,13 @@ public final class QueryParams {
         this.rank = rank;
         this.searchSet = searchSet;
         this.queryStrategy = queryStrategy;
+    }
+
+    public boolean imposesDomainMetadataConstraint() {
+        return qualityLimit.type() != SpecificationLimitType.NONE
+                ||  year.type() != SpecificationLimitType.NONE
+                ||  size.type() != SpecificationLimitType.NONE
+                ||  rank.type() != SpecificationLimitType.NONE;
     }
 
     public SpecificationLimit qualityLimit() {
