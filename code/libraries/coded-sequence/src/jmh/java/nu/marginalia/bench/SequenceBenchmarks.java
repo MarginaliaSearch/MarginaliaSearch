@@ -23,9 +23,12 @@ public class SequenceBenchmarks {
 
             var r = new Random(1000);
 
+            for (int i = 0; i < 10; i++) {
+                b.add(r.nextInt(0, 5000));
+            }
+
             for (int i = 0; i < 100; i++) {
-                b.add(r.nextInt(0, 500));
-                c.add(r.nextInt(0, 500));
+                c.add(r.nextInt(0, 5000));
             }
 
             for (int i = 0; i < 1000; i++) {
@@ -42,6 +45,13 @@ public class SequenceBenchmarks {
         return SequenceOperations.findIntersections(state.a, state.b, state.c);
     }
 
+    @Fork(value = 1, warmups = 1)
+    @Warmup(iterations = 1)
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public IntList intersect1(SequenceState state) {
+        return SequenceOperations.findIntersections(state.a);
+    }
 
 
 }

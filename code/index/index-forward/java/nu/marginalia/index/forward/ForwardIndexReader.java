@@ -23,9 +23,6 @@ import static nu.marginalia.index.forward.ForwardIndexParameters.*;
  * and a mapping between document identifiers to the index into the
  * data array.
  * <p/>
- * Since the total data is relatively small, this is kept in memory to
- * reduce the amount of disk thrashing.
- * <p/>
  * The metadata is a binary encoding of {@see nu.marginalia.idx.DocumentMetadata}
  */
 public class ForwardIndexReader {

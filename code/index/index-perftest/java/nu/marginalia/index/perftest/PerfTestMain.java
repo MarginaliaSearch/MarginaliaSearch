@@ -180,11 +180,11 @@ public class PerfTestMain {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
-                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }
         }
         System.out.println("Benchmark complete after " + iter + " iters!");
-        System.out.println("Best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+        System.out.println("Best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
         System.out.println(docIds.size());

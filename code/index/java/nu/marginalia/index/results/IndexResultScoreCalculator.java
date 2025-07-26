@@ -230,7 +230,7 @@ public class IndexResultScoreCalculator {
         long result = 0;
         int bit = 0;
 
-        IntIterator intersection = phraseConstraints.getFullGroup().findIntersections(positions).intIterator();
+        IntIterator intersection = phraseConstraints.getFullGroup().findIntersections(positions, 64).intIterator();
 
         while (intersection.hasNext() && bit < 64) {
             bit = (int) (Math.sqrt(intersection.nextInt()));
