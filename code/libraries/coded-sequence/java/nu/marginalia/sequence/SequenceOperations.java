@@ -172,9 +172,13 @@ public class SequenceOperations {
     public static int minDistance(IntList[] positions, int[] offsets) {
         if (positions.length <= 1)
             return 0;
+        if (positions.length == 1)
+            return 0;
 
         int[] values = new int[positions.length];
         int[] indexes = new int[positions.length];
+
+        int largestValue = 0;
 
         for (int i = 0; i < positions.length; i++) {
             // if any of the lists are empty, return MAX_VALUE
@@ -184,6 +188,7 @@ public class SequenceOperations {
             }
 
             values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+            largestValue = Math.min(largestValue, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
         }
 
         int minDist = Integer.MAX_VALUE;
@@ -199,7 +204,7 @@ public class SequenceOperations {
             }
         }
 
-        for (;;) {
+        do {
             // For all the other indexes except maxI, update values[] with the largest value smaller than maxVal
             for (int idx = 0; idx < positions.length - 1; idx++) {
                 int i = (maxI + idx) % positions.length;
@@ -254,6 +259,8 @@ public class SequenceOperations {
             else {
                 return minDist;
             }
-        }
+        } while (maxVal <= largestValue);
+
+        return minDist;
     }
 }
