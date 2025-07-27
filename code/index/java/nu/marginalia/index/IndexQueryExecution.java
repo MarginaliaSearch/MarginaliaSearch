@@ -66,7 +66,7 @@ public class IndexQueryExecution {
 
         // Await evaluation task termination
         synchronized (IndexQueryExecution.this) {
-            while (evaluationJobCounter > 0) {
+            while (evaluationJobCounter > 0 && budget.hasTimeLeft()) {
                 IndexQueryExecution.this.wait(budget.timeLeft());
             }
         }
