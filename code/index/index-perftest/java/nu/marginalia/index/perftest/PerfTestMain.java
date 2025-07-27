@@ -211,10 +211,7 @@ public class PerfTestMain {
                 .setFetchSize(4096)
                 .build();
         SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
-
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
-
-        SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
 
         System.out.println("Running warmup loop!");
         int sum = 0;
@@ -223,6 +220,7 @@ public class PerfTestMain {
 
         int iter;
         for (iter = 0;; iter++) {
+            SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
             var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
             execution.run();
             sum += execution.itemsProcessed();
@@ -237,6 +235,7 @@ public class PerfTestMain {
         int sum2 = 0;
         List<Integer> counts = new ArrayList<>();
         for (iter = 0;; iter++) {
+            SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
             var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
             execution.run();
             sum2 += execution.itemsProcessed();
@@ -246,11 +245,11 @@ public class PerfTestMain {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
-                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " +  counts.stream().mapToInt(Integer::intValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
+                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best counts: " +  counts.stream().mapToInt(Integer::intValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
             }
         }
         System.out.println("Benchmark complete after " + iter + " iters!");
-        System.out.println("Best counts times: " + counts.stream().mapToInt(Integer::intValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
+        System.out.println("Best counts: " + counts.stream().mapToInt(Integer::intValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
     }
@@ -317,7 +316,7 @@ public class PerfTestMain {
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 
-            if ((iter % 100) == 0) {
+            if ((iter % 5) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
