@@ -230,6 +230,7 @@ public class SearchOperator {
                 return new EdgeUrl("https", new EdgeDomain("breezewiki.com"), null,  "/" + subdomain + path.substring(wikiIndex), null);
             }
         }
+/*
         else if (topdomain.equals("medium.com")) {
             int slashIndex = path.indexOf("/", 1);
             if (slashIndex >= 0) {
@@ -241,8 +242,7 @@ public class SearchOperator {
                     return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
                 }
             }
-
-        }
+        }*/
         return url;
     }
 
