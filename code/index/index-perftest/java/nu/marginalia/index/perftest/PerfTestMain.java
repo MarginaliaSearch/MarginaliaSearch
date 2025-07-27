@@ -241,7 +241,7 @@ public class PerfTestMain {
             execution.run();
             long end = System.nanoTime();
             sum2 += execution.itemsProcessed();
-            rates.add(execution.itemsProcessed() / ((end - start)/1_000_000.));
+            rates.add(execution.itemsProcessed() / ((end - start)/1_000_000_000.));
 
             if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {

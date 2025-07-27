@@ -12,10 +12,6 @@ import java.util.Iterator;
 /** A priority queue for search results. This class is not thread-safe,
  * in general, except for concurrent use of the addAll method.
  * <p></p>
- * The class implements a subset of the Collection interface, and
- * is intended to be used as a priority queue for search results,
- * with a maximum size.
- * <p></p>
  * Since the expected use case is to add a large number of items
  * and then iterate over the items, the class is optimized for
  * this scenario, and does not implement other mutating methods
@@ -35,16 +31,6 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem> {
         return queue.iterator();
     }
 
-    public boolean add(SearchResultItem item) {
-        itemsProcessed++;
-
-        if (idsInSet.add(item.getDocumentId())) {
-            queue.add(item);
-            return true;
-        }
-        return false;
-    }
-
     /** Adds all items to the queue, and returns true if any items were added.
      * This is a thread-safe operation.
      */
@@ -58,11 +44,6 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem> {
         }
 
         return true;
-    }
-
-    public void clear() {
-        queue.clear();
-        idsInSet.clear();
     }
 
     public int size() {
