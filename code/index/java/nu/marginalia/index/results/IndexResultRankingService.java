@@ -20,6 +20,7 @@ import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.ResultRankingContext;
 import nu.marginalia.index.model.SearchTermsUtil;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.model.PhraseConstraintGroupList;
 import nu.marginalia.index.results.model.QuerySearchTerms;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
@@ -57,9 +58,10 @@ public class IndexResultRankingService {
     }
 
     public List<SearchResultItem> rankResults(
-                                              ResultRankingContext rankingContext,
-                                              CombinedDocIdList resultIds,
-                                              boolean exportDebugData)
+            ResultRankingContext rankingContext,
+            IndexSearchBudget budget,
+            CombinedDocIdList resultIds,
+            boolean exportDebugData)
     {
         if (resultIds.isEmpty())
             return List.of();
@@ -94,7 +96,7 @@ public class IndexResultRankingService {
             // Iterate over documents by their index in the combinedDocIds, as we need the index for the
             // term data arrays as well
 
-            for (int i = 0; i < resultIds.size(); i++) {
+            for (int i = 0; i < resultIds.size() && budget.hasTimeLeft(); i++) {
 
                 // Prepare term-level data for the document
                 for (int ti = 0; ti < flags.length; ti++) {
@@ -171,9 +173,10 @@ public class IndexResultRankingService {
             }
 
             resultsList.clear();
+            IndexSearchBudget budget = new IndexSearchBudget(10000);
             resultsList.addAll(this.rankResults(
                     resultRankingContext,
-                    new CombinedDocIdList(combinedIdsList),
+                    budget, new CombinedDocIdList(combinedIdsList),
                     true)
             );
         }

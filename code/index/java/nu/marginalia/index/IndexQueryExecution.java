@@ -76,7 +76,7 @@ public class IndexQueryExecution {
     }
 
     private void lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(512);
+        final LongQueryBuffer buffer = new LongQueryBuffer(8192);
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
@@ -103,7 +103,7 @@ public class IndexQueryExecution {
                 }
 
                 if (stealWork) {
-                    resultHeap.addAll(rankingService.rankResults(rankingContext, docIds, false));
+                    resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
                 }
                 else {
                     // Spawn an evaluation task
@@ -120,7 +120,7 @@ public class IndexQueryExecution {
         try {
             if (!budget.hasTimeLeft())
                 return;
-            resultHeap.addAll(rankingService.rankResults(rankingContext, docIds, false));
+            resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
         } finally {
             synchronized (IndexQueryExecution.this) {
                 if (--evaluationJobCounter == 0) {
