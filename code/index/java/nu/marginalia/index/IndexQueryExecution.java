@@ -94,7 +94,7 @@ public class IndexQueryExecution {
                     // to avoid backpressure, instead steal work into the lookup thread
                     // in this scenario
 
-                    if (evaluationJobCounter > indexValuationThreads * 8) {
+                    if (evaluationJobCounter > indexValuationThreads * 2) {
                         stealWork = true;
                     }
                     else {
