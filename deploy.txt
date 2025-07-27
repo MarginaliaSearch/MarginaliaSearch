@@ -14,3 +14,5 @@
 2025-07-21:  Deploy executor partition 1.
 2025-07-21:  Deploy search.
 2025-07-23:  Redeploy all.
+2025-07-25:  Redeploy index.
+
