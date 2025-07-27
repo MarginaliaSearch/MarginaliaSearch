@@ -76,7 +76,7 @@ public class IndexQueryExecution {
     }
 
     private void lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(8192);
+        final LongQueryBuffer buffer = new LongQueryBuffer(1024);
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
