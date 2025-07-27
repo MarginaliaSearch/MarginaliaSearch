@@ -316,7 +316,7 @@ public class PerfTestMain {
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 
-            if ((iter % 5) == 0) {
+            if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
