@@ -235,8 +235,11 @@ public class SearchOperator {
                 return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
             }
             else {
-                String article = path.substring(path.indexOf("/", 1));
-                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
+                int slashIndex = path.indexOf("/", 1);
+                if (slashIndex >= 0) {
+                    String article = path.substring(slashIndex);
+                    return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
+                }
             }
 
         }
