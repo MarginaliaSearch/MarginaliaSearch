@@ -21,10 +21,11 @@ import java.util.Iterator;
  * this scenario, and does not implement other mutating methods
  * than addAll().
  */
-public class ResultPriorityQueue implements Iterable<SearchResultItem>,
-        Collection<SearchResultItem> {
+public class ResultPriorityQueue implements Iterable<SearchResultItem> {
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
     private final MinMaxPriorityQueue<SearchResultItem> queue;
+
+    private int itemsProcessed = 0;
 
     public ResultPriorityQueue(int limit) {
         this.queue = MinMaxPriorityQueue.<SearchResultItem>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
@@ -34,41 +35,23 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
         return queue.iterator();
     }
 
-    @NotNull
-    @Override
-    public Object[] toArray() {
-        return queue.toArray();
-    }
-
-    @NotNull
-    @Override
-    public <T> T[] toArray(@NotNull T[] a) {
-        return queue.toArray(a);
-    }
-
-    @Override
-    public boolean add(SearchResultItem searchResultItem) {
-        throw new UnsupportedOperationException("Use addAll instead");
-    }
-
-    @Override
-    public boolean remove(Object o) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean containsAll(@NotNull Collection<?> c) {
-        return idsInSet.containsAll(c);
+    public boolean add(SearchResultItem item) {
+        if (idsInSet.add(item.getDocumentId())) {
+            itemsProcessed++;
+            queue.add(item);
+            return true;
+        }
+        return false;
     }
 
     /** Adds all items to the queue, and returns true if any items were added.
      * This is a thread-safe operation.
      */
-    @Override
     public synchronized boolean addAll(@NotNull Collection<? extends SearchResultItem> items) {
 
         for (var item : items) {
             if (idsInSet.add(item.getDocumentId())) {
+                itemsProcessed++;
                 queue.add(item);
             }
         }
@@ -76,17 +59,6 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
         return true;
     }
 
-    @Override
-    public boolean removeAll(@NotNull Collection<?> c) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean retainAll(@NotNull Collection<?> c) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void clear() {
         queue.clear();
         idsInSet.clear();
@@ -95,15 +67,11 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem>,
     public int size() {
         return queue.size();
     }
-
-    @Override
+    public int getItemsProcessed() {
+        return itemsProcessed;
+    }
     public boolean isEmpty() {
         return queue.isEmpty();
-    }
-
-    @Override
-    public boolean contains(Object o) {
-        return queue.contains(o);
     }
 
 }

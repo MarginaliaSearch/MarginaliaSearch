@@ -14,7 +14,7 @@ import nu.marginalia.crawl.fetcher.DomainCookies;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.functions.searchquery.QueryFactory;
-import nu.marginalia.index.IndexGrpcService;
+import nu.marginalia.index.IndexQueryExecution;
 import nu.marginalia.index.ReverseIndexFullFileNames;
 import nu.marginalia.index.ReverseIndexPrioFileNames;
 import nu.marginalia.index.construction.full.FullIndexConstructor;
@@ -25,6 +25,7 @@ import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -89,9 +90,10 @@ public class IntegrationTest {
     @Inject
     StatefulIndex statefulIndex;
     @Inject
-    IndexGrpcService indexGrpcService;
-    @Inject
     DocumentDbReader documentDbReader;
+
+    @Inject
+    IndexResultRankingService rankingService;
 
     @Inject
     QueryFactory queryFactory;
@@ -222,7 +224,7 @@ public class IntegrationTest {
 
         System.out.println(indexRequest);
 
-        var rs = indexGrpcService.executeSearch(new SearchParameters(indexRequest, new SearchSetAny()));
+        var rs = new IndexQueryExecution(new SearchParameters(indexRequest, new SearchSetAny()), rankingService, statefulIndex.get());
 
         System.out.println(rs);
     }

@@ -14,11 +14,11 @@ import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
+import nu.marginalia.index.ResultPriorityQueue;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.ResultRankingContext;
-import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.PhraseConstraintGroupList;
 import nu.marginalia.index.results.model.QuerySearchTerms;
@@ -33,7 +33,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.foreign.Arena;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class IndexResultRankingService {
@@ -130,19 +133,20 @@ public class IndexResultRankingService {
     }
 
 
-    public List<RpcDecoratedResultItem> selectBestResults(SearchParameters params,
+    public List<RpcDecoratedResultItem> selectBestResults(int limitByDomain,
+                                                          int limitTotal,
                                                           ResultRankingContext resultRankingContext,
-                                                          Collection<SearchResultItem> results) throws SQLException {
+                                                          ResultPriorityQueue results) throws SQLException {
 
-        var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
+        var domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
 
         List<SearchResultItem> resultsList = new ArrayList<>(results.size());
-        TLongList idsList = new TLongArrayList(params.limitTotal);
+        TLongList idsList = new TLongArrayList(limitTotal);
 
         for (var item : results) {
             if (domainCountFilter.test(item)) {
 
-                if (resultsList.size() < params.limitTotal) {
+                if (resultsList.size() < limitTotal) {
                     resultsList.add(item);
                     idsList.add(item.getDocumentId());
                 }
@@ -160,7 +164,7 @@ public class IndexResultRankingService {
         // for the selected results, as this would be comically expensive to do for all the results we
         // discard along the way
 
-        if (params.rankingParams.getExportDebugData()) {
+        if (resultRankingContext.params.getExportDebugData()) {
             var combinedIdsList = new LongArrayList(resultsList.size());
             for (var item : resultsList) {
                 combinedIdsList.add(item.combinedId);
@@ -247,7 +251,7 @@ public class IndexResultRankingService {
 
                 var termOutputs = RpcResultTermRankingOutputs.newBuilder();
 
-                CqDataLong termIds = params.compiledQueryIds.data;;
+                CqDataLong termIds = resultRankingContext.compiledQueryIds.data;
 
                 for (var entry : debugFactors.getTermFactors()) {
                     String term = "[ERROR IN LOOKUP]";
@@ -255,7 +259,7 @@ public class IndexResultRankingService {
                     // CURSED: This is a linear search, but the number of terms is small, and it's in a debug path
                     for (int i = 0; i < termIds.size(); i++) {
                         if (termIds.get(i) == entry.termId()) {
-                            term = params.compiledQuery.at(i);
+                            term = resultRankingContext.compiledQuery.at(i);
                             break;
                         }
                     }
