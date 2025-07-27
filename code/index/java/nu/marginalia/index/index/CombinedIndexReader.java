@@ -205,11 +205,7 @@ public class CombinedIndexReader {
         return forwardIndexReader.getDocumentSize(docId);
     }
 
-    /** Retrieves the document spans for the specified document */
-    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
-        return forwardIndexReader.getDocumentSpans(arena, docId);
-    }
-
+    /** Retrieves the document spans for the specified documents */
     public DocumentSpans[] getDocumentSpans(Arena arena, CombinedDocIdList docIds) {
         long[] decodedIDs = docIds.array();
         for (int i = 0; i < decodedIDs.length; i++) {
@@ -221,7 +217,7 @@ public class CombinedIndexReader {
 
     /** Close the indexes (this is not done immediately)
      * */
-    public void close() throws InterruptedException {
+    public void close() {
        /* Delay the invocation of close method to allow for a clean shutdown of the service.
         *
         * This is especially important when using Unsafe-based LongArrays, since we have
@@ -236,7 +232,7 @@ public class CombinedIndexReader {
     }
 
 
-    private void delayedCall(Runnable call, Duration delay) throws InterruptedException {
+    private void delayedCall(Runnable call, Duration delay) {
         Thread.ofPlatform().start(() -> {
             try {
                 TimeUnit.SECONDS.sleep(delay.toSeconds());
