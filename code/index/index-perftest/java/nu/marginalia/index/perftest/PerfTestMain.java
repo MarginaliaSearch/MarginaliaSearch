@@ -20,6 +20,7 @@ import nu.marginalia.index.model.SearchParameters;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.query.IndexQuery;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.DomainRankingOverrides;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
@@ -162,10 +163,10 @@ public class PerfTestMain {
         int sum = 0;
 
         Instant runEndTime = Instant.now().plus(warmupTime);
-
         int iter;
+        IndexSearchBudget budget = new IndexSearchBudget(10000);
         for (iter = 0;; iter++) {
-            sum += rankingService.rankResults(rankingContext, docIds, false).size();
+            sum += rankingService.rankResults(rankingContext, budget, docIds, false).size();
             if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
                 break;
             }
@@ -178,7 +179,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(rankingContext, docIds, false).size();
+            sum2 += rankingService.rankResults(rankingContext, budget, docIds, false).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 
