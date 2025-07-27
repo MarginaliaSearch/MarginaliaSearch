@@ -200,14 +200,16 @@ public class SearchOperator {
             }
         }
         else if (topdomain.equals("medium.com")) {
-            if (!subdomain.isBlank()) {
-                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
+            int slashIndex = path.indexOf("/", 1);
+            if (slashIndex >= 0) {
+                if (!subdomain.isBlank()) {
+                    return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
+                }
+                else {
+                    String article = path.substring(slashIndex);
+                    return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
+                }
             }
-            else {
-                String article = path.substring(path.indexOf("/", 1));
-                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
-            }
-
         }
         return url;
     }

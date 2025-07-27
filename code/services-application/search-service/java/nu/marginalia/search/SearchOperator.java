@@ -231,12 +231,12 @@ public class SearchOperator {
             }
         }
         else if (topdomain.equals("medium.com")) {
-            if (!subdomain.isBlank()) {
-                return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
-            }
-            else {
-                int slashIndex = path.indexOf("/", 1);
-                if (slashIndex >= 0) {
+            int slashIndex = path.indexOf("/", 1);
+            if (slashIndex >= 0) {
+                if (!subdomain.isBlank()) {
+                    return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, path, null);
+                }
+                else {
                     String article = path.substring(slashIndex);
                     return new EdgeUrl("https", new EdgeDomain("scribe.rip"), null, article, null);
                 }
