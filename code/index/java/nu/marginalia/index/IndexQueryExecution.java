@@ -94,7 +94,7 @@ public class IndexQueryExecution {
                     // Hold off on spawning new evaluation jobs if we have too many queued
                     // to avoid backpressure.  It's unlikely evaluation is slower than lookup,
                     // but it can not be ruled out
-                    while (evaluationJobCounter > indexValuationThreads * 4 && budget.hasTimeLeft()) {
+                    while (evaluationJobCounter > indexValuationThreads * 128 && budget.hasTimeLeft()) {
                         IndexQueryExecution.this.wait(budget.timeLeft());
                     }
                     if (!budget.hasTimeLeft()) break;
