@@ -36,8 +36,9 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem> {
     }
 
     public boolean add(SearchResultItem item) {
+        itemsProcessed++;
+
         if (idsInSet.add(item.getDocumentId())) {
-            itemsProcessed++;
             queue.add(item);
             return true;
         }
@@ -48,10 +49,10 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem> {
      * This is a thread-safe operation.
      */
     public synchronized boolean addAll(@NotNull Collection<? extends SearchResultItem> items) {
+        itemsProcessed+=items.size();
 
         for (var item : items) {
             if (idsInSet.add(item.getDocumentId())) {
-                itemsProcessed++;
                 queue.add(item);
             }
         }
