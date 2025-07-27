@@ -1,9 +1,10 @@
 package nu.marginalia.index.forward;
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.forward.spans.DocumentSpans;
-import nu.marginalia.index.forward.spans.ForwardIndexSpansReader;
+import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,16 +23,15 @@ import static nu.marginalia.index.forward.ForwardIndexParameters.*;
  * and a mapping between document identifiers to the index into the
  * data array.
  * <p/>
- * Since the total data is relatively small, this is kept in memory to
- * reduce the amount of disk thrashing.
- * <p/>
  * The metadata is a binary encoding of {@see nu.marginalia.idx.DocumentMetadata}
  */
 public class ForwardIndexReader {
     private final LongArray ids;
     private final LongArray data;
 
-    private final ForwardIndexSpansReader spansReader;
+    private volatile Long2IntOpenHashMap idsMap;
+
+    private final IndexSpansReader spansReader;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -64,7 +64,18 @@ public class ForwardIndexReader {
 
         ids = loadIds(idsFile);
         data = loadData(dataFile);
-        spansReader = new ForwardIndexSpansReader(spansFile);
+
+        spansReader = IndexSpansReader.open(spansFile);
+
+        Thread.ofPlatform().start(this::createIdsMap);
+    }
+
+    private void createIdsMap() {
+        Long2IntOpenHashMap idsMap = new Long2IntOpenHashMap((int) ids.size());
+        for (int i = 0; i < ids.size(); i++) {
+            idsMap.put(ids.get(i), i);
+        }
+        this.idsMap = idsMap;
     }
 
     private static LongArray loadIds(Path idsFile) throws IOException {
@@ -106,6 +117,10 @@ public class ForwardIndexReader {
     private int idxForDoc(long docId) {
         assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
 
+        if (idsMap != null) {
+            return idsMap.getOrDefault(docId, -1);
+        }
+
         long offset = ids.binarySearch(docId, 0, ids.size());
 
         if (offset >= ids.size() || offset < 0 || ids.get(offset) != docId) {
@@ -134,6 +149,27 @@ public class ForwardIndexReader {
     }
 
 
+    public DocumentSpans[] getDocumentSpans(Arena arena, long[] docIds) {
+        long[] offsets = new long[docIds.length];
+        for (int i = 0; i < docIds.length; i++) {
+            long offset = idxForDoc(docIds[i]);
+            if (offset >= 0) {
+                offsets[i] = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
+            }
+            else {
+                offsets[i] = -1;
+            }
+        }
+
+        try {
+            return spansReader.readSpans(arena, offsets);
+        }
+        catch (IOException ex) {
+            logger.error("Failed to read spans for docIds", ex);
+            return new DocumentSpans[docIds.length];
+        }
+    }
+
     public int totalDocCount() {
         return (int) ids.size();
     }
@@ -141,6 +177,8 @@ public class ForwardIndexReader {
     public void close() {
         if (data != null)
             data.close();
+        if (ids != null)
+            ids.close();
     }
 
     public boolean isLoaded() {

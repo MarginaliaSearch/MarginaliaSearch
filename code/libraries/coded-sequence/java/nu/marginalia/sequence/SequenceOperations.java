@@ -56,7 +56,7 @@ public class SequenceOperations {
      * <p></p>
      */
     public static IntList findIntersections(IntList... positions) {
-        return findIntersections(positions, new int[positions.length]);
+        return findIntersections(positions, new int[positions.length], Integer.MAX_VALUE);
     }
 
     /** Find any intersections between the given positions lists, and return the list of intersections.
@@ -67,53 +67,80 @@ public class SequenceOperations {
      * @param positions the positions lists to compare - each list must be sorted in ascending order
      *                  and contain unique values.
      * @param offsets constant offsets to apply to each position
+     * @param n       maximum number of intersections we're interested in.  The algorithm does not guarantee
+     *                the return value will have a smaller size than this if it is cheaper to return back e.g.
+     *                an input list.
      * */
-    public static IntList findIntersections(IntList[] positions, int[] offsets) {
+    public static IntList findIntersections(IntList[] positions, int[] offsets, int n) {
 
-        if (positions.length < 1)
+        // Trivial cases
+        if (positions.length < 1) { // n = 0
             return IntList.of();
+        }
+//        else if (positions.length == 1) { // n = 1
+//            if (offsets[0] == 0) { // with zero offset, we'll just return the input back
+//                return positions[0];
+//            }
+//
+//            // Calculate an offset input array
+//            IntList ret = new IntArrayList(positions[0].size());
+//            for (int i = 0; i < positions[0].size() && i < n; i++) {
+//                ret.add(positions[0].getInt(i) + offsets[0]);
+//            }
+//            return ret;
+//        }
 
         int[] indexes = new int[positions.length];
         // Initialize values and find the maximum value
         int[] values = new int[positions.length];
+        int minLength = Integer.MAX_VALUE;
+        int largestValue = Integer.MAX_VALUE;
 
         for (int i = 0; i < positions.length; i++) {
+            minLength = Math.min(minLength, positions[i].size());
+
             if (indexes[i] < positions[i].size())
                 values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
             else
                 return IntList.of();
+
+            largestValue = Math.min(largestValue, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
         }
 
         // Intersect the sequences by advancing all values smaller than the maximum seen so far
         // until they are equal to the maximum value, or until the end of the sequence is reached
-        int max = Integer.MIN_VALUE;
-        int successes = 0;
+        int currentMax = Integer.MIN_VALUE;
 
-        IntList ret = new IntArrayList();
+        int listMatches = 0;
+        int foundIntersections = 0;
+
+        IntList ret = new IntArrayList(Math.min(n, Math.max(1, minLength)));
 
         outer:
-        for (int i = 0;; i = (i + 1) % positions.length)
+        for (int i = 0; currentMax <= largestValue; i = (i + 1) % positions.length)
         {
-            if (successes == positions.length) {
-                ret.add(max);
-                successes = 1;
+            if (listMatches == positions.length) {
+                ret.add(currentMax);
+                if (++foundIntersections > n) return ret;
+
+                listMatches = 1;
 
                 if (indexes[i] < positions[i].size()) {
                     values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
 
                     // Update the maximum value, if necessary
-                    max = Math.max(max, values[i]);
+                    currentMax = Math.max(currentMax, values[i]);
                 } else {
                     break;
                 }
-            } else if (values[i] == max) {
-                successes++;
+            } else if (values[i] == currentMax) {
+                listMatches++;
             } else {
-                successes = 1;
+                listMatches = 1;
 
                 // Discard values until we reach the maximum value seen so far,
                 // or until the end of the sequence is reached
-                while (values[i] < max) {
+                while (values[i] < currentMax) {
                     if (indexes[i] < positions[i].size()) {
                         values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
                     } else {
@@ -122,13 +149,12 @@ public class SequenceOperations {
                 }
 
                 // Update the maximum value, if necessary
-                max = Math.max(max, values[i]);
+                currentMax = Math.max(currentMax, values[i]);
             }
         }
 
         return ret;
     }
-
 
     /** Given each set of positions, one from each list, find the set with the smallest distance between them
      * and return that distance.  If any of the lists are empty, return 0.
@@ -146,9 +172,13 @@ public class SequenceOperations {
     public static int minDistance(IntList[] positions, int[] offsets) {
         if (positions.length <= 1)
             return 0;
+        if (positions.length == 1)
+            return 0;
 
         int[] values = new int[positions.length];
         int[] indexes = new int[positions.length];
+
+        int largestValue = 0;
 
         for (int i = 0; i < positions.length; i++) {
             // if any of the lists are empty, return MAX_VALUE
@@ -158,6 +188,7 @@ public class SequenceOperations {
             }
 
             values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+            largestValue = Math.min(largestValue, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
         }
 
         int minDist = Integer.MAX_VALUE;
@@ -173,7 +204,7 @@ public class SequenceOperations {
             }
         }
 
-        for (;;) {
+        do {
             // For all the other indexes except maxI, update values[] with the largest value smaller than maxVal
             for (int idx = 0; idx < positions.length - 1; idx++) {
                 int i = (maxI + idx) % positions.length;
@@ -228,6 +259,8 @@ public class SequenceOperations {
             else {
                 return minDist;
             }
-        }
+        } while (maxVal <= largestValue);
+
+        return minDist;
     }
 }

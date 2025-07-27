@@ -35,6 +35,13 @@ public class StatefulIndex {
         this.eventLog = eventLog;
     }
 
+    /** For use in testing only */
+    public StatefulIndex(CombinedIndexReader combinedIndexReader) {
+        this.combinedIndexReader = combinedIndexReader;
+        this.servicesFactory = null;
+        this.eventLog = null;
+    }
+
     public void init() {
         Lock lock = indexReplacementLock.writeLock();
 

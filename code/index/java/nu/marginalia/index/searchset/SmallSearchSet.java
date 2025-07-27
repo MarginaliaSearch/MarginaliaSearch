@@ -14,7 +14,7 @@ public class SmallSearchSet implements SearchSet {
     }
 
     @Override
-    public boolean contains(int domainId, long meta) {
+    public boolean contains(int domainId) {
         return entries.contains(domainId);
     }
 

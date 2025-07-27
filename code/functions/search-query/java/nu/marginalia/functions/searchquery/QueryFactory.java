@@ -34,8 +34,6 @@ public class QueryFactory {
         this.queryExpansion = queryExpansion;
     }
 
-
-
     public ProcessedQuery createQuery(QueryParams params,
                                       @Nullable RpcResultRankingParameters rankingParams) {
         final var query = params.humanQuery();
@@ -153,7 +151,6 @@ public class QueryFactory {
 
         var specsBuilder = SearchSpecification.builder()
                 .query(queryBuilder.build())
-                .humanQuery(query)
                 .quality(qualityLimit)
                 .year(year)
                 .size(size)

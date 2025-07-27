@@ -10,5 +10,5 @@ public class IndexSearchBudget {
     }
 
     public boolean hasTimeLeft() { return System.currentTimeMillis() < timeout; }
-    public long timeLeft() { return timeout - System.currentTimeMillis(); }
+    public long timeLeft() { return Math.max(0, timeout - System.currentTimeMillis()); }
 }
