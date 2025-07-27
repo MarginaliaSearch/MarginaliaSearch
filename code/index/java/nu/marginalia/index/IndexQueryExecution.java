@@ -10,8 +10,6 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -22,10 +20,10 @@ import java.util.concurrent.ForkJoinPool;
 public class IndexQueryExecution {
 
     private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
-    private static final Logger logger = LoggerFactory.getLogger(IndexQueryExecution.class);
 
     private static final ForkJoinPool lookupPool = new ForkJoinPool(indexValuationThreads);
     private static final ForkJoinPool evaluationPool = new ForkJoinPool(indexValuationThreads);
+
     private final IndexResultRankingService rankingService;
 
     private final ResultRankingContext rankingContext;
@@ -78,7 +76,7 @@ public class IndexQueryExecution {
     }
 
     private void lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        final LongQueryBuffer buffer = new LongQueryBuffer(8192);
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
@@ -90,22 +88,28 @@ public class IndexQueryExecution {
 
                 CombinedDocIdList docIds = new CombinedDocIdList(buffer);
 
+                boolean stealWork = false;
                 synchronized (IndexQueryExecution.this) {
                     // Hold off on spawning new evaluation jobs if we have too many queued
-                    // to avoid backpressure.  It's unlikely evaluation is slower than lookup,
-                    // but it can not be ruled out
-                    while (evaluationJobCounter > indexValuationThreads * 128 && budget.hasTimeLeft()) {
-                        IndexQueryExecution.this.wait(budget.timeLeft());
+                    // to avoid backpressure, instead steal work into the lookup thread
+                    // in this scenario
+
+                    if (evaluationJobCounter > indexValuationThreads * 8) {
+                        stealWork = true;
                     }
-                    if (!budget.hasTimeLeft()) break;
-                    evaluationJobCounter++;
+                    else {
+                        evaluationJobCounter++;
+                    }
                 }
 
-                // Spawn an evaluation task
-                evaluationPool.execute(() -> evaluate(docIds));
+                if (stealWork) {
+                    resultHeap.addAll(rankingService.rankResults(rankingContext, docIds, false));
+                }
+                else {
+                    // Spawn an evaluation task
+                    evaluationPool.execute(() -> evaluate(docIds));
+                }
             }
-        } catch (InterruptedException ex) {
-            logger.warn("Lookup interrupted", ex);
         } finally {
             buffer.dispose();
             executionCountdown.countDown();
@@ -119,12 +123,9 @@ public class IndexQueryExecution {
             resultHeap.addAll(rankingService.rankResults(rankingContext, docIds, false));
         } finally {
             synchronized (IndexQueryExecution.this) {
-                --evaluationJobCounter;
-
-                // This rouses both any lookup tasks waiting on backpressure to clear up,
-                // but also the main loop which waits for all evaluation tasks to finalize
-
-                IndexQueryExecution.this.notifyAll();
+                if (--evaluationJobCounter == 0) {
+                    IndexQueryExecution.this.notifyAll();
+                }
             }
         }
     }
