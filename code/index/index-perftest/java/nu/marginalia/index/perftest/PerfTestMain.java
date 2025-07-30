@@ -141,19 +141,19 @@ public class PerfTestMain {
         List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
 
         TLongArrayList allResults = new TLongArrayList();
-        LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
 
         for (var query : queries) {
-            while (query.hasMore() && allResults.size() < 4096 ) {
+            while (query.hasMore() && allResults.size() < 512 ) {
                 query.getMoreResults(buffer);
                 allResults.addAll(buffer.copyData());
             }
-            if (allResults.size() >= 4096)
+            if (allResults.size() >= 512)
                 break;
         }
         allResults.sort();
-        if (allResults.size() > 4096) {
-            allResults.subList(4096,  allResults.size()).clear();
+        if (allResults.size() > 512) {
+            allResults.subList(512,  allResults.size()).clear();
         }
 
         var docIds = new CombinedDocIdList(allResults.toArray());
@@ -187,11 +187,11 @@ public class PerfTestMain {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
-                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }
         }
         System.out.println("Benchmark complete after " + iter + " iters!");
-        System.out.println("Best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+        System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
         System.out.println(docIds.size());
@@ -280,7 +280,7 @@ public class PerfTestMain {
 
         Instant runEndTime = Instant.now().plus(warmupTime);
 
-        LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
         int sum1 = 0;
         int iter;
         for (iter = 0;; iter++) {
