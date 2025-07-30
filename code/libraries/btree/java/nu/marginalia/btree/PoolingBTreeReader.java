@@ -99,20 +99,23 @@ public class PoolingBTreeReader {
 
     /** Keeps all items in buffer that exist in the btree */
     public void retainEntries(LongQueryBuffer buffer) {
+        if (buffer.hasMore())
+            return;
+
         BTreePointer pointer = new BTreePointer(header);
         if (header.layers() == 0) {
-            while (buffer.hasMore()) {
+            do {
                 pointer.retainData(buffer);
-            }
+            } while (buffer.hasMore());
         }
-        else while (buffer.hasMore()) {
+        else do {
             long val = buffer.currentValue();
 
             pointer.walkToData(val);
             pointer.retainData(buffer);
 
             pointer.resetToRoot();
-        }
+        } while (buffer.hasMore());
     }
 
     /** Removes all items in buffer that exist in the btree */
@@ -277,6 +280,12 @@ public class PoolingBTreeReader {
                 remainingBlock = (long) ctx.pageSize() * ctx.entrySize;
             }
 
+            if (0 == remainingBlock) {
+                while (buffer.hasMore()) {
+                    buffer.rejectAndAdvance();
+                }
+            }
+
             long key = buffer.currentValue();
 
             try (var page = dataPool.get(8 * ((dataStartOffset + searchStart) & -ctx.pageSize()),
@@ -318,6 +327,13 @@ public class PoolingBTreeReader {
             }
 
             long key = buffer.currentValue();
+
+            if (0 == remainingBlock) {
+                while (buffer.hasMore()) {
+                    buffer.retainAndAdvance();
+                }
+            }
+
 
             try (var page = dataPool.get(8 * ((dataStartOffset + searchStart) & -ctx.pageSize()),
                     BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE))
