@@ -99,7 +99,7 @@ public class PoolingBTreeReader {
 
     /** Keeps all items in buffer that exist in the btree */
     public void retainEntries(LongQueryBuffer buffer) {
-        if (buffer.hasMore())
+        if (!buffer.hasMore())
             return;
 
         BTreePointer pointer = new BTreePointer(header);
@@ -120,20 +120,24 @@ public class PoolingBTreeReader {
 
     /** Removes all items in buffer that exist in the btree */
     public void rejectEntries(LongQueryBuffer buffer) {
+        if (!buffer.hasMore())
+            return;
+
+
         BTreePointer pointer = new BTreePointer(header);
         if (header.layers() == 0) {
-            while (buffer.hasMore()) {
+            do {
                 pointer.rejectData(buffer);
-            }
+            } while (buffer.hasMore());
         }
-        else while (buffer.hasMore()) {
+        else do {
             long val = buffer.currentValue();
 
             pointer.walkToData(val);
             pointer.rejectData(buffer);
 
             pointer.resetToRoot();
-        }
+        } while (buffer.hasMore());
     }
 
     @CheckReturnValue
@@ -203,7 +207,7 @@ public class PoolingBTreeReader {
 
                 long blockEnd = min(ctx.pageSize(), remainingTotal) + dataStartOffset % ctx.pageSize();
 
-                try (var page = indexPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.NONE)) {
+                try (var page = dataPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.NONE)) {
                     maxValueInBlock = page.get(blockEnd - ctx.entrySize);
                 }
             }
@@ -222,7 +226,7 @@ public class PoolingBTreeReader {
 
             long blockEnd =  min(ctx.pageSize(), remainingTotal);
 
-            try (var page = indexPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
+            try (var page = dataPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
                 maxValueInBlock = page.get(blockEnd - ctx.entrySize);
             }
 
