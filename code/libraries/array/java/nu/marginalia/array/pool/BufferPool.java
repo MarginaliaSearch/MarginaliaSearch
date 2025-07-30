@@ -44,17 +44,14 @@ public class BufferPool implements AutoCloseable {
 
         Thread.ofPlatform().start(() -> {
             while (running) {
-
-                logger.info("[{}] Disk read count: {}", pageSizeBytes, diskReadCount.get());
-                logger.info("[{}] Cached read count: {}", pageSizeBytes, cacheReadCount.get());
-                logger.info("[{}] Readahead fetch count: {}", pageSizeBytes, readaheadFetchCount.get());
-
                 try {
                     TimeUnit.SECONDS.sleep(30);
                 } catch (InterruptedException e) {
                     logger.info("Sleep interrupted", e);
                     break;
                 }
+
+                logger.info("[{}] Disk read: {}, Cached read: {}, Readahead Fetch: {}", pageSizeBytes, diskReadCount.get(), cacheReadCount.get(), readaheadFetchCount.get());
             }
         });
 
