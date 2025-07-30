@@ -60,7 +60,7 @@ public class BufferPool implements AutoCloseable {
                 int readaheadFetch = readaheadFetchCount.get();
 
                 if (diskRead != diskReadOld || cacheRead != cacheReadOld ||  readaheadFetch != readaheadFetchOld) {
-                    logger.info("[{}:{}] Disk read: {}, Cached read: {}, Readahead Fetch: {}", hashCode(), pageSizeBytes, diskRead, cacheRead, readaheadFetch);
+                    logger.info("[#{}:{}] Disk read: {}, Cached read: {}, Readahead Fetch: {}", hashCode(), pageSizeBytes, diskRead, cacheRead, readaheadFetch);
                 }
             }
         });

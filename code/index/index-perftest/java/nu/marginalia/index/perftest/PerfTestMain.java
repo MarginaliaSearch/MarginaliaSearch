@@ -159,7 +159,7 @@ public class PerfTestMain {
         var docIds = new CombinedDocIdList(allResults.toArray());
         var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
 
-        System.out.println("Running warmup loop!");
+        System.out.println("Running warmup loop, evaluating " + allResults.size() + " results");
         int sum = 0;
 
         Instant runEndTime = Instant.now().plus(warmupTime);
