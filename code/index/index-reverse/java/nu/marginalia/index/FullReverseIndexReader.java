@@ -22,6 +22,7 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FullReverseIndexReader {
     private final LongArray words;
@@ -33,8 +34,11 @@ public class FullReverseIndexReader {
 
     private final PositionsFileReader positionsFileReader;
 
-    private final BufferPool indexPool;
-    private final BufferPool dataPool;
+    private final BufferPool[] indexPools;
+    private final BufferPool[] dataPools;
+
+    private final long[] poolOffsets;
+    private final AtomicInteger poolIdx = new AtomicInteger();
 
     public FullReverseIndexReader(String name,
                                   Path words,
@@ -49,8 +53,9 @@ public class FullReverseIndexReader {
             this.documents = null;
             this.wordsBTreeReader = null;
             this.wordsDataOffset = -1;
-            this.dataPool = null;
-            this.indexPool = null;
+            this.dataPools = null;
+            this.indexPools = null;
+            this.poolOffsets = null;
             return;
         }
 
@@ -59,8 +64,15 @@ public class FullReverseIndexReader {
         this.words = LongArrayFactory.mmapForReadingShared(words);
         this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
-        indexPool = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize(), 64);
-        dataPool = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize() * ReverseIndexParameters.wordsBTreeContext.entrySize, 64);
+        indexPools = new BufferPool[64];
+        dataPools = new BufferPool[64];
+        poolOffsets = new long[64];
+
+        for (int i = 0; i < 64; i++) {
+            indexPools[i] = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize(), 32);
+            dataPools[i] = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize() * ReverseIndexParameters.wordsBTreeContext.entrySize, 32);
+        }
+
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
 
@@ -145,9 +157,21 @@ public class FullReverseIndexReader {
 
     /** Create a BTreeReader for the document offset associated with a termId */
     private PoolingBTreeReader getReader(long offset) {
+        int idx = -1;
+        for (int i = 0; i < indexPools.length; i++) {
+            if (poolOffsets[i] == offset) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx < 0) {
+            idx = poolIdx.incrementAndGet() % poolOffsets.length;
+            poolOffsets[idx] = offset;
+        }
+
         return new PoolingBTreeReader(
-                indexPool,
-                dataPool,
+                indexPools[idx],
+                dataPools[idx],
                 ReverseIndexParameters.fullDocsBTreeContext,
                 offset);
     }
@@ -177,11 +201,16 @@ public class FullReverseIndexReader {
     public void close() {
 
         try {
-            if (indexPool != null) {
-                indexPool.close();
+
+            if (indexPools != null) {
+                for (var pool : indexPools) {
+                    pool.close();
+                }
             }
-            if (dataPool != null) {
-                dataPool.close();
+            if (dataPools != null) {
+                for (var pool : dataPools) {
+                    pool.close();
+                }
             }
         }
         catch (Exception e) {

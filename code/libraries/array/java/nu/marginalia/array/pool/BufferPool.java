@@ -66,7 +66,9 @@ public class BufferPool implements AutoCloseable {
         NativeAlgos.closeFd(fd);
         arena.close();
 
-        logger.info("Disk read: {}, Cached read: {}, Readahead Fetch: {}", diskReadCount.get(), cacheReadCount.get(), readaheadFetchCount.get());
+        System.out.println("Disk read count: " + diskReadCount.get());
+        System.out.println("Cached read count: " + cacheReadCount.get());
+        System.out.println("Readahead fetch count: " + readaheadFetchCount.get());
     }
 
     public void readaheadThread() {
@@ -149,7 +151,6 @@ public class BufferPool implements AutoCloseable {
     }
 
     public UnsafeLongArrayBuffer get(long address, BufferEvictionPolicy eviction, BufferReadaheadPolicy readahead) {
-
         // Look through available pages for the one we're looking for
         UnsafeLongArrayBuffer buffer = getExistingBufferForReading(address);
 
