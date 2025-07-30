@@ -1,14 +1,14 @@
 package nu.marginalia.index;
 
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.btree.BTreeReader;
+import nu.marginalia.btree.PoolingBTreeReader;
 import nu.marginalia.index.query.EntrySource;
 
 import static java.lang.Math.min;
 
 public class FullIndexEntrySource implements EntrySource {
     private final String name;
-    private final BTreeReader reader;
+    private final PoolingBTreeReader reader;
 
     int pos;
     int endOffset;
@@ -17,7 +17,7 @@ public class FullIndexEntrySource implements EntrySource {
     private final long wordId;
 
     public FullIndexEntrySource(String name,
-                                BTreeReader reader,
+                                PoolingBTreeReader reader,
                                 int entrySize,
                                 long wordId) {
         this.name = name;
@@ -38,8 +38,7 @@ public class FullIndexEntrySource implements EntrySource {
     public void read(LongQueryBuffer buffer) {
         buffer.reset();
         buffer.end = min(buffer.end, endOffset - pos);
-        reader.readData(buffer.data, buffer.end, pos);
-        pos += buffer.end;
+        pos += reader.readData(buffer.data, buffer.end, pos);
 
         destagger(buffer);
         buffer.uniq();

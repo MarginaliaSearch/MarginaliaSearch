@@ -5,7 +5,7 @@ public enum BTreeBlockSize {
     BS_32(2),
     BS_64(3),
     BS_128(4),
-    BS_245(5),
+    BS_256(5),
     BS_512(6),
     BS_1024(7),
     BS_2048(8),

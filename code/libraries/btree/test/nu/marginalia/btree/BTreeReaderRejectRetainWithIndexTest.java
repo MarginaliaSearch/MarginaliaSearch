@@ -1,6 +1,7 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeBlockSize;
 import nu.marginalia.btree.model.BTreeContext;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -40,6 +42,41 @@ public class BTreeReaderRejectRetainWithIndexTest {
         long[] primeOdds = odds.copyData();
         long[] first100OddPrimes = new long[] { 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 };
         assertArrayEquals(first100OddPrimes, primeOdds);
+    }
+
+    @Test
+    public void testRetainLargeTreeKV() throws Exception {
+        BTreeContext ctxKV = new BTreeContext(4, 2, BTreeBlockSize.BS_512);
+
+        try (var array = LongArrayFactory.onHeapShared(65536)) {
+            BTreeWriter btw = new BTreeWriter(array, ctxKV);
+            btw.write(64, 1024, slice -> {
+                for (int i = 0; i < 1024; i++) {
+                    slice.set(2 * i, 3 * i);
+                    slice.set(2 * i + 1, -3 * i);
+                }
+            });
+
+            long[] filterData = new long[600];
+            for (int i = 0; i < 600; i++) {
+                filterData[i] = 30 + i;
+            }
+
+            LongQueryBuffer lqb = new LongQueryBuffer(filterData, 600);
+            var reader = new BTreeReader(array, ctxKV, 64);
+
+            reader.retainEntries(lqb);
+            lqb.finalizeFiltering();
+            long[] expected = new long[200];
+            for (int i = 0; i < 200; i++) {
+                expected[i] = 30 + 3 * i;
+            }
+            System.out.println(Arrays.toString(expected));
+            System.out.println(Arrays.toString(lqb.copyData()));
+            assertArrayEquals(expected, lqb.copyData());
+
+        }
+
     }
 
     @Test

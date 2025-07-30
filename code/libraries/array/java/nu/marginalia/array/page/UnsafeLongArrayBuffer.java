@@ -1,20 +1,19 @@
 package nu.marginalia.array.page;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.algo.LongArrayBuffer;
+import nu.marginalia.array.pool.BufferEvictionPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
@@ -22,69 +21,148 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
  * */
 
 @SuppressWarnings("preview")
-public class UnsafeLongArray implements LongArray {
+public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
     private static final Unsafe unsafe = UnsafeProvider.getUnsafe();
     private static final Logger logger = LoggerFactory.getLogger(UnsafeLongArray.class);
-
-    @Nullable
-    private final Arena arena;
-    @Nullable
-    private final FileChannel channel;
+    private static final AtomicLong accessOrderCtr = new AtomicLong();
 
     private final MemorySegment segment;
-    private boolean closed;
 
-    UnsafeLongArray(MemorySegment segment,
-                    @Nullable Arena arena) {
+    private volatile long pageAddress = -1;
+    private volatile boolean dirty = false;
+    private BufferEvictionPolicy evictionPolicy;
+
+    private volatile long accessOrder = -1;
+
+    /** Pin count is used as a read-write condition.
+     * <p></p>
+     * When the pin count is 0, the page is free.
+     * When it is -1, it is held for writing.
+     * When it is greater than 0, it is held for reading.
+     */
+    private final AtomicInteger pinCount = new AtomicInteger(0);
+
+    public UnsafeLongArrayBuffer(MemorySegment segment) {
         this.segment = segment;
-        this.arena = arena;
-        this.channel = null;
     }
 
-    UnsafeLongArray(MemorySegment segment,
-                    @Nonnull FileChannel channel,
-                    @Nullable Arena arena) {
-        this.segment = segment;
-        this.arena = arena;
-        this.channel = channel;
+    @Override
+    public long pageAddress() {
+        return pageAddress;
     }
 
-    public static UnsafeLongArray wrap(MemorySegment ms) {
-        return new UnsafeLongArray(ms, null);
+    @Override
+    public void pageAddress(long address) {
+        this.pageAddress = address;
     }
 
-    public static UnsafeLongArray onHeap(Arena arena, long size) {
-        return new UnsafeLongArray(arena.allocate(WORD_SIZE*size, 16), arena);
+    @Override
+    public AtomicInteger pinCount() {
+        return pinCount;
     }
 
-    public static UnsafeLongArray fromMmapReadOnly(Arena arena, Path file, long offset, long size) throws IOException {
-        try (var channel = (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ)) {
-            return new UnsafeLongArray(channel.map(FileChannel.MapMode.READ_ONLY,
-                    JAVA_LONG.byteSize() * offset, JAVA_LONG.byteSize() * size,
-                    arena), arena);
+    @Override
+    public boolean dirty() {
+        return dirty;
+    }
+
+    @Override
+    public void dirty(boolean val) {
+        this.dirty = val;
+    }
+
+    @Override
+    public BufferEvictionPolicy evictionPolicy() {
+        return evictionPolicy;
+    }
+
+    @Override
+    public void evictionPolicy(BufferEvictionPolicy evictionPolicy) {
+        this.evictionPolicy = evictionPolicy;
+    }
+
+    @Override
+    public boolean isHeld() {
+        return pinCount.get() != 0;
+    }
+
+    @Override
+    public boolean acquireForWriting(long intendedAddress) {
+        if (pinCount.compareAndSet(0, -1)) {
+            pageAddress = intendedAddress;
+            dirty = true;
+            accessOrder = -1;
+            return true;
         }
-        catch (IOException ex) {
-            throw new IOException("Failed to map file " + file + " (" + offset + ":" + size + ")", ex);
-        }
+
+        return false;
     }
 
-    public static UnsafeLongArray fromMmapReadWrite(Arena arena, Path file, long offset, long size) throws IOException {
-        var channel = (FileChannel) Files.newByteChannel(file,
-                StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-        var segment = channel.map(FileChannel.MapMode.READ_WRITE,
-                JAVA_LONG.byteSize() * offset, JAVA_LONG.byteSize() * size,
-                arena);
+    @Override
+    public boolean acquireAsReader(long expectedAddress) {
+        int pinCountVal;
 
-        return new UnsafeLongArray(segment, channel, arena);
+        while ((pinCountVal = pinCount.get()) >= 0) {
+            if (pinCount.compareAndSet(pinCountVal, pinCountVal + 1)) {
+                if (pageAddress != expectedAddress) {
+                    pinCount.decrementAndGet();
+                    return false;
+                }
+                accessOrder = accessOrderCtr.getAndIncrement();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public long accessOrder() {
+        return accessOrder;
+    }
+
+    public void access() {
+        accessOrder = accessOrderCtr.getAndIncrement();
+    }
+
+    /** Close yields the buffer back to the pool (unless held by multiple readers), but does not deallocate it */
+    @Override
+    public void close() {
+        if (evictionPolicy == BufferEvictionPolicy.CACHE) {
+            pinCount.decrementAndGet();
+        }
+        else if (evictionPolicy == BufferEvictionPolicy.READ_ONCE) {
+            for (;;) {
+                int pinCountVal = pinCount.get();
+
+                // If we have multiple readers
+                if (pinCountVal > 1) {
+                    if (pinCount.compareAndSet(pinCountVal, pinCountVal - 1)) {
+                        return;
+                    }
+                }
+                // When pin count = 1, decrementing it would make it a free page
+                // with the READ_ONCE policy, we should acquire a brief write lock
+                // during this phase and nuke the address, so that this buffer becomes
+                // immediately available for reuse
+                else if (pinCountVal == 1) {
+                    if (pinCount.compareAndSet(1, -2)) {
+                        pageAddress = -1;
+                        accessOrder = -1;
+                        if (!pinCount.compareAndSet(-2, 0)) {
+                            throw new IllegalStateException();
+                        }
+                        break;
+                    }
+                }
+                else throw new IllegalStateException("close() on LongArrayBuffer that is not held for writing");
+            }
+        }
     }
 
     @Override
     public LongArray range(long start, long end) {
-
-        assert end >= start : end + "<" + start;
-        assert end <= size() : end + "<" + size();
-
         return new UnsafeLongArray(
             segment.asSlice(
                 start * JAVA_LONG.byteSize(),
@@ -101,6 +179,9 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public long get(long at) {
+        assert at <= size() : at + " > " + size();
+        if (at > size())
+            throw new RuntimeException(at + ">" + size());
         try {
             return unsafe.getLong(segment.address() + at * JAVA_LONG.byteSize());
         }
@@ -134,93 +215,18 @@ public class UnsafeLongArray implements LongArray {
     }
 
     @Override
-    public synchronized void close() {
-        if (arena != null && !closed) {
-            arena.close();
-        }
-        if (channel != null && !closed) {
-            try {
-                channel.close();
-            }
-            catch (IOException ex) {
-                throw new RuntimeException("Failed to close channel", ex);
-            }
-        }
-
-        closed = true;
-    }
-
-    @Override
     public long size() {
         return segment.byteSize() / JAVA_LONG.byteSize();
     }
 
     @Override
     public void write(Path filename) throws IOException {
-        try (var arena = Arena.ofConfined()) {
-            var destSegment = UnsafeLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize() / JAVA_LONG.byteSize());
-
-            destSegment.segment.copyFrom(segment);
-            destSegment.force();
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void force() {
-        if (segment.isMapped()) {
-            segment.force();
-            try {
-                if (channel != null) {
-                    channel.force(false);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to force channel", e);
-            }
-        }
-    }
-
-    public void chanelChannelTransfer(FileChannel source,
-                                      long sourceStartL,
-                                      long arrayStartL,
-                                      long arrayEndL) throws IOException {
-
-        assert channel != null;
-
-        final int B_per_L = (int) JAVA_LONG.byteSize();
-
-        final int strideB = 128*1024*1024; // Copy in 128 MB chunks
-
-        final long destStartB = arrayStartL * B_per_L;
-        final long destEndB = arrayEndL * B_per_L;
-        final long lengthB = destEndB - destStartB;
-
-        final long sourceStartB = sourceStartL * B_per_L;
-        final long sourceEndB = sourceStartB + lengthB;
-
-
-        if (sourceStartB > sourceEndB)
-            throw new IndexOutOfBoundsException("Source start after end");
-        if (sourceStartB > source.size())
-            throw new IndexOutOfBoundsException("Source channel too small, start " + sourceStartB + " < input size " + source.size());
-        if (sourceEndB > source.size())
-            throw new IndexOutOfBoundsException("Source channel too small, end " + sourceEndB + " < input size " + source.size());
-
-        long destIndexB = destStartB;
-
-        source.position(sourceStartB);
-
-        while (destIndexB < destEndB)
-        {
-            long stepSizeB = Math.min(destIndexB + strideB, destEndB);
-            long copyLengthB = (stepSizeB - destIndexB);
-
-            long transferred = channel.transferFrom(source, destIndexB, copyLengthB);
-            if (transferred != copyLengthB) {
-                logger.warn("Less than {} bytes were copied: {}", copyLengthB, transferred);
-            }
-
-            destIndexB += copyLengthB;
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -228,13 +234,6 @@ public class UnsafeLongArray implements LongArray {
                              long sourceStartL,
                              long arrayStartL,
                              long arrayEndL) throws IOException {
-
-
-        if (channel != null) {
-            chanelChannelTransfer(source, sourceStartL, arrayStartL, arrayEndL);
-            return;
-        }
-
         final int B_per_L = (int) JAVA_LONG.byteSize();
 
         final int strideB = 1024*1024*1024; // Copy 1 GB at a time

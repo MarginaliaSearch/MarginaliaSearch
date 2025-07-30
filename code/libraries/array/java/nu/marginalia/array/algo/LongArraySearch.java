@@ -33,6 +33,7 @@ public interface LongArraySearch extends LongArrayBase {
             len = half;
         }
 
+
         return fromIndex + sz * low;
     }
 

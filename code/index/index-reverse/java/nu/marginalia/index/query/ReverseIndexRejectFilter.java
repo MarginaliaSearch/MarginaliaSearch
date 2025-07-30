@@ -1,10 +1,10 @@
 package nu.marginalia.index.query;
 
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.btree.BTreeReader;
+import nu.marginalia.btree.PoolingBTreeReader;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 
-public record ReverseIndexRejectFilter(BTreeReader range) implements QueryFilterStepIf {
+public record ReverseIndexRejectFilter(PoolingBTreeReader range) implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {

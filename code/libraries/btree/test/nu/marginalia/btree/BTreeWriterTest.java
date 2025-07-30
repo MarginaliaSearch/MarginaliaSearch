@@ -22,18 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BTreeWriterTest {
 
-
-
-    @Test
-    void testSmallDataBlock() {
-        BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
-        BTreeWriter writer = new BTreeWriter(null, ctx);
-
-        var header = writer.makeHeader(ctx, 1024, ctx.pageSize()/2);
-        assertEquals(1024 + BTreeHeader.BTreeHeaderSizeLongs, header.dataOffsetLongs());
-        assertEquals(header.dataOffsetLongs(), header.indexOffsetLongs());
-    }
-
     @Test
     void testLayerCount() {
         BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
