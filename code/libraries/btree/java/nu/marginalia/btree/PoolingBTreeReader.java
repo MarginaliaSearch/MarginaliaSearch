@@ -37,7 +37,7 @@ public class PoolingBTreeReader {
         this.indexPool = indexPool;
         this.dataPool = dataPool;
 
-        try (LongArray rootPage = indexPool.get(offset * 8, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.NONE)) {
+        try (LongArray rootPage = indexPool.get(offset * 8, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
             this.header = new BTreeHeader(rootPage, 0);
         }
         if (header.numEntries() == 0) {
