@@ -280,7 +280,7 @@ public class PoolingBTreeReader {
             long key = buffer.currentValue();
 
             try (var page = dataPool.get(8 * ((dataStartOffset + searchStart) & -ctx.pageSize()),
-                    BufferEvictionPolicy.READ_ONCE, BufferReadaheadPolicy.AGGRESSIVE))
+                    BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE))
             {
                 long blockOffset = searchStart % ctx.pageSize();
                 long valueLocation = page.binarySearchN(ctx.entrySize, key, blockOffset, blockOffset + min(remainingTotal, remainingBlock));
@@ -320,7 +320,7 @@ public class PoolingBTreeReader {
             long key = buffer.currentValue();
 
             try (var page = dataPool.get(8 * ((dataStartOffset + searchStart) & -ctx.pageSize()),
-                    BufferEvictionPolicy.READ_ONCE, BufferReadaheadPolicy.AGGRESSIVE))
+                    BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE))
             {
                 long blockOffset = searchStart % ctx.pageSize();
 
