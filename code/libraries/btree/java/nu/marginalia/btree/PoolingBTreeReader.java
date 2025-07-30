@@ -219,7 +219,7 @@ public class PoolingBTreeReader {
 
             long blockEnd =  min(ctx.pageSize(), remainingTotal);
 
-            try (var page = indexPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.NONE)) {
+            try (var page = indexPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
                 maxValueInBlock = page.get(blockEnd - ctx.entrySize);
             }
 
@@ -320,7 +320,7 @@ public class PoolingBTreeReader {
             long key = buffer.currentValue();
 
             try (var page = dataPool.get(8 * ((dataStartOffset + searchStart) & -ctx.pageSize()),
-                    BufferEvictionPolicy.READ_ONCE, BufferReadaheadPolicy.SMALL))
+                    BufferEvictionPolicy.READ_ONCE, BufferReadaheadPolicy.AGGRESSIVE))
             {
                 long blockOffset = searchStart % ctx.pageSize();
 
