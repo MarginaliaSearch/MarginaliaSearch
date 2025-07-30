@@ -40,6 +40,9 @@ public class PoolingBTreeReader {
         try (LongArray rootPage = indexPool.get(offset * 8, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.NONE)) {
             this.header = new BTreeHeader(rootPage, 0);
         }
+        if (header.numEntries() == 0) {
+            throw new IllegalStateException("Num entries can not be 0, likely pointing to a zeroed memory area");
+        }
 
         dataBlockEnd = (long) ctx.entrySize * header.numEntries();
 
@@ -77,12 +80,7 @@ public class PoolingBTreeReader {
 
         if (header.layers() == 0) {
             pointer.walkToData(keys[0]);
-            int i = 0;
-            while (i < keys.length) {
-                i+=pointer.getValues(keys, ret, i, offset);
-                if (!pointer.walkForward())
-                    break;
-            }
+            pointer.getValues(keys, ret, 0, offset);
         }
         else {
             int i = 0;
@@ -92,7 +90,6 @@ public class PoolingBTreeReader {
                 pointer.resetToRoot();
             }
         }
-
 
         return ret;
     }
@@ -211,26 +208,6 @@ public class PoolingBTreeReader {
                     maxValueInBlock = page.get(blockEnd - ctx.entrySize);
                 }
             }
-        }
-
-        public boolean walkForward() {
-            if (!isDataLayer()) throw new IllegalStateException("Can only walk forward on the data layer");
-            if (pointerOffset + ctx.pageSize() >= dataBlockEnd / ctx.entrySize) {
-                return false;
-            }
-
-            pointerOffset += ctx.pageSize();
-
-            final long blockStart = pointerOffset * ctx.entrySize;
-            final long remainingTotal = dataBlockEnd - pointerOffset * ctx.entrySize;
-
-            long blockEnd =  min(ctx.pageSize(), remainingTotal);
-
-            try (var page = dataPool.get(8 * ((dataStartOffset + blockStart) & -ctx.pageSize()), BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
-                maxValueInBlock = page.get(blockEnd - ctx.entrySize);
-            }
-
-            return true;
         }
 
         public boolean isDataLayer() {

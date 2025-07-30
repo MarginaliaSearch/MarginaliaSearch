@@ -243,6 +243,9 @@ class PoolingBTreeReaderTest {
                 slice.set(0, 4);
                 slice.set(1, 5);
             });
+            for (int i = 0; i <5; i++) {
+                System.out.println((256+i) + ":" + array.get(256+i));
+            }
         }
 
         try (var indexPool = new BufferPool(testFile, 8 * ctxKV.pageSize(), 32);
