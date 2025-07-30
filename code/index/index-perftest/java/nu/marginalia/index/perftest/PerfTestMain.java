@@ -225,6 +225,7 @@ public class PerfTestMain {
             var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
             execution.run();
             sum += execution.itemsProcessed();
+            indexReader.reset();
             if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
                 break;
             }
@@ -243,7 +244,7 @@ public class PerfTestMain {
             long end = System.nanoTime();
             sum2 += execution.itemsProcessed();
             rates.add(execution.itemsProcessed() / ((end - start)/1_000_000_000.));
-
+            indexReader.reset();
             if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
@@ -293,7 +294,7 @@ public class PerfTestMain {
                     buffer.reset();
                 }
             }
-
+            indexReader.reset();
             if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
                 break;
             }

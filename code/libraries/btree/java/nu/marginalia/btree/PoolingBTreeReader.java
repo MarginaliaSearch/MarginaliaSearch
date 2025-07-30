@@ -37,7 +37,7 @@ public class PoolingBTreeReader {
         this.indexPool = indexPool;
         this.dataPool = dataPool;
 
-        try (LongArray rootPage = indexPool.get(offset * 8, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
+        try (LongArray rootPage = indexPool.get(offset * 8, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.MEDIUM)) {
             this.header = new BTreeHeader(rootPage, 0);
         }
         if (header.numEntries() == 0) {
@@ -51,8 +51,6 @@ public class PoolingBTreeReader {
         dataStartOffset = header.dataOffsetLongs();
         dataEndOffset = dataStartOffset + dataBlockEnd;
     }
-
-
     public BTreeHeader getHeader() {
         return header;
     }
@@ -141,7 +139,7 @@ public class PoolingBTreeReader {
     public int readData(LongArray buf, int n, long pos) {
         long pageOffset = ((dataStartOffset&-ctx.pageSize()) + pos);
 
-        try (var page = indexPool.get(8 * pageOffset, BufferEvictionPolicy.READ_ONCE, BufferReadaheadPolicy.AGGRESSIVE)) {
+        try (var page = indexPool.get(8 * pageOffset, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.AGGRESSIVE)) {
             int relOffset = (int) ((pos + dataStartOffset) % ctx.pageSize());
             n = (int) Math.min(n, Math.min(header.numEntries() * ctx.entrySize - pos, ctx.pageSize() - relOffset));
             page.get(relOffset, relOffset + n, buf, 0);
@@ -183,7 +181,7 @@ public class PoolingBTreeReader {
 
             final long searchStart = indexStartOffset + layerOffsets[layer] + pointerOffset;
 
-            try (var buffer = indexPool.get(8 * searchStart, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.SMALL)) {
+            try (var buffer = indexPool.get(8 * searchStart, BufferEvictionPolicy.CACHE, BufferReadaheadPolicy.MEDIUM)) {
                 final long nextLayerOffset = buffer.binarySearch(key, 0, ctx.pageSize());
                 maxValueInBlock = buffer.get(nextLayerOffset);
                 layer--;
