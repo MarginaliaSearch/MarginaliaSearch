@@ -72,7 +72,7 @@ public class IndexQueryExecution {
         }
 
         // Final result selection
-        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap);
+        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
     }
 
     private void lookup(IndexQuery query) {
