@@ -66,9 +66,7 @@ public class BufferPool implements AutoCloseable {
         NativeAlgos.closeFd(fd);
         arena.close();
 
-        System.out.println("Disk read count: " + diskReadCount.get());
-        System.out.println("Cached read count: " + cacheReadCount.get());
-        System.out.println("Readahead fetch count: " + readaheadFetchCount.get());
+        logger.info("Disk read: {}, Cached read: {}, Readahead Fetch: {}", diskReadCount.get(), cacheReadCount.get(), readaheadFetchCount.get());
     }
 
     public void readaheadThread() {
