@@ -22,7 +22,10 @@ public class BufferPool implements AutoCloseable {
     private final int fd;
     private final int pageSize;
     private final Thread readaheadThread;
+
     private volatile UnsafeLongArrayBuffer lastAccessedBuffer;
+
+    private final PoolLru poolLru;
 
     final AtomicInteger diskReadCount = new AtomicInteger();
     final AtomicInteger cacheReadCount = new AtomicInteger();
@@ -32,9 +35,17 @@ public class BufferPool implements AutoCloseable {
 
     private volatile boolean running = true;
 
+    public synchronized void reset() {
+        for (var page : pages) {
+            page.pageAddress(-1);
+        }
+    }
+
     public BufferPool(Path filename, int pageSizeBytes, int poolSize) {
         this.fd = NativeAlgos.openDirect(filename);
         this.pageSize = pageSizeBytes;
+
+        this.poolLru = new PoolLru(poolSize);
 
         this.arena = Arena.ofShared();
         this.pages = new UnsafeLongArrayBuffer[poolSize];
@@ -98,6 +109,7 @@ public class BufferPool implements AutoCloseable {
                     throw new RuntimeException();
                 }
                 populateBuffer(page);
+                poolLru.put(instruction.address(),  page);
                 page.pageAddress(instruction.address());
 
                 // Mark the page as
@@ -127,36 +139,36 @@ public class BufferPool implements AutoCloseable {
 
         // Fast path for checking the last buffer we accessed
 
-        var lastAccessedBuffer = this.lastAccessedBuffer;
-        if (lastAccessedBuffer != null && lastAccessedBuffer.pageAddress() == address) {
-            if (lastAccessedBuffer.acquireAsReader(address)) {
+        var cachedBuffer = this.lastAccessedBuffer;
+        if (cachedBuffer != null && cachedBuffer.pageAddress() == address) {
+            if (cachedBuffer.acquireAsReader(address)) {
                 cacheReadCount.incrementAndGet();
-                return lastAccessedBuffer;
+                return cachedBuffer;
             }
         }
 
-        for (var page : pages) {
-
-            if (page.pageAddress() != address) continue;
+        cachedBuffer = poolLru.get(address);
+        if (cachedBuffer != null && cachedBuffer.pageAddress() == address) {
 
             // Try to acquire the page normally
-            if (page.acquireAsReader(address)) {
+            if (cachedBuffer.acquireAsReader(address)) {
                 cacheReadCount.incrementAndGet();
 
-                return page;
+                return cachedBuffer;
             }
 
-            if (page.pageAddress() != address)
-                continue;
+            if (cachedBuffer.pageAddress() != address)
+                return null;
 
             // The page we are looking for is currently being written
-            waitForPageWrite(page);
+            waitForPageWrite(cachedBuffer);
 
-            if (page.acquireAsReader(address)) {
+            if (cachedBuffer.acquireAsReader(address)) {
                 this.cacheReadCount.incrementAndGet();
-                return page;
+                return cachedBuffer;
             }
         }
+
         return null;
     }
 
@@ -167,9 +179,9 @@ public class BufferPool implements AutoCloseable {
         if (buffer == null) {
             // If the page is not available, read it from the caller's thread
             buffer = acquireFreePage(address);
+            poolLru.put(address, buffer);
             populateBuffer(buffer);
             buffer.evictionPolicy(eviction);
-            buffer.access();
 
             // Flip from a write lock to a read lock immediately
             if (!buffer.pinCount().compareAndSet(-1, 1)) {
@@ -185,10 +197,17 @@ public class BufferPool implements AutoCloseable {
         switch (readahead) {
             case NONE -> {}
             case SMALL -> submitInstruction(new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + pageSize));
+            case MEDIUM -> submitInstructions(new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + pageSize),
+                                              new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 2L*pageSize),
+                                              new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 3L*pageSize));
             case AGGRESSIVE -> submitInstructions(
                                     new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + pageSize),
                                     new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 2L*pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 3L*pageSize)
+                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 3L*pageSize),
+                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 4L*pageSize),
+                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 5L*pageSize),
+                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 6L*pageSize),
+                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 7L*pageSize)
                                 );
         }
 
@@ -211,22 +230,23 @@ public class BufferPool implements AutoCloseable {
         // Among the pages that do have cached data, try to find the oldest
 
         long[] lruOrder = new long[pages.length];
-        int lruCnt = 0;
-
-        // Sort buffers by access time
-        for (int i = 0; i < pages.length; i++) {
-            var page = pages[i];
-
-            if (page.isHeld())
-                continue;
-
-            long sortOrder = (page.accessOrder() << 10) | i;
-            lruOrder[lruCnt++] = sortOrder;
-        }
-
-        Arrays.sort(lruOrder, 0, lruCnt);
-
         for (;;) {
+            int lruCnt = 0;
+
+            // Sort buffers by access time
+            for (int i = 0; i < pages.length; i++) {
+                var page = pages[i];
+
+                if (page.isHeld())
+                    continue;
+
+                long sortOrder = (page.accessOrder() << 10) | i;
+                lruOrder[lruCnt++] = sortOrder;
+            }
+
+            Arrays.sort(lruOrder, 0, lruCnt);
+
+
             for (int i = 0; i < lruCnt; i++) {
                 int idx = (int) (lruOrder[i] & ~((~0L) << 10));
                 var page = pages[idx];
@@ -237,10 +257,6 @@ public class BufferPool implements AutoCloseable {
                     return page;
             }
         }
-
-        // FIXME
-//        throw new IllegalStateException("No free pages!");
-
     }
 
     private void populateBuffer(LongArrayBuffer buffer) {

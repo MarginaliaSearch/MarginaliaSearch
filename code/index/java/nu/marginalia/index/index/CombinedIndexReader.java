@@ -82,6 +82,11 @@ public class CombinedIndexReader {
         return reverseIndexFullReader.numDocuments(word);
     }
 
+    /** Reset caches and buffers */
+    public void reset() {
+        reverseIndexFullReader.reset();
+    }
+
     public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
 
         if (!isLoaded()) {
