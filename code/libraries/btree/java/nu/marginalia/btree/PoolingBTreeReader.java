@@ -41,7 +41,7 @@ public class PoolingBTreeReader {
             this.header = new BTreeHeader(rootPage, 0);
         }
         if (header.numEntries() == 0) {
-            throw new IllegalStateException("Num entries can not be 0, likely pointing to a zeroed memory area");
+            throw new IllegalStateException("Num entries can not be 0, likely pointing to a zeroed memory area, reading at " + offset);
         }
 
         dataBlockEnd = (long) ctx.entrySize * header.numEntries();
