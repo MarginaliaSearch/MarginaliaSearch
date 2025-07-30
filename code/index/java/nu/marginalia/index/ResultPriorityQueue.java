@@ -5,9 +5,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
+import java.util.*;
 
 /** A priority queue for search results. This class is not thread-safe,
  * in general, except for concurrent use of the addAll method.
@@ -44,6 +42,10 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem> {
         }
 
         return true;
+    }
+
+    public synchronized List<SearchResultItem> toList() {
+        return new ArrayList<>(queue);
     }
 
     public int size() {
