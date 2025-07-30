@@ -43,6 +43,10 @@ public class BufferPool implements AutoCloseable {
         }
 
         Thread.ofPlatform().start(() -> {
+            int diskReadOld = 0;
+            int cacheReadOld = 0;
+            int readaheadFetchOld = 0;
+
             while (running) {
                 try {
                     TimeUnit.SECONDS.sleep(30);
@@ -51,7 +55,13 @@ public class BufferPool implements AutoCloseable {
                     break;
                 }
 
-                logger.info("[{}] Disk read: {}, Cached read: {}, Readahead Fetch: {}", pageSizeBytes, diskReadCount.get(), cacheReadCount.get(), readaheadFetchCount.get());
+                int diskRead = diskReadCount.get();
+                int cacheRead = cacheReadCount.get();
+                int readaheadFetch = readaheadFetchCount.get();
+
+                if (diskRead != diskReadOld || cacheRead != cacheReadOld ||  readaheadFetch != readaheadFetchOld) {
+                    logger.info("[{}:{}] Disk read: {}, Cached read: {}, Readahead Fetch: {}", hashCode(), pageSizeBytes, diskRead, cacheRead, readaheadFetch);
+                }
             }
         });
 
