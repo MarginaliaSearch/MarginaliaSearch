@@ -39,7 +39,7 @@ public class BufferPool implements AutoCloseable {
         this.arena = Arena.ofShared();
         this.pages = new UnsafeLongArrayBuffer[poolSize];
         for (int i = 0; i < pages.length; i++) {
-            pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 8));
+            pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 512));
         }
 
         Thread.ofPlatform().start(() -> {
