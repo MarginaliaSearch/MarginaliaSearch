@@ -11,6 +11,7 @@ import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferPool implements AutoCloseable {
@@ -40,6 +41,22 @@ public class BufferPool implements AutoCloseable {
         for (int i = 0; i < pages.length; i++) {
             pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 8));
         }
+
+        Thread.ofPlatform().start(() -> {
+            while (running) {
+
+                logger.info("[{}] Disk read count: {}", pageSizeBytes, diskReadCount.get());
+                logger.info("[{}] Cached read count: {}", pageSizeBytes, cacheReadCount.get());
+                logger.info("[{}] Readahead fetch count: {}", pageSizeBytes, readaheadFetchCount.get());
+
+                try {
+                    TimeUnit.SECONDS.sleep(30);
+                } catch (InterruptedException e) {
+                    logger.info("Sleep interrupted", e);
+                    break;
+                }
+            }
+        });
 
         readaheadThread = Thread.ofPlatform().start(this::readaheadThread);
     }
