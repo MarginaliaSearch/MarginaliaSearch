@@ -295,7 +295,7 @@ public class PerfTestMain {
                 }
             }
             indexReader.reset();
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
+            if (Instant.now().isAfter(runEndTime)) {
                 break;
             }
         }
@@ -307,6 +307,7 @@ public class PerfTestMain {
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
+            indexReader.reset();
             List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
 
             long start = System.nanoTime();
@@ -318,9 +319,9 @@ public class PerfTestMain {
                 }
             }
             long end = System.nanoTime();
-            times.add((end - start)/1_000_000.);
+            times.add((end - start)/1_000_000_000.);
 
-            if ((iter % 100) == 0) {
+            if ((iter % 10) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
