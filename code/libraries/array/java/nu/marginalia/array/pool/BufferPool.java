@@ -45,13 +45,14 @@ public class BufferPool implements AutoCloseable {
         this.fd = NativeAlgos.openDirect(filename);
         this.pageSize = pageSizeBytes;
 
-        this.poolLru = new PoolLru(poolSize);
 
         this.arena = Arena.ofShared();
         this.pages = new UnsafeLongArrayBuffer[poolSize];
         for (int i = 0; i < pages.length; i++) {
             pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 512));
         }
+
+        this.poolLru = new PoolLru(pages);
 
         Thread.ofPlatform().start(() -> {
             int diskReadOld = 0;
@@ -216,6 +217,11 @@ public class BufferPool implements AutoCloseable {
 
     private UnsafeLongArrayBuffer acquireFreePage(long address) {
         // First try to grab any page that's not have cached data
+
+        var free = poolLru.getFree();
+        if (free != null && free.acquireForWriting(address)) {
+            return free;
+        }
 
         for (var page : pages) {
             if (page.isHeld())
