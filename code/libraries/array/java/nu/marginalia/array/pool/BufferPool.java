@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,29 +18,24 @@ public class BufferPool implements AutoCloseable {
     private final UnsafeLongArrayBuffer[] pages;
     private final Arena arena;
     private final int fd;
-    private final int pageSize;
-    private final Thread readaheadThread;
-    private final InstructionsQueue instructionsQueue = new InstructionsQueue(32);
     private volatile UnsafeLongArrayBuffer lastAccessedBuffer;
-
-    private final PoolLru poolLru;
+    private PoolLru poolLru;
 
     final AtomicInteger diskReadCount = new AtomicInteger();
     final AtomicInteger cacheReadCount = new AtomicInteger();
-    final AtomicInteger readaheadFetchCount = new AtomicInteger();
 
     private volatile boolean running = true;
 
+    /** Unassociate all buffers with their addresses, ensuring they will not be cacheable */
     public synchronized void reset() {
         for (var page : pages) {
             page.pageAddress(-1);
         }
+        poolLru = new PoolLru(pages);
     }
 
     public BufferPool(Path filename, int pageSizeBytes, int poolSize) {
         this.fd = NativeAlgos.openDirect(filename);
-        this.pageSize = pageSizeBytes;
-
 
         this.arena = Arena.ofShared();
         this.pages = new UnsafeLongArrayBuffer[poolSize];
@@ -54,7 +48,6 @@ public class BufferPool implements AutoCloseable {
         Thread.ofPlatform().start(() -> {
             int diskReadOld = 0;
             int cacheReadOld = 0;
-            int readaheadFetchOld = 0;
 
             while (running) {
                 try {
@@ -66,55 +59,22 @@ public class BufferPool implements AutoCloseable {
 
                 int diskRead = diskReadCount.get();
                 int cacheRead = cacheReadCount.get();
-                int readaheadFetch = readaheadFetchCount.get();
 
-                if (diskRead != diskReadOld || cacheRead != cacheReadOld ||  readaheadFetch != readaheadFetchOld) {
-                    logger.info("[#{}:{}] Disk read: {}, Cached read: {}, Readahead Fetch: {}", hashCode(), pageSizeBytes, diskRead, cacheRead, readaheadFetch);
+                if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
+                    logger.info("[#{}:{}] Disk/Cached: {}/{}", hashCode(), pageSizeBytes, diskRead, cacheRead);
                 }
             }
         });
-
-        readaheadThread = Thread.ofPlatform().start(this::readaheadThread);
     }
 
     public void close() throws InterruptedException {
         running = false;
-        readaheadThread.interrupt();
-        readaheadThread.join();
 
         NativeAlgos.closeFd(fd);
         arena.close();
 
         System.out.println("Disk read count: " + diskReadCount.get());
         System.out.println("Cached read count: " + cacheReadCount.get());
-        System.out.println("Readahead fetch count: " + readaheadFetchCount.get());
-    }
-
-    public void readaheadThread() {
-        try {
-            while (running) {
-                long address = instructionsQueue.dequeue();
-                if (poolLru.get(address) != null) {
-                    continue;
-                }
-
-                var page = acquireFreePage(address);
-                if (page.pinCount().get() != -1) {
-                    throw new RuntimeException();
-                }
-                populateBuffer(page);
-                poolLru.register(page);
-
-                // Mark the page as
-                if (!page.pinCount().compareAndSet(-1, 0)) {
-                    throw new IllegalStateException("Unexpected pin state");
-                }
-                readaheadFetchCount.incrementAndGet();
-            }
-        }
-        catch (InterruptedException ex) {
-            logger.info("readAhead thread interrupted");
-        }
     }
 
     @Nullable
@@ -155,7 +115,7 @@ public class BufferPool implements AutoCloseable {
         return null;
     }
 
-    public UnsafeLongArrayBuffer get(long address, BufferEvictionPolicy eviction, BufferReadaheadPolicy readahead) {
+    public UnsafeLongArrayBuffer get(long address) {
         // Look through available pages for the one we're looking for
         UnsafeLongArrayBuffer buffer = getExistingBufferForReading(address);
 
@@ -164,7 +124,6 @@ public class BufferPool implements AutoCloseable {
             buffer = acquireFreePage(address);
             poolLru.register(buffer);
             populateBuffer(buffer);
-            buffer.evictionPolicy(eviction);
 
             // Flip from a write lock to a read lock immediately
             if (!buffer.pinCount().compareAndSet(-1, 1)) {
@@ -174,73 +133,16 @@ public class BufferPool implements AutoCloseable {
             diskReadCount.incrementAndGet();
         }
 
-        if (eviction != BufferEvictionPolicy.READ_ONCE)
-            this.lastAccessedBuffer = buffer;
-
-        switch (readahead) {
-            case NONE -> {}
-            case SMALL -> instructionsQueue.enqueue(address + pageSize);
-            case MEDIUM -> {
-                for (int i = 1; i < 4; i++) {
-                    instructionsQueue.enqueue(address + (long) pageSize * i);
-                }
-            }
-            case AGGRESSIVE -> {
-                for (int i = 1; i < 8; i++) {
-                    instructionsQueue.enqueue(address + (long) pageSize * i);
-                }
-            }
-        }
+        lastAccessedBuffer = buffer;
 
         return buffer;
     }
 
     private UnsafeLongArrayBuffer acquireFreePage(long address) {
-        // First try to grab any page that's not have cached data
-
-        var free = poolLru.getFree();
-        if (free != null && free.acquireForWriting(address)) {
-            return free;
-        }
-
-        for (var page : pages) {
-            if (page.isHeld())
-                continue;
-            if (page.pageAddress() != -1)
-                continue;
-
-            if (page.acquireForWriting(address))
-                return page;
-        }
-
-        // Among the pages that do have cached data, try to find the oldest
-
-        long[] lruOrder = new long[pages.length];
         for (;;) {
-            int lruCnt = 0;
-
-            // Sort buffers by access time
-            for (int i = 0; i < pages.length; i++) {
-                var page = pages[i];
-
-                if (page.isHeld())
-                    continue;
-
-                long sortOrder = (page.accessOrder() << 10) | i;
-                lruOrder[lruCnt++] = sortOrder;
-            }
-
-            Arrays.sort(lruOrder, 0, lruCnt);
-
-
-            for (int i = 0; i < lruCnt; i++) {
-                int idx = (int) (lruOrder[i] & ~((~0L) << 10));
-                var page = pages[idx];
-
-                if (page.isHeld())
-                    continue;
-                if (page.acquireForWriting(address))
-                    return page;
+            var free = poolLru.getFree();
+            if (free != null && free.acquireForWriting(address)) {
+                return free;
             }
         }
     }

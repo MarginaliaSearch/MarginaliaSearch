@@ -13,10 +13,12 @@ public class PoolLru {
     private final int maxSize;
     private final LinkedHashMap<Long, UnsafeLongArrayBuffer> backingMap;
     private final SequencedCollection<UnsafeLongArrayBuffer> values;
-    private final ArrayDeque<UnsafeLongArrayBuffer> freeQueue = new ArrayDeque<>();
-    private final long freeQueueSize;
 
-    private final StampedLock lock = new StampedLock();
+    private final ArrayDeque<UnsafeLongArrayBuffer> freeQueue;
+    private final int freeQueueSize;
+
+    private final StampedLock mapLock = new StampedLock();
+    private final StampedLock freeQueueLock = new StampedLock();
 
     public PoolLru(UnsafeLongArrayBuffer[] entries) {
         backingMap = new LinkedHashMap<>(entries.length, 0.75f, true);
@@ -27,23 +29,24 @@ public class PoolLru {
         values = backingMap.sequencedValues();
         maxSize = backingMap.size();
 
-        freeQueueSize = Math.clamp(maxSize / 4, 4, 64);
+        freeQueueSize = Math.clamp(maxSize / 4, 4, 128);
+        freeQueue = new ArrayDeque<>(freeQueueSize);
     }
 
     /** Attempt to get a buffer alread yassociated with the address */
     public UnsafeLongArrayBuffer get(long address) {
-        long stamp = lock.readLock();
+        long stamp = mapLock.readLock();
         try {
             return backingMap.get(address);
         }
         finally {
-            lock.unlockRead(stamp);
+            mapLock.unlockRead(stamp);
         }
     }
 
     /** Associate the buffer with an address */
     public void register(UnsafeLongArrayBuffer buffer) {
-        long stamp = lock.writeLock();
+        long stamp = mapLock.writeLock();
         try {
             var old = backingMap.put(buffer.pageAddress(), buffer);
             if (old != null && !old.isHeld()) {
@@ -59,7 +62,7 @@ public class PoolLru {
             }
         }
         finally {
-            lock.unlockWrite(stamp);
+            mapLock.unlockWrite(stamp);
         }
     }
 
@@ -68,27 +71,32 @@ public class PoolLru {
      * @return An unheld buffer, or null if the attempt failed
      * */
     public UnsafeLongArrayBuffer getFree() {
-        long stamp = lock.writeLock();
-
+        long queueLock = freeQueueLock.writeLock();
         try {
             UnsafeLongArrayBuffer buffer = freeQueue.pollFirst();
             if (buffer != null && !buffer.isHeld()) {
                 return buffer;
             }
 
-            var iter = values.iterator();
-            int attempts = 0;
-            while (iter.hasNext() && attempts++ < freeQueueSize) {
-                buffer = iter.next();
-                if (!buffer.isHeld()) {
-                    iter.remove();
-                    freeQueue.addLast(buffer);
+            long mapStamp = mapLock.writeLock();
+            try {
+                var iter = values.iterator();
+                int attempts = 0;
+                while (iter.hasNext() && attempts++ < freeQueueSize) {
+                    buffer = iter.next();
+                    if (!buffer.isHeld()) {
+                        iter.remove();
+                        freeQueue.addLast(buffer);
+                    }
                 }
+                return freeQueue.pollFirst();
             }
-            return freeQueue.pollFirst();
+            finally {
+                mapLock.unlockWrite(mapStamp);
+            }
         }
         finally {
-            lock.unlockWrite(stamp);
+            freeQueueLock.unlockWrite(queueLock);
         }
     }
 }

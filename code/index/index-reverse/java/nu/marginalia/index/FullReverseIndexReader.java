@@ -69,7 +69,7 @@ public class FullReverseIndexReader {
         poolOffsets = new long[64];
 
         for (int i = 0; i < 64; i++) {
-            indexPools[i] = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize(), 16);
+            indexPools[i] = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize(), 512);
             dataPools[i] = new BufferPool(documents, 8 * ReverseIndexParameters.wordsBTreeContext.pageSize() * ReverseIndexParameters.wordsBTreeContext.entrySize, 2048);
         }
 

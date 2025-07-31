@@ -2,9 +2,6 @@ package nu.marginalia.array.page;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.LongArrayBuffer;
-import nu.marginalia.array.pool.BufferEvictionPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
 import java.io.IOException;
@@ -24,14 +21,12 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
     private static final Unsafe unsafe = UnsafeProvider.getUnsafe();
-    private static final Logger logger = LoggerFactory.getLogger(UnsafeLongArray.class);
     private static final AtomicLong accessOrderCtr = new AtomicLong();
 
     private final MemorySegment segment;
 
     private volatile long pageAddress = -1;
     private volatile boolean dirty = false;
-    private BufferEvictionPolicy evictionPolicy;
 
     private volatile long accessOrder = -1;
 
@@ -73,16 +68,6 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
     }
 
     @Override
-    public BufferEvictionPolicy evictionPolicy() {
-        return evictionPolicy;
-    }
-
-    @Override
-    public void evictionPolicy(BufferEvictionPolicy evictionPolicy) {
-        this.evictionPolicy = evictionPolicy;
-    }
-
-    @Override
     public boolean isHeld() {
         return pinCount.get() != 0;
     }
@@ -92,7 +77,6 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
         if (pinCount.compareAndSet(0, -1)) {
             pageAddress = intendedAddress;
             dirty = true;
-            accessOrder = -1;
             return true;
         }
 
@@ -109,7 +93,6 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
                     pinCount.decrementAndGet();
                     return false;
                 }
-                accessOrder = accessOrderCtr.getAndIncrement();
                 return true;
             }
         }
@@ -117,48 +100,10 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
         return false;
     }
 
-    @Override
-    public long accessOrder() {
-        return accessOrder;
-    }
-
-    public void access() {
-        accessOrder = accessOrderCtr.getAndIncrement();
-    }
-
     /** Close yields the buffer back to the pool (unless held by multiple readers), but does not deallocate it */
     @Override
     public void close() {
-        if (evictionPolicy == BufferEvictionPolicy.CACHE) {
-            pinCount.decrementAndGet();
-        }
-        else if (evictionPolicy == BufferEvictionPolicy.READ_ONCE) {
-            for (;;) {
-                int pinCountVal = pinCount.get();
-
-                // If we have multiple readers
-                if (pinCountVal > 1) {
-                    if (pinCount.compareAndSet(pinCountVal, pinCountVal - 1)) {
-                        return;
-                    }
-                }
-                // When pin count = 1, decrementing it would make it a free page
-                // with the READ_ONCE policy, we should acquire a brief write lock
-                // during this phase and nuke the address, so that this buffer becomes
-                // immediately available for reuse
-                else if (pinCountVal == 1) {
-                    if (pinCount.compareAndSet(1, -2)) {
-                        pageAddress = -1;
-                        accessOrder = -1;
-                        if (!pinCount.compareAndSet(-2, 0)) {
-                            throw new IllegalStateException();
-                        }
-                        break;
-                    }
-                }
-                else throw new IllegalStateException("close() on LongArrayBuffer that is not held for writing");
-            }
-        }
+        pinCount.decrementAndGet();
     }
 
     @Override
