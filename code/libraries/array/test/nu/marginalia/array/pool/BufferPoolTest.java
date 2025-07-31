@@ -86,7 +86,7 @@ class BufferPoolTest {
         Thread.sleep(1000);
         for (int i = 0; i < 3; i++) {
             var buffer2 = pool.getExistingBufferForReading(64 + 64L*i);
-            assertNotNull(buffer2);
+            assertNotNull(buffer2, "No buffer found for " + (64 + 64L*i));
         }
     }
 }
