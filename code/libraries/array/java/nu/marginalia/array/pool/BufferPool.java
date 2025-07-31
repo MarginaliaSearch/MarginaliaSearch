@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +21,7 @@ public class BufferPool implements AutoCloseable {
     private final int fd;
     private final int pageSize;
     private final Thread readaheadThread;
-
+    private final InstructionsQueue instructionsQueue = new InstructionsQueue(32);
     private volatile UnsafeLongArrayBuffer lastAccessedBuffer;
 
     private final PoolLru poolLru;
@@ -30,8 +29,6 @@ public class BufferPool implements AutoCloseable {
     final AtomicInteger diskReadCount = new AtomicInteger();
     final AtomicInteger cacheReadCount = new AtomicInteger();
     final AtomicInteger readaheadFetchCount = new AtomicInteger();
-
-    private final ArrayBlockingQueue<BufferPoolFetchInstruction> instructionsQueue = new ArrayBlockingQueue<>(16);
 
     private volatile boolean running = true;
 
@@ -95,23 +92,18 @@ public class BufferPool implements AutoCloseable {
 
     public void readaheadThread() {
         try {
-            mainLoop:
             while (running) {
-                BufferPoolFetchInstruction instruction = instructionsQueue.take();
-
-                for (var page : pages) {
-                    // Check if we already hold the address
-                    if (page.pageAddress() == instruction.address())
-                        continue mainLoop;
+                long address = instructionsQueue.dequeue();
+                if (poolLru.get(address) != null) {
+                    continue;
                 }
 
-                var page = acquireFreePage(instruction.address());
+                var page = acquireFreePage(address);
                 if (page.pinCount().get() != -1) {
                     throw new RuntimeException();
                 }
                 populateBuffer(page);
-                poolLru.put(instruction.address(),  page);
-                page.pageAddress(instruction.address());
+                poolLru.register(page);
 
                 // Mark the page as
                 if (!page.pinCount().compareAndSet(-1, 0)) {
@@ -123,16 +115,6 @@ public class BufferPool implements AutoCloseable {
         catch (InterruptedException ex) {
             logger.info("readAhead thread interrupted");
         }
-    }
-
-    public void submitInstructions(BufferPoolFetchInstruction... instructions) {
-        for (var instruction : instructions) {
-            if (!instructionsQueue.offer(instruction))
-                break;
-        }
-    }
-    public void submitInstruction(BufferPoolFetchInstruction instruction) {
-        instructionsQueue.offer(instruction);
     }
 
     @Nullable
@@ -180,7 +162,7 @@ public class BufferPool implements AutoCloseable {
         if (buffer == null) {
             // If the page is not available, read it from the caller's thread
             buffer = acquireFreePage(address);
-            poolLru.put(address, buffer);
+            poolLru.register(buffer);
             populateBuffer(buffer);
             buffer.evictionPolicy(eviction);
 
@@ -197,19 +179,17 @@ public class BufferPool implements AutoCloseable {
 
         switch (readahead) {
             case NONE -> {}
-            case SMALL -> submitInstruction(new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + pageSize));
-            case MEDIUM -> submitInstructions(new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + pageSize),
-                                              new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 2L*pageSize),
-                                              new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 3L*pageSize));
-            case AGGRESSIVE -> submitInstructions(
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 2L*pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 3L*pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 4L*pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 5L*pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 6L*pageSize),
-                                    new BufferPoolFetchInstruction(PoolInstructionPriority.READAHEAD, eviction, address + 7L*pageSize)
-                                );
+            case SMALL -> instructionsQueue.enqueue(address + pageSize);
+            case MEDIUM -> {
+                for (int i = 1; i < 4; i++) {
+                    instructionsQueue.enqueue(address + (long) pageSize * i);
+                }
+            }
+            case AGGRESSIVE -> {
+                for (int i = 1; i < 8; i++) {
+                    instructionsQueue.enqueue(address + (long) pageSize * i);
+                }
+            }
         }
 
         return buffer;
