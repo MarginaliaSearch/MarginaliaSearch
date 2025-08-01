@@ -1,6 +1,8 @@
 package nu.marginalia.array.pool;
 
 import nu.marginalia.array.page.UnsafeLongArrayBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
@@ -10,21 +12,24 @@ import java.util.concurrent.locks.StampedLock;
 /** LRU for pool buffers
  * */
 public class PoolLru {
+    private static final Logger logger = LoggerFactory.getLogger(PoolLru.class);
+
     private final int maxSize;
     private final LinkedHashMap<Long, UnsafeLongArrayBuffer> backingMap;
+    private final UnsafeLongArrayBuffer[] pages;
     private final SequencedCollection<UnsafeLongArrayBuffer> values;
-
     private final ArrayDeque<UnsafeLongArrayBuffer> freeQueue;
     private final int freeQueueSize;
 
     private final StampedLock mapLock = new StampedLock();
     private final StampedLock freeQueueLock = new StampedLock();
 
-    public PoolLru(UnsafeLongArrayBuffer[] entries) {
-        backingMap = new LinkedHashMap<>(entries.length, 0.75f, true);
+    public PoolLru(UnsafeLongArrayBuffer[] pages) {
+        backingMap = new LinkedHashMap<>(pages.length, 0.75f, true);
+        this.pages = pages;
         // Pre-assign all entries with nonsense memory locations
-        for (int i = 0; i < entries.length; i++) {
-            backingMap.put(-i-1L, entries[i]);
+        for (int i = 0; i < pages.length; i++) {
+            backingMap.put(-i-1L, pages[i]);
         }
         values = backingMap.sequencedValues();
         maxSize = backingMap.size();
@@ -81,12 +86,23 @@ public class PoolLru {
             long mapStamp = mapLock.writeLock();
             try {
                 var iter = values.iterator();
-                int attempts = 0;
-                while (iter.hasNext() && attempts++ < freeQueueSize) {
+                while (iter.hasNext() && freeQueue.size() < freeQueueSize) {
                     buffer = iter.next();
                     if (!buffer.isHeld()) {
                         iter.remove();
                         freeQueue.addLast(buffer);
+                    }
+                }
+
+                logger.warn("Running expensive reclamation");
+                if (freeQueue.isEmpty()) {
+                    for (var page : pages) {
+                        if (!page.isHeld()) {
+                            freeQueue.addLast(page);
+                        }
+                        if (freeQueue.size() >= freeQueueSize) {
+                            break;
+                        }
                     }
                 }
                 return freeQueue.pollFirst();
