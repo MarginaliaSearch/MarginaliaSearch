@@ -106,8 +106,8 @@ public class PoolLru {
                 }
             }
 
-            logger.warn("Running expensive reclamation");
             if (freeQueue.isEmpty()) {
+                logger.warn("Running expensive reclamation");
                 for (var page : pages) {
                     if (!page.isHeld()) {
                         freeQueue.addLast(page);
