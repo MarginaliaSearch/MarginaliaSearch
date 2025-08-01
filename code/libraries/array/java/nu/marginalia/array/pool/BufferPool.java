@@ -60,9 +60,15 @@ public class BufferPool implements AutoCloseable {
 
                 int diskRead = diskReadCount.get();
                 int cacheRead = cacheReadCount.get();
+                int heldCount = 0;
+                for (var page : pages) {
+                    if (page.isHeld()) {
+                        heldCount++;
+                    }
+                }
 
                 if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                    logger.info("[#{}:{}] Disk/Cached: {}/{}", hashCode(), pageSizeBytes, diskRead, cacheRead);
+                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}", hashCode(), pageSizeBytes, diskRead, cacheRead, heldCount, pages.length, poolLru.getFreeQueueSize());
                 }
             }
         });
