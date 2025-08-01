@@ -22,7 +22,6 @@ public class PoolLru {
     private final int freeQueueSize;
 
     private final StampedLock mapLock = new StampedLock();
-    private final StampedLock freeQueueLock = new StampedLock();
 
     public PoolLru(UnsafeLongArrayBuffer[] pages) {
         backingMap = new LinkedHashMap<>(pages.length, 0.75f, true);
@@ -51,20 +50,32 @@ public class PoolLru {
 
     /** Associate the buffer with an address */
     public void register(UnsafeLongArrayBuffer buffer) {
+        UnsafeLongArrayBuffer free1 = null;
+        UnsafeLongArrayBuffer free2 = null;
+
         long stamp = mapLock.writeLock();
         try {
             var old = backingMap.put(buffer.pageAddress(), buffer);
             if (old != null && !old.isHeld()) {
-                freeQueue.add(old);
+                free1 = old;
             }
 
             // Evict the last entry if we've exceeded the
             while (backingMap.size() >= maxSize) {
-                var evicted = backingMap.pollLastEntry().getValue();
-                if (!evicted.isHeld()) {
-                    freeQueue.add(evicted);
+                UnsafeLongArrayBuffer evicted = backingMap.pollLastEntry().getValue();
+                if (!evicted.isHeld() && evicted != free1) {
+                    free2 = evicted;
                 }
             }
+        }
+        finally {
+            mapLock.unlockWrite(stamp);
+        }
+
+        stamp = mapLock.writeLock();
+        try {
+            if (free1 != null) freeQueue.add(free1);
+            if (free2 != null) freeQueue.add(free2);
         }
         finally {
             mapLock.unlockWrite(stamp);
@@ -76,53 +87,50 @@ public class PoolLru {
      * @return An unheld buffer, or null if the attempt failed
      * */
     public UnsafeLongArrayBuffer getFree() {
-        long queueLock = freeQueueLock.writeLock();
+        long mapStamp = mapLock.writeLock();
         try {
-            UnsafeLongArrayBuffer buffer = freeQueue.pollFirst();
-            if (buffer != null && !buffer.isHeld()) {
-                return buffer;
+            UnsafeLongArrayBuffer buffer;
+
+            while (!freeQueue.isEmpty()) {
+                buffer = freeQueue.pollFirst();
+                if (buffer != null && !buffer.isHeld()) {
+                    return buffer;
+                }
+            }
+            var iter = values.iterator();
+            while (iter.hasNext() && freeQueue.size() < freeQueueSize) {
+                buffer = iter.next();
+                if (!buffer.isHeld()) {
+                    iter.remove();
+                    freeQueue.addLast(buffer);
+                }
             }
 
-            long mapStamp = mapLock.writeLock();
-            try {
-                var iter = values.iterator();
-                while (iter.hasNext() && freeQueue.size() < freeQueueSize) {
-                    buffer = iter.next();
-                    if (!buffer.isHeld()) {
-                        iter.remove();
-                        freeQueue.addLast(buffer);
+            logger.warn("Running expensive reclamation");
+            if (freeQueue.isEmpty()) {
+                for (var page : pages) {
+                    if (!page.isHeld()) {
+                        freeQueue.addLast(page);
+                    }
+                    if (freeQueue.size() >= freeQueueSize) {
+                        break;
                     }
                 }
-
-                logger.warn("Running expensive reclamation");
-                if (freeQueue.isEmpty()) {
-                    for (var page : pages) {
-                        if (!page.isHeld()) {
-                            freeQueue.addLast(page);
-                        }
-                        if (freeQueue.size() >= freeQueueSize) {
-                            break;
-                        }
-                    }
-                }
-                return freeQueue.pollFirst();
             }
-            finally {
-                mapLock.unlockWrite(mapStamp);
-            }
+            return freeQueue.pollFirst();
         }
         finally {
-            freeQueueLock.unlockWrite(queueLock);
+            mapLock.unlockWrite(mapStamp);
         }
     }
 
     public Object getFreeQueueSize() {
-        long queueLock = freeQueueLock.readLock();
+        long queueLock = mapLock.readLock();
         try {
             return freeQueue.size();
         }
         finally {
-            freeQueueLock.unlockRead(queueLock);
+            mapLock.unlockRead(queueLock);
         }
     }
 }
