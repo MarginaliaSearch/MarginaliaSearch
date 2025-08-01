@@ -31,9 +31,6 @@ public class FullIndexEntrySource implements EntrySource {
     @Override
     public void read(LongQueryBuffer buffer) {
         reader.getData(buffer);
-
-        // Is this needed?
-        buffer.uniq();
     }
 
     @Override

@@ -115,4 +115,14 @@ public class PoolLru {
             freeQueueLock.unlockWrite(queueLock);
         }
     }
+
+    public Object getFreeQueueSize() {
+        long queueLock = freeQueueLock.readLock();
+        try {
+            return freeQueue.size();
+        }
+        finally {
+            freeQueueLock.unlockRead(queueLock);
+        }
+    }
 }
