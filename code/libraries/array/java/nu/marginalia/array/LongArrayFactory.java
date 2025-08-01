@@ -75,7 +75,7 @@ public class LongArrayFactory {
             return SegmentLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, size);
     }
 
-    public static LongArray wrap(MemorySegment ms) throws IOException {
+    public static LongArray wrap(MemorySegment ms) {
         if (useUnsafe) {
             return UnsafeLongArray.wrap(ms);
         }

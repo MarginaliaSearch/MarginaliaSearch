@@ -27,6 +27,7 @@ import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.segmentation.NgramLexicon;
+import nu.marginalia.skiplist.SkipListWriter;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 
 import java.io.IOException;
@@ -64,7 +65,10 @@ public class PerfTestMain {
                 case "valuation" -> runValuation(indexDir, homeDir, query);
                 case "lookup" -> runLookup(indexDir, homeDir, query);
                 case "execution" -> runExecution(indexDir, homeDir, query);
+                case "convert" -> runConvert(indexDir, homeDir, query);
             }
+
+            System.exit(0);
         }
         catch (NumberFormatException e) {
             System.err.println("Arguments: data-dir index-dir query");
@@ -117,6 +121,27 @@ public class PerfTestMain {
         );
     }
 
+    public static void runConvert(Path homeDir,
+                                    Path indexDir,
+                                    String rawQuery) throws IOException, SQLException
+    {
+        var ir = new FullReverseIndexReader(
+                "full",
+                indexDir.resolve("ir/rev-words.dat"),
+                indexDir.resolve("ir/rev-docs.dat"),
+                new PositionsFileReader(indexDir.resolve("ir/rev-positions.dat"))
+        );
+        try (SkipListWriter sw = new SkipListWriter(Path.of("/tmp/index.dat"))) {
+            ir.eachDocRange(la -> {
+                try {
+                    sw.writeList(la, 0, (int) la.size()/2);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+    }
     public static void runValuation(Path homeDir,
                                     Path indexDir,
                                     String rawQuery) throws IOException, SQLException

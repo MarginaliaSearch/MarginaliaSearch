@@ -10,7 +10,6 @@ import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
@@ -21,14 +20,11 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
     private static final Unsafe unsafe = UnsafeProvider.getUnsafe();
-    private static final AtomicLong accessOrderCtr = new AtomicLong();
 
     private final MemorySegment segment;
 
     private volatile long pageAddress = -1;
     private volatile boolean dirty = false;
-
-    private volatile long accessOrder = -1;
 
     /** Pin count is used as a read-write condition.
      * <p></p>
@@ -124,6 +120,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
     @Override
     public long get(long at) {
+        assert at >= 0;
         assert at <= size() : at + " > " + size();
         if (at > size())
             throw new RuntimeException(at + ">" + size());

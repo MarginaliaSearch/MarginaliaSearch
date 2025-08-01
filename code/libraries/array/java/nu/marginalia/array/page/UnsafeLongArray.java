@@ -101,6 +101,7 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public long get(long at) {
+
         try {
             return unsafe.getLong(segment.address() + at * JAVA_LONG.byteSize());
         }
@@ -128,6 +129,7 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public void set(long start, long end, LongBuffer buffer, int bufferStart) {
+        System.out.println("setA@"+ start + "#" + hashCode() + "-" + Thread.currentThread().threadId());
         for (int i = 0; i < end - start; i++) {
             unsafe.putLong(segment.address() + (start + i) * JAVA_LONG.byteSize(), buffer.get(bufferStart + i));
         }

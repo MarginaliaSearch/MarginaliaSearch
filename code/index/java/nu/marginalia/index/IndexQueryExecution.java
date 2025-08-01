@@ -80,7 +80,7 @@ public class IndexQueryExecution {
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
-                buffer.reset();
+                buffer.zero();
                 query.getMoreResults(buffer);
 
                 if (buffer.isEmpty())
