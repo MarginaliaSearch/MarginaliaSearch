@@ -34,7 +34,7 @@ public class PoolLru {
         values = backingMap.sequencedValues();
         maxSize = backingMap.size();
 
-        freeQueueSize = Math.clamp(maxSize / 4, 4, 128);
+        freeQueueSize = maxSize / 4;
         freeQueue = new ArrayDeque<>(freeQueueSize);
     }
 
