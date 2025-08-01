@@ -411,8 +411,6 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 .filter(v -> (id % v) == 0)
                 .toArray();
 
-        System.out.println("id:" + id + " factors: " + Arrays.toString(factors));
-
         long fullId = fullId(id);
 
         ldbw.add(new DocdbUrlDetail(

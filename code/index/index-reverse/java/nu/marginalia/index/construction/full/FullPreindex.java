@@ -6,7 +6,6 @@ import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.ReverseIndexParameters;
 import nu.marginalia.index.construction.CountToOffsetTransformer;
 import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.IndexSizeEstimator;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.IndexJournalPage;
 import org.slf4j.Logger;
@@ -81,15 +80,11 @@ public class FullPreindex {
 
         // Estimate the size of the docs index data
         offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(2));
-        IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.fullDocsBTreeContext, 2);
-        offsets.fold(0, 0, offsets.size(), sizeEstimator);
 
         // Write the docs file
-        LongArray finalDocs = LongArrayFactory.mmapForWritingConfined(outputFileDocs, sizeEstimator.size);
-        offsets.transformEachIO(0, offsets.size(),
-                new FullIndexBTreeTransformer(finalDocs, 2,
-                        ReverseIndexParameters.fullDocsBTreeContext,
-                        documents.documents));
+        try (var transformer = new FullIndexSkipListTransformer(outputFileDocs, documents.documents)) {
+            offsets.transformEachIO(0, offsets.size(), transformer);
+        }
 
         LongArray wordIds = segments.wordIds;
 
@@ -102,7 +97,7 @@ public class FullPreindex {
         // Estimate the size of the words index data
         long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) offsets.size());
 
-        // Construct the tree
+        // Construct the keywords tree
         LongArray wordsArray = LongArrayFactory.mmapForWritingConfined(outputFileWords, wordsSize);
 
         new BTreeWriter(wordsArray, ReverseIndexParameters.wordsBTreeContext)
@@ -113,8 +108,6 @@ public class FullPreindex {
             }
         });
 
-        finalDocs.force();
-        finalDocs.close();
         wordsArray.force();
         wordsArray.close();
 

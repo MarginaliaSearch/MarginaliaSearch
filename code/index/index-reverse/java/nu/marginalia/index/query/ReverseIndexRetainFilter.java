@@ -1,24 +1,24 @@
 package nu.marginalia.index.query;
 
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.btree.PoolingBTreeReader;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
+import nu.marginalia.skiplist.SkipListReader;
 
-public record ReverseIndexRetainFilter(PoolingBTreeReader range, String name, long wordId) implements QueryFilterStepIf {
+public record ReverseIndexRetainFilter(SkipListReader range, String name, long wordId) implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {
-        range.retainEntries(buffer);
+        range.retainData(buffer);
         buffer.finalizeFiltering();
     }
 
     public boolean test(long id) {
-        return range.findEntry(id) >= 0;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public double cost() {
-        return range.numEntries();
+        return 1;
     }
 
     @Override

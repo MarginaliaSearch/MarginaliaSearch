@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -67,7 +68,7 @@ public class BufferPool implements AutoCloseable {
         });
     }
 
-    public void close() throws InterruptedException {
+    public void close() {
         running = false;
 
         NativeAlgos.closeFd(fd);
@@ -148,7 +149,11 @@ public class BufferPool implements AutoCloseable {
     }
 
     private void populateBuffer(LongArrayBuffer buffer) {
+        if (getClass().desiredAssertionStatus()) {
+            buffer.getMemorySegment().set(ValueLayout.JAVA_INT, 0, 9999);
+        }
         NativeAlgos.readAt(fd, buffer.getMemorySegment(), buffer.pageAddress());
+        assert buffer.getMemorySegment().get(ValueLayout.JAVA_INT, 0) != 9999;
         buffer.dirty(false);
     }
 
