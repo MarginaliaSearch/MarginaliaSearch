@@ -149,7 +149,10 @@ public class PoolLru {
 
             reclaimCycles++;
             do {
-                int idx = clockHand++ % clock.length;
+                if (++clockHand >= clock.length) {
+                    clockHand = 0;
+                }
+                int idx = clockHand;
                 if (pages[idx].isCached()) {
                     if (clock[idx] <= 0) {
                         if (pages[idx].reclaim()) {
