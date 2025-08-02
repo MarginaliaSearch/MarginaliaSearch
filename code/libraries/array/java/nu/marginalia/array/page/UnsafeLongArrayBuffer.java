@@ -130,7 +130,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
         int pinCountVal;
 
         while ((pinCountVal = pinCount.get()) >= 0) {
-            if (pinCount.compareAndSet(pinCountVal, Math.max(pinCountVal + 1, 2))) {
+            if (pinCount.compareAndSet(pinCountVal, Math.min(pinCountVal + 1, 2))) {
                 if (pageAddress != expectedAddress) {
                     pinCount.decrementAndGet();
                     return false;
