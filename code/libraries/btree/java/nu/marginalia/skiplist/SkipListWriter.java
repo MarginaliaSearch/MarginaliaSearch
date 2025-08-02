@@ -47,6 +47,20 @@ public class SkipListWriter implements AutoCloseable {
         }
     }
 
+
+    private void writeBlockHeader(ByteBuffer buffer, int nItems, byte fc, byte flags) {
+        assert nItems >= 0;
+        assert nItems <= MAX_RECORDS_PER_BLOCK;
+        assert fc >= 0;
+
+        buffer.putInt(nItems);
+        buffer.put(fc); // number of records
+        buffer.put(flags); // forward count = 0
+        buffer.putShort((short) 0);
+
+        assert (buffer.position() % 8) == 0;
+    }
+
     public long writeList(LongArray input, long offset, int n) throws IOException {
         long startPos = outputChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
@@ -59,12 +73,8 @@ public class SkipListWriter implements AutoCloseable {
             /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK */
 
             buffer.clear();
-            buffer.put((byte) n); // number of records
-            buffer.put((byte) 0); // forward count = 0
-            buffer.put(FLAG_END_BLOCK); // this is the last block
-            // pad to 8 byte alignment
-            buffer.put((byte) 0);
-            buffer.putInt(n);
+
+            writeBlockHeader(buffer, n, (byte) 0, FLAG_END_BLOCK);
 
             // Write the keys
             for (int i = 0; i < n; i++) {
@@ -84,7 +94,7 @@ public class SkipListWriter implements AutoCloseable {
             return startPos;
         }
 
-        if (blockRemaining < BLOCK_SIZE / 2) {
+        if (blockRemaining < SkipListConstants.MIN_TRUNCATED_BLOCK_SIZE) {
 
             /** REMAINING BLOCK TOO SMALL TO RECLAIM - INSERT PADDING */
             buffer.clear();
@@ -108,16 +118,12 @@ public class SkipListWriter implements AutoCloseable {
             /** WRITE THE ROOT BLOCK **/
 
             buffer.clear();
-            buffer.put((byte) rootBlockCapacity); // number of records
-            buffer.put((byte) rootBlockPointerCount); // forward count
+            byte flags = 0;
             if (numBlocks == 1) {
-                buffer.put((byte) FLAG_END_BLOCK); // this is the last block
-            } else {
-                buffer.put((byte) 0);
+                flags = FLAG_END_BLOCK;
             }
-            // pad to 8 byte alignment
-            buffer.put((byte) 0);
-            buffer.putInt(n);
+
+            writeBlockHeader(buffer, rootBlockCapacity, (byte) rootBlockPointerCount, flags);
 
             findBlockHighestValues(input, maxValuesList,
                     offset + (long) RECORD_SIZE * rootBlockCapacity,
@@ -174,17 +180,13 @@ public class SkipListWriter implements AutoCloseable {
             boolean isLastBlock = blockIdx == (numBlocks - 1);
             int blockSize = Math.min(nRemaining, blockCapacity);
             buffer.clear();
-            buffer.put((byte) blockSize); // number of records
-            buffer.put((byte) forwardPointers); // forward count
+
+            byte flags = 0;
             if (isLastBlock) {
-                buffer.put((byte) FLAG_END_BLOCK); // this is the last block
+                flags = FLAG_END_BLOCK;
             }
-            else {
-                buffer.put((byte) 0);
-            }
-            // pad to 8 byte alignment
-            buffer.put((byte) 0);
-            buffer.putInt(nRemaining);
+
+            writeBlockHeader(buffer, blockSize, (byte) forwardPointers, flags);
 
             for (int pi = 0; pi < forwardPointers; pi++) {
                 int skipBlocks = skipOffsetForPointer(pi);
@@ -263,31 +265,6 @@ public class SkipListWriter implements AutoCloseable {
         return blocks;
     }
 
-    static int skipOffsetForPointer(int pointerIdx) {
-        return (1 << (pointerIdx));
-    }
-
-    static int numPointersForBlock(int blockIdx) {
-        assert blockIdx >= 1;
-        return Integer.numberOfTrailingZeros(blockIdx);
-    }
-
-    static int numPointersForRootBlock(int n) {
-        return Integer.numberOfTrailingZeros(Integer.highestOneBit(estimateNumBlocks(n)));
-    }
-
-    static int rootBlockCapacity(int rootBlockSize, int n) {
-        return Math.min(n, (rootBlockSize - HEADER_SIZE - 8 * numPointersForRootBlock(n)) / (RECORD_SIZE * 8));
-    }
-
-    static int nonRootBlockCapacity(int blockIdx) {
-        assert blockIdx >= 1;
-        return (BLOCK_SIZE - HEADER_SIZE - 8 * numPointersForBlock(blockIdx)) / (RECORD_SIZE * 8);
-    }
-
-    static int estimateNumBlocks(int n) {
-        return n / 31 + Integer.signum(n % 31);
-    }
 
 
 }

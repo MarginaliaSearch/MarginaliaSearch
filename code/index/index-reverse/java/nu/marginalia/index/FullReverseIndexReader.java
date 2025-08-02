@@ -13,6 +13,7 @@ import nu.marginalia.index.query.ReverseIndexRetainFilter;
 import nu.marginalia.index.query.filter.QueryFilterLetThrough;
 import nu.marginalia.index.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
+import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +68,7 @@ public class FullReverseIndexReader {
         poolOffsets = new long[1];
 
         for (int i = 0; i < 1; i++) {
-            dataPools[i] = new BufferPool(documents, 512, 65536);
+            dataPools[i] = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, 65536);
         }
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);

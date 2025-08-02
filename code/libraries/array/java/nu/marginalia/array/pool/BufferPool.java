@@ -22,8 +22,8 @@ public class BufferPool implements AutoCloseable {
     private volatile UnsafeLongArrayBuffer lastAccessedBuffer;
     private PoolLru poolLru;
 
-    final AtomicInteger diskReadCount = new AtomicInteger();
-    final AtomicInteger cacheReadCount = new AtomicInteger();
+    private final AtomicInteger diskReadCount = new AtomicInteger();
+    private final AtomicInteger cacheReadCount = new AtomicInteger();
 
     private volatile boolean running = true;
 
@@ -132,20 +132,32 @@ public class BufferPool implements AutoCloseable {
         UnsafeLongArrayBuffer buffer = getExistingBufferForReading(address);
 
         if (buffer == null) {
-            // If the page is not available, read it from the caller's thread
-            buffer = acquireFreePage(address);
-            poolLru.register(buffer);
-            populateBuffer(buffer);
-
-            // Flip from a write lock to a read lock immediately
-            if (!buffer.pinCount().compareAndSet(-1, 1)) {
-                throw new IllegalStateException("Panic! Write lock was not held during write!");
-            }
-
-            diskReadCount.incrementAndGet();
+            buffer = read(address, true);
         }
 
         lastAccessedBuffer = buffer;
+
+        return buffer;
+    }
+
+    private UnsafeLongArrayBuffer read(long address, boolean acquire) {
+        // If the page is not available, read it from the caller's thread
+        UnsafeLongArrayBuffer buffer = acquireFreePage(address);
+        poolLru.register(buffer);
+        populateBuffer(buffer);
+
+        if (acquire) {
+            if (!buffer.pinCount().compareAndSet(-1, 1)) {
+                throw new IllegalStateException("Panic! Write lock was not held during write!");
+            }
+        }
+        else {
+            if (!buffer.pinCount().compareAndSet(-1, 0)) {
+                throw new IllegalStateException("Panic! Write lock was not held during write!");
+            }
+        }
+
+        diskReadCount.incrementAndGet();
 
         return buffer;
     }
@@ -166,6 +178,12 @@ public class BufferPool implements AutoCloseable {
         NativeAlgos.readAt(fd, buffer.getMemorySegment(), buffer.pageAddress());
         assert buffer.getMemorySegment().get(ValueLayout.JAVA_INT, 0) != 9999;
         buffer.dirty(false);
+
+        if (buffer.pinCount().get() > 1) {
+            synchronized (buffer) {
+                buffer.notifyAll();
+            }
+        }
     }
 
     private void waitForPageWrite(LongArrayBuffer page) {

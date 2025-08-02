@@ -51,7 +51,7 @@ public class SkipListReaderTest {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
             while (!reader.atEnd()) {
@@ -64,7 +64,7 @@ public class SkipListReaderTest {
 
         System.out.println("---");
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(40);
             while (!reader.atEnd()) {
@@ -87,7 +87,7 @@ public class SkipListReaderTest {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
             reader.retainData(lqb);
@@ -105,7 +105,7 @@ public class SkipListReaderTest {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
             long[] queryVals = reader.getValues(queryKeys);
@@ -124,7 +124,7 @@ public class SkipListReaderTest {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             LongQueryBuffer lqb = new LongQueryBuffer(4);
             reader.getData(lqb);
@@ -154,7 +154,7 @@ public class SkipListReaderTest {
             throw new RuntimeException(e);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 4104);
             long[] queryKeys = new long[] { 100 };
             var lqb = new LongQueryBuffer(32);
@@ -180,7 +180,7 @@ public class SkipListReaderTest {
                 pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             }
 
-            try (var pool = new BufferPool(outputFile, 512, 8)) {
+            try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
                 var reader = new SkipListReader(pool, pos);
                 var lqb = new LongQueryBuffer(32);
                 reader.getData(lqb);
@@ -208,7 +208,7 @@ public class SkipListReaderTest {
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             var lqb = new LongQueryBuffer(32);
             reader.getData(lqb);
@@ -232,7 +232,7 @@ public class SkipListReaderTest {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             long[] queryKeys = new long[] { 100 };
             long[] queryVals = reader.getValues(queryKeys);
@@ -250,7 +250,7 @@ public class SkipListReaderTest {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, 512, 8)) {
+        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
             reader.rejectData(lqb);
