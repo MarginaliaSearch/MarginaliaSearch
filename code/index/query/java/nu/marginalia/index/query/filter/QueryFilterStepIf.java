@@ -3,8 +3,6 @@ package nu.marginalia.index.query.filter;
 import nu.marginalia.array.page.LongQueryBuffer;
 
 public interface QueryFilterStepIf extends Comparable<QueryFilterStepIf> {
-    boolean test(long value);
-
     double cost();
 
     default int compareTo(QueryFilterStepIf other) {
@@ -22,17 +20,7 @@ public interface QueryFilterStepIf extends Comparable<QueryFilterStepIf> {
      *
      * <p>ASSUMPTION: buffer is sorted up until end.</p>
      */
-    default void apply(LongQueryBuffer buffer) {
-        while (buffer.hasMore()) {
-            if (test(buffer.currentValue())) {
-                buffer.retainAndAdvance();
-            }
-            else {
-                buffer.rejectAndAdvance();
-            }
-        }
-        buffer.finalizeFiltering();
-    }
+    void apply(LongQueryBuffer buffer);
 
 }
 

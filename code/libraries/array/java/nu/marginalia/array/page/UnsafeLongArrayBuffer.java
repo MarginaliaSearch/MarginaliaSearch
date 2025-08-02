@@ -22,6 +22,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
     private static final Unsafe unsafe = UnsafeProvider.getUnsafe();
 
     private final MemorySegment segment;
+    public final int ord;
 
     private volatile long pageAddress = -1;
     private volatile boolean dirty = false;
@@ -30,12 +31,14 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
      * <p></p>
      * When the pin count is 0, the page is free.
      * When it is -1, it is held for writing.
-     * When it is greater than 0, it is held for reading.
+     * When the pin count is 1, the page is cached and can be reclaimed.
+     * When it is greater than 1, it is held for reading.
      */
     private final AtomicInteger pinCount = new AtomicInteger(0);
 
-    public UnsafeLongArrayBuffer(MemorySegment segment) {
+    public UnsafeLongArrayBuffer(MemorySegment segment, int ord) {
         this.segment = segment;
+        this.ord = ord;
     }
 
     public int hashCode() {
@@ -72,7 +75,43 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
     @Override
     public boolean isHeld() {
-        return pinCount.get() != 0;
+        int pinCount = this.pinCount.get();
+        return pinCount < 0 || pinCount > 1;
+    }
+
+    public boolean isCached() {
+        return this.pinCount.get() == 1;
+    }
+
+
+    public boolean reclaim() {
+        return pinCount.compareAndSet(1, 0);
+    }
+
+    public byte getByte(int offset) {
+        return unsafe.getByte(segment.address() + offset);
+    }
+    public int getInt(int offset) {
+        return unsafe.getInt(segment.address() + offset);
+    }
+    public long getLong(int offset) {
+        return unsafe.getLong(segment.address() + offset);
+    }
+
+    public int binarySearchLong(long key, int baseOffset, int fromIndex, int toIndex) {
+        int low = 0;
+        int high = (toIndex - fromIndex) - 1;
+        int len = high - low;
+
+        while (len > 0) {
+            var half = len / 2;
+            if (getLong(baseOffset + fromIndex + 8 * (low + half)) < key) {
+                low += len - half;
+            }
+            len = half;
+        }
+
+        return fromIndex + low;
     }
 
     @Override
@@ -91,7 +130,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
         int pinCountVal;
 
         while ((pinCountVal = pinCount.get()) >= 0) {
-            if (pinCount.compareAndSet(pinCountVal, pinCountVal + 1)) {
+            if (pinCount.compareAndSet(pinCountVal, Math.max(pinCountVal + 1, 2))) {
                 if (pageAddress != expectedAddress) {
                     pinCount.decrementAndGet();
                     return false;
@@ -102,6 +141,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
         return false;
     }
+
 
     /** Close yields the buffer back to the pool (unless held by multiple readers), but does not deallocate it */
     @Override

@@ -316,7 +316,7 @@ public class PerfTestMain {
                 while (query.hasMore()) {
                     query.getMoreResults(buffer);
                     sum1 += buffer.end;
-                    buffer.reset();
+                    buffer.zero();
                 }
             }
             indexReader.reset();

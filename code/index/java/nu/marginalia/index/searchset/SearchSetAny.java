@@ -10,4 +10,9 @@ public class SearchSetAny implements SearchSet {
     public String toString() {
         return getClass().getSimpleName();
     }
+
+    @Override
+    public boolean imposesConstraint() {
+        return false;
+    }
 }

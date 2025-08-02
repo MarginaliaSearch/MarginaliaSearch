@@ -12,9 +12,6 @@ public record ReverseIndexRejectFilter(SkipListReader range) implements QueryFil
         buffer.finalizeFiltering();
     }
 
-    public boolean test(long id) {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public double cost() {

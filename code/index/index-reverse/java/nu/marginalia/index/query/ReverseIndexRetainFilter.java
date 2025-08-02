@@ -12,10 +12,6 @@ public record ReverseIndexRetainFilter(SkipListReader range, String name, long w
         buffer.finalizeFiltering();
     }
 
-    public boolean test(long id) {
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     public double cost() {
         return 1;
