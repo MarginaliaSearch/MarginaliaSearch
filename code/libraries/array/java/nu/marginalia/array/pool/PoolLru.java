@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.SequencedCollection;
 import java.util.concurrent.locks.StampedLock;
@@ -19,8 +20,11 @@ public class PoolLru {
     private final UnsafeLongArrayBuffer[] pages;
     private final SequencedCollection<UnsafeLongArrayBuffer> values;
     private final ArrayDeque<UnsafeLongArrayBuffer> freeQueue;
+    private final HashSet<UnsafeLongArrayBuffer> freeSet = new HashSet<>();
+
     private final int freeQueueSize;
 
+    private long junkAddress = Long.MIN_VALUE;
     private final StampedLock mapLock = new StampedLock();
 
     public PoolLru(UnsafeLongArrayBuffer[] pages) {
@@ -50,32 +54,25 @@ public class PoolLru {
 
     /** Associate the buffer with an address */
     public void register(UnsafeLongArrayBuffer buffer) {
-        UnsafeLongArrayBuffer free1 = null;
-        UnsafeLongArrayBuffer free2 = null;
-
         long stamp = mapLock.writeLock();
         try {
-            var old = backingMap.put(buffer.pageAddress(), buffer);
+            UnsafeLongArrayBuffer old = backingMap.put(buffer.pageAddress(), buffer);
             if (old != null && !old.isHeld()) {
-                free1 = old;
+                if (freeSet.add(old)) {
+                    freeQueue.add(old);
+                }
             }
+
 
             // Evict the last entry if we've exceeded the
             while (backingMap.size() >= maxSize) {
-                UnsafeLongArrayBuffer evicted = backingMap.pollLastEntry().getValue();
-                if (!evicted.isHeld() && evicted != free1) {
-                    free2 = evicted;
+                UnsafeLongArrayBuffer evicted = backingMap.pollFirstEntry().getValue();
+                if (evicted != null && !evicted.isHeld()) {
+                    if (freeSet.add(evicted)) {
+                        freeQueue.add(evicted);
+                    }
                 }
             }
-        }
-        finally {
-            mapLock.unlockWrite(stamp);
-        }
-
-        stamp = mapLock.writeLock();
-        try {
-            if (free1 != null) freeQueue.add(free1);
-            if (free2 != null) freeQueue.add(free2);
         }
         finally {
             mapLock.unlockWrite(stamp);
@@ -94,6 +91,7 @@ public class PoolLru {
             while (!freeQueue.isEmpty()) {
                 buffer = freeQueue.pollFirst();
                 if (buffer != null && !buffer.isHeld()) {
+                    freeSet.remove(buffer);
                     return buffer;
                 }
             }
@@ -102,22 +100,32 @@ public class PoolLru {
                 buffer = iter.next();
                 if (!buffer.isHeld()) {
                     iter.remove();
-                    freeQueue.addLast(buffer);
+                    if (freeSet.add(buffer)) {
+                        freeQueue.addLast(buffer);
+                    }
                 }
             }
 
             if (freeQueue.isEmpty()) {
-                logger.warn("Running expensive reclamation");
                 for (var page : pages) {
                     if (!page.isHeld()) {
-                        freeQueue.addLast(page);
+                        if (freeSet.add(page)) {
+                            freeQueue.addLast(page);
+                            backingMap.remove(page.pageAddress());
+                        }
                     }
                     if (freeQueue.size() >= freeQueueSize) {
                         break;
                     }
                 }
+                logger.warn("Ran expensive reclamation, freed {}", freeQueue.size());
             }
-            return freeQueue.pollFirst();
+
+            var entry = freeQueue.pollFirst();
+            if (entry != null) {
+                freeSet.remove(entry);
+            }
+            return entry;
         }
         finally {
             mapLock.unlockWrite(mapStamp);
