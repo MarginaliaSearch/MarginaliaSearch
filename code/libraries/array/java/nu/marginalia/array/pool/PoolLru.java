@@ -120,7 +120,12 @@ public class PoolLru {
                 }
                 logger.warn("Ran expensive reclamation, freed {}", freeQueue.size());
             }
-            return freeQueue.pollFirst();
+
+            var entry = freeQueue.pollFirst();
+            if (entry != null) {
+                freeSet.remove(entry);
+            }
+            return entry;
         }
         finally {
             mapLock.unlockWrite(mapStamp);
