@@ -32,6 +32,11 @@ public class BufferPool implements AutoCloseable {
         for (var page : pages) {
             page.pageAddress(-1);
         }
+        try {
+            poolLru.stop();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         poolLru = new PoolLru(pages);
     }
 
@@ -41,7 +46,7 @@ public class BufferPool implements AutoCloseable {
         this.arena = Arena.ofShared();
         this.pages = new UnsafeLongArrayBuffer[poolSize];
         for (int i = 0; i < pages.length; i++) {
-            pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 512));
+            pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 512), i);
         }
 
         this.poolLru = new PoolLru(pages);
@@ -68,7 +73,7 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}", hashCode(), pageSizeBytes, diskRead, cacheRead, heldCount, pages.length, poolLru.getFreeQueueSize());
+                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}", hashCode(), pageSizeBytes, diskRead, cacheRead, heldCount, pages.length, poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
                 }
             }
         });
@@ -171,7 +176,7 @@ public class BufferPool implements AutoCloseable {
         synchronized (page) {
             while (page.dirty()) {
                 try {
-                    page.wait(1);
+                    page.wait(0, 1000);
                 }
                 catch (InterruptedException ex) {
                     throw new RuntimeException(ex);

@@ -63,11 +63,11 @@ public class FullReverseIndexReader {
         this.words = LongArrayFactory.mmapForReadingShared(words);
         this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
-        dataPools = new BufferPool[64];
-        poolOffsets = new long[64];
+        dataPools = new BufferPool[1];
+        poolOffsets = new long[1];
 
-        for (int i = 0; i < 64; i++) {
-            dataPools[i] = new BufferPool(documents, 512, 2048);
+        for (int i = 0; i < 1; i++) {
+            dataPools[i] = new BufferPool(documents, 512, 65536);
         }
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);

@@ -60,6 +60,7 @@ public class IndexQuery {
         if (!fillBuffer(dest))
             return;
 
+
         for (var filter : inclusionFilter) {
             filter.apply(dest);
 
@@ -73,6 +74,8 @@ public class IndexQuery {
 
     private boolean fillBuffer(LongQueryBuffer dest) {
         for (;;) {
+            dest.zero();
+
             EntrySource source = sources.get(si);
             source.read(dest);
 

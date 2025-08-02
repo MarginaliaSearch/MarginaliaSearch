@@ -3,6 +3,7 @@ package nu.marginalia.skiplist;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.array.page.UnsafeLongArrayBuffer;
 import nu.marginalia.array.pool.BufferPool;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +19,7 @@ public class SkipListReader {
 
     private long currentBlock;
     private int currentBlockOffset;
-    private int currentIdx;
+    private int currentBlockIdx;
 
     private boolean atEnd;
 
@@ -30,13 +31,13 @@ public class SkipListReader {
         currentBlockOffset = (int) (blockStart & (SkipListConstants.BLOCK_SIZE - 1));
         atEnd = false;
 
-        currentIdx = 0;
+        currentBlockIdx = 0;
     }
 
     public void reset() {
         currentBlock = blockStart & -SkipListConstants.BLOCK_SIZE;
         currentBlockOffset = (int) (blockStart & (SkipListConstants.BLOCK_SIZE - 1));
-        currentIdx = 0;
+        currentBlockIdx = 0;
 
         atEnd = false;
     }
@@ -48,7 +49,7 @@ public class SkipListReader {
     public int getRemainingSize() {
         try (var page = pool.get(currentBlock)) {
             var ms = page.getMemorySegment();
-            return ms.get(ValueLayout.JAVA_INT, 4 + currentBlockOffset) - currentIdx;
+            return ms.get(ValueLayout.JAVA_INT, 4 + currentBlockOffset) - currentBlockIdx;
         }
     }
 
@@ -57,14 +58,35 @@ public class SkipListReader {
             try (var page = pool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
 
-                int n = headerNumRecords(ms, currentBlockOffset);
-                int fc = headerForwardCount(ms, currentBlockOffset);
-                byte flags = (byte) headerFlags(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
 
                 int dataOffset = currentBlockOffset + 8 * (1 + fc);
 
-                if (currentIdx < n) {
-                    long pv = ms.get(ValueLayout.JAVA_LONG, dataOffset + currentIdx * 8L);
+
+                while (currentBlockIdx < n && data.hasMore()) {
+                    currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n);
+
+                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                    long bv = data.currentValue();
+
+                    if (pv == bv) {
+                        data.retainAndAdvance();
+                        currentBlockIdx++;
+                        break;
+                    }
+                    else if (pv > bv) {
+                        currentBlockIdx++;
+                        data.rejectAndAdvance();
+                    }
+                    else {
+                        currentBlockIdx ++;
+                    }
+                }
+
+                if (currentBlockIdx < n && data.hasMore()) {
+                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
                     long bv = data.currentValue();
 
                     while (data.hasMore()) {
@@ -80,8 +102,8 @@ public class SkipListReader {
                             continue;
                         }
 
-                        if (++currentIdx < n) {
-                            pv = ms.get(ValueLayout.JAVA_LONG, dataOffset + currentIdx * 8L);
+                        if (++currentBlockIdx < n) {
+                            pv = page.getLong( dataOffset + currentBlockIdx * 8);
                         }
                         else {
                             break;
@@ -89,7 +111,7 @@ public class SkipListReader {
                     }
                 }
 
-                if (currentIdx == n) {
+                if (currentBlockIdx == n) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (atEnd) {
                         while (data.hasMore())
@@ -97,7 +119,7 @@ public class SkipListReader {
                         return;
                     }
                     currentBlockOffset = 0;
-                    currentIdx = 0;
+                    currentBlockIdx = 0;
                     if (!data.hasMore()) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
@@ -127,15 +149,34 @@ public class SkipListReader {
                 MemorySegment ms = page.getMemorySegment();
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
 
-                int n = headerNumRecords(ms, currentBlockOffset);
-                int fc = headerForwardCount(ms, currentBlockOffset);
-                byte flags = (byte) headerFlags(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
 
                 int dataOffset = currentBlockOffset + 8 * (1 + fc);
                 int valuesOffset = currentBlockOffset + 8 * (1 + fc + n);
 
-                if (currentIdx < n) {
-                    long pv = ms.get(ValueLayout.JAVA_LONG, dataOffset + currentIdx * 8L);
+                while (currentBlockIdx < n && pos < keys.length) {
+                    currentBlockIdx = page.binarySearchLong(keys[pos], dataOffset, currentBlockIdx, n);
+
+                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                    long bv = keys[pos];
+
+                    if (pv == bv) {
+                        vals[pos++] = page.getLong(valuesOffset + currentBlockIdx * 8);
+                        break;
+                    }
+                    else if (pv > bv) {
+                        pos++;
+                    }
+                    else {
+                        currentBlockIdx ++;
+                    }
+
+                }
+
+                if (currentBlockIdx < n && pos < keys.length) {
+                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
                     long bv = keys[pos];
 
                     for (;;) {
@@ -146,14 +187,14 @@ public class SkipListReader {
                             continue;
                         }
                         else if (bv == pv) {
-                            vals[pos] = ms.get(ValueLayout.JAVA_LONG, valuesOffset + 8L*currentIdx);
+                            vals[pos] = page.getLong(valuesOffset + currentBlockIdx * 8);
                             if (++pos >= keys.length) break;
                             bv = keys[pos];
                             continue;
                         }
 
-                        if (++currentIdx < n) {
-                            pv = ms.get(ValueLayout.JAVA_LONG, dataOffset + currentIdx * 8L);
+                        if (++currentBlockIdx < n) {
+                            pv = page.getLong( dataOffset + currentBlockIdx * 8);
                         }
                         else {
                             break;
@@ -161,14 +202,14 @@ public class SkipListReader {
                     }
                 }
 
-                if (currentIdx == n) {
+                if (currentBlockIdx == n) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (atEnd) {
 
                         break;
                     }
                     currentBlockOffset = 0;
-                    currentIdx = 0;
+                    currentBlockIdx = 0;
                     if (pos >= keys.length) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
@@ -196,14 +237,34 @@ public class SkipListReader {
             try (var page = pool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
 
-                int n = headerNumRecords(ms, currentBlockOffset);
-                int fc = headerForwardCount(ms, currentBlockOffset);
-                byte flags = (byte) headerFlags(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
 
                 int dataOffset = currentBlockOffset + 8 * (1 + fc);
 
-                if (currentIdx < n) {
-                    long pv = ms.get(ValueLayout.JAVA_LONG, dataOffset + currentIdx * 8L);
+                while (currentBlockIdx < n && data.hasMore()) {
+                    currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n);
+
+                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                    long bv = data.currentValue();
+
+                    if (pv == bv) {
+                        data.retainAndAdvance();
+                        currentBlockIdx++;
+                        break;
+                    }
+                    else if (pv > bv) {
+                        currentBlockIdx++;
+                        data.rejectAndAdvance();
+                    }
+                    else {
+                        currentBlockIdx ++;
+                    }
+                }
+
+                if (currentBlockIdx < n) {
+                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
                     long bv = data.currentValue();
 
                     while (data.hasMore()) {
@@ -219,8 +280,8 @@ public class SkipListReader {
                             continue;
                         }
 
-                        if (++currentIdx < n) {
-                            pv = ms.get(ValueLayout.JAVA_LONG, dataOffset + currentIdx * 8L);
+                        if (++currentBlockIdx < n) {
+                            pv = page.getLong( dataOffset + currentBlockIdx * 8);
                         }
                         else {
                             break;
@@ -228,7 +289,7 @@ public class SkipListReader {
                     }
                 }
 
-                if (currentIdx == n) {
+                if (currentBlockIdx == n) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (atEnd) {
                         while (data.hasMore())
@@ -236,7 +297,7 @@ public class SkipListReader {
                         return;
                     }
                     currentBlockOffset = 0;
-                    currentIdx = 0;
+                    currentBlockIdx = 0;
                     if (!data.hasMore()) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
@@ -268,20 +329,20 @@ public class SkipListReader {
             try (var page = pool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
-                int n = headerNumRecords(ms, currentBlockOffset);
-                int fc = headerForwardCount(ms, currentBlockOffset);
-                byte flags = (byte) headerFlags(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
 
                 int dataOffset = currentBlockOffset + 8 * (1 + fc);
-                int nCopied = dest.addData(ms, dataOffset, n - currentIdx);
-                currentIdx += nCopied;
+                int nCopied = dest.addData(ms, dataOffset, n - currentBlockIdx);
+                currentBlockIdx += nCopied;
 
-                if (currentIdx >= n) {
+                if (currentBlockIdx >= n) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (!atEnd) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                         currentBlockOffset = 0;
-                        currentIdx = 0;
+                        currentBlockIdx = 0;
                     }
                 }
 
@@ -346,17 +407,32 @@ public class SkipListReader {
 
         return ret;
     }
+    public static int headerNumRecords(UnsafeLongArrayBuffer buffer, int offset) {
+        return buffer.getByte(offset);
+    }
 
     public static int headerNumRecords(MemorySegment block, int offset) {
         return block.get(ValueLayout.JAVA_BYTE, offset);
+    }
+
+    public static int headerForwardCount(UnsafeLongArrayBuffer buffer, int offset) {
+        return buffer.getByte(offset + 1);
     }
 
     public static int headerForwardCount(MemorySegment block, int offset) {
         return block.get(ValueLayout.JAVA_BYTE, offset + 1);
     }
 
+    public static int headerFlags(UnsafeLongArrayBuffer buffer, int offset) {
+        return buffer.getByte(offset + 2);
+    }
+
     public static int headerFlags(MemorySegment block, int offset) {
         return block.get(ValueLayout.JAVA_BYTE, offset + 2);
+    }
+
+    public static int headerSize(UnsafeLongArrayBuffer buffer, int offset) {
+        return buffer.getInt(offset + 4);
     }
 
     public static int headerSize(MemorySegment block, int offset) {

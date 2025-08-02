@@ -91,6 +91,7 @@ public class SkipListReaderTest {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
             reader.retainData(lqb);
+            lqb.finalizeFiltering();
             System.out.println(Arrays.toString(lqb.copyData()));
         }
     }
