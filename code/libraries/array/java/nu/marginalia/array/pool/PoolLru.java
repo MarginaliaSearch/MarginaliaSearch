@@ -8,7 +8,6 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.SequencedCollection;
-import java.util.concurrent.locks.StampedLock;
 
 /** LRU for pool buffers
  * */
@@ -25,7 +24,6 @@ public class PoolLru {
     private final int freeQueueSize;
 
     private long junkAddress = Long.MIN_VALUE;
-    private final StampedLock mapLock = new StampedLock();
 
     public PoolLru(UnsafeLongArrayBuffer[] pages) {
         backingMap = new LinkedHashMap<>(pages.length, 0.75f, true);
@@ -42,40 +40,28 @@ public class PoolLru {
     }
 
     /** Attempt to get a buffer alread yassociated with the address */
-    public UnsafeLongArrayBuffer get(long address) {
-        long stamp = mapLock.readLock();
-        try {
-            return backingMap.get(address);
-        }
-        finally {
-            mapLock.unlockRead(stamp);
-        }
+    public synchronized UnsafeLongArrayBuffer get(long address) {
+        return backingMap.get(address);
     }
 
     /** Associate the buffer with an address */
-    public void register(UnsafeLongArrayBuffer buffer) {
-        long stamp = mapLock.writeLock();
-        try {
-            UnsafeLongArrayBuffer old = backingMap.put(buffer.pageAddress(), buffer);
-            if (old != null && !old.isHeld()) {
-                if (freeSet.add(old)) {
-                    freeQueue.add(old);
-                }
-            }
-
-
-            // Evict the last entry if we've exceeded the
-            while (backingMap.size() >= maxSize) {
-                UnsafeLongArrayBuffer evicted = backingMap.pollFirstEntry().getValue();
-                if (evicted != null && !evicted.isHeld()) {
-                    if (freeSet.add(evicted)) {
-                        freeQueue.add(evicted);
-                    }
-                }
+    public synchronized void register(UnsafeLongArrayBuffer buffer) {
+        UnsafeLongArrayBuffer old = backingMap.put(buffer.pageAddress(), buffer);
+        if (old != null && !old.isHeld()) {
+            if (freeSet.add(old)) {
+                freeQueue.add(old);
             }
         }
-        finally {
-            mapLock.unlockWrite(stamp);
+
+
+        // Evict the last entry if we've exceeded the
+        while (backingMap.size() >= maxSize) {
+            UnsafeLongArrayBuffer evicted = backingMap.pollFirstEntry().getValue();
+            if (evicted != null && !evicted.isHeld()) {
+                if (freeSet.add(evicted)) {
+                    freeQueue.add(evicted);
+                }
+            }
         }
     }
 
@@ -83,62 +69,50 @@ public class PoolLru {
      *
      * @return An unheld buffer, or null if the attempt failed
      * */
-    public UnsafeLongArrayBuffer getFree() {
-        long mapStamp = mapLock.writeLock();
-        try {
-            UnsafeLongArrayBuffer buffer;
+    public synchronized UnsafeLongArrayBuffer getFree() {
+        UnsafeLongArrayBuffer buffer;
 
-            while (!freeQueue.isEmpty()) {
-                buffer = freeQueue.pollFirst();
-                if (buffer != null && !buffer.isHeld()) {
-                    freeSet.remove(buffer);
-                    return buffer;
-                }
+        while (!freeQueue.isEmpty()) {
+            buffer = freeQueue.pollFirst();
+            if (buffer != null && !buffer.isHeld()) {
+                freeSet.remove(buffer);
+                return buffer;
             }
-            var iter = values.iterator();
-            while (iter.hasNext() && freeQueue.size() < freeQueueSize) {
-                buffer = iter.next();
-                if (!buffer.isHeld()) {
-                    iter.remove();
-                    if (freeSet.add(buffer)) {
-                        freeQueue.addLast(buffer);
-                    }
-                }
-            }
-
-            if (freeQueue.isEmpty()) {
-                for (var page : pages) {
-                    if (!page.isHeld()) {
-                        if (freeSet.add(page)) {
-                            freeQueue.addLast(page);
-                            backingMap.remove(page.pageAddress());
-                        }
-                    }
-                    if (freeQueue.size() >= freeQueueSize) {
-                        break;
-                    }
-                }
-                logger.warn("Ran expensive reclamation, freed {}", freeQueue.size());
-            }
-
-            var entry = freeQueue.pollFirst();
-            if (entry != null) {
-                freeSet.remove(entry);
-            }
-            return entry;
         }
-        finally {
-            mapLock.unlockWrite(mapStamp);
+        var iter = values.iterator();
+        while (iter.hasNext() && freeQueue.size() < freeQueueSize) {
+            buffer = iter.next();
+            if (!buffer.isHeld()) {
+                iter.remove();
+                if (freeSet.add(buffer)) {
+                    freeQueue.addLast(buffer);
+                }
+            }
         }
+
+        if (freeQueue.isEmpty()) {
+            for (var page : pages) {
+                if (!page.isHeld()) {
+                    if (freeSet.add(page)) {
+                        freeQueue.addLast(page);
+                        backingMap.remove(page.pageAddress());
+                    }
+                }
+                if (freeQueue.size() >= freeQueueSize) {
+                    break;
+                }
+            }
+            logger.warn("Ran expensive reclamation, freed {}", freeQueue.size());
+        }
+
+        var entry = freeQueue.pollFirst();
+        if (entry != null) {
+            freeSet.remove(entry);
+        }
+        return entry;
     }
 
-    public Object getFreeQueueSize() {
-        long queueLock = mapLock.readLock();
-        try {
-            return freeQueue.size();
-        }
-        finally {
-            mapLock.unlockRead(queueLock);
-        }
+    public synchronized Object getFreeQueueSize() {
+        return freeQueue.size();
     }
 }
