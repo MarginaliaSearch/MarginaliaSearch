@@ -38,6 +38,13 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
         this.segment = segment;
     }
 
+    public int hashCode() {
+        return (int) segment.address();
+    }
+    public boolean equals(Object obj) {
+        return obj == this;
+    }
+
     @Override
     public long pageAddress() {
         return pageAddress;
