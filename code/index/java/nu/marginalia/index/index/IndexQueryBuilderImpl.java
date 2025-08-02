@@ -1,11 +1,9 @@
 package nu.marginalia.index.index;
 
-import java.util.List;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.FullReverseIndexReader;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
-import nu.marginalia.index.query.filter.QueryFilterAnyOf;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 
 public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
@@ -51,20 +49,6 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
     public IndexQueryBuilder addInclusionFilter(QueryFilterStepIf filterStep) {
 
         query.addInclusionFilter(filterStep);
-
-        return this;
-    }
-
-    public IndexQueryBuilder addInclusionFilterAny(List<QueryFilterStepIf> filterSteps) {
-        if (filterSteps.isEmpty())
-            return this;
-
-        if (filterSteps.size() == 1) {
-            query.addInclusionFilter(filterSteps.getFirst());
-        }
-        else {
-            query.addInclusionFilter(new QueryFilterAnyOf(filterSteps));
-        }
 
         return this;
     }
