@@ -19,14 +19,12 @@ public class PoolLru {
     private final UnsafeLongArrayBuffer[] pages;
 
     private final int[] freeQueue;
-    private final int[] clock;
-    private int clockHand = 0;
     private volatile long reclaimCycles;
-    private AtomicLong clockWriteIdx;
-    private AtomicLong clockReadIdx;
+    private final AtomicLong clockWriteIdx;
+    private final AtomicLong clockReadIdx;
 
     private final StampedLock lock = new StampedLock();
-    Thread reclaimThread;
+    private final Thread reclaimThread;
 
     private volatile boolean running = true;
 
@@ -39,7 +37,6 @@ public class PoolLru {
         }
         maxSize = backingMap.size();
 
-        clock = new int[pages.length];
         freeQueue = new int[pages.length];
 
         for (int i = 0; i < freeQueue.length; i++) {
@@ -61,13 +58,7 @@ public class PoolLru {
     public UnsafeLongArrayBuffer get(long address) {
         var res = getAssociatedItem(address);
         if (res != null) {
-            long stamp = lock.writeLock();
-            try {
-                clock[res.ord]+=2;
-            }
-            finally {
-                lock.unlockWrite(stamp);
-            }
+            res.increaseClock(1);
         }
         return res;
     }
@@ -92,11 +83,21 @@ public class PoolLru {
         long stamp = lock.writeLock();
         try {
             backingMap.put(buffer.pageAddress(), buffer);
-            clock[buffer.ord]++;
+            buffer.touchClock(1);
             // Evict the last entry if we've exceeded the
             while (backingMap.size() >= maxSize) {
                 backingMap.pollFirstEntry();
             }
+        }
+        finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
+    public void deregister(UnsafeLongArrayBuffer buffer) {
+        long stamp = lock.writeLock();
+        try {
+            backingMap.remove(buffer.pageAddress(), buffer);
         }
         finally {
             lock.unlockWrite(stamp);
@@ -108,13 +109,13 @@ public class PoolLru {
      * @return An unheld buffer, or null if the attempt failed
      * */
     public UnsafeLongArrayBuffer getFree() {
-        for (; ; ) {
+        for (;;) {
             var readIdx = clockReadIdx.get();
             var writeIdx = clockWriteIdx.get();
+
             if (writeIdx - readIdx == freeQueue.length / 4) {
                 LockSupport.unpark(reclaimThread);
-            }
-            if (readIdx == writeIdx) {
+            } else if (readIdx == writeIdx) {
                 LockSupport.unpark(reclaimThread);
                 synchronized (this) {
                     try {
@@ -125,6 +126,7 @@ public class PoolLru {
                 }
                 continue;
             }
+
             if (clockReadIdx.compareAndSet(readIdx, readIdx + 1)) {
                 return pages[freeQueue[(int) (readIdx % freeQueue.length)]];
             }
@@ -132,6 +134,8 @@ public class PoolLru {
     }
 
     private void reclaimThread() {
+        int pageIdx = 0;
+
         while (running) {
             long readIdx = clockReadIdx.get();
             long writeIdx = clockWriteIdx.get();
@@ -147,24 +151,25 @@ public class PoolLru {
             if (toClaim == 0)
                 continue;
 
-            reclaimCycles++;
+            ++reclaimCycles;
             do {
-                if (++clockHand >= clock.length) {
-                    clockHand = 0;
+                if (++pageIdx >= pages.length) {
+                    pageIdx = 0;
                 }
-                int idx = clockHand;
-                if (pages[idx].isCached()) {
-                    if (clock[idx] <= 0) {
-                        if (pages[idx].reclaim()) {
-                            freeQueue[(int) (clockWriteIdx.getAndIncrement() % freeQueue.length)] = idx;
-                            toClaim--;
-                        }
+                var currentPage = pages[pageIdx];
+
+                if (currentPage.decreaseClock()) {
+                    if (!currentPage.isHeld()) {
+                        freeQueue[(int) (clockWriteIdx.getAndIncrement() % freeQueue.length)] = pageIdx;
+                        deregister(pages[pageIdx]);
+                        toClaim--;
                     }
                     else {
-                        clock[idx]--;
+                        currentPage.touchClock(1);
                     }
                 }
-            } while (toClaim >= 0);
+
+            } while (running && toClaim >= 0);
 
             synchronized (this) {
                 notifyAll();

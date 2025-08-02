@@ -31,10 +31,10 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
      * <p></p>
      * When the pin count is 0, the page is free.
      * When it is -1, it is held for writing.
-     * When the pin count is 1, the page is cached and can be reclaimed.
-     * When it is greater than 1, it is held for reading.
+     * When it is greater than 0, it is held for reading.
      */
     private final AtomicInteger pinCount = new AtomicInteger(0);
+    private final AtomicInteger clock = new AtomicInteger();
 
     public UnsafeLongArrayBuffer(MemorySegment segment, int ord) {
         this.segment = segment;
@@ -46,6 +46,23 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
     }
     public boolean equals(Object obj) {
         return obj == this;
+    }
+
+    public void increaseClock(int val) {
+        clock.addAndGet(val);
+    }
+    public void touchClock(int val) {
+        clock.set(val);
+    }
+    public boolean decreaseClock() {
+        for (;;) {
+            int cv = clock.get();
+            if (cv == 0)
+                return true;
+            if (clock.compareAndSet(cv, cv-1)) {
+                return cv == 1;
+            }
+        }
     }
 
     @Override
@@ -75,17 +92,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
 
     @Override
     public boolean isHeld() {
-        int pinCount = this.pinCount.get();
-        return pinCount < 0 || pinCount > 1;
-    }
-
-    public boolean isCached() {
-        return this.pinCount.get() == 1;
-    }
-
-
-    public boolean reclaim() {
-        return pinCount.compareAndSet(1, 0);
+        return 0 != this.pinCount.get();
     }
 
     public byte getByte(int offset) {
@@ -130,7 +137,7 @@ public class UnsafeLongArrayBuffer implements LongArray, LongArrayBuffer {
         int pinCountVal;
 
         while ((pinCountVal = pinCount.get()) >= 0) {
-            if (pinCount.compareAndSet(pinCountVal, Math.max(pinCountVal + 1, 2))) {
+            if (pinCount.compareAndSet(pinCountVal, pinCountVal+1)) {
                 if (pageAddress != expectedAddress) {
                     pinCount.decrementAndGet();
                     return false;
