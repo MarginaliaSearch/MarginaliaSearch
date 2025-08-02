@@ -27,6 +27,7 @@ import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.segmentation.NgramLexicon;
+import nu.marginalia.skiplist.SkipListWriter;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 
 import java.io.IOException;
@@ -64,7 +65,10 @@ public class PerfTestMain {
                 case "valuation" -> runValuation(indexDir, homeDir, query);
                 case "lookup" -> runLookup(indexDir, homeDir, query);
                 case "execution" -> runExecution(indexDir, homeDir, query);
+                case "convert" -> runConvert(indexDir, homeDir, query);
             }
+
+            System.exit(0);
         }
         catch (NumberFormatException e) {
             System.err.println("Arguments: data-dir index-dir query");
@@ -117,6 +121,27 @@ public class PerfTestMain {
         );
     }
 
+    public static void runConvert(Path homeDir,
+                                    Path indexDir,
+                                    String rawQuery) throws IOException, SQLException
+    {
+        var ir = new FullReverseIndexReader(
+                "full",
+                indexDir.resolve("ir/rev-words.dat"),
+                indexDir.resolve("ir/rev-docs.dat"),
+                new PositionsFileReader(indexDir.resolve("ir/rev-positions.dat"))
+        );
+        try (SkipListWriter sw = new SkipListWriter(Path.of("/tmp/index.dat"))) {
+            ir.eachDocRange(la -> {
+                try {
+                    sw.writeList(la, 0, (int) la.size()/2);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+    }
     public static void runValuation(Path homeDir,
                                     Path indexDir,
                                     String rawQuery) throws IOException, SQLException
@@ -141,25 +166,25 @@ public class PerfTestMain {
         List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
 
         TLongArrayList allResults = new TLongArrayList();
-        LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
 
         for (var query : queries) {
-            while (query.hasMore() && allResults.size() < 4096 ) {
+            while (query.hasMore() && allResults.size() < 512 ) {
                 query.getMoreResults(buffer);
                 allResults.addAll(buffer.copyData());
             }
-            if (allResults.size() >= 4096)
+            if (allResults.size() >= 512)
                 break;
         }
         allResults.sort();
-        if (allResults.size() > 4096) {
-            allResults.subList(4096,  allResults.size()).clear();
+        if (allResults.size() > 512) {
+            allResults.subList(512,  allResults.size()).clear();
         }
 
         var docIds = new CombinedDocIdList(allResults.toArray());
         var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
 
-        System.out.println("Running warmup loop!");
+        System.out.println("Running warmup loop, evaluating " + allResults.size() + " results");
         int sum = 0;
 
         Instant runEndTime = Instant.now().plus(warmupTime);
@@ -187,11 +212,11 @@ public class PerfTestMain {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
-                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }
         }
         System.out.println("Benchmark complete after " + iter + " iters!");
-        System.out.println("Best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+        System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
         System.out.println(docIds.size());
@@ -225,6 +250,7 @@ public class PerfTestMain {
             var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
             execution.run();
             sum += execution.itemsProcessed();
+            indexReader.reset();
             if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
                 break;
             }
@@ -243,7 +269,7 @@ public class PerfTestMain {
             long end = System.nanoTime();
             sum2 += execution.itemsProcessed();
             rates.add(execution.itemsProcessed() / ((end - start)/1_000_000_000.));
-
+            indexReader.reset();
             if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
@@ -280,7 +306,7 @@ public class PerfTestMain {
 
         Instant runEndTime = Instant.now().plus(warmupTime);
 
-        LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
         int sum1 = 0;
         int iter;
         for (iter = 0;; iter++) {
@@ -290,11 +316,11 @@ public class PerfTestMain {
                 while (query.hasMore()) {
                     query.getMoreResults(buffer);
                     sum1 += buffer.end;
-                    buffer.reset();
+                    buffer.zero();
                 }
             }
-
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
+            indexReader.reset();
+            if (Instant.now().isAfter(runEndTime)) {
                 break;
             }
         }
@@ -306,6 +332,7 @@ public class PerfTestMain {
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
+            indexReader.reset();
             List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
 
             long start = System.nanoTime();
@@ -317,9 +344,9 @@ public class PerfTestMain {
                 }
             }
             long end = System.nanoTime();
-            times.add((end - start)/1_000_000.);
+            times.add((end - start)/1_000_000_000.);
 
-            if ((iter % 100) == 0) {
+            if ((iter % 10) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }

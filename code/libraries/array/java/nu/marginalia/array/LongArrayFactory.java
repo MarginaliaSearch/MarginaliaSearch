@@ -5,6 +5,7 @@ import nu.marginalia.array.page.UnsafeLongArray;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,6 +24,13 @@ public class LongArrayFactory {
             return UnsafeLongArray.onHeap(Arena.ofShared(), size);
         else
             return SegmentLongArray.onHeap(Arena.ofShared(), size);
+    }
+
+    public static LongArray onHeapManaged(Arena arena, long size) {
+        if (useUnsafe)
+            return UnsafeLongArray.wrap(arena.allocate(8 * size));
+        else
+            return SegmentLongArray.wrap(arena.allocate(8 * size));
     }
 
     public static LongArray mmapForReadingConfined(Path filename) throws IOException  {
@@ -65,5 +73,14 @@ public class LongArrayFactory {
             return UnsafeLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, size);
         else
             return SegmentLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, size);
+    }
+
+    public static LongArray wrap(MemorySegment ms) {
+        if (useUnsafe) {
+            return UnsafeLongArray.wrap(ms);
+        }
+        else {
+            return SegmentLongArray.wrap(ms);
+        }
     }
 }

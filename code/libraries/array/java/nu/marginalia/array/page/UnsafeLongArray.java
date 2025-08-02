@@ -50,6 +50,10 @@ public class UnsafeLongArray implements LongArray {
         this.channel = channel;
     }
 
+    public static UnsafeLongArray wrap(MemorySegment ms) {
+        return new UnsafeLongArray(ms, null);
+    }
+
     public static UnsafeLongArray onHeap(Arena arena, long size) {
         return new UnsafeLongArray(arena.allocate(WORD_SIZE*size, 16), arena);
     }
@@ -77,6 +81,10 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public LongArray range(long start, long end) {
+
+        assert end >= start : end + "<" + start;
+        assert end <= size() : end + "<" + size();
+
         return new UnsafeLongArray(
             segment.asSlice(
                 start * JAVA_LONG.byteSize(),
@@ -93,6 +101,7 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public long get(long at) {
+
         try {
             return unsafe.getLong(segment.address() + at * JAVA_LONG.byteSize());
         }
@@ -120,6 +129,7 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public void set(long start, long end, LongBuffer buffer, int bufferStart) {
+        System.out.println("setA@"+ start + "#" + hashCode() + "-" + Thread.currentThread().threadId());
         for (int i = 0; i < end - start; i++) {
             unsafe.putLong(segment.address() + (start + i) * JAVA_LONG.byteSize(), buffer.get(bufferStart + i));
         }

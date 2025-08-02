@@ -9,14 +9,6 @@ public class BTreeContext {
     private final int blockSizeBits;
     private final int pageSize;
 
-    // Below this number of data pages, a b-tree will not be constructed.
-    //
-    // 8 pages is the breaking point where using a B-tree is actually advantageous
-    // over just binary searching in a sorted list. Above 8 pages, binary search will
-    // worst-case four page faults. A b-tree will incur three page faults up until
-    // ~100k-200k entries with typical configurations.
-    private static final int MIN_PAGES_FOR_BTREE = 8;
-
     /**
      * @param maxLayers         The maximum number of index layers
      * @param entrySize         The entry size, for size 1 the key is the data. For sizes larger than 1,
@@ -38,11 +30,19 @@ public class BTreeContext {
     public long calculateSize(int numEntries) {
         var header = BTreeWriter.makeHeader(this, 0, numEntries);
 
-        return header.dataOffsetLongs() + (long) numEntries * entrySize + 4;
+        long size;
+        if (header.layers() == 0)
+            size = pageSize;
+        else {
+            long dataSizeLongs = (long) numEntries * entrySize;
+            long dataSizeBlockRounded = pageSize * (dataSizeLongs / pageSize + Long.signum(dataSizeLongs % pageSize));
+            size = header.dataOffsetLongs() + dataSizeBlockRounded;
+        }
+        return size;
     }
 
     public int numIndexLayers(int numEntries) {
-        if (entrySize * numEntries <= pageSize * MIN_PAGES_FOR_BTREE) {
+        if (entrySize * numEntries <= pageSize - 3) {
             return 0;
         }
         for (int i = 1; i < maxLayers; i++) {

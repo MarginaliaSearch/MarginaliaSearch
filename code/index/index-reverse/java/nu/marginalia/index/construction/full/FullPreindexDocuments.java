@@ -12,10 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 /** A LongArray with document data, segmented according to
@@ -51,11 +49,6 @@ public class FullPreindexDocuments {
 
         return new FullPreindexDocuments(docsFileMap, docsFile);
     }
-
-    public FileChannel createDocumentsFileChannel() throws IOException {
-        return (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ);
-    }
-
 
     public LongArray slice(long start, long end) {
         return documents.range(start, end);

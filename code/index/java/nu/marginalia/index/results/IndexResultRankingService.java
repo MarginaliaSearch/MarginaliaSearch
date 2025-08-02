@@ -14,7 +14,6 @@ import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
-import nu.marginalia.index.ResultPriorityQueue;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
@@ -138,7 +137,7 @@ public class IndexResultRankingService {
     public List<RpcDecoratedResultItem> selectBestResults(int limitByDomain,
                                                           int limitTotal,
                                                           ResultRankingContext resultRankingContext,
-                                                          ResultPriorityQueue results) throws SQLException {
+                                                          List<SearchResultItem> results) throws SQLException {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
 

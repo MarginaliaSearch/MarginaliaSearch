@@ -9,8 +9,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
 
-import static java.lang.foreign.ValueLayout.ADDRESS;
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static java.lang.foreign.ValueLayout.*;
 
 /** This class provides access to native implementations of key algorithms
  *  used in index construction and querying.
@@ -28,6 +27,9 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 public class NativeAlgos {
     private final MethodHandle qsortHandle;
     private final MethodHandle qsort128Handle;
+    private final MethodHandle openDirect;
+    private final MethodHandle closeFd;
+    private final MethodHandle readAtFd;
 
     public static final NativeAlgos instance;
 
@@ -47,6 +49,15 @@ public class NativeAlgos {
         handle = libraryLookup.find("ms_sort_128").get();
         qsort128Handle = nativeLinker.downcallHandle(handle,
                 FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
+
+        handle = libraryLookup.find("open_direct_fd").get();
+        openDirect = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS));
+
+        handle = libraryLookup.find("close_fd").get();
+        closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
+
+        handle = libraryLookup.find("read_at").get();
+        readAtFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, JAVA_LONG));
     }
 
     static {
@@ -56,7 +67,6 @@ public class NativeAlgos {
         try (var is = NativeAlgos.class.getClassLoader().getResourceAsStream("libcpp.so")) {
             var tempFile = File.createTempFile("libcpp", ".so");
             tempFile.deleteOnExit();
-
 
             try (var os = new FileOutputStream(tempFile)) {
                 is.transferTo(os);
@@ -75,7 +85,31 @@ public class NativeAlgos {
         isAvailable = instance != null;
     }
 
+    public static int openDirect(Path filename) {
+        try {
+            MemorySegment filenameCStr = Arena.global().allocateFrom(filename.toString());
+            return (Integer) instance.openDirect.invoke(filenameCStr);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
 
+    public static int readAt(int fd, MemorySegment dest, long offset) {
+        try {
+            return (Integer) instance.readAtFd.invoke(fd, dest, (int) dest.byteSize(), offset);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static void closeFd(int fd) {
+        try {
+            instance.closeFd.invoke(fd);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
     public static void sort(MemorySegment ms, long start, long end) {
         try {
             instance.qsortHandle.invoke(ms, start, end);

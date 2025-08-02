@@ -65,12 +65,10 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     }
     @Override
     public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
-        long totalSize = 0;
         int numJobs = 0;
         for (long offset : encodedOffsets) {
             if (offset < 0)
                 continue;
-            totalSize += SpansCodec.decodeSize(offset);
             numJobs++;
         }
 
@@ -78,20 +76,18 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
         if (numJobs == 0) return ret;
 
         CountDownLatch latch = new CountDownLatch(numJobs);
-        MemorySegment segment = arena.allocate(totalSize, 8);
 
-        long bufferOffset = 0;
         for (int idx = 0; idx < encodedOffsets.length; idx++) {
+            if (encodedOffsets[idx] < 0)
+                continue;
             long size = SpansCodec.decodeSize(encodedOffsets[idx]);
             long start = SpansCodec.decodeStartOffset(encodedOffsets[idx]);
 
-            MemorySegment slice = segment.asSlice(bufferOffset, size);
-            bufferOffset += size;
-
             int i = idx;
             forkJoinPool.execute(() -> {
-                var buffer = slice.asByteBuffer();
                 try {
+                    MemorySegment slice = arena.allocate(size);
+                    var buffer = slice.asByteBuffer();
                     spansFileChannels[i% spansFileChannels.length].read(buffer, start);
                     ret[i] = decode(slice);
                 }
@@ -104,7 +100,10 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
             });
         }
         try {
-            latch.await();
+            do {
+                latch.await();
+            }
+            while (latch.getCount() != 0);
         }
         catch (InterruptedException ex) {
             Thread.currentThread().interrupt();

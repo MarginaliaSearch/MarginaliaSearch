@@ -9,4 +9,8 @@ public interface SearchSet {
      */
     boolean contains(int domainId);
 
+    default boolean imposesConstraint() {
+        return true;
+    }
+
 }

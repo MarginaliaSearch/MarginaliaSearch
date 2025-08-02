@@ -1,6 +1,8 @@
 #include "cpphelpers.hpp"
 #include <algorithm>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 /* Pair of 64-bit integers. */
 /* The struct is packed to ensure that the struct is exactly 16 bytes in size, as we need to pointer
@@ -28,4 +30,15 @@ void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
     [](const p64x2& fst, const p64x2& snd) {
     return fst.a < snd.a;
   });
+}
+
+int open_direct_fd(char* filename) {
+  return open(filename, O_DIRECT | O_RDONLY);
+}
+
+int read_at(int fd, void* buf, unsigned int count, long offset) {
+  return pread(fd, buf, count, offset);
+}
+void close_fd(int fd) {
+  close(fd);
 }

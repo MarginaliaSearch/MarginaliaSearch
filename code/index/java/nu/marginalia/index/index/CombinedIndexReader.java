@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
+import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.FullReverseIndexReader;
 import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
@@ -80,6 +81,11 @@ public class CombinedIndexReader {
     /** Returns the number of occurrences of the word in the full index */
     public int numHits(long word) {
         return reverseIndexFullReader.numDocuments(word);
+    }
+
+    /** Reset caches and buffers */
+    public void reset() {
+        reverseIndexFullReader.reset();
     }
 
     public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
@@ -263,6 +269,22 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
     }
 
     @Override
+    public void apply(LongQueryBuffer buffer) {
+        if (!imposesMetaConstraint && !params.searchSet().imposesConstraint())
+            return;
+
+        while (buffer.hasMore()) {
+            if (test(buffer.currentValue())) {
+                buffer.retainAndAdvance();
+            }
+            else {
+                buffer.rejectAndAdvance();
+            }
+        }
+
+        buffer.finalizeFiltering();
+    }
+
     public boolean test(long combinedId) {
         long docId = UrlIdCodec.removeRank(combinedId);
         int domainId = UrlIdCodec.getDomainId(docId);
@@ -348,4 +370,5 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
     public String describe() {
         return getClass().getSimpleName();
     }
+
 }

@@ -72,15 +72,15 @@ public class IndexQueryExecution {
         }
 
         // Final result selection
-        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap);
+        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
     }
 
     private void lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(512);
+        final LongQueryBuffer buffer = new LongQueryBuffer(64);
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
-                buffer.reset();
+                buffer.zero();
                 query.getMoreResults(buffer);
 
                 if (buffer.isEmpty())

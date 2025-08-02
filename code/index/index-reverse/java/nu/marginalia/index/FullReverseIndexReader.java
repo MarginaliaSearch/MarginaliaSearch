@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.positions.TermData;
@@ -12,6 +13,7 @@ import nu.marginalia.index.query.ReverseIndexRetainFilter;
 import nu.marginalia.index.query.filter.QueryFilterLetThrough;
 import nu.marginalia.index.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
+import nu.marginalia.skiplist.SkipListReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +22,8 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class FullReverseIndexReader {
     private final LongArray words;
@@ -30,6 +34,11 @@ public class FullReverseIndexReader {
     private final String name;
 
     private final PositionsFileReader positionsFileReader;
+
+    private final BufferPool[] dataPools;
+
+    private final long[] poolOffsets;
+    private final AtomicInteger poolIdx = new AtomicInteger();
 
     public FullReverseIndexReader(String name,
                                   Path words,
@@ -44,6 +53,8 @@ public class FullReverseIndexReader {
             this.documents = null;
             this.wordsBTreeReader = null;
             this.wordsDataOffset = -1;
+            this.dataPools = null;
+            this.poolOffsets = null;
             return;
         }
 
@@ -51,6 +62,13 @@ public class FullReverseIndexReader {
 
         this.words = LongArrayFactory.mmapForReadingShared(words);
         this.documents = LongArrayFactory.mmapForReadingShared(documents);
+
+        dataPools = new BufferPool[1];
+        poolOffsets = new long[1];
+
+        for (int i = 0; i < 1; i++) {
+            dataPools[i] = new BufferPool(documents, 512, 65536);
+        }
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
@@ -61,6 +79,14 @@ public class FullReverseIndexReader {
             }
         }
     }
+
+    public void reset() {
+        for (int i = 0; i < poolOffsets.length; i++) {
+            poolOffsets[i] = -1;
+            dataPools[i].reset();
+        }
+    }
+
 
     private void selfTest() {
         logger.info("Running self test program");
@@ -76,6 +102,15 @@ public class FullReverseIndexReader {
         ReverseIndexSelfTest.runSelfTest6(wordsDataRange, documents);
     }
 
+    public void eachDocRange(Consumer<LongArray> eachDocRange) {
+        long wordsDataSize = wordsBTreeReader.getHeader().numEntries() * 2L;
+        var wordsDataRange = words.range(wordsDataOffset, wordsDataOffset + wordsDataSize);
+
+        for (long i = 1; i < wordsDataRange.size(); i+=2) {
+            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.fullDocsBTreeContext, wordsDataRange.get(i));
+            eachDocRange.accept(docsBTreeReader.data());
+        }
+    }
 
     /** Calculate the offset of the word in the documents.
      * If the return-value is negative, the term does not exist
@@ -101,7 +136,7 @@ public class FullReverseIndexReader {
         if (offset < 0) // No documents
             return new EmptyEntrySource();
 
-        return new FullIndexEntrySource(name, createReaderNew(offset), 2, termId);
+        return new FullIndexEntrySource(name, getReader(offset), termId);
     }
 
     /** Create a filter step requiring the specified termId to exist in the documents */
@@ -111,7 +146,7 @@ public class FullReverseIndexReader {
         if (offset < 0) // No documents
             return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(createReaderNew(offset), name, termId);
+        return new ReverseIndexRetainFilter(getReader(offset), name, termId);
     }
 
     /** Create a filter step requiring the specified termId to be absent from the documents */
@@ -121,7 +156,7 @@ public class FullReverseIndexReader {
         if (offset < 0) // No documents
             return new QueryFilterLetThrough();
 
-        return new ReverseIndexRejectFilter(createReaderNew(offset));
+        return new ReverseIndexRejectFilter(getReader(offset));
     }
 
     /** Return the number of documents with the termId in the index */
@@ -131,14 +166,25 @@ public class FullReverseIndexReader {
         if (offset < 0)
             return 0;
 
-        return createReaderNew(offset).numEntries();
+        return getReader(offset).getRemainingSize();
     }
 
     /** Create a BTreeReader for the document offset associated with a termId */
-    private BTreeReader createReaderNew(long offset) {
-        return new BTreeReader(
-                documents,
-                ReverseIndexParameters.fullDocsBTreeContext,
+    private SkipListReader getReader(long offset) {
+        int idx = -1;
+        for (int i = 0; i < dataPools.length; i++) {
+            if (poolOffsets[i] == offset) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx < 0) {
+            idx = poolIdx.incrementAndGet() % poolOffsets.length;
+            poolOffsets[idx] = offset;
+        }
+
+        return new SkipListReader(
+                dataPools[idx],
                 offset);
     }
 
@@ -156,15 +202,26 @@ public class FullReverseIndexReader {
             return ret;
         }
 
-        var reader = createReaderNew(offset);
+        var reader = getReader(offset);
 
         // Read the size and offset of the position data
-        var offsets = reader.queryData(docIds, 1);
+        var offsets = reader.getValues(docIds);
 
         return positionsFileReader.getTermData(arena, offsets);
     }
 
     public void close() {
+        try {
+            if (dataPools != null) {
+                for (var pool : dataPools) {
+                    pool.close();
+                }
+            }
+        }
+        catch (Exception e) {
+            logger.warn("Error while closing bufferPool", e);
+        }
+
         if (documents != null)
             documents.close();
 
