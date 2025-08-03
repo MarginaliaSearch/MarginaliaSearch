@@ -3,6 +3,7 @@ package nu.marginalia.array;
 import nu.marginalia.NativeAlgos;
 
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
 
 public class DirectFileReader implements AutoCloseable {
@@ -15,10 +16,36 @@ public class DirectFileReader implements AutoCloseable {
         }
     }
 
-    public void read(LongArray dest, long offset) throws IOException {
-        var segment = dest.getMemorySegment();
+    public void readAligned(LongArray dest, long offset) throws IOException {
+        readAligned(dest.getMemorySegment(), offset);
+    }
+
+    public void readAligned(MemorySegment segment, long offset) throws IOException {
         if (NativeAlgos.readAt(fd, segment, offset) != segment.byteSize()) {
             throw new IOException("Failed to read data at " + offset);
+        }
+    }
+
+    public void readUnaligned(MemorySegment dest, MemorySegment alignedBuffer, long fileOffset) throws IOException {
+        int destOffset = 0;
+
+        for (long totalBytesToCopy = dest.byteSize(); totalBytesToCopy > 0; ) {
+            long alignedPageAddress = fileOffset & -4096L;
+            long srcPageOffset = fileOffset & 4095L;
+            long srcPageEnd = Math.min(srcPageOffset + totalBytesToCopy, 4096);
+
+            // wrapper for O_DIRECT pread
+            if (NativeAlgos.readAt(fd, alignedBuffer, alignedPageAddress) != alignedBuffer.byteSize()) {
+                throw new IOException("Failed to read data at " + alignedPageAddress + " of size " + dest.byteSize());
+            }
+
+            int bytesToCopy = (int) (srcPageEnd - srcPageOffset);
+
+            MemorySegment.copy(alignedBuffer, srcPageOffset, dest, destOffset, bytesToCopy);
+
+            destOffset += bytesToCopy;
+            fileOffset += bytesToCopy;
+            totalBytesToCopy -= bytesToCopy;
         }
     }
 

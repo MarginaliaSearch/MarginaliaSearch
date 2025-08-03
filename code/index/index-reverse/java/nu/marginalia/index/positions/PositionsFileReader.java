@@ -1,28 +1,20 @@
 package nu.marginalia.index.positions;
 
+import nu.marginalia.array.AioFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ForkJoinPool;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Reads positions data from the positions file */
 public class PositionsFileReader implements AutoCloseable {
 
-    // We use multiple file channels to avoid reads becoming serialized by the kernel.
-    // If we don't do this, multi-threaded reads become strictly slower than single-threaded reads
-    // (which is why AsynchronousFileChannel sucks).
-
-    // This is likely the best option apart from O_DIRECT or FFI:ing in libaio or io_uring.
-
-    private final FileChannel[] positions;
-    private final ForkJoinPool forkJoinPool;
+    private final AioFileReader aioFileReader;
     private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
@@ -30,19 +22,12 @@ public class PositionsFileReader implements AutoCloseable {
     }
 
     public PositionsFileReader(Path positionsFile, int nreaders) throws IOException {
-        positions = new FileChannel[nreaders];
-        for (int i = 0; i < positions.length; i++) {
-            positions[i] = FileChannel.open(positionsFile, StandardOpenOption.READ);
-        }
-        forkJoinPool = new ForkJoinPool(nreaders);
+        aioFileReader = new AioFileReader(positionsFile, false);
     }
 
     @Override
     public void close() throws IOException {
-        for (FileChannel fc : positions) {
-            fc.close();
-        }
-        forkJoinPool.close();
+        aioFileReader.close();
     }
 
     /** Get the positions for a keywords in the index, as pointed out by the encoded offsets;
@@ -50,36 +35,37 @@ public class PositionsFileReader implements AutoCloseable {
     public TermData[] getTermData(Arena arena, long[] offsets) {
         TermData[] ret = new TermData[offsets.length];
 
-        int tasks = 0;
-        for (long l : offsets) if (l != 0) tasks++;
-
-        CountDownLatch cl = new CountDownLatch(tasks);
+        int sizeTotal = 0;
 
         for (int i = 0; i < offsets.length; i++) {
             long encodedOffset = offsets[i];
             if (encodedOffset == 0) continue;
-
-            int idx = i;
-            int length = PositionCodec.decodeSize(encodedOffset);
-            long offset = PositionCodec.decodeOffset(encodedOffset);
-            ByteBuffer buffer = arena.allocate(length).asByteBuffer();
-
-            forkJoinPool.execute(() -> {
-                try {
-                    positions[idx % positions.length].read(buffer, offset);
-                    ret[idx] = new TermData(buffer);
-                    cl.countDown();
-                }
-                catch (IOException ex) {
-                    logger.error("Failed to read positions file", ex);
-                }
-            });
+            sizeTotal += PositionCodec.decodeSize(encodedOffset);
         }
 
-        try {
-            cl.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        MemorySegment segment = arena.allocate(sizeTotal, 8);
+
+        List<MemorySegment> buffers = new ArrayList<>(offsets.length);
+        List<Long> readOffsets = new ArrayList<>(offsets.length);
+
+        int bufOffset = 0;
+        for (int i = 0; i < offsets.length; i++) {
+            long encodedOffset = offsets[i];
+            if (encodedOffset == 0) continue;
+
+            int length = PositionCodec.decodeSize(encodedOffset);
+            long offset = PositionCodec.decodeOffset(encodedOffset);
+            buffers.add(segment.asSlice(bufOffset, length));
+            readOffsets.add(offset);
+            bufOffset+= length;
+        }
+
+        aioFileReader.read(buffers, readOffsets);
+
+        for (int i = 0, j=0; i < offsets.length; i++) {
+            long encodedOffset = offsets[i];
+            if (encodedOffset == 0) continue;
+            ret[i] = new TermData(buffers.get(j++).asByteBuffer());
         }
 
         return ret;

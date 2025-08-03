@@ -133,22 +133,6 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-    public DocumentSpans getDocumentSpans(Arena arena, long docId) {
-        long offset = idxForDoc(docId);
-        if (offset < 0) return new DocumentSpans();
-
-        long encodedOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
-
-        try {
-            return spansReader.readSpans(arena, encodedOffset);
-        }
-        catch (IOException ex) {
-            logger.error("Failed to read spans for doc " + docId, ex);
-            return new DocumentSpans();
-        }
-    }
-
-
     public DocumentSpans[] getDocumentSpans(Arena arena, long[] docIds) {
         long[] offsets = new long[docIds.length];
         for (int i = 0; i < docIds.length; i++) {

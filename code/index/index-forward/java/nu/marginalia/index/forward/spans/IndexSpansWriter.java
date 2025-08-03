@@ -55,7 +55,7 @@ public class IndexSpansWriter implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        ByteBuffer footer = SpansCodec.createSpanFilesFooter(SpansCodec.SpansCodecVersion.PLAIN);
+        ByteBuffer footer = SpansCodec.createSpanFilesFooter(SpansCodec.SpansCodecVersion.PLAIN, (int) (4096 - (outputChannel.position() & 4095)));
         outputChannel.position(outputChannel.size());
         while (footer.hasRemaining()) {
             outputChannel.write(footer, outputChannel.size());

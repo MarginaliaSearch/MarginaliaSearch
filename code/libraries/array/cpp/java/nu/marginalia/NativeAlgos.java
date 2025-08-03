@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
+import java.util.List;
 
 import static java.lang.foreign.ValueLayout.*;
 
@@ -28,8 +29,10 @@ public class NativeAlgos {
     private final MethodHandle qsortHandle;
     private final MethodHandle qsort128Handle;
     private final MethodHandle openDirect;
+    private final MethodHandle openBuffered;
     private final MethodHandle closeFd;
     private final MethodHandle readAtFd;
+    private final MethodHandle aioRead;
 
     public static final NativeAlgos instance;
 
@@ -52,6 +55,11 @@ public class NativeAlgos {
 
         handle = libraryLookup.find("open_direct_fd").get();
         openDirect = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS));
+        handle = libraryLookup.find("open_buffered_fd").get();
+        openBuffered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS));
+
+        handle = libraryLookup.find("aio_read").get();
+        aioRead = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
 
         handle = libraryLookup.find("close_fd").get();
         closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
@@ -64,6 +72,7 @@ public class NativeAlgos {
         Path libFile;
         NativeAlgos nativeAlgosI = null;
         // copy resource to temp file so it can be loaded
+        System.loadLibrary("aio");
         try (var is = NativeAlgos.class.getClassLoader().getResourceAsStream("libcpp.so")) {
             var tempFile = File.createTempFile("libcpp", ".so");
             tempFile.deleteOnExit();
@@ -94,9 +103,45 @@ public class NativeAlgos {
         }
     }
 
+    public static int openBuffered(Path filename) {
+        try {
+            MemorySegment filenameCStr = Arena.global().allocateFrom(filename.toString());
+            return (Integer) instance.openBuffered.invoke(filenameCStr);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
     public static int readAt(int fd, MemorySegment dest, long offset) {
         try {
             return (Integer) instance.readAtFd.invoke(fd, dest, (int) dest.byteSize(), offset);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static int aioRead(int fd, List<MemorySegment> dest, List<Long> offsets) {
+        if (offsets.size() == 1) {
+            if (readAt(fd, dest.getFirst(), offsets.getFirst()) > 0)
+                return 1;
+            else return -1;
+        }
+        try {
+            MemorySegment bufferList = Arena.ofAuto().allocate(8L * offsets.size(), 8);
+            MemorySegment sizeList = Arena.ofAuto().allocate(4L * offsets.size(), 8);
+            MemorySegment offsetList = Arena.ofAuto().allocate(8L * offsets.size(), 8);
+
+            for (int i = 0; i < offsets.size(); i++) {
+                var buffer = dest.get(i);
+                bufferList.setAtIndex(JAVA_LONG, i, buffer.address());
+                sizeList.setAtIndex(JAVA_INT, i, (int) buffer.byteSize());
+                offsetList.setAtIndex(JAVA_LONG, i, offsets.get(i));
+            }
+
+            synchronized (instance.aioRead) {
+                return (Integer) instance.aioRead.invoke(fd, dest.size(), bufferList, sizeList, offsetList);
+            }
         }
         catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);

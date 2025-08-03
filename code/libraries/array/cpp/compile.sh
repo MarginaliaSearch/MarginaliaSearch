@@ -7,4 +7,4 @@ if ! which ${CXX} > /dev/null; then
     exit 0
 fi
 
-${CXX} -O3 -march=native -std=c++14 -shared -Isrc/main/public src/main/cpp/*.cpp -o resources/libcpp.so
+${CXX} -O3 -march=native -std=c++14 -fPIC -laio -shared -Isrc/main/public src/main/cpp/*.cpp -o resources/libcpp.so

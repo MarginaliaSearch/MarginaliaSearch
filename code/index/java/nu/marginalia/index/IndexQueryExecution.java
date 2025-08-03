@@ -13,16 +13,14 @@ import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 
 /** Performs an index query */
 public class IndexQueryExecution {
 
     private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
 
-    private static final ForkJoinPool lookupPool = new ForkJoinPool(indexValuationThreads);
-    private static final ForkJoinPool evaluationPool = new ForkJoinPool(indexValuationThreads);
+    private static final ExecutorService threadPool = new ThreadPoolExecutor(indexValuationThreads, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
     private final IndexResultRankingService rankingService;
 
@@ -58,7 +56,7 @@ public class IndexQueryExecution {
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
         // Spawn lookup tasks for each query
         for (IndexQuery query : queries) {
-            lookupPool.execute(() -> lookup(query));
+            threadPool.execute(() -> lookup(query));
         }
 
         // Await lookup task termination (this guarantees we're no longer creating new evaluation tasks)
@@ -76,7 +74,7 @@ public class IndexQueryExecution {
     }
 
     private void lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(64);
+        final LongQueryBuffer buffer = new LongQueryBuffer(512);
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
@@ -107,7 +105,7 @@ public class IndexQueryExecution {
                 }
                 else {
                     // Spawn an evaluation task
-                    evaluationPool.execute(() -> evaluate(docIds));
+                    threadPool.execute(() -> evaluate(docIds));
                 }
             }
         } finally {

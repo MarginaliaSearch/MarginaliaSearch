@@ -1,44 +1,27 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import nu.marginalia.array.AioFileReader;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ForkJoinPool;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
-    private final FileChannel[] spansFileChannels;
-    private final ForkJoinPool forkJoinPool;
+    private final AioFileReader aioReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        this.spansFileChannels = new FileChannel[8];
-        for (int i = 0; i < spansFileChannels.length; i++) {
-            spansFileChannels[i] = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
-        }
-        forkJoinPool = new ForkJoinPool(spansFileChannels.length);
+        aioReader = new AioFileReader(spansFile, false);
     }
 
     @Override
     public DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException {
-        // Decode the size and offset from the encoded offset
-        long size = SpansCodec.decodeSize(encodedOffset);
-        long offset = SpansCodec.decodeStartOffset(encodedOffset);
-
-        var ms = arena.allocate(size, 4);
-        // Allocate a buffer from the arena
-        var buffer = ms.asByteBuffer();
-        while (buffer.hasRemaining()) {
-            spansFileChannels[0].read(buffer, offset + buffer.position());
-        }
-
-        return decode(ms);
+        // for testing, slow
+        return readSpans(arena, new long[] { encodedOffset})[0];
     }
 
     public DocumentSpans decode(MemorySegment ms) {
@@ -63,59 +46,56 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
 
         return ret;
     }
+
     @Override
-    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
-        int numJobs = 0;
+    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) {
+
+        long totalSize = 0;
         for (long offset : encodedOffsets) {
             if (offset < 0)
                 continue;
-            numJobs++;
+            totalSize += SpansCodec.decodeSize(offset);
+        }
+
+        if (totalSize == 0) {
+            return new DocumentSpans[encodedOffsets.length];
+        }
+
+        MemorySegment segment = arena.allocate(totalSize, 8);
+
+        List<MemorySegment> buffers = new ArrayList<>(encodedOffsets.length);
+        List<Long> offsets = new ArrayList<>(encodedOffsets.length);
+
+        long bufferOffset = 0;
+
+        for (long offset : encodedOffsets) {
+            if (offset < 0)
+                continue;
+
+            long size = SpansCodec.decodeSize(offset);
+            long start = SpansCodec.decodeStartOffset(offset);
+
+            buffers.add(segment.asSlice(bufferOffset, size));
+            offsets.add(start);
+            bufferOffset += size;
         }
 
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
-        if (numJobs == 0) return ret;
 
-        CountDownLatch latch = new CountDownLatch(numJobs);
+        aioReader.read(buffers, offsets);
 
-        for (int idx = 0; idx < encodedOffsets.length; idx++) {
+        for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
             if (encodedOffsets[idx] < 0)
                 continue;
-            long size = SpansCodec.decodeSize(encodedOffsets[idx]);
-            long start = SpansCodec.decodeStartOffset(encodedOffsets[idx]);
+            ret[idx] = decode(buffers.get(j++));
+        }
 
-            int i = idx;
-            forkJoinPool.execute(() -> {
-                try {
-                    MemorySegment slice = arena.allocate(size);
-                    var buffer = slice.asByteBuffer();
-                    spansFileChannels[i% spansFileChannels.length].read(buffer, start);
-                    ret[i] = decode(slice);
-                }
-                catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-                finally {
-                    latch.countDown();
-                }
-            });
-        }
-        try {
-            do {
-                latch.await();
-            }
-            while (latch.getCount() != 0);
-        }
-        catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
         return ret;
     }
 
     @Override
     public void close() throws IOException {
-        for (var spansFileChannel : spansFileChannels) {
-            spansFileChannel.close();
-        }
+        aioReader.close();
     }
 
 }
