@@ -32,7 +32,7 @@ public class NativeAlgos {
     private final MethodHandle openBuffered;
     private final MethodHandle closeFd;
     private final MethodHandle readAtFd;
-    private final MethodHandle aioRead;
+    private final MethodHandle uringRead;
 
     public static final NativeAlgos instance;
 
@@ -58,8 +58,8 @@ public class NativeAlgos {
         handle = libraryLookup.find("open_buffered_fd").get();
         openBuffered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS));
 
-        handle = libraryLookup.find("aio_read").get();
-        aioRead = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+        handle = libraryLookup.find("uring_read").get();
+        uringRead = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
 
         handle = libraryLookup.find("close_fd").get();
         closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
@@ -72,7 +72,7 @@ public class NativeAlgos {
         Path libFile;
         NativeAlgos nativeAlgosI = null;
         // copy resource to temp file so it can be loaded
-        System.loadLibrary("aio");
+        System.loadLibrary("uring");
         try (var is = NativeAlgos.class.getClassLoader().getResourceAsStream("libcpp.so")) {
             var tempFile = File.createTempFile("libcpp", ".so");
             tempFile.deleteOnExit();
@@ -121,7 +121,7 @@ public class NativeAlgos {
         }
     }
 
-    public static int aioRead(int fd, List<MemorySegment> dest, List<Long> offsets) {
+    public static int uringRead(int fd, List<MemorySegment> dest, List<Long> offsets) {
         if (offsets.size() == 1) {
             if (readAt(fd, dest.getFirst(), offsets.getFirst()) > 0)
                 return 1;
@@ -139,8 +139,8 @@ public class NativeAlgos {
                 offsetList.setAtIndex(JAVA_LONG, i, offsets.get(i));
             }
 
-            synchronized (instance.aioRead) {
-                return (Integer) instance.aioRead.invoke(fd, dest.size(), bufferList, sizeList, offsetList);
+            synchronized (instance.uringRead) {
+                return (Integer) instance.uringRead.invoke(fd, dest.size(), bufferList, sizeList, offsetList);
             }
         }
         catch (Throwable t) {

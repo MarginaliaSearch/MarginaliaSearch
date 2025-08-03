@@ -7,10 +7,10 @@ import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
 import java.util.List;
 
-public class AioFileReader implements AutoCloseable {
+public class UringFileReader implements AutoCloseable {
     int fd;
 
-    public AioFileReader(Path filename, boolean direct) throws IOException {
+    public UringFileReader(Path filename, boolean direct) throws IOException {
         if (direct) {
             fd = NativeAlgos.openDirect(filename);
         }
@@ -24,14 +24,14 @@ public class AioFileReader implements AutoCloseable {
 
     public void read(List<MemorySegment> destinations, List<Long> offsets) {
         if (destinations.size() < 1024) {
-            int ret = NativeAlgos.aioRead(fd, destinations, offsets);
+            int ret = NativeAlgos.uringRead(fd, destinations, offsets);
             if (ret != offsets.size())
                 throw new RuntimeException("Read failed, rv=" + ret);
         }
         else {
             for (int readStart = 0; readStart < destinations.size(); readStart+=1024) {
                 int readSize = Math.min(1024, destinations.size() - readStart);
-                int ret = NativeAlgos.aioRead(fd, destinations.subList(readStart, readStart + readSize),
+                int ret = NativeAlgos.uringRead(fd, destinations.subList(readStart, readStart + readSize),
                         offsets.subList(readStart, readStart + readSize));
                 if (ret != readSize)
                     throw new RuntimeException("Read failed, rv=" + ret);

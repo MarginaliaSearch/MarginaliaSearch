@@ -1,10 +1,10 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.NativeAlgos;
-import nu.marginalia.array.AioFileReader;
 import nu.marginalia.array.DirectFileReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.array.UringFileReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class NativeAlgosTest {
         }
         array.close();
 
-        try (var dfr = new AioFileReader(Path.of("/tmp/test"), false)) {
+        try (var dfr = new UringFileReader(Path.of("/tmp/test"), false)) {
             MemorySegment buf1 = Arena.ofAuto().allocate(32, 8);
             MemorySegment buf2 = Arena.ofAuto().allocate(16, 8);
 

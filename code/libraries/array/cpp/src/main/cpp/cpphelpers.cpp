@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <libaio.h>
-
+#include <liburing.h>
 /* Pair of 64-bit integers. */
 /* The struct is packed to ensure that the struct is exactly 16 bytes in size, as we need to pointer
    alias on an array of 8 byte longs.  Since structs guarantee that the first element is at offset 0,
@@ -33,43 +32,54 @@ void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
   });
 }
 
-static io_context_t ctx = 0;
+static struct io_uring ring;
+static int ring_initialized = 0;
 
-int aio_read(int fd, int n, void** buffers, unsigned int* sizes, long* offsets) {
-    if (ctx == 0 && io_setup(1024, &ctx) != 0) {
-        perror("io_setup failed");
-        return -1;  // Setup failed
-    }
-
-//    printf("aio_read(%d,%d,%d)\n", fd, n, offsets[0]);
-//    fflush(stdout);
-
-    struct iocb* iocbs[1024];
-    struct iocb ios[1024];
-
-    for (int i = 0; i < n; i++) {
-        io_prep_pread(&ios[i], fd, buffers[i], sizes[i], offsets[i]);
-        ios[i].data = (void*)(long)i;
-        iocbs[i] = &ios[i];
-    }
-
-    int ret = io_submit(ctx, n, iocbs);
-    if (ret != n) {
-        perror("AIO Read failed");
-        fprintf(stderr, "%d %d %p %p %p", fd, n, buffers, sizes, offsets);
-        return -1;
-    }
-
-    struct io_event events[n];
-    int completed = io_getevents(ctx, n, n, events, NULL);
-    for (int i = 0; i < completed; i++) {
-        struct io_event* event = &events[i];
-        int buffer_index = (int)(long)event->data;
-
-        if (event->res <= 0) {
+int uring_read(int fd, int n, void** buffers, unsigned int* sizes, long* offsets) {
+    if (!ring_initialized) {
+        int ret = io_uring_queue_init(1024, &ring, 0);
+        if (ret < 0) {
+            fprintf(stderr, "uring initialization failed");
             return -1;
         }
+        ring_initialized = 1;
     }
+
+    for (int i = 0; i < n; i++) {
+        struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
+        if (!sqe) {
+            fprintf(stderr, "uring_queue full!");
+            return -1;
+        }
+
+        io_uring_prep_read(sqe, fd, buffers[i], sizes[i], offsets[i]);
+        io_uring_sqe_set_data(sqe, (void*)(long)i);  // Store buffer index
+    }
+
+    int submitted = io_uring_submit(&ring);
+    if (submitted != n) return -1;
+
+    for (int i = 0; i < n; i++) {
+        struct io_uring_cqe *cqe;
+        int ret = io_uring_wait_cqe(&ring, &cqe);
+        if (ret < 0) {
+            return -1;
+        }
+
+        if (cqe->res <= 0) {
+            io_uring_cqe_seen(&ring, cqe);
+            while (++i < n) {
+                struct io_uring_cqe *remaining_cqe;
+                if (io_uring_wait_cqe(&ring, &remaining_cqe) == 0) {
+                    io_uring_cqe_seen(&ring, remaining_cqe);
+                }
+            }
+            return -1;
+        }
+
+        io_uring_cqe_seen(&ring, cqe);
+    }
+
     return n;
 }
 

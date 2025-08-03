@@ -1,7 +1,7 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import nu.marginalia.array.AioFileReader;
+import nu.marginalia.array.UringFileReader;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
-    private final AioFileReader aioReader;
+    private final UringFileReader aioReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        aioReader = new AioFileReader(spansFile, false);
+        aioReader = new UringFileReader(spansFile, false);
     }
 
     @Override

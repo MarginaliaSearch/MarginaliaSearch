@@ -1,6 +1,6 @@
 package nu.marginalia.index.positions;
 
-import nu.marginalia.array.AioFileReader;
+import nu.marginalia.array.UringFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,20 +14,16 @@ import java.util.List;
 /** Reads positions data from the positions file */
 public class PositionsFileReader implements AutoCloseable {
 
-    private final AioFileReader aioFileReader;
+    private final UringFileReader uringFileReader;
     private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
-        this(positionsFile, 8);
-    }
-
-    public PositionsFileReader(Path positionsFile, int nreaders) throws IOException {
-        aioFileReader = new AioFileReader(positionsFile, false);
+        uringFileReader = new UringFileReader(positionsFile, false);
     }
 
     @Override
     public void close() throws IOException {
-        aioFileReader.close();
+        uringFileReader.close();
     }
 
     /** Get the positions for a keywords in the index, as pointed out by the encoded offsets;
@@ -60,7 +56,7 @@ public class PositionsFileReader implements AutoCloseable {
             bufOffset+= length;
         }
 
-        aioFileReader.read(buffers, readOffsets);
+        uringFileReader.read(buffers, readOffsets);
 
         for (int i = 0, j=0; i < offsets.length; i++) {
             long encodedOffset = offsets[i];
