@@ -184,25 +184,16 @@ public class PerfTestMain {
         var docIds = new CombinedDocIdList(allResults.toArray());
         var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
 
-        System.out.println("Running warmup loop, evaluating " + allResults.size() + " results");
         int sum = 0;
 
-        Instant runEndTime = Instant.now().plus(warmupTime);
-        int iter;
-        IndexSearchBudget budget = new IndexSearchBudget(10000);
-        for (iter = 0;; iter++) {
-            sum += rankingService.rankResults(rankingContext, budget, docIds, false).size();
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
-                break;
-            }
-        }
-        System.out.println("Warmup complete after " + iter + " iters!");
-
-        runEndTime = Instant.now().plus(runTime);
+        Instant runEndTime = Instant.now().plus(runTime);
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
+
+        int iter;
         for (iter = 0;; iter++) {
+            IndexSearchBudget budget = new IndexSearchBudget(10000);
             long start = System.nanoTime();
             sum2 += rankingService.rankResults(rankingContext, budget, docIds, false).size();
             long end = System.nanoTime();
@@ -242,25 +233,11 @@ public class PerfTestMain {
         System.out.println("Running warmup loop!");
         int sum = 0;
 
-        Instant runEndTime = Instant.now().plus(warmupTime);
-
-        int iter;
-        for (iter = 0;; iter++) {
-            SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-            var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
-            execution.run();
-            sum += execution.itemsProcessed();
-            indexReader.reset();
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
-                break;
-            }
-        }
-        System.out.println("Warmup complete after " + iter + " iters!");
-
-        runEndTime = Instant.now().plus(runTime);
+        Instant runEndTime = Instant.now().plus(runTime);
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> rates = new ArrayList<>();
+        int iter;
         for (iter = 0;; iter++) {
             SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
             var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
@@ -304,30 +281,12 @@ public class PerfTestMain {
         SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
 
 
-        Instant runEndTime = Instant.now().plus(warmupTime);
+        Instant runEndTime = Instant.now().plus(runTime);
 
         LongQueryBuffer buffer = new LongQueryBuffer(512);
         int sum1 = 0;
         int iter;
-        for (iter = 0;; iter++) {
-            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
 
-            for (var query : queries) {
-                while (query.hasMore()) {
-                    query.getMoreResults(buffer);
-                    sum1 += buffer.end;
-                    buffer.zero();
-                }
-            }
-            indexReader.reset();
-            if (Instant.now().isAfter(runEndTime)) {
-                break;
-            }
-        }
-
-        System.out.println("Warmup complete after " + iter + " iters with sum1 = " + sum1);
-
-        runEndTime = Instant.now().plus(runTime);
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
