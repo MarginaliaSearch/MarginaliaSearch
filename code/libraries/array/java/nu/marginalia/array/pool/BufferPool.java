@@ -1,8 +1,6 @@
 package nu.marginalia.array.pool;
 
 import nu.marginalia.NativeAlgos;
-import nu.marginalia.array.algo.LongArrayBuffer;
-import nu.marginalia.array.page.UnsafeLongArrayBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +14,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
 
-    private final UnsafeLongArrayBuffer[] pages;
+    private final MemoryPage[] pages;
+
     private final Arena arena;
     private final int fd;
-    private volatile UnsafeLongArrayBuffer lastAccessedBuffer;
     private PoolLru poolLru;
 
     private final AtomicInteger diskReadCount = new AtomicInteger();
@@ -44,9 +42,14 @@ public class BufferPool implements AutoCloseable {
         this.fd = NativeAlgos.openDirect(filename);
 
         this.arena = Arena.ofShared();
-        this.pages = new UnsafeLongArrayBuffer[poolSize];
+        this.pages = new UnsafeMemoryPage[poolSize];
         for (int i = 0; i < pages.length; i++) {
-            pages[i] = new UnsafeLongArrayBuffer(arena.allocate(pageSizeBytes, 512), i);
+            if (Boolean.getBoolean("system.noSunMiscUnsafe")) {
+                pages[i] = new SegmentMemoryPage(arena.allocate(pageSizeBytes, 512), i);
+            }
+            else {
+                pages[i] = new UnsafeMemoryPage(arena.allocate(pageSizeBytes, 512), i);
+            }
         }
 
         this.poolLru = new PoolLru(pages);
@@ -90,19 +93,8 @@ public class BufferPool implements AutoCloseable {
     }
 
     @Nullable
-    public UnsafeLongArrayBuffer getExistingBufferForReading(long address) {
-
-        // Fast path for checking the last buffer we accessed
-
-        var cachedBuffer = this.lastAccessedBuffer;
-        if (cachedBuffer != null && cachedBuffer.pageAddress() == address) {
-            if (cachedBuffer.acquireAsReader(address)) {
-                cacheReadCount.incrementAndGet();
-                return cachedBuffer;
-            }
-        }
-
-        cachedBuffer = poolLru.get(address);
+    public MemoryPage getExistingBufferForReading(long address) {
+        MemoryPage cachedBuffer = poolLru.get(address);
         if (cachedBuffer != null && cachedBuffer.pageAddress() == address) {
 
             // Try to acquire the page normally
@@ -127,22 +119,20 @@ public class BufferPool implements AutoCloseable {
         return null;
     }
 
-    public UnsafeLongArrayBuffer get(long address) {
+    public MemoryPage get(long address) {
         // Look through available pages for the one we're looking for
-        UnsafeLongArrayBuffer buffer = getExistingBufferForReading(address);
+        MemoryPage buffer = getExistingBufferForReading(address);
 
         if (buffer == null) {
             buffer = read(address, true);
         }
 
-        lastAccessedBuffer = buffer;
-
         return buffer;
     }
 
-    private UnsafeLongArrayBuffer read(long address, boolean acquire) {
+    private MemoryPage read(long address, boolean acquire) {
         // If the page is not available, read it from the caller's thread
-        UnsafeLongArrayBuffer buffer = acquireFreePage(address);
+        MemoryPage buffer = acquireFreePage(address);
         poolLru.register(buffer);
         populateBuffer(buffer);
 
@@ -162,7 +152,7 @@ public class BufferPool implements AutoCloseable {
         return buffer;
     }
 
-    private UnsafeLongArrayBuffer acquireFreePage(long address) {
+    private MemoryPage acquireFreePage(long address) {
         for (;;) {
             var free = poolLru.getFree();
             if (free != null && free.acquireForWriting(address)) {
@@ -171,7 +161,7 @@ public class BufferPool implements AutoCloseable {
         }
     }
 
-    private void populateBuffer(LongArrayBuffer buffer) {
+    private void populateBuffer(MemoryPage buffer) {
         if (getClass().desiredAssertionStatus()) {
             buffer.getMemorySegment().set(ValueLayout.JAVA_INT, 0, 9999);
         }
@@ -186,7 +176,7 @@ public class BufferPool implements AutoCloseable {
         }
     }
 
-    private void waitForPageWrite(LongArrayBuffer page) {
+    private void waitForPageWrite(MemoryPage page) {
         if (!page.dirty()) {
             return;
         }

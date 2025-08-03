@@ -1,6 +1,5 @@
 package nu.marginalia.array.pool;
 
-import nu.marginalia.array.page.UnsafeLongArrayBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +14,8 @@ public class PoolLru {
     private static final Logger logger = LoggerFactory.getLogger(PoolLru.class);
 
     private final int maxSize;
-    private final LinkedHashMap<Long, UnsafeLongArrayBuffer> backingMap;
-    private final UnsafeLongArrayBuffer[] pages;
+    private final LinkedHashMap<Long, MemoryPage> backingMap;
+    private final MemoryPage[] pages;
 
     private final int[] freeQueue;
     private volatile long reclaimCycles;
@@ -28,7 +27,7 @@ public class PoolLru {
 
     private volatile boolean running = true;
 
-    public PoolLru(UnsafeLongArrayBuffer[] pages) {
+    public PoolLru(MemoryPage[] pages) {
         backingMap = new LinkedHashMap<>(pages.length, 0.75f);
         this.pages = pages;
         // Pre-assign all entries with nonsense memory locations
@@ -55,7 +54,7 @@ public class PoolLru {
         reclaimThread.join();
     }
     /** Attempt to get a buffer already associated with the address */
-    public UnsafeLongArrayBuffer get(long address) {
+    public MemoryPage get(long address) {
         var res = getAssociatedItem(address);
         if (res != null) {
             res.increaseClock(1);
@@ -63,9 +62,9 @@ public class PoolLru {
         return res;
     }
 
-    private UnsafeLongArrayBuffer getAssociatedItem(long address) {
+    private MemoryPage getAssociatedItem(long address) {
         long stamp = lock.tryOptimisticRead();
-        UnsafeLongArrayBuffer res = backingMap.get(address);
+        MemoryPage res = backingMap.get(address);
         if (lock.validate(stamp)) {
             return res;
         }
@@ -79,7 +78,7 @@ public class PoolLru {
     }
 
     /** Associate the buffer with an address */
-    public void register(UnsafeLongArrayBuffer buffer) {
+    public void register(MemoryPage buffer) {
         long stamp = lock.writeLock();
         try {
             backingMap.put(buffer.pageAddress(), buffer);
@@ -94,7 +93,7 @@ public class PoolLru {
         }
     }
 
-    public void deregister(UnsafeLongArrayBuffer buffer) {
+    public void deregister(MemoryPage buffer) {
         long stamp = lock.writeLock();
         try {
             backingMap.remove(buffer.pageAddress(), buffer);
@@ -108,7 +107,7 @@ public class PoolLru {
      *
      * @return An unheld buffer, or null if the attempt failed
      * */
-    public UnsafeLongArrayBuffer getFree() {
+    public MemoryPage getFree() {
         for (;;) {
             var readIdx = clockReadIdx.get();
             var writeIdx = clockWriteIdx.get();

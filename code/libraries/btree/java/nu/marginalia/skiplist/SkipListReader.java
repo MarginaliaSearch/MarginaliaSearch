@@ -3,8 +3,8 @@ package nu.marginalia.skiplist;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.array.page.UnsafeLongArrayBuffer;
 import nu.marginalia.array.pool.BufferPool;
+import nu.marginalia.array.pool.MemoryPage;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.foreign.MemorySegment;
@@ -46,14 +46,19 @@ public class SkipListReader {
         return atEnd;
     }
 
-    public int getRemainingSize() {
+    public int estimateSize() {
         try (var page = pool.get(currentBlock)) {
-            var ms = page.getMemorySegment();
-            return ms.get(ValueLayout.JAVA_INT, 4 + currentBlockOffset) - currentBlockIdx;
+            int fc = headerForwardCount(page, currentBlockOffset);
+            if (fc > 0) {
+                return SkipListConstants.MAX_RECORDS_PER_BLOCK * SkipListConstants.skipOffsetForPointer(fc);
+            }
+            else {
+                return headerNumRecords(page, currentBlockOffset);
+            }
         }
     }
 
-    private boolean retainInPage(UnsafeLongArrayBuffer page, int dataOffset, int n, LongQueryBuffer data) {
+    private boolean retainInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
         while (currentBlockIdx < n && data.hasMore()) {
             currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n);
@@ -408,7 +413,7 @@ public class SkipListReader {
 
         return ret;
     }
-    public static int headerNumRecords(UnsafeLongArrayBuffer buffer, int offset) {
+    public static int headerNumRecords(MemoryPage buffer, int offset) {
         return buffer.getInt(offset);
     }
 
@@ -416,7 +421,7 @@ public class SkipListReader {
         return block.get(ValueLayout.JAVA_INT, offset);
     }
 
-    public static int headerForwardCount(UnsafeLongArrayBuffer buffer, int offset) {
+    public static int headerForwardCount(MemoryPage buffer, int offset) {
         return buffer.getByte(offset + 4);
     }
 
@@ -424,7 +429,7 @@ public class SkipListReader {
         return block.get(ValueLayout.JAVA_BYTE, offset + 4);
     }
 
-    public static int headerFlags(UnsafeLongArrayBuffer buffer, int offset) {
+    public static int headerFlags(MemoryPage buffer, int offset) {
         return buffer.getByte(offset + 5);
     }
 

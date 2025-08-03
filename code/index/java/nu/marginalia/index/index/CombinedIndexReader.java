@@ -270,8 +270,9 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {
-        if (!imposesMetaConstraint && !params.searchSet().imposesConstraint())
+        if (!imposesMetaConstraint && !params.searchSet().imposesConstraint()) {
             return;
+        }
 
         while (buffer.hasMore()) {
             if (test(buffer.currentValue())) {

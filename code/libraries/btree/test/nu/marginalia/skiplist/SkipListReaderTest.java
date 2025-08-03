@@ -55,7 +55,7 @@ public class SkipListReaderTest {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
             while (!reader.atEnd()) {
-                System.out.println(reader.getRemainingSize());
+                System.out.println(reader.estimateSize());
                 System.out.println(reader.getData(lqb));
                 System.out.println(Arrays.toString(lqb.copyData()));
                 lqb.zero();
@@ -68,7 +68,7 @@ public class SkipListReaderTest {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(40);
             while (!reader.atEnd()) {
-                System.out.println(reader.getRemainingSize());
+                System.out.println(reader.estimateSize());
                 System.out.println(reader.getData(lqb));
                 System.out.println(Arrays.toString(lqb.copyData()));
                 if (!lqb.fitsMore()) {

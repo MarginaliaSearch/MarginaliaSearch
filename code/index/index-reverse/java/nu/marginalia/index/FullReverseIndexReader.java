@@ -36,9 +36,8 @@ public class FullReverseIndexReader {
 
     private final PositionsFileReader positionsFileReader;
 
-    private final BufferPool[] dataPools;
+    private final BufferPool dataPool;
 
-    private final long[] poolOffsets;
     private final AtomicInteger poolIdx = new AtomicInteger();
 
     public FullReverseIndexReader(String name,
@@ -54,8 +53,7 @@ public class FullReverseIndexReader {
             this.documents = null;
             this.wordsBTreeReader = null;
             this.wordsDataOffset = -1;
-            this.dataPools = null;
-            this.poolOffsets = null;
+            this.dataPool = null;
             return;
         }
 
@@ -64,12 +62,7 @@ public class FullReverseIndexReader {
         this.words = LongArrayFactory.mmapForReadingShared(words);
         this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
-        dataPools = new BufferPool[1];
-        poolOffsets = new long[1];
-
-        for (int i = 0; i < 1; i++) {
-            dataPools[i] = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, 65536);
-        }
+        dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, 65536);
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
@@ -82,10 +75,7 @@ public class FullReverseIndexReader {
     }
 
     public void reset() {
-        for (int i = 0; i < poolOffsets.length; i++) {
-            poolOffsets[i] = -1;
-            dataPools[i].reset();
-        }
+        dataPool.reset();
     }
 
 
@@ -167,26 +157,12 @@ public class FullReverseIndexReader {
         if (offset < 0)
             return 0;
 
-        return getReader(offset).getRemainingSize();
+        return getReader(offset).estimateSize();
     }
 
     /** Create a BTreeReader for the document offset associated with a termId */
     private SkipListReader getReader(long offset) {
-        int idx = -1;
-        for (int i = 0; i < dataPools.length; i++) {
-            if (poolOffsets[i] == offset) {
-                idx = i;
-                break;
-            }
-        }
-        if (idx < 0) {
-            idx = poolIdx.incrementAndGet() % poolOffsets.length;
-            poolOffsets[idx] = offset;
-        }
-
-        return new SkipListReader(
-                dataPools[idx],
-                offset);
+        return new SkipListReader(dataPool, offset);
     }
 
     public TermData[] getTermData(Arena arena,
@@ -213,11 +189,7 @@ public class FullReverseIndexReader {
 
     public void close() {
         try {
-            if (dataPools != null) {
-                for (var pool : dataPools) {
-                    pool.close();
-                }
-            }
+            dataPool.close();
         }
         catch (Exception e) {
             logger.warn("Error while closing bufferPool", e);
