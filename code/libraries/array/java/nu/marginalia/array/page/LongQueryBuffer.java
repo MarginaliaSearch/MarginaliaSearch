@@ -53,6 +53,12 @@ public class LongQueryBuffer {
         return copy;
     }
 
+    public long[] copyFilterData() {
+        long[] copy = new long[write];
+        data.forEach(0, write, (pos, val) -> copy[(int)pos]=val );
+        return copy;
+    }
+
     public boolean fitsMore() {
         return end < data.size();
     }

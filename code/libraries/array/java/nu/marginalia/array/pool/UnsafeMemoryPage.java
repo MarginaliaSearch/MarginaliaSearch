@@ -100,13 +100,17 @@ public class UnsafeMemoryPage implements MemoryPage, AutoCloseable {
 
     public int binarySearchLong(long key, int baseOffset, int fromIndex, int toIndex) {
         int low = 0;
-        int high = (toIndex - fromIndex) - 1;
-        int len = high - low;
+        int len = toIndex - fromIndex;
 
         while (len > 0) {
             var half = len / 2;
-            if (getLong(baseOffset + fromIndex + 8 * (low + half)) < key) {
+            long val = getLong(baseOffset + 8 * (fromIndex + low + half));
+            if (val < key) {
                 low += len - half;
+            }
+            else if (val == key) {
+                low += half;
+                break;
             }
             len = half;
         }
