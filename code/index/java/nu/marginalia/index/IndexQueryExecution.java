@@ -159,6 +159,12 @@ public class IndexQueryExecution {
 
             return evaluationJobs;
         }
+        catch (Exception ex) {
+            if (!(ex.getCause() instanceof InterruptedException)) {
+                log.error("Exception in lookup thread", ex);
+            }  // suppress logging for interrupted ex
+            return List.of();
+        }
         finally {
             threadCount.decrementAndGet();
         }
@@ -174,6 +180,10 @@ public class IndexQueryExecution {
             long et = System.nanoTime();
 
             valuationTime.addAndGet(et - st);
+        } catch (Exception ex) {
+            if (!(ex.getCause() instanceof InterruptedException)) {
+                log.error("Exception in lookup thread", ex);
+            }  // suppress logging for interrupted ex
         } finally {
             synchronized (IndexQueryExecution.this) {
                 if (--evaluationJobCounter == 0) {

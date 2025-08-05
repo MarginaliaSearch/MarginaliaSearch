@@ -39,6 +39,9 @@ public class PositionsFileReader implements AutoCloseable {
             sizeTotal += PositionCodec.decodeSize(encodedOffset);
         }
 
+        if (sizeTotal == 0)
+            return ret;
+
         MemorySegment segment = arena.allocate(sizeTotal, 512);
 
         List<MemorySegment> buffers = new ArrayList<>(offsets.length);
