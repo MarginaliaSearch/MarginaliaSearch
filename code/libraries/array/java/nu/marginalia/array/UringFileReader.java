@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class UringFileReader implements AutoCloseable {
-    private final UringQueue[] rings = new UringQueue[6];
+    private final UringQueue[] rings = new UringQueue[5];
     private final AtomicLong ringIdx = new AtomicLong();
     private final int fd;
     private final boolean direct;

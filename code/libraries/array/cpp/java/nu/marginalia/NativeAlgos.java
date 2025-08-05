@@ -166,7 +166,7 @@ public class NativeAlgos {
 
     public static int uringRead(int fd, UringQueue ring, List<MemorySegment> dest, List<Long> offsets, boolean direct) {
         if (offsets.isEmpty()) {
-            System.err.println("Empty offset list in  uringRead");
+            throw new IllegalArgumentException("Empty offset list in  uringRead");
         }
         if (offsets.size() == 1) {
             if (readAt(fd, dest.getFirst(), offsets.getFirst()) > 0)

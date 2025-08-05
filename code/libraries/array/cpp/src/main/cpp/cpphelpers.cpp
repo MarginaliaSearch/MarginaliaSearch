@@ -42,6 +42,9 @@ io_uring* initialize_uring(int queue_size) {
     int ret = io_uring_queue_init(queue_size, ring, 0);
     if (ret < 0) {
         fprintf(stderr, "io_uring_queue_init failed: %s\n", strerror(-ret));
+        if (-ret == ENOMEM) {
+            fprintf(stderr, "If you are seeing this error, you probably need to increase `ulimit -l` or memlock in /etc/security/limits.conf");
+        }
         free(ring);
         return NULL;
     }
