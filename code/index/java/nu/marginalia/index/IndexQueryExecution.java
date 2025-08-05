@@ -10,18 +10,27 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Performs an index query */
 public class IndexQueryExecution {
 
     private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
 
+    private static final AtomicInteger threadCount = new AtomicInteger();
+    private static final AtomicLong lookupTime = new AtomicLong();
+    private static final AtomicLong valuationTime = new AtomicLong();
+
     private static final ExecutorService threadPool = new ThreadPoolExecutor(indexValuationThreads, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+    private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
     private final IndexResultRankingService rankingService;
 
@@ -35,6 +44,21 @@ public class IndexQueryExecution {
     private final int limitByDomain;
 
     private int evaluationJobCounter;
+
+    static {
+        Thread.ofPlatform().daemon().start(() -> {
+            for (;;) {
+                try {
+                    TimeUnit.SECONDS.sleep(10);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
+                }
+                log.info("Lookup: {}, Valuation: {}, Thread Count: {}", lookupTime.get() / 1_000_000_000.,  valuationTime.get() / 1_000_000_000., threadCount.get());
+            }
+        });
+    }
 
     public IndexQueryExecution(SearchParameters params,
                                IndexResultRankingService rankingService,
@@ -87,62 +111,76 @@ public class IndexQueryExecution {
     }
 
     private List<Future<?>> lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(1024);
-        List<Future<?>> evaluationJobs = new ArrayList<>();
         try {
-            while (query.hasMore() && budget.hasTimeLeft()) {
+            threadCount.incrementAndGet();
 
-                buffer.zero();
-                query.getMoreResults(buffer);
+            final LongQueryBuffer buffer = new LongQueryBuffer(512);
+            List<Future<?>> evaluationJobs = new ArrayList<>();
+            try {
+                while (query.hasMore() && budget.hasTimeLeft()) {
 
-                if (buffer.isEmpty())
-                    continue;
+                    buffer.zero();
+                    long st = System.nanoTime();
+                    query.getMoreResults(buffer);
+                    long et = System.nanoTime();
+                    lookupTime.addAndGet(et - st);
 
-                CombinedDocIdList docIds = new CombinedDocIdList(buffer);
+                    if (buffer.isEmpty())
+                        continue;
 
-                boolean stealWork = false;
-                synchronized (IndexQueryExecution.this) {
-                    // Hold off on spawning new evaluation jobs if we have too many queued
-                    // to avoid backpressure, instead steal work into the lookup thread
-                    // in this scenario
+                    CombinedDocIdList docIds = new CombinedDocIdList(buffer);
 
-                    if (evaluationJobCounter > 2*indexValuationThreads) {
-                        stealWork = true;
+                    boolean stealWork = false;
+                    synchronized (IndexQueryExecution.this) {
+                        // Hold off on spawning new evaluation jobs if we have too many queued
+                        // to avoid backpressure, instead steal work into the lookup thread
+                        // in this scenario
+
+                        if (evaluationJobCounter > 2 * indexValuationThreads) {
+                            stealWork = true;
+                        } else {
+                            evaluationJobCounter++;
+                        }
                     }
-                    else {
-                        evaluationJobCounter++;
+
+                    if (stealWork) {
+                        resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
+                    } else {
+                        // Spawn an evaluation task
+                        evaluationJobs.add(threadPool.submit(() -> evaluate(docIds)));
                     }
                 }
-
-                if (stealWork) {
-                    resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
-                }
-                else {
-                    // Spawn an evaluation task
-                    evaluationJobs.add(threadPool.submit(() -> evaluate(docIds)));
-                }
+            } catch (RuntimeException ex) {
+                evaluationJobs.forEach(future -> future.cancel(true));
+            } finally {
+                buffer.dispose();
+                executionCountdown.countDown();
             }
-        } catch (RuntimeException ex) {
-            evaluationJobs.forEach(future -> future.cancel(true));
-        } finally {
-            buffer.dispose();
-            executionCountdown.countDown();
-        }
 
-        return evaluationJobs;
+            return evaluationJobs;
+        }
+        finally {
+            threadCount.decrementAndGet();
+        }
     }
 
     private void evaluate(CombinedDocIdList docIds) {
         try {
+            threadCount.incrementAndGet();
             if (!budget.hasTimeLeft())
                 return;
+            long st =  System.nanoTime();
             resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
+            long et = System.nanoTime();
+
+            valuationTime.addAndGet(et - st);
         } finally {
             synchronized (IndexQueryExecution.this) {
                 if (--evaluationJobCounter == 0) {
                     IndexQueryExecution.this.notifyAll();
                 }
             }
+            threadCount.decrementAndGet();
         }
     }
 
