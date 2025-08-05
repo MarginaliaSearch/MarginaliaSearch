@@ -12,6 +12,7 @@ import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -55,8 +56,14 @@ public class IndexQueryExecution {
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
         // Spawn lookup tasks for each query
+        List<Future<?>> tasks = new ArrayList<>();
         for (IndexQuery query : queries) {
-            threadPool.execute(() -> lookup(query));
+            threadPool.submit(() -> {
+                var lookupJobs = lookup(query);
+                synchronized (tasks) {
+                    tasks.addAll(lookupJobs);
+                }
+            });
         }
 
         // Await lookup task termination (this guarantees we're no longer creating new evaluation tasks)
@@ -69,12 +76,19 @@ public class IndexQueryExecution {
             }
         }
 
+        synchronized (tasks) {
+            for (var job : tasks) {
+                job.cancel(true);
+            }
+        }
+
         // Final result selection
         return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
     }
 
-    private void lookup(IndexQuery query) {
-        final LongQueryBuffer buffer = new LongQueryBuffer(512);
+    private List<Future<?>> lookup(IndexQuery query) {
+        final LongQueryBuffer buffer = new LongQueryBuffer(1024);
+        List<Future<?>> evaluationJobs = new ArrayList<>();
         try {
             while (query.hasMore() && budget.hasTimeLeft()) {
 
@@ -105,13 +119,17 @@ public class IndexQueryExecution {
                 }
                 else {
                     // Spawn an evaluation task
-                    threadPool.execute(() -> evaluate(docIds));
+                    evaluationJobs.add(threadPool.submit(() -> evaluate(docIds)));
                 }
             }
+        } catch (RuntimeException ex) {
+            evaluationJobs.forEach(future -> future.cancel(true));
         } finally {
             buffer.dispose();
             executionCountdown.countDown();
         }
+
+        return evaluationJobs;
     }
 
     private void evaluate(CombinedDocIdList docIds) {

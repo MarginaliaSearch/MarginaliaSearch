@@ -15,7 +15,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     private final UringFileReader aioReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        aioReader = new UringFileReader(spansFile, false);
+        aioReader = new UringFileReader(spansFile,  false);
     }
 
     @Override

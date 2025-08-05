@@ -232,6 +232,7 @@ public class CombinedIndexReaderTest {
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileDocsData = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS_DATA, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
 
@@ -243,6 +244,7 @@ public class CombinedIndexReaderTest {
         var constructor =
                 new FullIndexConstructor(
                     outputFileDocs,
+                    outputFileDocsData,
                     outputFileWords,
                     outputFilePositions,
                     DocIdRewriter.identity(),
@@ -253,20 +255,23 @@ public class CombinedIndexReaderTest {
     private void createPrioReverseIndex() throws IOException {
 
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileDocsData = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS_DATA, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor(
-                outputFileDocs,
-                outputFileWords,
-                outputFilePositions,
-                DocIdRewriter.identity(),
-                tmpDir);
-
+        var constructor =
+                new FullIndexConstructor(
+                        outputFileDocs,
+                        outputFileDocsData,
+                        outputFileWords,
+                        outputFilePositions,
+                        DocIdRewriter.identity(),
+                        tmpDir);
         constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 

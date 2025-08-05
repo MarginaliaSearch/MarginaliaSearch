@@ -15,6 +15,7 @@ import nu.marginalia.index.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.SkipListValuesReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,9 @@ import java.util.function.Consumer;
 public class FullReverseIndexReader {
     private final LongArray words;
     private final LongArray documents;
+
+    private final SkipListValuesReader docValuesReader;
+
     private final long wordsDataOffset;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final BTreeReader wordsBTreeReader;
@@ -43,6 +47,7 @@ public class FullReverseIndexReader {
     public FullReverseIndexReader(String name,
                                   Path words,
                                   Path documents,
+                                  Path documentsData,
                                   PositionsFileReader positionsFileReader) throws IOException {
         this.name = name;
 
@@ -54,6 +59,7 @@ public class FullReverseIndexReader {
             this.wordsBTreeReader = null;
             this.wordsDataOffset = -1;
             this.dataPool = null;
+            this.docValuesReader = null;
             return;
         }
 
@@ -63,6 +69,7 @@ public class FullReverseIndexReader {
         this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
         dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, 65536);
+        docValuesReader = new SkipListValuesReader(documentsData);
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
@@ -182,7 +189,8 @@ public class FullReverseIndexReader {
         var reader = getReader(offset);
 
         // Read the size and offset of the position data
-        var offsets = reader.getValues(docIds);
+        var offsets = reader.getValuesOrOffsets(docIds);
+        docValuesReader.getValues(arena, offsets);
 
         return positionsFileReader.getTermData(arena, offsets);
     }
@@ -194,6 +202,9 @@ public class FullReverseIndexReader {
         catch (Exception e) {
             logger.warn("Error while closing bufferPool", e);
         }
+
+        if (docValuesReader != null)
+            docValuesReader.close();
 
         if (documents != null)
             documents.close();

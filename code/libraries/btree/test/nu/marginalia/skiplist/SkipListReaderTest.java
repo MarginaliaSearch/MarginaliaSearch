@@ -22,17 +22,22 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.LongStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class SkipListReaderTest {
-    Path outputFile;
+    Path docsFile;
+    Path dataFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        outputFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".output.dat");
+        docsFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".docs.dat");
+        dataFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".data.dat");
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        Files.deleteIfExists(outputFile);
+        Files.deleteIfExists(docsFile);
     }
 
     LongArray createArray(long[] keys, long[] values) {
@@ -54,11 +59,11 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
             while (!reader.atEnd()) {
@@ -71,7 +76,7 @@ public class SkipListReaderTest {
 
         System.out.println("---");
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(40);
             while (!reader.atEnd()) {
@@ -90,11 +95,11 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
             reader.retainData(lqb);
@@ -136,13 +141,13 @@ public class SkipListReaderTest {
 
             long[] keys = keysSet.toLongArray();
 
-            try (var writer = new SkipListWriter(outputFile);
-                Arena arena = Arena.ofConfined()
+            try (var writer = new SkipListWriter(docsFile, dataFile);
+                 Arena arena = Arena.ofConfined()
             ) {
                 writer.writeList(createArray(arena, keys, keys), 0, keys.length);
             }
 
-            try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
                 var reader = new SkipListReader(pool, 0);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbSet.toLongArray(), qbSet.size());
 
@@ -166,7 +171,7 @@ public class SkipListReaderTest {
     @Test
     public void testGetDataFuzz() throws IOException {
 
-        for (int seed = 0; seed < 100; seed++) {
+        for (int seed = 0; seed < 256; seed++) {
             System.out.println("Seed: " + seed);
 
             Random r = new Random(seed);
@@ -196,22 +201,34 @@ public class SkipListReaderTest {
 
             long[] keys = keysSet.toLongArray();
 
-            try (var writer = new SkipListWriter(outputFile);
+            long blockStart;
+            try (var writer = new SkipListWriter(docsFile, dataFile);
                  Arena arena = Arena.ofConfined()
             ) {
-                writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                writer.padDocuments(r.nextInt(0, 4096/8) * 8);
+                blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
             }
 
-            try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(pool, 0);
+            long dataFileSize = Files.size(dataFile);
+
+            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+                var reader = new SkipListReader(pool, blockStart);
 
                 long[] queryKeys = qbSet.toLongArray();
-                long[] queryVals = reader.getValues(queryKeys);
+                long[] queryVals = reader.getValuesOrOffsets(queryKeys);
 
                 LongSortedSet presentValues = new LongAVLTreeSet();
                 for (int i = 0; i < queryKeys.length; i++) {
-                    if (queryVals[i] != 0)
+                    if (queryVals[i] != 0) {
+                        long offset = queryVals[i] - 1;
+
+                        assertEquals(0, (offset & 7), "Offset not long-aligned");
+                        assertTrue(offset >= 0, "Negative offset " + offset);
+                        assertTrue(offset + 8 <= dataFileSize, "Offset exceeds file size");
+
                         presentValues.add(queryKeys[i]);
+                    }
+
                 }
 
                 System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
@@ -229,18 +246,18 @@ public class SkipListReaderTest {
 
 
     @Test
-    public void testGetValues() throws IOException {
+    public void testGetValuesOrOffsets() throws IOException {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -2*v).toArray();
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
-            long[] queryVals = reader.getValues(queryKeys);
+            long[] queryVals = reader.getValuesOrOffsets(queryKeys);
             System.out.println(Arrays.toString(queryVals));
         }
     }
@@ -251,12 +268,12 @@ public class SkipListReaderTest {
         long[] vals = new long[] { 50,51 };
 
         long pos = 0;
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             LongQueryBuffer lqb = new LongQueryBuffer(4);
             reader.getData(lqb);
@@ -273,8 +290,8 @@ public class SkipListReaderTest {
         }
 
         try (LongArray array = LongArrayFactory.onHeapConfined(4096);
-             var writer = new SkipListWriter(outputFile)) {
-            writer.pad(4104);
+             var writer = new SkipListWriter(docsFile, dataFile)) {
+            writer.padDocuments(4104);
             for (int i = 0; i < vals.size(); i++) {
                 array.set(i, vals.getLong(i));
             }
@@ -286,7 +303,7 @@ public class SkipListReaderTest {
             throw new RuntimeException(e);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 4104);
             long[] queryKeys = new long[] { 100 };
             var lqb = new LongQueryBuffer(32);
@@ -307,12 +324,12 @@ public class SkipListReaderTest {
             long[] vals = new long[] { 2 };
 
             long pos;
-            try (var writer = new SkipListWriter(outputFile)) {
-                writer.pad(8 * alignment);
+            try (var writer = new SkipListWriter(docsFile, dataFile)) {
+                writer.padDocuments(8 * alignment);
                 pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             }
 
-            try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
                 var reader = new SkipListReader(pool, pos);
                 var lqb = new LongQueryBuffer(32);
                 reader.getData(lqb);
@@ -320,7 +337,7 @@ public class SkipListReaderTest {
 
                 reader.reset();
 
-                long[] gotVals = reader.getValues(keys);
+                long[] gotVals = reader.getValuesOrOffsets(keys);
                 Assertions.assertArrayEquals(gotVals, vals);
             }
         }
@@ -335,12 +352,12 @@ public class SkipListReaderTest {
         long[] vals = new long[] { 2 };
 
         long pos;
-        try (var writer = new SkipListWriter(outputFile)) {
-            writer.pad(8 * alignment);
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+            writer.padDocuments(8 * alignment);
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             var lqb = new LongQueryBuffer(32);
             reader.getData(lqb);
@@ -348,26 +365,26 @@ public class SkipListReaderTest {
 
             reader.reset();
 
-            long[] gotVals = reader.getValues(keys);
+            long[] gotVals = reader.getValuesOrOffsets(keys);
             Assertions.assertArrayEquals(gotVals, vals);
         }
     }
 
     @Test
-    public void testGetValues1() throws IOException {
+    public void testGetValuesOrOffsets1() throws IOException {
         long[] keys = new long[] { 100 };
         long[] vals = new long[] { 50 };
 
         long pos = 0;
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             long[] queryKeys = new long[] { 100 };
-            long[] queryVals = reader.getValues(queryKeys);
+            long[] queryVals = reader.getValuesOrOffsets(queryKeys);
             System.out.println(Arrays.toString(queryVals));
         }
     }
@@ -378,11 +395,11 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
             reader.rejectData(lqb);
@@ -396,13 +413,13 @@ public class SkipListReaderTest {
         long[] vals = Arrays.copyOf(keys, keys.length);
         long[] qbdata = new long[] { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 67108964, 67108969, 67108974, 67108979, 67108984, 67108989, 67108994, 67108999, 67109004, 67109009, 67109014, 67109019, 67109024, 67109029, 67109034, 67109039, 67109044, 67109049, 67109054, 67109059, 134217928, 134217933, 134217938, 134217943, 134217948, 134217953, 134217958, 134217963, 134217968, 134217973, 134217978, 134217983, 134217988, 134217993, 134217998, 134218003, 134218008, 134218013, 134218018, 134218023, 201326892, 201326897, 201326902, 201326907, 201326912, 201326917, 201326922, 201326927, 201326932, 201326937, 201326942, 201326947, 201326952, 201326957, 201326962, 201326967, 201326972, 201326977, 201326982, 201326987, 268435856, 268435861, 268435866, 268435871, 268435876, 268435881, 268435886, 268435891, 268435896, 268435901, 268435906, 268435911, 268435916, 268435921, 268435926, 268435931, 268435936, 268435941, 268435946, 268435951, 335544820, 335544825, 335544830 };
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        try (var pool = new BufferPool(outputFile, SkipListConstants.BLOCK_SIZE, 8)) {
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             var qb = new LongQueryBuffer(qbdata, qbdata.length);
             reader.retainData(qb);

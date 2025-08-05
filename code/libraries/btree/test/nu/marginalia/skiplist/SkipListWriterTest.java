@@ -20,16 +20,18 @@ import java.util.stream.LongStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SkipListWriterTest {
-    Path outputFile;
+    Path docsFile;
+    Path dataFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        outputFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".output.dat");
+        docsFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".docs.dat");
+        dataFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".data.dat");
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        Files.deleteIfExists(outputFile);
+        Files.deleteIfExists(docsFile);
     }
 
     LongArray createArray(long[] keys, long[] values) {
@@ -45,7 +47,7 @@ class SkipListWriterTest {
     @Test
     public void testWriteSingleBlock() throws IOException {
         long pos1, pos2;
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             pos1 = writer.writeList(
                     createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
             pos2 = writer.writeList(
@@ -55,11 +57,12 @@ class SkipListWriterTest {
         System.out.println(pos1);
         System.out.println(pos2);
 
-        try (var arr = LongArrayFactory.mmapForReadingConfined(outputFile)) {
+        try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
             var ms = arr.getMemorySegment();
 
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
-            var expected1 = new SkipListReader.RecordView(8, 0,  SkipListConstants.FLAG_END_BLOCK,
+            var expected1 = new SkipListReader.RecordView(8, 0,  SkipListConstants.FLAG_END_BLOCK | SkipListConstants.FLAG_COMPACT_BLOCK,
+                    -1,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 0,1,2,3,4,5,6,7}),
                     new LongArrayList(new long[] { -0,-1,-2,-3,-4,-5,-6,-7}));
@@ -69,7 +72,8 @@ class SkipListWriterTest {
             assertEquals(expected1, actual1);
 
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
-            var expected2 = new SkipListReader.RecordView(2, 0,  SkipListConstants.FLAG_END_BLOCK,
+            var expected2 = new SkipListReader.RecordView(2, 0,  SkipListConstants.FLAG_END_BLOCK | SkipListConstants.FLAG_COMPACT_BLOCK,
+                    -1,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 2,3}),
                     new LongArrayList(new long[] { -2,-3}));
@@ -86,13 +90,13 @@ class SkipListWriterTest {
         long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-2) * 2).toArray();
         long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-2) * 2).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
         System.out.println(pos1);
 
-        try (var arr = LongArrayFactory.mmapForReadingConfined(outputFile)) {
+        try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
             LongArrayList allDocIds = new LongArrayList();
             LongArrayList allValues = new LongArrayList();
 
@@ -110,7 +114,7 @@ class SkipListWriterTest {
             }
 
             LongList expectedAllDocIds = new LongArrayList(keys);
-            LongList expectedAllValues = new LongArrayList(vals);
+            LongList expectedAllValues = new LongArrayList();
 
             Assertions.assertEquals(expectedAllDocIds, allDocIds);
             Assertions.assertEquals(expectedAllValues, allValues);
@@ -131,13 +135,13 @@ class SkipListWriterTest {
         long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-2)*10).toArray();
         long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-2)*10).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
         System.out.println(pos1);
 
-        try (var arr = LongArrayFactory.mmapForReadingConfined(outputFile)) {
+        try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
             LongArrayList allDocIds = new LongArrayList();
             LongArrayList allValues = new LongArrayList();
 
@@ -155,7 +159,7 @@ class SkipListWriterTest {
             }
 
             LongList expectedAllDocIds = new LongArrayList(keys);
-            LongList expectedAllValues = new LongArrayList(vals);
+            LongList expectedAllValues = new LongArrayList();
 
             Assertions.assertEquals(expectedAllDocIds, allDocIds);
             Assertions.assertEquals(expectedAllValues, allValues);
@@ -181,13 +185,13 @@ class SkipListWriterTest {
 
         long[] expectedKeys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-2)*10).toArray();
         long[] expectedVals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-2)*10).map(v -> -v).toArray();
-        try (var writer = new SkipListWriter(outputFile)) {
+        try (var writer = new SkipListWriter(docsFile, dataFile)) {
             pos1 = writer.writeList(createArray(readKeys, readVals), 4, expectedKeys.length);
         }
 
         System.out.println(pos1);
 
-        try (var arr = LongArrayFactory.mmapForReadingConfined(outputFile)) {
+        try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
             LongArrayList allDocIds = new LongArrayList();
             LongArrayList allValues = new LongArrayList();
 
@@ -205,7 +209,7 @@ class SkipListWriterTest {
             }
 
             LongList expectedAllDocIds = new LongArrayList(expectedKeys);
-            LongList expectedAllValues = new LongArrayList(expectedVals);
+            LongList expectedAllValues = new LongArrayList();
 
             Assertions.assertEquals(expectedAllDocIds, allDocIds);
             Assertions.assertEquals(expectedAllValues, allValues);

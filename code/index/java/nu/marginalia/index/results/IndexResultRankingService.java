@@ -95,7 +95,7 @@ public class IndexResultRankingService {
             // Iterate over documents by their index in the combinedDocIds, as we need the index for the
             // term data arrays as well
 
-            for (int i = 0; i < resultIds.size() && budget.hasTimeLeft(); i++) {
+            for (int i = 0; i < resultIds.size() && budget.hasTimeLeft() && !Thread.interrupted(); i++) {
 
                 // Prepare term-level data for the document
                 for (int ti = 0; ti < flags.length; ti++) {

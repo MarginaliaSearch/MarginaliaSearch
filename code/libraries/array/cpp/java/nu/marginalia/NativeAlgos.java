@@ -32,7 +32,11 @@ public class NativeAlgos {
     private final MethodHandle openBuffered;
     private final MethodHandle closeFd;
     private final MethodHandle readAtFd;
-    private final MethodHandle uringRead;
+
+    private final MethodHandle uringInit;
+    private final MethodHandle uringClose;
+    private final MethodHandle uringReadBuffered;
+    private final MethodHandle uringReadDirect;
 
     public static final NativeAlgos instance;
 
@@ -41,30 +45,38 @@ public class NativeAlgos {
 
     private static final Logger logger = LoggerFactory.getLogger(NativeAlgos.class);
 
-
     private NativeAlgos(Path libFile) {
-        var libraryLookup = SymbolLookup.libraryLookup(libFile, Arena.global());
+        SymbolLookup libraryLookup = SymbolLookup.libraryLookup(libFile, Arena.global());
         var nativeLinker = Linker.nativeLinker();
 
-        var handle = libraryLookup.find("ms_sort_64").get();
+        MemorySegment handle = libraryLookup.findOrThrow("ms_sort_64");
         qsortHandle = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
 
-        handle = libraryLookup.find("ms_sort_128").get();
+        handle = libraryLookup.findOrThrow("ms_sort_128");
         qsort128Handle = nativeLinker.downcallHandle(handle,
                 FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
 
-        handle = libraryLookup.find("open_direct_fd").get();
+        handle = libraryLookup.findOrThrow("open_direct_fd");
         openDirect = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS));
-        handle = libraryLookup.find("open_buffered_fd").get();
+        handle = libraryLookup.findOrThrow("open_buffered_fd");
         openBuffered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS));
 
-        handle = libraryLookup.find("uring_read").get();
-        uringRead = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+        handle = libraryLookup.findOrThrow("uring_read_buffered");
+        uringReadBuffered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
 
-        handle = libraryLookup.find("close_fd").get();
+        handle = libraryLookup.findOrThrow("uring_read_direct");
+        uringReadDirect = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+
+        handle = libraryLookup.findOrThrow("initialize_uring");
+        uringInit = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(ADDRESS, JAVA_INT));
+
+        handle = libraryLookup.findOrThrow("close_uring");
+        uringClose = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS));
+
+        handle = libraryLookup.findOrThrow("close_fd");
         closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
 
-        handle = libraryLookup.find("read_at").get();
+        handle = libraryLookup.findOrThrow("read_at");
         readAtFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, JAVA_LONG));
     }
 
@@ -72,7 +84,21 @@ public class NativeAlgos {
         Path libFile;
         NativeAlgos nativeAlgosI = null;
         // copy resource to temp file so it can be loaded
-        System.loadLibrary("uring");
+        try (var is = NativeAlgos.class.getClassLoader().getResourceAsStream("liburing.so")) {
+            var tempFile = File.createTempFile("liburing", ".so");
+            tempFile.deleteOnExit();
+
+            try (var os = new FileOutputStream(tempFile)) {
+                is.transferTo(os);
+                os.flush();
+            }
+
+            System.load(tempFile.getAbsolutePath());
+        }
+        catch (Exception e) {
+            logger.info("Failed to load native library, likely not built", e);
+        }
+
         try (var is = NativeAlgos.class.getClassLoader().getResourceAsStream("libcpp.so")) {
             var tempFile = File.createTempFile("libcpp", ".so");
             tempFile.deleteOnExit();
@@ -86,8 +112,7 @@ public class NativeAlgos {
             nativeAlgosI = new NativeAlgos(libFile);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            logger.info("Failed to load native library, likely not built");
+            logger.info("Failed to load native library, likely not built", e);
         }
 
         instance = nativeAlgosI;
@@ -121,7 +146,28 @@ public class NativeAlgos {
         }
     }
 
-    public static int uringRead(int fd, List<MemorySegment> dest, List<Long> offsets) {
+    public static UringQueue uringOpen(int fd, int queueSize) {
+        try {
+            return new UringQueue((MemorySegment) instance.uringInit.invoke(queueSize), fd);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static void uringClose(UringQueue ring) {
+        try {
+            instance.uringClose.invoke(ring.pointer());
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static int uringRead(int fd, UringQueue ring, List<MemorySegment> dest, List<Long> offsets, boolean direct) {
+        if (offsets.isEmpty()) {
+            System.err.println("Empty offset list in  uringRead");
+        }
         if (offsets.size() == 1) {
             if (readAt(fd, dest.getFirst(), offsets.getFirst()) > 0)
                 return 1;
@@ -132,15 +178,21 @@ public class NativeAlgos {
             MemorySegment sizeList = Arena.ofAuto().allocate(4L * offsets.size(), 8);
             MemorySegment offsetList = Arena.ofAuto().allocate(8L * offsets.size(), 8);
 
+            if (dest.size() != offsets.size()) {
+                throw new IllegalStateException();
+            }
+
             for (int i = 0; i < offsets.size(); i++) {
                 var buffer = dest.get(i);
                 bufferList.setAtIndex(JAVA_LONG, i, buffer.address());
                 sizeList.setAtIndex(JAVA_INT, i, (int) buffer.byteSize());
                 offsetList.setAtIndex(JAVA_LONG, i, offsets.get(i));
             }
-
-            synchronized (instance.uringRead) {
-                return (Integer) instance.uringRead.invoke(fd, dest.size(), bufferList, sizeList, offsetList);
+            if (direct) {
+                return (Integer) instance.uringReadDirect.invoke(fd, ring.pointer(), dest.size(), bufferList, sizeList, offsetList);
+            }
+            else {
+                return (Integer) instance.uringReadBuffered.invoke(fd, ring.pointer(), dest.size(), bufferList, sizeList, offsetList);
             }
         }
         catch (Throwable t) {

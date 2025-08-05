@@ -18,7 +18,7 @@ public class PositionsFileReader implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
-        uringFileReader = new UringFileReader(positionsFile, false);
+        uringFileReader = new UringFileReader(positionsFile,  false);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class PositionsFileReader implements AutoCloseable {
             sizeTotal += PositionCodec.decodeSize(encodedOffset);
         }
 
-        MemorySegment segment = arena.allocate(sizeTotal, 8);
+        MemorySegment segment = arena.allocate(sizeTotal, 512);
 
         List<MemorySegment> buffers = new ArrayList<>(offsets.length);
         List<Long> readOffsets = new ArrayList<>(offsets.length);
@@ -53,7 +53,7 @@ public class PositionsFileReader implements AutoCloseable {
             long offset = PositionCodec.decodeOffset(encodedOffset);
             buffers.add(segment.asSlice(bufOffset, length));
             readOffsets.add(offset);
-            bufOffset+= length;
+            bufOffset+=length;
         }
 
         uringFileReader.read(buffers, readOffsets);

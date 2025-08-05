@@ -103,17 +103,18 @@ class FullReverseIndexReaderTest {
 
         Path posFile = tempDir.resolve("positions.dat");
         Path docsFile = tempDir.resolve("docs.dat");
+        Path docsDataFile = tempDir.resolve("docs-data.dat");
         Path wordsFile = tempDir.resolve("words.dat");
 
         try (var positionsFileConstructor = new PositionsFileConstructor(posFile)) {
             var preindex = FullPreindex.constructPreindex(reader,
                     positionsFileConstructor,
                     DocIdRewriter.identity(), tempDir);
-            preindex.finalizeIndex(docsFile, wordsFile);
+            preindex.finalizeIndex(docsFile, docsDataFile, wordsFile);
             preindex.delete();
         }
 
-        return new FullReverseIndexReader("test", wordsFile, docsFile, new PositionsFileReader(posFile));
+        return new FullReverseIndexReader("test", wordsFile, docsFile, docsDataFile, new PositionsFileReader(posFile));
 
     }
 }

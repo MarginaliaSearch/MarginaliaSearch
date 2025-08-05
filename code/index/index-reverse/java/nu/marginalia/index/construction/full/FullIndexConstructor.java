@@ -23,17 +23,20 @@ public class FullIndexConstructor {
     }
 
     private final Path outputFileDocs;
+    private final Path outputFileDocsData;
     private final Path outputFileWords;
     private final Path outputFilePositions;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
     public FullIndexConstructor(Path outputFileDocs,
+                                Path outputFileDocsData,
                                 Path outputFileWords,
                                 Path outputFilePositions,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
         this.outputFileDocs = outputFileDocs;
+        this.outputFileDocsData = outputFileDocsData;
         this.outputFileWords = outputFileWords;
         this.outputFilePositions = outputFilePositions;
         this.docIdRewriter = docIdRewriter;
@@ -112,7 +115,7 @@ public class FullIndexConstructor {
     private void finalizeIndex(FullPreindexReference finalPR) {
         try {
             var finalP = finalPR.open();
-            finalP.finalizeIndex(outputFileDocs, outputFileWords);
+            finalP.finalizeIndex(outputFileDocs, outputFileDocsData, outputFileWords);
             finalP.delete();
         }
         catch (IOException e) {

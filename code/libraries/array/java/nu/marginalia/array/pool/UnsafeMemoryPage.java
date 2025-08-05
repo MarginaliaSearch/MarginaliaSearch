@@ -89,12 +89,18 @@ public class UnsafeMemoryPage implements MemoryPage, AutoCloseable {
     }
 
     public byte getByte(int offset) {
+        assert offset >= 0;
+        assert offset + 1 <= segment.byteSize();
         return unsafe.getByte(segment.address() + offset);
     }
     public int getInt(int offset) {
+        assert offset >= 0;
+        assert offset + 4 <= segment.byteSize();
         return unsafe.getInt(segment.address() + offset);
     }
     public long getLong(int offset) {
+        assert offset >= 0;
+        assert offset + 8 <= segment.byteSize();
         return unsafe.getLong(segment.address() + offset);
     }
 

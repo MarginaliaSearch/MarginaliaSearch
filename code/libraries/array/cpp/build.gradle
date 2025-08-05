@@ -10,6 +10,10 @@ java {
 
 dependencies {
     implementation libs.bundles.slf4j
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+
 }
 
 apply from: "$rootProject.projectDir/srcsets.gradle"
@@ -21,6 +25,15 @@ tasks.register('compileCpp', Exec) {
     inputs.files('compile.sh', 'src/main/cpp/cpphelpers.cpp', 'src/main/public/cpphelpers.h')
     outputs.file 'resources/libcpp.so'
     commandLine 'sh', 'compile.sh'
+
+    doLast {
+        // copy /usr/lib/liburing.so to resources
+        copy {
+            from '/usr/lib/liburing.so'
+            into 'resources'
+            rename { 'liburing.so' }
+        }
+    }
 }
 
 processResources.dependsOn('compileCpp')

@@ -79,7 +79,7 @@ public class NativeAlgosTest {
         }
         array.close();
 
-        try (var dfr = new UringFileReader(Path.of("/tmp/test"), false)) {
+        try (var dfr = new UringFileReader(Path.of("/tmp/test"),  false)) {
             MemorySegment buf1 = Arena.ofAuto().allocate(32, 8);
             MemorySegment buf2 = Arena.ofAuto().allocate(16, 8);
 
