@@ -19,7 +19,7 @@ public class SkipListConstants {
 
     static int numPointersForBlock(int blockIdx) {
         assert blockIdx >= 1;
-        return Math.min(16, Integer.numberOfTrailingZeros(blockIdx));
+        return Math.max(16, Integer.numberOfTrailingZeros(blockIdx));
     }
 
     static int numPointersForRootBlock(int n) {
