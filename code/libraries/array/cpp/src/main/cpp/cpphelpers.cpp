@@ -66,6 +66,8 @@ void close_uring(io_uring* ring) {
 
 int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned int* sizes, long* offsets) {
 
+#ifdef DEBUG_CHECKS
+
     struct stat st;
     fstat(fd, &st);
     for (int i = 0; i < n; i++) {
@@ -75,6 +77,7 @@ int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned 
             return -1;
         }
     }
+#endif
 
     unsigned ready = io_uring_cq_ready(ring);
     if (ready > 0) {
@@ -118,6 +121,7 @@ int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned 
 
 
 int uring_read_direct(int fd, io_uring* ring, int n, void** buffers, unsigned int* sizes, long* offsets) {
+#ifdef DEBUG_CHECKS
     if (!ring) {
         fprintf(stderr, "NULL ring!\n");
         return -1;
@@ -143,6 +147,7 @@ int uring_read_direct(int fd, io_uring* ring, int n, void** buffers, unsigned in
             return -1;
         }
     }
+#endif
 
     unsigned ready = io_uring_cq_ready(ring);
     if (ready > 0) {
