@@ -7,10 +7,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.array.pool.BufferPool;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -250,17 +247,18 @@ public class SkipListReaderTest {
     }
 
     @Test
+    @Tag("slow")
     public void testParseFuzz() throws IOException {
 
         long seedOffset = System.nanoTime();
-        for (int seed = 0; seed < 100; seed++) {
+        for (int seed = 0; seed < 1000; seed++) {
             System.out.println("Seed: " + (seed + seedOffset));
 
             Random r = new Random(seed);
 
             List<long[]> keysForBlocks = new ArrayList<>();
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 1000; i++) {
 
                 int nVals = r.nextInt(8, SkipListConstants.MAX_RECORDS_PER_BLOCK);
                 long[] keys = new long[nVals];
@@ -284,9 +282,6 @@ public class SkipListReaderTest {
             try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
                 for (var offset: offsets) {
                     var reader = new SkipListReader(pool, offset);
-                    long offsetBlock = offset & -SkipListConstants.BLOCK_SIZE;
-                    int offsetIdx = (int) (offset & (SkipListConstants.BLOCK_SIZE - 1));
-                    System.out.println(offsetBlock + " : " + offsetIdx);
                     reader.parseBlocks(pool, offset);
                 }
             }
