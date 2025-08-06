@@ -30,7 +30,17 @@ public class SkipListWriter implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
+        int blockRemaining = (int) (BLOCK_SIZE - (documentsChannel.position() & (BLOCK_SIZE - 1)));
+        docsBuffer.position(0);
+        docsBuffer.limit(blockRemaining);
+        while (docsBuffer.hasRemaining()) {
+            documentsChannel.write(docsBuffer);
+        }
+
         documentsChannel.force(false);
+        if ((documentsChannel.position() & (BLOCK_SIZE-1)) != 0) {
+            throw new IllegalStateException("Wrote a documents file that was not aligned with block size " + BLOCK_SIZE);
+        }
         documentsChannel.close();
 
         while (dataBuffer.position() < dataBuffer.capacity()) {
@@ -39,6 +49,9 @@ public class SkipListWriter implements AutoCloseable {
         dataBuffer.flip();
         while (dataBuffer.hasRemaining()) {
             dataChannel.write(dataBuffer);
+        }
+        if ((dataChannel.position() & (4096-1)) != 0) {
+            throw new IllegalStateException("Wrote a documents file that was not aligned with block size " + 4096);
         }
         dataChannel.force(false);
         dataChannel.close();
