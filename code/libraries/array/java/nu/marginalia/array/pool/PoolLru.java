@@ -135,7 +135,7 @@ public class PoolLru {
     private void reclaimThread() {
         int pageIdx = 0;
 
-        while (running) {
+        while (running && !Thread.interrupted()) {
             long readIdx = clockReadIdx.get();
             long writeIdx = clockWriteIdx.get();
             int queueSize = (int) (writeIdx - readIdx);
