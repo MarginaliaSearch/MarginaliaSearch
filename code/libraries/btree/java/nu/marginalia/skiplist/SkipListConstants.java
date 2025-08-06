@@ -1,7 +1,7 @@
 package nu.marginalia.skiplist;
 
 public class SkipListConstants {
-    public static final int BLOCK_SIZE = 4096;
+    public static final int BLOCK_SIZE = 65536;
     static final int MIN_TRUNCATED_BLOCK_SIZE = Math.min(512, BLOCK_SIZE / 4);
 
     static final int HEADER_SIZE = 8;

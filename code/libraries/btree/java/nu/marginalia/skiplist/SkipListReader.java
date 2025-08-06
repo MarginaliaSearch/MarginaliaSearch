@@ -387,8 +387,7 @@ public class SkipListReader {
                              int flags,
                              long docOffset,
                              LongList fowardPointers,
-                             LongList docIds,
-                             LongList values)
+                             LongList docIds)
     {
         public long highestDocId() {
             return docIds.getLast();
@@ -411,7 +410,6 @@ public class SkipListReader {
         offset += 8*fc;
 
         LongList docIds = new LongArrayList();
-        LongList values = new LongArrayList();
         long docOffset = seg.get(ValueLayout.JAVA_LONG, offset);
         offset += 8;
 
@@ -426,7 +424,16 @@ public class SkipListReader {
             docIds.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
         }
 
-        return new RecordView(n, fc, flags, docOffset, forwardPointers, docIds, values);
+        for (int i = 1; i < docIds.size(); i++) {
+            if (docIds.getLong(i-1) >= docIds.getLong(i)) {
+                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, docOffset, forwardPointers, docIds));
+            }
+        }
+        if ((docOffset & 7) != 0) {
+            throw new IllegalStateException("docOffset is not long-aligned" + new RecordView(n, fc, flags, docOffset, forwardPointers, docIds));
+        }
+
+        return new RecordView(n, fc, flags, docOffset, forwardPointers, docIds);
     }
 
     public static List<RecordView> parseBlocks(MemorySegment seg, int offset) {
