@@ -109,14 +109,11 @@ public class SkipListWriter implements AutoCloseable {
         maxValuesList.clear();
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
+        docsBuffer.clear();
 
-        if (blockRemaining >= (HEADER_SIZE + n * ValueLayout.JAVA_LONG.byteSize())) {
+        if (blockRemaining >= (HEADER_SIZE + (n + 1) * ValueLayout.JAVA_LONG.byteSize())) {
             /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK, WRITE A COMPACT BLOCK */
-
-            docsBuffer.clear();
-
             writeCompactBlockHeader(docsBuffer, n, (byte) 0, FLAG_END_BLOCK);
-
             docsBuffer.putLong(dataPosition());
 
             // Write the keys
@@ -134,9 +131,7 @@ public class SkipListWriter implements AutoCloseable {
         }
 
         if (blockRemaining < SkipListConstants.MIN_TRUNCATED_BLOCK_SIZE) {
-
             /** REMAINING BLOCK TOO SMALL TO RECLAIM - INSERT PADDING */
-            docsBuffer.clear();
             for (int i = 0; i < blockRemaining; i++) {
                 docsBuffer.put((byte) 0);
             }
@@ -145,6 +140,7 @@ public class SkipListWriter implements AutoCloseable {
                 startPos += documentsChannel.write(docsBuffer);
             }
             blockRemaining = BLOCK_SIZE;
+            docsBuffer.clear();
         }
 
         int writtenRecords = 0;
@@ -156,7 +152,6 @@ public class SkipListWriter implements AutoCloseable {
 
             /** WRITE THE ROOT BLOCK **/
 
-            docsBuffer.clear();
             byte flags = 0;
             if (numBlocks == 1) {
                 flags = FLAG_END_BLOCK;
@@ -207,6 +202,8 @@ public class SkipListWriter implements AutoCloseable {
         /** WRITE REMAINING BLOCKS **/
 
         for (int blockIdx = 1; blockIdx < numBlocks; blockIdx++) {
+            docsBuffer.clear();
+
             int nRemaining = n - writtenRecords;
             int blockCapacity = nonRootBlockCapacity(blockIdx);
 
@@ -217,7 +214,7 @@ public class SkipListWriter implements AutoCloseable {
 
             boolean isLastBlock = blockIdx == (numBlocks - 1);
             int blockSize = Math.min(nRemaining, blockCapacity);
-            docsBuffer.clear();
+
 
             byte flags = 0;
             if (isLastBlock) {

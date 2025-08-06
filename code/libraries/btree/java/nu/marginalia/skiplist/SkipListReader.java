@@ -426,7 +426,7 @@ public class SkipListReader {
         long lastDataBlock = (offset + 8L * (n-1)) & - SkipListConstants.BLOCK_SIZE;
 
         if (currentBlock != lastDataBlock) {
-            throw new IllegalStateException("Last data block is not the same as the current data block");
+            throw new IllegalStateException("Last data block is not the same as the current data block (n=" + n +", flags=" + flags + ")" + " for block offset " + (offset & (SkipListConstants.BLOCK_SIZE - 1)));
         }
 
         for (int i = 0; i < n; i++) {
@@ -441,6 +441,7 @@ public class SkipListReader {
         if ((docOffset & 7) != 0) {
             throw new IllegalStateException("docOffset is not long-aligned" + new RecordView(n, fc, flags, docOffset, forwardPointers, docIds));
         }
+
 
         return new RecordView(n, fc, flags, docOffset, forwardPointers, docIds);
     }

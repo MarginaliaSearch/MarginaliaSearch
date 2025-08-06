@@ -2,7 +2,6 @@ package nu.marginalia.skiplist;
 
 import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSortedSet;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
@@ -19,7 +18,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.LongStream;
 
@@ -252,35 +253,42 @@ public class SkipListReaderTest {
     public void testParseFuzz() throws IOException {
 
         long seedOffset = System.nanoTime();
-        for (int seed = 0; seed < 256; seed++) {
+        for (int seed = 0; seed < 100; seed++) {
             System.out.println("Seed: " + (seed + seedOffset));
 
-            Random r = new Random(seed + seedOffset);
+            Random r = new Random(seed);
 
-            int nVals = r.nextInt(8, 65536);
-            LongSet keysSet = new LongAVLTreeSet();
+            List<long[]> keysForBlocks = new ArrayList<>();
 
-            while (keysSet.size() < nVals) {
-                long val = r.nextLong(0, 1000_000);
-                keysSet.add(val);
+            for (int i = 0; i < 100; i++) {
+
+                int nVals = r.nextInt(8, SkipListConstants.MAX_RECORDS_PER_BLOCK);
+                long[] keys = new long[nVals];
+                for (int ki = 0; ki < keys.length; ki++) {
+                    keys[ki] = r.nextLong(0, Long.MAX_VALUE);
+                }
+
+                Arrays.sort(keys);
+                keysForBlocks.add(keys);
             }
-
-            long[] keys = keysSet.toLongArray();
-
-            long blockStart;
+            List<Long> offsets = new ArrayList<>();
             try (var writer = new SkipListWriter(docsFile, dataFile);
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
-                blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                for (var block : keysForBlocks) {
+                    offsets.add(writer.writeList(createArray(arena, block, block), 0, block.length));
+                }
             }
 
             try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(pool, blockStart);
-                long offsetBlock = blockStart & -SkipListConstants.BLOCK_SIZE;
-                int offsetIdx = (int) (blockStart & (SkipListConstants.BLOCK_SIZE - 1));
-                System.out.println(offsetBlock + " : " + offsetIdx);
-                reader.parseBlocks(pool, blockStart);
+                for (var offset: offsets) {
+                    var reader = new SkipListReader(pool, offset);
+                    long offsetBlock = offset & -SkipListConstants.BLOCK_SIZE;
+                    int offsetIdx = (int) (offset & (SkipListConstants.BLOCK_SIZE - 1));
+                    System.out.println(offsetBlock + " : " + offsetIdx);
+                    reader.parseBlocks(pool, offset);
+                }
             }
         }
     }

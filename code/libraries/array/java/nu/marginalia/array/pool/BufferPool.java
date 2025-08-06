@@ -97,6 +97,11 @@ public class BufferPool implements AutoCloseable {
     public void close() {
         running = false;
 
+        try {
+            poolLru.stop();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         NativeAlgos.closeFd(fd);
         arena.close();
 
