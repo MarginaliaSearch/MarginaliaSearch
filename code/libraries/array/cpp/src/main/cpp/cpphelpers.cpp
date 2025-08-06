@@ -35,6 +35,10 @@ void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
   });
 }
 
+void fadvise_random(int fd) {
+  posix_fadvise(fd, 0, 0, POSIX_FADV_RANDOM);
+}
+
 io_uring* initialize_uring(int queue_size) {
     io_uring* ring = (io_uring*) malloc(sizeof(io_uring));
     if (!ring) return NULL;
@@ -65,7 +69,7 @@ int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned 
     struct stat st;
     fstat(fd, &st);
     for (int i = 0; i < n; i++) {
-        if (offsets[i] + sizes[i] >= st.st_size) {
+        if (offsets[i] + sizes[i] > st.st_size) {
             fprintf(stderr, "Read beyond EOF: offset %ld >= size %ld\n",
                     offsets[i], st.st_size);
             return -1;

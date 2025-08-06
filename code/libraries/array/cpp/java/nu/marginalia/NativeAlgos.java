@@ -32,6 +32,7 @@ public class NativeAlgos {
     private final MethodHandle openBuffered;
     private final MethodHandle closeFd;
     private final MethodHandle readAtFd;
+    private final MethodHandle fadviseRandom;
 
     private final MethodHandle uringInit;
     private final MethodHandle uringClose;
@@ -72,6 +73,9 @@ public class NativeAlgos {
 
         handle = libraryLookup.findOrThrow("close_uring");
         uringClose = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS));
+
+        handle = libraryLookup.findOrThrow("fadvise_random");
+        fadviseRandom = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
 
         handle = libraryLookup.findOrThrow("close_fd");
         closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
@@ -196,6 +200,14 @@ public class NativeAlgos {
             }
         }
         catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static void fadviseRandom(int fd) {
+        try {
+            instance.fadviseRandom.invoke(fd);
+        } catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);
         }
     }

@@ -24,6 +24,7 @@ public class UringFileReader implements AutoCloseable {
         }
         else {
             fd = NativeAlgos.openBuffered(filename);
+            NativeAlgos.fadviseRandom(fd);
             this.direct = false;
         }
         for (int i = 0; i < rings.length; i++) {
