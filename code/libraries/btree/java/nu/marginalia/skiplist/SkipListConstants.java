@@ -2,7 +2,7 @@ package nu.marginalia.skiplist;
 
 public class SkipListConstants {
     public static final int BLOCK_SIZE = 4096;
-    static final int MIN_TRUNCATED_BLOCK_SIZE = BLOCK_SIZE / 4;
+    static final int MIN_TRUNCATED_BLOCK_SIZE = Math.min(512, BLOCK_SIZE / 4);
 
     static final int HEADER_SIZE = 8;
     static final int SEGREGATED_HEADER_SIZE = 16;
@@ -10,7 +10,6 @@ public class SkipListConstants {
     static final int MAX_RECORDS_PER_BLOCK = (BLOCK_SIZE/8 - 2);
 
     static final byte FLAG_END_BLOCK = 1<<0;
-    static final byte FLAG_COMPACT_BLOCK = 1<<1;
 
 
     static int skipOffsetForPointer(int pointerIdx) {
@@ -37,5 +36,9 @@ public class SkipListConstants {
 
     static int estimateNumBlocks(int n) {
         return n / MAX_RECORDS_PER_BLOCK + Integer.signum(n % MAX_RECORDS_PER_BLOCK);
+    }
+
+    public static int pageDataOffset(int baseBlockOffset, int fc) {
+        return baseBlockOffset + 8 * (2 + fc);
     }
 }

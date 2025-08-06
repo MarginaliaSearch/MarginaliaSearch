@@ -119,10 +119,7 @@ public class SkipListReader {
                 int fc = headerForwardCount(page, currentBlockOffset);
                 int flags = headerFlags(page, currentBlockOffset);
 
-                int dataOffset = currentBlockOffset + 8 * (1 + fc);
-                if ((flags & SkipListConstants.FLAG_COMPACT_BLOCK) == 0) {
-                    dataOffset += 8;
-                }
+                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
 
                 if (retainInPage(page, dataOffset, n, data)) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
@@ -167,8 +164,8 @@ public class SkipListReader {
                 int fc = headerForwardCount(page, currentBlockOffset);
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
 
-                int dataOffset = currentBlockOffset + 8 * (2 + fc);
-                long valuesOffset = page.getLong(currentBlockOffset + 8 * (1+fc));
+                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
+                long valuesOffset = headerValuesBaseOffset(page, currentBlockOffset);
                 if ((valuesOffset & 7) != 0) {
                     System.err.println(pageNo + " Values offset invalid at " + currentBlock + ":" + currentBlockOffset);
                     throw new IllegalStateException(parseBlock(ms, currentBlockOffset).toString());
@@ -254,6 +251,7 @@ public class SkipListReader {
         return vals;
     }
 
+
     boolean rejectInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
         while (currentBlockIdx < n && data.hasMore()) {
@@ -314,10 +312,7 @@ public class SkipListReader {
                 int fc = headerForwardCount(page, currentBlockOffset);
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
 
-                int dataOffset = currentBlockOffset + 8 * (1 + fc);
-                if ((flags & SkipListConstants.FLAG_COMPACT_BLOCK) == 0) {
-                    dataOffset += 8;
-                }
+                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
 
                 if (rejectInPage(page, dataOffset, n, data)) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
@@ -365,10 +360,7 @@ public class SkipListReader {
                 assert fc >= 0;
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
 
-                int dataOffset = currentBlockOffset + 8 * (1 + fc);
-                if ((flags & SkipListConstants.FLAG_COMPACT_BLOCK) == 0) {
-                    dataOffset += 8;
-                }
+                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
 
                 int nCopied = dest.addData(ms, dataOffset, n - currentBlockIdx);
                 currentBlockIdx += nCopied;
@@ -420,22 +412,18 @@ public class SkipListReader {
 
         LongList docIds = new LongArrayList();
         LongList values = new LongArrayList();
-        long docOffset = -1;
-        if ((flags & SkipListConstants.FLAG_COMPACT_BLOCK) != 0) {
-            for (int i = 0; i < n; i++) {
-                docIds.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
-            }
-            offset += 8 * n;
-            for (int i = 0; i < n; i++) {
-                values.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
-            }
+        long docOffset = seg.get(ValueLayout.JAVA_LONG, offset);
+        offset += 8;
+
+        long currentBlock = offset & -SkipListConstants.BLOCK_SIZE;
+        long lastDataBlock = (offset + 8L * (n-1)) & - SkipListConstants.BLOCK_SIZE;
+
+        if (currentBlock != lastDataBlock) {
+            throw new IllegalStateException("Last data block is not the same as the current data block");
         }
-        else {
-            docOffset = seg.get(ValueLayout.JAVA_LONG, offset);
-            offset += 8;
-            for (int i = 0; i < n; i++) {
-                docIds.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
-            }
+
+        for (int i = 0; i < n; i++) {
+            docIds.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
         }
 
         return new RecordView(n, fc, flags, docOffset, forwardPointers, docIds, values);
@@ -482,6 +470,10 @@ public class SkipListReader {
 
     public static int headerForwardCount(MemorySegment block, int offset) {
         return block.get(ValueLayout.JAVA_BYTE, offset + 4);
+    }
+
+    private long headerValuesBaseOffset(MemoryPage buffer, int blockOffset) {
+        return buffer.getLong(blockOffset + 8 * (1+headerForwardCount(buffer, blockOffset)));
     }
 
     public static int headerFlags(MemoryPage buffer, int offset) {

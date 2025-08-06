@@ -61,7 +61,7 @@ class SkipListWriterTest {
             var ms = arr.getMemorySegment();
 
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
-            var expected1 = new SkipListReader.RecordView(8, 0,  SkipListConstants.FLAG_END_BLOCK | SkipListConstants.FLAG_COMPACT_BLOCK,
+            var expected1 = new SkipListReader.RecordView(8, 0,  SkipListConstants.FLAG_END_BLOCK,
                     -1,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 0,1,2,3,4,5,6,7}),
@@ -72,7 +72,7 @@ class SkipListWriterTest {
             assertEquals(expected1, actual1);
 
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
-            var expected2 = new SkipListReader.RecordView(2, 0,  SkipListConstants.FLAG_END_BLOCK | SkipListConstants.FLAG_COMPACT_BLOCK,
+            var expected2 = new SkipListReader.RecordView(2, 0,  SkipListConstants.FLAG_END_BLOCK,
                     -1,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 2,3}),
