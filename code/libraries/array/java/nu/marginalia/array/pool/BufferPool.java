@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
@@ -43,12 +44,14 @@ public class BufferPool implements AutoCloseable {
 
         this.arena = Arena.ofShared();
         this.pages = new UnsafeMemoryPage[poolSize];
+
+        MemorySegment memoryArea = arena.allocate((long) pageSizeBytes*poolSize, 128);
         for (int i = 0; i < pages.length; i++) {
             if (Boolean.getBoolean("system.noSunMiscUnsafe")) {
-                pages[i] = new SegmentMemoryPage(arena.allocate(pageSizeBytes, 512), i);
+                pages[i] =  (MemoryPage) new SegmentMemoryPage(memoryArea.asSlice((long) i*pageSizeBytes, pageSizeBytes), i);
             }
             else {
-                pages[i] = new UnsafeMemoryPage(arena.allocate(pageSizeBytes, 512), i);
+                pages[i] = (MemoryPage) new UnsafeMemoryPage(memoryArea.asSlice((long) i*pageSizeBytes, pageSizeBytes), i);
             }
         }
 
