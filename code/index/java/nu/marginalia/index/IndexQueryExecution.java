@@ -151,6 +151,7 @@ public class IndexQueryExecution {
                     }
                 }
             } catch (RuntimeException ex) {
+                log.error("Exception in lookup thread", ex);
                 evaluationJobs.forEach(future -> future.cancel(true));
             } finally {
                 buffer.dispose();

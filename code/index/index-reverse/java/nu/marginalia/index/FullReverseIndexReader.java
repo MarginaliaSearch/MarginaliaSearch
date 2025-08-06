@@ -189,7 +189,7 @@ public class FullReverseIndexReader {
         var reader = getReader(offset);
 
         // Read the size and offset of the position data
-        var offsets = reader.getValuesOrOffsets(docIds);
+        var offsets = reader.getValueOffsets(docIds);
         docValuesReader.getValues(arena, offsets);
 
         return positionsFileReader.getTermData(arena, offsets);

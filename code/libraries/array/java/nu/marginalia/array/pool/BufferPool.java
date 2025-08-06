@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,8 +19,10 @@ public class BufferPool implements AutoCloseable {
 
     private final MemoryPage[] pages;
 
+    private final long fileSize;
     private final Arena arena;
     private final int fd;
+    private final int pageSizeBytes;
     private PoolLru poolLru;
 
     private final AtomicInteger diskReadCount = new AtomicInteger();
@@ -41,7 +45,12 @@ public class BufferPool implements AutoCloseable {
 
     public BufferPool(Path filename, int pageSizeBytes, int poolSize) {
         this.fd = NativeAlgos.openDirect(filename);
-
+        this.pageSizeBytes = pageSizeBytes;
+        try {
+            this.fileSize = Files.size(filename);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         this.arena = Arena.ofShared();
         this.pages = new UnsafeMemoryPage[poolSize];
 
@@ -135,6 +144,12 @@ public class BufferPool implements AutoCloseable {
 
     private MemoryPage read(long address, boolean acquire) {
         // If the page is not available, read it from the caller's thread
+        if (address + pageSizeBytes > fileSize) {
+            throw new RuntimeException("Address " + address + " too large for page " + pageSizeBytes);
+        }
+        if ((address & 511) != 0) {
+            throw new  RuntimeException("Address " + address + " not aligned");
+        }
         MemoryPage buffer = acquireFreePage(address);
         poolLru.register(buffer);
         populateBuffer(buffer);

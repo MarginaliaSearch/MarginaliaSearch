@@ -150,7 +150,7 @@ public class SkipListReader {
         }
     }
 
-    public long[] getValuesOrOffsets(long[] keys) {
+    public long[] getValueOffsets(long[] keys) {
         int pos = 0;
         long[] vals = new long[keys.length];
 
@@ -163,6 +163,10 @@ public class SkipListReader {
                 int n = headerNumRecords(page, currentBlockOffset);
                 int fc = headerForwardCount(page, currentBlockOffset);
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                if (n == 0) {
+                    throw new IllegalStateException("Reading null memory!");
+                }
 
                 int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
                 long valuesOffset = headerValuesBaseOffset(page, currentBlockOffset);
@@ -357,6 +361,11 @@ public class SkipListReader {
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
                 int n = headerNumRecords(page, currentBlockOffset);
                 int fc = headerForwardCount(page, currentBlockOffset);
+
+                if (n == 0) {
+                    throw new IllegalStateException("Reading null memory!");
+                }
+
                 assert fc >= 0;
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
 

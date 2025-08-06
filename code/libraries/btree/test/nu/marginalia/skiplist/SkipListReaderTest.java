@@ -219,7 +219,7 @@ public class SkipListReaderTest {
                 }
 
                 long[] queryKeys = qbSet.toLongArray();
-                long[] queryVals = reader.getValuesOrOffsets(queryKeys);
+                long[] queryVals = reader.getValueOffsets(queryKeys);
 
                 LongSortedSet presentValues = new LongAVLTreeSet();
                 for (int i = 0; i < queryKeys.length; i++) {
@@ -286,7 +286,7 @@ public class SkipListReaderTest {
     }
 
     @Test
-    public void testGetValuesOrOffsets() throws IOException {
+    public void testGetValueOffsets() throws IOException {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -2*v).toArray();
 
@@ -297,7 +297,7 @@ public class SkipListReaderTest {
         try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
-            long[] queryVals = reader.getValuesOrOffsets(queryKeys);
+            long[] queryVals = reader.getValueOffsets(queryKeys);
             System.out.println(Arrays.toString(queryVals));
         }
     }
@@ -355,7 +355,7 @@ public class SkipListReaderTest {
     }
 
     @Test
-    public void testGetValuesOrOffsets1() throws IOException {
+    public void testGetValueOffsets1() throws IOException {
         long[] keys = new long[] { 100 };
         long[] vals = new long[] { 50 };
 
@@ -368,7 +368,7 @@ public class SkipListReaderTest {
         try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             long[] queryKeys = new long[] { 100 };
-            long[] queryVals = reader.getValuesOrOffsets(queryKeys);
+            long[] queryVals = reader.getValueOffsets(queryKeys);
             System.out.println(Arrays.toString(queryVals));
         }
     }
