@@ -48,7 +48,7 @@ public class BufferPool implements AutoCloseable {
         MemorySegment memoryArea = arena.allocate((long) pageSizeBytes*poolSize, 128);
         for (int i = 0; i < pages.length; i++) {
             if (Boolean.getBoolean("system.noSunMiscUnsafe")) {
-                pages[i] =  (MemoryPage) new SegmentMemoryPage(memoryArea.asSlice((long) i*pageSizeBytes, pageSizeBytes), i);
+                pages[i] = (MemoryPage) new SegmentMemoryPage(memoryArea.asSlice((long) i*pageSizeBytes, pageSizeBytes), i);
             }
             else {
                 pages[i] = (MemoryPage) new UnsafeMemoryPage(memoryArea.asSlice((long) i*pageSizeBytes, pageSizeBytes), i);
