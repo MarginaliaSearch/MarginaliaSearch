@@ -145,7 +145,7 @@ public class BufferPool implements AutoCloseable {
     private MemoryPage read(long address, boolean acquire) {
         // If the page is not available, read it from the caller's thread
         if (address + pageSizeBytes > fileSize) {
-            throw new RuntimeException("Address " + address + " too large for page " + pageSizeBytes);
+            throw new RuntimeException("Address " + address + " too large for page size " + pageSizeBytes + " and file size" + fileSize);
         }
         if ((address & 511) != 0) {
             throw new  RuntimeException("Address " + address + " not aligned");
