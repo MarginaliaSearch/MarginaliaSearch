@@ -2,7 +2,6 @@ package nu.marginalia.index.results.model.ids;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.array.page.LongQueryBuffer;
-import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import java.util.Arrays;
 import java.util.stream.LongStream;
@@ -24,11 +23,15 @@ public final class CombinedDocIdList {
     public CombinedDocIdList(LongArrayList data) {
         this.data = data.toLongArray();
     }
-    public CombinedDocIdList(Roaring64Bitmap data) {
-        this.data = data.toArray();
-    }
     public CombinedDocIdList() {
         this.data = new long[0];
+    }
+
+    public static CombinedDocIdList combineLists(CombinedDocIdList one, CombinedDocIdList other) {
+        long[] data = new long[one.size() + other.size()];
+        System.arraycopy(one.data, 0, data, 0, one.data.length);
+        System.arraycopy(other.data, 0, data, one.data.length, other.data.length);
+        return new CombinedDocIdList(data);
     }
 
     public int size() {

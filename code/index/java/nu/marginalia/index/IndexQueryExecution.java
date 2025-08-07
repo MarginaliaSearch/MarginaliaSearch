@@ -38,12 +38,13 @@ public class IndexQueryExecution {
     private final List<IndexQuery> queries;
     private final IndexSearchBudget budget;
     private final ResultPriorityQueue resultHeap;
-    private final CountDownLatch executionCountdown;
+    private final CountDownLatch lookupCountdown;
+    private final CountDownLatch evaluationCountdown;
+
+    private final ArrayBlockingQueue<CombinedDocIdList> evaluationQueue = new ArrayBlockingQueue<>(8);
 
     private final int limitTotal;
     private final int limitByDomain;
-
-    private int evaluationJobCounter;
 
     static {
         Thread.ofPlatform().daemon().start(() -> {
@@ -73,125 +74,81 @@ public class IndexQueryExecution {
 
         rankingContext = ResultRankingContext.create(currentIndex, params);
         queries = currentIndex.createQueries(new SearchTerms(params.query, params.compiledQueryIds), params.queryParams);
-        executionCountdown = new CountDownLatch(queries.size());
 
-        evaluationJobCounter = 0;
+        lookupCountdown = new CountDownLatch(queries.size());
+        evaluationCountdown = new CountDownLatch(indexValuationThreads);
     }
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
         // Spawn lookup tasks for each query
-        List<Future<?>> tasks = new ArrayList<>();
+        for (int i = 0; i < indexValuationThreads; i++) {
+            threadPool.submit(this::evaluate);
+        }
         for (IndexQuery query : queries) {
-            threadPool.submit(() -> {
-                var lookupJobs = lookup(query);
-                synchronized (tasks) {
-                    tasks.addAll(lookupJobs);
-                }
-            });
+            threadPool.submit(() -> lookup(query));
         }
 
-        // Await lookup task termination (this guarantees we're no longer creating new evaluation tasks)
-        executionCountdown.await();
-
-        // Await evaluation task termination
-        synchronized (IndexQueryExecution.this) {
-            while (evaluationJobCounter > 0 && budget.hasTimeLeft()) {
-                IndexQueryExecution.this.wait(budget.timeLeft());
-            }
-        }
-
-        synchronized (tasks) {
-            for (var job : tasks) {
-                job.cancel(true);
-            }
-        }
+        // Await lookup task termination
+        lookupCountdown.await();
+        evaluationCountdown.await();
 
         // Final result selection
         return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
     }
 
     private List<Future<?>> lookup(IndexQuery query) {
+        final LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        List<Future<?>> evaluationJobs = new ArrayList<>();
         try {
-            threadCount.incrementAndGet();
+            while (query.hasMore() && budget.hasTimeLeft()) {
 
-            final LongQueryBuffer buffer = new LongQueryBuffer(512);
-            List<Future<?>> evaluationJobs = new ArrayList<>();
-            try {
-                while (query.hasMore() && budget.hasTimeLeft()) {
+                buffer.zero();
 
-                    buffer.zero();
-                    long st = System.nanoTime();
-                    query.getMoreResults(buffer);
-                    long et = System.nanoTime();
-                    lookupTime.addAndGet(et - st);
+                long st = System.nanoTime();
+                query.getMoreResults(buffer);
+                long et = System.nanoTime();
+                lookupTime.addAndGet(et - st);
 
-                    if (buffer.isEmpty())
-                        continue;
+                if (buffer.isEmpty())
+                    continue;
 
-                    CombinedDocIdList docIds = new CombinedDocIdList(buffer);
-
-                    boolean stealWork = false;
-                    synchronized (IndexQueryExecution.this) {
-                        // Hold off on spawning new evaluation jobs if we have too many queued
-                        // to avoid backpressure, instead steal work into the lookup thread
-                        // in this scenario
-
-                        if (evaluationJobCounter > 2 * indexValuationThreads) {
-                            stealWork = true;
-                        } else {
-                            evaluationJobCounter++;
-                        }
-                    }
-
-                    if (stealWork) {
-                        resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
-                    } else {
-                        // Spawn an evaluation task
-                        evaluationJobs.add(threadPool.submit(() -> evaluate(docIds)));
-                    }
-                }
-            } catch (RuntimeException ex) {
-                log.error("Exception in lookup thread", ex);
-                evaluationJobs.forEach(future -> future.cancel(true));
-            } finally {
-                buffer.dispose();
-                executionCountdown.countDown();
+                CombinedDocIdList docIds = new CombinedDocIdList(buffer);
+                evaluationQueue.offer(docIds, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
             }
+        } catch (RuntimeException | InterruptedException ex) {
+            log.error("Exception in lookup thread", ex);
+        } finally {
+            buffer.dispose();
+            lookupCountdown.countDown();
+        }
 
-            return evaluationJobs;
-        }
-        catch (Exception ex) {
-            if (!(ex.getCause() instanceof InterruptedException)) {
-                log.error("Exception in lookup thread", ex);
-            }  // suppress logging for interrupted ex
-            return List.of();
-        }
-        finally {
-            threadCount.decrementAndGet();
-        }
+        return evaluationJobs;
     }
 
-    private void evaluate(CombinedDocIdList docIds) {
+    private void evaluate() {
         try {
-            threadCount.incrementAndGet();
-            if (!budget.hasTimeLeft())
-                return;
-            long st =  System.nanoTime();
-            resultHeap.addAll(rankingService.rankResults(rankingContext, budget, docIds, false));
-            long et = System.nanoTime();
+            while (budget.hasTimeLeft() && (lookupCountdown.getCount() > 0 || !evaluationQueue.isEmpty())) {
+                var rankingItems = evaluationQueue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
+                if (rankingItems == null) continue;
 
-            valuationTime.addAndGet(et - st);
+                // If we have ample time left and have received few results to rank, wait for more and join the tasks
+                if (rankingItems.size() < 32 && budget.timeLeft() > 25) {
+                    var additionalItems = evaluationQueue.poll(10, TimeUnit.MILLISECONDS);
+                    if (additionalItems != null) {
+                        rankingItems = CombinedDocIdList.combineLists(rankingItems, additionalItems);
+                    }
+                }
+                long st =  System.nanoTime();
+                resultHeap.addAll(rankingService.rankResults(rankingContext, budget, rankingItems, false));
+                long et = System.nanoTime();
+                valuationTime.addAndGet(et - st);
+            }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
                 log.error("Exception in lookup thread", ex);
             }  // suppress logging for interrupted ex
         } finally {
-            synchronized (IndexQueryExecution.this) {
-                if (--evaluationJobCounter == 0) {
-                    IndexQueryExecution.this.notifyAll();
-                }
-            }
-            threadCount.decrementAndGet();
+            evaluationCountdown.countDown();
         }
     }
 
