@@ -61,51 +61,39 @@ public class SkipListReader {
     boolean retainInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
         int matches = 0;
-        while (currentBlockIdx < n && data.hasMore()) {
-            currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n);
-            if (currentBlockIdx >= n) break;
 
-            long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-            long bv = data.currentValue();
-
-            if (pv == bv) {
-                data.retainAndAdvance();
-                currentBlockIdx++;
-                if (++matches > 5)
-                    break;
-            }
-            else if (pv > bv) {
+        while (data.hasMore()
+                && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
+        {
+            if (data.currentValue() != page.getLong( dataOffset + currentBlockIdx * 8)) {
                 data.rejectAndAdvance();
             }
             else {
-                currentBlockIdx ++;
+                data.retainAndAdvance();
+                matches++;
+
+                if (++matches > 5) {
+                    break;
+                }
             }
         }
 
-        if (currentBlockIdx < n && data.hasMore()) {
-            long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+        outer:
+        while (data.hasMore()) {
             long bv = data.currentValue();
 
-            while (data.hasMore()) {
-
+            for (; currentBlockIdx < n; currentBlockIdx++) {
+                long pv = page.getLong( dataOffset + currentBlockIdx * 8);
                 if (bv < pv) {
-                    if (!data.rejectAndAdvance()) break;
-                    bv = data.currentValue();
-                    continue;
+                    data.rejectAndAdvance();
+                    continue outer;
                 }
                 else if (bv == pv) {
-                    if (!data.retainAndAdvance()) break;
-                    bv = data.currentValue();
-                    continue;
-                }
-
-                if (++currentBlockIdx < n) {
-                    pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                }
-                else {
-                    return true;
+                    data.retainAndAdvance();
+                    continue outer;
                 }
             }
+            break;
         }
 
         return currentBlockIdx >= n;
@@ -175,53 +163,40 @@ public class SkipListReader {
                     throw new IllegalStateException(parseBlock(ms, currentBlockOffset).toString());
                 }
 
-                while (currentBlockIdx < n && pos < keys.length) {
-                    currentBlockIdx = page.binarySearchLong(keys[pos], dataOffset, currentBlockIdx, n);
-                    if (currentBlockIdx >= n) break;
+                int matches = 0;
 
-                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                    long bv = keys[pos];
-
-                    if (pv == bv) {
-                        vals[pos++] = 1L + valuesOffset + currentBlockIdx * 8L;
-                        currentBlockIdx++;
-                        break;
-                    }
-                    else if (pv > bv) {
+                while (pos < keys.length
+                        && n > (currentBlockIdx = page.binarySearchLong(keys[pos], dataOffset, currentBlockIdx, n)))
+                {
+                    if (keys[pos] != page.getLong( dataOffset + currentBlockIdx * 8)) {
                         pos++;
                     }
                     else {
-                        currentBlockIdx ++;
-                    }
+                        vals[pos++] = 1L + valuesOffset + currentBlockIdx * 8L;
+                        matches++;
 
-                }
-
-                if (currentBlockIdx < n && pos < keys.length) {
-                    long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                    long bv = keys[pos];
-
-                    for (;;) {
-
-                        if (bv < pv) {
-                            if (++pos >= keys.length) break;
-                            bv = keys[pos];
-                            continue;
-                        }
-                        else if (bv == pv) {
-                            assert currentBlockIdx < n;
-                            vals[pos] = 1L + valuesOffset + currentBlockIdx * 8L;
-                            if (++pos >= keys.length) break;
-                            bv = keys[pos];
-                            continue;
-                        }
-
-                        if (++currentBlockIdx < n) {
-                            pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                        }
-                        else {
+                        if (++matches > 5) {
                             break;
                         }
                     }
+                }
+
+                outer:
+                while (pos < keys.length) {
+                    long kv = keys[pos];
+
+                    for (; currentBlockIdx < n; currentBlockIdx++) {
+                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                        if (kv < pv) {
+                            pos++;
+                            continue outer;
+                        }
+                        else if (kv == pv) {
+                            vals[pos++] = 1L + valuesOffset + currentBlockIdx * 8L;
+                            continue outer;
+                        }
+                    }
+                    break;
                 }
 
                 if (currentBlockIdx >= n) {
@@ -258,50 +233,40 @@ public class SkipListReader {
 
     boolean rejectInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
-        while (currentBlockIdx < n && data.hasMore()) {
-            currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n);
-            if (currentBlockIdx >= n) break;
+        int matches = 0;
 
-            long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-            long bv = data.currentValue();
-
-            if (pv == bv) {
-                data.rejectAndAdvance();
-                currentBlockIdx++;
-                break;
-            }
-            else if (pv > bv) {
+        while (data.hasMore()
+                && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
+        {
+            if (data.currentValue() != page.getLong( dataOffset + currentBlockIdx * 8)) {
                 data.retainAndAdvance();
             }
             else {
-                currentBlockIdx ++;
+                data.rejectAndAdvance();
+                matches++;
+
+                if (++matches > 5) {
+                    break;
+                }
             }
         }
 
-        if (currentBlockIdx < n && data.hasMore()) {
-            long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+        outer:
+        while (data.hasMore()) {
             long bv = data.currentValue();
 
-            while (data.hasMore()) {
-
+            for (; currentBlockIdx < n; currentBlockIdx++) {
+                long pv = page.getLong( dataOffset + currentBlockIdx * 8);
                 if (bv < pv) {
-                    if (!data.retainAndAdvance()) break;
-                    bv = data.currentValue();
-                    continue;
+                    data.retainAndAdvance();
+                    continue outer;
                 }
                 else if (bv == pv) {
-                    if (!data.rejectAndAdvance()) break;
-                    bv = data.currentValue();
-                    continue;
-                }
-
-                if (++currentBlockIdx < n) {
-                    pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                }
-                else {
-                    return true;
+                    data.rejectAndAdvance();
+                    continue outer;
                 }
             }
+            break;
         }
 
         return currentBlockIdx >= n;
