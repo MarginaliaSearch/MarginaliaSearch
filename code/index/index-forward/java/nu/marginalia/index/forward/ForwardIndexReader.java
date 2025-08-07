@@ -1,6 +1,7 @@
 package nu.marginalia.index.forward;
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.forward.spans.DocumentSpans;
@@ -65,6 +66,9 @@ public class ForwardIndexReader {
         ids = loadIds(idsFile);
         data = loadData(dataFile);
 
+        NativeAlgos.madviseRandom(data.getMemorySegment());
+        NativeAlgos.madviseRandom(ids.getMemorySegment());
+
         spansReader = IndexSpansReader.open(spansFile);
 
         Thread.ofPlatform().start(this::createIdsMap);
@@ -76,6 +80,7 @@ public class ForwardIndexReader {
             idsMap.put(ids.get(i), i);
         }
         this.idsMap = idsMap;
+        logger.info("Forward index laoded into RAM");
     }
 
     private static LongArray loadIds(Path idsFile) throws IOException {
@@ -121,7 +126,7 @@ public class ForwardIndexReader {
             return idsMap.getOrDefault(docId, -1);
         }
 
-        long offset = ids.binarySearch(docId, 0, ids.size());
+        long offset = ids.binarySearch2(docId, 0, ids.size());
 
         if (offset >= ids.size() || offset < 0 || ids.get(offset) != docId) {
             if (getClass().desiredAssertionStatus()) {

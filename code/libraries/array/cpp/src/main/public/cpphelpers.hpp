@@ -12,6 +12,8 @@ extern "C" {
   int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned int* sizes, long* offsets);
   int uring_read_direct(int fd, io_uring* ring, int n, void** buffers, unsigned int* sizes, long* offsets);
   void close_fd(int fd);
+
+  void madvise_random(void* address, unsigned long size);
   void fadvise_random(int fd);
   io_uring* initialize_uring(int queue_size);
   void close_uring(io_uring* ring);

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <liburing.h>
 #include <cstring>
-
+#include <sys/mman.h>
 extern "C" {
 /* Pair of 64-bit integers. */
 /* The struct is packed to ensure that the struct is exactly 16 bytes in size, as we need to pointer
@@ -38,7 +38,9 @@ void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
 void fadvise_random(int fd) {
   posix_fadvise(fd, 0, 0, POSIX_FADV_RANDOM);
 }
-
+void madvise_random(void* address, unsigned long size) {
+  madvise(address, size, MADV_RANDOM);
+}
 io_uring* initialize_uring(int queue_size) {
     io_uring* ring = (io_uring*) malloc(sizeof(io_uring));
     if (!ring) return NULL;

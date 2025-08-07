@@ -20,6 +20,27 @@ public interface LongArraySearch extends LongArrayBase {
         return fromIndex + low;
     }
 
+    default long binarySearch2(long key, long fromIndex, long toIndex) {
+        long low = 0;
+        long len = toIndex - fromIndex;
+
+        while (len > 0) {
+            var half = len / 2;
+            long val = get(fromIndex + low + half);
+            if (val < key) {
+                low += len - half;
+            }
+            else if (val == key) {
+                low += half;
+                break;
+            }
+            len = half;
+        }
+
+        return fromIndex + low;
+    }
+
+
     default long binarySearchN(int sz, long key, long fromIndex, long toIndex) {
         long low = 0;
         long high = (toIndex - fromIndex)/sz - 1;

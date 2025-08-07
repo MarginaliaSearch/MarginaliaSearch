@@ -1,5 +1,6 @@
 package nu.marginalia.index;
 
+import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
@@ -39,6 +40,8 @@ public class PrioReverseIndexReader {
         logger.info("Switching reverse index");
 
         this.words = LongArrayFactory.mmapForReadingShared(words);
+
+        NativeAlgos.madviseRandom(this.words.getMemorySegment());
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
