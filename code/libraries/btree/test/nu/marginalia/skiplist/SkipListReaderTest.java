@@ -168,6 +168,52 @@ public class SkipListReaderTest {
 
 
     @Test
+    public void testRetainFuzz1() throws IOException {
+
+        for (int seed = 0; seed < 100; seed++) {
+            System.out.println("Seed: " + seed);
+
+            Random r = new Random(seed);
+
+            LongSortedSet keyset = new LongAVLTreeSet();
+
+            int nkeys = r.nextInt(SkipListConstants.BLOCK_SIZE/2, SkipListConstants.BLOCK_SIZE*4);
+            while (keyset.size() < nkeys) {
+                long val = r.nextLong(0, 10_000_000);
+
+                keyset.add(val);
+            }
+
+            long[] keys = keyset.toLongArray();
+            long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
+
+            long off = 0;
+            try (var writer = new SkipListWriter(docsFile, dataFile);
+                 Arena arena = Arena.ofConfined()
+            ) {
+                writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
+                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+            }
+
+            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+                var reader = new SkipListReader(pool, off);
+                LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
+
+                reader.retainData(lqb);
+                lqb.finalizeFiltering();
+                long[] actual = lqb.copyData();
+                long[] expected = qbs;
+
+
+                System.out.println(Arrays.toString(expected));
+                System.out.println(Arrays.toString(actual));
+                Assertions.assertArrayEquals(expected, actual);
+            }
+        }
+    }
+
+    @Tag("slow")
+    @Test
     public void testGetDataFuzz() throws IOException {
 
         for (int seed = 0; seed < 256; seed++) {

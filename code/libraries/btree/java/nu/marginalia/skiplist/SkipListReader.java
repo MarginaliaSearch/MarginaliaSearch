@@ -120,7 +120,6 @@ public class SkipListReader {
                 int flags = headerFlags(page, currentBlockOffset);
 
                 int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
-
                 if (retainInPage(page, dataOffset, n, data)) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (atEnd) {
@@ -128,8 +127,7 @@ public class SkipListReader {
                             data.rejectAndAdvance();
                         return;
                     }
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
+
                     if (!data.hasMore()) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
@@ -143,6 +141,8 @@ public class SkipListReader {
                                 break;
                             }
                         }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
                         currentBlock = nextBlock;
                     }
                 }
@@ -227,11 +227,9 @@ public class SkipListReader {
                 if (currentBlockIdx >= n) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (atEnd) {
-
                         break;
                     }
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
+
                     if (pos >= keys.length) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
@@ -246,6 +244,8 @@ public class SkipListReader {
                                 break;
                             }
                         }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
                         currentBlock = nextBlock;
                     }
                 }
@@ -325,8 +325,6 @@ public class SkipListReader {
                             data.retainAndAdvance();
                         break;
                     }
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
                     if (!data.hasMore()) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
@@ -340,6 +338,8 @@ public class SkipListReader {
                                 break;
                             }
                         }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
                         currentBlock = nextBlock;
                     }
                 }
