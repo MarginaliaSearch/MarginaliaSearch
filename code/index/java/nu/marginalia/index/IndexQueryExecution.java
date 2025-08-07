@@ -131,13 +131,6 @@ public class IndexQueryExecution {
                 var rankingItems = evaluationQueue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
                 if (rankingItems == null) continue;
 
-                // If we have ample time left and have received few results to rank, wait for more and join the tasks
-                if (rankingItems.size() < 32 && budget.timeLeft() > 25) {
-                    var additionalItems = evaluationQueue.poll(10, TimeUnit.MILLISECONDS);
-                    if (additionalItems != null) {
-                        rankingItems = CombinedDocIdList.combineLists(rankingItems, additionalItems);
-                    }
-                }
                 long st =  System.nanoTime();
                 resultHeap.addAll(rankingService.rankResults(rankingContext, budget, rankingItems, false));
                 long et = System.nanoTime();
