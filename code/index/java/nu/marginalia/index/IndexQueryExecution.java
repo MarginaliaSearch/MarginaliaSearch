@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class IndexQueryExecution {
 
     private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
+    private static final int evaluationTaskSize = 512;
 
     private static final AtomicInteger threadCount = new AtomicInteger();
     private static final AtomicLong lookupTime = new AtomicLong();
@@ -112,8 +114,16 @@ public class IndexQueryExecution {
                 if (buffer.isEmpty())
                     continue;
 
-                CombinedDocIdList docIds = new CombinedDocIdList(buffer);
-                evaluationQueue.offer(docIds, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
+                if (buffer.end <= evaluationTaskSize) {
+                    evaluationQueue.offer(new CombinedDocIdList(buffer), Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
+                }
+                else {
+                    long[] bufferData = buffer.copyData();
+                    for (int start = 0; start < bufferData.length; start+=evaluationTaskSize) {
+                        long[] slice =  Arrays.copyOfRange(bufferData, start, Math.min(start+evaluationTaskSize,bufferData.length));
+                        evaluationQueue.offer(new CombinedDocIdList(slice), Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
+                    }
+                }
             }
         } catch (RuntimeException | InterruptedException ex) {
             log.error("Exception in lookup thread", ex);
