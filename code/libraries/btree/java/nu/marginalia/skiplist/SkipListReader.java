@@ -157,7 +157,7 @@ public class SkipListReader {
                 }
 
                 int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
-                long valuesOffset = headerValuesBaseOffset(page, currentBlockOffset);
+                int valuesOffset = dataOffset + 8 * n;
                 if ((valuesOffset & 7) != 0) {
                     System.err.println(pageNo + " Values offset invalid at " + currentBlock + ":" + currentBlockOffset);
                     throw new IllegalStateException(parseBlock(ms, currentBlockOffset).toString());
@@ -172,7 +172,7 @@ public class SkipListReader {
                         pos++;
                     }
                     else {
-                        vals[pos++] = 1L + valuesOffset + currentBlockIdx * 8L;
+                        vals[pos++] = page.getLong(valuesOffset + currentBlockIdx * 8);
                         matches++;
 
                         if (++matches > 5) {
@@ -192,7 +192,7 @@ public class SkipListReader {
                             continue outer;
                         }
                         else if (kv == pv) {
-                            vals[pos++] = 1L + valuesOffset + currentBlockIdx * 8L;
+                            vals[pos++] = page.getLong(valuesOffset + currentBlockIdx * 8);
                             continue outer;
                         }
                     }
@@ -359,7 +359,6 @@ public class SkipListReader {
     public record RecordView(int n,
                              int fc,
                              int flags,
-                             long docOffset,
                              LongList fowardPointers,
                              LongList docIds)
     {
@@ -384,8 +383,6 @@ public class SkipListReader {
         offset += 8*fc;
 
         LongList docIds = new LongArrayList();
-        long docOffset = seg.get(ValueLayout.JAVA_LONG, offset);
-        offset += 8;
 
         long currentBlock = offset & -SkipListConstants.BLOCK_SIZE;
         long lastDataBlock = (offset + 8L * (n-1)) & - SkipListConstants.BLOCK_SIZE;
@@ -400,15 +397,12 @@ public class SkipListReader {
 
         for (int i = 1; i < docIds.size(); i++) {
             if (docIds.getLong(i-1) >= docIds.getLong(i)) {
-                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, docOffset, forwardPointers, docIds));
+                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, forwardPointers, docIds));
             }
         }
-        if ((docOffset & 7) != 0) {
-            throw new IllegalStateException("docOffset is not long-aligned" + new RecordView(n, fc, flags, docOffset, forwardPointers, docIds));
-        }
 
 
-        return new RecordView(n, fc, flags, docOffset, forwardPointers, docIds);
+        return new RecordView(n, fc, flags, forwardPointers, docIds);
     }
 
     public static List<RecordView> parseBlocks(MemorySegment seg, int offset) {

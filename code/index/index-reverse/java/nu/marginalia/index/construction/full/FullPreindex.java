@@ -72,7 +72,7 @@ public class FullPreindex {
     }
 
     /** Transform the preindex into a reverse index */
-    public void finalizeIndex(Path outputFileDocs, Path outputFileDocsData, Path outputFileWords) throws IOException {
+    public void finalizeIndex(Path outputFileDocs, Path outputFileWords) throws IOException {
         var offsets = segments.counts;
 
         Files.deleteIfExists(outputFileDocs);
@@ -82,7 +82,7 @@ public class FullPreindex {
         offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(2));
 
         // Write the docs file
-        try (var transformer = new FullIndexSkipListTransformer(outputFileDocs, outputFileDocsData, documents.documents)) {
+        try (var transformer = new FullIndexSkipListTransformer(outputFileDocs, documents.documents)) {
             offsets.transformEachIO(0, offsets.size(), transformer);
         }
 

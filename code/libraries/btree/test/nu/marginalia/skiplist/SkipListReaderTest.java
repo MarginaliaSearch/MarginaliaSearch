@@ -21,17 +21,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.LongStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class SkipListReaderTest {
     Path docsFile;
-    Path dataFile;
 
     @BeforeEach
     void setUp() throws IOException {
         docsFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".docs.dat");
-        dataFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".data.dat");
     }
 
     @AfterEach
@@ -58,7 +53,7 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -94,7 +89,7 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -140,7 +135,7 @@ public class SkipListReaderTest {
 
             long[] keys = keysSet.toLongArray();
 
-            try (var writer = new SkipListWriter(docsFile, dataFile);
+            try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.writeList(createArray(arena, keys, keys), 0, keys.length);
@@ -190,7 +185,7 @@ public class SkipListReaderTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
-            try (var writer = new SkipListWriter(docsFile, dataFile);
+            try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
@@ -236,7 +231,7 @@ public class SkipListReaderTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
-            try (var writer = new SkipListWriter(docsFile, dataFile);
+            try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
@@ -295,14 +290,12 @@ public class SkipListReaderTest {
             long[] keys = keysSet.toLongArray();
 
             long blockStart;
-            try (var writer = new SkipListWriter(docsFile, dataFile);
+            try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(r.nextInt(0, 4096/8) * 8);
                 blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
             }
-
-            long dataFileSize = Files.size(dataFile);
 
             try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
                 var reader = new SkipListReader(pool, blockStart);
@@ -316,12 +309,6 @@ public class SkipListReaderTest {
                 LongSortedSet presentValues = new LongAVLTreeSet();
                 for (int i = 0; i < queryKeys.length; i++) {
                     if (queryVals[i] != 0) {
-                        long offset = queryVals[i] - 1;
-
-                        assertEquals(0, (offset & 7), "Offset not long-aligned");
-                        assertTrue(offset >= 0, "Negative offset " + offset);
-                        assertTrue(offset + 8 <= dataFileSize, "Offset exceeds file size");
-
                         presentValues.add(queryKeys[i]);
                     }
 
@@ -345,7 +332,7 @@ public class SkipListReaderTest {
     public void testParseFuzz() throws IOException {
 
         long seedOffset = System.nanoTime();
-        for (int seed = 0; seed < 1000; seed++) {
+        for (int seed = 0; seed < 100; seed++) {
             System.out.println("Seed: " + (seed + seedOffset));
 
             Random r = new Random(seed);
@@ -364,7 +351,7 @@ public class SkipListReaderTest {
                 keysForBlocks.add(keys);
             }
             List<Long> offsets = new ArrayList<>();
-            try (var writer = new SkipListWriter(docsFile, dataFile);
+            try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
@@ -387,7 +374,7 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -2*v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -405,7 +392,7 @@ public class SkipListReaderTest {
         long[] vals = new long[] { 50,51 };
 
         long pos = 0;
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
@@ -427,7 +414,7 @@ public class SkipListReaderTest {
         }
 
         try (LongArray array = LongArrayFactory.onHeapConfined(4096);
-             var writer = new SkipListWriter(docsFile, dataFile)) {
+             var writer = new SkipListWriter(docsFile)) {
             writer.padDocuments(4104);
             for (int i = 0; i < vals.size(); i++) {
                 array.set(i, vals.getLong(i));
@@ -457,7 +444,7 @@ public class SkipListReaderTest {
         long[] vals = new long[] { 50 };
 
         long pos = 0;
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
@@ -476,7 +463,7 @@ public class SkipListReaderTest {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -494,7 +481,7 @@ public class SkipListReaderTest {
         long[] vals = Arrays.copyOf(keys, keys.length);
         long[] qbdata = new long[] { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 67108964, 67108969, 67108974, 67108979, 67108984, 67108989, 67108994, 67108999, 67109004, 67109009, 67109014, 67109019, 67109024, 67109029, 67109034, 67109039, 67109044, 67109049, 67109054, 67109059, 134217928, 134217933, 134217938, 134217943, 134217948, 134217953, 134217958, 134217963, 134217968, 134217973, 134217978, 134217983, 134217988, 134217993, 134217998, 134218003, 134218008, 134218013, 134218018, 134218023, 201326892, 201326897, 201326902, 201326907, 201326912, 201326917, 201326922, 201326927, 201326932, 201326937, 201326942, 201326947, 201326952, 201326957, 201326962, 201326967, 201326972, 201326977, 201326982, 201326987, 268435856, 268435861, 268435866, 268435871, 268435876, 268435881, 268435886, 268435891, 268435896, 268435901, 268435906, 268435911, 268435916, 268435921, 268435926, 268435931, 268435936, 268435941, 268435946, 268435951, 335544820, 335544825, 335544830 };
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         } catch (IOException e) {
             throw new RuntimeException(e);

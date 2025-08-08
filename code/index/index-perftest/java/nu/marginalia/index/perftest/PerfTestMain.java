@@ -92,7 +92,6 @@ public class PerfTestMain {
                         "full",
                         indexDir.resolve("ir/rev-words.dat"),
                         indexDir.resolve("ir/rev-docs.dat"),
-                        indexDir.resolve("ir/rev-docs-data.dat"),
                         new PositionsFileReader(indexDir.resolve("ir/rev-positions.dat"))
                 ),
                 new PrioReverseIndexReader(

@@ -13,10 +13,6 @@ public class ReverseIndexFullFileNames {
                 case NEXT -> basePath.resolve("rev-docs.dat.next");
                 case CURRENT -> basePath.resolve("rev-docs.dat");
             };
-            case DOCS_DATA -> switch (version) {
-                case NEXT -> basePath.resolve("rev-docs-data.dat.next");
-                case CURRENT -> basePath.resolve("rev-docs-data.dat");
-            };
             case POSITIONS -> switch (version) {
                 case NEXT -> basePath.resolve("rev-positions.dat.next");
                 case CURRENT -> basePath.resolve("rev-positions.dat");
@@ -32,7 +28,6 @@ public class ReverseIndexFullFileNames {
     public enum FileIdentifier {
         WORDS,
         DOCS,
-        DOCS_DATA,
         POSITIONS,
     }
 }

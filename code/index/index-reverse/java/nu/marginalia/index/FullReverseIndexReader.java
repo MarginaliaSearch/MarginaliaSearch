@@ -16,7 +16,6 @@ import nu.marginalia.index.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
-import nu.marginalia.skiplist.SkipListValuesReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,14 +24,11 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class FullReverseIndexReader {
     private final LongArray words;
     private final LongArray documents;
-
-    private final SkipListValuesReader docValuesReader;
 
     private final long wordsDataOffset;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -43,12 +39,9 @@ public class FullReverseIndexReader {
 
     private final BufferPool dataPool;
 
-    private final AtomicInteger poolIdx = new AtomicInteger();
-
     public FullReverseIndexReader(String name,
                                   Path words,
                                   Path documents,
-                                  Path documentsData,
                                   PositionsFileReader positionsFileReader) throws IOException {
         this.name = name;
 
@@ -60,7 +53,6 @@ public class FullReverseIndexReader {
             this.wordsBTreeReader = null;
             this.wordsDataOffset = -1;
             this.dataPool = null;
-            this.docValuesReader = null;
             return;
         }
 
@@ -73,7 +65,6 @@ public class FullReverseIndexReader {
         NativeAlgos.madviseRandom(this.documents.getMemorySegment());
 
         dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE));
-        docValuesReader = new SkipListValuesReader(documentsData);
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
@@ -194,7 +185,6 @@ public class FullReverseIndexReader {
 
         // Read the size and offset of the position data
         var offsets = reader.getValueOffsets(docIds);
-        docValuesReader.getValues(arena, offsets);
 
         return positionsFileReader.getTermData(arena, offsets);
     }
@@ -206,9 +196,6 @@ public class FullReverseIndexReader {
         catch (Exception e) {
             logger.warn("Error while closing bufferPool", e);
         }
-
-        if (docValuesReader != null)
-            docValuesReader.close();
 
         if (documents != null)
             documents.close();

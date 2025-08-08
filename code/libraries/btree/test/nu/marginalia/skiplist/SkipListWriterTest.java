@@ -21,12 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SkipListWriterTest {
     Path docsFile;
-    Path dataFile;
 
     @BeforeEach
     void setUp() throws IOException {
         docsFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".docs.dat");
-        dataFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".data.dat");
     }
 
     @AfterEach
@@ -47,7 +45,7 @@ class SkipListWriterTest {
     @Test
     public void testWriteSingleBlock() throws IOException {
         long pos1, pos2;
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             pos1 = writer.writeList(
                     createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
             pos2 = writer.writeList(
@@ -62,7 +60,6 @@ class SkipListWriterTest {
 
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
             var expected1 = new SkipListReader.RecordView(8, 0,  SkipListConstants.FLAG_END_BLOCK,
-                    0,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 0,1,2,3,4,5,6,7})
             );
@@ -73,7 +70,6 @@ class SkipListWriterTest {
 
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
             var expected2 = new SkipListReader.RecordView(2, 0,  SkipListConstants.FLAG_END_BLOCK,
-                    64,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 2,3}));
 
@@ -89,7 +85,7 @@ class SkipListWriterTest {
         long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-16) * 2).toArray();
         long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-16) * 2).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -133,7 +129,7 @@ class SkipListWriterTest {
         long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-16)*10).toArray();
         long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-16)*10).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -181,7 +177,7 @@ class SkipListWriterTest {
         long[] readVals = LongStream.range(-2, (SkipListConstants.MAX_RECORDS_PER_BLOCK-16)*10).map(v -> -v).toArray();
 
         long[] expectedKeys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-16)*10).toArray();
-        try (var writer = new SkipListWriter(docsFile, dataFile)) {
+        try (var writer = new SkipListWriter(docsFile)) {
             pos1 = writer.writeList(createArray(readKeys, readVals), 4, expectedKeys.length);
         }
 
