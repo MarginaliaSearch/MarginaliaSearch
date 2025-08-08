@@ -183,10 +183,11 @@ public class SkipListWriter implements AutoCloseable {
             int nRemaining = n - writtenRecords;
             int blockCapacity = nonRootBlockCapacity(blockIdx);
 
-            int forwardPointers = numPointersForBlock(blockIdx);
-            while (forwardPointers > 0 && blockIdx + skipOffsetForPointer(forwardPointers) >= numBlocks) {
-                forwardPointers--;
-            }
+            int forwardPointers;
+            for (forwardPointers = numPointersForBlock(blockIdx);
+                 forwardPointers > 0
+                         && blockIdx + skipOffsetForPointer(forwardPointers) >= numBlocks - 1;
+                 forwardPointers--);
 
             boolean isLastBlock = blockIdx == (numBlocks - 1);
             int blockSize = Math.min(nRemaining, blockCapacity);

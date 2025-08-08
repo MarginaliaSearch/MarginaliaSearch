@@ -216,7 +216,12 @@ class SkipListWriterTest {
         }
 
     }
-
+    @Test
+    public void testSkipOffsetForPointer() {
+        for (int i = 0; i < 64; i++) {
+            System.out.println(i + ":" + SkipListConstants.skipOffsetForPointer(i));
+        }
+    }
     @Test
     public void testNumPointersForBlock() {
         for (int i = 1; i < 64; i++) {

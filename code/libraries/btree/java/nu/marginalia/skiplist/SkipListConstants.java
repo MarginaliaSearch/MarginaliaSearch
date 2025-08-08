@@ -13,7 +13,10 @@ public class SkipListConstants {
 
 
     static int skipOffsetForPointer(int pointerIdx) {
-        return (1 << (pointerIdx));
+        if (pointerIdx <= 5) {
+            return pointerIdx + 1;
+        }
+        return 5 + (pointerIdx - 4) * (pointerIdx - 4);
     }
 
     static int numPointersForBlock(int blockIdx) {
