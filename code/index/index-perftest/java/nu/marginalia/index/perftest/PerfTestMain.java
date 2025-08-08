@@ -180,10 +180,15 @@ public class PerfTestMain {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
+                if (times.size() > 100) {
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(100 - times.size()).sorted().toArray();
+                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
+                }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }
         }
         System.out.println("Benchmark complete after " + iter + " iters!");
+
         System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
@@ -214,6 +219,7 @@ public class PerfTestMain {
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> rates = new ArrayList<>();
+        List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
             SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
@@ -223,14 +229,20 @@ public class PerfTestMain {
             long end = System.nanoTime();
             sum2 += execution.itemsProcessed();
             rates.add(execution.itemsProcessed() / ((end - start)/1_000_000_000.));
+            times.add((end - start)/1_000_000.);
             indexReader.reset();
             if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
+                if (times.size() > 100) {
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(100 - times.size()).sorted().toArray();
+                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
+                }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best rates: " +  rates.stream().mapToDouble(Double::doubleValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
             }
         }
+
         System.out.println("Benchmark complete after " + iter + " iters!");
         System.out.println("Best counts: " + rates.stream().mapToDouble(Double::doubleValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
@@ -285,6 +297,10 @@ public class PerfTestMain {
             if ((iter % 10) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
+                }
+                if (times.size() > 100) {
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(100 - times.size()).sorted().toArray();
+                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
                 }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }
