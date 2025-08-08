@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Performs an index query */
 public class IndexQueryExecution {
 
-    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
+    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 2);
     private static final int evaluationTaskSize = 512;
 
     private static final AtomicInteger threadCount = new AtomicInteger();
@@ -43,7 +43,8 @@ public class IndexQueryExecution {
     private final CountDownLatch lookupCountdown;
     private final CountDownLatch evaluationCountdown;
 
-    private final ArrayBlockingQueue<CombinedDocIdList> evaluationQueue = new ArrayBlockingQueue<>(8);
+    private final ArrayBlockingQueue<CombinedDocIdList> fullEvaluationQueue = new ArrayBlockingQueue<>(4, true);
+    private final ArrayBlockingQueue<CombinedDocIdList> priorityEvaluationQueue = new ArrayBlockingQueue<>(4, true);
 
     private final int limitTotal;
     private final int limitByDomain;
@@ -84,7 +85,8 @@ public class IndexQueryExecution {
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
         // Spawn lookup tasks for each query
         for (int i = 0; i < indexValuationThreads; i++) {
-            threadPool.submit(this::evaluate);
+            threadPool.submit(() -> evaluate(priorityEvaluationQueue));
+            threadPool.submit(() -> evaluate(fullEvaluationQueue));
         }
         for (IndexQuery query : queries) {
             threadPool.submit(() -> lookup(query));
@@ -114,14 +116,16 @@ public class IndexQueryExecution {
                 if (buffer.isEmpty())
                     continue;
 
+                var queue = query.isPrioritized() ? priorityEvaluationQueue : fullEvaluationQueue;
+
                 if (buffer.end <= evaluationTaskSize) {
-                    evaluationQueue.offer(new CombinedDocIdList(buffer), Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
+                    queue.offer(new CombinedDocIdList(buffer), Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
                 }
                 else {
                     long[] bufferData = buffer.copyData();
                     for (int start = 0; start < bufferData.length; start+=evaluationTaskSize) {
                         long[] slice =  Arrays.copyOfRange(bufferData, start, Math.min(start+evaluationTaskSize,bufferData.length));
-                        evaluationQueue.offer(new CombinedDocIdList(slice), Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
+                        queue.offer(new CombinedDocIdList(slice), Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS);
                     }
                 }
             }
@@ -135,10 +139,10 @@ public class IndexQueryExecution {
         return evaluationJobs;
     }
 
-    private void evaluate() {
+    private void evaluate(ArrayBlockingQueue<CombinedDocIdList> queue) {
         try {
-            while (budget.hasTimeLeft() && (lookupCountdown.getCount() > 0 || !evaluationQueue.isEmpty())) {
-                var rankingItems = evaluationQueue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
+            while (budget.hasTimeLeft() && (lookupCountdown.getCount() > 0 || !queue.isEmpty())) {
+                var rankingItems = queue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
                 if (rankingItems == null) continue;
 
                 long st =  System.nanoTime();

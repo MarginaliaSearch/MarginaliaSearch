@@ -63,14 +63,13 @@ public class CombinedIndexReader {
 
     /** Creates a query builder for terms in the priority index */
     public IndexQueryBuilder findPriorityWord(long wordId) {
-        return newQueryBuilder(new IndexQuery(reverseIndexPriorityReader.documents(wordId)))
+        return newQueryBuilder(new IndexQuery(reverseIndexPriorityReader.documents(wordId), true))
                 .withSourceTerms(wordId);
     }
 
     /** Creates a query builder for terms in the full index */
     public IndexQueryBuilder findFullWord(long wordId) {
-        return newQueryBuilder(
-                new IndexQuery(reverseIndexFullReader.documents(wordId)))
+        return newQueryBuilder(new IndexQuery(reverseIndexFullReader.documents(wordId), false))
                 .withSourceTerms(wordId);
     }
 

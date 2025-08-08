@@ -18,15 +18,16 @@ import java.util.stream.Collectors;
 public class IndexQuery {
     private final List<EntrySource> sources;
     private final List<QueryFilterStepIf> inclusionFilter = new ArrayList<>(10);
+    private boolean prioritize = false;
 
-    public IndexQuery(List<EntrySource> sources)
+    public IndexQuery(EntrySource source, boolean prioritize)
     {
-        this.sources = sources;
+        this.sources = List.of(source);
+        this.prioritize = prioritize;
     }
 
-    public IndexQuery(EntrySource... sources)
-    {
-        this.sources = List.of(sources);
+    public boolean isPrioritized() {
+        return prioritize;
     }
     /** Adds a filter to the query.  The filter will be applied to the results
      * after they are read from the sources.
