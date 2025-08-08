@@ -181,7 +181,7 @@ public class PerfTestMain {
                     break;
                 }
                 if (times.size() > 100) {
-                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(100 - times.size()).sorted().toArray();
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
                     System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
                 }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
@@ -236,7 +236,7 @@ public class PerfTestMain {
                     break;
                 }
                 if (times.size() > 100) {
-                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(100 - times.size()).sorted().toArray();
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
                     System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
                 }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best rates: " +  rates.stream().mapToDouble(Double::doubleValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
@@ -299,7 +299,7 @@ public class PerfTestMain {
                     break;
                 }
                 if (times.size() > 100) {
-                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(100 - times.size()).sorted().toArray();
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
                     System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
                 }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
