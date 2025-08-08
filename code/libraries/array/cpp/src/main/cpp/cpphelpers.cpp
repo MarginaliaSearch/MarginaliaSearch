@@ -38,6 +38,9 @@ void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
 void fadvise_random(int fd) {
   posix_fadvise(fd, 0, 0, POSIX_FADV_RANDOM);
 }
+void fadvise_willneed(int fd) {
+  posix_fadvise(fd, 0, 0, POSIX_FADV_WILLNEED);
+}
 void madvise_random(void* address, unsigned long size) {
   madvise(address, size, MADV_RANDOM);
 }
