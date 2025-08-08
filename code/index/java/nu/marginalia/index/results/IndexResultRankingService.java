@@ -77,7 +77,7 @@ public class IndexResultRankingService {
         final int termCount = searchTerms.termIdsAll.size();
 
         // We use an arena for the position and spans data to limit gc pressure
-        try (var arena = Arena.ofShared()) {
+        try (var arena = Arena.ofConfined()) {
 
             TermMetadataList[] termsForDocs = new TermMetadataList[termCount];
             for (int ti = 0; ti < termCount; ti++) {
