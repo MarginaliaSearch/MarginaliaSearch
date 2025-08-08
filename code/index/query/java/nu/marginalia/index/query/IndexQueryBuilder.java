@@ -9,7 +9,7 @@ import nu.marginalia.index.query.filter.QueryFilterStepIf;
 public interface IndexQueryBuilder {
     /** Filters documents that also contain termId, within the full index.
      */
-    IndexQueryBuilder also(long termId);
+    IndexQueryBuilder also(long termId, IndexSearchBudget budget);
 
     /** Excludes documents that contain termId, within the full index
      */

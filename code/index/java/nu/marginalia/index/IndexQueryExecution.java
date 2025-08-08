@@ -75,7 +75,7 @@ public class IndexQueryExecution {
         limitTotal = params.limitTotal;
 
         rankingContext = ResultRankingContext.create(currentIndex, params);
-        queries = currentIndex.createQueries(new SearchTerms(params.query, params.compiledQueryIds), params.queryParams);
+        queries = currentIndex.createQueries(new SearchTerms(params.query, params.compiledQueryIds), params.queryParams, budget);
 
         lookupCountdown = new CountDownLatch(queries.size());
         evaluationCountdown = new CountDownLatch(indexValuationThreads);

@@ -14,6 +14,7 @@ import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchTerms;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
@@ -56,8 +57,8 @@ public class CombinedIndexReader {
         return new IndexQueryBuilderImpl(reverseIndexFullReader, query);
     }
 
-    public QueryFilterStepIf hasWordFull(long termId) {
-        return reverseIndexFullReader.also(termId);
+    public QueryFilterStepIf hasWordFull(long termId, IndexSearchBudget budget) {
+        return reverseIndexFullReader.also(termId, budget);
     }
 
     /** Creates a query builder for terms in the priority index */
@@ -88,7 +89,7 @@ public class CombinedIndexReader {
         reverseIndexFullReader.reset();
     }
 
-    public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params) {
+    public List<IndexQuery> createQueries(SearchTerms terms, QueryParams params, IndexSearchBudget budget) {
 
         if (!isLoaded()) {
             logger.warn("Index reader not ready");
@@ -129,7 +130,7 @@ public class CombinedIndexReader {
                         continue;
                     }
 
-                    head.addInclusionFilter(hasWordFull(termId));
+                    head.addInclusionFilter(hasWordFull(termId, budget));
                 }
                 queryHeads.add(head);
             }
@@ -138,7 +139,7 @@ public class CombinedIndexReader {
             if (paths.size() < 4) {
                 var prioHead = findPriorityWord(elements.getLong(0));
                 for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordFull(elements.getLong(i)));
+                    prioHead.addInclusionFilter(hasWordFull(elements.getLong(i), budget));
                 }
                 queryHeads.add(prioHead);
             }
@@ -149,7 +150,7 @@ public class CombinedIndexReader {
 
             // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
             for (long term : terms.advice()) {
-                query = query.also(term);
+                query = query.also(term, budget);
             }
 
             for (long term : terms.excludes()) {

@@ -7,10 +7,7 @@ import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.positions.TermData;
-import nu.marginalia.index.query.EmptyEntrySource;
-import nu.marginalia.index.query.EntrySource;
-import nu.marginalia.index.query.ReverseIndexRejectFilter;
-import nu.marginalia.index.query.ReverseIndexRetainFilter;
+import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterLetThrough;
 import nu.marginalia.index.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
@@ -133,13 +130,13 @@ public class FullReverseIndexReader {
     }
 
     /** Create a filter step requiring the specified termId to exist in the documents */
-    public QueryFilterStepIf also(long termId) {
+    public QueryFilterStepIf also(long termId, IndexSearchBudget budget) {
         long offset = wordOffset(termId);
 
         if (offset < 0) // No documents
             return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(getReader(offset), name, termId);
+        return new ReverseIndexRetainFilter(getReader(offset), name, termId, budget);
     }
 
     /** Create a filter step requiring the specified termId to be absent from the documents */
