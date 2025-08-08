@@ -15,6 +15,7 @@ extern "C" {
 
   void madvise_random(void* address, unsigned long size);
   void fadvise_random(int fd);
+  void fadvise_willneed(int fd);
   io_uring* initialize_uring(int queue_size);
   void close_uring(io_uring* ring);
 }

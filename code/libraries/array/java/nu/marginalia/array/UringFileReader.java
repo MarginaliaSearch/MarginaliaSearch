@@ -35,7 +35,23 @@ public class UringFileReader implements AutoCloseable {
         }
     }
 
+    public void fadviseWillneed() {
+        NativeAlgos.fadviseWillneed(fd);
+    }
+
     public void read(List<MemorySegment> destinations, List<Long> offsets) {
+        if (destinations.size() < 5) {
+            for (int  i = 0; i < destinations.size(); i++) {
+                var ms = destinations.get(i);
+                long offset = offsets.get(i);
+
+                int ret;
+                if (ms.byteSize() != (ret = NativeAlgos.readAt(fd, ms, offset))) {
+                    throw new RuntimeException("Read failed, rv=" + ret);
+                }
+            }
+            return;
+        }
         var ring = rings[(int) (ringIdx.getAndIncrement() % rings.length)];
 
         if (destinations.size() < 1024) {

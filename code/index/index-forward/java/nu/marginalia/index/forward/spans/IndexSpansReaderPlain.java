@@ -12,10 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
-    private final UringFileReader aioReader;
+    private final UringFileReader urinReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        aioReader = new UringFileReader(spansFile,  false);
+        urinReader = new UringFileReader(spansFile,  false);
+        urinReader.fadviseWillneed();
     }
 
     @Override
@@ -82,7 +83,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
 
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
 
-        aioReader.read(buffers, offsets);
+        urinReader.read(buffers, offsets);
 
         for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
             if (encodedOffsets[idx] < 0)
@@ -95,7 +96,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
 
     @Override
     public void close() throws IOException {
-        aioReader.close();
+        urinReader.close();
     }
 
 }

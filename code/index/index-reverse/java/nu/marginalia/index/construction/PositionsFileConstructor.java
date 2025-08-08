@@ -70,6 +70,14 @@ public class PositionsFileConstructor implements AutoCloseable {
                 channel.write(workBuffer);
         }
 
+        long remainingBlockSize = 4096 - (channel.position() & -4096);
+        if (remainingBlockSize != 0) {
+            workBuffer.position(0);
+            workBuffer.limit(0);
+            while (workBuffer.hasRemaining())
+                channel.write(workBuffer);
+        }
+
         channel.force(false);
         channel.close();
     }

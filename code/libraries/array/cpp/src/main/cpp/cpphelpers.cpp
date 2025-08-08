@@ -94,7 +94,7 @@ int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned 
         }
 
         io_uring_prep_read(sqe, fd, buffers[i], sizes[i], offsets[i]);
-        io_uring_sqe_set_data(sqe, (void*)(long)i);  // Store buffer index
+        io_uring_sqe_set_data(sqe, (void*)(long)i);
     }
 
     int submitted = io_uring_submit_and_wait(ring, n);
