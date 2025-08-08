@@ -13,7 +13,7 @@ import java.nio.channels.FileChannel;
 public class PrioIndexEntrySource implements EntrySource {
     private final String name;
 
-    private final ByteBuffer readData = ByteBuffer.allocate(1024);
+    private final ByteBuffer readData = ByteBuffer.allocate(8*1024);
     private final BitReader bitReader = new BitReader(readData, this::fillReadBuffer);
 
     private final FileChannel docsFileChannel;
