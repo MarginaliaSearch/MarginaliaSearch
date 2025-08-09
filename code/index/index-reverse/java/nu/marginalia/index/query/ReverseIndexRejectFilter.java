@@ -4,11 +4,12 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.skiplist.SkipListReader;
 
-public record ReverseIndexRejectFilter(SkipListReader range) implements QueryFilterStepIf {
+public record ReverseIndexRejectFilter(SkipListReader range, IndexSearchBudget budget) implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {
-        range.rejectData(buffer);
+        while (budget.hasTimeLeft() && range.tryRejectData(buffer));
+
         buffer.finalizeFiltering();
     }
 

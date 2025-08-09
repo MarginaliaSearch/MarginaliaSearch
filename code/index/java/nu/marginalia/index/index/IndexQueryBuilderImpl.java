@@ -40,9 +40,9 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
         return this;
     }
 
-    public IndexQueryBuilder not(long termId) {
+    public IndexQueryBuilder not(long termId, IndexSearchBudget budget) {
 
-        query.addInclusionFilter(reverseIndexFullReader.not(termId));
+        query.addInclusionFilter(reverseIndexFullReader.not(termId, budget));
 
         return this;
     }

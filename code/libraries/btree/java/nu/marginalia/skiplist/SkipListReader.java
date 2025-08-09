@@ -307,6 +307,45 @@ public class SkipListReader {
         return currentBlockIdx >= n;
     }
 
+    public boolean tryRejectData(@NotNull LongQueryBuffer data) {
+        try (var page = pool.get(currentBlock)) {
+
+            int n = headerNumRecords(page, currentBlockOffset);
+            int fc = headerForwardCount(page, currentBlockOffset);
+            int flags = headerFlags(page, currentBlockOffset);
+
+            int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
+            if (rejectInPage(page, dataOffset, n, data)) {
+                atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
+                if (atEnd) {
+                    while (data.hasMore())
+                        data.retainAndAdvance();
+                    return false;
+                }
+
+                if (!data.hasMore()) {
+                    currentBlock += SkipListConstants.BLOCK_SIZE;
+                }
+                else {
+                    long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
+                    long currentValue = data.currentValue();
+                    for (int i = 0; i < fc; i++) {
+                        long blockMaxValue = page.getLong(currentBlockOffset + SkipListConstants.HEADER_SIZE + 8 * i);
+                        nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE * SkipListConstants.skipOffsetForPointer(Math.max(0, i-1));
+                        if (blockMaxValue >= currentValue) {
+                            break;
+                        }
+                    }
+                    currentBlockOffset = 0;
+                    currentBlockIdx = 0;
+                    currentBlock = nextBlock;
+                }
+            }
+        }
+
+        return data.hasMore();
+    }
+
     public void rejectData(@NotNull LongQueryBuffer data) {
         while (data.hasMore()) {
             try (var page = pool.get(currentBlock)) {

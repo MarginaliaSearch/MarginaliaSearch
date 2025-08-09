@@ -8,11 +8,8 @@ public record ReverseIndexRetainFilter(SkipListReader range, String name, long w
 
     @Override
     public void apply(LongQueryBuffer buffer) {
-        while (budget.hasTimeLeft()) {
-            if (!range.tryRetainData(buffer)) {
-                return;
-            }
-        }
+        while (budget.hasTimeLeft() && range.tryRetainData(buffer));
+
         buffer.finalizeFiltering();
     }
 

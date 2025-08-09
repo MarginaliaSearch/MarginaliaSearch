@@ -155,7 +155,7 @@ public class CombinedIndexReader {
             }
 
             for (long term : terms.excludes()) {
-                query = query.not(term);
+                query = query.not(term, budget);
             }
 
             // Run these filter steps last, as they'll worst-case cause as many page faults as there are

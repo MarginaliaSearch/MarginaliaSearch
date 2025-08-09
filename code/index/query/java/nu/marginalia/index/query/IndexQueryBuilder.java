@@ -13,7 +13,7 @@ public interface IndexQueryBuilder {
 
     /** Excludes documents that contain termId, within the full index
      */
-    IndexQueryBuilder not(long termId);
+    IndexQueryBuilder not(long termId, IndexSearchBudget budget);
 
     IndexQueryBuilder addInclusionFilter(QueryFilterStepIf filterStep);
 

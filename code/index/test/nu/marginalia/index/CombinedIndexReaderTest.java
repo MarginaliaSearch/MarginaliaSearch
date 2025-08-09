@@ -200,7 +200,7 @@ public class CombinedIndexReaderTest {
         var reader = indexFactory.getCombinedIndexReader();
         var query = reader.findFullWord(kw("hello"))
                 .also(kw("world"), new IndexSearchBudget(10_000))
-                .not(kw("goodbye"))
+                .not(kw("goodbye"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);

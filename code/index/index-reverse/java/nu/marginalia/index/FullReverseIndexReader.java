@@ -140,13 +140,13 @@ public class FullReverseIndexReader {
     }
 
     /** Create a filter step requiring the specified termId to be absent from the documents */
-    public QueryFilterStepIf not(long termId) {
+    public QueryFilterStepIf not(long termId, IndexSearchBudget budget) {
         long offset = wordOffset(termId);
 
         if (offset < 0) // No documents
             return new QueryFilterLetThrough();
 
-        return new ReverseIndexRejectFilter(getReader(offset));
+        return new ReverseIndexRejectFilter(getReader(offset), budget);
     }
 
     /** Return the number of documents with the termId in the index */
