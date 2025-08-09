@@ -113,7 +113,7 @@ public class IndexQueryExecution {
         // Await lookup task termination
         lookupCountdown.await();
         preparationCountdown.await();
-        preparationCountdown.await();
+        rankingCountdown.await();
 
         // Deallocate any leftover ranking data buffers
         for (var data : priorityEvaluationQueue) {
@@ -201,7 +201,7 @@ public class IndexQueryExecution {
 
     private void evaluate(ArrayBlockingQueue<IndexResultRankingService.RankingData> queue) {
         try {
-            while (budget.hasTimeLeft() && (rankingCountdown.getCount() > 0 || !queue.isEmpty())) {
+            while (budget.hasTimeLeft() && (preparationCountdown.getCount() > 0 || !queue.isEmpty())) {
                 var rankingData = queue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
                 if (rankingData == null) continue;
 
