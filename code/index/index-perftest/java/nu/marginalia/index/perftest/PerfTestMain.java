@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class PerfTestMain {
     static Duration warmupTime = Duration.ofMinutes(1);
@@ -121,8 +122,7 @@ public class PerfTestMain {
 
     public static void runValuation(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException
-    {
+                                    String rawQuery) throws IOException, SQLException, TimeoutException {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
@@ -140,7 +140,7 @@ public class PerfTestMain {
 
         SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
 
-        List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
+        List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(10_000));
 
         TLongArrayList allResults = new TLongArrayList();
         LongQueryBuffer buffer = new LongQueryBuffer(512);
@@ -158,8 +158,8 @@ public class PerfTestMain {
             allResults.subList(512,  allResults.size()).clear();
         }
 
-        var docIds = new CombinedDocIdList(allResults.toArray());
         var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
+        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()), null);
 
         int sum = 0;
 
@@ -172,7 +172,7 @@ public class PerfTestMain {
         for (iter = 0;; iter++) {
             IndexSearchBudget budget = new IndexSearchBudget(10000);
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(rankingContext, budget, docIds, false).size();
+            sum2 += rankingService.rankResults(budget, rankingContext, rankingData, false).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 
@@ -192,7 +192,7 @@ public class PerfTestMain {
         System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
-        System.out.println(docIds.size());
+        System.out.println(rankingData.size());
     }
 
     public static void runExecution(Path homeDir,
@@ -281,7 +281,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
             indexReader.reset();
-            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
+            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(150));
 
             long start = System.nanoTime();
             for (var query : queries) {

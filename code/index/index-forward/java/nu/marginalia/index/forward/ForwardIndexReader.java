@@ -80,7 +80,7 @@ public class ForwardIndexReader {
             idsMap.put(ids.get(i), i);
         }
         this.idsMap = idsMap;
-        logger.info("Forward index laoded into RAM");
+        logger.info("Forward index loaded into RAM");
     }
 
     private static LongArray loadIds(Path idsFile) throws IOException {
