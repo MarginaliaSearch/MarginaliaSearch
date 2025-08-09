@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
 public class IndexResultRankingService {
@@ -71,7 +72,7 @@ public class IndexResultRankingService {
         private final CodedSequence[] positions;
         private final CombinedDocIdList resultIds;
         private final QuerySearchTerms searchTerms;
-
+        private AtomicBoolean closed = new AtomicBoolean(false);
         int pos = -1;
 
         public RankingData(ResultRankingContext rankingContext, CombinedDocIdList resultIds, @Nullable IndexSearchBudget budget) throws TimeoutException {
@@ -134,7 +135,9 @@ public class IndexResultRankingService {
         }
 
         public void close() {
-            arena.close();
+            if (closed.compareAndSet(false, true)) {
+                arena.close();
+            }
         }
 
     }
