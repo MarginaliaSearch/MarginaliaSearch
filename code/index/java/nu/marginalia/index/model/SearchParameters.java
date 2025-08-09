@@ -43,7 +43,7 @@ public class SearchParameters {
         var limits = specsSet.queryLimits;
 
         this.fetchSize = limits.getFetchSize();
-        this.budget = new IndexSearchBudget(limits.getTimeoutMs());
+        this.budget = new IndexSearchBudget(Math.max(limits.getTimeoutMs()/2, limits.getTimeoutMs()-50));
         this.query = specsSet.query;
         this.limitByDomain = limits.getResultsByDomain();
         this.limitTotal = limits.getResultsTotal();
@@ -67,9 +67,7 @@ public class SearchParameters {
 
         this.fetchSize = limits.getFetchSize();
 
-        // The time budget is halved because this is the point when we start to
-        // wrap up the search and return the results.
-        this.budget = new IndexSearchBudget(limits.getTimeoutMs() / 2);
+        this.budget = new IndexSearchBudget(Math.max(limits.getTimeoutMs()/2, limits.getTimeoutMs()-50));
         this.query = IndexProtobufCodec.convertRpcQuery(request.getQuery());
 
         this.limitByDomain = limits.getResultsByDomain();
