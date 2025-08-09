@@ -183,11 +183,12 @@ public class SkipListWriter implements AutoCloseable {
             int nRemaining = n - writtenRecords;
             int blockCapacity = nonRootBlockCapacity(blockIdx);
 
+            int maxPointers = numPointersForBlock(blockIdx);
             int forwardPointers;
-            for (forwardPointers = numPointersForBlock(blockIdx);
-                 forwardPointers > 0
-                         && blockIdx + skipOffsetForPointer(forwardPointers) >= numBlocks - 1;
-                 forwardPointers--);
+            for (forwardPointers = 0; forwardPointers < maxPointers; forwardPointers++) {
+                if (blockIdx + skipOffsetForPointer(forwardPointers) + 1 >= maxValuesList.size())
+                    break;
+            }
 
             boolean isLastBlock = blockIdx == (numBlocks - 1);
             int blockSize = Math.min(nRemaining, blockCapacity);
@@ -200,11 +201,7 @@ public class SkipListWriter implements AutoCloseable {
             writeCompactBlockHeader(docsBuffer, blockSize, (byte) forwardPointers, flags);
 
             for (int pi = 0; pi < forwardPointers; pi++) {
-                int skipBlocks = skipOffsetForPointer(pi);
-
-                assert skipBlocks < 1 + numBlocks; // should be ~ 1/2 numBlocks at most for the root block
-
-                docsBuffer.putLong(maxValuesList.getLong(blockIdx + skipBlocks));
+                docsBuffer.putLong(maxValuesList.getLong(blockIdx + skipOffsetForPointer(pi)));
             }
 
             // Write the keys

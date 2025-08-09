@@ -13,19 +13,24 @@ public class SkipListConstants {
 
 
     static int skipOffsetForPointer(int pointerIdx) {
-        if (pointerIdx <= 5) {
+        final int linearPart = 16;
+        if (pointerIdx <= linearPart) {
             return pointerIdx + 1;
         }
-        return 5 + (pointerIdx - 4) * (pointerIdx - 4);
+        return linearPart + ((pointerIdx - linearPart - 1) * (pointerIdx - linearPart - 1));
     }
 
     static int numPointersForBlock(int blockIdx) {
-        assert blockIdx >= 1;
-        return Math.max(16, Integer.numberOfTrailingZeros(blockIdx));
+        return 64;
     }
 
     static int numPointersForRootBlock(int n) {
-        return Math.max(0, Integer.numberOfTrailingZeros(Integer.highestOneBit(estimateNumBlocks(n))));
+        int numBlocks = estimateNumBlocks(n);
+        for (int fp = 0;;fp++) {
+            if (skipOffsetForPointer(fp) >= numBlocks) {
+                return fp;
+            }
+        }
     }
 
     static int rootBlockCapacity(int rootBlockSize, int n) {

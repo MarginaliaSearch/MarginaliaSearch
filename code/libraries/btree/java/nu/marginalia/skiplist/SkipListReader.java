@@ -242,6 +242,7 @@ public class SkipListReader {
                 if (currentBlockIdx >= n) {
                     atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
                     if (atEnd) {
+                        pos = keys.length;
                         break;
                     }
 
