@@ -165,6 +165,33 @@ public class FullReverseIndexReader {
     }
 
     public TermData[] getTermData(Arena arena,
+                                  long[] termIds,
+                                  long[] docIds)
+    {
+
+        long[] offsetsAll = new long[termIds.length * docIds.length];
+
+        for (int i = 0; i < termIds.length; i++) {
+            long termId = termIds[i];
+            long offset = wordOffset(termId);
+
+            if (offset < 0) {
+                // This is likely a bug in the code, but we can't throw an exception here
+                logger.debug("Missing offset for word {}", termId);
+                continue;
+            }
+
+            var reader = getReader(offset);
+
+            // Read the size and offset of the position data
+            var offsetsForTerm = reader.getValueOffsets(docIds);
+            System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIds.length, docIds.length);
+        }
+
+        return positionsFileReader.getTermData(arena, offsetsAll);
+    }
+
+    public TermData[] getTermData(Arena arena,
                                   long termId,
                                   long[] docIds)
     {

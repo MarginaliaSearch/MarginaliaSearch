@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.stream.LongStream;
 
 public final class TermIdList {
-    private final long[] array;
+    public final long[] array;
 
     public TermIdList(long[] array) {
         this.array = array;

@@ -12,6 +12,7 @@ import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchTerms;
+import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.IndexSearchBudget;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -184,6 +186,18 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
+    public TermMetadataList[] getTermMetadata(Arena arena,
+                                            long[] wordIds,
+                                            CombinedDocIdList docIds)
+    {
+        TermData[] combinedTermData = reverseIndexFullReader.getTermData(arena, wordIds, docIds.array());
+        TermMetadataList[] ret = new TermMetadataList[wordIds.length];
+        for (int i = 0; i < wordIds.length; i++) {
+            ret[i] = new TermMetadataList(Arrays.copyOfRange(combinedTermData, i*docIds.size(), (i+1)*docIds.size()));
+        }
+        return ret;
+    }
+
     public TermMetadataList getTermMetadata(Arena arena,
                                             long wordId,
                                             CombinedDocIdList docIds)

@@ -15,7 +15,7 @@ public class UringFileReader implements AutoCloseable {
     private final int fd;
     private final boolean direct;
 
-    private static final int QUEUE_SIZE = 1024;
+    private static final int QUEUE_SIZE = 8192;
 
     public UringFileReader(Path filename, boolean direct) throws IOException {
         if (direct) {
