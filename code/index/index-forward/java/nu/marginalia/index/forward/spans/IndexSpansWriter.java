@@ -12,7 +12,7 @@ import java.nio.file.StandardOpenOption;
 
 public class IndexSpansWriter implements AutoCloseable {
     private final FileChannel outputChannel;
-    private final ByteBuffer work = ByteBuffer.allocate(65536).order(ByteOrder.nativeOrder());
+    private final ByteBuffer work = ByteBuffer.allocate(4*1024*1024).order(ByteOrder.nativeOrder());
 
     private long stateStartOffset = -1;
     private int stateLength = -1;
