@@ -1,7 +1,6 @@
-package nu.marginalia.array;
+package nu.marginalia.uring;
 
-import nu.marginalia.NativeAlgos;
-import nu.marginalia.UringQueue;
+import nu.marginalia.ffi.LinuxSystemCalls;
 
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
@@ -19,12 +18,12 @@ public class UringFileReader implements AutoCloseable {
 
     public UringFileReader(Path filename, boolean direct) throws IOException {
         if (direct) {
-            fd = NativeAlgos.openDirect(filename);
+            fd = LinuxSystemCalls.openDirect(filename);
             this.direct = true;
         }
         else {
-            fd = NativeAlgos.openBuffered(filename);
-            NativeAlgos.fadviseRandom(fd);
+            fd = LinuxSystemCalls.openBuffered(filename);
+            LinuxSystemCalls.fadviseRandom(fd);
             this.direct = false;
         }
         for (int i = 0; i < rings.length; i++) {
@@ -36,7 +35,7 @@ public class UringFileReader implements AutoCloseable {
     }
 
     public void fadviseWillneed() {
-        NativeAlgos.fadviseWillneed(fd);
+        LinuxSystemCalls.fadviseWillneed(fd);
     }
 
     public void read(List<MemorySegment> destinations, List<Long> offsets) {
@@ -46,7 +45,7 @@ public class UringFileReader implements AutoCloseable {
                 long offset = offsets.get(i);
 
                 int ret;
-                if (ms.byteSize() != (ret = NativeAlgos.readAt(fd, ms, offset))) {
+                if (ms.byteSize() != (ret = LinuxSystemCalls.readAt(fd, ms, offset))) {
                     throw new RuntimeException("Read failed, rv=" + ret);
                 }
             }
@@ -71,6 +70,6 @@ public class UringFileReader implements AutoCloseable {
         for (var ring : rings) {
             ring.close();
         }
-        NativeAlgos.closeFd(fd);
+        LinuxSystemCalls.closeFd(fd);
     }
 }

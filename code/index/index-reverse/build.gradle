@@ -15,7 +15,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
     implementation project(':code:libraries:array')
-    implementation project(':code:libraries:array:cpp')
+    implementation project(':code:libraries:native')
     implementation project(':code:libraries:btree')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:random-write-funnel')

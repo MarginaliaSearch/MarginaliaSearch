@@ -1,10 +1,10 @@
 package nu.marginalia.index;
 
-import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.btree.BTreeReader;
+import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.query.*;
@@ -58,8 +58,8 @@ public class FullReverseIndexReader {
         this.words = LongArrayFactory.mmapForReadingShared(words);
         this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
-        NativeAlgos.madviseRandom(this.words.getMemorySegment());
-        NativeAlgos.madviseRandom(this.documents.getMemorySegment());
+        LinuxSystemCalls.madviseRandom(this.words.getMemorySegment());
+        LinuxSystemCalls.madviseRandom(this.documents.getMemorySegment());
 
         dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE));
 

@@ -1,6 +1,6 @@
 package nu.marginalia.array;
 
-import nu.marginalia.NativeAlgos;
+import nu.marginalia.ffi.LinuxSystemCalls;
 
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
@@ -10,7 +10,7 @@ public class DirectFileReader implements AutoCloseable {
     int fd;
 
     public DirectFileReader(Path filename) throws IOException {
-        fd = NativeAlgos.openDirect(filename);
+        fd = LinuxSystemCalls.openDirect(filename);
         if (fd < 0) {
             throw new IOException("Error opening direct file: " + filename);
         }
@@ -21,7 +21,7 @@ public class DirectFileReader implements AutoCloseable {
     }
 
     public void readAligned(MemorySegment segment, long offset) throws IOException {
-        if (NativeAlgos.readAt(fd, segment, offset) != segment.byteSize()) {
+        if (LinuxSystemCalls.readAt(fd, segment, offset) != segment.byteSize()) {
             throw new IOException("Failed to read data at " + offset);
         }
     }
@@ -35,7 +35,7 @@ public class DirectFileReader implements AutoCloseable {
             long srcPageEnd = Math.min(srcPageOffset + totalBytesToCopy, 4096);
 
             // wrapper for O_DIRECT pread
-            if (NativeAlgos.readAt(fd, alignedBuffer, alignedPageAddress) != alignedBuffer.byteSize()) {
+            if (LinuxSystemCalls.readAt(fd, alignedBuffer, alignedPageAddress) != alignedBuffer.byteSize()) {
                 throw new IOException("Failed to read data at " + alignedPageAddress + " of size " + dest.byteSize());
             }
 
@@ -50,6 +50,6 @@ public class DirectFileReader implements AutoCloseable {
     }
 
     public void close() {
-        NativeAlgos.closeFd(fd);
+        LinuxSystemCalls.closeFd(fd);
     }
 }

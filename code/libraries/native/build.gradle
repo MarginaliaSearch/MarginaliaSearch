@@ -22,18 +22,14 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 // with a shellscript as gradle's c++ tasks are kind of insufferable
 
 tasks.register('compileCpp', Exec) {
-    inputs.files('compile.sh', 'src/main/cpp/cpphelpers.cpp', 'src/main/public/cpphelpers.h')
-    outputs.file 'resources/libcpp.so'
-    commandLine 'sh', 'compile.sh'
+    inputs.files('Makefile', 'src/sort.cc', 'src/unix.cc', 'src/uring.cc')
+    outputs.files('resources/libcpp.so', 'resources/liburing.so')
 
-    doLast {
-        // copy /usr/lib/liburing.so to resources
-        copy {
-            from '/usr/lib/liburing.so'
-            into 'resources'
-            rename { 'liburing.so' }
-        }
-    }
+    commandLine 'make', 'all'
+}
+tasks.register('cleanCpp', Exec) {
+    commandLine 'make', 'clean'
 }
 
 processResources.dependsOn('compileCpp')
+clean.dependsOn('cleanCpp')

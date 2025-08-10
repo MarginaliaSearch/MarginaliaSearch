@@ -43,7 +43,7 @@ include 'code:index:index-reverse'
 include 'code:index:index-perftest'
 
 include 'code:libraries:array'
-include 'code:libraries:array:cpp'
+include 'code:libraries:native'
 include 'code:libraries:coded-sequence'
 include 'code:libraries:geo-ip'
 include 'code:libraries:btree'

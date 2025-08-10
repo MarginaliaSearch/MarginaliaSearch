@@ -1,6 +1,6 @@
 package nu.marginalia.array.pool;
 
-import nu.marginalia.NativeAlgos;
+import nu.marginalia.ffi.LinuxSystemCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class BufferPool implements AutoCloseable {
     }
 
     public BufferPool(Path filename, int pageSizeBytes, int poolSize) {
-        this.fd = NativeAlgos.openDirect(filename);
+        this.fd = LinuxSystemCalls.openDirect(filename);
         this.pageSizeBytes = pageSizeBytes;
         try {
             this.fileSize = Files.size(filename);
@@ -102,7 +102,7 @@ public class BufferPool implements AutoCloseable {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        NativeAlgos.closeFd(fd);
+        LinuxSystemCalls.closeFd(fd);
         arena.close();
 
         System.out.println("Disk read count: " + diskReadCount.get());
@@ -188,7 +188,7 @@ public class BufferPool implements AutoCloseable {
         if (getClass().desiredAssertionStatus()) {
             buffer.getMemorySegment().set(ValueLayout.JAVA_INT, 0, 9999);
         }
-        NativeAlgos.readAt(fd, buffer.getMemorySegment(), buffer.pageAddress());
+        LinuxSystemCalls.readAt(fd, buffer.getMemorySegment(), buffer.pageAddress());
         assert buffer.getMemorySegment().get(ValueLayout.JAVA_INT, 0) != 9999;
         buffer.dirty(false);
 

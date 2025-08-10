@@ -1,9 +1,9 @@
 package nu.marginalia.index.forward;
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -66,8 +66,8 @@ public class ForwardIndexReader {
         ids = loadIds(idsFile);
         data = loadData(dataFile);
 
-        NativeAlgos.madviseRandom(data.getMemorySegment());
-        NativeAlgos.madviseRandom(ids.getMemorySegment());
+        LinuxSystemCalls.madviseRandom(data.getMemorySegment());
+        LinuxSystemCalls.madviseRandom(ids.getMemorySegment());
 
         spansReader = IndexSpansReader.open(spansFile);
 

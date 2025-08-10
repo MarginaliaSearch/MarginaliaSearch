@@ -1,6 +1,6 @@
 package nu.marginalia.index.positions;
 
-import nu.marginalia.array.UringFileReader;
+import nu.marginalia.uring.UringFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

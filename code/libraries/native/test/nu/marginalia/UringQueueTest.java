@@ -1,5 +1,7 @@
 package nu.marginalia;
 
+import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.uring.UringQueue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,7 @@ class UringQueueTest {
 
     @Test
     public void testSunnyDay() throws IOException {
-        int fd = NativeAlgos.openBuffered(file);
+        int fd = LinuxSystemCalls.openBuffered(file);
 
         List<MemorySegment> segments = new ArrayList<>();
         List<Long> offsets = new ArrayList<>();

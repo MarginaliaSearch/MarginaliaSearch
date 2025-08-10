@@ -1,10 +1,10 @@
-package nu.marginalia.array.algo;
+package nu.marginalia;
 
-import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.DirectFileReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.array.UringFileReader;
+import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.uring.UringFileReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -25,11 +25,11 @@ public class NativeAlgosTest {
 
         var ms = Arena.global().allocate(512, 8);
 
-        int fd = NativeAlgos.openDirect(Path.of("/tmp/test"));
-        int ret = NativeAlgos.readAt(fd, ms, 512);
+        int fd = LinuxSystemCalls.openDirect(Path.of("/tmp/test"));
+        int ret = LinuxSystemCalls.readAt(fd, ms, 512);
         System.out.println(ret);
         System.out.println(ms.byteSize());
-        NativeAlgos.closeFd(fd);
+        LinuxSystemCalls.closeFd(fd);
 
         var array2 = LongArrayFactory.wrap(ms);
         for (int i = 0; i < array2.size(); i++) {

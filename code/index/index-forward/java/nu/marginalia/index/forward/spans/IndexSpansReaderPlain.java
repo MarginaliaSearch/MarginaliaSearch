@@ -1,7 +1,7 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import nu.marginalia.array.UringFileReader;
+import nu.marginalia.uring.UringFileReader;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;

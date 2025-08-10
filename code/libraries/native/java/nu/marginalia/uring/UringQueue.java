@@ -1,4 +1,6 @@
-package nu.marginalia;
+package nu.marginalia.uring;
+
+import nu.marginalia.ffi.IoUring;
 
 import java.lang.foreign.MemorySegment;
 import java.util.List;
@@ -18,7 +20,7 @@ public final class UringQueue {
     }
 
     public static UringQueue open(int fd, int size) {
-        return NativeAlgos.uringOpen(fd, size);
+        return IoUring.uringOpen(fd, size);
     }
 
     public int read(List<MemorySegment> dest, List<Long> offsets, boolean direct) {
@@ -27,7 +29,7 @@ public final class UringQueue {
                 throw new RuntimeException("io_uring slow, likely backpressure!");
 
             try {
-                return NativeAlgos.uringRead(fd, this, dest, offsets, direct);
+                return IoUring.uringReadBatch(fd, this, dest, offsets, direct);
             }
             finally {
                 lock.unlock();
@@ -42,7 +44,7 @@ public final class UringQueue {
     }
 
     public void close() {
-        NativeAlgos.uringClose(this);
+        IoUring.uringClose(this);
     }
 
     public MemorySegment pointer() {

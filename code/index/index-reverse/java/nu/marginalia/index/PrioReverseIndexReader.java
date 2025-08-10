@@ -1,9 +1,9 @@
 package nu.marginalia.index;
 
-import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
+import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.query.EmptyEntrySource;
 import nu.marginalia.index.query.EntrySource;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class PrioReverseIndexReader {
 
         this.words = LongArrayFactory.mmapForReadingShared(words);
 
-        NativeAlgos.madviseRandom(this.words.getMemorySegment());
+        LinuxSystemCalls.madviseRandom(this.words.getMemorySegment());
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();

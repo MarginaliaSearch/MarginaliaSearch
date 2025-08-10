@@ -1,8 +1,8 @@
 package nu.marginalia.array.page;
 
-import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.LongArraySort;
+import nu.marginalia.ffi.NativeAlgos;
 import org.openjdk.jmh.annotations.*;
 
 import java.lang.foreign.Arena;
