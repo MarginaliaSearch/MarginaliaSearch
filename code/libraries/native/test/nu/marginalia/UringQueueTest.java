@@ -38,7 +38,7 @@ class UringQueueTest {
             offsets.add(32L*i);
         }
         var uring = UringQueue.open(fd, 16);
-        uring.read(segments, offsets, false);
+        uring.readBatch(segments, offsets, false);
         uring.close();
 
     }

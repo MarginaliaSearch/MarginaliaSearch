@@ -23,7 +23,7 @@ public final class UringQueue {
         return IoUring.uringOpen(fd, size);
     }
 
-    public int read(List<MemorySegment> dest, List<Long> offsets, boolean direct) {
+    public int readBatch(List<MemorySegment> dest, List<Long> offsets, boolean direct) {
         try {
             if (!lock.tryLock(10, TimeUnit.MILLISECONDS))
                 throw new RuntimeException("io_uring slow, likely backpressure!");

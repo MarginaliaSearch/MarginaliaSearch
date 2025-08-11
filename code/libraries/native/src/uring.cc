@@ -31,6 +31,81 @@ void close_uring(io_uring* ring) {
     free(ring);
 }
 
+
+int uring_read_submit_and_poll(
+						io_uring* ring,
+                        long* result_ids,
+                        int in_flight_requests,
+                        int read_count,
+                        long* read_batch_ids,
+                        int* read_fds,
+                        void** read_buffers,
+                        unsigned int* read_sizes,
+                        long* read_offsets)
+{
+
+    for (int i = 0; i < read_count; i++) {
+        struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
+        if (!sqe) {
+            fprintf(stderr, "uring_queue full!");
+            return -1;
+        }
+
+        io_uring_prep_read(sqe, read_fds[i], read_buffers[i], read_sizes[i], read_offsets[i]);
+        io_uring_sqe_set_data(sqe, (void*) read_batch_ids[i]);
+    }
+
+	int wait_cnt = 8;
+
+	if (wait_cnt > in_flight_requests) {
+		wait_cnt = in_flight_requests;
+	}
+
+    int submitted = io_uring_submit_and_wait(ring, wait_cnt);
+    if (submitted != read_count) {
+    	if (submitted < 0) {
+    		fprintf(stderr, "io_uring_submit %s\n", strerror(-submitted));
+    	}
+    	else {
+        	fprintf(stderr, "io_uring_submit(): submitted != %d, was %d", read_count, submitted);
+		}
+        return -1;
+    }
+
+	int completed = 0;
+	struct io_uring_cqe *cqe;
+	while (io_uring_peek_cqe(ring, &cqe) == 0) {
+        if (cqe->res < 0) {
+            fprintf(stderr, "io_uring error: %s\n", strerror(-cqe->res));
+			result_ids[completed++] = -cqe->user_data; // flag an error by sending a negative ID back so we can clean up memory allocation etc
+        }
+		else {
+        	result_ids[completed++] = cqe->user_data;
+        }
+        io_uring_cqe_seen(ring, cqe);
+    }
+
+    return completed;
+}
+
+int uring_poll(io_uring* ring, long* result_ids)
+{
+	int completed = 0;
+	struct io_uring_cqe *cqe;
+	while (io_uring_peek_cqe(ring, &cqe) == 0) {
+        if (cqe->res < 0) {
+            fprintf(stderr, "io_uring error: %s\n", strerror(-cqe->res));
+			result_ids[completed++] = -cqe->user_data; // flag an error by sending a negative ID back so we can clean up memory allocation etc
+        }
+		else {
+        	result_ids[completed++] = cqe->user_data;
+        }
+        io_uring_cqe_seen(ring, cqe);
+    }
+
+    return completed;
+}
+
 int uring_read_buffered(int fd, io_uring* ring, int n, void** buffers, unsigned int* sizes, long* offsets) {
 
 #ifdef DEBUG_CHECKS

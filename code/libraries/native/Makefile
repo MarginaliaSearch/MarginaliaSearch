@@ -7,8 +7,10 @@ CXX=c++
 SOURCES=src/sort.cc src/unix.cc src/uring.cc
 
 all: resources/libcpp.so resources/liburing.so
-resources/libcpp.so:
+
+resources/libcpp.so: ${SOURCES}
 	${CXX} -shared ${LDFLAGS} ${CXXFLAGS} ${SOURCES} -o resources/libcpp.so
+
 resources/liburing.so:
 	cp /usr/lib/liburing.so resources/
 clean:

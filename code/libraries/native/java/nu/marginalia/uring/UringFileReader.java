@@ -54,7 +54,7 @@ public class UringFileReader implements AutoCloseable {
         var ring = rings[(int) (ringIdx.getAndIncrement() % rings.length)];
 
         if (destinations.size() <= QUEUE_SIZE) {
-            int ret = ring.read(destinations, offsets, direct);
+            int ret = ring.readBatch(destinations, offsets, direct);
             if (ret != offsets.size()) {
                 throw new RuntimeException("Read failed, rv=" + ret);
             }
