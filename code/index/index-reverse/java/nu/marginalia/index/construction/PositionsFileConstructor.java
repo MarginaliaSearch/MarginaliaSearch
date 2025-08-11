@@ -23,12 +23,8 @@ import java.nio.file.StandardOpenOption;
  * each posting in the file.
  */
 public class PositionsFileConstructor implements AutoCloseable {
-    private final int BLOCK_SIZE = 4096;
-    
     private final Path file;
     private final FileChannel channel;
-
-    private long offset;
 
     public PositionsFileConstructor(Path file) throws IOException {
         this.file = file;
