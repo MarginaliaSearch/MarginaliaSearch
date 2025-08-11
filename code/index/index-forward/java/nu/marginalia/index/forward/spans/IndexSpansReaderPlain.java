@@ -8,15 +8,14 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
-    private final UringFileReader urinReader;
+    private final UringFileReader uringReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        urinReader = new UringFileReader(spansFile,  false);
-        urinReader.fadviseWillneed();
+        uringReader = new UringFileReader(spansFile,  true);
+        uringReader.fadviseWillneed();
     }
 
     @Override
@@ -51,39 +50,33 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     @Override
     public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) {
 
-        long totalSize = 0;
+        int readCnt = 0;
         for (long offset : encodedOffsets) {
             if (offset < 0)
                 continue;
-            totalSize += SpansCodec.decodeSize(offset);
+            readCnt ++;
         }
 
-        if (totalSize == 0) {
+        if (readCnt == 0) {
             return new DocumentSpans[encodedOffsets.length];
         }
 
-        MemorySegment segment = arena.allocate(totalSize, 8);
+        long[] offsets = new long[readCnt];
+        int[] sizes = new int[readCnt];
 
-        List<MemorySegment> buffers = new ArrayList<>(encodedOffsets.length);
-        List<Long> offsets = new ArrayList<>(encodedOffsets.length);
-
-        long bufferOffset = 0;
-
-        for (long offset : encodedOffsets) {
-            if (offset < 0)
+        for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
+            if (encodedOffsets[idx] < 0)
                 continue;
+            long offset = encodedOffsets[idx];
 
-            long size = SpansCodec.decodeSize(offset);
-            long start = SpansCodec.decodeStartOffset(offset);
-
-            buffers.add(segment.asSlice(bufferOffset, size));
-            offsets.add(start);
-            bufferOffset += size;
+            offsets[j] = SpansCodec.decodeStartOffset(offset);
+            sizes[j] = SpansCodec.decodeSize(offset);
+            j++;
         }
 
-        DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
+        List<MemorySegment> buffers = uringReader.readUnalignedInDirectMode(arena, offsets, sizes, 4096);
 
-        urinReader.read(buffers, offsets);
+        DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
 
         for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
             if (encodedOffsets[idx] < 0)
@@ -96,7 +89,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
 
     @Override
     public void close() throws IOException {
-        urinReader.close();
+        uringReader.close();
     }
 
 }

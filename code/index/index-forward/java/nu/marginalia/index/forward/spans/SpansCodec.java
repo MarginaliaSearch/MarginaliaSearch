@@ -26,8 +26,8 @@ public class SpansCodec {
         return encoded >>> 28;
     }
 
-    public static long decodeSize(long encoded) {
-        return encoded & 0x0FFF_FFFFL;
+    public static int decodeSize(long encoded) {
+        return (int) (encoded & 0x0FFF_FFFFL);
     }
 
     public static ByteBuffer createSpanFilesFooter(SpansCodecVersion version, int padSize) {
