@@ -14,9 +14,7 @@ import java.nio.file.StandardOpenOption;
  *
  * The positions data is concatenated in the file, with each term's metadata
  * followed by its positions.  The metadata is a single byte, and the positions
- * are encoded using the Elias Gamma code, with zero padded bits at the end to
- * get octet alignment.
- *
+ * are encoded varints.
  * <p></p>
  *
  * It is the responsibility of the caller to keep track of the byte offset of
@@ -32,6 +30,10 @@ public class PositionsFileConstructor implements AutoCloseable {
         channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
+    /** Represents a block of positions lists.  Each writer thread should hold on to
+     * a block object to ensure the locality of its positions lists.
+     * When finished, commit() must be run.
+     * */
     public class PositionsFileBlock {
         private final ByteBuffer workBuffer = ByteBuffer.allocate(1024*1024*16);
         private long position;
@@ -82,8 +84,11 @@ public class PositionsFileConstructor implements AutoCloseable {
     }
 
     /** Add a term to the positions file
+     *
+     * @param block a block token to ensure data locality
      * @param termMeta the term metadata
      * @param positionsBuffer the positions of the term
+     *
      * @return the offset of the term in the file, with the size of the data in the highest byte
      */
     public long add(PositionsFileBlock block, byte termMeta, ByteBuffer positionsBuffer) throws IOException {
