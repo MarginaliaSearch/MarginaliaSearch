@@ -4,7 +4,6 @@ import nu.marginalia.array.DirectFileReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
-import nu.marginalia.uring.UringFileReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Path;
-import java.util.List;
 
 public class NativeAlgosTest {
     @Test
@@ -71,28 +69,4 @@ public class NativeAlgosTest {
         }
     }
 
-    @Test
-    void testAioFileReader() throws IOException {
-        LongArray array = LongArrayFactory.mmapForWritingShared(Path.of("/tmp/test"), 1024);
-        for (int i = 0; i < 1024; i++) {
-            array.set(i, i);
-        }
-        array.close();
-
-        try (var dfr = new UringFileReader(Path.of("/tmp/test"),  false)) {
-            MemorySegment buf1 = Arena.ofAuto().allocate(32, 8);
-            MemorySegment buf2 = Arena.ofAuto().allocate(16, 8);
-
-            dfr.read(List.of(buf1, buf2), List.of(0L, 8L));
-
-            for (int i = 0; i < buf1.byteSize(); i+=8) {
-                System.out.println(buf1.get(ValueLayout.JAVA_LONG, i));
-            }
-
-            for (int i = 0; i < buf2.byteSize(); i+=8) {
-                System.out.println(buf2.get(ValueLayout.JAVA_LONG, i));
-            }
-        }
-
-    }
 }

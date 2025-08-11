@@ -1,10 +1,15 @@
 package nu.marginalia.uring;
 
+import it.unimi.dsi.fastutil.longs.Long2IntAVLTreeMap;
+import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.ffi.LinuxSystemCalls;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -46,7 +51,7 @@ public class UringFileReader implements AutoCloseable {
 
                 int ret;
                 if (ms.byteSize() != (ret = LinuxSystemCalls.readAt(fd, ms, offset))) {
-                    throw new RuntimeException("Read failed, rv=" + ret);
+                    throw new RuntimeException("Read failed, rv=" + ret + " at " + offset + " : " + ms.byteSize());
                 }
             }
             return;
@@ -64,6 +69,87 @@ public class UringFileReader implements AutoCloseable {
             // very unpredictable read latencies
             throw new IllegalArgumentException("Submission size exceeds queue size!");
         }
+    }
+
+    /** This function takes a list of offsets and sizes, and translates them to a minium of blockSize'd O_DIRECT
+     * reads.  A single buffer will be allocated to hold all the data, to encourage HugePages allocation and
+     * reduce TLB thrashing.  It is still generally helpful for performance if the data is at least best-effort
+     * block aligned.
+     *
+     * @return MemorySegment slices that contain only the requested data.
+     */
+    public List<MemorySegment> readUnalignedInDirectMode(Arena arena, long[] offsets, int[] sizes, int blockSize) {
+
+        if (offsets.length < 1)
+            return List.of();
+        if (offsets.length != sizes.length) throw new IllegalArgumentException("Offsets and Sizes arrays don't match!");
+        if ((blockSize & 511) != 0) throw new IllegalArgumentException("Block size must be a multiple of 512");
+
+        // First we work out which blocks we need to read, and how many they are
+        final LongAVLTreeSet neededBlocks = new LongAVLTreeSet();
+
+        for (int i = 0; i < offsets.length; i++) {
+            for (long block = offsets[i] & -blockSize;
+                 block <= ((offsets[i] + sizes[i]) & -blockSize);
+                 block+=blockSize)
+            {
+                neededBlocks.add(block);
+            }
+        }
+
+        MemorySegment allMemory = arena.allocate((long) blockSize * neededBlocks.size(), blockSize);
+
+        List<MemorySegment> buffers = new ArrayList<>(sizes.length);
+        List<Long> bufferOffsets = new ArrayList<>(sizes.length);
+
+        final Long2IntAVLTreeMap blockToIdx  = new Long2IntAVLTreeMap();
+        LongIterator neededBlockIterator = neededBlocks.longIterator();
+
+        long runStart = -1;
+        long runCurrent = -1;
+        long sliceOffset = 0;
+
+        for (;;) {
+            long nextBlock = neededBlockIterator.nextLong();
+
+            blockToIdx.put(nextBlock, blockToIdx.size());
+
+            if (runStart < 0) runStart = nextBlock;
+            else if (runCurrent + blockSize != nextBlock) {
+                int bufferSize = (int) (blockSize + runCurrent - runStart);
+                bufferOffsets.add(runStart);
+                buffers.add(allMemory.asSlice(sliceOffset, bufferSize));
+                sliceOffset += bufferSize;
+
+                runStart = nextBlock;
+            }
+
+            runCurrent = nextBlock;
+
+            if (!neededBlockIterator.hasNext()) {
+                // If this is the last value, we need to wrap up the final run
+                int bufferSize = (int) (blockSize + runCurrent - runStart);
+                bufferOffsets.add(runStart);
+                buffers.add(allMemory.asSlice(sliceOffset, bufferSize));
+                break;
+            }
+        }
+
+        // Perform the read
+        read(buffers, bufferOffsets);
+
+        // Slice the big memory chunk into the requested slices
+        List<MemorySegment> ret = new ArrayList<>(sizes.length);
+        for (int i = 0; i < offsets.length; i++) {
+            long offset = offsets[i];
+            int size = sizes[i];
+
+            long startBlock = (long) blockSize * blockToIdx.get(offset & -blockSize);
+            long blockOffset = offset & (blockSize - 1);
+            ret.add(allMemory.asSlice(startBlock + blockOffset, size));
+        }
+
+        return ret;
     }
 
     public void close() {

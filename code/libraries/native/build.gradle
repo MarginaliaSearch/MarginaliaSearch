@@ -10,6 +10,7 @@ java {
 
 dependencies {
     implementation libs.bundles.slf4j
+    implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
