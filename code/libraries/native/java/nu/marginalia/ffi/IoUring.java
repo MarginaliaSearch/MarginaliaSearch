@@ -120,7 +120,6 @@ public class IoUring {
 
     public static UringQueue uringOpen(int fd, int queueSize) {
         try {
-            System.out.println(instance.uringInit != null);
             return new UringQueue((MemorySegment) instance.uringInit.invoke(queueSize), fd);
         }
         catch (Throwable t) {
