@@ -49,7 +49,7 @@ public class PositionsFileConstructor implements AutoCloseable {
             workBuffer.limit(workBuffer.capacity());
             int pos = 0;
             while (workBuffer.hasRemaining()) {
-                pos += channel.write(workBuffer, pos + workBuffer.position());
+                pos += channel.write(workBuffer, this.position + pos + workBuffer.position());
             }
         }
 
