@@ -24,6 +24,7 @@ import java.nio.file.StandardOpenOption;
  */
 public class PositionsFileConstructor implements AutoCloseable {
     private final ByteBuffer workBuffer = ByteBuffer.allocate(65536);
+    private final int BLOCK_SIZE = 4096;
     
     private final Path file;
     private final FileChannel channel;
@@ -45,6 +46,8 @@ public class PositionsFileConstructor implements AutoCloseable {
         synchronized (file) {
             int size = 1 + positionsBuffer.remaining();
 
+            padToAlignment(size);
+
             if (workBuffer.remaining() < size) {
                 workBuffer.flip();
                 channel.write(workBuffer);
@@ -62,6 +65,38 @@ public class PositionsFileConstructor implements AutoCloseable {
         }
     }
 
+    private void padToAlignment(int size) throws IOException {
+        if (size > BLOCK_SIZE)
+            return;
+
+        // Check if the putative write starts and ends on the same block
+        long currentBlock = offset & -BLOCK_SIZE;
+        long endBlock = (offset + size) & -BLOCK_SIZE;
+        if (currentBlock == endBlock)
+            return;
+
+        // We've already checked that size <= BLOCK_SIZE
+        // so we can safely assume endBlock = the next block boundary
+
+        int toPad = (int) (endBlock - offset);
+        offset += toPad;
+
+        int remainingCapacity = workBuffer.capacity() - workBuffer.position();
+
+        if (remainingCapacity >= toPad) {
+            workBuffer.position(workBuffer.position() + toPad);
+        }
+        else {
+            toPad -= remainingCapacity;
+            workBuffer.position(workBuffer.capacity());
+            workBuffer.flip();
+            channel.write(workBuffer);
+
+            workBuffer.clear();
+            workBuffer.position(toPad);
+        }
+    }
+
     public void close() throws IOException {
         if (workBuffer.hasRemaining()) {
             workBuffer.flip();
@@ -70,7 +105,7 @@ public class PositionsFileConstructor implements AutoCloseable {
                 channel.write(workBuffer);
         }
 
-        long remainingBlockSize = 4096 - (channel.position() & -4096);
+        long remainingBlockSize = BLOCK_SIZE - (channel.position() & -BLOCK_SIZE);
         if (remainingBlockSize != 0) {
             workBuffer.position(0);
             workBuffer.limit(0);
