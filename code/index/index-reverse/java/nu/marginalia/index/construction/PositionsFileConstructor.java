@@ -23,7 +23,6 @@ import java.nio.file.StandardOpenOption;
  * each posting in the file.
  */
 public class PositionsFileConstructor implements AutoCloseable {
-    private final ByteBuffer workBuffer = ByteBuffer.allocate(65536);
     private final int BLOCK_SIZE = 4096;
     
     private final Path file;
@@ -37,85 +36,80 @@ public class PositionsFileConstructor implements AutoCloseable {
         channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
+    public class PositionsFileBlock {
+        private final ByteBuffer workBuffer = ByteBuffer.allocate(1024*1024*16);
+        private long position;
+
+        public PositionsFileBlock(long position) {
+            this.position = position;
+        }
+
+        public boolean fitsData(int size) {
+            return workBuffer.remaining() >= size;
+        }
+
+        public void commit() throws IOException {
+            workBuffer.position(0);
+            workBuffer.limit(workBuffer.capacity());
+            int pos = 0;
+            while (workBuffer.hasRemaining()) {
+                pos += channel.write(workBuffer, pos + workBuffer.position());
+            }
+        }
+
+        private void relocate() throws IOException {
+            workBuffer.clear();
+            position = channel.position();
+            while (workBuffer.hasRemaining()) {
+                channel.write(workBuffer);
+            }
+            workBuffer.clear();
+        }
+
+        public long position() {
+            return this.position + workBuffer.position();
+        }
+        public void put(byte b) {
+            workBuffer.put(b);
+        }
+        public void put(ByteBuffer buffer) {
+            workBuffer.put(buffer);
+        }
+    }
+
+    public PositionsFileBlock getBlock() throws IOException {
+        synchronized (this) {
+            var block = new PositionsFileBlock(channel.position());
+            block.relocate();
+            return block;
+        }
+    }
+
     /** Add a term to the positions file
      * @param termMeta the term metadata
      * @param positionsBuffer the positions of the term
      * @return the offset of the term in the file, with the size of the data in the highest byte
      */
-    public long add(byte termMeta, ByteBuffer positionsBuffer) throws IOException {
-        synchronized (file) {
-            int size = 1 + positionsBuffer.remaining();
+    public long add(PositionsFileBlock block, byte termMeta, ByteBuffer positionsBuffer) throws IOException {
+        int size = 1 + positionsBuffer.remaining();
 
-            padToAlignment(size);
-
-            if (workBuffer.remaining() < size) {
-                workBuffer.flip();
-                channel.write(workBuffer);
-                workBuffer.clear();
+        if (!block.fitsData(size)) {
+            synchronized (this) {
+                block.commit();
+                block.relocate();
             }
-
-            workBuffer.put(termMeta);
-            workBuffer.put(positionsBuffer);
-
-            long ret = PositionCodec.encode(size, offset);
-
-            offset += size;
-
-            return ret;
         }
-    }
+        synchronized (file) {
+            long offset = block.position();
 
-    private void padToAlignment(int size) throws IOException {
-        if (size > BLOCK_SIZE)
-            return;
+            block.put(termMeta);
+            block.put(positionsBuffer);
 
-        // Check if the putative write starts and ends on the same block
-        long currentBlock = offset & -BLOCK_SIZE;
-        long endBlock = (offset + size) & -BLOCK_SIZE;
-        if (currentBlock == endBlock)
-            return;
-
-        // We've already checked that size <= BLOCK_SIZE
-        // so we can safely assume endBlock = the next block boundary
-
-        int toPad = (int) (endBlock - offset);
-        offset += toPad;
-
-        int remainingCapacity = workBuffer.capacity() - workBuffer.position();
-
-        if (remainingCapacity >= toPad) {
-            workBuffer.position(workBuffer.position() + toPad);
-        }
-        else {
-            toPad -= remainingCapacity;
-            workBuffer.position(workBuffer.capacity());
-            workBuffer.flip();
-            channel.write(workBuffer);
-
-            workBuffer.clear();
-            workBuffer.position(toPad);
+            return PositionCodec.encode(size, offset);
         }
     }
 
     public void close() throws IOException {
-        if (workBuffer.hasRemaining()) {
-            workBuffer.flip();
-
-            while (workBuffer.hasRemaining())
-                channel.write(workBuffer);
-        }
-
-        workBuffer.clear();
-
-        long remainingBlockSize = BLOCK_SIZE - (channel.position() & (BLOCK_SIZE-1));
-        if (remainingBlockSize != BLOCK_SIZE) {
-            workBuffer.position(0);
-            workBuffer.limit((int) remainingBlockSize);
-            while (workBuffer.hasRemaining()) {
-                channel.write(workBuffer);
-            }
-        }
-
         channel.force(false);
         channel.close();
     }

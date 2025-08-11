@@ -3,6 +3,7 @@ package nu.marginalia.uring;
 import nu.marginalia.asyncio.AsyncReadRequest;
 import nu.marginalia.asyncio.UringExecutionQueue;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
@@ -12,6 +13,7 @@ import java.util.List;
 
 class UringExecutionQueueTest {
     @Test
+    @Disabled
     public void test() {
         int fd = LinuxSystemCalls.openDirect(Path.of("/home/vlofgren/test.dat"));
         MemorySegment ms = Arena.ofAuto().allocate(4096, 4096);

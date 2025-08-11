@@ -79,6 +79,8 @@ public class FullPreindexDocuments {
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
+            var positionsBlock = positionsFileConstructor.getBlock();
+
             while (docIds.hasRemaining()) {
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
@@ -94,12 +96,13 @@ public class FullPreindexDocuments {
                     ByteBuffer pos = tPos.get(i);
 
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
-                    long encodedPosOffset = positionsFileConstructor.add(meta, pos);
+                    long encodedPosOffset = positionsFileConstructor.add(positionsBlock, meta, pos);
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);
                 }
             }
+            positionsBlock.commit();
 
             assembly.write(docsFile);
         }

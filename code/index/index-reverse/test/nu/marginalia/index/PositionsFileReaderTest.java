@@ -33,9 +33,11 @@ class PositionsFileReaderTest {
     void getTermData() throws IOException {
         long key1, key2, key3;
         try (PositionsFileConstructor constructor = new PositionsFileConstructor(file)) {
-            key1 = constructor.add((byte) 43, VarintCodedSequence.generate(1, 2, 3).buffer());
-            key2 = constructor.add((byte) 51, VarintCodedSequence.generate(2, 3, 5, 1000, 5000, 20241).buffer());
-            key3 = constructor.add((byte) 61, VarintCodedSequence.generate(3, 5, 7).buffer());
+            var block = constructor.getBlock();
+            key1 = constructor.add(block, (byte) 43, VarintCodedSequence.generate(1, 2, 3).buffer());
+            key2 = constructor.add(block, (byte) 51, VarintCodedSequence.generate(2, 3, 5, 1000, 5000, 20241).buffer());
+            key3 = constructor.add(block, (byte) 61, VarintCodedSequence.generate(3, 5, 7).buffer());
+            block.commit();
         }
 
         System.out.println("key1: " + Long.toHexString(key1));
