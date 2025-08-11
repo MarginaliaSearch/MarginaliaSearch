@@ -8,6 +8,7 @@ import nu.marginalia.ffi.LinuxSystemCalls;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +70,35 @@ public class UringFileReader implements AutoCloseable {
             // very unpredictable read latencies
             throw new IllegalArgumentException("Submission size exceeds queue size!");
         }
+    }
+
+    public List<MemorySegment> readUnaligned(Arena arena, long[] offsets, int[] sizes, int blockSize) {
+        if (direct) {
+            return readUnalignedInDirectMode(arena, offsets, sizes, blockSize);
+        } else {
+            return readUnalignedInBufferedMode(arena, offsets, sizes);
+        }
+    }
+
+    private List<MemorySegment> readUnalignedInBufferedMode(Arena arena, long[] offsets, int[] sizes) {
+        int totalSize = 0;
+        for (int size : sizes) {
+            totalSize += size;
+        }
+
+        var allocator = SegmentAllocator.slicingAllocator(arena.allocate(totalSize));
+
+        List<MemorySegment> segmentsList = new ArrayList<>(sizes.length);
+        List<Long> offsetsList = new ArrayList<>(sizes.length);
+
+        for (int i = 0; i < sizes.length; i++) {
+            segmentsList.add(allocator.allocate(sizes[i]));
+            offsetsList.add(offsets[i]);
+        }
+
+        read(segmentsList, offsetsList);
+
+        return segmentsList;
     }
 
     /** This function takes a list of offsets and sizes, and translates them to a minium of blockSize'd O_DIRECT
