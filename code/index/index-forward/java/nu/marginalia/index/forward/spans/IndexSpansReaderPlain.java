@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -14,8 +15,18 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     private final UringFileReader uringReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        uringReader = new UringFileReader(spansFile,  true);
-        uringReader.fadviseWillneed();
+        if (Boolean.getBoolean("index.directModePositionsSpans")) {
+            if ((Files.size(spansFile) & 4095) != 0) {
+                throw new IllegalArgumentException("Spans file is not block aligned in size: " + Files.size(spansFile));
+            }
+
+            uringReader = new UringFileReader(spansFile,  true);
+        }
+        else {
+            uringReader = new UringFileReader(spansFile,  false);
+            uringReader.fadviseWillneed();
+        }
+
     }
 
     @Override
@@ -74,7 +85,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
             j++;
         }
 
-        List<MemorySegment> buffers = uringReader.readUnalignedInDirectMode(arena, offsets, sizes, 4096);
+        List<MemorySegment> buffers = uringReader.readUnaligned(arena, offsets, sizes, 4096);
 
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
 

@@ -18,10 +18,16 @@ public class PositionsFileReader implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
-        if ((Files.size(positionsFile) & 4095) != 0) {
-            throw new IllegalArgumentException("Positions file is not block aligned in size: " + Files.size(positionsFile));
+        if (Boolean.getBoolean("index.directModePositionsFile")) {
+            if ((Files.size(positionsFile) & 4095) != 0) {
+                throw new IllegalArgumentException("Positions file is not block aligned in size: " + Files.size(positionsFile));
+            }
+
+            uringFileReader = new UringFileReader(positionsFile, true);
         }
-        uringFileReader = new UringFileReader(positionsFile, true);
+        else {
+            uringFileReader = new UringFileReader(positionsFile, false);
+        }
     }
 
     @Override
@@ -57,7 +63,7 @@ public class PositionsFileReader implements AutoCloseable {
             j++;
         }
 
-        List<MemorySegment> buffers = uringFileReader.readUnalignedInDirectMode(arena, readOffsets, readSizes, 4096);
+        List<MemorySegment> buffers = uringFileReader.readUnaligned(arena, readOffsets, readSizes, 4096);
 
         TermData[] ret = new TermData[offsets.length];
         for (int i = 0, j=0; i < offsets.length; i++) {
