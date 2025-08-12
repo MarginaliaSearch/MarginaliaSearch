@@ -40,6 +40,8 @@ services:
     <<: *partition-1
     image: "marginalia/index-service"
     container_name: "index-service-1"
+    security_opt:
+      - seccomp:unconfined
   query-service:
     <<: *service
     image: "marginalia/query-service"
