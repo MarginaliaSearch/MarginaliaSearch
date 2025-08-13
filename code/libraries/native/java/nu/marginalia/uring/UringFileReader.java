@@ -66,9 +66,14 @@ public class UringFileReader implements AutoCloseable {
             }
         }
         else {
-            // We *could* break the task into multiple submissions, but this leads to some
-            // very unpredictable read latencies
-            throw new IllegalArgumentException("Submission size exceeds queue size!");
+            for (int i = 0; i < destinations.size(); i+=QUEUE_SIZE) {
+                var destSlice = destinations.subList(i, Math.min(destinations.size(), i+QUEUE_SIZE));
+                var offSlice = offsets.subList(i, Math.min(offsets.size(), i+QUEUE_SIZE));
+                int ret = ring.readBatch(destSlice, offSlice, direct);
+                if (ret != offSlice.size()) {
+                    throw new RuntimeException("Read failed, rv=" + ret);
+                }
+            }
         }
     }
 
