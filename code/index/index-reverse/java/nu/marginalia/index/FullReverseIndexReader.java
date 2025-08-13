@@ -21,6 +21,7 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 public class FullReverseIndexReader {
@@ -165,8 +166,10 @@ public class FullReverseIndexReader {
     }
 
     public TermData[] getTermData(Arena arena,
+                                  IndexSearchBudget budget,
                                   long[] termIds,
                                   long[] docIds)
+            throws TimeoutException
     {
 
         long[] offsetsAll = new long[termIds.length * docIds.length];
@@ -188,7 +191,7 @@ public class FullReverseIndexReader {
             System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIds.length, docIds.length);
         }
 
-        return positionsFileReader.getTermData(arena, offsetsAll);
+        return positionsFileReader.getTermData(arena, budget, offsetsAll);
     }
 
     public TermData[] getTermData(Arena arena,
@@ -210,7 +213,13 @@ public class FullReverseIndexReader {
         // Read the size and offset of the position data
         var offsets = reader.getValueOffsets(docIds);
 
-        return positionsFileReader.getTermData(arena, offsets);
+        // FIXME this entire method chain only exists for a single unit test
+        // remove me!
+        try {
+            return positionsFileReader.getTermData(arena, new IndexSearchBudget(1000), offsets);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void close() {

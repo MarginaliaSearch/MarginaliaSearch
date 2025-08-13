@@ -6,6 +6,7 @@ import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -21,6 +22,24 @@ public final class UringQueue {
 
     public static UringQueue open(int fd, int size) {
         return IoUring.uringOpen(fd, size);
+    }
+
+    public int readBatch(List<MemorySegment> dest, List<Long> offsets, long timeout, boolean direct)
+            throws TimeoutException {
+        try {
+            if (!lock.tryLock(timeout, TimeUnit.MILLISECONDS))
+                throw new TimeoutException();
+
+            try {
+                return IoUring.uringReadBatch(fd, this, dest, offsets, direct);
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+        catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public int readBatch(List<MemorySegment> dest, List<Long> offsets, boolean direct) {

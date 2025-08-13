@@ -1,12 +1,17 @@
 package nu.marginalia.index.forward.spans;
 
+import nu.marginalia.index.query.IndexSearchBudget;
+
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
+import java.util.concurrent.TimeoutException;
 
 public interface IndexSpansReader extends AutoCloseable {
+    @Deprecated
     DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException;
-    DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException;
+
+    DocumentSpans[] readSpans(Arena arena, IndexSearchBudget budget, long[] encodedOffsets) throws TimeoutException, IOException;
 
     static IndexSpansReader open(Path fileName) throws IOException {
         int version = SpansCodec.parseSpanFilesFooter(fileName);

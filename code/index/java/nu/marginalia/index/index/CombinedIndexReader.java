@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
 /** A reader for the combined forward and reverse indexes.
@@ -187,10 +188,12 @@ public class CombinedIndexReader {
 
     /** Retrieves the term metadata for the specified word for the provided documents */
     public TermMetadataList[] getTermMetadata(Arena arena,
-                                            long[] wordIds,
-                                            CombinedDocIdList docIds)
+                                              IndexSearchBudget budget,
+                                              long[] wordIds,
+                                              CombinedDocIdList docIds)
+    throws TimeoutException
     {
-        TermData[] combinedTermData = reverseIndexFullReader.getTermData(arena, wordIds, docIds.array());
+        TermData[] combinedTermData = reverseIndexFullReader.getTermData(arena, budget, wordIds, docIds.array());
         TermMetadataList[] ret = new TermMetadataList[wordIds.length];
         for (int i = 0; i < wordIds.length; i++) {
             ret[i] = new TermMetadataList(Arrays.copyOfRange(combinedTermData, i*docIds.size(), (i+1)*docIds.size()));
@@ -226,13 +229,13 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public DocumentSpans[] getDocumentSpans(Arena arena, CombinedDocIdList docIds) {
+    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList docIds) throws TimeoutException {
         long[] decodedIDs = docIds.array();
         for (int i = 0; i < decodedIDs.length; i++) {
             decodedIDs[i] = UrlIdCodec.removeRank(decodedIDs[i]);
         }
 
-        return forwardIndexReader.getDocumentSpans(arena, decodedIDs);
+        return forwardIndexReader.getDocumentSpans(arena, budget, decodedIDs);
     }
 
     /** Close the indexes (this is not done immediately)

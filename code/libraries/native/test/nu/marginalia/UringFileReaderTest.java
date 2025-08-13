@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class UringFileReaderTest {
     Path testFile;
@@ -63,11 +64,12 @@ public class UringFileReaderTest {
     }
 
     @Test
-    void testUringFileReaderUnaligned() throws IOException {
+    void testUringFileReaderUnaligned() throws IOException, TimeoutException {
         createTestFileWithLongs(65536);
 
         try (var dfr = new UringFileReader(testFile,  true)) {
             var ret = dfr.readUnalignedInDirectMode(Arena.ofAuto(),
+                    1000,
                     new long[] { 10*8, 20*8, 5000*8, 5100*8},
                     new int[] { 32*8, 10*8, 100*8, 100*8},
                     4096);

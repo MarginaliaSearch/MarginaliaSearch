@@ -1,6 +1,7 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.uring.UringFileReader;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
     private final UringFileReader uringReader;
@@ -32,7 +34,11 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     @Override
     public DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException {
         // for testing, slow
-        return readSpans(arena, new long[] { encodedOffset})[0];
+        try {
+            return readSpans(arena, new IndexSearchBudget(1000), new long[] { encodedOffset})[0];
+        } catch (TimeoutException e) {
+            throw new IOException(e);
+        }
     }
 
     public DocumentSpans decode(MemorySegment ms) {
@@ -59,7 +65,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     }
 
     @Override
-    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) {
+    public DocumentSpans[] readSpans(Arena arena, IndexSearchBudget budget, long[] encodedOffsets) throws TimeoutException {
 
         int readCnt = 0;
         for (long offset : encodedOffsets) {
@@ -85,7 +91,7 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
             j++;
         }
 
-        List<MemorySegment> buffers = uringReader.readUnaligned(arena, offsets, sizes, 4096);
+        List<MemorySegment> buffers = uringReader.readUnaligned(arena, budget.timeLeft(), offsets, sizes, 4096);
 
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
 

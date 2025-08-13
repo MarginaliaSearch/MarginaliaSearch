@@ -12,6 +12,7 @@ import java.lang.foreign.SegmentAllocator;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class UringFileReader implements AutoCloseable {
@@ -77,15 +78,54 @@ public class UringFileReader implements AutoCloseable {
         }
     }
 
-    public List<MemorySegment> readUnaligned(Arena arena, long[] offsets, int[] sizes, int blockSize) {
-        if (direct) {
-            return readUnalignedInDirectMode(arena, offsets, sizes, blockSize);
-        } else {
-            return readUnalignedInBufferedMode(arena, offsets, sizes);
+    public void read(List<MemorySegment> destinations, List<Long> offsets, long timeoutMs) throws TimeoutException {
+        if (destinations.size() < 5) {
+            for (int  i = 0; i < destinations.size(); i++) {
+                var ms = destinations.get(i);
+                long offset = offsets.get(i);
+
+                int ret;
+                if (ms.byteSize() != (ret = LinuxSystemCalls.readAt(fd, ms, offset))) {
+                    throw new RuntimeException("Read failed, rv=" + ret + " at " + offset + " : " + ms.byteSize());
+                }
+            }
+            return;
+        }
+        var ring = rings[(int) (ringIdx.getAndIncrement() % rings.length)];
+
+        if (destinations.size() <= QUEUE_SIZE) {
+            int ret = ring.readBatch(destinations, offsets, timeoutMs, direct);
+            if (ret != offsets.size()) {
+                throw new RuntimeException("Read failed, rv=" + ret);
+            }
+        }
+        else {
+            long timeEnd = System.currentTimeMillis() + timeoutMs;
+            for (int i = 0; i < destinations.size(); i+=QUEUE_SIZE) {
+                long timeRemainingMs = timeEnd - System.currentTimeMillis();
+                if (timeRemainingMs <= 0)
+                    throw new TimeoutException();
+
+                var destSlice = destinations.subList(i, Math.min(destinations.size(), i+QUEUE_SIZE));
+                var offSlice = offsets.subList(i, Math.min(offsets.size(), i+QUEUE_SIZE));
+                int ret = ring.readBatch(destSlice, offSlice, timeRemainingMs, direct);
+                if (ret != offSlice.size()) {
+                    throw new RuntimeException("Read failed, rv=" + ret);
+                }
+            }
         }
     }
 
-    private List<MemorySegment> readUnalignedInBufferedMode(Arena arena, long[] offsets, int[] sizes) {
+
+    public List<MemorySegment> readUnaligned(Arena arena, long timeoutMs, long[] offsets, int[] sizes, int blockSize) throws TimeoutException {
+        if (direct) {
+            return readUnalignedInDirectMode(arena, timeoutMs, offsets, sizes, blockSize);
+        } else {
+            return readUnalignedInBufferedMode(arena, timeoutMs, offsets, sizes);
+        }
+    }
+
+    private List<MemorySegment> readUnalignedInBufferedMode(Arena arena, long timeoutMs, long[] offsets, int[] sizes) throws TimeoutException {
         int totalSize = 0;
         for (int size : sizes) {
             totalSize += size;
@@ -101,7 +141,7 @@ public class UringFileReader implements AutoCloseable {
             offsetsList.add(offsets[i]);
         }
 
-        read(segmentsList, offsetsList);
+        read(segmentsList, offsetsList, timeoutMs);
 
         return segmentsList;
     }
@@ -113,7 +153,7 @@ public class UringFileReader implements AutoCloseable {
      *
      * @return MemorySegment slices that contain only the requested data.
      */
-    public List<MemorySegment> readUnalignedInDirectMode(Arena arena, long[] offsets, int[] sizes, int blockSize) {
+    public List<MemorySegment> readUnalignedInDirectMode(Arena arena, long timeoutMs, long[] offsets, int[] sizes, int blockSize) throws TimeoutException {
 
         if (offsets.length < 1)
             return List.of();
@@ -171,7 +211,7 @@ public class UringFileReader implements AutoCloseable {
         }
 
         // Perform the read
-        read(buffers, bufferOffsets);
+        read(buffers, bufferOffsets, timeoutMs);
 
         // Slice the big memory chunk into the requested slices
         List<MemorySegment> ret = new ArrayList<>(sizes.length);

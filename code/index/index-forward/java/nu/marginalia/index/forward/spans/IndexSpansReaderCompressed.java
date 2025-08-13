@@ -1,5 +1,6 @@
 package nu.marginalia.index.forward.spans;
 
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.sequence.VarintCodedSequence;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class IndexSpansReaderCompressed implements AutoCloseable, IndexSpansRead
     }
 
     @Override
-    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
+    public DocumentSpans[] readSpans(Arena arena, IndexSearchBudget budget, long[] encodedOffsets) throws IOException {
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
         for (int i = 0; i < encodedOffsets.length; i++) {
             if (encodedOffsets[i] >= 0) {

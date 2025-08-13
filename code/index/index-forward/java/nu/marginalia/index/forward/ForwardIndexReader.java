@@ -6,6 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeoutException;
 
 import static nu.marginalia.index.forward.ForwardIndexParameters.*;
 
@@ -138,7 +140,7 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-    public DocumentSpans[] getDocumentSpans(Arena arena, long[] docIds) {
+    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, long[] docIds) throws TimeoutException {
         long[] offsets = new long[docIds.length];
         for (int i = 0; i < docIds.length; i++) {
             long offset = idxForDoc(docIds[i]);
@@ -151,7 +153,7 @@ public class ForwardIndexReader {
         }
 
         try {
-            return spansReader.readSpans(arena, offsets);
+            return spansReader.readSpans(arena, budget, offsets);
         }
         catch (IOException ex) {
             logger.error("Failed to read spans for docIds", ex);

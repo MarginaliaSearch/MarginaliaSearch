@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.construction.PositionsFileConstructor;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.positions.TermData;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,7 +32,7 @@ class PositionsFileReaderTest {
     }
 
     @Test
-    void getTermData() throws IOException {
+    void getTermData() throws IOException, TimeoutException {
         long key1, key2, key3;
         try (PositionsFileConstructor constructor = new PositionsFileConstructor(file)) {
             var block = constructor.getBlock();
@@ -47,7 +49,7 @@ class PositionsFileReaderTest {
         try (Arena arena = Arena.ofShared();
             PositionsFileReader reader = new PositionsFileReader(file))
         {
-            TermData[] data = reader.getTermData(arena, new long[] { key1, key2, key3 });
+            TermData[] data = reader.getTermData(arena, new IndexSearchBudget(10000), new long[] { key1, key2, key3 });
 
             assertEquals(43, data[0].flags());
             assertEquals(IntList.of( 1, 2, 3), data[0].positions().values());

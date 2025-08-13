@@ -92,10 +92,14 @@ public class IndexResultRankingService {
 
             // Perform expensive I/O operations
 
-            this.termsForDocs = currentIndex.getTermMetadata(arena, searchTerms.termIdsAll.array, resultIds);
-            if (!budget.hasTimeLeft())
-                throw new TimeoutException();
-            this.documentSpans = currentIndex.getDocumentSpans(arena, resultIds);
+            try {
+                this.termsForDocs = currentIndex.getTermMetadata(arena, budget, searchTerms.termIdsAll.array, resultIds);
+                this.documentSpans = currentIndex.getDocumentSpans(arena, budget, resultIds);
+            }
+            catch (TimeoutException ex) {
+                arena.close();
+                throw ex;
+            }
         }
 
         public CodedSequence[] positions() {
