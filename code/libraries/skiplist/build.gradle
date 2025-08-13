@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+    id "me.champeau.jmh" version "0.6.6"
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation libs.bundles.slf4j
+
+    implementation libs.notnull
+    implementation libs.commons.lang3
+    implementation libs.fastutil
+    implementation libs.lz4
+    implementation libs.guava
+
+    implementation project(':code:libraries:native')
+    implementation project(':code:libraries:array')
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+    testImplementation project(':code:libraries:test-helpers')
+}
+
+jmh {
+    jvmArgs = [ "--enable-preview" ]
+}
+tasks.withType(me.champeau.jmh.WithJavaToolchain).configureEach {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    })
+}
+tasks.withType(me.champeau.jmh.JmhBytecodeGeneratorTask).configureEach {
+    jvmArgs = ["--enable-preview"]
+}
+test {
+    useJUnitPlatform()
+}

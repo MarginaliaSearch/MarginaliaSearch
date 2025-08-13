@@ -17,6 +17,7 @@ dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:native')
     implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:skiplist')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:random-write-funnel')
     implementation project(':code:index:query')
