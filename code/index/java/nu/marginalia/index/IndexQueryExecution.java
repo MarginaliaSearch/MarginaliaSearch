@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class IndexQueryExecution {
 
     private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
-    private static final int indexPreparationThreads = Integer.getInteger("index.preparationThreads", 4);
+    private static final int indexPreparationThreads = Integer.getInteger("index.preparationThreads", 2);
 
     // Since most NVMe drives have a maximum read size of 128 KB, and most small reads are 512B
     // this should probably be 128*1024 / 512 = 256 to reduce queue depth and optimize tail latency
