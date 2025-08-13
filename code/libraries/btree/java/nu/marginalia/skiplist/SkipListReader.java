@@ -90,6 +90,7 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.retainAndAdvance();
+                    currentBlockIdx++;
                     continue outer;
                 }
             }
@@ -117,6 +118,8 @@ public class SkipListReader {
 
                 if (!data.hasMore()) {
                     currentBlock += SkipListConstants.BLOCK_SIZE;
+                    currentBlockOffset = 0;
+                    currentBlockIdx = 0;
                 }
                 else {
                     long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
@@ -158,6 +161,8 @@ public class SkipListReader {
 
                     if (!data.hasMore()) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
                     }
                     else {
                         long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
@@ -244,6 +249,8 @@ public class SkipListReader {
 
                     if (pos >= keys.length) {
                         currentBlock += SkipListConstants.BLOCK_SIZE;
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
                     }
                     else {
                         long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
@@ -298,6 +305,7 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.rejectAndAdvance();
+                    currentBlockIdx++;
                     continue outer;
                 }
             }
@@ -324,6 +332,8 @@ public class SkipListReader {
                 }
 
                 if (!data.hasMore()) {
+                    currentBlockOffset = 0;
+                    currentBlockIdx = 0;
                     currentBlock += SkipListConstants.BLOCK_SIZE;
                 }
                 else {
@@ -365,6 +375,8 @@ public class SkipListReader {
                         break;
                     }
                     if (!data.hasMore()) {
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
                         currentBlock += SkipListConstants.BLOCK_SIZE;
                     }
                     else {

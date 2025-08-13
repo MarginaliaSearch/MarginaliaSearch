@@ -102,6 +102,36 @@ public class SkipListReaderTest {
         }
     }
 
+
+    @Test
+    public void testRetainBug() throws IOException {
+        long[] keys = LongStream.range(0, 30000).map(v -> v).toArray();
+        long[] vals = LongStream.range(0, 30000).map(v -> -v).toArray();
+
+        long start;
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.padDocuments(512);
+            start = writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, start);
+            long[] values = LongStream.range(0, 4059).toArray();
+            LongQueryBuffer lqb = new LongQueryBuffer(values, values.length);
+
+            reader.retainData(lqb);
+            lqb.finalizeFiltering();
+            System.out.println(Arrays.toString(lqb.copyData()));
+
+            values = LongStream.range(4060, 4070).toArray();
+            lqb = new LongQueryBuffer(values, values.length);
+            reader.retainData(lqb);
+            lqb.finalizeFiltering();
+            System.out.println(Arrays.toString(lqb.copyData()));
+
+        }
+    }
+
     @Test
     public void testRetainFuzz() throws IOException {
 
