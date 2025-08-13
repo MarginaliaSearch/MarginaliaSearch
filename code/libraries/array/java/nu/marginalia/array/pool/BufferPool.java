@@ -52,7 +52,7 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         this.arena = Arena.ofShared();
-        this.pages = new UnsafeMemoryPage[poolSize];
+        this.pages = new MemoryPage[poolSize];
 
         MemorySegment memoryArea = arena.allocate((long) pageSizeBytes*poolSize, 4096);
         for (int i = 0; i < pages.length; i++) {
