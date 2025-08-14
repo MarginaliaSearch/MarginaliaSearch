@@ -1,11 +1,11 @@
 package nu.marginalia.converting.processor.logic;
 
-import crawlercommons.utils.Strings;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawldata.CrawledDocument;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -169,7 +169,7 @@ public class DocumentValuator {
 
             if (srcAttr.contains("wp-content") || srcAttr.contains("wp-includes") || srcAttr.contains("jquery")) {
                 penalty += 0.49;
-            } else if (!Strings.isBlank(srcAttr)) {
+            } else if (!StringUtils.isBlank(srcAttr)) {
                 penalty += 1;
             } else {
                 var wt = el.wholeText();
