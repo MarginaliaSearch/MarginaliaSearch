@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+dependencies {
+    implementation libs.bundles.slf4j
+    implementation libs.fastutil
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+// We use a custom task to compile the C++ code into a shared library
+// with a shellscript as gradle's c++ tasks are kind of insufferable
+
+tasks.register('compileCpp', Exec) {
+    inputs.files('Makefile', 'src/sort.cc', 'src/unix.cc', 'src/uring.cc', 'src/config.h')
+    outputs.files('resources/libcpp.so', 'resources/liburing.so')
+
+    commandLine 'make', 'all'
+}
+tasks.register('cleanCpp', Exec) {
+    commandLine 'make', 'clean'
+}
+
+processResources.dependsOn('compileCpp')
+clean.dependsOn('cleanCpp')

@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class PerfTestMain {
     static Duration warmupTime = Duration.ofMinutes(1);
@@ -65,6 +66,8 @@ public class PerfTestMain {
                 case "lookup" -> runLookup(indexDir, homeDir, query);
                 case "execution" -> runExecution(indexDir, homeDir, query);
             }
+
+            System.exit(0);
         }
         catch (NumberFormatException e) {
             System.err.println("Arguments: data-dir index-dir query");
@@ -119,8 +122,7 @@ public class PerfTestMain {
 
     public static void runValuation(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException
-    {
+                                    String rawQuery) throws IOException, SQLException, TimeoutException {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
@@ -138,48 +140,39 @@ public class PerfTestMain {
 
         SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
 
-        List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
+        List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(10_000));
 
         TLongArrayList allResults = new TLongArrayList();
-        LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
 
         for (var query : queries) {
-            while (query.hasMore() && allResults.size() < 4096 ) {
+            while (query.hasMore() && allResults.size() < 512 ) {
                 query.getMoreResults(buffer);
                 allResults.addAll(buffer.copyData());
             }
-            if (allResults.size() >= 4096)
+            if (allResults.size() >= 512)
                 break;
         }
         allResults.sort();
-        if (allResults.size() > 4096) {
-            allResults.subList(4096,  allResults.size()).clear();
+        if (allResults.size() > 512) {
+            allResults.subList(512,  allResults.size()).clear();
         }
 
-        var docIds = new CombinedDocIdList(allResults.toArray());
         var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
+        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()), null);
 
-        System.out.println("Running warmup loop!");
         int sum = 0;
 
-        Instant runEndTime = Instant.now().plus(warmupTime);
-        int iter;
-        IndexSearchBudget budget = new IndexSearchBudget(10000);
-        for (iter = 0;; iter++) {
-            sum += rankingService.rankResults(rankingContext, budget, docIds, false).size();
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
-                break;
-            }
-        }
-        System.out.println("Warmup complete after " + iter + " iters!");
-
-        runEndTime = Instant.now().plus(runTime);
+        Instant runEndTime = Instant.now().plus(runTime);
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
+
+        int iter;
         for (iter = 0;; iter++) {
+            IndexSearchBudget budget = new IndexSearchBudget(10000);
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(rankingContext, budget, docIds, false).size();
+            sum2 += rankingService.rankResults(budget, rankingContext, rankingData, false).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 
@@ -187,14 +180,19 @@ public class PerfTestMain {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
-                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+                if (times.size() > 100) {
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
+                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
+                }
+                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }
         }
         System.out.println("Benchmark complete after " + iter + " iters!");
-        System.out.println("Best times: " + (allResults.size() / 4096.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+
+        System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
         System.out.println("Main sum: " + sum2);
-        System.out.println(docIds.size());
+        System.out.println(rankingData.size());
     }
 
     public static void runExecution(Path homeDir,
@@ -217,24 +215,12 @@ public class PerfTestMain {
         System.out.println("Running warmup loop!");
         int sum = 0;
 
-        Instant runEndTime = Instant.now().plus(warmupTime);
-
-        int iter;
-        for (iter = 0;; iter++) {
-            SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-            var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
-            execution.run();
-            sum += execution.itemsProcessed();
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
-                break;
-            }
-        }
-        System.out.println("Warmup complete after " + iter + " iters!");
-
-        runEndTime = Instant.now().plus(runTime);
+        Instant runEndTime = Instant.now().plus(runTime);
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> rates = new ArrayList<>();
+        List<Double> times = new ArrayList<>();
+        int iter;
         for (iter = 0;; iter++) {
             SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
             var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
@@ -243,14 +229,20 @@ public class PerfTestMain {
             long end = System.nanoTime();
             sum2 += execution.itemsProcessed();
             rates.add(execution.itemsProcessed() / ((end - start)/1_000_000_000.));
-
+            times.add((end - start)/1_000_000.);
+            indexReader.reset();
             if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
                 }
+                if (times.size() > 100) {
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
+                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
+                }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best rates: " +  rates.stream().mapToDouble(Double::doubleValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
             }
         }
+
         System.out.println("Benchmark complete after " + iter + " iters!");
         System.out.println("Best counts: " + rates.stream().mapToDouble(Double::doubleValue).map(i -> -i).sorted().map(i -> -i).limit(3).average().orElse(-1));
         System.out.println("Warmup sum: " + sum);
@@ -278,35 +270,18 @@ public class PerfTestMain {
         SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
 
 
-        Instant runEndTime = Instant.now().plus(warmupTime);
+        Instant runEndTime = Instant.now().plus(runTime);
 
-        LongQueryBuffer buffer = new LongQueryBuffer(4096);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
         int sum1 = 0;
         int iter;
-        for (iter = 0;; iter++) {
-            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
 
-            for (var query : queries) {
-                while (query.hasMore()) {
-                    query.getMoreResults(buffer);
-                    sum1 += buffer.end;
-                    buffer.reset();
-                }
-            }
-
-            if ((iter % 100) == 0 && Instant.now().isAfter(runEndTime)) {
-                break;
-            }
-        }
-
-        System.out.println("Warmup complete after " + iter + " iters with sum1 = " + sum1);
-
-        runEndTime = Instant.now().plus(runTime);
         Instant runStartTime =  Instant.now();
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
-            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams);
+            indexReader.reset();
+            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(150));
 
             long start = System.nanoTime();
             for (var query : queries) {
@@ -317,11 +292,15 @@ public class PerfTestMain {
                 }
             }
             long end = System.nanoTime();
-            times.add((end - start)/1_000_000.);
+            times.add((end - start)/1_000_000_000.);
 
-            if ((iter % 100) == 0) {
+            if ((iter % 10) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
+                }
+                if (times.size() > 100) {
+                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
+                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
                 }
                 System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
             }

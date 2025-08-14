@@ -12,10 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 /** A LongArray with document data, segmented according to
@@ -52,11 +50,6 @@ public class FullPreindexDocuments {
         return new FullPreindexDocuments(docsFileMap, docsFile);
     }
 
-    public FileChannel createDocumentsFileChannel() throws IOException {
-        return (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ);
-    }
-
-
     public LongArray slice(long start, long end) {
         return documents.range(start, end);
     }
@@ -86,6 +79,8 @@ public class FullPreindexDocuments {
             var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
+            var positionsBlock = positionsFileConstructor.getBlock();
+
             while (docIds.hasRemaining()) {
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
@@ -101,12 +96,13 @@ public class FullPreindexDocuments {
                     ByteBuffer pos = tPos.get(i);
 
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
-                    long encodedPosOffset = positionsFileConstructor.add(meta, pos);
+                    long encodedPosOffset = positionsFileConstructor.add(positionsBlock, meta, pos);
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);
                 }
             }
+            positionsBlock.commit();
 
             assembly.write(docsFile);
         }

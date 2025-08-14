@@ -1,7 +1,7 @@
 package nu.marginalia.index.query;
 
-import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.index.query.filter.QueryFilterStepIf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,15 +18,16 @@ import java.util.stream.Collectors;
 public class IndexQuery {
     private final List<EntrySource> sources;
     private final List<QueryFilterStepIf> inclusionFilter = new ArrayList<>(10);
+    private boolean prioritize = false;
 
-    public IndexQuery(List<EntrySource> sources)
+    public IndexQuery(EntrySource source, boolean prioritize)
     {
-        this.sources = sources;
+        this.sources = List.of(source);
+        this.prioritize = prioritize;
     }
 
-    public IndexQuery(EntrySource... sources)
-    {
-        this.sources = List.of(sources);
+    public boolean isPrioritized() {
+        return prioritize;
     }
     /** Adds a filter to the query.  The filter will be applied to the results
      * after they are read from the sources.
@@ -60,6 +61,7 @@ public class IndexQuery {
         if (!fillBuffer(dest))
             return;
 
+
         for (var filter : inclusionFilter) {
             filter.apply(dest);
 
@@ -73,6 +75,8 @@ public class IndexQuery {
 
     private boolean fillBuffer(LongQueryBuffer dest) {
         for (;;) {
+            dest.zero();
+
             EntrySource source = sources.get(si);
             source.read(dest);
 
@@ -102,6 +106,7 @@ public class IndexQuery {
 
         return sb.toString();
     }
+
 }
 
 

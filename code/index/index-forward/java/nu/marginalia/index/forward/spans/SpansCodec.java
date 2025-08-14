@@ -10,7 +10,7 @@ public class SpansCodec {
     public static int MAGIC_INT = 0xF000F000;
     public static int FOOTER_SIZE = 8;
 
-    enum SpansCodecVersion {
+    public enum SpansCodecVersion {
         @Deprecated
         COMPRESSED,
         PLAIN
@@ -26,12 +26,17 @@ public class SpansCodec {
         return encoded >>> 28;
     }
 
-    public static long decodeSize(long encoded) {
-        return encoded & 0x0FFF_FFFFL;
+    public static int decodeSize(long encoded) {
+        return (int) (encoded & 0x0FFF_FFFFL);
     }
 
-    public static ByteBuffer createSpanFilesFooter(SpansCodecVersion version) {
-        ByteBuffer footer = ByteBuffer.allocate(FOOTER_SIZE);
+    public static ByteBuffer createSpanFilesFooter(SpansCodecVersion version, int padSize) {
+        if (padSize < FOOTER_SIZE) {
+            padSize += 4096;
+        }
+
+        ByteBuffer footer = ByteBuffer.allocate(padSize);
+        footer.position(padSize - FOOTER_SIZE);
         footer.putInt(SpansCodec.MAGIC_INT);
         footer.put((byte) version.ordinal());
         footer.put((byte) 0);

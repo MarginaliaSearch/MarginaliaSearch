@@ -1,44 +1,44 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.uring.UringFileReader;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ForkJoinPool;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
-    private final FileChannel[] spansFileChannels;
-    private final ForkJoinPool forkJoinPool;
+    private final UringFileReader uringReader;
 
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        this.spansFileChannels = new FileChannel[8];
-        for (int i = 0; i < spansFileChannels.length; i++) {
-            spansFileChannels[i] = (FileChannel) Files.newByteChannel(spansFile, StandardOpenOption.READ);
+        if (Boolean.getBoolean("index.directModePositionsSpans")) {
+            if ((Files.size(spansFile) & 4095) != 0) {
+                throw new IllegalArgumentException("Spans file is not block aligned in size: " + Files.size(spansFile));
+            }
+
+            uringReader = new UringFileReader(spansFile,  true);
         }
-        forkJoinPool = new ForkJoinPool(spansFileChannels.length);
+        else {
+            uringReader = new UringFileReader(spansFile,  false);
+            uringReader.fadviseWillneed();
+        }
+
     }
 
     @Override
     public DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException {
-        // Decode the size and offset from the encoded offset
-        long size = SpansCodec.decodeSize(encodedOffset);
-        long offset = SpansCodec.decodeStartOffset(encodedOffset);
-
-        var ms = arena.allocate(size, 4);
-        // Allocate a buffer from the arena
-        var buffer = ms.asByteBuffer();
-        while (buffer.hasRemaining()) {
-            spansFileChannels[0].read(buffer, offset + buffer.position());
+        // for testing, slow
+        try {
+            return readSpans(arena, new IndexSearchBudget(1000), new long[] { encodedOffset})[0];
+        } catch (TimeoutException e) {
+            throw new IOException(e);
         }
-
-        return decode(ms);
     }
 
     public DocumentSpans decode(MemorySegment ms) {
@@ -63,60 +63,50 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
 
         return ret;
     }
+
     @Override
-    public DocumentSpans[] readSpans(Arena arena, long[] encodedOffsets) throws IOException {
-        long totalSize = 0;
-        int numJobs = 0;
+    public DocumentSpans[] readSpans(Arena arena, IndexSearchBudget budget, long[] encodedOffsets) throws TimeoutException {
+
+        int readCnt = 0;
         for (long offset : encodedOffsets) {
             if (offset < 0)
                 continue;
-            totalSize += SpansCodec.decodeSize(offset);
-            numJobs++;
+            readCnt ++;
         }
+
+        if (readCnt == 0) {
+            return new DocumentSpans[encodedOffsets.length];
+        }
+
+        long[] offsets = new long[readCnt];
+        int[] sizes = new int[readCnt];
+
+        for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
+            if (encodedOffsets[idx] < 0)
+                continue;
+            long offset = encodedOffsets[idx];
+
+            offsets[j] = SpansCodec.decodeStartOffset(offset);
+            sizes[j] = SpansCodec.decodeSize(offset);
+            j++;
+        }
+
+        List<MemorySegment> buffers = uringReader.readUnaligned(arena, budget.timeLeft(), offsets, sizes, 4096);
 
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
-        if (numJobs == 0) return ret;
 
-        CountDownLatch latch = new CountDownLatch(numJobs);
-        MemorySegment segment = arena.allocate(totalSize, 8);
-
-        long bufferOffset = 0;
-        for (int idx = 0; idx < encodedOffsets.length; idx++) {
-            long size = SpansCodec.decodeSize(encodedOffsets[idx]);
-            long start = SpansCodec.decodeStartOffset(encodedOffsets[idx]);
-
-            MemorySegment slice = segment.asSlice(bufferOffset, size);
-            bufferOffset += size;
-
-            int i = idx;
-            forkJoinPool.execute(() -> {
-                var buffer = slice.asByteBuffer();
-                try {
-                    spansFileChannels[i% spansFileChannels.length].read(buffer, start);
-                    ret[i] = decode(slice);
-                }
-                catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-                finally {
-                    latch.countDown();
-                }
-            });
+        for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
+            if (encodedOffsets[idx] < 0)
+                continue;
+            ret[idx] = decode(buffers.get(j++));
         }
-        try {
-            latch.await();
-        }
-        catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
+
         return ret;
     }
 
     @Override
     public void close() throws IOException {
-        for (var spansFileChannel : spansFileChannels) {
-            spansFileChannel.close();
-        }
+        uringReader.close();
     }
 
 }

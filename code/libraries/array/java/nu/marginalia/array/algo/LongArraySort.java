@@ -1,7 +1,7 @@
 package nu.marginalia.array.algo;
 
-import nu.marginalia.NativeAlgos;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.ffi.NativeAlgos;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;

@@ -16,6 +16,7 @@ import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.positions.TermData;
+import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
@@ -156,7 +157,7 @@ public class CombinedIndexReaderTest {
         var reader = indexFactory.getCombinedIndexReader();
         var query = reader
                 .findFullWord(kw("hello"))
-                .also(kw("world"))
+                .also(kw("world"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);
@@ -198,8 +199,8 @@ public class CombinedIndexReaderTest {
 
         var reader = indexFactory.getCombinedIndexReader();
         var query = reader.findFullWord(kw("hello"))
-                .also(kw("world"))
-                .not(kw("goodbye"))
+                .also(kw("world"), new IndexSearchBudget(10_000))
+                .not(kw("goodbye"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);
@@ -255,18 +256,19 @@ public class CombinedIndexReaderTest {
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor(
-                outputFileDocs,
-                outputFileWords,
-                outputFilePositions,
-                DocIdRewriter.identity(),
-                tmpDir);
-
+        var constructor =
+                new FullIndexConstructor(
+                        outputFileDocs,
+                        outputFileWords,
+                        outputFilePositions,
+                        DocIdRewriter.identity(),
+                        tmpDir);
         constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 

@@ -32,7 +32,16 @@ public class BTreeWriter {
 
         // Calculate the data range
         final long startRange = header.dataOffsetLongs();
-        final long endRange = startRange + (long) numEntries * ctx.entrySize;
+        final long endRange;
+        if (header.layers() == 0) {
+            endRange = offset + ctx.pageSize();
+            assert ctx.pageSize() - 3 >= numEntries * ctx.entrySize;
+        }
+        else {
+            long dataSizeLongs = (long) numEntries * ctx.entrySize;
+            long dataSizeBlockRounded = (long) ctx.pageSize() * ( dataSizeLongs / ctx.pageSize() + Long.signum(dataSizeLongs % ctx.pageSize()));
+            endRange = startRange + dataSizeBlockRounded;
+        }
 
         // Prepare to write the data
         var slice = map.range(startRange, endRange);
@@ -53,7 +62,9 @@ public class BTreeWriter {
         }
 
         // Return the size of the written data
-        return endRange - offset;
+        long size = endRange - offset;
+        assert (size % ctx.pageSize()) == 0 : "Size is not page size aligned, was " + size + ", page size = " + ctx.pageSize();
+        return size;
     }
 
 

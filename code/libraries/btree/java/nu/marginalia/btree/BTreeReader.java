@@ -187,11 +187,8 @@ public class BTreeReader {
 
         /** Move the pointer to the next layer in the direction of the provided key */
         public void walkTowardChild(long key) {
-
             final long searchStart = layerOffsets[layer] + pointerOffset;
-
             final long nextLayerOffset = index.binarySearch(key, searchStart, searchStart + ctx.pageSize()) - searchStart;
-
             layer --;
             maxValueInBlock = index.get(searchStart + nextLayerOffset);
             pointerOffset = ctx.pageSize() * (pointerOffset + nextLayerOffset);
@@ -250,20 +247,19 @@ public class BTreeReader {
             long dataIndex = findData(buffer.currentValue());
             if (dataIndex >= 0) {
                 buffer.retainAndAdvance();
-
-                if (buffer.hasMore() && buffer.currentValue() <= maxValueInBlock) {
-                    long relOffsetInBlock = dataIndex - pointerOffset * ctx.entrySize;
-
-                    long remainingTotal = dataBlockEnd - dataIndex;
-                    long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
-
-                    long searchEnd = dataIndex + min(remainingTotal, remainingBlock);
-
-                    data.retainN(buffer, ctx.entrySize, maxValueInBlock, dataIndex, searchEnd);
-                }
             }
             else {
                 buffer.rejectAndAdvance();
+            }
+            if (buffer.hasMore() && buffer.currentValue() <= maxValueInBlock) {
+                long relOffsetInBlock = dataIndex - pointerOffset * ctx.entrySize;
+
+                long remainingTotal = dataBlockEnd - dataIndex;
+                long remainingBlock = ctx.pageSize() - relOffsetInBlock; // >= 0
+
+                long searchEnd = dataIndex + min(remainingTotal, remainingBlock);
+
+                data.retainN(buffer, ctx.entrySize, maxValueInBlock, dataIndex, searchEnd);
             }
 
         }

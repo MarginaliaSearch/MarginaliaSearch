@@ -29,6 +29,10 @@ public class SegmentLongArray implements LongArray {
         this.arena = arena;
     }
 
+    public static SegmentLongArray wrap(MemorySegment segment) {
+        return new SegmentLongArray(segment, null);
+    }
+
     public static SegmentLongArray onHeap(Arena arena, long size) {
         return new SegmentLongArray(arena.allocate(WORD_SIZE*size, 16), arena);
     }

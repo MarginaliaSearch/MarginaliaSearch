@@ -3,6 +3,8 @@ package nu.marginalia.array.page;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -36,13 +38,12 @@ public class LongQueryBuffer {
 
     public LongQueryBuffer(int size) {
         this.data = LongArrayFactory.onHeapConfined(size);
-        this.end = size;
+        this.end = 0;
     }
 
     public LongQueryBuffer(long[] data, int size) {
         this.data = LongArrayFactory.onHeapConfined(size);
         this.data.set(0, data);
-
         this.end = size;
     }
 
@@ -50,6 +51,26 @@ public class LongQueryBuffer {
         long[] copy = new long[end];
         data.forEach(0, end, (pos, val) -> copy[(int)pos]=val );
         return copy;
+    }
+
+    public long[] copyFilterData() {
+        long[] copy = new long[write];
+        data.forEach(0, write, (pos, val) -> copy[(int)pos]=val );
+        return copy;
+    }
+
+    public boolean fitsMore() {
+        return end < data.size();
+    }
+
+    public int addData(MemorySegment source, long sourceOffset, int nMax) {
+        int n = Math.min(nMax, (int) data.size() - end);
+
+        MemorySegment.copy(source, ValueLayout.JAVA_LONG, sourceOffset, data.getMemorySegment(), ValueLayout.JAVA_LONG, 8L * end, n);
+
+        end += n;
+
+        return n;
     }
 
     /** Dispose of the buffer and release resources */

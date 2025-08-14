@@ -32,9 +32,21 @@ class LongArraySearchTest {
     @Test
     public void testEmptyRange() {
         assertTrue(segmentArray.binarySearchN(2, 0, 0, 0) <= 0);
+
         assertTrue(segmentArray.binarySearch(0, 0, 0) <= 0);
     }
 
+    @Test
+    public void testBinarySearchNCase() {
+        try (var array = LongArrayFactory.onHeapConfined(1024)) {
+            for (int i = 0; i < 64; i++) {
+                array.set(2*i, 3*i);
+                array.set(2*i+1, i);
+                System.out.println(i + ":" + array.get(i));
+            }
+            System.out.println(array.binarySearchN(2, 3, 0, 64));
+        }
+    }
 
     void binarySearchTester(LongArray array) {
         for (int i = 0; i < array.size() * 3; i++) {
