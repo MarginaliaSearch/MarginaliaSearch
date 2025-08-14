@@ -18,7 +18,6 @@ import static java.lang.foreign.ValueLayout.*;
  *  isAvailable will be false.  This flag must be checked before calling
  *  any of the native functions.
  * */
-@SuppressWarnings("preview")
 public class LinuxSystemCalls {
     private final MethodHandle openDirect;
     private final MethodHandle openBuffered;

@@ -24,7 +24,6 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
  *  isAvailable will be false.  This flag must be checked before calling
  *  any of the native functions.
  * */
-@SuppressWarnings("preview")
 public class NativeAlgos {
     private final MethodHandle qsortHandle;
     private final MethodHandle qsort128Handle;

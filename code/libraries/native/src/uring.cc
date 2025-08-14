@@ -1,11 +1,18 @@
+#include "config.h"
+
 #include <algorithm>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifndef NO_IO_URING
 #include <liburing.h>
+#endif
 #include <string.h>
 
 extern "C" {
+
+#ifndef NO_IO_URING
+
 io_uring* initialize_uring(int queue_size) {
     io_uring* ring = (io_uring*) malloc(sizeof(io_uring));
     if (!ring) return NULL;
@@ -231,4 +238,23 @@ int uring_read_direct(int fd, io_uring* ring, int n, void** buffers, unsigned in
 
     return n;
 }
+
+
+#endif
+
+int substitute_uring_read(int fd, int n, void** buffers, unsigned int* sizes, long* offsets) {
+	for (int i = 0; i < n; i++) {
+		int rv = pread(fd, buffers[i], sizes[i], offsets[i]);
+		if (rv == -1) {
+			perror("pread");
+			return -1;
+		}
+		if (rv != sizes[i]) {
+			fprintf(stderr, "Unexpected number of bytes read");
+			return -1;
+		}
+	}
+    return n;
+}
+
 }

@@ -27,13 +27,13 @@ class UringQueueTest {
     }
 
     @Test
-    public void testSunnyDay() throws IOException {
+    public void testSunnyDay() {
         int fd = LinuxSystemCalls.openBuffered(file);
 
         List<MemorySegment> segments = new ArrayList<>();
         List<Long> offsets = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 8; i++) {
             segments.add(Arena.ofAuto().allocate(32));
             offsets.add(32L*i);
         }
