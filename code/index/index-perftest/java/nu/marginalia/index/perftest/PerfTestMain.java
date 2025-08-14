@@ -223,7 +223,7 @@ public class PerfTestMain {
         int iter;
         for (iter = 0;; iter++) {
             SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-            var execution = new IndexQueryExecution(searchParameters, rankingService, indexReader);
+            var execution = new IndexQueryExecution(searchParameters, 1, rankingService, indexReader);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();

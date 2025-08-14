@@ -71,9 +71,8 @@ public class IndexGrpcService
     private final SearchSetsService searchSetsService;
 
     private final IndexResultRankingService rankingService;
-
     private final String nodeName;
-
+    private final int nodeId;
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
@@ -81,7 +80,7 @@ public class IndexGrpcService
                             SearchSetsService searchSetsService,
                             IndexResultRankingService rankingService)
     {
-        var nodeId = serviceConfiguration.node();
+        this.nodeId = serviceConfiguration.node();
         this.nodeName = Integer.toString(nodeId);
         this.statefulIndex = statefulIndex;
         this.searchSetsService = searchSetsService;
@@ -108,7 +107,7 @@ public class IndexGrpcService
                                 return List.of();
                             }
 
-                            return new IndexQueryExecution(params, rankingService, statefulIndex.get()).run();
+                            return new IndexQueryExecution(params, nodeId, rankingService, statefulIndex.get()).run();
                         }
                         catch (Exception ex) {
                             logger.error("Error in handling request", ex);
@@ -149,7 +148,7 @@ public class IndexGrpcService
                 return List.of();
             }
 
-            return new IndexQueryExecution(new SearchParameters(specsSet, getSearchSet(specsSet)), rankingService, statefulIndex.get()).run();
+            return new IndexQueryExecution(new SearchParameters(specsSet, getSearchSet(specsSet)), 1, rankingService, statefulIndex.get()).run();
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);

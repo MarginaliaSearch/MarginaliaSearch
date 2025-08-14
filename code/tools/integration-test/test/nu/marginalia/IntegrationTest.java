@@ -224,7 +224,7 @@ public class IntegrationTest {
 
         System.out.println(indexRequest);
 
-        var rs = new IndexQueryExecution(new SearchParameters(indexRequest, new SearchSetAny()), rankingService, statefulIndex.get());
+        var rs = new IndexQueryExecution(new SearchParameters(indexRequest, new SearchSetAny()), 1, rankingService, statefulIndex.get());
 
         System.out.println(rs);
     }

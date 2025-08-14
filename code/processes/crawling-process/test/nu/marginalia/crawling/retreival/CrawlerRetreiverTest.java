@@ -80,8 +80,8 @@ class CrawlerRetreiverTest {
         var specs = CrawlerMain.CrawlSpecRecord
                 .builder()
                 .crawlDepth(5)
-                .domain("www.marginalia.nu")
-                .urls(List.of("https://www.marginalia.nu/misc/debian-laptop-install-log/"))
+                .domain("thenewleafjournal.com")
+                .urls(List.of("https://thenewleafjournal.com/"))
                 .build();
         Path tempFile = null;
         try {
