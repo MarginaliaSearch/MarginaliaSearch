@@ -96,7 +96,7 @@ public class IndexResultRankingService {
                 this.termsForDocs = currentIndex.getTermMetadata(arena, budget, searchTerms.termIdsAll.array, resultIds);
                 this.documentSpans = currentIndex.getDocumentSpans(arena, budget, resultIds);
             }
-            catch (TimeoutException ex) {
+            catch (TimeoutException|RuntimeException ex) {
                 arena.close();
                 throw ex;
             }
