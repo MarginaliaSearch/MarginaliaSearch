@@ -330,7 +330,7 @@ public class SkipListReaderTest {
             try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
                 var reader = new SkipListReader(pool, blockStart);
                 try (var page = pool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
-                    reader.parseBlock(page.getMemorySegment(), (int) blockStart & (-SkipListConstants.BLOCK_SIZE));
+                    reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
                 }
 
                 long[] queryKeys = qbSet.toLongArray();
