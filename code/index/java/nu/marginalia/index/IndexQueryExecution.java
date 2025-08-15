@@ -136,7 +136,7 @@ public class IndexQueryExecution {
 
         metric_index_documents_ranked
                 .labels(nodeName)
-                .inc(1000. * resultHeap.getItemsProcessed() / budget.timeLeft());
+                .inc(1000. * resultHeap.getItemsProcessed() / budget.getLimitTime());
 
         // Final result selection
         return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
