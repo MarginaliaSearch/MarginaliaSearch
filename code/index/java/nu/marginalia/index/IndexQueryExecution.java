@@ -24,7 +24,7 @@ import java.util.concurrent.*;
 /** Performs an index query */
 public class IndexQueryExecution {
 
-    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 16);
+    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
     private static final int indexPreparationThreads = Integer.getInteger("index.preparationThreads", 2);
 
     // Since most NVMe drives have a maximum read size of 128 KB, and most small reads are 512B
@@ -52,8 +52,8 @@ public class IndexQueryExecution {
 
     private final ArrayBlockingQueue<CombinedDocIdList> fullPreparationQueue = new ArrayBlockingQueue<>(1);
     private final ArrayBlockingQueue<CombinedDocIdList> priorityPreparationQueue = new ArrayBlockingQueue<>(1);
-    private final ArrayBlockingQueue<IndexResultRankingService.RankingData> fullEvaluationQueue = new ArrayBlockingQueue<>(4);
-    private final ArrayBlockingQueue<IndexResultRankingService.RankingData> priorityEvaluationQueue = new ArrayBlockingQueue<>(4);
+    private final ArrayBlockingQueue<IndexResultRankingService.RankingData> fullEvaluationQueue = new ArrayBlockingQueue<>(32);
+    private final ArrayBlockingQueue<IndexResultRankingService.RankingData> priorityEvaluationQueue = new ArrayBlockingQueue<>(32);
 
     private final int limitTotal;
     private final int limitByDomain;
