@@ -1,19 +1,22 @@
 package nu.marginalia.language.filter;
 
-import org.jsoup.Jsoup;
+import nu.marginalia.language.model.DocumentLanguageData;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class LanguageFilterTest {
 
     @Test
     void isPageInteresting() {
         var languageFilter = new LanguageFilter(TestLanguageModels.getLanguageModels());
-        assertTrue(languageFilter.isPageInterestingByHtmlTag(Jsoup.parse("<html></html>")).orElse(true));
-        assertTrue(languageFilter.isPageInterestingByHtmlTag(Jsoup.parse("<html lang=\"en\"></html>")).orElse(false));
-        assertFalse(languageFilter.isPageInterestingByHtmlTag(Jsoup.parse("<html lang=\"no\"></html>")).orElse(false));
+
+        assertEquals(0., languageFilter.dictionaryAgreement(new DocumentLanguageData(List.of(), "Kalle fue al bosque y recogió bayas")));
+        assertEquals(0., languageFilter.dictionaryAgreement(new DocumentLanguageData(List.of(), "Kalle est allé dans la forêt et a cueilli des baies")));
+        assertEquals(1.0, languageFilter.dictionaryAgreement(new DocumentLanguageData(List.of(), "Kalle gick i skogen och plockade bär")));
+        assertEquals(1.0, languageFilter.dictionaryAgreement(new DocumentLanguageData(List.of(), "Charlie went to the woods to go berry-picking")));
     }
 
 }
