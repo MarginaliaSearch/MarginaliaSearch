@@ -221,7 +221,7 @@ dependencyResolutionManagement {
             library('snakeyaml','org.yaml','snakeyaml').version('1.33') // Known CVE, but this library only parses internal config files so it's fine
 
             library('junit.jupiter','org.junit.jupiter','junit-jupiter-api').version('5.8.2')
-            library('junit.jupiter.engine','org.junit.jupiter','junit-jupiter-engine').version('')
+            library('junit.jupiter.engine','org.junit.jupiter','junit-jupiter-engine').version('5.8.2')
             library('mockito','org.mockito','mockito-junit-jupiter').version('4.5.1')
 
             library('selenium.chrome','org.seleniumhq.selenium','selenium-chrome-driver').version('4.8.3')
