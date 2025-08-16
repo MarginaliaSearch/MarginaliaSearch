@@ -21,6 +21,7 @@ import java.util.Random;
 import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SkipListWriterTest {
     Path docsFile;
@@ -174,7 +175,7 @@ class SkipListWriterTest {
                 SkipListReader.RecordView block = blocks.get(i);
                 for (int fci = 0; fci < block.fc(); fci++) {
                     int skipOffset = SkipListConstants.skipOffsetForPointer(fci);
-                    Assertions.assertTrue(i + skipOffset < blocks.size());
+                    assertTrue(i + skipOffset < blocks.size());
                     Assertions.assertEquals(block.fowardPointers().getLong(fci), blocks.get(i+skipOffset).highestDocId());
                 }
             }
@@ -323,7 +324,7 @@ class SkipListWriterTest {
                 SkipListReader.RecordView block = blocks.get(i);
                 for (int fci = 0; fci < block.fc(); fci++) {
                     int skipOffset = SkipListConstants.skipOffsetForPointer(fci);
-                    Assertions.assertTrue(i + skipOffset < blocks.size());
+                    assertTrue(i + skipOffset < blocks.size());
                     Assertions.assertEquals(block.fowardPointers().getLong(fci), blocks.get(i+skipOffset).highestDocId());
                 }
             }
@@ -360,7 +361,7 @@ class SkipListWriterTest {
     @Test
     public void testNumPointersForRootBlock() {
         for (int i = 1; i < 1024; i++) {
-            System.out.println(i + ":" + SkipListConstants.estimateNumBlocks(i) + ":" + SkipListConstants.numPointersForRootBlock(i));
+            System.out.println(i + ":" + SkipListConstants.estimateNumBlocks(i) + ":" + SkipListConstants.numPointersForRootBlock(512, i));
         }
     }
 
@@ -375,4 +376,5 @@ class SkipListWriterTest {
     public void calculateNumBlocks2() {
         System.out.println(SkipListWriter.calculateActualNumBlocks(2048,1));
     }
+
 }

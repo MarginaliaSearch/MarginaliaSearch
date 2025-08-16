@@ -124,7 +124,7 @@ public class SkipListWriter implements AutoCloseable {
 
         {
             int rootBlockCapacity = rootBlockCapacity(blockRemaining, n);
-            int rootBlockPointerCount = numPointersForRootBlock(n);
+            int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, n);
 
             /** WRITE THE ROOT BLOCK **/
 
