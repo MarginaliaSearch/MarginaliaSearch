@@ -2,9 +2,10 @@ package nu.marginalia.language.filter;
 
 import nu.marginalia.language.model.DocumentLanguageData;
 
+import java.util.Optional;
+
 public interface LanguagePredictionModel {
-    /** Returns the probability the language is in English */
-    double predictEnglish(DocumentLanguageData dld);
+    Optional<String> predictLanguage(DocumentLanguageData dld);
 
     boolean hasPoorAccuracy();
 
