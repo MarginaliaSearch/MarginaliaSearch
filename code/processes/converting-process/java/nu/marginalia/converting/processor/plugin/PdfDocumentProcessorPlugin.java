@@ -39,6 +39,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
     private final int maxTitleLength;
     private final DocumentKeywordExtractor keywordExtractor;
+    private final LanguageFilter languageFilter;
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
     private final DefaultSpecialization defaultSpecialization;
@@ -55,7 +56,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                                       DefaultSpecialization defaultSpecialization)
 
     {
-        super(languageFilter);
+        this.languageFilter = languageFilter;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
@@ -100,7 +101,10 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(doc);
 
-        checkDocumentLanguage(dld);
+        Optional<String> language = languageFilter.predictLanguage(dld);
+        if (language.isEmpty()) {
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
+        }
 
         if (!lenientProcessing && !documentLengthLogic.validateLength(dld, 1.0)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
@@ -141,6 +145,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                 .build();
 
         words.addAllSyntheticTerms(tagWords);
+        words.addSyntheticTerm("lang:" + language.get());
 
         if (pubDate.hasYear()) {
             ret.pubYear = pubDate.year();

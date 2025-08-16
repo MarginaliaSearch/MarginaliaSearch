@@ -120,7 +120,7 @@ public class TermFrequencyExporter implements ExporterIf {
 
                 DocumentLanguageData dld = se.extractSentences(parsed);
 
-                if (lf.dictionaryAgreement(dld) < 0.1) {
+                if (lf.predictLanguage(dld).isEmpty()) {
                     return;
                 }
 

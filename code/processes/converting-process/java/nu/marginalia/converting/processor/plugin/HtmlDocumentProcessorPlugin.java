@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static nu.marginalia.converting.model.DisqualifiedException.DisqualificationReason;
@@ -55,6 +56,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final DocumentKeywordExtractor keywordExtractor;
     private final PubDateSniffer pubDateSniffer;
 
+    private final LanguageFilter languageFilter;
     private final DocumentLengthLogic documentLengthLogic;
 
     private final MetaRobotsTag metaRobotsTag;
@@ -81,8 +83,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
             HtmlProcessorSpecializations specializations)
     {
-        super(languageFilter);
-
+        this.languageFilter = languageFilter;
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.featureExtractor = featureExtractor;
@@ -151,7 +152,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(prunedDoc);
 
-        checkDocumentLanguage(dld);
+        Optional<String> language = languageFilter.predictLanguage(dld);
+        if (language.isEmpty()) {
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
+        }
 
         var ret = new ProcessedDocumentDetails();
 
@@ -191,7 +195,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addFeatures(features)
                 .addFormat(format)
                 .addGenerator(generatorParts.keywords())
+                .addLanguage(language.get())
                 .build();
+
 
 
         words.addAllSyntheticTerms(tagWords);

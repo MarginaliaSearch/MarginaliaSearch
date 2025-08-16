@@ -8,16 +8,22 @@ import nu.marginalia.language.model.DocumentLanguageData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+import java.util.Set;
+
 @Singleton
 public class LanguageFilter {
+
+private final Set<String> permittedLanguages = Set.of("en", "sv");
 
     private static final Logger logger = LoggerFactory.getLogger(LanguageFilter.class);
 
     private final LanguagePredictionModel languagePredictionModel;
 
-    /** Returns the probability the language is in in a permitted language */
-    public double dictionaryAgreement(DocumentLanguageData dld) {
-        return languagePredictionModel.predictEnglish(dld);
+    public Optional<String> predictLanguage(DocumentLanguageData dld) {
+        return languagePredictionModel
+                .predictLanguage(dld)
+                .filter(permittedLanguages::contains);
     }
 
     @Inject

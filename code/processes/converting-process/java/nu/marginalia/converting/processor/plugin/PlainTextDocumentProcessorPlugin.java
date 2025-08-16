@@ -32,6 +32,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     private final int maxTitleLength;
     private final DocumentKeywordExtractor keywordExtractor;
     private final PlainTextLogic plainTextLogic = new PlainTextLogic();
+    private final LanguageFilter languageFilter;
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
 
@@ -46,7 +47,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
                                             DocumentLengthLogic documentLengthLogic
                                             )
     {
-        super(languageFilter);
+        this.languageFilter = languageFilter;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
@@ -81,7 +82,10 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         var dld = sentenceExtractorProvider.get().extractSentences(documentBody, "");
 
-        checkDocumentLanguage(dld);
+        Optional<String> language = languageFilter.predictLanguage(dld);
+        if (language.isEmpty()) {
+            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
+        }
 
         if (!lenientProcessing && !documentLengthLogic.validateLength(dld, 1.0)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
@@ -116,6 +120,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
                 .addUrl(url)
                 .addFeatures(ret.features)
                 .addFormat(ret.format)
+                .addLanguage(language.get())
                 .build();
 
         words.addAllSyntheticTerms(tagWords);
