@@ -4,20 +4,26 @@ import com.github.jfasttext.JFastText;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.model.DocumentLanguageData;
 
+import java.util.Set;
+
 /** A language prediction model that uses a FastText model to predict the language of a document */
 public class FasttextLanguagePredictionModel implements LanguagePredictionModel {
+    private final Set<String> permittedLanguageLabels = Set.of(
+            "__label__en",
+            "__label__sv"
+    );
     private final JFastText jft = new JFastText();
 
-    public FasttextLanguagePredictionModel(LanguageModels lm) throws Exception {
+    public FasttextLanguagePredictionModel(LanguageModels lm){
         jft.loadModel(lm.fasttextLanguageModel.toString());
     }
 
     @Override
     public double predictEnglish(DocumentLanguageData dld) {
-        if ("__label__en".equals(jft.predict(dld.text()))) {
-            return 1.0;
-        }
-        return 0.;
+        String prediction = jft.predict(dld.text());
+
+        if (permittedLanguageLabels.contains(prediction)) return 1.0;
+        else return 0.0;
     }
 
     @Override
