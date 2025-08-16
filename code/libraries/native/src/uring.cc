@@ -30,8 +30,7 @@ io_uring* initialize_uring_single_file(int queue_size, int fd) {
 	// Register the file descriptor with io_uring to speed it up fairly significantly
 	int *fds = (int*) malloc(sizeof(int));
 
-	// We need to duplicate the file descriptor because io_uring grabs ownership of it
-	fds[0] = dup(fd);
+	fds[0] = fd;
 	ret = io_uring_register_files(ring, fds, 1);
 
 	if (ret < 0) {
