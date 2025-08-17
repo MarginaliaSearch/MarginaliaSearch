@@ -21,7 +21,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DocumentPositionMapperTest {
-    private final DocumentPositionMapper positionMapper = new DocumentPositionMapper();
+    private final DocumentPositionMapper positionMapper = new DocumentPositionMapper("en");
     static SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
     @Test

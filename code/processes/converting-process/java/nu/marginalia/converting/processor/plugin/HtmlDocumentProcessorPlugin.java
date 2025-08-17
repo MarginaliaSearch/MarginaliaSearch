@@ -185,7 +185,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 (int) -ret.quality, // ret.quality is negative
                 documentFlags);
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, language.get(), linkTexts, url);
 
         ret.description = specialization.getSummary(prunedDoc, words.importantWords);
         ret.generator = generatorParts.type();
