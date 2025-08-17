@@ -23,8 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ForwardIndexConverterTest {
 
-    IndexJournalSlopWriter writer;
-
     Path wordsFile1;
     Path urlsFile1;
     Path dictionaryFile;
@@ -83,6 +81,7 @@ class ForwardIndexConverterTest {
                         id%3,
                         id%5,
                         15,
+                        "en",
                         List.of(),
                         new byte[0],
                         List.of(),

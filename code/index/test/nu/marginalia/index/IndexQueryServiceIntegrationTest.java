@@ -563,6 +563,7 @@ public class IndexQueryServiceIntegrationTest {
                                 meta.features,
                                 meta.documentMetadata.encode(),
                                 100,
+                                "en",
                                 keywords,
                                 metadata,
                                 positions,
