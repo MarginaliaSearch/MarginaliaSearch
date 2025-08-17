@@ -164,6 +164,7 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.details.title = StringUtils.truncate(post.title(), 128);
             ret.details.description = StringUtils.truncate(doc.body().text(), 255);
             ret.details.length = 128;
+            ret.details.language = "en"; // FIXME we should run this throguh language detection
 
             ret.details.format = DocumentFormat.HTML5;
             ret.details.linksExternal = List.of();
