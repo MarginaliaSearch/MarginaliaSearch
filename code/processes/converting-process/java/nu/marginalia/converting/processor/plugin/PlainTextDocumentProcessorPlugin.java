@@ -99,6 +99,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         ret.format = DocumentFormat.PLAIN;
         ret.title = StringUtils.truncate(plainTextLogic.getTitle(url, firstFewLines), maxTitleLength);
+        ret.language = language.get();
 
         ret.quality = -1;
 

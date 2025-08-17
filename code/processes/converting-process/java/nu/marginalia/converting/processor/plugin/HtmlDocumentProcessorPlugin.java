@@ -162,6 +162,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.length = length;
         ret.format = format;
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
+        ret.language = language.get();
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
 
