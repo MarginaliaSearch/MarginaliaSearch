@@ -1,6 +1,8 @@
 package nu.marginalia.index.forward.spans;
 
 import nu.marginalia.sequence.VarintCodedSequence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,6 +15,8 @@ import java.nio.file.StandardOpenOption;
 public class IndexSpansWriter implements AutoCloseable {
     private final FileChannel outputChannel;
     private final ByteBuffer work = ByteBuffer.allocate(4*1024*1024).order(ByteOrder.nativeOrder());
+
+    private static Logger logger = LoggerFactory.getLogger(IndexSpansWriter.class);
 
     private long stateStartOffset = -1;
     private int stateLength = -1;
@@ -38,10 +42,17 @@ public class IndexSpansWriter implements AutoCloseable {
         work.put(spanCode);
         work.put((byte) 0); // Ensure we're byte aligned
         var sequence = new VarintCodedSequence(sequenceData);
-        work.putShort((short) sequence.valueCount());
+
+        int spanLength = sequence.valueCount();
+
+        if (spanLength > 8192) {
+            logger.warn("Excessive span length with code {}: {}", spanCode, spanLength);
+            spanLength = 8192;
+        }
+        work.putShort((short) spanLength);
 
         var iter = sequence.iterator();
-        while (iter.hasNext()) {
+        for (int spanIdx = 0; iter.hasNext() && spanIdx < spanLength; spanIdx++) {
             work.putInt(iter.nextInt());
         }
         work.flip();
