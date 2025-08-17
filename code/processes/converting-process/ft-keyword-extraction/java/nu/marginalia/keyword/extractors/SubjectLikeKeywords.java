@@ -14,6 +14,8 @@ public class SubjectLikeKeywords implements WordReps {
     private final List<WordRep> wordList;
     private final Set<String> stemmed;
 
+    private static Set<String> svoLanguages = Set.of("en", "sv");
+
     // Seeks out subjects in a sentence by constructs like
     //
     // [Name] (Verbs) (the|a|Adverb|Verb|Noun) ...
@@ -23,8 +25,17 @@ public class SubjectLikeKeywords implements WordReps {
     // Steve McQueen drove fast | cars -> Steve McQueen
 
     public SubjectLikeKeywords(KeywordExtractor keywordExtractor,
+                               String language,
                                WordsTfIdfCounts tfIdfCounts,
                                DocumentLanguageData dld) {
+
+        // FIXME: We can't assume Subject-Verb-Object grammar is universally valid
+
+        if (!svoLanguages.contains(language)) {
+            wordList = List.of();
+            stemmed = Set.of();
+            return;
+        }
 
         Map<String, Set<WordRep>> instances = new HashMap<>();
 

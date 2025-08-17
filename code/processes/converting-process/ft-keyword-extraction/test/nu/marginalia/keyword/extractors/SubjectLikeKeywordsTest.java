@@ -51,7 +51,7 @@ class SubjectLikeKeywordsTest {
 
         WordsTfIdfCounts tfIdfCounts = new WordsTfIdfCounts(dict, new KeywordExtractor(), dld);
         SubjectLikeKeywords keywords = new SubjectLikeKeywords(new KeywordExtractor(),
-                tfIdfCounts,
+                "en", tfIdfCounts,
                 dld);
 
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());

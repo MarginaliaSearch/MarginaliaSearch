@@ -114,7 +114,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         ret.metadata = new DocumentMetadata(documentLengthLogic.getEncodedAverageLength(dld),
                 pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, language.get(), linkTexts, url);
 
         var tagWords = new MetaTagsBuilder()
                 .addPubDate(pubDate)

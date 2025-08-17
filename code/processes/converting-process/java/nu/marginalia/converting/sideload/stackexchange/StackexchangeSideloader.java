@@ -131,7 +131,7 @@ public class StackexchangeSideloader implements SideloadSource {
             var dld = sentenceExtractorProvider.get().extractSentences(doc);
 
             ret.url = url;
-            ret.words = keywordExtractor.extractKeywords(dld, new LinkTexts(), url);
+            ret.words = keywordExtractor.extractKeywords(dld, "en", new LinkTexts(), url);
 
             List<String> syntheticTerms = new ArrayList<>(
                     List.of("site:" + domainName,
