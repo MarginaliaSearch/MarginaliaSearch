@@ -1,4 +1,4 @@
-package nu.marginalia.keyword;
+package nu.marginalia.keyword.extractors;
 
 import nu.marginalia.language.model.WordRep;
 

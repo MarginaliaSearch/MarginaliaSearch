@@ -61,13 +61,13 @@ class DocumentKeywordExtractorTest {
         Map<String, CodedSequence> positions = new HashMap<>();
 
         for (int i = 0; i < keywordsBuilt.size(); i++) {
-            String keyword = keywordsBuilt.keywords.get(i);
-            byte metadata = keywordsBuilt.metadata[i]
+            String keyword = keywordsBuilt.keywords().get(i);
+            byte metadata = keywordsBuilt.metadata()[i]
                     ;
 
             if (Set.of("dirty", "blues").contains(keyword)) {
                 flags.put(keyword, metadata);
-                positions.put(keyword, keywordsBuilt.positions.get(i));
+                positions.put(keyword, keywordsBuilt.positions().get(i));
 
             }
         }

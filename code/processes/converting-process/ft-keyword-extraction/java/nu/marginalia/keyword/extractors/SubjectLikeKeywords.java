@@ -2,7 +2,6 @@ package nu.marginalia.keyword.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.keyword.KeywordExtractor;
-import nu.marginalia.keyword.WordReps;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.model.WordSpan;

@@ -5,6 +5,7 @@ import gnu.trove.list.array.TIntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.keyword.model.DocumentWordSpan;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -105,7 +106,7 @@ class DocumentPositionMapperTest {
         var linkTextSpans = keywordsBuilder.wordSpans.get(HtmlTag.EXTERNAL_LINKTEXT);
         assertEquals(2, linkTextSpans.size());
 
-        DocumentKeywordsBuilder.DocumentWordSpan span;
+        DocumentWordSpan span;
         span = linkTextSpans.get(0);
 
         assertEquals(6, span.start());
@@ -134,7 +135,7 @@ class DocumentPositionMapperTest {
         var linkTextSpans = keywordsBuilder.wordSpans.get(HtmlTag.EXTERNAL_LINKTEXT);
         assertEquals(2, linkTextSpans.size());
 
-        DocumentKeywordsBuilder.DocumentWordSpan span;
+        DocumentWordSpan span;
         span = linkTextSpans.get(0);
 
         assertEquals(6, span.start());
@@ -170,7 +171,7 @@ class DocumentPositionMapperTest {
         var linkTextSpans = keywordsBuilder.wordSpans.get(HtmlTag.EXTERNAL_LINKTEXT);
         assertEquals(2, linkTextSpans.size());
 
-        DocumentKeywordsBuilder.DocumentWordSpan span;
+        DocumentWordSpan span;
         span = linkTextSpans.get(0);
 
         assertEquals(6, span.start());

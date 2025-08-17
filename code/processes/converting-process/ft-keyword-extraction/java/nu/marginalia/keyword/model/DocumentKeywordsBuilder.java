@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ByteOpenHashMap;
 import nu.marginalia.language.sentence.tag.HtmlTag;
-import nu.marginalia.model.idx.CodedWordSpan;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.slf4j.Logger;
@@ -28,6 +27,7 @@ public class DocumentKeywordsBuilder {
     // be plenty. The lexicon writer has another limit that's higher.
     private final int MAX_WORD_LENGTH = 64;
     private final int MAX_POSITIONS_PER_WORD = 512;
+    private final int MAX_SPANS_PER_TYPE = 8192;
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentKeywordsBuilder.class);
 
@@ -35,13 +35,22 @@ public class DocumentKeywordsBuilder {
         this(1600);
     }
 
+    public DocumentKeywordsBuilder(int capacity) {
+        wordToMeta = new Object2ByteOpenHashMap<>(capacity);
+        wordToPos = new HashMap<>(capacity);
+    }
+
+
     public DocumentKeywords build() {
         final List<String> wordArray = new ArrayList<>(wordToMeta.size());
         final TByteArrayList meta = new TByteArrayList(wordToMeta.size());
         final List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
+        final List<VarintCodedSequence> spanSequences = new ArrayList<>(wordSpans.size());
+        final byte[] spanCodes = new byte[wordSpans.size()];
 
         var iter = wordToMeta.object2ByteEntrySet().fastIterator();
 
+        // Encode positions
         while (iter.hasNext()) {
             var entry = iter.next();
 
@@ -58,27 +67,26 @@ public class DocumentKeywordsBuilder {
         }
 
         // Encode spans
-        List<CodedWordSpan> spans = new ArrayList<>(wordSpans.size());
-
         wordSpans.forEach((tag, spansForTag) -> {
             spansForTag.sort(Comparator.comparingInt(DocumentWordSpan::start));
 
             var positionsForTag = new IntArrayList(spansForTag.size() * 2);
+
             for (var span : spansForTag) {
                 positionsForTag.add(span.start());
                 positionsForTag.add(span.end());
+
+                if (positionsForTag.size() >= MAX_SPANS_PER_TYPE)
+                    break;
             }
 
-            spans.add(new CodedWordSpan(tag.code, VarintCodedSequence.generate(positionsForTag)));
+            spanCodes[spanSequences.size()] = tag.code;
+            spanSequences.add(VarintCodedSequence.generate(positionsForTag));
         });
 
-        return new DocumentKeywords(wordArray, meta.toArray(), positions, spans);
+        return new DocumentKeywords(wordArray, meta.toArray(), positions, spanCodes, spanSequences);
     }
 
-    public DocumentKeywordsBuilder(int capacity) {
-        wordToMeta = new Object2ByteOpenHashMap<>(capacity);
-        wordToPos = new HashMap<>(capacity);
-    }
 
     public void addMeta(String word, byte meta) {
         if (word.length() > MAX_WORD_LENGTH)
@@ -173,6 +181,4 @@ public class DocumentKeywordsBuilder {
         return this.importantWords;
     }
 
-    public record DocumentWordSpan(HtmlTag tag, int start, int end) {
-    }
 }
