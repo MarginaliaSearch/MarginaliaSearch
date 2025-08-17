@@ -193,48 +193,4 @@ public class DocumentPositionMapper {
         return false;
     }
 
-    /** Helper class to record spans of words */
-    private static class SpanRecorder {
-        private final List<DocumentKeywordsBuilder.DocumentWordSpan> spans = new ArrayList<>();
-        private final HtmlTag htmlTag;
-        private int start = 0;
-
-        public SpanRecorder(HtmlTag htmlTag) {
-            this.htmlTag = htmlTag;
-        }
-
-        public void update(DocumentSentence sentence, int pos) {
-            assert pos > 0;
-
-            if (sentence.htmlTags.contains(htmlTag)) {
-                if (start <= 0) start = pos;
-            }
-            else if (sentence.htmlTags.isEmpty() && htmlTag == HtmlTag.BODY)
-            {
-                // special case for body tag, we match against no tag on the sentence
-                if (start <= 0) start = pos;
-            }
-            else {
-                if (start > 0) {
-                    spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, pos));
-                    start = 0;
-                }
-            }
-        }
-
-        public void endCurrentSpan(int pos) {
-            if (start > 0) {
-                spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, pos));
-                start = 0;
-            }
-        }
-
-        public List<DocumentKeywordsBuilder.DocumentWordSpan> finish(int length) {
-            if (start > 0) {
-                spans.add(new DocumentKeywordsBuilder.DocumentWordSpan(htmlTag, start, length));
-                start = 0;
-            }
-            return spans;
-        }
-    }
 }
