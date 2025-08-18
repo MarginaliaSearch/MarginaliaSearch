@@ -14,7 +14,7 @@ import java.util.Set;
 @Singleton
 public class LanguageFilter {
 
-private final Set<String> permittedLanguages = Set.of("en", "sv");
+    private final Set<String> permittedLanguages = Set.of("en", "sv");
 
     private static final Logger logger = LoggerFactory.getLogger(LanguageFilter.class);
 

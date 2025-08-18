@@ -6,7 +6,6 @@ import com.google.inject.name.Named;
 import gnu.trove.list.TLongList;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -104,7 +102,7 @@ public class DocumentDbReader {
         }
 
         try (var stmt = connection.prepareStatement("""
-                SELECT ID, URL, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR
+                SELECT ID, URL, TITLE, DESCRIPTION, LANGUAGE, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR
                 FROM DOCUMENT WHERE ID = ?
                 """)) {
             for (int i = 0; i < ids.size(); i++) {
@@ -118,6 +116,7 @@ public class DocumentDbReader {
                             url,
                             rs.getString("TITLE"),
                             rs.getString("DESCRIPTION"),
+                            rs.getString("LANGUAGE"),
                             rs.getDouble("QUALITY"),
                             rs.getString("FORMAT"),
                             rs.getInt("FEATURES"),

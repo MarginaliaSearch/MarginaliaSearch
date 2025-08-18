@@ -351,6 +351,7 @@ public class CombinedIndexReaderTest {
                         new EdgeUrl("https://www.example.com"),
                         "test",
                         "test",
+                        "en",
                         0.,
                         "HTML5",
                         0,

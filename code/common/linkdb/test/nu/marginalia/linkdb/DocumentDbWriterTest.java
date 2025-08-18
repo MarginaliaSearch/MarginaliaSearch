@@ -23,6 +23,7 @@ public class DocumentDbWriterTest {
                     new nu.marginalia.model.EdgeUrl("http", new EdgeDomain("example.com"), null, "/", null),
                     "Test",
                     "This is a test",
+                    "en",
                     -4.,
                     "XHTML",
                     5,

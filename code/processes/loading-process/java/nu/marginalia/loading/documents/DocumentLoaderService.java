@@ -92,6 +92,7 @@ public class DocumentLoaderService {
                         parsedUrl.get(),
                         projection.title(),
                         projection.description(),
+                        projection.language(),
                         projection.quality(),
                         projection.htmlStandard(),
                         projection.htmlFeatures(),
