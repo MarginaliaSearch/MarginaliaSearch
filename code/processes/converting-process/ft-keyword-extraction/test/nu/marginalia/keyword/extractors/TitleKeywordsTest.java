@@ -2,12 +2,17 @@ package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
 import nu.marginalia.keyword.KeywordExtractor;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -187,8 +192,8 @@ class TitleKeywordsTest {
             """;
 
     @Test
-    public void extractTitleWords() {
-        var se = new SentenceExtractor(TestLanguageModels.getLanguageModels());
+    public void extractTitleWords() throws IOException, ParserConfigurationException, SAXException, UnsupportedLanguageException {
+        var se = new SentenceExtractor(new LanguageConfiguration(TestLanguageModels.getLanguageModels()), TestLanguageModels.getLanguageModels());
 
         var dld = se.extractSentences(Jsoup.parse(document));
 

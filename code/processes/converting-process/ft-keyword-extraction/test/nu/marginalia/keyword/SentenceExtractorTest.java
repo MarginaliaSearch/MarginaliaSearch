@@ -2,15 +2,21 @@ package nu.marginalia.keyword;
 
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.LanguageDefinition;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.jsoup.Jsoup;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -23,9 +29,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SentenceExtractorTest {
     static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-    static SentenceExtractor se = new SentenceExtractor(lm);
+    static SentenceExtractor se;
+    private static LanguageDefinition english;
 
-    public static void main(String... args) throws IOException, URISyntaxException {
+
+    @BeforeAll
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        var config = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        se = new SentenceExtractor(config, WmsaHome.getLanguageModels());
+        english = config.getLanguage("en");
+
+    }
+
+    public static void main(String... args) throws IOException, URISyntaxException, UnsupportedLanguageException {
         final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
         var data = WmsaHome.getHomePath().resolve("test-data/");
@@ -58,7 +74,7 @@ class SentenceExtractorTest {
 
     @Test
     public void testACDC() {
-        var ret = se.extractSentence("AC/DC is a rock band.", EnumSet.noneOf(HtmlTag.class));
+        var ret = se.extractSentence(english, "AC/DC is a rock band.", EnumSet.noneOf(HtmlTag.class));
         assertEquals("ac/dc", ret.wordsLowerCase[0]);
     }
 

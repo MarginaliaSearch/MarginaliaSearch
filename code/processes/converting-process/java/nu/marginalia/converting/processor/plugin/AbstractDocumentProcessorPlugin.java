@@ -6,6 +6,7 @@ import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -20,7 +21,12 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractDocumentProcessorPlugin {
-    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, LinkTexts linkTexts, Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException, IOException;
+    public abstract DetailsWithWords createDetails(
+            CrawledDocument crawledDocument,
+            LinkTexts linkTexts,
+            Set<DomSampleClassification> domSampleClassifications,
+            DocumentClass documentClass)
+            throws DisqualifiedException, UnsupportedLanguageException,  URISyntaxException, IOException;
     public abstract boolean isApplicable(CrawledDocument doc);
 
     protected static class MetaTagsBuilder {

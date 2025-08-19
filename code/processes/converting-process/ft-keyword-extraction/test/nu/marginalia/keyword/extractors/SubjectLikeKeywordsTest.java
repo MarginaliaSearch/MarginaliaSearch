@@ -1,12 +1,17 @@
 package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.KeywordExtractor;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.test.util.TestLanguageModels;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
@@ -41,12 +46,18 @@ class SubjectLikeKeywordsTest {
             the Roman Republic. Octavian set about solidifying his power, and the era of the Roman Empire began.
            """;
 
+    static SentenceExtractor se;
+
+    @BeforeAll
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+    }
+
     @Test
     public void test() throws IOException {
         var lm = TestLanguageModels.getLanguageModels();
         var dict = new TermFrequencyDict(lm);
 
-        SentenceExtractor se = new SentenceExtractor(lm);
         var dld = se.extractSentences(text, "Julius Caesar");
 
         WordsTfIdfCounts tfIdfCounts = new WordsTfIdfCounts(dict, new KeywordExtractor(), dld);

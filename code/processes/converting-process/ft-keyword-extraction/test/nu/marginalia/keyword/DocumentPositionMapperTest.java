@@ -6,14 +6,20 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.keyword.model.DocumentWordSpan;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -21,8 +27,16 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DocumentPositionMapperTest {
+    private static LanguageDefinition english;
     private final DocumentPositionMapper positionMapper = new DocumentPositionMapper("en");
-    static SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+    static SentenceExtractor se;
+
+    @BeforeAll
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        var config = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        se = new SentenceExtractor(config, WmsaHome.getLanguageModels());
+        english = config.getLanguage("en");
+    }
 
     @Test
     public void testWordPattern() {
@@ -44,8 +58,8 @@ class DocumentPositionMapperTest {
     @Test
     public void testBasic() {
         DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
-        DocumentLanguageData dld = new DocumentLanguageData(
-                se.extractSentencesFromString("I am a teapot, short and stout", EnumSet.of(HtmlTag.CODE)),
+        DocumentLanguageData dld = new DocumentLanguageData(english,
+                se.extractSentencesFromString(english, "I am a teapot, short and stout", EnumSet.of(HtmlTag.CODE)),
                 "I am a teapot"
         );
 
@@ -73,7 +87,7 @@ class DocumentPositionMapperTest {
     public void testLinksSingleWord1Rep() {
         DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
 
-        var sentences = se.extractSentencesFromString("Zelda", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        var sentences = se.extractSentencesFromString(english, "Zelda", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
         assertEquals(1, sentences.size());
         TIntList counts = new TIntArrayList(new int[] { 1 });
 
@@ -94,7 +108,7 @@ class DocumentPositionMapperTest {
     public void testLinksSingleWord2Reps() {
         DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
 
-        var sentences = se.extractSentencesFromString("Zelda", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        var sentences = se.extractSentencesFromString(english, "Zelda", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
         assertEquals(1, sentences.size());
         TIntList counts = new TIntArrayList(new int[] { 4 }); // This will become 2 repetitions, formula is ~ sqrt(counts)
 
@@ -122,7 +136,7 @@ class DocumentPositionMapperTest {
     public void testLinksTwoWords2Reps() {
         DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
 
-        var sentences = se.extractSentencesFromString("Zelda II", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        var sentences = se.extractSentencesFromString(english, "Zelda II", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
         assertEquals(1, sentences.size());
         TIntList counts = new TIntArrayList(new int[] { 4 });
 
@@ -152,8 +166,8 @@ class DocumentPositionMapperTest {
     public void testLinksTwoSent1Word1Rep() {
         DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
 
-        var sentences1 = se.extractSentencesFromString("Zelda", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
-        var sentences2 = se.extractSentencesFromString("Link", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        var sentences1 = se.extractSentencesFromString(english, "Zelda", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        var sentences2 = se.extractSentencesFromString(english, "Link", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
         assertEquals(1, sentences1.size());
         assertEquals(1, sentences2.size());
         TIntList counts = new TIntArrayList(new int[] { 1, 1 });
