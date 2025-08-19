@@ -86,7 +86,7 @@ public class LanguageConfiguration {
 
     public Optional<LanguageDefinition> identifyLanguage(org.jsoup.nodes.Document jsoupDoc) {
         StringBuilder sampleBuilder = new StringBuilder();
-        jsoupDoc.body().traverse((node, depth) -> {
+        jsoupDoc.body().traverse((node, _) -> {
             if (sampleBuilder.length() > 4096) return;
             if (!(node instanceof TextNode tn)) return;
 
