@@ -4,20 +4,21 @@ import com.github.jfasttext.JFastText;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.LanguageModels;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.encoding.UnicodeRanges;
 import nu.marginalia.language.model.DocumentLanguageData;
 
 import java.util.Optional;
-import java.util.Set;
 
 @Singleton
 public class LanguageFilter {
 
-    private final Set<String> permittedLanguages = Set.of("en", "sv");
+    private final LanguageConfiguration languageConfiguration;
     private final JFastText jft = new JFastText();
 
     @Inject
-    public LanguageFilter(LanguageModels lm) {
+    public LanguageFilter(LanguageModels lm, LanguageConfiguration languageConfiguration) {
+        this.languageConfiguration = languageConfiguration;
         jft.loadModel(lm.fasttextLanguageModel.toString());
     }
 
@@ -27,9 +28,10 @@ public class LanguageFilter {
         if (prediction.length() == "__label__??".length()) {
             String isoCode = prediction.substring("__label__".length());
 
-            if (permittedLanguages.contains(isoCode)) {
+            LanguageConfiguration.Language config = languageConfiguration.getLanguage(isoCode);
+
+            if (config != null && config.permitted())
                 return Optional.of(isoCode);
-            }
         }
 
         return Optional.empty();

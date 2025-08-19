@@ -1,5 +1,6 @@
 package nu.marginalia.language.filter;
 
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +13,7 @@ class LanguageFilterTest {
 
     @Test
     void isPageInteresting() {
-        var languageFilter = new LanguageFilter(TestLanguageModels.getLanguageModels());
+        var languageFilter = new LanguageFilter(TestLanguageModels.getLanguageModels(), new LanguageConfiguration());
 
         assertEquals(Optional.empty(), languageFilter.predictLanguage(new DocumentLanguageData(List.of(), "Carlos fue al bosque y recogió bayas")));
         assertEquals(Optional.empty(), languageFilter.predictLanguage(new DocumentLanguageData(List.of(), "Charlie est allé dans la forêt et a cueilli des baies")));
