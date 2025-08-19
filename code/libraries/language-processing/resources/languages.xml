@@ -1,19 +1,44 @@
 <?xml version="1.0"?>
 <!DOCTYPE languages [
         <!ELEMENT languages (language*)>
-        <!ELEMENT language (#PCDATA)>
+        <!ELEMENT language (stemmer,sentenceDetector,rdrTagger)>
+
         <!ATTLIST language
                 isoCode ID #REQUIRED
                 name CDATA #REQUIRED
+                display (rtl|ltr) #REQUIRED
                 disabled (true|false) #IMPLIED
                 >
-        ]>
+
+        <!ELEMENT stemmer (#PCDATA)>
+        <!ATTLIST stemmer
+                algorithm (porter|snowball|none) #REQUIRED
+                >
+
+        <!ELEMENT rdrTagger EMPTY>
+        <!ATTLIST rdrTagger
+                dict CDATA #REQUIRED
+                rdr CDATA #REQUIRED
+                >
+
+        <!ELEMENT sentenceDetector EMPTY>
+        <!ATTLIST sentenceDetector algorithm (none|opennlp) #REQUIRED>
+]>
 
 <languages>
-    <language isoCode="en" name="English">
-
+    <language isoCode="xx" name="Undefined" display="ltr">
+        <stemmer algorithm="none" />
+        <sentenceDetector algorithm="none"/>
+        <rdrTagger dict="English.DICT" rdr="English.RDR" />
     </language>
-    <language isoCode="sv" name="Swedish/Svenska">
-
+    <language isoCode="en" name="English" display="ltr">
+        <stemmer algorithm="porter" />
+        <sentenceDetector algorithm="opennlp"/>
+        <rdrTagger dict="English.DICT" rdr="English.RDR" />
+    </language>
+    <language isoCode="sv" name="Swedish" display="ltr">
+        <stemmer algorithm="snowball">SWEDISH</stemmer>
+        <sentenceDetector algorithm="opennlp"/>
+        <rdrTagger dict="Swedish.DICT" rdr="Swedish.RDR" />
     </language>
 </languages>

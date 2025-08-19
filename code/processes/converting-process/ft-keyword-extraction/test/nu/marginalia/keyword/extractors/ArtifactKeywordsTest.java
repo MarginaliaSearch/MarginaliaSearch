@@ -1,16 +1,21 @@
 package nu.marginalia.keyword.extractors;
 
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArtifactKeywordsTest {
 
     @Test
-    public void testExtractArtifacts() {
-        SentenceExtractor se = new SentenceExtractor(TestLanguageModels.getLanguageModels());
+    public void testExtractArtifacts() throws IOException, ParserConfigurationException, SAXException {
+        SentenceExtractor se = new SentenceExtractor(new LanguageConfiguration(TestLanguageModels.getLanguageModels()), TestLanguageModels.getLanguageModels());
 
         var artifacts = new ArtifactKeywords(se.extractSentences("Hello I'm <vlofgren@marginalia.nu>, what's up?", "hello!"));
         System.out.println(artifacts.getWords());

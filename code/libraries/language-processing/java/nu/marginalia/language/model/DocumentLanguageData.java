@@ -15,11 +15,13 @@ import java.util.stream.Stream;
  *
  * @see SentenceExtractor
  */
-public record DocumentLanguageData(List<DocumentSentence> sentences, String text) implements Iterable<DocumentSentence> {
+public record DocumentLanguageData(LanguageDefinition language,
+                                   List<DocumentSentence> sentences,
+                                   String text) implements Iterable<DocumentSentence> {
 
-    public DocumentLanguageData(List<DocumentSentence> sentences,
-                                String text)
+    public DocumentLanguageData(LanguageDefinition language, List<DocumentSentence> sentences, String text)
     {
+        this.language = language;
         this.sentences = Collections.unmodifiableList(sentences);
         this.text = text;
     }

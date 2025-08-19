@@ -2,15 +2,19 @@ package nu.marginalia.keyword;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
-import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -22,10 +26,16 @@ import java.util.Set;
 class DocumentKeywordExtractorTest {
 
     static DocumentKeywordExtractor extractor = new DocumentKeywordExtractor();
-    static SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+    static SentenceExtractor se;
+
+
+    @BeforeAll
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+    }
 
     @Test
-    public void testKeyboards2() throws IOException, URISyntaxException {
+    public void testKeyboards2() throws IOException, URISyntaxException, UnsupportedLanguageException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/keyboards.html"),
                 "Could not load word frequency table");
         String html = new String(resource.readAllBytes(), Charset.defaultCharset());
@@ -43,7 +53,7 @@ class DocumentKeywordExtractorTest {
 
 
     @Test
-    public void testMadonna() throws IOException, URISyntaxException {
+    public void testMadonna() throws IOException, URISyntaxException, UnsupportedLanguageException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/madonna.html"),
                 "Could not load word frequency table");
         String html = new String(resource.readAllBytes(), Charset.defaultCharset());
@@ -80,17 +90,4 @@ class DocumentKeywordExtractorTest {
                 );
     }
 
-    @Test
-    public void testSpam() throws IOException, URISyntaxException {
-        var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/spam.html"),
-                "Could not load word frequency table");
-        String html = new String(resource.readAllBytes(), Charset.defaultCharset());
-        var doc = Jsoup.parse(html);
-        doc.filter(new DomPruningFilter(0.5));
-
-        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(
-                new TermFrequencyDict(WmsaHome.getLanguageModels()));
-        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
-
-    }
 }

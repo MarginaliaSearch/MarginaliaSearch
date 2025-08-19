@@ -4,11 +4,15 @@ import com.google.common.collect.Sets;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.keyword.KeywordExtractor;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.test.util.TestLanguageModels;
 import org.jsoup.Jsoup;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -44,10 +48,16 @@ class NameLikeKeywordsTest {
             later known as Augustus, rose to sole power after defeating his opponents in the last civil war of
             the Roman Republic. Octavian set about solidifying his power, and the era of the Roman Empire began.
            """;
+    static SentenceExtractor se;
+
+
+    @BeforeAll
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+    }
 
     @Test
     public void test() {
-        SentenceExtractor se = new SentenceExtractor(TestLanguageModels.getLanguageModels());
         NameLikeKeywords keywords = new NameLikeKeywords(new KeywordExtractor(), se.extractSentences(text, "Julius Caesar"), 2);
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());
         Set<String> expected = Set.of("caesar", "senate", "roman", "republic", "roman_republic");
@@ -58,14 +68,12 @@ class NameLikeKeywordsTest {
     }
 
     @Test
-    public void testWikiArticle() throws IOException {
+    public void testWikiArticle() throws IOException, UnsupportedLanguageException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/java.html"),
                 "Could not load word frequency table");
         String html = new String(resource.readAllBytes(), Charset.defaultCharset());
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0));
-
-        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         var ke = new KeywordExtractor();
 
@@ -74,15 +82,13 @@ class NameLikeKeywordsTest {
     }
 
     @Test
-    public void testWikiArticleP1() {
+    public void testWikiArticleP1() throws UnsupportedLanguageException {
         String html = """
                 <p><b>Java</b> is a high-level, class-based, object-oriented programming language that is designed to have as few implementation dependencies as possible. It is a general-purpose programming language intended to let programmers <i>write once, run anywhere</i> (WORA), meaning that compiled Java code can run on all platforms that support Java without the need to recompile. Java applications are typically compiled to bytecode that can run on any Java virtual machine (JVM) regardless of the underlying computer architecture. The syntax of Java is similar to C and C++, but has fewer low-level facilities than either of them. The Java runtime provides dynamic capabilities (such as reflection and runtime code modification) that are typically not available in traditional compiled languages.  As of 2019 , Java was one of the most popular programming languages in use according to GitHub, particularly for client–server web applications, with a reported 9 million developers.</p>
                                 <p>Java was originally developed by James Gosling at Sun Microsystems. It was released in May 1995 as a core component of Sun Microsystems' Java platform. The original and reference implementation Java compilers, virtual machines, and class libraries were originally released by Sun under proprietary licenses. As of May 2007, in compliance with the specifications of the Java Community Process, Sun had relicensed most of its Java technologies under the GPL-2.0-only license. Oracle offers its own HotSpot Java Virtual Machine, however the official reference implementation is the OpenJDK JVM which is free open-source software and used by most developers and is the default JVM for almost all Linux distributions.</p>
                                 <p>As of September   2023 , Java 21 is the latest version, while Java 17, 11 and 8 are the current long-term support (LTS) versions.</p>""";
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0));
-
-        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         var ke = new KeywordExtractor();
 

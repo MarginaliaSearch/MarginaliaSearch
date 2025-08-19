@@ -12,6 +12,7 @@ import nu.marginalia.converting.processor.plugin.PdfDocumentProcessorPlugin;
 import nu.marginalia.converting.processor.plugin.PlainTextDocumentProcessorPlugin;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -113,6 +114,11 @@ public class DocumentProcessor {
             {
                 ret.details.features.add(HtmlFeature.COOKIES);
             }
+        }
+        catch (UnsupportedLanguageException ex) {
+            ret.state = UrlIndexingState.DISQUALIFIED;
+            ret.stateReason = "Language";
+            logger.info(converterAuditMarker, "Disqualified {}: Language", ret.url);
         }
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
