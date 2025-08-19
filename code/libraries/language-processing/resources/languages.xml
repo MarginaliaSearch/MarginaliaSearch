@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE languages [
+        <!ELEMENT languages (language*)>
+        <!ELEMENT language (#PCDATA)>
+        <!ATTLIST language
+                isoCode ID #REQUIRED
+                name CDATA #REQUIRED
+                disabled (true|false) #IMPLIED
+                >
+        ]>
+
+<languages>
+    <language isoCode="en" name="English">
+
+    </language>
+    <language isoCode="sv" name="Swedish/Svenska">
+
+    </language>
+</languages>

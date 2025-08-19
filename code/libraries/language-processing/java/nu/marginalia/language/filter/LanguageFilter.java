@@ -28,9 +28,9 @@ public class LanguageFilter {
         if (prediction.length() == "__label__??".length()) {
             String isoCode = prediction.substring("__label__".length());
 
-            LanguageConfiguration.Language config = languageConfiguration.getLanguage(isoCode);
+            LanguageConfiguration.LanguageDefinition config = languageConfiguration.getLanguage(isoCode);
 
-            if (config != null && config.permitted())
+            if (config != null)
                 return Optional.of(isoCode);
         }
 
