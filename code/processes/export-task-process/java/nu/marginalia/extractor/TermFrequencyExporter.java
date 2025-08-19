@@ -36,12 +36,13 @@ import static nu.marginalia.term_frequency_dict.TermFrequencyDict.longHash;
 
 public class TermFrequencyExporter implements ExporterIf {
     private final FileStorageService storageService;
-    private final LanguageFilter lf = new LanguageFilter(WmsaHome.getLanguageModels(), new LanguageConfiguration());
+    private final LanguageFilter lf;
     private static final Logger logger = LoggerFactory.getLogger(TermFrequencyExporter.class);
 
     @Inject
-    public TermFrequencyExporter(FileStorageService storageService) {
+    public TermFrequencyExporter(FileStorageService storageService, LanguageConfiguration languageConfiguration) {
         this.storageService = storageService;
+        this.lf = new LanguageFilter(WmsaHome.getLanguageModels(), languageConfiguration);
     }
 
     @Override

@@ -3,16 +3,19 @@ package nu.marginalia.language.filter;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class LanguageFilterTest {
+class LanguageDefinitionFilterTest {
 
     @Test
-    void isPageInteresting() {
+    void isPageInteresting() throws IOException, ParserConfigurationException, SAXException {
         var languageFilter = new LanguageFilter(TestLanguageModels.getLanguageModels(), new LanguageConfiguration());
 
         assertEquals(Optional.empty(), languageFilter.predictLanguage(new DocumentLanguageData(List.of(), "Carlos fue al bosque y recogió bayas")));
