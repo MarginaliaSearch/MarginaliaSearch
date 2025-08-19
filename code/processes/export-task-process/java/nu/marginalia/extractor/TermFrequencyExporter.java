@@ -6,6 +6,7 @@ import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.io.SerializableCrawlDataStream;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -35,7 +36,7 @@ import static nu.marginalia.term_frequency_dict.TermFrequencyDict.longHash;
 
 public class TermFrequencyExporter implements ExporterIf {
     private final FileStorageService storageService;
-    private final LanguageFilter lf = new LanguageFilter(WmsaHome.getLanguageModels());
+    private final LanguageFilter lf = new LanguageFilter(WmsaHome.getLanguageModels(), new LanguageConfiguration());
     private static final Logger logger = LoggerFactory.getLogger(TermFrequencyExporter.class);
 
     @Inject
