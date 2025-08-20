@@ -14,6 +14,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 dependencies {
     implementation project(':third-party:rdrpostagger')
     implementation project(':third-party:porterstemmer')
+    implementation project(':third-party:commons-codec')
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:libraries:easy-lsh')

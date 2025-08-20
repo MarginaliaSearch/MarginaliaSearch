@@ -1,13 +1,21 @@
 <?xml version="1.0"?>
 <!DOCTYPE languages [
-        <!ELEMENT languages (language*)>
-        <!ELEMENT language (stemmer,sentenceDetector,rdrTagger)>
+        <!ELEMENT languages (language*,resource*)>
+        <!ELEMENT language (keywordHash,stemmer,sentenceDetector,rdrTagger)>
+
+        <!ELEMENT resource EMPTY>
+        <!ATTLIST resource
+                id ID #REQUIRED
+                md5 CDATA #REQUIRED
+                path CDATA #REQUIRED
+                href CDATA #REQUIRED
+                >
 
         <!ATTLIST language
                 isoCode ID #REQUIRED
                 name CDATA #REQUIRED
                 display (rtl|ltr) #REQUIRED
-                disabled (true|false) #IMPLIED
+                disabled (true|false) "false"
                 >
 
         <!ELEMENT stemmer (#PCDATA)>
@@ -15,10 +23,15 @@
                 algorithm (porter|snowball|none) #REQUIRED
                 >
 
+        <!ELEMENT keywordHash (#PCDATA)>
+        <!ATTLIST keywordHash
+                algorithm (asciish|utf8) #REQUIRED
+                >
+
         <!ELEMENT rdrTagger EMPTY>
         <!ATTLIST rdrTagger
-                dict CDATA #REQUIRED
-                rdr CDATA #REQUIRED
+                dictId IDREF #REQUIRED
+                rdrId IDREF #REQUIRED
                 >
 
         <!ELEMENT sentenceDetector EMPTY>
@@ -26,19 +39,28 @@
 ]>
 
 <languages>
-    <language isoCode="xx" name="Undefined" display="ltr">
+    <language isoCode="xx" name="Undefined" display="ltr" >
+        <keywordHash algorithm="asciish" />
         <stemmer algorithm="none" />
         <sentenceDetector algorithm="none"/>
-        <rdrTagger dict="English.DICT" rdr="English.RDR" />
+        <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
     </language>
     <language isoCode="en" name="English" display="ltr">
+        <keywordHash algorithm="asciish" />
         <stemmer algorithm="porter" />
         <sentenceDetector algorithm="opennlp"/>
-        <rdrTagger dict="English.DICT" rdr="English.RDR" />
+        <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
     </language>
     <language isoCode="sv" name="Swedish" display="ltr">
+        <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball">SWEDISH</stemmer>
         <sentenceDetector algorithm="opennlp"/>
-        <rdrTagger dict="Swedish.DICT" rdr="Swedish.RDR" />
+        <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
     </language>
+
+    <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
+    <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
+    <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-sv" md5="" path="rdr/Swedish.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.RDR" />
+
 </languages>

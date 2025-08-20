@@ -40,4 +40,18 @@ public class LanguageConfigurationTest {
         assertEquals("bilar", enStemmer.stem("bilar"));
         assertEquals("dog", enStemmer.stem("dogged"));
     }
+
+    @Test
+    public void testPosData() {
+        var svPos = languageConfiguration.getLanguage("sv").posTaggingData();
+        var enPos = languageConfiguration.getLanguage("en").posTaggingData();
+
+        Assertions.assertNotNull(svPos);
+        Assertions.assertNotNull(enPos);
+
+        System.out.println(enPos);
+        System.out.println(svPos);
+
+        Assertions.assertNotEquals(svPos.tags, enPos.tags);
+    }
 }
