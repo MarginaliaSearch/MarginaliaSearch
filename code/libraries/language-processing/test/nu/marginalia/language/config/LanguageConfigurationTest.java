@@ -1,6 +1,7 @@
 package nu.marginalia.language.config;
 
 import nu.marginalia.language.filter.TestLanguageModels;
+import nu.marginalia.language.pos.PosPattern;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LanguageConfigurationTest {
-    static LanguageConfiguration languageConfiguration;
+    private static LanguageConfiguration languageConfiguration;
 
     @BeforeAll
     public static void setUpAll() throws IOException, SAXException, ParserConfigurationException {
@@ -53,5 +54,15 @@ public class LanguageConfigurationTest {
         System.out.println(svPos);
 
         Assertions.assertNotEquals(svPos.tags, enPos.tags);
+    }
+
+    @Test
+    public void testPosPattern() {
+        var enPos = languageConfiguration.getLanguage("en").posTaggingData();
+
+        System.out.println(new PosPattern(enPos.tags, "NNP").pattern);
+        System.out.println(new PosPattern(enPos.tags, "NNP NNPS").pattern);
+        System.out.println(new PosPattern(enPos.tags,"NNPS (NNPS DT) DT").pattern);
+        System.out.println(new PosPattern(enPos.tags, "(NNP NNPS) (NNP NNPS IN DT CC) (NNP NNPS IN DT CC) (NNP NNPS)").pattern);
     }
 }
