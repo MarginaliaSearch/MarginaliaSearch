@@ -1,6 +1,8 @@
 package nu.marginalia.language.pos;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.Map;
 
 public class PosPattern {
     public final LongArrayList pattern = new LongArrayList();
+    private static final Logger logger = LoggerFactory.getLogger(PosPattern.class);
 
     public long[] toArray() {
         return pattern.toLongArray();
@@ -79,6 +82,8 @@ public class PosPattern {
                     Integer bit = lexicon.get(variant);
                     if (bit != null) {
                         variantsCompiled |= 1L << bit;
+                    } else {
+                        logger.warn("Pattern '{}' is referencing unknown POS tag '{}'", expression, variant);
                     }
                 }
             }
