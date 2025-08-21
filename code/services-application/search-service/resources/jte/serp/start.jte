@@ -62,7 +62,7 @@
         </div>
         <div class="text-xs text-liteblue dark:text-blue-200">
             <i class="fa-brands fa-discord"></i>
-            <a href="https://discord.gg/GgpkrVbF" class="underline">Project Discord</a>
+            <a href="https://chat.marginalia.nu/" class="underline">Project Discord</a>
         </div>
         </div>
     </div>
