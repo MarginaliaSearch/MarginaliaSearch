@@ -301,7 +301,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
     }
 
     public boolean isAds() {
-        return HtmlFeature.hasFeature(features, HtmlFeature.TRACKING_ADTECH);
+        return HtmlFeature.hasFeature(features, HtmlFeature.ADVERTISEMENT);
     }
 
     public int getMatchRank() {
