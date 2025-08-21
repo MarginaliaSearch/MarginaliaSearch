@@ -67,7 +67,20 @@ public class PosPattern {
         for (List<String> variants : variantsPerPos) {
             long variantsCompiled = 0L;
             for (String variant : variants) {
-                variantsCompiled |= 1L << lexicon.getOrDefault(variant, 63);
+                if (variant.endsWith("*") && variant.length() > 1) {
+                    String prefix = variant.substring(0, variant.length() - 1);
+                    variantsCompiled |= lexicon.entrySet()
+                            .stream()
+                            .filter(entry -> entry.getKey().startsWith(prefix))
+                            .mapToLong(entry -> 1L<<entry.getValue())
+                            .reduce(0, (a,b) -> (a|b));
+                }
+                else {
+                    Integer bit = lexicon.get(variant);
+                    if (bit != null) {
+                        variantsCompiled |= 1L << bit;
+                    }
+                }
             }
             pattern.add(variantsCompiled);
         }
