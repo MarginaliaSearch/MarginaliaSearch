@@ -6,6 +6,8 @@ import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.model.LanguageDefinition;
+import nu.marginalia.language.pos.PosPattern;
+import nu.marginalia.language.pos.PosPatternCategory;
 import nu.marginalia.language.pos.PosTaggingData;
 import nu.marginalia.language.stemming.Stemmer;
 import org.jsoup.nodes.TextNode;
@@ -34,10 +36,7 @@ import java.nio.file.StandardOpenOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class LanguageConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(LanguageConfiguration.class);
@@ -49,8 +48,10 @@ public class LanguageConfiguration {
     public Optional<LanguageDefinition> identifyLanguage(org.jsoup.nodes.Document jsoupDoc) {
         StringBuilder sampleBuilder = new StringBuilder();
         jsoupDoc.body().traverse((node, _) -> {
-            if (sampleBuilder.length() > 4096) return;
-            if (!(node instanceof TextNode tn)) return;
+            if (sampleBuilder.length() > 4096)
+                return;
+            if (!(node instanceof TextNode tn))
+                return;
 
             sampleBuilder.append(' ').append(tn.text());
         });
@@ -67,6 +68,7 @@ public class LanguageConfiguration {
 
         return Optional.empty();
     }
+
     public Optional<LanguageDefinition> identifyLanguage(String sample, String fallbackIsoCode) {
         return identifyLanguage(sample).or(() -> Optional.ofNullable(getLanguage(fallbackIsoCode)));
     }
@@ -79,7 +81,8 @@ public class LanguageConfiguration {
 
 
     @Inject
-    public LanguageConfiguration(LanguageModels lm) throws IOException, ParserConfigurationException, SAXException {
+    public LanguageConfiguration(LanguageModels lm)
+            throws IOException, ParserConfigurationException, SAXException {
         fastTextLanguageModel.loadModel(lm.fasttextLanguageModel.toString());
 
         // TODO: Read from data directory
@@ -93,7 +96,8 @@ public class LanguageConfiguration {
         logger.info("Loaded language configuration: {}", languages);
     }
 
-    private void loadConfiguration(InputStream xmlData) throws ParserConfigurationException, IOException, SAXException {
+    private void loadConfiguration(InputStream xmlData)
+            throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(xmlData);
@@ -110,24 +114,57 @@ public class LanguageConfiguration {
             Element languageTag = (Element) languageNodes.item(i);
 
             boolean disabled = "TRUE".equalsIgnoreCase(languageTag.getAttribute("disabled"));
-            if (disabled) continue;
+            if (disabled)
+                continue;
 
             String isoCode = languageTag.getAttribute("isoCode").toLowerCase();
             String name = languageTag.getAttribute("name");
 
             Stemmer stemmer = parseStemmerTag(languageTag, isoCode);
             KeywordHasher keywordHasher = parseHasherTag(languageTag, isoCode);
-
             PosTaggingData posTaggingData = parsePosTag(languageTag, isoCode);
+            Map<PosPatternCategory, List<PosPattern>> posPatterns =
+                    parsePosPatterns(posTaggingData, languageTag, isoCode);
 
-            languages.put(isoCode, new LanguageDefinition(isoCode, name, stemmer, keywordHasher, posTaggingData));
+            languages.put(isoCode,
+                    new LanguageDefinition(isoCode, name, stemmer, keywordHasher, posTaggingData));
         }
+    }
+
+    private Map<PosPatternCategory, List<PosPattern>> parsePosPatterns(PosTaggingData posTaggingData,
+                                                                       Element languageTag, String isoCode) {
+        Map<PosPatternCategory, List<PosPattern>> ret = new HashMap<>();
+        NodeList ngramsElements = languageTag.getElementsByTagName("ngrams");
+
+        for (int i = 0; i < ngramsElements.getLength(); i++) {
+            Element ngramsTag = (Element) ngramsElements.item(i);
+            String type = ngramsTag.getAttribute("type");
+
+            PosPatternCategory category = switch(type) {
+                case "name" -> PosPatternCategory.NAME;
+                case "noun" -> PosPatternCategory.NOUN;
+                case "keyword" -> PosPatternCategory.KEYWORD;
+                case "subject-suffix" -> PosPatternCategory.SUBJECT_SUFFIX;
+                default -> throw new IllegalArgumentException("Invalid ngrams type in " + isoCode + ", what is '" + type + "'?");
+            };
+
+            NodeList posPatternsList = ngramsTag.getElementsByTagName("pospattern");
+            for (int j = 0; j < posPatternsList.getLength(); j++) {
+                Element posPatternTag = (Element) posPatternsList.item(j);
+                ret.computeIfAbsent(category, (k) -> new ArrayList<>())
+                        .add(new PosPattern(posTaggingData.tags, posPatternTag.getTextContent()));
+            }
+
+        }
+
+        return null;
     }
 
     private PosTaggingData parsePosTag(Element languageTag, String isoCode) {
         NodeList rdrElements = languageTag.getElementsByTagName("rdrTagger");
         if (rdrElements.getLength() != 1) {
-            throw new IllegalArgumentException("language.xml: No rdrTagger block for language element " + isoCode);
+            throw new IllegalArgumentException(
+                    "language.xml: No rdrTagger block for language element " + isoCode);
         }
         Element rdrElement = (Element) rdrElements.item(0);
 
@@ -137,8 +174,12 @@ public class LanguageConfiguration {
         Path dictPath = resources.get(dictId);
         Path rdrPath = resources.get(rdrId);
 
-        if (null == dictPath) throw new IllegalArgumentException("language.xml: dictPath id " + dictId + " does not map to a resource in " + isoCode);
-        if (null == rdrPath) throw new IllegalArgumentException("language.xml: rdrPath id " + dictId + " does not map to a resource in " + isoCode);
+        if (null == dictPath)
+            throw new IllegalArgumentException("language.xml: dictPath id " + dictId
+                    + " does not map to a resource in " + isoCode);
+        if (null == rdrPath)
+            throw new IllegalArgumentException("language.xml: rdrPath id " + dictId
+                    + " does not map to a resource in " + isoCode);
 
         return new PosTaggingData(dictPath, rdrPath);
     }
@@ -147,7 +188,8 @@ public class LanguageConfiguration {
     private KeywordHasher parseHasherTag(Element languageElement, String isoCode) {
         NodeList keywordHasherElements = languageElement.getElementsByTagName("keywordHash");
         if (keywordHasherElements.getLength() != 1) {
-            throw new IllegalArgumentException("language.xml: No keywordHasher block for language element " + isoCode);
+            throw new IllegalArgumentException(
+                    "language.xml: No keywordHasher block for language element " + isoCode);
         }
         Element keywordHasheElement = (Element) keywordHasherElements.item(0);
 
@@ -156,14 +198,16 @@ public class LanguageConfiguration {
         return switch (hasherName) {
             case "asciish" -> new KeywordHasher.AsciiIsh();
             case "utf8" -> new KeywordHasher.Utf8();
-            default -> throw new  IllegalArgumentException("language.xml: Unknown keywordHash name " + hasherName + " in " + isoCode);
+            default -> throw new IllegalArgumentException(
+                    "language.xml: Unknown keywordHash name " + hasherName + " in " + isoCode);
         };
     }
 
     private Stemmer parseStemmerTag(Element languageElement, String isoCode) {
         NodeList stemmerElements = languageElement.getElementsByTagName("stemmer");
         if (stemmerElements.getLength() != 1) {
-            throw new IllegalArgumentException("language.xml: No stemmer block for language element " + isoCode);
+            throw new IllegalArgumentException(
+                    "language.xml: No stemmer block for language element " + isoCode);
         }
         Element stemmerElement = (Element) stemmerElements.item(0);
 
@@ -174,7 +218,8 @@ public class LanguageConfiguration {
             case "porter" -> new Stemmer.Porter();
             case "snowball" -> new Stemmer.Snowball(stemmerVariant);
             case "none" -> new Stemmer.NoOpStemmer();
-            default -> throw new  IllegalArgumentException("language.xml: Unknown stemmer name " + stemmerName + " in " + isoCode);
+            default -> throw new IllegalArgumentException(
+                    "language.xml: Unknown stemmer name " + stemmerName + " in " + isoCode);
         };
     }
 
@@ -192,14 +237,15 @@ public class LanguageConfiguration {
                 boolean success = false;
                 try {
                     success = fetchResource(resourceHref, resourcePath, resourceMd5);
-                }
-                catch (URISyntaxException|IOException ex) {
+                } catch (URISyntaxException | IOException ex) {
                     logger.error(ex.getMessage(), ex);
                     success = false;
                 }
 
-                // It's likely if we were to just explode here, that a docker-compose restart:always would put us in a
-                // loop that repeatedly fails to download the same file.   We'd like to avoid that by stalling and
+                // It's likely if we were to just explode here, that a docker-compose restart:always
+                // would put us in a
+                // loop that repeatedly fails to download the same file. We'd like to avoid that by
+                // stalling and
                 // awaiting human intervention.
 
                 while (!success) {
@@ -212,13 +258,15 @@ public class LanguageConfiguration {
                 }
             }
             if (resources.put(resourceId, resourcePath) != null)
-                throw new IllegalStateException("Resource with id " + resourceId + " already exists");
+                throw new IllegalStateException(
+                        "Resource with id " + resourceId + " already exists");
         }
     }
 
-    private boolean fetchResource(String resourceUrl, Path resourcePath, String resourceMd5) throws IOException, URISyntaxException {
+    private boolean fetchResource(String resourceUrl, Path resourcePath, String resourceMd5)
+            throws IOException, URISyntaxException {
 
-        Path parentPath =  resourcePath.getParent();
+        Path parentPath = resourcePath.getParent();
         if (!Files.isDirectory(parentPath)) {
             logger.info("Setting up directory {}", parentPath);
             Files.createDirectories(parentPath);
@@ -229,27 +277,27 @@ public class LanguageConfiguration {
         URL url = new URI(resourceUrl).toURL();
         Path tempFile = Files.createTempFile("resource", "dat");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        try (InputStream is =  conn.getInputStream();
-             OutputStream os = Files.newOutputStream(tempFile, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (InputStream is = conn.getInputStream();
+             OutputStream os = Files.newOutputStream(tempFile, StandardOpenOption.WRITE,
+                     StandardOpenOption.TRUNCATE_EXISTING)) {
             is.transferTo(os);
             os.flush();
 
             String actualMd5 = getFileMD5(tempFile);
             if (!resourceMd5.isBlank() && !Objects.equals(resourceMd5, actualMd5)) {
-                logger.error("Freshly downloaded resource {} does not match md5sum {}",  resourceUrl, resourceMd5);
+                logger.error("Freshly downloaded resource {} does not match md5sum {}", resourceUrl,
+                        resourceMd5);
                 return false;
-            }
-            else {
-                logger.info("Downloaded resource {} to {} ** md5sum {}", resourceUrl, resourcePath, actualMd5);
+            } else {
+                logger.info("Downloaded resource {} to {} ** md5sum {}", resourceUrl, resourcePath,
+                        actualMd5);
                 Files.move(tempFile, resourcePath, StandardCopyOption.REPLACE_EXISTING);
                 return true;
             }
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             logger.error("IOException", ex);
             return false;
-        }
-        finally {
+        } finally {
             conn.disconnect();
             Files.deleteIfExists(tempFile);
         }
@@ -259,7 +307,8 @@ public class LanguageConfiguration {
         resourcePath = resourcePath.normalize();
 
         if (!resourcePath.normalize().startsWith(WmsaHome.getDataPath()))
-            throw new IllegalArgumentException("Resource path has escaped $WMSA_HOME/data: " + resourcePath);
+            throw new IllegalArgumentException(
+                    "Resource path has escaped $WMSA_HOME/data: " + resourcePath);
         if (!Files.exists(resourcePath)) {
             logger.info("Resource path does not exist: " + resourcePath);
             return false;
@@ -267,14 +316,14 @@ public class LanguageConfiguration {
 
         String actualMd5 = getFileMD5(resourcePath);
         if (providedMd5Sum.isBlank()) {
-            logger.info("No md5sum provided for resource path: {}, but was calculated to {}", resourcePath, actualMd5);
+            logger.info("No md5sum provided for resource path: {}, but was calculated to {}",
+                    resourcePath, actualMd5);
             return true;
         }
 
         if (Objects.equals(actualMd5, providedMd5Sum)) {
             return true;
-        }
-        else {
+        } else {
             logger.error("MD5 checksum mismatch for {} -- {}", resourcePath, providedMd5Sum);
             return false;
         }
