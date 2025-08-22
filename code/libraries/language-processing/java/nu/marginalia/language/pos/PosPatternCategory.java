@@ -1,6 +1,8 @@
 package nu.marginalia.language.pos;
 
 public enum PosPatternCategory {
-    NAMED_ENTITY,
-    SUBJECT
+    NAME,
+    NOUN,
+    KEYWORD,
+    SUBJECT_SUFFIX
 }

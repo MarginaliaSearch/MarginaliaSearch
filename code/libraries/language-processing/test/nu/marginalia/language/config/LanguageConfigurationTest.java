@@ -64,10 +64,13 @@ public class LanguageConfigurationTest {
         System.out.println(new PosPattern(enPos.tags, "NNP").pattern);
         System.out.println(new PosPattern(enPos.tags, "NNP").pattern);
         System.out.println(new PosPattern(enPos.tags, "NNP NNPS").pattern);
-        System.out.println(new PosPattern(enPos.tags,"NNPS (NNPS DT) DT").pattern);
-        System.out.println(new PosPattern(enPos.tags, "(NNP NNPS) (NNP NNPS IN DT CC) (NNP NNPS IN DT CC) (NNP NNPS)").pattern);
+        System.out.println(new PosPattern(enPos.tags, "NNPS (NNPS DT) DT").pattern);
+        System.out.println(new PosPattern(enPos.tags,
+                "(NNP NNPS) (NNP NNPS IN DT CC) (NNP NNPS IN DT CC) (NNP NNPS)").pattern);
 
-        assertEquals(new PosPattern(enPos.tags, "NNP*").pattern, new PosPattern(enPos.tags, "(NNP NNPS)").pattern);
+        assertEquals(new PosPattern(enPos.tags, "NNP*").pattern,
+                new PosPattern(enPos.tags, "(NNP NNPS)").pattern);
         assertEquals(LongList.of(0L), new PosPattern(enPos.tags, "Hello").pattern);
     }
 }
+

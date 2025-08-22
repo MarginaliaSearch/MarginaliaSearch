@@ -35,7 +35,7 @@
                 >
 
         <!ELEMENT ngrams (pospattern*)>
-        <!ATTLIST ngrams type (name|subject) #REQUIRED>
+        <!ATTLIST ngrams type (noun|name|subject-suffix|keyword) #REQUIRED>
         <!ELEMENT pospattern (#PCDATA)>
 
         <!ELEMENT sentenceDetector EMPTY>
@@ -55,11 +55,29 @@
         <sentenceDetector algorithm="opennlp"/>
         <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
         <ngrams type="name">
-            <pospattern>(NNP NNPS)</pospattern>
-            <pospattern>(NNP NNPS) (NNP NNPS)</pospattern>
-            <pospattern>(NNP NNPS) (NNP NNPS IN DT CC) (NNP NNPS)</pospattern>
-            <pospattern>(NNP NNPS) (NNP NNPS IN DT CC) (NNP NNPS IN DT CC) (NNP NNPS)</pospattern>
+            <pospattern>NNP*</pospattern>
+            <pospattern>NNP* NNP*</pospattern>
+            <pospattern>NNP* (NNP* IN DT CC) NNP*</pospattern>
+            <pospattern>NNP* (NNP* IN DT CC) (NNP* IN DT CC) NNP*</pospattern>
         </ngrams>
+        <ngrams type="noun">
+            <pospattern>NN</pospattern>
+            <pospattern>(NN JJ) NN</pospattern>
+            <pospattern>(NN JJ) (NN IN TO CC) NN</pospattern>
+            <pospattern>(NN JJ) (NN IN TO CC) DT NN</pospattern>
+            <pospattern>(NN JJ) (NN IN TO CC) (NN IN TO CC) NN</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(DT RB* VB* JJ* P* NN*) (VBD VBG VBP VBN VBZ)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <!-- length = 1 -->
+            <pospattern>(N* VBG VBN JJ R VBG)</pospattern>
+            <!-- length = 2 -->
+            <pospattern>(N* VBG VBN JJ R VBG) (N* VBG VBN)</pospattern>
+            <pospattern>(N* VBG VBN) CD</pospattern>
+        </ngrams>
+
     </language>
     <language isoCode="sv" name="Swedish" display="ltr">
         <keywordHash algorithm="asciish" />
