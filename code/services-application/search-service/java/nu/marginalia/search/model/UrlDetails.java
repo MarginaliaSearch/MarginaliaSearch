@@ -107,11 +107,12 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
         int distSinceBreak = 0;
 
-        char c = ' ';
+        int c = ' ';
         int prevC = ' ';
-        for (int i = 0; i < str.length(); i++) {
+        for (int i = 0; i < str.length();) {
             prevC = c;
-            c = str.charAt(i);
+            c = str.codePointAt(i);
+            i += Character.charCount(c);
 
             if (Character.isSpaceChar(c)) {
                 distSinceBreak = 0;
@@ -156,8 +157,10 @@ public class UrlDetails implements Comparable<UrlDetails> {
         StringBuilder sb = new StringBuilder();
 
         int distSinceSpace = 0;
-        for (int i = 0; i < description.length(); i++) {
-            char c = description.charAt(i);
+        for (int i = 0; i < description.length();) {
+            int c = description.codePointAt(i);
+            i += Character.charCount(c);
+
             if (Character.isSpaceChar(c)) {
                 distSinceSpace = 0;
             }
