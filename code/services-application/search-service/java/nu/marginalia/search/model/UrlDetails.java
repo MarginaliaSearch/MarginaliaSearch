@@ -182,6 +182,11 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append("&shy;");
                 distSinceSpace = 0;
             }
+            else if (distSinceSpace > 48) {
+                sb.appendCodePoint(c);
+                sb.append("&shy;");
+                distSinceSpace = 0;
+            }
             else {
                 sb.appendCodePoint(c);
             }
