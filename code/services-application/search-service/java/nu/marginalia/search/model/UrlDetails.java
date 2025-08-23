@@ -132,21 +132,21 @@ public class UrlDetails implements Comparable<UrlDetails> {
             }
             else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
                 distSinceBreak = 0;
-                sb.append(c);
+                sb.appendCodePoint(c);
                 sb.append("&shy;");
             }
             else if (Character.isUpperCase(c) && Character.isLowerCase(prevC)) {
                 distSinceBreak = 0;
                 sb.append("&shy;");
-                sb.append(c);
+                sb.appendCodePoint(c);
             }
             else if (distSinceBreak > 16) {
                 distSinceBreak = 0;
                 sb.append("&shy;");
-                sb.append(c);
+                sb.appendCodePoint(c);
             }
             else {
-                sb.append(c);
+                sb.appendCodePoint(c);
             }
         }
     }
