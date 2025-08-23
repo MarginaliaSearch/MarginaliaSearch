@@ -178,12 +178,12 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append("&amp;");
             }
             else if (!Character.isAlphabetic(c) && distSinceSpace > 24) {
-                sb.append(c);
+                sb.appendCodePoint(c);
                 sb.append("&shy;");
                 distSinceSpace = 0;
             }
             else {
-                sb.append(c);
+                sb.appendCodePoint(c);
             }
         }
 
@@ -208,11 +208,11 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append("&amp;");
             }
             else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
-                sb.append(c);
+                sb.appendCodePoint(c);
                 sb.append("&shy;");
             }
             else {
-                sb.append(c);
+                sb.appendCodePoint(c);
             }
         }
 
