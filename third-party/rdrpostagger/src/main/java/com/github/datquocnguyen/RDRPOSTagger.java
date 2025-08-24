@@ -2,7 +2,10 @@ package com.github.datquocnguyen;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -172,4 +175,19 @@ public class RDRPOSTagger
 		return tags;
 	}
 
+    public String[] tagSentence(String[] sentence)
+    {
+
+        var initialTags = InitialTagger.InitTagger4Sentence(FREQDICT, sentence);
+
+        String[] tags = new String[initialTags.length];
+        FWObject object = new FWObject(true);
+
+        for (int i = 0; i < initialTags.length; i++) {
+            Utils.getObject(object, sentence, initialTags, initialTags.length, i);
+            tags[i] = findFiredNode(object);
+        }
+
+        return tags;
+    }
 }

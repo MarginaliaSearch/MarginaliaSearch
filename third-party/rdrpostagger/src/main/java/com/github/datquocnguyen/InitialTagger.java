@@ -109,6 +109,70 @@ public class InitialTagger
 		return Character.isLowerCase(s.charAt(0)) && s.endsWith("s");
 	}
 
+    public static String[] InitTagger4Sentence(
+            HashMap<String, String> DICT, String[] sentence)
+    {
+        String[] wordtags = new String[sentence.length];
+
+        for (int i = 0; i < sentence.length; i++) {
+            wordtags[i] = getTagForWord(DICT, sentence[i]);
+        }
+        return wordtags;
+    }
+
+
+    private static String getTagForWord(HashMap<String, String> DICT, String word) {
+        if ("[]()<>!".contains(word)) {
+            return "?";
+        }
+
+        String tag = "";
+        String lowerW = word.toLowerCase();
+        if (DICT.containsKey(word))
+            tag = DICT.get(word);
+        else if (DICT.containsKey(lowerW))
+            tag = DICT.get(lowerW);
+        else {
+            if (cd(word)) {
+                tag = DICT.get("TAG4UNKN-NUM");
+            }
+            else {
+                String suffixL2 = null, suffixL3 = null, suffixL4 = null, suffixL5 = null;
+
+                int wordLength = word.length();
+                if (wordLength >= 4) {
+                    suffixL2 = ".*" + word.substring(wordLength - 2);
+                    suffixL3 = ".*" + word.substring(wordLength - 3);
+                }
+                if (wordLength >= 5) {
+                    suffixL4 = ".*" + word.substring(wordLength - 4);
+                }
+                if (wordLength >= 6) {
+                    suffixL5 = ".*" + word.substring(wordLength - 5);
+                }
+
+                if (DICT.containsKey(suffixL5)) {
+                    tag = DICT.get(suffixL5);
+                }
+                else if (DICT.containsKey(suffixL4)) {
+                    tag = DICT.get(suffixL4);
+                }
+                else if (DICT.containsKey(suffixL3)) {
+                    tag = DICT.get(suffixL3);
+                }
+                else if (DICT.containsKey(suffixL2)) {
+                    tag = DICT.get(suffixL2);
+                }
+                else if (Character.isUpperCase(word.codePointAt(0)))
+                    tag = DICT.get("TAG4UNKN-CAPITAL");
+                else
+                    tag = DICT.get("TAG4UNKN-WORD");
+            }
+        }
+
+        return tag;
+    }
+
 	public static String[] EnInitTagger4Sentence(
 		HashMap<String, String> DICT, String[] sentence)
 	{

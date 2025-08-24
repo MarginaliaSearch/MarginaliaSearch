@@ -60,6 +60,9 @@ public class LanguageConfiguration {
 
     public Optional<LanguageDefinition> identifyLanguage(String sample) {
         String prediction = fastTextLanguageModel.predict(sample);
+        System.out.println("prediction: " + prediction);
+        if (null == prediction)
+            return Optional.empty();
 
         if (prediction.length() == "__label__??".length()) {
             String isoCode = prediction.substring("__label__".length());
@@ -73,6 +76,9 @@ public class LanguageConfiguration {
         return identifyLanguage(sample).or(() -> Optional.ofNullable(getLanguage(fallbackIsoCode)));
     }
 
+    public List<LanguageDefinition> languages() {
+        return new ArrayList<>(this.languages.values());
+    }
     @Nullable
     public LanguageDefinition getLanguage(String language) {
         return languages.get(language);
