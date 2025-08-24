@@ -34,7 +34,7 @@ public class SentenceExtractor {
 
     private final LanguageConfiguration languageConfiguration;
     private SentenceDetectorME sentenceDetector;
-    private static RDRPOSTagger rdrposTagger;
+    private static HashMap<String, RDRPOSTagger> taggers;
 
     private static NgramLexicon ngramLexicon = null;
 
@@ -67,11 +67,16 @@ public class SentenceExtractor {
                 ngramLexicon = new NgramLexicon(models);
             }
 
-            if (rdrposTagger == null) {
-                try {
-                    rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
-                } catch (Exception ex) {
-                    throw new IllegalStateException(ex);
+            if (taggers == null) {
+                taggers = new HashMap<>();
+                for (var langauge : languageConfiguration.languages()) {
+                    try {
+                        var tagger = new RDRPOSTagger( langauge.posTaggingData().dictFilePath, langauge.posTaggingData().rdrFilePath);
+                        taggers.put(langauge.isoCode(), tagger);
+                    }
+                    catch (IOException ex) {
+                        logger.error("Failed to initialize RDRPosTagger for language " + langauge.isoCode());
+                    }
                 }
             }
         }
@@ -122,6 +127,17 @@ public class SentenceExtractor {
                 text);
     }
 
+
+    public DocumentLanguageData extractSentences(String text) {
+        LanguageDefinition language = languageConfiguration.identifyLanguage(text, "en")
+                .orElseThrow(() -> new RuntimeException("Language not found for default isoCode 'en'"));
+
+        var sentences = extractSentencesFromString(language, text, EnumSet.noneOf(HtmlTag.class));
+
+        return new DocumentLanguageData(language, sentences, text);
+    }
+
+
     public DocumentSentence extractSentence(LanguageDefinition language,
                                             String text,
                                             EnumSet<HtmlTag> htmlTags) {
@@ -158,7 +174,7 @@ public class SentenceExtractor {
         return new DocumentSentence(
                 seps,
                 lc,
-                rdrposTagger.tagsForEnSentence(words),
+                taggers.get(language.isoCode()).tagSentence(words),
                 stemmed,
                 htmlTags,
                 isCapitalized,
@@ -211,7 +227,7 @@ public class SentenceExtractor {
                 var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
-                var posTags = rdrposTagger.tagsForEnSentence(tokens);
+                var posTags = taggers.get(language.isoCode()).tagSentence(tokens);
                 var tokensLc = new String[tokens.length];
                 var stemmed = new String[tokens.length];
 
