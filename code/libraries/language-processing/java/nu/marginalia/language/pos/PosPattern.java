@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.OptionalInt;
 
 public class PosPattern {
     public final LongArrayList pattern = new LongArrayList();
@@ -20,7 +20,7 @@ public class PosPattern {
         return pattern.size();
     }
 
-    public PosPattern(Map<String, Integer> lexicon, String expression) {
+    public PosPattern(PosTaggingData taggingData, String expression) {
         List<String> tokens = new ArrayList<>();
         int pos = 0;
 
@@ -72,16 +72,14 @@ public class PosPattern {
             for (String variant : variants) {
                 if (variant.endsWith("*") && variant.length() > 1) {
                     String prefix = variant.substring(0, variant.length() - 1);
-                    variantsCompiled |= lexicon.entrySet()
-                            .stream()
-                            .filter(entry -> entry.getKey().startsWith(prefix))
-                            .mapToLong(entry -> 1L<<entry.getValue())
-                            .reduce(0, (a,b) -> (a|b));
+                    for (int tagId : taggingData.tagIdsForPrefix(prefix)) {
+                        variantsCompiled |= 1L << tagId;
+                    }
                 }
                 else {
-                    Integer bit = lexicon.get(variant);
-                    if (bit != null) {
-                        variantsCompiled |= 1L << bit;
+                    OptionalInt tag = taggingData.tagId(variant);
+                    if (tag.isPresent()) {
+                        variantsCompiled |= 1L << tag.getAsInt();
                     } else {
                         logger.warn("Pattern '{}' is referencing unknown POS tag '{}'", expression, variant);
                     }

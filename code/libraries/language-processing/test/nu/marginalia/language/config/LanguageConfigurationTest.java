@@ -61,16 +61,16 @@ public class LanguageConfigurationTest {
     public void testPosPattern() {
         var enPos = languageConfiguration.getLanguage("en").posTaggingData();
 
-        System.out.println(new PosPattern(enPos.tags, "NNP").pattern);
-        System.out.println(new PosPattern(enPos.tags, "NNP").pattern);
-        System.out.println(new PosPattern(enPos.tags, "NNP NNPS").pattern);
-        System.out.println(new PosPattern(enPos.tags, "NNPS (NNPS DT) DT").pattern);
-        System.out.println(new PosPattern(enPos.tags,
+        System.out.println(new PosPattern(enPos, "NNP").pattern);
+        System.out.println(new PosPattern(enPos, "NNP").pattern);
+        System.out.println(new PosPattern(enPos, "NNP NNPS").pattern);
+        System.out.println(new PosPattern(enPos, "NNPS (NNPS DT) DT").pattern);
+        System.out.println(new PosPattern(enPos,
                 "(NNP NNPS) (NNP NNPS IN DT CC) (NNP NNPS IN DT CC) (NNP NNPS)").pattern);
 
-        assertEquals(new PosPattern(enPos.tags, "NNP*").pattern,
-                new PosPattern(enPos.tags, "(NNP NNPS)").pattern);
-        assertEquals(LongList.of(0L), new PosPattern(enPos.tags, "Hello").pattern);
+        assertEquals(new PosPattern(enPos, "NNP*").pattern,
+                new PosPattern(enPos, "(NNP NNPS)").pattern);
+        assertEquals(LongList.of(0L), new PosPattern(enPos, "Hello").pattern);
     }
 }
 

@@ -152,7 +152,7 @@ public class LanguageConfiguration {
             for (int j = 0; j < posPatternsList.getLength(); j++) {
                 Element posPatternTag = (Element) posPatternsList.item(j);
                 ret.computeIfAbsent(category, (k) -> new ArrayList<>())
-                        .add(new PosPattern(posTaggingData.tags, posPatternTag.getTextContent()));
+                        .add(new PosPattern(posTaggingData, posPatternTag.getTextContent()));
             }
 
         }
