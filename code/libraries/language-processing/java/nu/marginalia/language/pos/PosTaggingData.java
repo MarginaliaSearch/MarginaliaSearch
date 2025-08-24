@@ -1,14 +1,14 @@
 package nu.marginalia.language.pos;
 
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class PosTaggingData {
     public final Path dictFilePath;
@@ -33,6 +33,26 @@ public class PosTaggingData {
         }
 
         this.tags = Collections.unmodifiableMap(tags);
+    }
+
+    public List<String> tags() {
+        return tags.keySet().stream().sorted().toList();
+    }
+
+    public OptionalInt tagId(String tagName) {
+        Integer id = tags.get(tagName);
+        if (id == null)
+            return OptionalInt.empty();
+        return OptionalInt.of(id);
+    }
+
+    public IntList tagIdsForPrefix(String tagNamePrefix) {
+        IntArrayList ret = new IntArrayList();
+        tags.entrySet().stream()
+                .filter(tag -> tag.getKey().startsWith(tagNamePrefix))
+                .mapToInt(Map.Entry::getValue)
+                .forEach(ret::add);
+        return ret;
     }
 
     @Override
