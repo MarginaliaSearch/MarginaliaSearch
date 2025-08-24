@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'jvm-test-suite'
+    id 'gg.jte.gradle' version '3.1.15'
 }
 
 java {
@@ -18,10 +19,12 @@ dependencies {
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:commons-codec')
     implementation project(':code:common:model')
+    implementation project(':code:common:service')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:term-frequency-dict')
 
     implementation libs.notnull
+    implementation libs.bundles.jooby
 
     implementation libs.guava
     implementation dependencies.create(libs.guice.get()) {
@@ -37,4 +40,10 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+}
+
+jte {
+    sourceDirectory = file('resources/ltt/jte').toPath()
+    targetDirectory = file('build/classes/jte-precompiled').toPath()
+    generate()
 }
