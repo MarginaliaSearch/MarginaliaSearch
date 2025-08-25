@@ -6,9 +6,12 @@ import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.keyword.KeywordExtractor;
+import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +23,7 @@ import java.util.*;
 public class LanguageProcessingTool extends Jooby {
     private static final Logger logger = LoggerFactory.getLogger(LanguageProcessingTool.class);
     private final ThreadLocalSentenceExtractorProvider  sentenceExtractorProvider;
-
+    private final TermFrequencyDict termFrequencyDict;
     static void main(String[] args) {
         Jooby.runApp(args, LanguageProcessingTool::new);
     }
@@ -28,6 +31,7 @@ public class LanguageProcessingTool extends Jooby {
     public LanguageProcessingTool() {
         try {
             LanguageModels languageModels = getLanguageModels();
+            termFrequencyDict = new TermFrequencyDict(languageModels);
 
             sentenceExtractorProvider = new ThreadLocalSentenceExtractorProvider(
                     new LanguageConfiguration(languageModels),
@@ -65,13 +69,24 @@ public class LanguageProcessingTool extends Jooby {
         var dld = sentenceExtractorProvider.get().extractSentences(textSample);
         Map<String, String> posStyles = posTagStyles(dld);
 
-        System.out.println(posStyles);
+        KeywordExtractor keywordExtractor = new KeywordExtractor();
+        var tfIdfCounts = new WordsTfIdfCounts(termFrequencyDict, keywordExtractor, dld);
+        var titleKeywords = new TitleKeywords(keywordExtractor, dld);
+        var nameLikeKeywords = new NameLikeKeywords(keywordExtractor, dld, 2);
+        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, dld.language().isoCode(), tfIdfCounts, dld);
+        var artifactKeywords = new ArtifactKeywords(dld);
+//        var urlKeywords = new UrlKeywords(url);
 
         return new MapModelAndView("keywords.jte")
                 .put("textSample", textSample)
                 .put("language", dld.language())
                 .put("tagColors", posStyles)
-                .put("sentences", dld.sentences());
+                .put("sentences", dld.sentences())
+                .put("tfIdfReps", tfIdfCounts.getReps())
+                .put("titleReps", titleKeywords.getReps())
+                .put("nameLikeReps", nameLikeKeywords.getReps())
+                .put("subjectLikeReps", subjectLikeKeywords.getReps())
+                .put("artifacts", artifactKeywords.getWords());
     }
 
     public static Map<String, String> posTagStyles(DocumentLanguageData dld) {
