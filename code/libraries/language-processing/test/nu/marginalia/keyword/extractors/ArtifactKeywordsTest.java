@@ -2,7 +2,7 @@ package nu.marginalia.keyword.extractors;
 
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.test.util.TestLanguageModels;
+import nu.marginalia.util.TestLanguageModels;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
