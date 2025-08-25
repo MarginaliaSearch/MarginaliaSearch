@@ -130,7 +130,9 @@
                             @for (WordRep rep : tfIdfReps)
                             <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                                 <span class="text-sm font-medium">${rep.word}</span>
-                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                @if (rep.length > 1)
+                                    <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                @endif
                             </div>
                             @endfor
                         </div>
@@ -146,7 +148,9 @@
                                 @for (WordRep rep : nameLikeReps)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                                         <span class="text-sm font-medium">${rep.word}</span>
+                                        @if (rep.length > 1)
                                         <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                        @endif
                                     </div>
                                 @endfor
                             </div>
@@ -162,7 +166,9 @@
                                 @for (WordRep rep : subjectLikeReps)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                                         <span class="text-sm font-medium">${rep.word}</span>
-                                        <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                        @if (rep.length > 1)
+                                            <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                        @endif
                                     </div>
                                 @endfor
                             </div>
@@ -178,7 +184,9 @@
                                 @for (WordRep rep : titleReps)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                                         <span class="text-sm font-medium">${rep.word}</span>
-                                        <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                        @if (rep.length > 1)
+                                            <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                        @endif
                                     </div>
                                 @endfor
                             </div>
