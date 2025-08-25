@@ -1,14 +1,19 @@
-@import nu.marginalia.language.LanguageProcessingTool
+@import nu.marginalia.language.model.WordRep
 @import nu.marginalia.language.model.DocumentSentence
 @import nu.marginalia.language.model.LanguageDefinition
-@import java.util.List
-@import java.util.Map
+@import java.util.*
 @import java.util.stream.IntStream
 
 @param String textSample
 @param LanguageDefinition language 
 @param List<DocumentSentence> sentences
 @param Map<String, String> tagColors
+@param Collection<WordRep> tfIdfReps
+@param Collection<WordRep> titleReps
+@param Collection<WordRep> nameLikeReps
+@param Collection<WordRep> subjectLikeReps
+@param Collection<String> artifacts
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -115,74 +120,85 @@
             <div class="p-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Keywords -->
+                    @if (tfIdfReps != null && !tfIdfReps.isEmpty())
                     <div>
                         <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                             <i class="fas fa-star text-yellow-500 mr-2"></i>
                             Keywords (TF-IDF)
                         </h3>
                         <div class="space-y-2">
+                            @for (WordRep rep : tfIdfReps)
                             <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span class="text-sm font-medium">language</span>
-                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">0.87</span>
+                                <span class="text-sm font-medium">${rep.word}</span>
+                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
                             </div>
-                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span class="text-sm font-medium">processing</span>
-                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">0.82</span>
-                            </div>
-                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span class="text-sm font-medium">fascinating</span>
-                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">0.75</span>
-                            </div>
-                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span class="text-sm font-medium">natural</span>
-                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">0.71</span>
-                            </div>
+                            @endfor
                         </div>
                     </div>
-
-                    <!-- Bigrams -->
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                            <i class="fas fa-link text-blue-500 mr-2"></i>
-                            Bigrams
-                        </h3>
-                        <div class="space-y-2">
-                            <div class="p-2 bg-blue-50 border border-blue-200 rounded">
-                                <span class="text-sm font-medium">natural language</span>
-                            </div>
-                            <div class="p-2 bg-blue-50 border border-blue-200 rounded">
-                                <span class="text-sm font-medium">language processing</span>
-                            </div>
-                            <div class="p-2 bg-blue-50 border border-blue-200 rounded">
-                                <span class="text-sm font-medium">quick brown</span>
-                            </div>
-                            <div class="p-2 bg-blue-50 border border-blue-200 rounded">
-                                <span class="text-sm font-medium">brown fox</span>
+                    @endif
+                    @if (nameLikeReps != null && !nameLikeReps.isEmpty())
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                Name-Like
+                            </h3>
+                            <div class="space-y-2">
+                                @for (WordRep rep : nameLikeReps)
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm font-medium">${rep.word}</span>
+                                        <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                    </div>
+                                @endfor
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Trigrams -->
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                            <i class="fas fa-sitemap text-green-500 mr-2"></i>
-                            Trigrams
-                        </h3>
-                        <div class="space-y-2">
-                            <div class="p-2 bg-green-50 border border-green-200 rounded">
-                                <span class="text-sm font-medium">natural language processing</span>
-                            </div>
-                            <div class="p-2 bg-green-50 border border-green-200 rounded">
-                                <span class="text-sm font-medium">the quick brown</span>
-                            </div>
-                            <div class="p-2 bg-green-50 border border-green-200 rounded">
-                                <span class="text-sm font-medium">quick brown fox</span>
-                            </div>
-                            <div class="p-2 bg-green-50 border border-green-200 rounded">
-                                <span class="text-sm font-medium">over the lazy</span>
+                    @endif
+                    @if (subjectLikeReps != null && !subjectLikeReps.isEmpty())
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                Subject-Like
+                            </h3>
+                            <div class="space-y-2">
+                                @for (WordRep rep : subjectLikeReps)
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm font-medium">${rep.word}</span>
+                                        <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                    </div>
+                                @endfor
                             </div>
                         </div>
-                    </div>
+                    @endif
+                    @if (titleReps != null && !titleReps.isEmpty())
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                Title
+                            </h3>
+                            <div class="space-y-2">
+                                @for (WordRep rep : titleReps)
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm font-medium">${rep.word}</span>
+                                        <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    @endif
+                    @if (artifacts != null && !artifacts.isEmpty())
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                Title
+                            </h3>
+                            <div class="space-y-2">
+                                @for (String word : artifacts)
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm font-medium">${word}</span>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
