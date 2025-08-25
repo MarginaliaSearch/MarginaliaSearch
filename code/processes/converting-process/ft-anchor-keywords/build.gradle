@@ -17,7 +17,6 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
-    implementation project(':code:processes:converting-process:ft-keyword-extraction')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
 

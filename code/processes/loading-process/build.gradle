@@ -37,7 +37,6 @@ dependencies {
 
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:converting-process:model')
-    implementation project(':code:processes:converting-process:ft-keyword-extraction')
 
     implementation project(':code:functions:link-graph:partition')
 

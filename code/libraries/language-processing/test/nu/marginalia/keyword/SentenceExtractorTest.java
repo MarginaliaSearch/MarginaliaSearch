@@ -9,7 +9,7 @@ import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
-import nu.marginalia.test.util.TestLanguageModels;
+import nu.marginalia.util.TestLanguageModels;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;

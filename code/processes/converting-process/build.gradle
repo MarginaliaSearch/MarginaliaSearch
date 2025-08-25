@@ -46,7 +46,6 @@ dependencies {
     implementation project(':code:processes:crawling-process:model')
 
     implementation project(':code:processes:converting-process:ft-anchor-keywords')
-    implementation project(':code:processes:converting-process:ft-keyword-extraction')
     implementation project(':code:processes:converting-process:ft-dom-classifier')
 
     implementation project(':code:processes:crawling-process:ft-crawl-blocklist')

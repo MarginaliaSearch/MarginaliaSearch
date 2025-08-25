@@ -5,7 +5,7 @@ import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.test.util.TestLanguageModels;
+import nu.marginalia.util.TestLanguageModels;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
