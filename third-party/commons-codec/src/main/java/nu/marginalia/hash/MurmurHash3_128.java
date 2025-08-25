@@ -57,12 +57,20 @@ public class MurmurHash3_128 {
         return hash64(data, 0, data.length(), data.hashCode());
     }
 
+    /** Like hashASCIIOnly except seeded with the Java String.hashCode()
+     * to provide better behavior for non-ASCII strings.  It's much worse
+     * than doing it properly, but better than not doing this.
+     */
+    public long hashUtf8(String data) {
+        return hash64(data, 0, data.length(), DEFAULT_SEED);
+    }
+
     /** Select the hash function appropriate for keywords based system configuration,
      * and hash the keyword.
      */
     public long hashKeyword(String data) {
         if (NO_FLATTEN_UNICODE) {
-            return hash64(data, 0, data.length(), DEFAULT_SEED);
+        return hashUtf8(data);
         }
         else {
             return hashNearlyASCII(data);

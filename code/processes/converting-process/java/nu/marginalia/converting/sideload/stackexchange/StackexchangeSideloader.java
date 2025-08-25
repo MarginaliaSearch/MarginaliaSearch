@@ -131,7 +131,7 @@ public class StackexchangeSideloader implements SideloadSource {
             var dld = sentenceExtractorProvider.get().extractSentences(doc);
 
             ret.url = url;
-            ret.words = keywordExtractor.extractKeywords(dld, new LinkTexts(), url);
+            ret.words = keywordExtractor.extractKeywords(dld, "en", new LinkTexts(), url);
 
             List<String> syntheticTerms = new ArrayList<>(
                     List.of("site:" + domainName,
@@ -164,6 +164,7 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.details.title = StringUtils.truncate(post.title(), 128);
             ret.details.description = StringUtils.truncate(doc.body().text(), 255);
             ret.details.length = 128;
+            ret.details.language = "en"; // FIXME we should run this throguh language detection
 
             ret.details.format = DocumentFormat.HTML5;
             ret.details.linksExternal = List.of();

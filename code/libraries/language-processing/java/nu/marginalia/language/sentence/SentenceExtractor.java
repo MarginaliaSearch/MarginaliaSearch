@@ -3,15 +3,18 @@ package nu.marginalia.language.sentence;
 import com.github.datquocnguyen.RDRPOSTagger;
 import com.google.inject.Inject;
 import nu.marginalia.LanguageModels;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
+import nu.marginalia.language.model.LanguageDefinition;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.tag.HtmlStringTagger;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.language.sentence.tag.HtmlTaggedString;
+import nu.marginalia.language.stemming.Stemmer;
 import nu.marginalia.segmentation.NgramLexicon;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
-import opennlp.tools.stemmer.PorterStemmer;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -29,12 +32,12 @@ import java.util.*;
  */
 public class SentenceExtractor {
 
+    private final LanguageConfiguration languageConfiguration;
     private SentenceDetectorME sentenceDetector;
-    private static RDRPOSTagger rdrposTagger;
+    private static HashMap<String, RDRPOSTagger> taggers;
 
     private static NgramLexicon ngramLexicon = null;
 
-    private final PorterStemmer porterStemmer = new PorterStemmer();
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
 
     private static final SentencePreCleaner sentencePrecleaner = new SentencePreCleaner();
@@ -46,8 +49,10 @@ public class SentenceExtractor {
     static final int MAX_SENTENCE_COUNT = 1000;
 
     @Inject
-    public SentenceExtractor(LanguageModels models)
+    public SentenceExtractor(LanguageConfiguration languageConfiguration, LanguageModels models)
     {
+        this.languageConfiguration = languageConfiguration;
+
         try (InputStream modelIn = new FileInputStream(models.openNLPSentenceDetectionData.toFile())) {
             var sentenceModel = new SentenceModel(modelIn);
             sentenceDetector = new SentenceDetectorME(sentenceModel);
@@ -62,20 +67,26 @@ public class SentenceExtractor {
                 ngramLexicon = new NgramLexicon(models);
             }
 
-            if (rdrposTagger == null) {
-                try {
-                    rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
-                } catch (Exception ex) {
-                    throw new IllegalStateException(ex);
+            if (taggers == null) {
+                taggers = new HashMap<>();
+                for (var langauge : languageConfiguration.languages()) {
+                    try {
+                        var tagger = new RDRPOSTagger( langauge.posTaggingData().dictFilePath, langauge.posTaggingData().rdrFilePath);
+                        taggers.put(langauge.isoCode(), tagger);
+                    }
+                    catch (IOException ex) {
+                        logger.error("Failed to initialize RDRPosTagger for language " + langauge.isoCode());
+                    }
                 }
             }
         }
 
     }
 
-    public DocumentLanguageData extractSentences(Document doc) {
+    public DocumentLanguageData extractSentences(Document doc) throws UnsupportedLanguageException {
+        var language = languageConfiguration.identifyLanguage(doc).orElseThrow(UnsupportedLanguageException::new);
+
         final List<DocumentSentence> textSentences = new ArrayList<>();
-        
         final List<HtmlTaggedString> taggedStrings = HtmlStringTagger.tagDocumentStrings(doc);
 
         final int totalTextLength = taggedStrings.stream().mapToInt(HtmlTaggedString::length).sum();
@@ -85,7 +96,7 @@ public class SentenceExtractor {
             String text = taggedString.string();
 
             textSentences.addAll(
-                    extractSentencesFromString(text, taggedString.tags())
+                    extractSentencesFromString(language, text, taggedString.tags())
             );
 
             if (documentText.isEmpty()) {
@@ -96,23 +107,42 @@ public class SentenceExtractor {
             }
         }
 
-        return new DocumentLanguageData(textSentences, documentText.toString());
+        return new DocumentLanguageData(language, textSentences, documentText.toString());
     }
 
     public DocumentLanguageData extractSentences(String text, String title) {
-        var textSentences = extractSentencesFromString(text, EnumSet.noneOf(HtmlTag.class));
-        var titleSentences = extractSentencesFromString(title.toLowerCase(), EnumSet.of(HtmlTag.TITLE));
+        LanguageDefinition language = languageConfiguration.identifyLanguage(text, "en")
+                .orElseThrow(() -> new RuntimeException("Language not found for default isoCode 'en'"));
+
+        var textSentences = extractSentencesFromString(language, text, EnumSet.noneOf(HtmlTag.class));
+        var titleSentences = extractSentencesFromString(language, title.toLowerCase(), EnumSet.of(HtmlTag.TITLE));
 
         List<DocumentSentence> combined = new ArrayList<>(textSentences.size() + titleSentences.size());
         combined.addAll(titleSentences);
         combined.addAll(textSentences);
 
         return new DocumentLanguageData(
+                language,
                 combined,
                 text);
     }
 
-    public DocumentSentence extractSentence(String text, EnumSet<HtmlTag> htmlTags) {
+
+    public DocumentLanguageData extractSentences(String text) {
+        LanguageDefinition language = languageConfiguration.identifyLanguage(text, "en")
+                .orElseThrow(() -> new RuntimeException("Language not found for default isoCode 'en'"));
+
+        var sentences = extractSentencesFromString(language, text, EnumSet.noneOf(HtmlTag.class));
+
+        return new DocumentLanguageData(language, sentences, text);
+    }
+
+
+    public DocumentSentence extractSentence(LanguageDefinition language,
+                                            String text,
+                                            EnumSet<HtmlTag> htmlTags) {
+        final Stemmer stemmer = language.stemmer();
+
         var wordsAndSeps = SentenceSegmentSplitter.splitSegment(text, MAX_SENTENCE_LENGTH);
 
         String[] words = wordsAndSeps.words();
@@ -134,7 +164,7 @@ public class SentenceExtractor {
             }
 
             try {
-                stemmed[i] = porterStemmer.stem(lc[i]);
+                stemmed[i] = stemmer.stem(lc[i]);
             }
             catch (Exception ex) {
                 stemmed[i] = "NN"; // ???
@@ -144,7 +174,7 @@ public class SentenceExtractor {
         return new DocumentSentence(
                 seps,
                 lc,
-                rdrposTagger.tagsForEnSentence(words),
+                taggers.get(language.isoCode()).tagSentence(words),
                 stemmed,
                 htmlTags,
                 isCapitalized,
@@ -152,8 +182,9 @@ public class SentenceExtractor {
         );
     }
 
-    public List<DocumentSentence> extractSentencesFromString(String text, EnumSet<HtmlTag> htmlTags) {
-        String[] sentences;
+    public List<DocumentSentence> extractSentencesFromString(LanguageDefinition language, String text, EnumSet<HtmlTag> htmlTags) {
+        final Stemmer stemmer = language.stemmer();
+
 
         // Safety net against malformed data DOS attacks,
         // found 5+ MB <p>-tags in the wild that just break
@@ -167,7 +198,7 @@ public class SentenceExtractor {
         text = normalizeSpaces(text);
 
         // Split into sentences
-
+        String[] sentences;
         try {
             sentences = sentenceDetector.sentDetect(text);
         }
@@ -196,7 +227,7 @@ public class SentenceExtractor {
                 var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
-                var posTags = rdrposTagger.tagsForEnSentence(tokens);
+                var posTags = taggers.get(language.isoCode()).tagSentence(tokens);
                 var tokensLc = new String[tokens.length];
                 var stemmed = new String[tokens.length];
 
@@ -221,7 +252,7 @@ public class SentenceExtractor {
                     }
 
                     try {
-                        stemmed[i] = porterStemmer.stem(tokens[i]);
+                        stemmed[i] = stemmer.stem(tokens[i]);
                     }
                     catch (Exception ex) {
                         stemmed[i] = "NN"; // ???

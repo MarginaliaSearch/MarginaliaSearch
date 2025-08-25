@@ -415,7 +415,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", 0., "HTML5", 0, null, fullId, 10
+                "test", "test", "en", 0., "HTML5", 0, null, fullId, 10
         ));
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
@@ -438,6 +438,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         0,
                         new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode(),
                         100,
+                        "en",
                         keywords,
                         metadata,
                         positions,
@@ -453,7 +454,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", 0., "HTML5", 0, null, id, 10
+                "test", "test", "en", 0., "HTML5", 0, null, id, 10
         ));
 
 
@@ -477,6 +478,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         0,
                         new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode(),
                         100,
+                        "en",
                         keywords,
                         metadata,
                         positions,

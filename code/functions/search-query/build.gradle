@@ -33,7 +33,6 @@ dependencies {
 
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
-    implementation project(':code:processes:converting-process:ft-keyword-extraction')
 
     implementation libs.bundles.slf4j
 

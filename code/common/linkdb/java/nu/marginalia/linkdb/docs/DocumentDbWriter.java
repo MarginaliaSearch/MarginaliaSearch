@@ -41,8 +41,8 @@ public class DocumentDbWriter {
     public void add(List<DocdbUrlDetail> docdbUrlDetail) throws SQLException {
 
         try (var stmt = connection.prepareStatement("""
-                INSERT OR IGNORE INTO DOCUMENT(ID, URL, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT OR IGNORE INTO DOCUMENT(ID, URL, TITLE, DESCRIPTION, LANGUAGE, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """)) {
 
             int i = 0;
@@ -54,15 +54,16 @@ public class DocumentDbWriter {
 
                 stmt.setString(3, document.title());
                 stmt.setString(4, document.description());
-                stmt.setInt(5, document.wordsTotal());
-                stmt.setString(6, document.format());
-                stmt.setInt(7, document.features());
-                stmt.setLong(8, document.dataHash());
-                stmt.setDouble(9, document.urlQuality());
+                stmt.setString(5, document.language());
+                stmt.setInt(6, document.wordsTotal());
+                stmt.setString(7, document.format());
+                stmt.setInt(8, document.features());
+                stmt.setLong(9, document.dataHash());
+                stmt.setDouble(10, document.urlQuality());
                 if (document.pubYear() == null) {
-                    stmt.setInt(10, 0);
+                    stmt.setInt(11, 0);
                 } else {
-                    stmt.setInt(10, document.pubYear());
+                    stmt.setInt(11, document.pubYear());
                 }
 
                 stmt.addBatch();
