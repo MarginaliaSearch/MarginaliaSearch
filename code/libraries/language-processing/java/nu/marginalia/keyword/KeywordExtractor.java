@@ -67,8 +67,7 @@ public class KeywordExtractor {
         for (int i = 1; i < sentence.length(); i++) {
             if (sentence.isSeparatorComma(i-1)) { continue; }
 
-            if (isNoun(i, sentence)
-                    && (isNoun(i-1, sentence)) || "JJ".equals(sentence.posTags[i-1])) {
+            if (isNoun(i, sentence) && (isNoun(i-1, sentence) || "JJ".equals(sentence.posTags[i-1]))) {
                 spans.add(new WordSpan(i - 1, i + 1));
             }
         }
@@ -79,7 +78,7 @@ public class KeywordExtractor {
 
             if ((isNoun(i, sentence))
                     && (isJoiner(sentence, i-1) || isNoun(i-1, sentence))
-                    && (isNoun(i-2, sentence)) || "JJ".equals(sentence.posTags[i-2]))
+                    && (isNoun(i-2, sentence) || "JJ".equals(sentence.posTags[i-2])))
                 spans.add(new WordSpan(i-2, i+1));
         }
 
@@ -99,6 +98,13 @@ public class KeywordExtractor {
             }
         }
 
+        for (var span : spans) {
+            StringBuilder sj = new StringBuilder(" ");
+            for (int i = span.start; i < span.end; i++) {
+                sj.append(sentence.wordsLowerCase[i]).append(':').append(sentence.posTags[i]).append(' ');
+            }
+            System.out.println(sj.toString());
+        }
         return spans.toArray(WordSpan[]::new);
     }
 
