@@ -4,6 +4,7 @@ import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
+import nu.marginalia.language.pos.PosPatternCategory;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 
 import java.util.ArrayList;
@@ -17,12 +18,10 @@ import static java.lang.Math.sqrt;
  */
 public class DocumentPositionMapper {
 
-    private final KeywordExtractor keywordExtractor = new KeywordExtractor();
+    private final KeywordExtractor keywordExtractor;
 
-    private final boolean englishGrammar;
-
-    public DocumentPositionMapper(String language) {
-        englishGrammar = language.equalsIgnoreCase("en");
+    public DocumentPositionMapper(KeywordExtractor keywordExtractor) {
+        this.keywordExtractor = keywordExtractor;
     }
 
     public void mapPositionsAndExtractSimpleKeywords(DocumentKeywordsBuilder wordsBuilder,
@@ -86,15 +85,11 @@ public class DocumentPositionMapper {
                 }
             }
 
-            if (englishGrammar) {
-                // FIXME: Grammar based Name Detection is limited to English for now
-                // this *may* work across languages but needs thorough evaluation
-                for (var names : keywordExtractor.getProperNames(sent)) {
-                    WordRep rep = new WordRep(sent, names);
-                    byte meta = metadata.getMetadataForWord(rep.stemmed);
+            for (var names : keywordExtractor.matchGrammarPattern(sent, PosPatternCategory.NAME)) {
+                WordRep rep = new WordRep(sent, names);
+                byte meta = metadata.getMetadataForWord(rep.stemmed);
 
-                    wordsBuilder.addMeta(rep.word, meta);
-                }
+                wordsBuilder.addMeta(rep.word, meta);
             }
         }
 

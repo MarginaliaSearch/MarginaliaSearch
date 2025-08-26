@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor.logic.dom;
+package nu.marginalia.dom;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;

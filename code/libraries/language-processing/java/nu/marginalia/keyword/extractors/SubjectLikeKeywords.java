@@ -5,6 +5,7 @@ import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.model.WordSpan;
+import nu.marginalia.language.pos.PosPatternCategory;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -13,8 +14,6 @@ import java.util.stream.Collectors;
 public class SubjectLikeKeywords implements WordReps {
     private final List<WordRep> wordList;
     private final Set<String> stemmed;
-
-    private static Set<String> svoLanguages = Set.of("en", "sv");
 
     // Seeks out subjects in a sentence by constructs like
     //
@@ -25,22 +24,12 @@ public class SubjectLikeKeywords implements WordReps {
     // Steve McQueen drove fast | cars -> Steve McQueen
 
     public SubjectLikeKeywords(KeywordExtractor keywordExtractor,
-                               String language,
                                WordsTfIdfCounts tfIdfCounts,
                                DocumentLanguageData dld) {
-
-        // FIXME: We can't assume Subject-Verb-Object grammar is universally valid
-
-        if (!svoLanguages.contains(language)) {
-            wordList = List.of();
-            stemmed = Set.of();
-            return;
-        }
-
         Map<String, Set<WordRep>> instances = new HashMap<>();
 
         for (var sentence : dld) {
-            for (WordSpan kw : keywordExtractor.getNouns(sentence)) {
+            for (WordSpan kw : keywordExtractor.matchGrammarPattern(sentence, PosPatternCategory.NOUN)) {
 
                 if (kw.end + 2 >= sentence.length()) {
                     continue;
@@ -48,10 +37,7 @@ public class SubjectLikeKeywords implements WordReps {
                 if (sentence.isSeparatorComma(kw.end) || sentence.isSeparatorComma(kw.end + 1))
                     continue;
 
-                String nextTag = sentence.posTags[kw.end];
-                String nextNextTag = sentence.posTags[kw.end+1];
-
-                if (isVerb(nextTag) && isDetOrAdverbOrVerbOrNoun(nextNextTag)) {
+                if (keywordExtractor.matchGrammarPattern(sentence, PosPatternCategory.SUBJECT_SUFFIX, kw.end)) {
                     var span = new WordSpan(kw.start, kw.end);
                     var rep = new WordRep(sentence, span);
 
@@ -104,17 +90,4 @@ public class SubjectLikeKeywords implements WordReps {
         return tfIdfCounts.getTfIdf(stemmed);
     }
 
-    private boolean isDetOrAdverbOrVerbOrNoun(String posTag) {
-        return "DT".equals(posTag) // determinant
-                || posTag.startsWith("RB") // adverb
-                || posTag.startsWith("VB")  // verb
-                || posTag.startsWith("JJ") // adjective
-                || posTag.startsWith("P")
-                || posTag.startsWith("NN");
-    }
-
-    boolean isVerb(String posTag) {
-        return posTag.startsWith("VB")
-            && !posTag.equals("VB"); // not interested in the infinitive
-    }
 }

@@ -66,14 +66,14 @@ public class LanguageProcessingTool extends Jooby {
         }
 
         String textSample = context.form("textSample").value();
-        var dld = sentenceExtractorProvider.get().extractSentences(textSample);
-        Map<String, String> posStyles = posTagStyles(dld);
+        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(textSample);
+        Map<Long, String> posStyles = posTagStyles(dld);
 
-        KeywordExtractor keywordExtractor = new KeywordExtractor();
+        KeywordExtractor keywordExtractor = new KeywordExtractor(dld.language());
         var tfIdfCounts = new WordsTfIdfCounts(termFrequencyDict, keywordExtractor, dld);
         var titleKeywords = new TitleKeywords(keywordExtractor, dld);
         var nameLikeKeywords = new NameLikeKeywords(keywordExtractor, dld, 2);
-        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, dld.language().isoCode(), tfIdfCounts, dld);
+        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, tfIdfCounts, dld);
         var artifactKeywords = new ArtifactKeywords(dld);
 //        var urlKeywords = new UrlKeywords(url);
 
@@ -89,20 +89,20 @@ public class LanguageProcessingTool extends Jooby {
                 .put("artifacts", artifactKeywords.getWords());
     }
 
-    public static Map<String, String> posTagStyles(DocumentLanguageData dld) {
-        Map<String, String> styles = new HashMap<>();
+    public static Map<Long, String> posTagStyles(DocumentLanguageData dld) {
+        Map<Long, String> styles = new HashMap<>();
 
         // we sort them first to ensure the most common tags are guaranteed to have
         // the largest difference between colors
 
-        Map<String, Integer> counts = new HashMap<>();
+        Map<Long, Integer> counts = new HashMap<>();
         for (var sentence : dld.sentences()) {
             for (var tag : sentence.posTags) {
                 counts.merge(tag, 1, Integer::sum);
             }
         }
 
-        List<String> posTagsByCount =  counts
+        List<Long> posTagsByCount =  counts
                 .entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .map(Map.Entry::getKey)

@@ -193,11 +193,12 @@ class TitleKeywordsTest {
 
     @Test
     public void extractTitleWords() throws IOException, ParserConfigurationException, SAXException, UnsupportedLanguageException {
-        var se = new SentenceExtractor(new LanguageConfiguration(TestLanguageModels.getLanguageModels()), TestLanguageModels.getLanguageModels());
+        var languageConfiguration = new LanguageConfiguration(TestLanguageModels.getLanguageModels());
+        var se = new SentenceExtractor(languageConfiguration, TestLanguageModels.getLanguageModels());
 
         var dld = se.extractSentences(Jsoup.parse(document));
 
-        var reps = new TitleKeywords(new KeywordExtractor(), dld).getReps();
+        var reps = new TitleKeywords(new KeywordExtractor(dld.language()), dld).getReps();
         var words = reps.stream().map(rep -> rep.word).collect(Collectors.toSet());
 
         Set<String> expected = Set.of(

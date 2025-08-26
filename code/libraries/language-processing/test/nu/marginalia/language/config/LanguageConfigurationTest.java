@@ -45,8 +45,8 @@ public class LanguageConfigurationTest {
 
     @Test
     public void testPosData() {
-        var svPos = languageConfiguration.getLanguage("sv").posTaggingData();
-        var enPos = languageConfiguration.getLanguage("en").posTaggingData();
+        var svPos = languageConfiguration.getLanguage("sv").posTagger();
+        var enPos = languageConfiguration.getLanguage("en").posTagger();
 
         Assertions.assertNotNull(svPos);
         Assertions.assertNotNull(enPos);
@@ -54,12 +54,12 @@ public class LanguageConfigurationTest {
         System.out.println(enPos);
         System.out.println(svPos);
 
-        Assertions.assertNotEquals(svPos.tags, enPos.tags);
+        Assertions.assertNotEquals(svPos.tagDict, enPos.tagDict);
     }
 
     @Test
     public void testPosPattern() {
-        var enPos = languageConfiguration.getLanguage("en").posTaggingData();
+        var enPos = languageConfiguration.getLanguage("en").posTagger();
 
         System.out.println(new PosPattern(enPos, "NNP").pattern);
         System.out.println(new PosPattern(enPos, "NNP").pattern);
@@ -71,6 +71,8 @@ public class LanguageConfigurationTest {
         assertEquals(new PosPattern(enPos, "NNP*").pattern,
                 new PosPattern(enPos, "(NNP NNPS)").pattern);
         assertEquals(LongList.of(0L), new PosPattern(enPos, "Hello").pattern);
+        assertEquals(0, (new PosPattern(enPos, "(NNP NNPS)").pattern.getFirst() & new PosPattern(enPos, "!(NNP NNPS)").pattern.getFirst()));
+        assertEquals(new PosPattern(enPos, "(NNP NNPS)").pattern.getFirst().longValue(), new PosPattern(enPos, "*").pattern.getFirst() ^ new PosPattern(enPos, "!(NNP NNPS)").pattern.getFirst());
     }
 }
 

@@ -60,13 +60,16 @@ class SubjectLikeKeywordsTest {
 
         var dld = se.extractSentences(text, "Julius Caesar");
 
-        WordsTfIdfCounts tfIdfCounts = new WordsTfIdfCounts(dict, new KeywordExtractor(), dld);
-        SubjectLikeKeywords keywords = new SubjectLikeKeywords(new KeywordExtractor(),
-                "en", tfIdfCounts,
+        WordsTfIdfCounts tfIdfCounts = new WordsTfIdfCounts(dict, new KeywordExtractor(dld.language()), dld);
+        SubjectLikeKeywords keywords = new SubjectLikeKeywords(new KeywordExtractor(dld.language()),
+                tfIdfCounts,
                 dld);
 
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());
         Set<String> expected = Set.of("republic", "authoritarian_reforms", "political_alliance_that", "power_as_populares", "caesar", "reforms", "populares", "senate", "sole_power_after", "pompey", "civil_wars", "wars", "governmental_reforms", "government_of_the_republic");
+
+        System.out.println(actual);
+        System.out.println(expected);
 
         assertEquals(Collections.emptySet(), Sets.symmetricDifference(actual, expected));
     }

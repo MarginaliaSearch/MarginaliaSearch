@@ -7,6 +7,8 @@ public class WordSpan implements Comparable<WordSpan> {
     public final int end;
 
     public WordSpan(int start, int end) {
+        assert end >= start;
+
         this.start = start;
         this.end = end;
     }

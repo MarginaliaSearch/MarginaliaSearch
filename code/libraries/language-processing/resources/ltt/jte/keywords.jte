@@ -7,7 +7,7 @@
 @param String textSample
 @param LanguageDefinition language 
 @param List<DocumentSentence> sentences
-@param Map<String, String> tagColors
+@param Map<Long, String> tagColors
 @param Collection<WordRep> tfIdfReps
 @param Collection<WordRep> titleReps
 @param Collection<WordRep> nameLikeReps
@@ -91,7 +91,7 @@
                             
                             </span>
                             <rt>
-                                ${sentence.posTags[pos]}
+                                ${language.posTagger().decodeTagName(sentence.posTags[pos])}
                                 @if (sentence.isAllCaps(pos))
                                     <i class="fa-solid fa-angles-up"></i>
                                 @elseif (sentence.isCapitalized(pos))

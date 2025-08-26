@@ -14,6 +14,7 @@ import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.xml.sax.SAXException;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DocumentPositionMapperTest {
     private static LanguageDefinition english;
-    private final DocumentPositionMapper positionMapper = new DocumentPositionMapper("en");
+    private DocumentPositionMapper positionMapper;
     static SentenceExtractor se;
 
     @BeforeAll
@@ -36,6 +37,11 @@ class DocumentPositionMapperTest {
         var config = new LanguageConfiguration(WmsaHome.getLanguageModels());
         se = new SentenceExtractor(config, WmsaHome.getLanguageModels());
         english = config.getLanguage("en");
+    }
+
+    @BeforeEach
+    public void setUp() {
+        positionMapper = new DocumentPositionMapper(new KeywordExtractor(english));
     }
 
     @Test

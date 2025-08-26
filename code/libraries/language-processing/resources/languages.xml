@@ -18,9 +18,10 @@
                 disabled (true|false) "false"
                 >
 
-        <!ELEMENT stemmer (#PCDATA)>
+        <!ELEMENT stemmer (pospattern?)>
         <!ATTLIST stemmer
                 algorithm (porter|snowball|none) #REQUIRED
+                variant CDATA #IMPLIED
                 >
 
         <!ELEMENT keywordHash (#PCDATA)>
@@ -35,7 +36,7 @@
                 >
 
         <!ELEMENT ngrams (pospattern*)>
-        <!ATTLIST ngrams type (noun|name|subject-suffix|keyword) #REQUIRED>
+        <!ATTLIST ngrams type (noun|name|subject-suffix|title|keyword) #REQUIRED>
         <!ELEMENT pospattern (#PCDATA)>
 
         <!ELEMENT sentenceDetector EMPTY>
@@ -51,7 +52,9 @@
     </language>
     <language isoCode="en" name="English" display="ltr">
         <keywordHash algorithm="asciish" />
-        <stemmer algorithm="porter" />
+        <stemmer algorithm="porter">
+            <pospattern>!(IN TO CC DT)</pospattern>
+        </stemmer>
         <sentenceDetector algorithm="opennlp"/>
         <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
         <ngrams type="name">
@@ -70,18 +73,31 @@
         <ngrams type="subject-suffix">
             <pospattern>(DT RB* VB* JJ* P* NN*) (VBD VBG VBP VBN VBZ)</pospattern>
         </ngrams>
+        <ngrams type="title">
+            <pospattern>!(CC IN DT TO)</pospattern>
+            <pospattern>!CC !(IN DT TO)</pospattern>
+            <pospattern>!CC * !(IN DT TO)</pospattern>
+            <pospattern>!CC * * !(IN DT TO)</pospattern>
+        </ngrams>
         <ngrams type="keyword">
             <!-- length = 1 -->
-            <pospattern>(N* VBG VBN JJ R VBG)</pospattern>
+            <pospattern>(N* VBG VBN JJ* R* VBG)</pospattern>
             <!-- length = 2 -->
-            <pospattern>(N* VBG VBN JJ R VBG) (N* VBG VBN)</pospattern>
+            <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
             <pospattern>(N* VBG VBN) CD</pospattern>
+            <!-- length = 3 -->
+            <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
+            <pospattern>NNP* (IN TO CC NNP*) (N* VBG VBN)</pospattern>
+            <pospattern>(N* VBG VBN) (N* VBG VBN) CD</pospattern>
+            <!-- length = 4 -->
+            <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
+            <pospattern>NNP* (DT IN TO CC) (IN TO CC) NNP*</pospattern>
         </ngrams>
 
     </language>
     <language isoCode="sv" name="Swedish" display="ltr">
         <keywordHash algorithm="asciish" />
-        <stemmer algorithm="snowball">SWEDISH</stemmer>
+        <stemmer algorithm="snowball" variant="SWEDISH" />
         <sentenceDetector algorithm="opennlp"/>
         <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
         <ngrams type="name">

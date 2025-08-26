@@ -8,7 +8,7 @@ import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.pos.PosPattern;
 import nu.marginalia.language.pos.PosPatternCategory;
-import nu.marginalia.language.pos.PosTaggingData;
+import nu.marginalia.language.pos.PosTagger;
 import nu.marginalia.language.stemming.Stemmer;
 import org.jsoup.nodes.TextNode;
 import org.slf4j.Logger;
@@ -126,18 +126,23 @@ public class LanguageConfiguration {
             String isoCode = languageTag.getAttribute("isoCode").toLowerCase();
             String name = languageTag.getAttribute("name");
 
-            Stemmer stemmer = parseStemmerTag(languageTag, isoCode);
-            KeywordHasher keywordHasher = parseHasherTag(languageTag, isoCode);
-            PosTaggingData posTaggingData = parsePosTag(languageTag, isoCode);
-            Map<PosPatternCategory, List<PosPattern>> posPatterns =
-                    parsePosPatterns(posTaggingData, languageTag, isoCode);
+            try {
+                PosTagger posTagger = parsePosTag(languageTag, isoCode);
+                Stemmer stemmer = parseStemmerTag(languageTag, posTagger, isoCode);
+                KeywordHasher keywordHasher = parseHasherTag(languageTag, isoCode);
+                Map<PosPatternCategory, List<PosPattern>> posPatterns =
+                        parsePosPatterns(posTagger, languageTag, isoCode);
 
-            languages.put(isoCode,
-                    new LanguageDefinition(isoCode, name, stemmer, keywordHasher, posTaggingData));
+                languages.put(isoCode,
+                        new LanguageDefinition(isoCode, name, stemmer, keywordHasher, posTagger, posPatterns));
+            }
+            catch (IOException ex) {
+                logger.error("Failed to set up language " + isoCode, ex);
+            }
         }
     }
 
-    private Map<PosPatternCategory, List<PosPattern>> parsePosPatterns(PosTaggingData posTaggingData,
+    private Map<PosPatternCategory, List<PosPattern>> parsePosPatterns(PosTagger posTagger,
                                                                        Element languageTag, String isoCode) {
         Map<PosPatternCategory, List<PosPattern>> ret = new HashMap<>();
         NodeList ngramsElements = languageTag.getElementsByTagName("ngrams");
@@ -150,6 +155,7 @@ public class LanguageConfiguration {
                 case "name" -> PosPatternCategory.NAME;
                 case "noun" -> PosPatternCategory.NOUN;
                 case "keyword" -> PosPatternCategory.KEYWORD;
+                case "title" -> PosPatternCategory.TITLE;
                 case "subject-suffix" -> PosPatternCategory.SUBJECT_SUFFIX;
                 default -> throw new IllegalArgumentException("Invalid ngrams type in " + isoCode + ", what is '" + type + "'?");
             };
@@ -158,15 +164,15 @@ public class LanguageConfiguration {
             for (int j = 0; j < posPatternsList.getLength(); j++) {
                 Element posPatternTag = (Element) posPatternsList.item(j);
                 ret.computeIfAbsent(category, (k) -> new ArrayList<>())
-                        .add(new PosPattern(posTaggingData, posPatternTag.getTextContent()));
+                        .add(new PosPattern(posTagger, posPatternTag.getTextContent()));
             }
 
         }
 
-        return null;
+        return ret;
     }
 
-    private PosTaggingData parsePosTag(Element languageTag, String isoCode) {
+    private PosTagger parsePosTag(Element languageTag, String isoCode) throws IOException {
         NodeList rdrElements = languageTag.getElementsByTagName("rdrTagger");
         if (rdrElements.getLength() != 1) {
             throw new IllegalArgumentException(
@@ -187,7 +193,7 @@ public class LanguageConfiguration {
             throw new IllegalArgumentException("language.xml: rdrPath id " + dictId
                     + " does not map to a resource in " + isoCode);
 
-        return new PosTaggingData(dictPath, rdrPath);
+        return new PosTagger(isoCode, dictPath, rdrPath);
     }
 
 
@@ -209,7 +215,7 @@ public class LanguageConfiguration {
         };
     }
 
-    private Stemmer parseStemmerTag(Element languageElement, String isoCode) {
+    private Stemmer parseStemmerTag(Element languageElement, PosTagger posTagger, String isoCode) {
         NodeList stemmerElements = languageElement.getElementsByTagName("stemmer");
         if (stemmerElements.getLength() != 1) {
             throw new IllegalArgumentException(
@@ -218,11 +224,18 @@ public class LanguageConfiguration {
         Element stemmerElement = (Element) stemmerElements.item(0);
 
         String stemmerName = stemmerElement.getAttribute("algorithm");
-        String stemmerVariant = stemmerElement.getTextContent().trim();
+        String stemmerVariant = stemmerElement.getAttribute("variant");
+
+        PosPattern inclusionPattern = null;
+        NodeList posPatternList = stemmerElement.getElementsByTagName("pospattern");
+        if (posPatternList.getLength() >= 1) {
+            Element posElement =  (Element) posPatternList.item(0);
+            inclusionPattern = new PosPattern(posTagger, posElement.getTextContent());
+        }
 
         return switch (stemmerName.toLowerCase()) {
-            case "porter" -> new Stemmer.Porter();
-            case "snowball" -> new Stemmer.Snowball(stemmerVariant);
+            case "porter" -> new Stemmer.Porter(inclusionPattern);
+            case "snowball" -> new Stemmer.Snowball(stemmerVariant, inclusionPattern);
             case "none" -> new Stemmer.NoOpStemmer();
             default -> throw new IllegalArgumentException(
                     "language.xml: Unknown stemmer name " + stemmerName + " in " + isoCode);

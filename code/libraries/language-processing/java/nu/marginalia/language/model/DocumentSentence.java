@@ -19,13 +19,14 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     /** A span of words in a sentence */
     public final String[] wordsLowerCase;
     public final String[] stemmedWords;
-    public final String[] posTags;
+    public final long[] posTags;
 
     /** A set of HTML tags that surround the sentence */
     public final EnumSet<HtmlTag> htmlTags;
 
     /** A bitset indicating whether the word is a stop word */
     private final BitSet isStopWord;
+    private final BitSet includeInStemming;
 
     /** A bitset indicating whether the word is capitalized */
     private final BitSet isCapitalized;
@@ -37,16 +38,16 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     // where false = COMMA, true = SPACE
     private final BitSet separators;
 
-
     public SoftReference<WordSpan[]> keywords;
 
     public DocumentSentence(BitSet separators,
                             String[] wordsLowerCase,
-                            String[] posTags,
+                            long[] posTags,
                             String[] stemmedWords,
                             EnumSet<HtmlTag> htmlTags,
                             BitSet isCapitalized,
-                            BitSet isAllCaps
+                            BitSet isAllCaps,
+                            BitSet includeInStemming
                             )
     {
         this.separators = separators;
@@ -56,6 +57,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
         this.htmlTags = htmlTags;
         this.isCapitalized = isCapitalized;
         this.isAllCaps = isAllCaps;
+        this.includeInStemming = includeInStemming;
 
         isStopWord = new BitSet(wordsLowerCase.length);
 
@@ -85,6 +87,16 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     }
     public boolean isSeparatorComma(int i) {
         return !separators.get(i);
+    }
+
+    /** Returns the position of the next comma in the sentence,
+     * or sentence.length() if no remaining commas exist.
+     */
+    public int nextCommaPos(int pos) {
+        int ret = separators.nextClearBit(pos);
+        if (ret < 0)
+            return separators.length();
+        return ret;
     }
 
     public String constructWordFromSpan(WordSpan span) {
@@ -153,10 +165,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     }
 
     private boolean includeInStemming(int i) {
-        if (posTags[i].equals("IN") || posTags[i].equals("TO") || posTags[i].equals("CC") || posTags[i].equals("DT")) {
-            return false;
-        }
-        return true;
+        return includeInStemming.get(i);
     }
 
     @Override
@@ -199,7 +208,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
         }
 
         public String wordLowerCase() { return wordsLowerCase[pos]; }
-        public String posTag() { return posTags[pos]; }
+        public long posTag() { return posTags[pos]; }
         public String stemmed() { return stemmedWords[pos]; }
         public boolean isStopWord() { return DocumentSentence.this.isStopWord(pos); }
 

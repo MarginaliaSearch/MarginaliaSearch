@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.dom.DomPruningFilter;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;

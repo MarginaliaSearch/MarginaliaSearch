@@ -4,5 +4,6 @@ public enum PosPatternCategory {
     NAME,
     NOUN,
     KEYWORD,
+    TITLE,
     SUBJECT_SUFFIX
 }

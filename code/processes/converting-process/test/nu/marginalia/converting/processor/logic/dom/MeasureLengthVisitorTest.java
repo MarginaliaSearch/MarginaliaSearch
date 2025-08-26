@@ -1,9 +1,10 @@
 package nu.marginalia.converting.processor.logic.dom;
 
+import nu.marginalia.dom.MeasureLengthVisitor;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MeasureLengthVisitorTest {
 

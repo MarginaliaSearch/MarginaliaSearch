@@ -2,9 +2,10 @@ package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.dom.DomPruningFilter;
 import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import org.jsoup.Jsoup;
@@ -49,21 +50,25 @@ class NameLikeKeywordsTest {
             the Roman Republic. Octavian set about solidifying his power, and the era of the Roman Empire began.
            """;
     static SentenceExtractor se;
+    static LanguageConfiguration lc;
+    static LanguageDefinition en;
 
 
     @BeforeAll
     public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
         se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+        lc = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        en = lc.getLanguage("en");
     }
 
     @Test
     public void test() {
-        NameLikeKeywords keywords = new NameLikeKeywords(new KeywordExtractor(), se.extractSentences(text, "Julius Caesar"), 2);
+        NameLikeKeywords keywords = new NameLikeKeywords(new KeywordExtractor(en), se.extractSentences(text, "Julius Caesar"), 2);
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());
         Set<String> expected = Set.of("caesar", "senate", "roman", "republic", "roman_republic");
 
-        // rome isn't counted because PorterStemmer is derp
-
+        System.out.println(actual);
+        System.out.println(expected);
         assertEquals(Collections.emptySet(), Sets.symmetricDifference(actual, expected));
     }
 
@@ -75,7 +80,7 @@ class NameLikeKeywordsTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0));
 
-        var ke = new KeywordExtractor();
+        var ke = new KeywordExtractor(en);
 
         var nameWords = new NameLikeKeywords(ke, se.extractSentences(doc), 2);
         System.out.println("Names: " + nameWords.words());
@@ -90,7 +95,7 @@ class NameLikeKeywordsTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0));
 
-        var ke = new KeywordExtractor();
+        var ke = new KeywordExtractor(en);
 
         var nameWords = new NameLikeKeywords(ke, se.extractSentences(doc), 2);
         System.out.println("Names: " + nameWords.words());

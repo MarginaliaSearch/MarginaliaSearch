@@ -10,11 +10,11 @@ import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.classifier.AcceptableAds;
 import nu.marginalia.converting.processor.logic.*;
-import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecializations;
 import nu.marginalia.converting.processor.pubdate.PubDateSniffer;
+import nu.marginalia.dom.MeasureLengthVisitor;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
@@ -177,7 +177,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 (int) -ret.quality, // ret.quality is negative
                 documentFlags);
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, languageIsoCode, linkTexts, url);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
         ret.description = specialization.getSummary(prunedDoc, words.importantWords);
         ret.generator = generatorParts.type();

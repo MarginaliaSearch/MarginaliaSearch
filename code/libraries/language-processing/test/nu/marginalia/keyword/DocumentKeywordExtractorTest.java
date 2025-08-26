@@ -1,7 +1,7 @@
 package nu.marginalia.keyword;
 
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.dom.DomPruningFilter;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -42,7 +42,7 @@ class DocumentKeywordExtractorTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0.5));
 
-        var keywords = extractor.extractKeywords(se.extractSentences(doc), "en", new LinkTexts(), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
+        var keywords = extractor.extractKeywords(se.extractSentences(doc), new LinkTexts(), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
 
         keywords.getWordToMeta().forEach((k, v) -> {
             if (k.contains("_")) {
@@ -62,7 +62,7 @@ class DocumentKeywordExtractorTest {
 
         var keywords = extractor.extractKeywords(
                 se.extractSentences(doc),
-                "en", new LinkTexts(), new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
+                new LinkTexts(), new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
         );
 
         var keywordsBuilt = keywords.build();

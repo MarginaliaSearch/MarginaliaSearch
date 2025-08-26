@@ -1,6 +1,5 @@
 package nu.marginalia.language.sentence;
 
-import com.github.datquocnguyen.RDRPOSTagger;
 import com.google.inject.Inject;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.config.LanguageConfiguration;
@@ -8,6 +7,7 @@ import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.UnsupportedLanguageException;
+import nu.marginalia.language.pos.PosPattern;
 import nu.marginalia.language.sentence.tag.HtmlStringTagger;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.language.sentence.tag.HtmlTaggedString;
@@ -34,7 +34,6 @@ public class SentenceExtractor {
 
     private final LanguageConfiguration languageConfiguration;
     private SentenceDetectorME sentenceDetector;
-    private static HashMap<String, RDRPOSTagger> taggers;
 
     private static NgramLexicon ngramLexicon = null;
 
@@ -65,19 +64,6 @@ public class SentenceExtractor {
         synchronized (SentenceExtractor.class) {
             if (ngramLexicon == null) {
                 ngramLexicon = new NgramLexicon(models);
-            }
-
-            if (taggers == null) {
-                taggers = new HashMap<>();
-                for (var langauge : languageConfiguration.languages()) {
-                    try {
-                        var tagger = new RDRPOSTagger( langauge.posTaggingData().dictFilePath, langauge.posTaggingData().rdrFilePath);
-                        taggers.put(langauge.isoCode(), tagger);
-                    }
-                    catch (IOException ex) {
-                        logger.error("Failed to initialize RDRPosTagger for language " + langauge.isoCode());
-                    }
-                }
             }
         }
 
@@ -149,9 +135,20 @@ public class SentenceExtractor {
         BitSet seps = wordsAndSeps.separators();
         String[] lc = new String[words.length];
         String[] stemmed = new String[words.length];
+        long[] posTags = language.posTagger().tagSentence(words);
 
         BitSet isCapitalized = new BitSet(words.length);
         BitSet isAllCaps = new BitSet(words.length);
+        BitSet includeInStemming;
+
+        PosPattern inclusionPattern = stemmer.inclusionPatten();
+        if (inclusionPattern == null) {
+            includeInStemming = new BitSet(lc.length);
+            includeInStemming.set(0, lc.length);
+        }
+        else {
+            includeInStemming = inclusionPattern.matchTagPattern(posTags);
+        }
 
         for (int i = 0; i < words.length; i++) {
             lc[i] = stripPossessive(words[i].toLowerCase());
@@ -174,11 +171,12 @@ public class SentenceExtractor {
         return new DocumentSentence(
                 seps,
                 lc,
-                taggers.get(language.isoCode()).tagSentence(words),
+                posTags,
                 stemmed,
                 htmlTags,
                 isCapitalized,
-                isAllCaps
+                isAllCaps,
+                includeInStemming
         );
     }
 
@@ -227,15 +225,25 @@ public class SentenceExtractor {
                 var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
-                var posTags = taggers.get(language.isoCode()).tagSentence(tokens);
+                var posTags = language.posTagger().tagSentence(tokens);
                 var tokensLc = new String[tokens.length];
                 var stemmed = new String[tokens.length];
 
                 BitSet isCapitalized = new BitSet(tokens.length);
                 BitSet isAllCaps = new BitSet(tokens.length);
+                BitSet includeInStemming;
+
+                PosPattern inclusionPattern = stemmer.inclusionPatten();
+                if (inclusionPattern == null) {
+                    includeInStemming = new BitSet(tokens.length);
+                    includeInStemming.set(0, tokens.length);
+                }
+                else {
+                    includeInStemming = inclusionPattern.matchTagPattern(posTags);
+                }
 
                 for (int i = 0; i < tokens.length; i++) {
-                    if (tokens[i].length() > 0 && Character.isUpperCase(tokens[i].charAt(0))) {
+                    if (!tokens[i].isEmpty() && Character.isUpperCase(tokens[i].charAt(0))) {
                         isCapitalized.set(i);
                     }
                     if (StringUtils.isAllUpperCase(tokens[i])) {
@@ -258,7 +266,7 @@ public class SentenceExtractor {
                         stemmed[i] = "NN"; // ???
                     }
                 }
-                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps));
+                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps, includeInStemming));
             }
         }
         else {
@@ -269,18 +277,19 @@ public class SentenceExtractor {
                 var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
-                var posTags = new String[tokens.length];
-                Arrays.fill(posTags, "X"); // Placeholder POS tag
+                var posTags = new long[tokens.length];
                 var tokensLc = new String[tokens.length];
                 var stemmed = new String[tokens.length];
 
                 BitSet isCapitalized = new BitSet(tokens.length);
                 BitSet isAllCaps = new BitSet(tokens.length);
+                BitSet includeInStemming = new BitSet(tokens.length);
+                includeInStemming.set(0, tokens.length);
 
                 for (int i = 0; i < tokensLc.length; i++) {
                     var originalVal = tokens[i];
 
-                    if (tokens[i].length() > 0 && Character.isUpperCase(tokens[i].charAt(0))) {
+                    if (!tokens[i].isEmpty() && Character.isUpperCase(tokens[i].charAt(0))) {
                         isCapitalized.set(i);
                     }
                     if (StringUtils.isAllUpperCase(tokens[i])) {
@@ -295,7 +304,7 @@ public class SentenceExtractor {
                     stemmed[i] = tokensLc[i]; // we don't stem non-language words
                 }
 
-                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isAllCaps, isCapitalized));
+                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isAllCaps, isCapitalized, includeInStemming));
             }
 
         }

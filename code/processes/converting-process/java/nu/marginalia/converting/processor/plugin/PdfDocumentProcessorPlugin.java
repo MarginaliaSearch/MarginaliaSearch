@@ -130,7 +130,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                 (int) -ret.quality,
                 documentFlags);
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, languageIsoCode, linkTexts, url);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
         var tagWords = new MetaTagsBuilder()
                 .addPubDate(pubDate)

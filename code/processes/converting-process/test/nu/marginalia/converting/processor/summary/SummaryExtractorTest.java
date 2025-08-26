@@ -43,7 +43,7 @@ class SummaryExtractorTest {
 
     Set<String> getImportantWords(Document doc) throws URISyntaxException, UnsupportedLanguageException {
         var dld = setenceExtractor.extractSentences(doc);
-        var keywords = keywordExtractor.extractKeywords(dld, "en", new LinkTexts(), new EdgeUrl(
+        var keywords = keywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(
                 "https://www.marginalia.nu/"
         ));
         System.out.println(keywords.importantWords);

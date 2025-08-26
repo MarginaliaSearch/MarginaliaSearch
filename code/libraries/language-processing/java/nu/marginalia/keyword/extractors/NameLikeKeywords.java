@@ -6,6 +6,7 @@ import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
+import nu.marginalia.language.pos.PosPatternCategory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ public class NameLikeKeywords implements WordReps {
         var instances = new HashMap<String, HashSet<WordRep>>(100);
 
         for (DocumentSentence sent : dld) {
-            var keywords = keywordExtractor.getProperNames(sent);
+            var keywords = keywordExtractor.matchGrammarPattern(sent, PosPatternCategory.NAME);
             for (var span : keywords) {
                 if (span.size() <= 1 && sent.isAllCaps(span.start))
                     continue;

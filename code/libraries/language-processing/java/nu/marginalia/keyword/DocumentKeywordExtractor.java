@@ -16,7 +16,6 @@ public class DocumentKeywordExtractor {
 
     private final TermFrequencyDict dict;
 
-    private final KeywordExtractor keywordExtractor = new KeywordExtractor();
 
     @Inject
     public DocumentKeywordExtractor(TermFrequencyDict dict) {
@@ -34,16 +33,17 @@ public class DocumentKeywordExtractor {
     }
 
 
-    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData dld, String language, LinkTexts linkTexts, EdgeUrl url) {
+    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData dld, LinkTexts linkTexts, EdgeUrl url) {
+        final KeywordExtractor keywordExtractor = new KeywordExtractor(dld.language());
 
         var tfIdfCounts = new WordsTfIdfCounts(dict, keywordExtractor, dld);
 
         var titleKeywords = new TitleKeywords(keywordExtractor, dld);
         var nameLikeKeywords = new NameLikeKeywords(keywordExtractor, dld, 2);
-        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, language, tfIdfCounts, dld);
+        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, tfIdfCounts, dld);
         var artifactKeywords = new ArtifactKeywords(dld);
         var urlKeywords = new UrlKeywords(url);
-        var positionMapper = new DocumentPositionMapper(language);
+        var positionMapper = new DocumentPositionMapper(keywordExtractor);
         var keywordMetadata = KeywordMetadata.builder()
                 .titleKeywords(titleKeywords)
                 .nameLikeKeywords(nameLikeKeywords)
