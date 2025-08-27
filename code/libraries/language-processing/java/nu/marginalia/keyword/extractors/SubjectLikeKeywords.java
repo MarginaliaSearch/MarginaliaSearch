@@ -30,11 +30,7 @@ public class SubjectLikeKeywords implements WordReps {
 
         for (var sentence : dld) {
             for (WordSpan kw : keywordExtractor.matchGrammarPattern(sentence, PosPatternCategory.NOUN)) {
-
-                if (kw.end + 2 >= sentence.length()) {
-                    continue;
-                }
-                if (sentence.isSeparatorComma(kw.end) || sentence.isSeparatorComma(kw.end + 1))
+                if (sentence.nextCommaPos(kw.end - 1) <= kw.end)
                     continue;
 
                 if (keywordExtractor.matchGrammarPattern(sentence, PosPatternCategory.SUBJECT_SUFFIX, kw.end)) {

@@ -12,7 +12,8 @@ import java.util.EnumSet;
 import java.util.List;
 
 class PosPatternTest {
-
+    final List<String> allTags = List.of("A1", "B1", "C1");
+    final PosTagger posTagger = new PosTagger("en", allTags);
 
     @Test
     void matchSentence__singleTermPattern() {
@@ -219,7 +220,6 @@ class PosPatternTest {
         Assertions.assertEquals(bitSet(false, false, true, false, false, true, false, false), pattern.matchTagPattern(matchPattern.toArray()));
     }
 
-    PosTagger posTagger = new PosTagger("en", List.of("A1", "B1", "C1", "A2", "B2", "C2"));
 
     DocumentSentence createSentenceForPattern(String... tags) {
         BitSet allSet = new BitSet(tags.length);

@@ -64,14 +64,21 @@
             <pospattern>NNP* (NNP* IN DT CC) (NNP* IN DT CC) NNP*</pospattern>
         </ngrams>
         <ngrams type="noun">
-            <pospattern>NN</pospattern>
-            <pospattern>(NN JJ) NN</pospattern>
-            <pospattern>(NN JJ) (NN IN TO CC) NN</pospattern>
-            <pospattern>(NN JJ) (NN IN TO CC) DT NN</pospattern>
-            <pospattern>(NN JJ) (NN IN TO CC) (NN IN TO CC) NN</pospattern>
+            <pospattern>VBG</pospattern>
+            <pospattern>RB VBG</pospattern>
+            <pospattern>(NNP* JJ)</pospattern>
+            <pospattern>(NN* JJ) NN*</pospattern>
+            <pospattern>(NN* JJ) (NN* JJ) NN*</pospattern>
+            <pospattern>(NN* JJ) (NN* JJ) (NN* JJ) NN*</pospattern>
+            <pospattern>(NNP* JJ) (NNP* IN TO CC) NNP*</pospattern>
+            <pospattern>(NNP* JJ) (NNP* IN TO CC) DT NNP*</pospattern>
+            <pospattern>(NNP* JJ) (NNP* IN TO CC) (NNP* IN TO CC) NNP*</pospattern>
         </ngrams>
         <ngrams type="subject-suffix">
-            <pospattern>(DT RB* VB* JJ* P* NN*) (VBD VBG VBP VBN VBZ)</pospattern>
+            <pospattern>(VBD VBZ)</pospattern>
+            <pospattern>MD VB</pospattern>
+            <pospattern>VBZ DT</pospattern>
+            <pospattern>(DT RB VB* JJ* NN) (VBD VBG VBP VBN VBZ)</pospattern>
         </ngrams>
         <ngrams type="title">
             <pospattern>!(CC IN DT TO)</pospattern>
