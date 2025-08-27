@@ -79,6 +79,7 @@ public class LanguageConfiguration {
     public List<LanguageDefinition> languages() {
         return new ArrayList<>(this.languages.values());
     }
+
     @Nullable
     public LanguageDefinition getLanguage(String language) {
         return languages.get(language);

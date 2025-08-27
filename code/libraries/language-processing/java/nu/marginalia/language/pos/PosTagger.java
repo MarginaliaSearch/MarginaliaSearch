@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class PosTagger {
     private final RDRPOSTagger rdrposTagger;
@@ -41,11 +43,18 @@ public class PosTagger {
         this.tagNames = Collections.unmodifiableList(tagNames);
     }
 
+    /** Alternate constructor for tests */
+    public PosTagger(String isoCode, List<String> tags) {
+        this.isoCode = isoCode;
+        this.tagNames  = tags.stream().distinct().toList();
+        this.tagDict = tags.stream().distinct().collect(Collectors.toMap(Function.identity(), tagNames::indexOf, (a,b)->a));
+        this.rdrposTagger = null;
+    }
+
     public long[] tagSentence(String[] words) {
         String[] tags;
 
         // Unclear if this is necessary, but the library does have a different function for tagging English
-
         if ("en".equalsIgnoreCase(isoCode)) {
             tags = rdrposTagger.tagsForEnSentence(words);
         }
@@ -53,13 +62,31 @@ public class PosTagger {
             tags = rdrposTagger.tagSentence(words);
         }
 
+        // Encode the tags as a bit mask.  These will just have one (or zero) bits set
+        // but will match against more complex masks
 
         long[] encodedTags = new long[tags.length];
         for (int i = 0; i < encodedTags.length; i++) {
-            encodedTags[i] = 1L << tagDict.getOrDefault(tags[i], 65);
+            encodedTags[i] = encodeTagName(tags[i]);
         }
 
         return encodedTags;
+    }
+
+    public long encodeTagName(String tagName) {
+        Integer tag = tagDict.get(tagName);
+        if (tag == null) {
+            return 0L;
+        }
+        return 1L << tag;
+    }
+
+    public long encodeTagNames(List<String> tagNames) {
+        long ret = 0;
+        for (String tagName : tagNames) {
+            ret |= encodeTagName(tagName);
+        }
+        return ret;
     }
 
     public String decodeTagName(long encodedTag) {
@@ -74,14 +101,17 @@ public class PosTagger {
         return tagNames.get(tagId);
     }
 
-    public List<String> tags() {
-        return tagDict.keySet().stream().sorted().toList();
-    }
     public OptionalInt tagId(String tagName) {
         Integer id = tagDict.get(tagName);
         if (id == null)
             return OptionalInt.empty();
         return OptionalInt.of(id);
+    }
+
+    public List<String> tags() {
+        var ret = new ArrayList<>(tagDict.keySet());
+        ret.sort(Comparator.naturalOrder());
+        return ret;
     }
 
     public IntList tagIdsForPrefix(String tagNamePrefix) {

@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.OptionalInt;
 
 public class PosPattern {
     public final LongArrayList pattern = new LongArrayList();
@@ -23,7 +23,142 @@ public class PosPattern {
         return pattern.size();
     }
 
-    public PosPattern(PosTagger taggingData, String expression) {
+    public PosPattern(PosTagger posTagger, String expression) {
+        for (List<String> variants : PosTagPatternParser.parse(posTagger, expression)) {
+            pattern.add(posTagger.encodeTagNames(variants));
+        }
+
+        if (pattern.isEmpty()) {
+            throw new IllegalArgumentException("Zero length patterns are not allowed");
+        }
+    }
+
+    public int matchSentence(DocumentSentence sentence, List<WordSpan> ret) {
+        long first = pattern.getLong(0);
+        int cnt = 0;
+
+        // Fast case for 1-length patterns
+        if (pattern.size() == 1) {
+            for (int i = 0; i < sentence.length(); i++) {
+                if (0L == (sentence.posTags[i] & first)) continue;
+                ret.add(new WordSpan(i, i+1));
+                cnt++;
+            }
+
+            return cnt;
+        }
+
+        pattern:
+        for (int i = 0; i <= sentence.length() - pattern.size(); i++) {
+
+            // Start by matching against the beginning of the pattern
+            // as a fast path
+            if (0L == (sentence.posTags[i] & first)) continue;
+
+
+            int j;
+            for (j = 1; j < pattern.size(); j++) {
+                if (0L == (sentence.posTags[i + j] & pattern.getLong(j)))
+                    continue pattern;
+            }
+
+            // Ensure no commas exist in the sentence except for the last word
+            int nextCommaPos = sentence.nextCommaPos(i);
+            if (nextCommaPos < i + pattern.size() - 1) {
+                // note the i++ in the for loop will also be added here, so we're positioned after the next comma
+                // beginning of the next iteration
+                i = nextCommaPos;
+                continue;
+            }
+
+            // Finally add the span
+            ret.add(new WordSpan(i, i+j));
+            cnt++;
+        }
+
+        return cnt;
+    }
+
+    public boolean isMatch(DocumentSentence sentence, int pos) {
+        if (pos + pattern.size() > sentence.length()) {
+            return false;
+        }
+
+        long first = pattern.getLong(0);
+        if (0 == (sentence.posTags[pos] & first)) return false;
+        else if (pattern.size() == 1) return true;
+
+        int nextCommaPos = sentence.nextCommaPos(pos);
+        if (nextCommaPos < pos + pattern.size() - 1) {
+            return false;
+        }
+
+        for (int j = 1; j < pattern.size(); j++) {
+            if (0L == (sentence.posTags[pos+j] & pattern.getLong(j)))
+                return false;
+        }
+        return true;
+    }
+
+    /** Return a bit set for every position where this pattern matches the tag sequence provided */
+    public BitSet matchTagPattern(long[] tags) {
+        BitSet bs = new BitSet(tags.length);
+
+        // Fast case for length = 1
+        if (pattern.size() == 1) {
+            long patternVal = pattern.getLong(0);
+
+            for (int i = 0; i < tags.length; i++) {
+                bs.set(i, (patternVal & tags[i]) != 0L);
+            }
+
+            return bs;
+        }
+
+        pattern:
+        for (int i = 0; i <= tags.length - pattern.size(); i++) {
+            int j;
+
+            for (j = 0; j < pattern.size(); j++) {
+                if (0L == (tags[i+j] & pattern.getLong(j)))
+                    continue pattern;
+            }
+
+            bs.set(i);
+        }
+
+        return bs;
+    }
+}
+
+class PosTagPatternParser {
+    private boolean inverted;
+    private boolean inParen;
+
+    private final List<List<String>> variants = new ArrayList<>();
+    private final List<String> allTags;
+
+    public PosTagPatternParser(PosTagger posTagger) {
+        allTags = Collections.unmodifiableList(posTagger.tags());
+    }
+
+    public static List<List<String>> parse(PosTagger posTagger, String expression) {
+
+        PosTagPatternParser patternBuilder = new PosTagPatternParser(posTagger);
+
+        for (String token : tokenize(expression)) {
+            switch (token) {
+                case "!" -> patternBuilder.invert();
+                case "(" -> patternBuilder.parenOpen();
+                case ")" -> patternBuilder.parenClose();
+                default -> patternBuilder.addToken(token);
+            }
+        }
+
+        return patternBuilder.variants;
+    }
+
+    private static List<String> tokenize(String expression) {
         List<String> tokens = new ArrayList<>();
         int pos = 0;
 
@@ -52,121 +187,50 @@ public class PosPattern {
             }
         }
 
-        List<List<String>> variantsPerPos = new ArrayList<>();
-        boolean inParen = false;
-        boolean inverted = false;
-        for (String token : tokens) {
-            if ("!".equalsIgnoreCase(token)) {
-                inverted = true;
-            }
-            else if ("(".equalsIgnoreCase(token)) {
-                inParen = true;
-                variantsPerPos.addLast(new ArrayList<>());
-                if (inverted) {
-                    variantsPerPos.getLast().addAll(taggingData.tags());
-                }
-            }
-            else if (")".equals(token)) {
-                inverted = false;
-                inParen = false;
-            }
-            else if (!inParen) {
-                if (inverted) {
-                    List<String> allButToken = new ArrayList<>(taggingData.tags());
-                    allButToken.remove(token);
-                    variantsPerPos.addLast(allButToken);
-                }
-                else {
-                    variantsPerPos.addLast(List.of(token));
-                }
-                inverted = false;
-            }
-            else if (inParen) {
-                if (inverted) {
-                    variantsPerPos.getLast().remove(token);
-                }
-                else {
-                    variantsPerPos.getLast().add(token);
-                }
-            }
-        }
+        return tokens;
 
-        for (List<String> variants : variantsPerPos) {
-            long variantsCompiled = 0L;
-            for (String variant : variants) {
-                if (variant.endsWith("*")) {
-                    String prefix = variant.substring(0, variant.length() - 1);
-                    for (int tagId : taggingData.tagIdsForPrefix(prefix)) {
-                        variantsCompiled |= 1L << tagId;
-                    }
-                }
-                else {
-                    OptionalInt tag = taggingData.tagId(variant);
-                    if (tag.isPresent()) {
-                        variantsCompiled |= 1L << tag.getAsInt();
-                    } else {
-                        logger.warn("Pattern '{}' is referencing unknown POS tag '{}'", expression, variant);
-                    }
-                }
-            }
-            pattern.add(variantsCompiled);
-        }
     }
 
-    public void matchSentence(DocumentSentence sentence, List<WordSpan> ret) {
-        pattern:
-        for (int i = 0; i <= sentence.length() - pattern.size(); i++) {
-            int j;
-
-            int nextCommaPos = sentence.nextCommaPos(i);
-            if (nextCommaPos < i + pattern.size() - 1) {
-                i = nextCommaPos;
-                continue;
-            }
-
-            for (j = 0; j < pattern.size() - 1; j++) {
-                if (0L == (sentence.posTags[i+j] & pattern.getLong(j)))
-                    continue pattern;
-            }
-            if (0L != (sentence.posTags[i + j] & pattern.getLong(j)))
-                ret.add(new WordSpan(i, i+j+1));
-        }
+    public void invert() {
+        inverted = true;
+    }
+    public void parenOpen() {
+        inParen = true;
+        beginToken();
     }
 
-    public boolean isMatch(DocumentSentence sentence, int pos) {
-        if (pos + pattern.size() > sentence.length()) {
-            return false;
-        }
-
-        int nextCommaPos = sentence.nextCommaPos(pos);
-        if (nextCommaPos < pattern.size() - 1) {
-            return false;
-        }
-
-        int j;
-        for (j = 0; j < pattern.size() - 1; j++) {
-            if (0L == (sentence.posTags[pos+j] & pattern.getLong(j)))
-                return false;
-        }
-        return (0L != (sentence.posTags[pos + j]));
+    public void parenClose() {
+       inParen = false;
+       inverted = false;
     }
 
-    public BitSet matchTagPattern(long[] tags) {
-        BitSet bs = new BitSet(tags.length);
-        pattern:
-        for (int i = 0; i <= tags.length - pattern.size(); i++) {
-            int j;
+    private void beginToken() {
+        variants.add(new ArrayList<>());
+        if (inverted)
+            variants.getLast().addAll(allTags);
+    }
 
-            for (j = 0; j < pattern.size() - 1; j++) {
-                if (0L == (tags[i+j] & pattern.getLong(j)))
-                    continue pattern;
-            }
+    public void addToken(String token) {
+       if (!inParen) beginToken();
 
-            if (0L != (tags[i + j] & pattern.getLong(j))) {
-                bs.set(i, i+pattern.size());
-            }
-        }
+       List<String> tokensExpanded;
+       if (token.endsWith("*")) {
+           String prefix = token.substring(0, token.length() - 1);
+           tokensExpanded = allTags.stream().filter(str -> prefix.isEmpty() || str.startsWith(prefix)).toList();
+       }
+       else {
+           tokensExpanded = List.of(token);
+       }
 
-        return bs;
+       if (inverted) {
+           variants.getLast().removeAll(tokensExpanded);
+       }
+       else {
+           variants.getLast().addAll(tokensExpanded);
+       }
+
+       if (!inParen) {
+           inverted = false;
+       }
     }
 }
