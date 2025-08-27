@@ -78,7 +78,7 @@
             <pospattern>(VBD VBZ)</pospattern>
             <pospattern>MD VB</pospattern>
             <pospattern>VBZ DT</pospattern>
-            <pospattern>(DT RB VB* JJ* NN) (VBD VBG VBP VBN VBZ)</pospattern>
+            <pospattern>(DT RB VBD VBP VBN JJ*) (VBD VBG VBP VBN VBZ)</pospattern>
         </ngrams>
         <ngrams type="title">
             <pospattern>!(CC IN DT TO)</pospattern>
