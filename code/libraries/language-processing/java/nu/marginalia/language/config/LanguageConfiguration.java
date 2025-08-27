@@ -60,7 +60,6 @@ public class LanguageConfiguration {
 
     public Optional<LanguageDefinition> identifyLanguage(String sample) {
         String prediction = fastTextLanguageModel.predict(sample);
-        System.out.println("prediction: " + prediction);
         if (null == prediction)
             return Optional.empty();
 
