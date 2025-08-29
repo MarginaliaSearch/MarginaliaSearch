@@ -32,7 +32,10 @@ subprojects.forEach {it ->
         jvmArgs += ['--enable-preview']
     }
     it.tasks.withType(Test).configureEach {
-        jvmArgs += ['--enable-preview']
+        jvmArgs += ['--enable-preview',
+                    '--enable-native-access=ALL-UNNAMED',
+                    '--sun-misc-unsafe-memory-access=allow',
+                    '-Dsystem.uringQueueCount=1']
     }
 
     // Enable reproducible builds for the entire project

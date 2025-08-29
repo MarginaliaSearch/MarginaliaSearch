@@ -16,7 +16,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class UringFileReader implements AutoCloseable {
-    private final UringQueue[] rings = new UringQueue[8];
+    private final UringQueue[] rings;
     private final AtomicLong ringIdx = new AtomicLong();
     private final int fd;
     private final boolean direct;
@@ -24,6 +24,9 @@ public class UringFileReader implements AutoCloseable {
     private static final int QUEUE_SIZE = 2048;
 
     public UringFileReader(Path filename, boolean direct) throws IOException {
+
+        rings = new UringQueue[Integer.getInteger("system.uringQueueCount", 2)];
+
         if (direct) {
             fd = LinuxSystemCalls.openDirect(filename);
             this.direct = true;
