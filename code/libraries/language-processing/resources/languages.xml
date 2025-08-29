@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE languages [
         <!ELEMENT languages (language*,resource*)>
-        <!ELEMENT language (keywordHash,stemmer,sentenceDetector,rdrTagger,ngrams*)>
+        <!ELEMENT language (keywordHash,stemmer,sentenceDetector,rdrTagger?,ngrams*)>
 
         <!ELEMENT resource EMPTY>
         <!ATTLIST resource
@@ -106,6 +106,7 @@
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball" variant="SWEDISH" />
         <sentenceDetector algorithm="opennlp"/>
+        <!--
         <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
         <ngrams type="name">
             <pospattern>PROPN</pospattern>
@@ -113,8 +114,13 @@
             <pospattern>PROPN PROPN PROPN</pospattern>
             <pospattern>PROPN PROPN PROPN PROPN</pospattern>
         </ngrams>
+        -->
     </language>
-
+    <language isoCode="fr" name="French" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="FRENCH" />
+        <sentenceDetector algorithm="opennlp"/>
+    </language>
     <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
     <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
     <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />

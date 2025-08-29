@@ -142,8 +142,11 @@ public class LanguageConfiguration {
         }
     }
 
-    private Map<PosPatternCategory, List<PosPattern>> parsePosPatterns(PosTagger posTagger,
+    private Map<PosPatternCategory, List<PosPattern>> parsePosPatterns(@Nullable PosTagger posTagger,
                                                                        Element languageTag, String isoCode) {
+        if (null == posTagger)
+            return Map.of();
+
         Map<PosPatternCategory, List<PosPattern>> ret = new HashMap<>();
         NodeList ngramsElements = languageTag.getElementsByTagName("ngrams");
 
@@ -172,11 +175,14 @@ public class LanguageConfiguration {
         return ret;
     }
 
+    @Nullable
     private PosTagger parsePosTag(Element languageTag, String isoCode) throws IOException {
         NodeList rdrElements = languageTag.getElementsByTagName("rdrTagger");
-        if (rdrElements.getLength() != 1) {
-            throw new IllegalArgumentException(
-                    "language.xml: No rdrTagger block for language element " + isoCode);
+        if (rdrElements.getLength() < 1) {
+            return null;
+        }
+        else if (rdrElements.getLength() > 1) {
+            throw new IllegalStateException("Multiple rdr taggers defined in " + isoCode);
         }
         Element rdrElement = (Element) rdrElements.item(0);
 

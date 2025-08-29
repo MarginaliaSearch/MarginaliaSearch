@@ -6,18 +6,24 @@ import nu.marginalia.keyword.extractors.TitleKeywords;
 import nu.marginalia.keyword.extractors.UrlKeywords;
 import nu.marginalia.model.idx.WordFlags;
 
+import javax.annotation.Nullable;
+
 public class KeywordMetadata {
 
+    @Nullable
     private final TitleKeywords titleKeywords;
+    @Nullable
     private final NameLikeKeywords nameLikeKeywords;
+    @Nullable
     private final SubjectLikeKeywords subjectLikeKeywords;
+    @Nullable
     private final UrlKeywords urlKeywords;
 
     public KeywordMetadata(
-            TitleKeywords titleKeywords,
-            NameLikeKeywords nameLikeKeywords,
-            SubjectLikeKeywords subjectLikeKeywords,
-            UrlKeywords urlKeywords) {
+            @Nullable TitleKeywords titleKeywords,
+            @Nullable NameLikeKeywords nameLikeKeywords,
+            @Nullable SubjectLikeKeywords subjectLikeKeywords,
+            @Nullable UrlKeywords urlKeywords) {
         this.titleKeywords = titleKeywords;
         this.nameLikeKeywords = nameLikeKeywords;
         this.subjectLikeKeywords = subjectLikeKeywords;
@@ -32,23 +38,23 @@ public class KeywordMetadata {
 
         byte flags = 0;
 
-        if (subjectLikeKeywords.contains(stemmed)) {
+        if (subjectLikeKeywords != null && subjectLikeKeywords.contains(stemmed)) {
             flags |= WordFlags.Subjects.asBit();
         }
 
-        if (nameLikeKeywords.contains(stemmed)) {
+        if (nameLikeKeywords != null && nameLikeKeywords.contains(stemmed)) {
             flags |= WordFlags.NamesWords.asBit();
         }
 
-        if (titleKeywords.contains(stemmed)) {
+        if (titleKeywords != null && titleKeywords.contains(stemmed)) {
             flags |= WordFlags.Title.asBit();
         }
 
-        if (urlKeywords.containsUrl(stemmed)) {
+        if (urlKeywords != null && urlKeywords.containsUrl(stemmed)) {
             flags |= WordFlags.UrlPath.asBit();
         }
 
-        if (urlKeywords.containsDomain(stemmed)) {
+        if (urlKeywords != null && urlKeywords.containsDomain(stemmed)) {
             flags |= WordFlags.UrlDomain.asBit();
         }
 

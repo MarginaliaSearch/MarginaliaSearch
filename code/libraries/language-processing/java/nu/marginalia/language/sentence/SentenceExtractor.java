@@ -135,7 +135,7 @@ public class SentenceExtractor {
         BitSet seps = wordsAndSeps.separators();
         String[] lc = new String[words.length];
         String[] stemmed = new String[words.length];
-        long[] posTags = language.posTagger().tagSentence(words);
+        long[] posTags = language.tagSentence(words);
 
         BitSet isCapitalized = new BitSet(words.length);
         BitSet isAllCaps = new BitSet(words.length);
@@ -225,7 +225,7 @@ public class SentenceExtractor {
                 var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
-                var posTags = language.posTagger().tagSentence(tokens);
+                var posTags = language.tagSentence(tokens);
                 var tokensLc = new String[tokens.length];
                 var stemmed = new String[tokens.length];
 

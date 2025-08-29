@@ -34,37 +34,57 @@ public class DocumentKeywordExtractor {
 
 
     public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData dld, LinkTexts linkTexts, EdgeUrl url) {
-        final KeywordExtractor keywordExtractor = new KeywordExtractor(dld.language());
 
-        var tfIdfCounts = new WordsTfIdfCounts(dict, keywordExtractor, dld);
+        if (dld.language().hasPosParsing()) {
+            KeywordExtractor keywordExtractor = new KeywordExtractor(dld.language());
+            DocumentKeywordsBuilder wordsBuilder = new DocumentKeywordsBuilder();
 
-        var titleKeywords = new TitleKeywords(keywordExtractor, dld);
-        var nameLikeKeywords = new NameLikeKeywords(keywordExtractor, dld, 2);
-        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, tfIdfCounts, dld);
-        var artifactKeywords = new ArtifactKeywords(dld);
-        var urlKeywords = new UrlKeywords(url);
-        var positionMapper = new DocumentPositionMapper(keywordExtractor);
-        var keywordMetadata = KeywordMetadata.builder()
-                .titleKeywords(titleKeywords)
-                .nameLikeKeywords(nameLikeKeywords)
-                .subjectLikeKeywords(subjectLikeKeywords)
-                .urlKeywords(urlKeywords)
-                .build();
+            var artifactKeywords = new ArtifactKeywords(dld);
+            var urlKeywords = new UrlKeywords(url);
+            var positionMapper = new DocumentPositionMapper(keywordExtractor);
 
-        DocumentKeywordsBuilder wordsBuilder = new DocumentKeywordsBuilder();
+            var tfIdfCounts = new WordsTfIdfCounts(dict, keywordExtractor, dld);
 
-        positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder, keywordMetadata, dld, linkTexts);
+            var titleKeywords = new TitleKeywords(keywordExtractor, dld);
+            var nameLikeKeywords = new NameLikeKeywords(keywordExtractor, dld, 2);
+            var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, tfIdfCounts, dld);
+            var keywordMetadata = KeywordMetadata.builder()
+                    .titleKeywords(titleKeywords)
+                    .nameLikeKeywords(nameLikeKeywords)
+                    .subjectLikeKeywords(subjectLikeKeywords)
+                    .urlKeywords(urlKeywords)
+                    .build();
 
-        createNGramTermsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
-        createNGramTermsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
-        createNGramTermsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
 
-        var importantWords = getImportantWords(tfIdfCounts, nameLikeKeywords, subjectLikeKeywords, wordsBuilder);
+            positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder, keywordMetadata, dld, linkTexts);
 
-        wordsBuilder.addImportantWords(importantWords);
-        wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
+            createNGramTermsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
+            createNGramTermsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
+            createNGramTermsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
 
-        return wordsBuilder;
+            var importantWords = getImportantWords(tfIdfCounts, nameLikeKeywords, subjectLikeKeywords, wordsBuilder);
+
+            wordsBuilder.addImportantWords(importantWords);
+            wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
+
+            return wordsBuilder;
+        }
+        else {
+            KeywordExtractor keywordExtractor = new KeywordExtractor(dld.language());
+            DocumentKeywordsBuilder wordsBuilder = new DocumentKeywordsBuilder();
+
+            var artifactKeywords = new ArtifactKeywords(dld);
+            var urlKeywords = new UrlKeywords(url);
+            var positionMapper = new DocumentPositionMapper(keywordExtractor);
+
+            var keywordMetadata = KeywordMetadata.builder()
+                    .urlKeywords(urlKeywords)
+                    .build();
+
+            positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder, keywordMetadata, dld, linkTexts);
+            wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
+            return wordsBuilder;
+        }
     }
 
     private static Collection<String> getImportantWords(WordsTfIdfCounts tfIdfCounts, NameLikeKeywords nameLikeKeywords, SubjectLikeKeywords subjectLikeKeywords, DocumentKeywordsBuilder wordsBuilder) {

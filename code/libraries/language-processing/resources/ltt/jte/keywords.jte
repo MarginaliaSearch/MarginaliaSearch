@@ -91,7 +91,8 @@
                             
                             </span>
                             <rt>
-                                ${language.posTagger().decodeTagName(sentence.posTags[pos])}
+                                ${language.decodeTagName(sentence.posTags[pos])}
+
                                 @if (sentence.isAllCaps(pos))
                                     <i class="fa-solid fa-angles-up"></i>
                                 @elseif (sentence.isCapitalized(pos))
