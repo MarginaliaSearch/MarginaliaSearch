@@ -2,9 +2,9 @@ package nu.marginalia.keyword.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.pos.PosPatternCategory;
 
@@ -16,12 +16,14 @@ public class NameLikeKeywords implements WordReps {
     private final List<WordRep> nameWords;
     private final Set<String> stemmed;
 
-    public NameLikeKeywords(KeywordExtractor keywordExtractor, DocumentLanguageData dld, int minCount) {
-        var counts = new Object2IntOpenHashMap<String>(100);
-        var instances = new HashMap<String, HashSet<WordRep>>(100);
+    public NameLikeKeywords(DocumentLanguageData dld, int minCount) {
+        LanguageDefinition  languageDefinition = dld.language();
+
+        Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<String>(100);
+        HashMap<String, HashSet<WordRep>> instances = new HashMap<String, HashSet<WordRep>>(100);
 
         for (DocumentSentence sent : dld) {
-            var keywords = keywordExtractor.matchGrammarPattern(sent, PosPatternCategory.NAME);
+            var keywords = languageDefinition.matchGrammarPattern(sent, PosPatternCategory.NAME);
             for (var span : keywords) {
                 if (span.size() <= 1 && sent.isAllCaps(span.start))
                     continue;

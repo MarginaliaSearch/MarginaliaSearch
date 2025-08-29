@@ -6,7 +6,6 @@ import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -69,11 +68,10 @@ public class LanguageProcessingTool extends Jooby {
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(textSample);
         Map<Long, String> posStyles = posTagStyles(dld);
 
-        KeywordExtractor keywordExtractor = new KeywordExtractor(dld.language());
-        var tfIdfCounts = new WordsTfIdfCounts(termFrequencyDict, keywordExtractor, dld);
-        var titleKeywords = new TitleKeywords(keywordExtractor, dld);
-        var nameLikeKeywords = new NameLikeKeywords(keywordExtractor, dld, 2);
-        var subjectLikeKeywords = new SubjectLikeKeywords(keywordExtractor, tfIdfCounts, dld);
+        var tfIdfCounts = new WordsTfIdfCounts(termFrequencyDict, dld);
+        var titleKeywords = new TitleKeywords(dld);
+        var nameLikeKeywords = new NameLikeKeywords(dld, 2);
+        var subjectLikeKeywords = new SubjectLikeKeywords(tfIdfCounts, dld);
         var artifactKeywords = new ArtifactKeywords(dld);
 //        var urlKeywords = new UrlKeywords(url);
 

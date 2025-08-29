@@ -2,7 +2,6 @@ package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -60,10 +59,8 @@ class SubjectLikeKeywordsTest {
 
         var dld = se.extractSentences(text, "Julius Caesar");
 
-        WordsTfIdfCounts tfIdfCounts = new WordsTfIdfCounts(dict, new KeywordExtractor(dld.language()), dld);
-        SubjectLikeKeywords keywords = new SubjectLikeKeywords(new KeywordExtractor(dld.language()),
-                tfIdfCounts,
-                dld);
+        WordsTfIdfCounts tfIdfCounts = new WordsTfIdfCounts(dict, dld);
+        SubjectLikeKeywords keywords = new SubjectLikeKeywords(tfIdfCounts, dld);
 
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());
         Set<String> expected = Set.of("populares", "republic", "authoritarian_reforms", "senate", "pompey", "civil_wars", "octavian", "caesar");

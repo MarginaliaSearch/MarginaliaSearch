@@ -3,7 +3,6 @@ package nu.marginalia.keyword.extractors;
 import com.google.common.collect.Sets;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.dom.DomPruningFilter;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.UnsupportedLanguageException;
@@ -63,7 +62,7 @@ class NameLikeKeywordsTest {
 
     @Test
     public void test() {
-        NameLikeKeywords keywords = new NameLikeKeywords(new KeywordExtractor(en), se.extractSentences(text, "Julius Caesar"), 2);
+        NameLikeKeywords keywords = new NameLikeKeywords(se.extractSentences(text, "Julius Caesar"), 2);
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());
         Set<String> expected = Set.of("caesar", "senate", "roman", "republic", "roman_republic");
 
@@ -80,9 +79,7 @@ class NameLikeKeywordsTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0));
 
-        var ke = new KeywordExtractor(en);
-
-        var nameWords = new NameLikeKeywords(ke, se.extractSentences(doc), 2);
+        var nameWords = new NameLikeKeywords(se.extractSentences(doc), 2);
         System.out.println("Names: " + nameWords.words());
     }
 
@@ -95,9 +92,7 @@ class NameLikeKeywordsTest {
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0));
 
-        var ke = new KeywordExtractor(en);
-
-        var nameWords = new NameLikeKeywords(ke, se.extractSentences(doc), 2);
+        var nameWords = new NameLikeKeywords(se.extractSentences(doc), 2);
         System.out.println("Names: " + nameWords.words());
     }
 }

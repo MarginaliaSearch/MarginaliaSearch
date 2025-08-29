@@ -3,6 +3,7 @@ package nu.marginalia.keyword;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.pos.PosPatternCategory;
 import nu.marginalia.language.sentence.tag.HtmlTag;
@@ -17,12 +18,6 @@ import static java.lang.Math.sqrt;
  * as well as recording spans of positions
  */
 public class DocumentPositionMapper {
-
-    private final KeywordExtractor keywordExtractor;
-
-    public DocumentPositionMapper(KeywordExtractor keywordExtractor) {
-        this.keywordExtractor = keywordExtractor;
-    }
 
     public void mapPositionsAndExtractSimpleKeywords(DocumentKeywordsBuilder wordsBuilder,
                                                      KeywordMetadata metadata,
@@ -48,6 +43,8 @@ public class DocumentPositionMapper {
                                     DocumentLanguageData dld)
 
     {
+
+        LanguageDefinition languageDefinition = dld.language();
 
         List<SpanRecorder> spanRecorders = new ArrayList<>();
         for (var htmlTag : HtmlTag.includedTags) {
@@ -85,7 +82,7 @@ public class DocumentPositionMapper {
                 }
             }
 
-            for (var names : keywordExtractor.matchGrammarPattern(sent, PosPatternCategory.NAME)) {
+            for (var names : languageDefinition.matchGrammarPattern(sent, PosPatternCategory.NAME)) {
                 WordRep rep = new WordRep(sent, names);
                 byte meta = metadata.getMetadataForWord(rep.stemmed);
 

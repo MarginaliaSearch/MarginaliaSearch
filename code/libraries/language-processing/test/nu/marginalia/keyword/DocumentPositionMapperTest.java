@@ -41,7 +41,7 @@ class DocumentPositionMapperTest {
 
     @BeforeEach
     public void setUp() {
-        positionMapper = new DocumentPositionMapper(new KeywordExtractor(english));
+        positionMapper = new DocumentPositionMapper();
     }
 
     @Test

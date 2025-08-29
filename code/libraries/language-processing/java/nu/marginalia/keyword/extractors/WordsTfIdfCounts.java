@@ -1,8 +1,8 @@
 package nu.marginalia.keyword.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.pos.PosPatternCategory;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -26,14 +26,13 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
     private final Set<WordRep> tfIdfHigh;
 
     public WordsTfIdfCounts(TermFrequencyDict dict,
-                            KeywordExtractor keywordExtractor,
                             DocumentLanguageData dld) {
         this.dict = dict;
         this.docCount = dict.docCount();
-
         this.tfIdf =  new Object2IntOpenHashMap<>(10_000);
+        this.tfIdfHigh = new HashSet<>(100);
 
-        var counts = getCounts(keywordExtractor, dld);
+        var counts = getCounts(dld);
         int maxVal = maxValue(counts);
         Set<String> highTfIdfInstances = new HashSet<>();
 
@@ -48,9 +47,10 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
 
         // Collect words with a high TF-IDF so that they can be marked with a bit flag
 
-        tfIdfHigh = new HashSet<>(100);
+        LanguageDefinition languageDefinition = dld.language();
+
         for (var sent : dld) {
-            var keywords = keywordExtractor.matchGrammarPattern(sent, PosPatternCategory.KEYWORD);
+            var keywords = languageDefinition.matchGrammarPattern(sent, PosPatternCategory.KEYWORD);
             for (var span : keywords) {
                 if (highTfIdfInstances.contains(sent.constructStemmedWordFromSpan(span))) {
                     tfIdfHigh.add(new WordRep(sent, span));
@@ -60,12 +60,14 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
 
     }
 
-    private Object2IntOpenHashMap<String> getCounts(KeywordExtractor keywordExtractor, DocumentLanguageData dld) {
+    private Object2IntOpenHashMap<String> getCounts(DocumentLanguageData dld) {
+        LanguageDefinition languageDefinition = dld.language();
+
         Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>(10_000, 0.7f);
         counts.defaultReturnValue(0);
 
         for (var sent : dld) {
-            var keywords = keywordExtractor.matchGrammarPattern(sent, PosPatternCategory.KEYWORD);
+            var keywords = languageDefinition.matchGrammarPattern(sent, PosPatternCategory.KEYWORD);
             for (var span : keywords) {
                 counts.addTo(sent.constructStemmedWordFromSpan(span), 1);
             }

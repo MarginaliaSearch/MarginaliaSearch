@@ -106,7 +106,6 @@
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball" variant="SWEDISH" />
         <sentenceDetector algorithm="opennlp"/>
-        <!--
         <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
         <ngrams type="name">
             <pospattern>PROPN</pospattern>
@@ -114,7 +113,6 @@
             <pospattern>PROPN PROPN PROPN</pospattern>
             <pospattern>PROPN PROPN PROPN PROPN</pospattern>
         </ngrams>
-        -->
     </language>
     <language isoCode="fr" name="French" display="ltr">
         <keywordHash algorithm="asciish" />

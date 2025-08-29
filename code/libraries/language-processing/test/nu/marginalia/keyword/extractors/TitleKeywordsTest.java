@@ -1,7 +1,6 @@
 package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -198,7 +197,7 @@ class TitleKeywordsTest {
 
         var dld = se.extractSentences(Jsoup.parse(document));
 
-        var reps = new TitleKeywords(new KeywordExtractor(dld.language()), dld).getReps();
+        var reps = new TitleKeywords(dld).getReps();
         var words = reps.stream().map(rep -> rep.word).collect(Collectors.toSet());
 
         Set<String> expected = Set.of(

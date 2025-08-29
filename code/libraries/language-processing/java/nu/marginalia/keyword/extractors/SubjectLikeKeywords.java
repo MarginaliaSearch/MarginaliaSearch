@@ -1,8 +1,8 @@
 package nu.marginalia.keyword.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.model.WordSpan;
 import nu.marginalia.language.pos.PosPatternCategory;
@@ -23,17 +23,18 @@ public class SubjectLikeKeywords implements WordReps {
     // Greeks bearing gifts -> Greeks
     // Steve McQueen drove fast | cars -> Steve McQueen
 
-    public SubjectLikeKeywords(KeywordExtractor keywordExtractor,
-                               WordsTfIdfCounts tfIdfCounts,
+    public SubjectLikeKeywords(WordsTfIdfCounts tfIdfCounts,
                                DocumentLanguageData dld) {
+        LanguageDefinition languageDefinition = dld.language();
+
         Map<String, Set<WordRep>> instances = new HashMap<>();
 
         for (var sentence : dld) {
-            for (WordSpan kw : keywordExtractor.matchGrammarPattern(sentence, PosPatternCategory.NOUN)) {
+            for (WordSpan kw : languageDefinition.matchGrammarPattern(sentence, PosPatternCategory.NOUN)) {
                 if (sentence.nextCommaPos(kw.end - 1) <= kw.end)
                     continue;
 
-                if (keywordExtractor.matchGrammarPattern(sentence, PosPatternCategory.SUBJECT_SUFFIX, kw.end)) {
+                if (languageDefinition.matchGrammarPattern(sentence, PosPatternCategory.SUBJECT_SUFFIX, kw.end)) {
                     var span = new WordSpan(kw.start, kw.end);
                     var rep = new WordRep(sentence, span);
 
