@@ -5,6 +5,7 @@
  * when applied to subprojects from the root project, this has to be done in each subproject.
  * */
 apply plugin: 'java'
+apply plugin: 'com.adarshr.test-logger'
 
 test {
     maxHeapSize = "8G"
