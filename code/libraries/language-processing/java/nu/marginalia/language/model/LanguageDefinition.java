@@ -33,30 +33,11 @@ public final class LanguageDefinition {
         this.posPatterns = posPatterns;
     }
 
-    public long[] tagSentence(String[] words) {
-        if (posTagger == null) return new long[words.length];
-        return posTagger.tagSentence(words);
-    }
-
-    public boolean hasPosParsing() {
-        return posTagger != null;
-    }
-
-    public List<PosPattern> getPatterns(PosPatternCategory category) {
-        return posPatterns.getOrDefault(category, List.of());
-    }
-
-    public String decodeTagName(long tagName) {
-        if (hasPosParsing())
-            return posTagger.decodeTagName(tagName);
-        return "";
-    }
-
     public String isoCode() {
         return isoCode;
     }
 
-    public String name() {
+    public String displayName() {
         return name;
     }
 
@@ -67,5 +48,25 @@ public final class LanguageDefinition {
     public KeywordHasher keywordHasher() {
         return keywordHasher;
     }
+
+    public long[] posTagSentence(String[] words) {
+        if (posTagger == null) return new long[0];
+        return posTagger.tagSentence(words);
+    }
+
+    public boolean hasPosParsing() {
+        return posTagger != null;
+    }
+
+    public List<PosPattern> getPosPatterns(PosPatternCategory category) {
+        return posPatterns.getOrDefault(category, List.of());
+    }
+
+    public String decodePosTagName(long tagName) {
+        if (hasPosParsing())
+            return posTagger.decodeTagName(tagName);
+        return "";
+    }
+
 
 }

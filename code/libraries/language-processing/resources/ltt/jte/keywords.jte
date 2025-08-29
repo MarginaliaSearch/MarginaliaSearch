@@ -77,7 +77,7 @@
                     Sentence Breakdown & POS Tags
                 </h2>
                 @if (language != null)
-                <div class="text-sm text-gray-500 mt-1">Auto-detected: ${language.name()} (${language.isoCode()})</div>
+                <div class="text-sm text-gray-500 mt-1">Auto-detected: ${language.displayName()} (${language.isoCode()})</div>
                 @endif
             </div>
             @if (sentences != null)
@@ -86,19 +86,31 @@
                 <div class="sentence-boundary pl-4 py-4 rounded">
                     @for (int pos : IntStream.range(0, sentence.length()).toArray())
                         <ruby class="p-4">
-                            
-                            <span class="text-xl font-serif ${tagColors.get(sentence.posTags[pos])}">${sentence.wordsLowerCase[pos]}
-                            
-                            </span>
-                            <rt>
-                                ${language.decodeTagName(sentence.posTags[pos])}
+                            @if (language.hasPosParsing())
+                                <span class="text-xl font-serif ${tagColors.get(sentence.posTags[pos])}">
+                                    ${sentence.wordsLowerCase[pos]}
+                                </span>
+                                <rt>
+                                    ${language.decodePosTagName(sentence.posTags[pos])}
 
-                                @if (sentence.isAllCaps(pos))
-                                    <i class="fa-solid fa-angles-up"></i>
-                                @elseif (sentence.isCapitalized(pos))
-                                    <i class="fa-solid fa-arrow-up"></i>
-                                @endif
-                            </rt>
+                                    @if (sentence.isAllCaps(pos))
+                                        <i class="fa-solid fa-angles-up"></i>
+                                    @elseif (sentence.isCapitalized(pos))
+                                        <i class="fa-solid fa-arrow-up"></i>
+                                    @endif
+                                </rt>
+                            @else <!-- pos tags disabled -->
+                                <span class="text-xl font-serif">
+                                    ${sentence.wordsLowerCase[pos]}
+                                </span>
+                                <rt>
+                                    @if (sentence.isAllCaps(pos))
+                                        <i class="fa-solid fa-angles-up"></i>
+                                    @elseif (sentence.isCapitalized(pos))
+                                        <i class="fa-solid fa-arrow-up"></i>
+                                    @endif
+                                </rt>
+                            @endif
                         </ruby>
                         @if (sentence.isSeparatorComma(pos))
                             <i class="fa-regular fa-circle"></i>

@@ -20,7 +20,7 @@ public class KeywordExtractor {
     public List<WordSpan> matchGrammarPattern(DocumentSentence sentence, PosPatternCategory category) {
         List<WordSpan> spans = new ArrayList<>(2 * sentence.length());
 
-        for (PosPattern pattern : languageDefinition.getPatterns(category)) {
+        for (PosPattern pattern : languageDefinition.getPosPatterns(category)) {
             pattern.matchSentence(sentence, spans);
         }
 
@@ -28,14 +28,15 @@ public class KeywordExtractor {
     }
 
     public boolean matchGrammarPattern(DocumentSentence sentence, PosPatternCategory category, int pos) {
-        for (var pattern : languageDefinition.getPatterns(category)) {
+        for (var pattern : languageDefinition.getPosPatterns(category)) {
             if (pattern.isMatch(sentence, pos))
                 return true;
         }
         return false;
     }
+
     public boolean matchGrammarPattern(DocumentSentence sentence, PosPatternCategory category, WordSpan span) {
-        for (var pattern : languageDefinition.getPatterns(category)) {
+        for (var pattern : languageDefinition.getPosPatterns(category)) {
             if (pattern.size() != span.size())
                 continue;
 
@@ -44,6 +45,7 @@ public class KeywordExtractor {
         }
         return false;
     }
+
     public List<WordSpan> getWordsFromSentence(DocumentSentence sentence) {
         List<WordSpan> spans = new ArrayList<>();
 
