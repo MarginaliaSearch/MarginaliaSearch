@@ -23,6 +23,10 @@ public class IndexMain extends MainClass {
     }
 
     public static void main(String... args) {
+
+        // HACK: Needed for parsing large XML files when sideloading stackexchange
+        System.setProperty("jdk.xml.maxGeneralEntitySizeLimit", "0");
+
         init(ServiceId.Index, args);
 
         Injector injector = Guice.createInjector(
