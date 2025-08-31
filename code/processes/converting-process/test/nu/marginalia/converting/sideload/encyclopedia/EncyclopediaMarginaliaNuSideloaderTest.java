@@ -5,6 +5,7 @@ import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
+import nu.marginalia.encyclopedia.EncyclopediaConverter;
 import nu.marginalia.encyclopedia.cleaner.model.ArticleParts;
 import nu.marginalia.encyclopedia.model.Article;
 import nu.marginalia.encyclopedia.model.LinkList;
@@ -55,6 +56,23 @@ class EncyclopediaMarginaliaNuSideloaderTest {
 
     @AfterAll
     public static void tearDown() throws IOException {
+    }
+
+
+    @Test
+    public void testFullConvert() throws IOException {
+        Path inputFile = Path.of("/home/vlofgren/Work/wikipedia_en_100_2025-07.zim");
+        if (!Files.exists(inputFile))
+            return;
+
+        Path outputFile = Files.createTempFile("encyclopedia", ".db");
+        try {
+            EncyclopediaConverter.convert(inputFile, outputFile);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Files.delete(outputFile);
+        }
     }
 
     @Test
