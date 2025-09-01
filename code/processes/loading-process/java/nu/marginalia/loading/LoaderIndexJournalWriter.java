@@ -5,6 +5,9 @@ import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.keywords.KeywordHasher;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
@@ -12,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Singleton
@@ -24,8 +29,15 @@ public class LoaderIndexJournalWriter {
     private long recordsWritten = 0;
     private int page;
 
+    private final Map<String, KeywordHasher> hasherByLanguage = new HashMap<>();
+
     @Inject
-    public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException {
+    public LoaderIndexJournalWriter(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) throws IOException {
+
+        for (LanguageDefinition languageDefinition: languageConfiguration.languages()) {
+            hasherByLanguage.put(languageDefinition.isoCode(), languageDefinition.keywordHasher());
+        }
+
         var indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
 
         journalPath = IndexJournal.allocateName(indexArea);
@@ -46,12 +58,15 @@ public class LoaderIndexJournalWriter {
 
     public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
     {
+        KeywordHasher hasher = hasherByLanguage.get(data.language());
+        if (null == hasher) return;
+
         if (++recordsWritten > 200_000) {
             recordsWritten = 0;
             switchToNextVersion();
         }
 
-        currentWriter.put(header, data);
+        currentWriter.put(header, data, hasher);
     }
 
     public void close() throws IOException {

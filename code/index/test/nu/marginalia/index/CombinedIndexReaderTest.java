@@ -18,6 +18,7 @@ import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.positions.TermData;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
@@ -339,7 +340,7 @@ public class CombinedIndexReaderTest {
                                 positions,
                                 new byte[0],
                                 List.of()
-                        ));
+                        ), new KeywordHasher.AsciiIsh());
             }
 
             var linkdbWriter = new DocumentDbWriter(

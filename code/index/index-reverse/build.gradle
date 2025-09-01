@@ -39,5 +39,6 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
     testImplementation project(':code:libraries:test-helpers')
+    testImplementation project(':code:libraries:language-processing')
 }
 

@@ -4,6 +4,7 @@ import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
@@ -87,8 +88,8 @@ class ForwardIndexConverterTest {
                         List.of(),
                         new byte[0],
                         List.of()
-                )
-        );
+                ),
+                new KeywordHasher.AsciiIsh());
 
 
     }

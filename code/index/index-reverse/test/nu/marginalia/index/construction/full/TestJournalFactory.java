@@ -2,6 +2,7 @@ package nu.marginalia.index.construction.full;
 
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.test.TestUtil;
@@ -84,8 +85,8 @@ public class TestJournalFactory {
                             Arrays.asList(positions),
                             new byte[0],
                             List.of()
-                    )
-            );
+                    ),
+                    new KeywordHasher.AsciiIsh());
         }
         writer.close();
 
@@ -121,8 +122,8 @@ public class TestJournalFactory {
                             Arrays.asList(positions),
                             new byte[0],
                             List.of()
-                    )
-            );
+                    ),
+                    new KeywordHasher.AsciiIsh());
 
         }
         writer.close();

@@ -1,6 +1,6 @@
 package nu.marginalia.index.journal;
 
-import nu.marginalia.hash.MurmurHash3_128;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
@@ -28,8 +28,6 @@ public class IndexJournalSlopWriter extends SlopTable {
     private final VarintCodedSequenceArrayColumn.Writer spansWriter;
     private final ByteArrayColumn.Writer spanCodesWriter;
 
-    private static final MurmurHash3_128 hash = new MurmurHash3_128();
-
     public IndexJournalSlopWriter(Path dir, int page) throws IOException {
 
         super(dir, page);
@@ -52,7 +50,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         spansWriter = IndexJournalPage.spans.create(this);
     }
 
-    public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection) throws IOException {
+    public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection, KeywordHasher hasher) throws IOException {
 
         combinedIdWriter.put(combinedId);
         featuresWriter.put(keywordsProjection.htmlFeatures());
@@ -66,7 +64,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         // termIds are the special hashes of the keywords
         long[] termIds = new long[keywordsProjection.words().size()];
         for (int i = 0; i < termIds.length; i++) {
-            termIds[i] = hash.hashKeyword(keywords.get(i));
+            termIds[i] = hasher.hashKeyword(keywords.get(i));
         }
 
         termIdsWriter.put(termIds);

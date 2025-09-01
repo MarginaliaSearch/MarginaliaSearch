@@ -20,6 +20,7 @@ import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
@@ -444,7 +445,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         positions,
                         new byte[0],
                         List.of()
-                ));
+                ), new KeywordHasher.AsciiIsh());
 
     }
 
@@ -484,7 +485,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         positions,
                         new byte[0],
                         List.of()
-                ));
+                ), new KeywordHasher.AsciiIsh());
 
     }
 
