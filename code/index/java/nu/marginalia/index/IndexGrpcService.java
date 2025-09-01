@@ -16,6 +16,9 @@ import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.keywords.KeywordHasher;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
@@ -23,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class IndexGrpcService
@@ -32,6 +37,7 @@ public class IndexGrpcService
 {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Map<String, KeywordHasher> keywordHasherByLangIso;
 
     // This marker is used to mark sensitive log messages that are related to queries
     // so that they can be filtered out in the production logging configuration
@@ -58,6 +64,7 @@ public class IndexGrpcService
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
+                            LanguageConfiguration languageConfiguration,
                             StatefulIndex statefulIndex,
                             SearchSetsService searchSetsService,
                             IndexResultRankingService rankingService)
@@ -67,15 +74,21 @@ public class IndexGrpcService
         this.statefulIndex = statefulIndex;
         this.searchSetsService = searchSetsService;
         this.rankingService = rankingService;
+        this.keywordHasherByLangIso = new HashMap<>();
+
+        for (LanguageDefinition definition : languageConfiguration.languages()) {
+            keywordHasherByLangIso.put(definition.isoCode(), definition.keywordHasher());
+        }
     }
 
     // GRPC endpoint
+
     public void query(RpcIndexQuery request,
                       StreamObserver<RpcDecoratedResultItem> responseObserver) {
 
         try {
-
             long endTime = System.currentTimeMillis() + request.getQueryLimits().getTimeoutMs();
+            KeywordHasher hasher = findHasher(request);
 
             List<RpcDecoratedResultItem> results = wmsa_query_time
                     .labels(nodeName, "GRPC")
@@ -87,7 +100,7 @@ public class IndexGrpcService
                                 // Short-circuit if the index is not loaded, as we trivially know that there can be no results
                                 return List.of();
                             }
-                            var rankingContext = SearchContext.create(statefulIndex.get(), request, getSearchSet(request));
+                            var rankingContext = SearchContext.create(statefulIndex.get(), hasher, request, getSearchSet(request));
                             return new IndexQueryExecution(rankingContext, nodeId, rankingService, statefulIndex.get()).run();
                         }
                         catch (Exception ex) {
@@ -115,6 +128,18 @@ public class IndexGrpcService
         }
     }
 
+    private KeywordHasher findHasher(RpcIndexQuery request) {
+        KeywordHasher hasher = keywordHasherByLangIso.get(request.getLangIsoCode());
+        if (hasher != null)
+            return hasher;
+
+        hasher = keywordHasherByLangIso.get("en");
+        if (hasher != null)
+            return hasher;
+
+        throw new IllegalStateException("Could not find fallback keyword hasher for iso code 'en'");
+    }
+
 
     // exists for test access
     public List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
@@ -126,7 +151,7 @@ public class IndexGrpcService
 
             var currentIndex = statefulIndex.get();
 
-            return new IndexQueryExecution(SearchContext.create(currentIndex, specsSet, getSearchSet(specsSet)), 1, rankingService, statefulIndex.get()).run();
+            return new IndexQueryExecution(SearchContext.create(currentIndex, keywordHasherByLangIso.get("en"), specsSet, getSearchSet(specsSet)), 1, rankingService, statefulIndex.get()).run();
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);

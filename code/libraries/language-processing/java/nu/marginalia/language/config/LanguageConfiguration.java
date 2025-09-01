@@ -87,6 +87,10 @@ public class LanguageConfiguration {
 
 
     @Inject
+    public LanguageConfiguration() throws IOException, ParserConfigurationException, SAXException {
+        this(WmsaHome.getLanguageModels());
+    }
+
     public LanguageConfiguration(LanguageModels lm)
             throws IOException, ParserConfigurationException, SAXException {
         fastTextLanguageModel.loadModel(lm.fasttextLanguageModel.toString());

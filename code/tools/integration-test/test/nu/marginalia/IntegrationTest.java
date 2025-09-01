@@ -28,6 +28,7 @@ import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.io.SerializableCrawlDataStream;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
@@ -224,7 +225,7 @@ public class IntegrationTest {
 
         System.out.println(indexRequest);
 
-        var rs = new IndexQueryExecution(SearchContext.create(statefulIndex.get(), indexRequest, new SearchSetAny()), 1, rankingService, statefulIndex.get());
+        var rs = new IndexQueryExecution(SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1, rankingService, statefulIndex.get());
 
         System.out.println(rs);
     }

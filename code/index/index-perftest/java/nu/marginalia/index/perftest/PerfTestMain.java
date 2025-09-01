@@ -23,6 +23,7 @@ import nu.marginalia.index.results.DomainRankingOverrides;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -136,7 +137,7 @@ public class PerfTestMain {
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
-        var rankingContext = SearchContext.create(indexReader, parsedQuery, new SearchSetAny());
+        var rankingContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
         List<IndexQuery> queries = indexReader.createQueries(rankingContext);
 
         TLongArrayList allResults = new TLongArrayList();
@@ -218,7 +219,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
-            var execution = new IndexQueryExecution(SearchContext.create(indexReader, parsedQuery, new SearchSetAny()), 1, rankingService, indexReader);
+            var execution = new IndexQueryExecution(SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny()), 1, rankingService, indexReader);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();
@@ -262,7 +263,7 @@ public class PerfTestMain {
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
-        SearchContext searchContext = SearchContext.create(indexReader, parsedQuery, new SearchSetAny());
+        SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
 
 
         Instant runEndTime = Instant.now().plus(runTime);

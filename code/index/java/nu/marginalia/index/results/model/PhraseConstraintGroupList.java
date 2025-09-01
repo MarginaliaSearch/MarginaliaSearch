@@ -3,8 +3,8 @@ package nu.marginalia.index.results.model;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.index.model.SearchTermsUtil;
 import nu.marginalia.index.results.model.ids.TermIdList;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 
@@ -61,7 +61,7 @@ public class PhraseConstraintGroupList {
         private final int presentCardinality;
 
         public final int size;
-        public PhraseConstraintGroup(List<String> terms, TermIdList termIdsAll) {
+        public PhraseConstraintGroup(KeywordHasher hasher, List<String> terms, TermIdList termIdsAll) {
             offsets = new int[terms.size()];
             present = new BitSet(terms.size());
             size = terms.size();
@@ -75,7 +75,7 @@ public class PhraseConstraintGroupList {
                 }
 
                 present.set(i);
-                long termId = SearchTermsUtil.getWordId(term);
+                long termId = hasher.hashKeyword(term);
 
                 int idx = termIdsAll.indexOf(termId);
                 if (idx < 0) {
