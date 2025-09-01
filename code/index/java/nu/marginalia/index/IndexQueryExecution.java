@@ -4,9 +4,7 @@ import io.prometheus.client.Gauge;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.index.model.ResultRankingContext;
-import nu.marginalia.index.model.SearchParameters;
-import nu.marginalia.index.model.SearchTerms;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.results.IndexResultRankingService;
@@ -41,7 +39,7 @@ public class IndexQueryExecution {
     private final String nodeName;
     private final IndexResultRankingService rankingService;
 
-    private final ResultRankingContext rankingContext;
+    private final SearchContext rankingContext;
     private final List<IndexQuery> queries;
     private final IndexSearchBudget budget;
     private final ResultPriorityQueue resultHeap;
@@ -84,21 +82,21 @@ public class IndexQueryExecution {
 
 
 
-    public IndexQueryExecution(SearchParameters params,
+    public IndexQueryExecution(SearchContext rankingContext,
                                int serviceNode,
                                IndexResultRankingService rankingService,
                                CombinedIndexReader currentIndex) {
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
 
-        resultHeap = new ResultPriorityQueue(params.fetchSize);
+        resultHeap = new ResultPriorityQueue(rankingContext.fetchSize);
 
-        budget = params.budget;
-        limitByDomain = params.limitByDomain;
-        limitTotal = params.limitTotal;
+        budget = rankingContext.budget;
+        limitByDomain = rankingContext.limitByDomain;
+        limitTotal = rankingContext.limitTotal;
+        this.rankingContext = rankingContext;
 
-        rankingContext = ResultRankingContext.create(currentIndex, params);
-        queries = currentIndex.createQueries(new SearchTerms(params.query, params.compiledQueryIds), params.queryParams, budget);
+        queries = currentIndex.createQueries(rankingContext);
 
         lookupCountdown = new CountDownLatch(queries.size());
         preparationCountdown = new CountDownLatch(indexPreparationThreads * 2);

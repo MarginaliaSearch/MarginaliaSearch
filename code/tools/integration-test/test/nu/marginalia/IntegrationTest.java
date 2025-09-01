@@ -24,7 +24,7 @@ import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
-import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.io.SerializableCrawlDataStream;
@@ -224,7 +224,7 @@ public class IntegrationTest {
 
         System.out.println(indexRequest);
 
-        var rs = new IndexQueryExecution(new SearchParameters(indexRequest, new SearchSetAny()), 1, rankingService, statefulIndex.get());
+        var rs = new IndexQueryExecution(SearchContext.create(statefulIndex.get(), indexRequest, new SearchSetAny()), 1, rankingService, statefulIndex.get());
 
         System.out.println(rs);
     }

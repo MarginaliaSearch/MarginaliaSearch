@@ -15,9 +15,7 @@ import nu.marginalia.index.PrioReverseIndexReader;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.model.ResultRankingContext;
-import nu.marginalia.index.model.SearchParameters;
-import nu.marginalia.index.model.SearchTerms;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.positions.PositionsFileReader;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexSearchBudget;
@@ -138,9 +136,8 @@ public class PerfTestMain {
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
-        SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-
-        List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(10_000));
+        var rankingContext = SearchContext.create(indexReader, parsedQuery, new SearchSetAny());
+        List<IndexQuery> queries = indexReader.createQueries(rankingContext);
 
         TLongArrayList allResults = new TLongArrayList();
         LongQueryBuffer buffer = new LongQueryBuffer(512);
@@ -158,7 +155,6 @@ public class PerfTestMain {
             allResults.subList(512,  allResults.size()).clear();
         }
 
-        var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
         var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()), null);
 
         int sum = 0;
@@ -222,8 +218,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
-            SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-            var execution = new IndexQueryExecution(searchParameters, 1, rankingService, indexReader);
+            var execution = new IndexQueryExecution(SearchContext.create(indexReader, parsedQuery, new SearchSetAny()), 1, rankingService, indexReader);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();
@@ -267,7 +262,7 @@ public class PerfTestMain {
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
-        SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
+        SearchContext searchContext = SearchContext.create(indexReader, parsedQuery, new SearchSetAny());
 
 
         Instant runEndTime = Instant.now().plus(runTime);
@@ -281,7 +276,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
             indexReader.reset();
-            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(150));
+            List<IndexQuery> queries = indexReader.createQueries(searchContext);
 
             long start = System.nanoTime();
             for (var query : queries) {
