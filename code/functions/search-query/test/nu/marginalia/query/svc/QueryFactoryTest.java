@@ -60,6 +60,7 @@ public class QueryFactoryTest {
                         QueryStrategy.AUTO,
                         RpcTemporalBias.Bias.NONE,
                         NsfwFilterTier.OFF,
+                        "en",
                         0), null).specs;
     }
 

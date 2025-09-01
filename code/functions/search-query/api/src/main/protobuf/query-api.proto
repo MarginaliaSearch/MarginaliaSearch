@@ -34,6 +34,7 @@ message RpcQsQuery {
   RpcQsQueryPagination pagination = 17;
 
   NSFW_FILTER_TIER nsfwFilterTier = 18;
+  string langIsoCode = 19;
 
   enum NSFW_FILTER_TIER {
     NONE = 0;
@@ -88,6 +89,7 @@ message RpcIndexQuery {
   RpcResultRankingParameters parameters = 12;
 
   NSFW_FILTER_TIER nsfwFilterTier = 13;
+  string langIsoCode = 14;
 
   enum NSFW_FILTER_TIER {
     NONE = 0;

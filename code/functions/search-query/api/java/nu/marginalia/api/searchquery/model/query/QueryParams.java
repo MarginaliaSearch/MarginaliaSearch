@@ -26,10 +26,11 @@ public record QueryParams(
         QueryStrategy queryStrategy,
         RpcTemporalBias.Bias temporalBias,
         NsfwFilterTier filterTier,
+        String langIsoCode,
         int page
 )
 {
-    public QueryParams(String query, RpcQueryLimits limits, String identifier, NsfwFilterTier filterTier) {
+    public QueryParams(String query, RpcQueryLimits limits, String identifier, NsfwFilterTier filterTier, String langIsoCode) {
         this(query, null,
                 List.of(),
                 List.of(),
@@ -45,6 +46,7 @@ public record QueryParams(
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
                 filterTier,
+                langIsoCode,
                 1 // page
                 );
     }

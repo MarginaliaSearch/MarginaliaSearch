@@ -53,6 +53,7 @@ public class QueryBasicInterface {
         int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));
         int page = parseInt(requireNonNullElse(request.queryParams("page"), "1"));
         int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
+        String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
         String set = requireNonNullElse(request.queryParams("set"), "");
 
         var params = new QueryParams(queryString,
@@ -62,7 +63,7 @@ public class QueryBasicInterface {
                         .setTimeoutMs(250)
                         .setFetchSize(8192)
                         .build()
-        , set, NsfwFilterTier.OFF);
+        , set, NsfwFilterTier.OFF, langIsoCode);
 
         var pagination = new IndexClient.Pagination(page, count);
 
@@ -106,6 +107,7 @@ public class QueryBasicInterface {
         int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));
         int page = parseInt(requireNonNullElse(request.queryParams("page"), "1"));
         int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
+        String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
         String set = requireNonNullElse(request.queryParams("set"), "");
 
         var queryParams = new QueryParams(queryString,
@@ -115,7 +117,7 @@ public class QueryBasicInterface {
                     .setTimeoutMs(250)
                     .setFetchSize(8192)
                     .build(),
-                set, NsfwFilterTier.OFF);
+                set, NsfwFilterTier.OFF, langIsoCode);
 
         var pagination = new IndexClient.Pagination(page, count);
 

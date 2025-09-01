@@ -134,7 +134,7 @@ public class PerfTestMain {
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
                 .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
+        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
@@ -209,7 +209,7 @@ public class PerfTestMain {
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
                 .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
+        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
         System.out.println("Running warmup loop!");
@@ -263,7 +263,7 @@ public class PerfTestMain {
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
                 .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
+        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 

@@ -54,6 +54,7 @@ public class SearchQueryParamFactory {
                 userParams.strategy(),
                 userParams.temporalBias(),
                 userParams.filterTier(),
+                "en",
                 userParams.page()
         );
 
@@ -81,6 +82,7 @@ public class SearchQueryParamFactory {
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
                 NsfwFilterTier.OFF,
+                "en",
                 1
         );
     }
@@ -102,6 +104,7 @@ public class SearchQueryParamFactory {
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
                 NsfwFilterTier.DANGER,
+                "en",
                 1
         );
     }
@@ -123,6 +126,7 @@ public class SearchQueryParamFactory {
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
                 NsfwFilterTier.DANGER,
+                "en",
                 1
         );
     }

@@ -28,6 +28,7 @@ public class QueryProtobufCodec {
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(request.getHumanQuery());
+        builder.setLangIsoCode(query.langIsoCode);
 
         builder.setNsfwFilterTierValue(request.getNsfwFilterTierValue());
 
@@ -76,6 +77,7 @@ public class QueryProtobufCodec {
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(humanQuery);
+        builder.setLangIsoCode(query.langIsoCode);
 
         builder.setNsfwFilterTier(RpcIndexQuery.NSFW_FILTER_TIER.DANGER);
 
@@ -114,6 +116,7 @@ public class QueryProtobufCodec {
                 QueryStrategy.valueOf(request.getQueryStrategy()),
                 RpcTemporalBias.Bias.valueOf(request.getTemporalBias().getBias().name()),
                 NsfwFilterTier.fromCodedValue(request.getNsfwFilterTierValue()),
+                request.getLangIsoCode(),
                 request.getPagination().getPage()
         );
     }
@@ -335,7 +338,8 @@ public class QueryProtobufCodec {
                 .setPagination(RpcQsQueryPagination.newBuilder()
                         .setPage(params.page())
                         .setPageSize(Math.min(100, params.limits().getResultsTotal()))
-                        .build());
+                        .build())
+                .setLangIsoCode(params.langIsoCode());
 
         if (params.nearDomain() != null)
             builder.setNearDomain(params.nearDomain());

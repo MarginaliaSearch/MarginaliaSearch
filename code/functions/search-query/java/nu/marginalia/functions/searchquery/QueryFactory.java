@@ -167,7 +167,7 @@ public class QueryFactory {
         specs.query.searchTermsPriority.addAll(params.tacitPriority());
         specs.query.searchTermsExclude.addAll(params.tacitExcludes());
 
-        return new ProcessedQuery(specs, searchTermsHuman, domain);
+        return new ProcessedQuery(specs, searchTermsHuman, domain, params.langIsoCode());
     }
 
     private void analyzeSearchTerm(List<String> problems, String str, String displayStr) {
