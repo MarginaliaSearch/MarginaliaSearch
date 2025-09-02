@@ -6,6 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
+import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
@@ -140,10 +141,12 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, long[] docIds) throws TimeoutException {
-        long[] offsets = new long[docIds.length];
-        for (int i = 0; i < docIds.length; i++) {
-            long offset = idxForDoc(docIds[i]);
+    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList combinedIds) throws TimeoutException {
+        long[] offsets = new long[combinedIds.size()];
+
+        for (int i = 0; i < offsets.length; i++) {
+            long docId = UrlIdCodec.removeRank(combinedIds.at(i));
+            long offset = idxForDoc(docId);
             if (offset >= 0) {
                 offsets[i] = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
             }
@@ -157,7 +160,7 @@ public class ForwardIndexReader {
         }
         catch (IOException ex) {
             logger.error("Failed to read spans for docIds", ex);
-            return new DocumentSpans[docIds.length];
+            return new DocumentSpans[offsets.length];
         }
     }
 

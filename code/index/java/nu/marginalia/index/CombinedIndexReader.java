@@ -206,12 +206,7 @@ public class CombinedIndexReader {
 
     /** Retrieves the document spans for the specified documents */
     public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList docIds) throws TimeoutException {
-        long[] decodedIDs = docIds.array();
-        for (int i = 0; i < decodedIDs.length; i++) {
-            decodedIDs[i] = UrlIdCodec.removeRank(decodedIDs[i]);
-        }
-
-        return forwardIndexReader.getDocumentSpans(arena, budget, decodedIDs);
+        return forwardIndexReader.getDocumentSpans(arena, budget, docIds);
     }
 
     /** Close the indexes (this is not done immediately)
