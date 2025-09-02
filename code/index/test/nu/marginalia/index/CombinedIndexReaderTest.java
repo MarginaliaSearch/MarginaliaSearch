@@ -10,11 +10,9 @@ import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.reverse.ReverseIndexFullFileNames;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
-import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.language.keywords.KeywordHasher;
@@ -38,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.IOException;
-import java.lang.foreign.Arena;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,40 +89,6 @@ public class CombinedIndexReaderTest {
     }
 
     private final MockDocumentMeta anyMetadata = new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class)));
-
-    @Test
-    public void testSimpleRetrieval() throws Exception {
-        new MockData().add(
-                d(1, 1),
-                anyMetadata,
-                w("hello", WordFlags.Title, 33, 55),
-                w("world", WordFlags.Subjects, 34)
-        ).load();
-
-        var reader = indexFactory.getCombinedIndexReader();
-        var query = reader.findFullWord(kw("hello")).build();
-
-        var buffer = new LongQueryBuffer(32);
-        query.getMoreResults(buffer);
-
-        assertEquals(
-                List.of(d(1, 1)),
-                decode(buffer)
-        );
-
-        var helloMeta = td(reader, kw("hello"), d(1, 1));
-        assertEquals(helloMeta.flags(), WordFlags.Title.asBit());
-        assertEquals(IntList.of(33, 55), helloMeta.positions().values());
-
-        var worldMeta = td(reader, kw("world"), d(1, 1));
-        assertEquals(worldMeta.flags(), WordFlags.Subjects.asBit());
-        assertEquals(IntList.of(34), worldMeta.positions().values());
-    }
-
-    TermData td(CombinedIndexReader reader, long wordId, MockDataDocument docId) {
-        return (reader.getTermMetadata(Arena.global(), wordId, new CombinedDocIdList(docId.docId())).array())[0];
-    }
-
 
     @Test
     public void testUnionRetrieval() throws Exception {

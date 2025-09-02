@@ -5,6 +5,8 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.model.CombinedDocIdList;
+import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.index.reverse.query.*;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -165,15 +168,22 @@ public class FullReverseIndexReader {
         return new SkipListReader(dataPool, offset);
     }
 
-    public TermData[] getTermData(Arena arena,
-                                  IndexSearchBudget budget,
-                                  long[] termIds,
-                                  long[] docIds)
+    /** Get term metadata for each document, return an array of TermMetadataList of the same
+     * length and order as termIds, with each list of the same length and order as docIds
+     *
+     * @throws TimeoutException if the read could not be queued in a timely manner;
+     *                          (the read itself may still exceed the budgeted time)
+     */
+    public TermMetadataList[] getTermData(Arena arena,
+                                          IndexSearchBudget budget,
+                                          long[] termIds,
+                                          CombinedDocIdList docIds)
             throws TimeoutException
     {
+        // Gather all termdata to be retrieved into a single array,
+        // to help cluster related disk accesses and get better I/O performance
 
-        long[] offsetsAll = new long[termIds.length * docIds.length];
-
+        long[] offsetsAll = new long[termIds.length * docIds.size()];
         for (int i = 0; i < termIds.length; i++) {
             long termId = termIds[i];
             long offset = wordOffset(termId);
@@ -187,39 +197,21 @@ public class FullReverseIndexReader {
             var reader = getReader(offset);
 
             // Read the size and offset of the position data
-            var offsetsForTerm = reader.getValueOffsets(docIds);
-            System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIds.length, docIds.length);
+            long[] docIdsArray = docIds.array();
+            var offsetsForTerm = reader.getValueOffsets(docIdsArray);
+            System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIdsArray.length, docIdsArray.length);
         }
 
-        return positionsFileReader.getTermData(arena, budget, offsetsAll);
-    }
+        // Perform the read
+        TermData[] termDataCombined = positionsFileReader.getTermData(arena, budget, offsetsAll);
 
-    public TermData[] getTermData(Arena arena,
-                                  long termId,
-                                  long[] docIds)
-    {
-        var ret = new TermData[docIds.length];
-
-        long offset = wordOffset(termId);
-
-        if (offset < 0) {
-            // This is likely a bug in the code, but we can't throw an exception here
-            logger.debug("Missing offset for word {}", termId);
-            return ret;
+        // Break the result data into separate arrays by termId again
+        TermMetadataList[] ret = new TermMetadataList[termIds.length];
+        for (int i = 0; i < termIds.length; i++) {
+            ret[i] = new TermMetadataList(Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size()));
         }
 
-        var reader = getReader(offset);
-
-        // Read the size and offset of the position data
-        var offsets = reader.getValueOffsets(docIds);
-
-        // FIXME this entire method chain only exists for a single unit test
-        // remove me!
-        try {
-            return positionsFileReader.getTermData(arena, new IndexSearchBudget(1000), offsets);
-        } catch (TimeoutException e) {
-            throw new RuntimeException(e);
-        }
+        return ret;
     }
 
     public void close() {

@@ -1,6 +1,5 @@
 package nu.marginalia.index.reverse;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -59,14 +57,6 @@ class FullReverseIndexReaderTest {
         );
 
         assertEquals(1, indexReader.numDocuments(termId("50")));
-
-        var positions = indexReader.getTermData(Arena.global(), termId("50"), new long[] { 100 });
-
-        assertEquals(1, positions.length);
-        assertNotNull(positions[0]);
-        assertEquals((byte) 51, positions[0].flags());
-        assertEquals(IntList.of(1, 3, 5), positions[0].positions().values());
-
         assertArrayEquals(new long[] { 100 }, readEntries(indexReader, termId("50")));
     }
 

@@ -15,7 +15,6 @@ import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
-import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexQueryBuilder;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -183,19 +181,7 @@ public class CombinedIndexReader {
                                               CombinedDocIdList docIds)
     throws TimeoutException
     {
-        TermData[] combinedTermData = reverseIndexFullReader.getTermData(arena, budget, wordIds, docIds.array());
-        TermMetadataList[] ret = new TermMetadataList[wordIds.length];
-        for (int i = 0; i < wordIds.length; i++) {
-            ret[i] = new TermMetadataList(Arrays.copyOfRange(combinedTermData, i*docIds.size(), (i+1)*docIds.size()));
-        }
-        return ret;
-    }
-
-    public TermMetadataList getTermMetadata(Arena arena,
-                                            long wordId,
-                                            CombinedDocIdList docIds)
-    {
-        return new TermMetadataList(reverseIndexFullReader.getTermData(arena, wordId, docIds.array()));
+        return reverseIndexFullReader.getTermData(arena, budget, wordIds, docIds);
     }
 
     /** Retrieves the document metadata for the specified document */
