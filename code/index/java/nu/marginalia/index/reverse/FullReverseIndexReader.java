@@ -23,27 +23,28 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 
 public class FullReverseIndexReader {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final LongArray words;
     private final LongArray documents;
 
-    private final long wordsDataOffset;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final BTreeReader wordsBTreeReader;
-    private final String name;
-
     private final PositionsFileReader positionsFileReader;
 
+    private final long wordsDataOffset;
+    private final BTreeReader wordsBTreeReader;
+
     private final BufferPool dataPool;
+    private final String name;
 
     public FullReverseIndexReader(String name,
                                   Path words,
                                   Path documents,
-                                  PositionsFileReader positionsFileReader) throws IOException {
+                                  PositionsFileReader positionsFileReader)
+            throws IOException
+    {
         this.name = name;
 
         this.positionsFileReader = positionsFileReader;
@@ -65,45 +66,16 @@ public class FullReverseIndexReader {
         LinuxSystemCalls.madviseRandom(this.words.getMemorySegment());
         LinuxSystemCalls.madviseRandom(this.documents.getMemorySegment());
 
-        dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE, (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE));
+        dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE,
+                (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE)
+        );
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
-
-        if (getClass().desiredAssertionStatus()) {
-            if (Boolean.getBoolean("index-self-test")) {
-                Executors.newSingleThreadExecutor().execute(this::selfTest);
-            }
-        }
     }
 
     public void reset() {
         dataPool.reset();
-    }
-
-
-    private void selfTest() {
-        logger.info("Running self test program");
-
-        long wordsDataSize = wordsBTreeReader.getHeader().numEntries() * 2L;
-        var wordsDataRange = words.range(wordsDataOffset, wordsDataOffset + wordsDataSize);
-
-//        ReverseIndexSelfTest.runSelfTest1(wordsDataRange, wordsDataSize);
-//        ReverseIndexSelfTest.runSelfTest2(wordsDataRange, documents);
-//        ReverseIndexSelfTest.runSelfTest3(wordsDataRange, wordsBTreeReader);
-//        ReverseIndexSelfTest.runSelfTest4(wordsDataRange, documents);
-        ReverseIndexSelfTest.runSelfTest5(wordsDataRange, wordsBTreeReader);
-        ReverseIndexSelfTest.runSelfTest6(wordsDataRange, documents);
-    }
-
-    public void eachDocRange(Consumer<LongArray> eachDocRange) {
-        long wordsDataSize = wordsBTreeReader.getHeader().numEntries() * 2L;
-        var wordsDataRange = words.range(wordsDataOffset, wordsDataOffset + wordsDataSize);
-
-        for (long i = 1; i < wordsDataRange.size(); i+=2) {
-            var docsBTreeReader = new BTreeReader(documents, ReverseIndexParameters.fullDocsBTreeContext, wordsDataRange.get(i));
-            eachDocRange.accept(docsBTreeReader.data());
-        }
     }
 
     /** Calculate the offset of the word in the documents.
@@ -189,17 +161,19 @@ public class FullReverseIndexReader {
             long offset = wordOffset(termId);
 
             if (offset < 0) {
-                // This is likely a bug in the code, but we can't throw an exception here
+                // This is likely a bug in the code, but we can't throw an exception here.
                 logger.debug("Missing offset for word {}", termId);
+
+                // We'll pass zero offsets to positionsFileReader.getTermData(), which will be
+                // interpreted as an instruction to ignore these positions.
                 continue;
             }
 
-            var reader = getReader(offset);
-
             // Read the size and offset of the position data
-            long[] docIdsArray = docIds.array();
-            var offsetsForTerm = reader.getValueOffsets(docIdsArray);
-            System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIdsArray.length, docIdsArray.length);
+            long[] offsetsForTerm = getReader(offset).getValueOffsets(docIds.array());
+
+            // Add to the big array of term data offsets
+            System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIds.size(), docIds.size());
         }
 
         // Perform the read
@@ -208,7 +182,9 @@ public class FullReverseIndexReader {
         // Break the result data into separate arrays by termId again
         TermMetadataList[] ret = new TermMetadataList[termIds.length];
         for (int i = 0; i < termIds.length; i++) {
-            ret[i] = new TermMetadataList(Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size()));
+            ret[i] = new TermMetadataList(
+                    Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size())
+            );
         }
 
         return ret;

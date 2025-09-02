@@ -56,11 +56,6 @@ public class PrioIndexEntrySource implements EntrySource {
     }
 
     @Override
-    public void skip(int n) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
     @SuppressWarnings("preview")
     public void read(LongQueryBuffer buffer) {
         var outputBuffer = buffer.asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
