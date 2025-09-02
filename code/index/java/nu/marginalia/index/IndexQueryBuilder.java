@@ -3,11 +3,10 @@ package nu.marginalia.index;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.query.IndexQuery;
-import nu.marginalia.index.reverse.query.IndexQueryBuilder;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 
-public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
+public class IndexQueryBuilder {
     private final IndexQuery query;
     private final FullReverseIndexReader reverseIndexFullReader;
 
@@ -19,7 +18,7 @@ public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
      * */
     private final TLongHashSet alreadyConsideredTerms = new TLongHashSet();
 
-    IndexQueryBuilderImpl(FullReverseIndexReader reverseIndexFullReader, IndexQuery query)
+    IndexQueryBuilder(FullReverseIndexReader reverseIndexFullReader, IndexQuery query)
     {
         this.query = query;
         this.reverseIndexFullReader = reverseIndexFullReader;

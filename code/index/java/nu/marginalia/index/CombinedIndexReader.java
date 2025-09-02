@@ -16,7 +16,6 @@ import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.query.IndexQuery;
-import nu.marginalia.index.reverse.query.IndexQueryBuilder;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -54,8 +53,8 @@ public class CombinedIndexReader {
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
-    public IndexQueryBuilderImpl newQueryBuilder(IndexQuery query) {
-        return new IndexQueryBuilderImpl(reverseIndexFullReader, query);
+    public IndexQueryBuilder newQueryBuilder(IndexQuery query) {
+        return new IndexQueryBuilder(reverseIndexFullReader, query);
     }
 
     public QueryFilterStepIf hasWordFull(long termId, IndexSearchBudget budget) {
@@ -96,9 +95,9 @@ public class CombinedIndexReader {
             return Collections.emptyList();
         }
 
-        List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
-
         final long[] termPriority = context.sortedDistinctIncludes(this::compareKeywords);
+
+        List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(context.compiledQueryIds);
 
         // Remove any paths that do not contain all prioritized terms, as this means
