@@ -1,7 +1,7 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.uring.UringFileReader;
 
 import java.io.IOException;

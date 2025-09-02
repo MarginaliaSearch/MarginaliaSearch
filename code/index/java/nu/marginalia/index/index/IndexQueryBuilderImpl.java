@@ -1,11 +1,11 @@
 package nu.marginalia.index.index;
 
 import gnu.trove.set.hash.TLongHashSet;
-import nu.marginalia.index.FullReverseIndexReader;
-import nu.marginalia.index.query.IndexQuery;
-import nu.marginalia.index.query.IndexQueryBuilder;
-import nu.marginalia.index.query.IndexSearchBudget;
-import nu.marginalia.index.query.filter.QueryFilterStepIf;
+import nu.marginalia.index.reverse.FullReverseIndexReader;
+import nu.marginalia.index.reverse.query.IndexQuery;
+import nu.marginalia.index.reverse.query.IndexQueryBuilder;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 
 public class IndexQueryBuilderImpl implements IndexQueryBuilder  {
     private final IndexQuery query;

@@ -2,7 +2,7 @@ package nu.marginalia.search.model;
 
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
-import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
 import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.Objects;

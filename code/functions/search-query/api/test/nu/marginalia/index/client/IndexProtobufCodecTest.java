@@ -3,7 +3,7 @@ package nu.marginalia.index.client;
 import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

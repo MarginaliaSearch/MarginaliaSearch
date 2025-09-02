@@ -2,8 +2,8 @@ package nu.marginalia.api.searchquery;
 
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.index.query.limit.SpecificationLimitType;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimitType;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,8 +1,8 @@
 package nu.marginalia.index.model;
 
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.index.query.limit.SpecificationLimitType;
+import nu.marginalia.index.reverse.query.limit.QueryStrategy;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimitType;
 import nu.marginalia.index.searchset.SearchSet;
 
 import java.util.Objects;

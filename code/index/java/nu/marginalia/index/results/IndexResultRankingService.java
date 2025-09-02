@@ -14,7 +14,7 @@ import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;

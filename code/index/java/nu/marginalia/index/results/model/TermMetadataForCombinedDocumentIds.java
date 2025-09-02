@@ -2,7 +2,7 @@ package nu.marginalia.index.results.model;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import nu.marginalia.index.positions.TermData;
+import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.results.model.ids.TermMetadataList;
 import nu.marginalia.sequence.CodedSequence;

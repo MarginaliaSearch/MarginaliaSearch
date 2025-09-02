@@ -6,7 +6,11 @@ import nu.marginalia.IndexLocations;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.index.positions.PositionsFileReader;
+import nu.marginalia.index.reverse.FullReverseIndexReader;
+import nu.marginalia.index.reverse.PrioReverseIndexReader;
+import nu.marginalia.index.reverse.ReverseIndexFullFileNames;
+import nu.marginalia.index.reverse.ReverseIndexPrioFileNames;
+import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import nu.marginalia.storage.FileStorageService;
 
 import java.io.IOException;

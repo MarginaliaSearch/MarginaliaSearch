@@ -6,8 +6,8 @@ import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.index.reverse.query.limit.QueryStrategy;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
 import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;

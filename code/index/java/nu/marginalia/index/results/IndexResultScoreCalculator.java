@@ -13,7 +13,7 @@ import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.query.limit.QueryStrategy;
+import nu.marginalia.index.reverse.query.limit.QueryStrategy;
 import nu.marginalia.index.results.model.PhraseConstraintGroupList;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.crawl.HtmlFeature;

@@ -1,7 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser.token;
 
 
-import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
 
 public sealed interface QueryToken {
     String str();

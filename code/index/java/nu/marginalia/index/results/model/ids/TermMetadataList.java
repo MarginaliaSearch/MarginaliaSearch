@@ -1,6 +1,6 @@
 package nu.marginalia.index.results.model.ids;
 
-import nu.marginalia.index.positions.TermData;
+import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.sequence.CodedSequence;
 
 import javax.annotation.Nullable;

@@ -1,6 +1,6 @@
 package nu.marginalia.index.forward.spans;
 
-import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;

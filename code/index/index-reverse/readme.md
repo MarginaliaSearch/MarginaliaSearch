@@ -38,14 +38,14 @@ to form a finalized reverse index.
 ## Central Classes
 
 Full index:
-* [FullPreindex](java/nu/marginalia/index/construction/full/FullPreindex.java) intermediate reverse index state.
-* [FullIndexConstructor](java/nu/marginalia/index/construction/full/FullIndexConstructor.java) constructs the index.
-* [FullReverseIndexReader](java/nu/marginalia/index/FullReverseIndexReader.java) interrogates the index.
+* [FullPreindex](java/nu/marginalia/index/reverse/construction/full/FullPreindex.java) intermediate reverse index state.
+* [FullIndexConstructor](java/nu/marginalia/index/reverse/construction/full/FullIndexConstructor.java) constructs the index.
+* [FullReverseIndexReader](java/nu/marginalia/index/reverse/FullReverseIndexReader.java) interrogates the index.
 
 Prio index:
-* [PrioPreindex](java/nu/marginalia/index/construction/prio/PrioPreindex.java) intermediate reverse index state.
-* [PrioIndexConstructor](java/nu/marginalia/index/construction/prio/PrioIndexConstructor.java) constructs the index.
-* [PrioIndexReader](java/nu/marginalia/index/PrioReverseIndexReader.java) interrogates the index.
+* [PrioPreindex](java/nu/marginalia/index/reverse/construction/prio/PrioPreindex.java) intermediate reverse index state.
+* [PrioIndexConstructor](java/nu/marginalia/index/reverse/construction/prio/PrioIndexConstructor.java) constructs the index.
+* [PrioIndexReader](java/nu/marginalia/index/reverse/PrioReverseIndexReader.java) interrogates the index.
 
 
 ## See Also

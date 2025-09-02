@@ -6,7 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
-import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
