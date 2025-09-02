@@ -1,13 +1,14 @@
 package nu.marginalia.index.forward;
 
 import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.index.forward.spans.IndexSpansReaderPlain;
 import nu.marginalia.index.forward.spans.IndexSpansWriter;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,6 +30,14 @@ class IndexSpansReaderTest {
         Files.deleteIfExists(testFile);
     }
 
+    DocumentSpans readSpans(Arena arena, IndexSpansReader reader, long offset) {
+        try {
+            return reader.readSpans(arena, new IndexSearchBudget(Long.MAX_VALUE), new long[] { offset })[0];
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     void testContainsPosition() throws IOException {
         ByteBuffer wa = ByteBuffer.allocate(32);
@@ -47,11 +56,11 @@ class IndexSpansReaderTest {
             offset2 = writer.endRecord();
         }
 
-        try (var reader = IndexSpansReader.open(testFile);
-             var arena = Arena.ofConfined()
+        try (IndexSpansReader reader = IndexSpansReader.open(testFile);
+             Arena arena = Arena.ofConfined()
         ) {
-            var spans1 = reader.readSpans(arena, offset1);
-            var spans2 = reader.readSpans(arena, offset2);
+            DocumentSpans spans1 = readSpans(arena, reader, offset1);
+            DocumentSpans spans2 = readSpans(arena, reader, offset2);
 
             assertEquals(2, spans1.heading.size());
 
@@ -84,10 +93,10 @@ class IndexSpansReaderTest {
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new IndexSpansReaderPlain(testFile);
-             var arena = Arena.ofConfined()
+        try (IndexSpansReaderPlain reader = new IndexSpansReaderPlain(testFile);
+             Arena arena = Arena.ofConfined()
         ) {
-            var spans1 = reader.readSpans(arena, offset1);
+            DocumentSpans spans1 = readSpans(arena, reader, offset1);
 
             assertTrue(spans1.heading.containsRange(IntList.of(10), 2));
             assertTrue(spans1.heading.containsRange(IntList.of(8, 10), 2));
@@ -111,10 +120,10 @@ class IndexSpansReaderTest {
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new IndexSpansReaderPlain(testFile);
-             var arena = Arena.ofConfined()
+        try (IndexSpansReaderPlain reader = new IndexSpansReaderPlain(testFile);
+             Arena arena = Arena.ofConfined()
         ) {
-            var spans1 = reader.readSpans(arena, offset1);
+            DocumentSpans spans1 = readSpans(arena, reader, offset1);
 
             assertEquals(0, spans1.heading.containsRangeExact(IntList.of(10), 2));
             assertEquals(0, spans1.heading.containsRangeExact(IntList.of(8, 10), 2));
@@ -138,27 +147,27 @@ class IndexSpansReaderTest {
             offset1 = writer.endRecord();
         }
 
-        try (var reader = new IndexSpansReaderPlain(testFile);
-             var arena = Arena.ofConfined()
+        try (IndexSpansReaderPlain reader = new IndexSpansReaderPlain(testFile);
+             Arena arena = Arena.ofConfined()
         ) {
-            var spans1 = reader.readSpans(arena, offset1);
+            DocumentSpans spans1 = readSpans(arena, reader, offset1);
 
-            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(10), 2));
-            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10), 2));
-            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10, 14), 2));
+            assertEquals(1, spans1.heading.countRangeMatches(IntList.of(10), 2));
+            assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10), 2));
+            assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10, 14), 2));
 
-            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(10), 5));
-            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10), 5));
-            Assertions.assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10, 14), 5));
+            assertEquals(1, spans1.heading.countRangeMatches(IntList.of(10), 5));
+            assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10), 5));
+            assertEquals(1, spans1.heading.countRangeMatches(IntList.of(8, 10, 14), 5));
 
-            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(10, 20), 5));
-            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(8, 10, 13, 20), 5));
-            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(8, 10, 14, 20, 55), 5));
+            assertEquals(2, spans1.heading.countRangeMatches(IntList.of(10, 20), 5));
+            assertEquals(2, spans1.heading.countRangeMatches(IntList.of(8, 10, 13, 20), 5));
+            assertEquals(2, spans1.heading.countRangeMatches(IntList.of(8, 10, 14, 20, 55), 5));
 
-            Assertions.assertEquals(2, spans1.heading.countRangeMatches(IntList.of(10, 12), 2));
+            assertEquals(2, spans1.heading.countRangeMatches(IntList.of(10, 12), 2));
 
-            Assertions.assertEquals(0, spans1.heading.countRangeMatches(IntList.of(11), 5));
-            Assertions.assertEquals(0, spans1.heading.countRangeMatches(IntList.of(9), 5));
+            assertEquals(0, spans1.heading.countRangeMatches(IntList.of(11), 5));
+            assertEquals(0, spans1.heading.countRangeMatches(IntList.of(9), 5));
         }
     }
 }

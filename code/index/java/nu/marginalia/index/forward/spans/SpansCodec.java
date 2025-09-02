@@ -11,8 +11,6 @@ public class SpansCodec {
     public static int FOOTER_SIZE = 8;
 
     public enum SpansCodecVersion {
-        @Deprecated
-        COMPRESSED,
         PLAIN
     }
 

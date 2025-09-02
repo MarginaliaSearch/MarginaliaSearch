@@ -32,45 +32,11 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     }
 
     @Override
-    public DocumentSpans readSpans(Arena arena, long encodedOffset) throws IOException {
-        // for testing, slow
-        try {
-            return readSpans(arena, new IndexSearchBudget(1000), new long[] { encodedOffset})[0];
-        } catch (TimeoutException e) {
-            throw new IOException(e);
-        }
-    }
-
-    public DocumentSpans decode(MemorySegment ms) {
-        int count = ms.get(ValueLayout.JAVA_INT, 0);
-        int pos = 4;
-        DocumentSpans ret = new DocumentSpans();
-
-        // Decode each span
-        for (int spanIdx = 0; spanIdx < count; spanIdx++) {
-            byte code = ms.get(ValueLayout.JAVA_BYTE, pos);
-            short len = ms.get(ValueLayout.JAVA_SHORT, pos+2);
-
-            IntArrayList values = new IntArrayList(len);
-
-            pos += 4;
-            for (int i = 0; i < len; i++) {
-                values.add(ms.get(ValueLayout.JAVA_INT, pos + 4*i));
-            }
-            ret.accept(code, values);
-            pos += 4*len;
-        }
-
-        return ret;
-    }
-
-    @Override
     public DocumentSpans[] readSpans(Arena arena, IndexSearchBudget budget, long[] encodedOffsets) throws TimeoutException {
 
         int readCnt = 0;
         for (long offset : encodedOffsets) {
-            if (offset < 0)
-                continue;
+            if (offset < 0) continue;
             readCnt ++;
         }
 
@@ -92,13 +58,35 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
         }
 
         List<MemorySegment> buffers = uringReader.readUnaligned(arena, budget.timeLeft(), offsets, sizes, 4096);
-
         DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
 
         for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
             if (encodedOffsets[idx] < 0)
                 continue;
             ret[idx] = decode(buffers.get(j++));
+        }
+
+        return ret;
+    }
+
+    public DocumentSpans decode(MemorySegment ms) {
+        int count = ms.get(ValueLayout.JAVA_INT, 0);
+        int pos = 4;
+        DocumentSpans ret = new DocumentSpans();
+
+        // Decode each span
+        for (int spanIdx = 0; spanIdx < count; spanIdx++) {
+            byte code = ms.get(ValueLayout.JAVA_BYTE, pos);
+            short len = ms.get(ValueLayout.JAVA_SHORT, pos+2);
+
+            IntArrayList values = new IntArrayList(len);
+
+            pos += 4;
+            for (int i = 0; i < len; i++) {
+                values.add(ms.get(ValueLayout.JAVA_INT, pos + 4*i));
+            }
+            ret.accept(code, values);
+            pos += 4*len;
         }
 
         return ret;
