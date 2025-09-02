@@ -18,7 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeoutException;
 
-import static nu.marginalia.index.forward.ForwardIndexParameters.*;
+import static nu.marginalia.index.config.ForwardIndexParameters.*;
 
 /** Reads the forward index.
  * <p/>

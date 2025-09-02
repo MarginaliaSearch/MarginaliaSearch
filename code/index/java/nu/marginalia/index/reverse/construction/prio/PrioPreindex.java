@@ -3,10 +3,10 @@ package nu.marginalia.index.reverse.construction.prio;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeWriter;
-import nu.marginalia.index.reverse.ReverseIndexParameters;
+import nu.marginalia.index.config.ReverseIndexParameters;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.CountToOffsetTransformer;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
-import nu.marginalia.index.journal.IndexJournalPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -5,6 +5,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.config.ReverseIndexParameters;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;

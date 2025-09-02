@@ -1,4 +1,4 @@
-package nu.marginalia.index.forward;
+package nu.marginalia.index.config;
 
 public class ForwardIndexParameters {
     public static final int ENTRY_SIZE = 3;

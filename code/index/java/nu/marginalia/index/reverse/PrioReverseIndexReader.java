@@ -4,6 +4,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.config.ReverseIndexParameters;
 import nu.marginalia.index.reverse.query.EmptyEntrySource;
 import nu.marginalia.index.reverse.query.EntrySource;
 import org.slf4j.Logger;

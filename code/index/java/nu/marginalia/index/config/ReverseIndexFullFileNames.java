@@ -1,4 +1,4 @@
-package nu.marginalia.index.reverse;
+package nu.marginalia.index.config;
 
 import java.nio.file.Path;
 

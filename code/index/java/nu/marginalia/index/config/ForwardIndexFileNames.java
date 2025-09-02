@@ -1,4 +1,4 @@
-package nu.marginalia.index.forward;
+package nu.marginalia.index.config;
 
 import java.nio.file.Path;
 

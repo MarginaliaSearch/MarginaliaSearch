@@ -61,6 +61,7 @@ public class PrioIndexEntrySource implements EntrySource {
         var outputBuffer = buffer.asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
         outputBuffer.clear();
 
+        // FYI: The encoding end of this compression algorithm is at PrioDocIdsTransformer
         while (outputBuffer.hasRemaining() && readItems++ < numItems) {
             int rank;
             int domainId;

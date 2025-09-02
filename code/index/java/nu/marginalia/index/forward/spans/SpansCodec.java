@@ -11,6 +11,8 @@ public class SpansCodec {
     public static int FOOTER_SIZE = 8;
 
     public enum SpansCodecVersion {
+        @Deprecated
+        DEPRECATED_1, // This must not be removed, the ordinal is used to encode the version
         PLAIN
     }
 
