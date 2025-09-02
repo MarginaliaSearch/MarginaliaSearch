@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 public class IndexConstructorMain extends ProcessMainClass {
@@ -39,7 +38,7 @@ public class IndexConstructorMain extends ProcessMainClass {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexConstructorMain.class);
 
-    public static void main(String[] args) throws Exception {
+    static void main(String[] args) throws Exception {
         Instructions<CreateIndexRequest> instructions = null;
         try {
             new org.mariadb.jdbc.Driver();
@@ -83,7 +82,7 @@ public class IndexConstructorMain extends ProcessMainClass {
         this.domainRankings = domainRankings;
     }
 
-    private void run(CreateIndexRequest instructions) throws SQLException, IOException {
+    private void run(CreateIndexRequest instructions) throws IOException {
         heartbeat.start();
 
         switch (instructions.indexName()) {
