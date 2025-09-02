@@ -1,4 +1,4 @@
-package nu.marginalia.index.domainranking;
+package nu.marginalia.index.searchset;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ShortOpenHashMap;

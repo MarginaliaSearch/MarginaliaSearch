@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.domainranking.DomainRankings;
+import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.storage.FileStorageService;
 
 public class IndexConstructorModule extends AbstractModule {

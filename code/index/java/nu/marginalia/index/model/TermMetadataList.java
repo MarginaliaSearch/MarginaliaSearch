@@ -1,4 +1,4 @@
-package nu.marginalia.index.results.model.ids;
+package nu.marginalia.index.model;
 
 import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.sequence.CodedSequence;

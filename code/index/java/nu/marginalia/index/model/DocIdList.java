@@ -1,14 +1,13 @@
-package nu.marginalia.index.results.model.ids;
+package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.LongStream;
 
 /** A list of document ids, with their ranking bits removed.
  *
- * @see nu.marginalia.index.results.model.ids.CombinedDocIdList
+ * @see CombinedDocIdList
  * @see nu.marginalia.model.id.UrlIdCodec
  * */
 public final class DocIdList {

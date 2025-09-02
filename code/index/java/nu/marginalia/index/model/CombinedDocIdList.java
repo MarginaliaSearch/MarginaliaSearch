@@ -1,4 +1,4 @@
-package nu.marginalia.index.results.model.ids;
+package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -8,7 +8,7 @@ import java.util.stream.LongStream;
 
 /** A list of document ids, with their ranking bits still remaining.
  *
- * @see nu.marginalia.index.results.model.ids.DocIdList
+ * @see DocIdList
  * @see nu.marginalia.model.id.UrlIdCodec
  * */
 public final class CombinedDocIdList {

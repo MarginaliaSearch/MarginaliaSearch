@@ -3,9 +3,9 @@ package nu.marginalia.index;
 import io.prometheus.client.Gauge;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.skiplist.SkipListConstants;
@@ -197,7 +197,7 @@ public class IndexQueryExecution {
                 if (docIds == null) continue;
 
                 long st = System.nanoTime();
-                var preparedData = rankingService.prepareRankingData(rankingContext, docIds, budget);
+                var preparedData = rankingService.prepareRankingData(rankingContext, docIds);
                 long et = System.nanoTime();
                 metric_index_prep_time_s
                         .labels(nodeName)
@@ -225,7 +225,7 @@ public class IndexQueryExecution {
 
                 try (rankingData) {
                     long st =  System.nanoTime();
-                    resultHeap.addAll(rankingService.rankResults(budget, rankingContext, rankingData, false));
+                    resultHeap.addAll(rankingService.rankResults(rankingContext, rankingData, false));
                     long et = System.nanoTime();
 
                     metric_index_rank_time_s

@@ -13,15 +13,14 @@ import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.IndexQueryExecution;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.ForwardIndexReader;
+import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.DomainRankingOverrides;
 import nu.marginalia.index.results.IndexResultRankingService;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import nu.marginalia.index.reverse.query.IndexQuery;
-import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -156,7 +155,7 @@ public class PerfTestMain {
             allResults.subList(512,  allResults.size()).clear();
         }
 
-        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()), null);
+        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()));
 
         int sum = 0;
 
@@ -167,9 +166,8 @@ public class PerfTestMain {
 
         int iter;
         for (iter = 0;; iter++) {
-            IndexSearchBudget budget = new IndexSearchBudget(10000);
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(budget, rankingContext, rankingData, false).size();
+            sum2 += rankingService.rankResults(rankingContext, rankingData, false).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 

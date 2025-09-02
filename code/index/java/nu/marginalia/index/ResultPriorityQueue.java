@@ -25,7 +25,7 @@ public class ResultPriorityQueue implements Iterable<SearchResultItem> {
         this.queue = MinMaxPriorityQueue.<SearchResultItem>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
     }
 
-    public Iterator<SearchResultItem> iterator() {
+    public @NotNull Iterator<SearchResultItem> iterator() {
         return queue.iterator();
     }
 

@@ -2,9 +2,9 @@ package nu.marginalia.index;
 
 import com.google.inject.AbstractModule;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.domainranking.DomainRankings;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.linkdb.docs.DocumentDbReader;

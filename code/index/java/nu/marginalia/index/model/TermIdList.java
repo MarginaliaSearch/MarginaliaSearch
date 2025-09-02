@@ -1,4 +1,4 @@
-package nu.marginalia.index.results.model.ids;
+package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 

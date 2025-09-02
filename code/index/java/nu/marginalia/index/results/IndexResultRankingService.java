@@ -13,17 +13,15 @@ import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
-import nu.marginalia.index.results.model.ids.TermMetadataList;
-import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.sequence.CodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -51,8 +49,8 @@ public class IndexResultRankingService {
         this.domainRankingOverrides = domainRankingOverrides;
     }
 
-    public RankingData prepareRankingData(SearchContext rankingContext, CombinedDocIdList resultIds, @Nullable IndexSearchBudget budget) throws TimeoutException {
-        return new RankingData(rankingContext, resultIds, budget);
+    public RankingData prepareRankingData(SearchContext rankingContext, CombinedDocIdList resultIds) throws TimeoutException {
+        return new RankingData(rankingContext, resultIds);
     }
 
     public final class RankingData implements AutoCloseable {
@@ -66,7 +64,7 @@ public class IndexResultRankingService {
         private AtomicBoolean closed = new AtomicBoolean(false);
         int pos = -1;
 
-        public RankingData(SearchContext rankingContext, CombinedDocIdList resultIds, @Nullable IndexSearchBudget budget) throws TimeoutException {
+        public RankingData(SearchContext rankingContext, CombinedDocIdList resultIds) throws TimeoutException {
             this.resultIds = resultIds;
             this.arena = Arena.ofShared();
 
@@ -83,8 +81,8 @@ public class IndexResultRankingService {
             // Perform expensive I/O operations
 
             try {
-                this.termsForDocs = currentIndex.getTermMetadata(arena, budget, rankingContext.termIdsAll.array, resultIds);
-                this.documentSpans = currentIndex.getDocumentSpans(arena, budget, resultIds);
+                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext.budget, rankingContext.termIdsAll.array, resultIds);
+                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds);
             }
             catch (TimeoutException|RuntimeException ex) {
                 arena.close();
@@ -133,7 +131,6 @@ public class IndexResultRankingService {
     }
 
     public List<SearchResultItem> rankResults(
-            IndexSearchBudget budget,
             SearchContext rankingContext,
             RankingData rankingData,
             boolean exportDebugData)
@@ -145,7 +142,7 @@ public class IndexResultRankingService {
         // Iterate over documents by their index in the combinedDocIds, as we need the index for the
         // term data arrays as well
 
-        while (rankingData.next() && budget.hasTimeLeft()) {
+        while (rankingData.next() && rankingContext.budget.hasTimeLeft()) {
 
             // Ignore documents that don't match the mandatory constraints
             if (!rankingContext.phraseConstraints.testMandatory(rankingData.positions())) {
@@ -211,10 +208,9 @@ public class IndexResultRankingService {
             }
 
             resultsList.clear();
-            IndexSearchBudget budget = new IndexSearchBudget(10000);
-            try (var data = prepareRankingData(searchContext,  new CombinedDocIdList(combinedIdsList), null)) {
+
+            try (var data = prepareRankingData(searchContext,  new CombinedDocIdList(combinedIdsList))) {
                 resultsList.addAll(this.rankResults(
-                        budget,
                         searchContext,
                         data,
                         true)
