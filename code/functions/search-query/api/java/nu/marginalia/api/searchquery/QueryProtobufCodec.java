@@ -9,7 +9,7 @@ import nu.marginalia.api.searchquery.model.results.debug.DebugFactor;
 import nu.marginalia.api.searchquery.model.results.debug.DebugFactorGroup;
 import nu.marginalia.api.searchquery.model.results.debug.DebugTermFactorGroup;
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
-import nu.marginalia.index.reverse.query.limit.QueryStrategy;
+import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.ArrayList;

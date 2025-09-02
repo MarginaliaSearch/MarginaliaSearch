@@ -1,4 +1,4 @@
-package nu.marginalia.index.reverse.query.limit;
+package nu.marginalia.api.searchquery.model.query;
 
 public record SpecificationLimit(SpecificationLimitType type, int value) {
     public boolean isNone() {

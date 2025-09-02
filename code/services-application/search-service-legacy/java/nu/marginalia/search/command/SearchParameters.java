@@ -3,8 +3,8 @@ package nu.marginalia.search.command;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.index.reverse.query.limit.QueryStrategy;
-import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
+import nu.marginalia.api.searchquery.model.query.QueryStrategy;
+import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.search.model.SearchProfile;
 import spark.Request;
 

@@ -37,9 +37,6 @@ include 'code:execution:api'
 include 'code:index'
 include 'code:index:api'
 include 'code:index:index-journal'
-include 'code:index:query'
-include 'code:index:index-forward'
-include 'code:index:index-reverse'
 include 'code:index:index-perftest'
 
 include 'code:libraries:array'
@@ -89,7 +86,6 @@ include 'code:processes:crawling-process'
 include 'code:processes:crawling-process:model'
 
 include 'code:processes:loading-process'
-include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
 
 include 'code:processes:export-task-process'

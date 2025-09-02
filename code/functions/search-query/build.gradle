@@ -22,8 +22,6 @@ dependencies {
     implementation project(':code:functions:nsfw-domain-filter')
     implementation project(':code:functions:search-query:api')
 
-    implementation project(':code:index:query')
-
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:term-frequency-dict')
 

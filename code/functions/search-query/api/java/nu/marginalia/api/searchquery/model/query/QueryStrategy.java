@@ -1,4 +1,4 @@
-package nu.marginalia.index.reverse.query.limit;
+package nu.marginalia.api.searchquery.model.query;
 
 public enum QueryStrategy {
     SENTENCE,

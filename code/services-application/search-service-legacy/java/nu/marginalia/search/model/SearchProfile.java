@@ -1,6 +1,6 @@
 package nu.marginalia.search.model;
 
-import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
+import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;

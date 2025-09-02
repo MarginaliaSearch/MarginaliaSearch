@@ -10,7 +10,6 @@ import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;

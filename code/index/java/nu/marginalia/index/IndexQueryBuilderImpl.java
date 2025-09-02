@@ -1,4 +1,4 @@
-package nu.marginalia.index.index;
+package nu.marginalia.index;
 
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.reverse.FullReverseIndexReader;

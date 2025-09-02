@@ -28,7 +28,6 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:config')
     implementation project(':code:functions:search-query:api')
-    implementation project(':code:index:query')
 
     implementation libs.bundles.slf4j
 

@@ -1,8 +1,7 @@
-package nu.marginalia.index.index;
+package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.index.IndexFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

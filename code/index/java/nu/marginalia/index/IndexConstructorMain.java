@@ -3,18 +3,20 @@ package nu.marginalia.index;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.index.domainranking.DomainRankings;
+import nu.marginalia.index.forward.ForwardIndexFileNames;
+import nu.marginalia.index.forward.construction.ForwardIndexConverter;
+import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.reverse.ReverseIndexFullFileNames;
 import nu.marginalia.index.reverse.ReverseIndexPrioFileNames;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
-import nu.marginalia.index.domainrankings.DomainRankings;
-import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.forward.construction.ForwardIndexConverter;
-import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.mq.MessageQueueFactory;
+import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
+import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
@@ -29,8 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
-
-import static nu.marginalia.mqapi.ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX;
 
 public class IndexConstructorMain extends ProcessMainClass {
     private final FileStorageService fileStorageService;
@@ -76,7 +76,7 @@ public class IndexConstructorMain extends ProcessMainClass {
                                 ProcessConfiguration processConfiguration,
                                 DomainRankings domainRankings) {
 
-        super(messageQueueFactory, processConfiguration, GsonFactory.get(), INDEX_CONSTRUCTOR_INBOX);
+        super(messageQueueFactory, processConfiguration, GsonFactory.get(), ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX);
 
         this.fileStorageService = fileStorageService;
         this.heartbeat = heartbeat;
@@ -87,9 +87,9 @@ public class IndexConstructorMain extends ProcessMainClass {
         heartbeat.start();
 
         switch (instructions.indexName()) {
-            case FORWARD      -> createForwardIndex();
-            case REVERSE_FULL -> createFullReverseIndex();
-            case REVERSE_PRIO -> createPrioReverseIndex();
+            case IndexName.FORWARD      -> createForwardIndex();
+            case IndexName.REVERSE_FULL -> createFullReverseIndex();
+            case IndexName.REVERSE_PRIO -> createPrioReverseIndex();
         }
 
         heartbeat.shutDown();

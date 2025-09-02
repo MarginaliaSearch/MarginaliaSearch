@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import nu.marginalia.index.index.CombinedIndexReader;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.ReverseIndexFullFileNames;

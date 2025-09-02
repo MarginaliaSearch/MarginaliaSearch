@@ -38,7 +38,6 @@ dependencies {
     implementation project(':code:processes:process-mq-api')
     implementation project(':code:features-search:screenshots')
     implementation project(':code:index:index-journal')
-    implementation project(':code:index:query')
 
     implementation project(':code:processes:crawling-process:model')
 

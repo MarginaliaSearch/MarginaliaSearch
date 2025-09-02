@@ -1,7 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser;
 
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
-import nu.marginalia.index.reverse.query.limit.SpecificationLimit;
+import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.encoding.AsciiFlattener;
 import nu.marginalia.util.transform_list.TransformList;

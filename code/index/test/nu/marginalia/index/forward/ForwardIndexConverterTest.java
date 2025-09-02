@@ -1,6 +1,6 @@
 package nu.marginalia.index.forward;
 
-import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.index.domainranking.DomainRankings;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;

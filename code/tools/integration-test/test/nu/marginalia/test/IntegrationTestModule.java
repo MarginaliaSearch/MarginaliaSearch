@@ -11,7 +11,7 @@ import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.db.DomainTypes;
-import nu.marginalia.index.domainrankings.DomainRankings;
+import nu.marginalia.index.domainranking.DomainRankings;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
