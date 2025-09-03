@@ -217,7 +217,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
-            var execution = new IndexQueryExecution(SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny()), 1, rankingService, indexReader);
+            var execution = new IndexQueryExecution(indexReader, rankingService, SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny()), 1);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();

@@ -32,7 +32,10 @@ public class IndexQueryExecution {
     // operations per lookup and again optimize tail latency
     private static final int lookupBatchSize = SkipListConstants.BLOCK_SIZE / 16;
 
-    private static final ExecutorService threadPool = new ThreadPoolExecutor(indexValuationThreads, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+    private static final ExecutorService threadPool =
+            new ThreadPoolExecutor(indexValuationThreads, 256,
+                    60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
     private final String nodeName;
@@ -81,19 +84,19 @@ public class IndexQueryExecution {
 
 
 
-    public IndexQueryExecution(SearchContext rankingContext,
-                               int serviceNode,
+    public IndexQueryExecution(CombinedIndexReader currentIndex,
                                IndexResultRankingService rankingService,
-                               CombinedIndexReader currentIndex) {
+                               SearchContext rankingContext,
+                               int serviceNode) {
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
+        this.rankingContext = rankingContext;
 
         resultHeap = new ResultPriorityQueue(rankingContext.fetchSize);
 
         budget = rankingContext.budget;
         limitByDomain = rankingContext.limitByDomain;
         limitTotal = rankingContext.limitTotal;
-        this.rankingContext = rankingContext;
 
         queries = currentIndex.createQueries(rankingContext);
 

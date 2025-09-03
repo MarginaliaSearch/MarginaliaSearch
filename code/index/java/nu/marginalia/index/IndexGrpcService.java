@@ -94,13 +94,20 @@ public class IndexGrpcService
                     .time(() -> {
                         // Perform the search
                         try {
-
                             if (!statefulIndex.isLoaded()) {
                                 // Short-circuit if the index is not loaded, as we trivially know that there can be no results
                                 return List.of();
                             }
-                            var rankingContext = SearchContext.create(statefulIndex.get(), hasher, request, getSearchSet(request));
-                            return new IndexQueryExecution(rankingContext, nodeId, rankingService, statefulIndex.get()).run();
+
+                            CombinedIndexReader indexReader = statefulIndex.get();
+
+                            SearchContext rankingContext =
+                                    SearchContext.create(indexReader, hasher, request, getSearchSet(request));
+
+                            IndexQueryExecution queryExecution =
+                                    new IndexQueryExecution(indexReader, rankingService, rankingContext, nodeId);
+
+                            return queryExecution.run();
                         }
                         catch (Exception ex) {
                             logger.error("Error in handling request", ex);
@@ -127,6 +134,9 @@ public class IndexGrpcService
         }
     }
 
+    /** Keywords are translated to a numeric format via a 64 bit hash algorithm,
+     * which varies depends on the language.
+     */
     private KeywordHasher findHasher(RpcIndexQuery request) {
         KeywordHasher hasher = keywordHasherByLangIso.get(request.getLangIsoCode());
         if (hasher != null)
@@ -148,9 +158,12 @@ public class IndexGrpcService
                 return List.of();
             }
 
-            var currentIndex = statefulIndex.get();
+            CombinedIndexReader currentIndex = statefulIndex.get();
 
-            return new IndexQueryExecution(SearchContext.create(currentIndex, keywordHasherByLangIso.get("en"), specsSet, getSearchSet(specsSet)), 1, rankingService, statefulIndex.get()).run();
+            SearchContext context = SearchContext.create(currentIndex,
+                    keywordHasherByLangIso.get("en"), specsSet, getSearchSet(specsSet));
+
+            return new IndexQueryExecution(currentIndex, rankingService, context, 1).run();
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);

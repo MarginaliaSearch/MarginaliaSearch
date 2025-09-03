@@ -225,7 +225,7 @@ public class IntegrationTest {
 
         System.out.println(indexRequest);
 
-        var rs = new IndexQueryExecution(SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1, rankingService, statefulIndex.get());
+        var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1);
 
         System.out.println(rs);
     }
