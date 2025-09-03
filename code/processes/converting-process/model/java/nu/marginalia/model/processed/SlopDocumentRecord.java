@@ -35,7 +35,7 @@ public record SlopDocumentRecord(
         long hash,
         float quality,
         long documentMetadata,
-        String language,
+        String languageIsoCode,
         Integer pubYear,
         List<String> words,
         byte[] metas,
@@ -57,7 +57,7 @@ public record SlopDocumentRecord(
             int htmlFeatures,
             long documentMetadata,
             int length,
-            String language,
+            String languageIsoCode,
             List<String> words,
             byte[] metas,
             List<VarintCodedSequence> positions,
@@ -76,7 +76,7 @@ public record SlopDocumentRecord(
                     && documentMetadata == that.documentMetadata
                     && Arrays.equals(metas, that.metas)
                     && Objects.equals(domain, that.domain)
-                    && Objects.equals(language, that.language)
+                    && Objects.equals(languageIsoCode, that.languageIsoCode)
                     && Arrays.equals(spanCodes, that.spanCodes)
                     && Objects.equals(words, that.words)
                     && Objects.equals(spans, that.spans)
@@ -91,7 +91,7 @@ public record SlopDocumentRecord(
             result = 31 * result + Long.hashCode(documentMetadata);
             result = 31 * result + length;
             result = 31 * result + Objects.hashCode(words);
-            result = 31 * result + Objects.hashCode(language);
+            result = 31 * result + Objects.hashCode(languageIsoCode);
             result = 31 * result + Arrays.hashCode(metas);
             result = 31 * result + Objects.hashCode(positions);
             result = 31 * result + Arrays.hashCode(spanCodes);
@@ -134,7 +134,7 @@ public record SlopDocumentRecord(
     private static final LongColumn hashesColumn = new LongColumn("hash", StorageType.PLAIN);
     private static final FloatColumn qualitiesColumn = new FloatColumn("quality", StorageType.PLAIN);
     private static final LongColumn domainMetadata = new LongColumn("domainMetadata", StorageType.PLAIN);
-    private static final EnumColumn languageColumn = new EnumColumn("language", StandardCharsets.UTF_8);
+    private static final EnumColumn languageColumn = new EnumColumn("languageIsoCode", StandardCharsets.UTF_8);
 
     // Keyword-level columns, these are enumerated by the counts column
 
@@ -337,7 +337,7 @@ public record SlopDocumentRecord(
             htmlFeaturesWriter.put(record.htmlFeatures());
             htmlStandardsWriter.put(record.htmlStandard());
 
-            languageWriter.put(record.language());
+            languageWriter.put(record.languageIsoCode());
             lengthsWriter.put(record.length());
             hashesWriter.put(record.hash());
             qualitiesWriter.put(record.quality());

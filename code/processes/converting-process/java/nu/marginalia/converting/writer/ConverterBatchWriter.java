@@ -119,7 +119,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     document.details.hashCode,
                     (float) document.details.quality,
                     document.details.metadata.encode(),
-                    document.details.language,
+                    document.details.languageIsoCode,
                     document.details.pubYear,
                     wb.keywords(),
                     wb.metadata(),

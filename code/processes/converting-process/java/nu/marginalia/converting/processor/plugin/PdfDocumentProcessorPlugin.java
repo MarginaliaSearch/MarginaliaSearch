@@ -110,7 +110,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         ret.format = DocumentFormat.PDF;
         ret.title = StringUtils.truncate(defaultSpecialization.getTitle(doc, dld, url.toString()), maxTitleLength);
-        ret.language = languageIsoCode;
+        ret.languageIsoCode = languageIsoCode;
 
         ret.quality = -5;
 

@@ -51,7 +51,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         spanCodesWriter = IndexJournalPage.spanCodes.create(this);
         spansWriter = IndexJournalPage.spans.create(this);
 
-        languagesWriter = IndexJournalPage.language.create(this);
+        languagesWriter = IndexJournalPage.languageIsoCode.create(this);
     }
 
     public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection, KeywordHasher hasher) throws IOException {
@@ -60,7 +60,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         featuresWriter.put(keywordsProjection.htmlFeatures());
         sizeWriter.put(keywordsProjection.length());
         documentMetaWriter.put(keywordsProjection.documentMetadata());
-        languagesWriter.put(keywordsProjection.language());
+        languagesWriter.put(keywordsProjection.languageIsoCode());
 
         // -- write keyword data --
 

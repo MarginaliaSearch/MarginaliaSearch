@@ -52,7 +52,7 @@ public record IndexJournal(Path journalDir) {
 
         for (var instance : pages()) {
             try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
-                languages.addAll(instance.openLanguage(slopTable).getDictionary());
+                languages.addAll(instance.openLanguageIsoCode(slopTable).getDictionary());
             }
         }
 

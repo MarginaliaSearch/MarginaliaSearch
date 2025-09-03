@@ -58,7 +58,7 @@ public class LoaderIndexJournalWriter {
 
     public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
     {
-        KeywordHasher hasher = hasherByLanguage.get(data.language());
+        KeywordHasher hasher = hasherByLanguage.get(data.languageIsoCode());
         if (null == hasher) return;
 
         if (++recordsWritten > 200_000) {
