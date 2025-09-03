@@ -1,7 +1,6 @@
 package nu.marginalia.segmentation;
 
-import it.unimi.dsi.fastutil.longs.*;
-import nu.marginalia.util.SimpleBlockingThreadPool;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openzim.ZIMTypes.ZIMFile;
@@ -11,7 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ForkJoinPool;
 
 public class NgramExtractorMain {
     public static void main(String... args) throws IOException, InterruptedException {
@@ -112,50 +111,45 @@ public class NgramExtractorMain {
 
         var orderedHasher = HasherGroup.ordered();
 
-        var pool = new SimpleBlockingThreadPool("ngram-extractor",
-                Math.clamp(2, Runtime.getRuntime().availableProcessors(), 32),
-                32
-                );
+        try (var pool = new ForkJoinPool(Math.clamp(2, Runtime.getRuntime().availableProcessors(), 32))) {
 
-        reader.forEachTitles((title) -> {
-            pool.submitQuietly(() -> {
-                LongArrayList orderedHashesTitle = new LongArrayList();
+            reader.forEachTitles((title) -> {
+                pool.submit(() -> {
+                    LongArrayList orderedHashesTitle = new LongArrayList();
 
-                String normalizedTitle = title.replace('_', ' ');
+                    String normalizedTitle = title.replace('_', ' ');
 
-                for (var sent : getNgramTitleTerms(normalizedTitle)) {
-                    String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
-                    orderedHashesTitle.add(orderedHasher.rollingHash(terms));
-                }
-                synchronized (lexicon) {
-                    for (var hash : orderedHashesTitle) {
-                        lexicon.incOrderedTitle(hash);
+                    for (var sent : getNgramTitleTerms(normalizedTitle)) {
+                        String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
+                        orderedHashesTitle.add(orderedHasher.rollingHash(terms));
                     }
-                }
+                    synchronized (lexicon) {
+                        for (var hash : orderedHashesTitle) {
+                            lexicon.incOrderedTitle(hash);
+                        }
+                    }
+                });
+
             });
 
-        });
+            reader.forEachArticles((title, body) -> {
+                pool.submit(() -> {
+                    LongArrayList orderedHashesBody = new LongArrayList();
 
-        reader.forEachArticles((title, body) -> {
-            pool.submitQuietly(() -> {
-                LongArrayList orderedHashesBody = new LongArrayList();
-
-                for (var sent : getNgramBodyTerms(Jsoup.parse(body))) {
-                    String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
-                    orderedHashesBody.add(orderedHasher.rollingHash(terms));
-                }
-
-                synchronized (lexicon) {
-                    for (var hash : orderedHashesBody) {
-                        lexicon.incOrderedBody(hash);
+                    for (var sent : getNgramBodyTerms(Jsoup.parse(body))) {
+                        String[] terms = BasicSentenceExtractor.getStemmedParts(sent);
+                        orderedHashesBody.add(orderedHasher.rollingHash(terms));
                     }
-                }
-            });
 
-        }, p -> true);
+                    synchronized (lexicon) {
+                        for (var hash : orderedHashesBody) {
+                            lexicon.incOrderedBody(hash);
+                        }
+                    }
+                });
 
-        pool.shutDown();
-        pool.awaitTermination(10, TimeUnit.DAYS);
+            }, p -> true);
+        }
 
         lexicon.saveCounts(countsOutputFile);
     }

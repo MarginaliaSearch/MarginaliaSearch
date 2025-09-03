@@ -33,7 +33,7 @@ dependencies {
     implementation project(':third-party:commons-codec')
 
     implementation project(':code:libraries:message-queue')
-    implementation project(':code:libraries:term-frequency-dict')
+    implementation project(':code:libraries:language-processing')
 
     implementation project(':code:functions:link-graph:api')
     implementation project(':code:functions:live-capture:api')

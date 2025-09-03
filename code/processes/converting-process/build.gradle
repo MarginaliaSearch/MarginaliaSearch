@@ -54,7 +54,7 @@ dependencies {
 
     implementation project(':code:functions:live-capture:api')
 
-    testImplementation project(':code:libraries:term-frequency-dict')
+    testImplementation project(':code:libraries:language-processing')
     testImplementation project(':code:processes:crawling-process:model')
 
     implementation libs.slop

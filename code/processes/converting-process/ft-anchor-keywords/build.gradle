@@ -18,7 +18,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:term-frequency-dict')
 
 
     implementation libs.bundles.slf4j

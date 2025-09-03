@@ -51,7 +51,6 @@ include 'code:libraries:random-write-funnel'
 include 'code:libraries:blocking-thread-pool'
 include 'code:libraries:braille-block-punch-cards'
 include 'code:libraries:language-processing'
-include 'code:libraries:term-frequency-dict'
 include 'code:libraries:test-helpers'
 include 'code:libraries:domain-lock'
 
@@ -92,7 +91,6 @@ include 'code:processes:export-task-process'
 
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
-include 'code:tools:load-test'
 include 'code:tools:integration-test'
 include 'code:tools:browserless'
 

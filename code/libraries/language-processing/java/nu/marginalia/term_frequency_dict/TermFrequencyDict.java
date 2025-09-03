@@ -5,16 +5,19 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.array.LongArray;
-import nu.marginalia.array.LongArrayFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /** Dictionary with term frequency information for (stemmed) words.
  *
@@ -38,15 +41,23 @@ public class TermFrequencyDict {
     }
 
     private static Long2IntOpenHashMap load(Path file) throws IOException {
-        try (LongArray array = LongArrayFactory.mmapForReadingConfined(file)) {
+        try (Arena arena = Arena.ofConfined();
+             FileChannel fileChannel = (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ)) {
 
-            int size = (int) Files.size(file) / 16;
+            long fileSizeBytes = Files.size(file);
+            MemorySegment mappedFile = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileSizeBytes, arena);
+
+            int size = (int) fileSizeBytes / 16;
             var ret = new Long2IntOpenHashMap(size, 0.5f);
 
             ret.defaultReturnValue(0);
 
             for (int i = 0; i < size; i++) {
-                ret.put(array.get(2 * i), (int) array.get(2 * i + 1));
+
+                long key = mappedFile.getAtIndex(ValueLayout.JAVA_LONG, 2 * i);
+                long val = mappedFile.getAtIndex(ValueLayout.JAVA_LONG, 2 * i + 1);
+
+                ret.put(key, (int) val);
             }
 
             return ret;

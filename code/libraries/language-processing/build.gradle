@@ -18,10 +18,10 @@ dependencies {
     implementation project(':third-party:rdrpostagger')
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:commons-codec')
+    implementation project(':third-party:openzim')
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:libraries:easy-lsh')
-    implementation project(':code:libraries:term-frequency-dict')
     implementation project(':code:libraries:coded-sequence')
     implementation libs.notnull
     implementation libs.bundles.jooby
