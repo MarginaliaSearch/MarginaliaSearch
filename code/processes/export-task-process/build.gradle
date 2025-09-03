@@ -31,7 +31,6 @@ dependencies {
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:processes:crawling-process:ft-link-parser')
-    implementation project(':code:processes:converting-process:ft-anchor-keywords')
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:converting-process')
     implementation project(':third-party:commons-codec')

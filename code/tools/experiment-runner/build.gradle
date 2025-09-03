@@ -34,7 +34,6 @@ dependencies {
 
     implementation project(':third-party:commons-codec')
     implementation project(':code:processes:crawling-process:ft-link-parser')
-    implementation project(':code:processes:converting-process:ft-anchor-keywords')
 
     implementation libs.bundles.slf4j
     implementation libs.notnull

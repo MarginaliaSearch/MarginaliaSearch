@@ -59,8 +59,6 @@ include 'code:libraries:message-queue'
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
 
-include 'code:processes:converting-process:ft-anchor-keywords'
-
 include 'code:processes:crawling-process:ft-crawl-blocklist'
 include 'code:processes:crawling-process:ft-link-parser'
 include 'code:processes:crawling-process:ft-content-type'

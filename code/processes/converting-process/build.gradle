@@ -43,11 +43,9 @@ dependencies {
     implementation project(':code:libraries:language-processing')
 
     implementation project(':code:processes:converting-process:model')
-    implementation project(':code:processes:crawling-process:model')
-
-    implementation project(':code:processes:converting-process:ft-anchor-keywords')
     implementation project(':code:processes:converting-process:ft-dom-classifier')
 
+    implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:ft-crawl-blocklist')
     implementation project(':code:processes:crawling-process:ft-link-parser')
     implementation project(':code:processes:crawling-process:ft-content-type')
@@ -55,7 +53,6 @@ dependencies {
     implementation project(':code:functions:live-capture:api')
 
     testImplementation project(':code:libraries:language-processing')
-    testImplementation project(':code:processes:crawling-process:model')
 
     implementation libs.slop
     implementation libs.bundles.slf4j
