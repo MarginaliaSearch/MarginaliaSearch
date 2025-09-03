@@ -6,9 +6,11 @@ import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public record IndexJournalPage(Path baseDir, int page) {
@@ -23,6 +25,8 @@ public record IndexJournalPage(Path baseDir, int page) {
 
     public static ByteArrayColumn spanCodes = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
     public static VarintCodedSequenceArrayColumn spans = new VarintCodedSequenceArrayColumn("spans", StorageType.ZSTD);
+
+    public static EnumColumn language = new EnumColumn("language", StandardCharsets.US_ASCII, StorageType.PLAIN);
 
     public IndexJournalPage {
         if (!baseDir.toFile().isDirectory()) {
@@ -46,6 +50,9 @@ public record IndexJournalPage(Path baseDir, int page) {
         return size.open(table);
     }
 
+    public EnumColumn.Reader openLanguage(SlopTable table) throws IOException {
+        return language.open(table);
+    }
 
     public LongArrayColumn.Reader openTermIds(SlopTable table) throws IOException {
         return termIds.open(table);

@@ -8,6 +8,7 @@ import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +28,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
     private final VarintCodedSequenceArrayColumn.Writer spansWriter;
     private final ByteArrayColumn.Writer spanCodesWriter;
+    private final EnumColumn.Writer languagesWriter;
 
     public IndexJournalSlopWriter(Path dir, int page) throws IOException {
 
@@ -48,6 +50,8 @@ public class IndexJournalSlopWriter extends SlopTable {
 
         spanCodesWriter = IndexJournalPage.spanCodes.create(this);
         spansWriter = IndexJournalPage.spans.create(this);
+
+        languagesWriter = IndexJournalPage.language.create(this);
     }
 
     public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection, KeywordHasher hasher) throws IOException {
@@ -56,6 +60,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         featuresWriter.put(keywordsProjection.htmlFeatures());
         sizeWriter.put(keywordsProjection.length());
         documentMetaWriter.put(keywordsProjection.documentMetadata());
+        languagesWriter.put(keywordsProjection.language());
 
         // -- write keyword data --
 
@@ -85,6 +90,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         termIdsWriter.close();
         termMetadataWriter.close();
         termPositionsWriter.close();
+        languagesWriter.close();
         spansWriter.close();
         spanCodesWriter.close();
     }

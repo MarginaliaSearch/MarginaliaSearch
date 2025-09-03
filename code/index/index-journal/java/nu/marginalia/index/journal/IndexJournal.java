@@ -2,11 +2,10 @@ package nu.marginalia.index.journal;
 
 import nu.marginalia.slop.SlopTable;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public record IndexJournal(Path journalDir) {
 
@@ -46,5 +45,17 @@ public record IndexJournal(Path journalDir) {
         }
 
         return instances;
+    }
+
+    public Set<String> languages() throws IOException {
+        Set<String> languages = new HashSet<>(languages());
+
+        for (var instance : pages()) {
+            try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
+                languages.addAll(instance.openLanguage(slopTable).getDictionary());
+            }
+        }
+
+        return languages;
     }
 }
