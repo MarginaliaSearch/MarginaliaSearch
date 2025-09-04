@@ -7,7 +7,6 @@ import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.index.reverse.construction.full.FullPreindex;
 import nu.marginalia.index.reverse.construction.full.TestJournalFactory;
 import nu.marginalia.index.reverse.construction.full.TestJournalFactory.EntryDataWithWordMeta;
-import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,11 +51,12 @@ class FullReverseIndexReaderTest {
     @Test
     public void testSimple() throws IOException {
 
-        var indexReader = createIndex(
+        FullReverseIndexReader indexReader = createIndex(
                 new EntryDataWithWordMeta(100, 101, wm(50, 51, 1, 3, 5))
         );
+        IndexLanguageContext languageContext = new IndexLanguageContext("en", indexReader.getWordLexicon("en"), null);
 
-        assertEquals(1, indexReader.numDocuments(termId("50")));
+        assertEquals(1, indexReader.numDocuments(languageContext, termId("50")));
         assertArrayEquals(new long[] { 100 }, readEntries(indexReader, termId("50")));
     }
 
@@ -68,10 +68,11 @@ class FullReverseIndexReaderTest {
                 new EntryDataWithWordMeta(100, 101, wm(50, 51), wm(51, 52)),
                 new EntryDataWithWordMeta(101, 101, wm(51, 53), wm(52, 54))
         );
+        IndexLanguageContext languageContext = new IndexLanguageContext("en", indexReader.getWordLexicon("en"), null);
 
-        assertEquals(1, indexReader.numDocuments(termId("50")));
-        assertEquals(2, indexReader.numDocuments(termId("51")));
-        assertEquals(1, indexReader.numDocuments(termId("52")));
+        assertEquals(1, indexReader.numDocuments(languageContext, termId("50")));
+        assertEquals(2, indexReader.numDocuments(languageContext, termId("51")));
+        assertEquals(1, indexReader.numDocuments(languageContext, termId("52")));
 
         assertArrayEquals(new long[] { 100 }, readEntries(indexReader, termId("50")));
         assertArrayEquals(new long[] { 100, 101 }, readEntries(indexReader, termId("51")));
@@ -80,7 +81,8 @@ class FullReverseIndexReaderTest {
     }
 
     private long[] readEntries(FullReverseIndexReader reader, long wordId) {
-        var es = reader.documents(wordId);
+        IndexLanguageContext languageContext = new IndexLanguageContext("en", reader.getWordLexicon("en"), null);
+        var es = reader.documents(languageContext, wordId);
         assertTrue(es.hasMore());
         LongQueryBuffer buffer = new LongQueryBuffer(4);
         es.read(buffer);
@@ -97,13 +99,14 @@ class FullReverseIndexReaderTest {
 
         try (var positionsFileConstructor = new PositionsFileConstructor(posFile)) {
             var preindex = FullPreindex.constructPreindex(reader,
+                    "en",
                     positionsFileConstructor,
                     DocIdRewriter.identity(), tempDir);
             preindex.finalizeIndex(docsFile, wordsFile);
             preindex.delete();
         }
 
-        return new FullReverseIndexReader("test", wordsFile, docsFile, new PositionsFileReader(posFile));
+        return new FullReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile, posFile);
 
     }
 }

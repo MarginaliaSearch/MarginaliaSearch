@@ -1,12 +1,18 @@
 package nu.marginalia.index.reverse.construction.full;
 
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
-import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.rwf.RandomFileAssembler;
+import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.array.ByteArrayColumn;
+import nu.marginalia.slop.column.array.LongArrayColumn;
+import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,51 +43,39 @@ public class FullPreindexDocuments {
             Path docsFile,
             Path workDir,
             IndexJournalPage journalInstance,
+            String languageIsoCode,
             DocIdRewriter docIdRewriter,
             PositionsFileConstructor positionsFileConstructor,
             FullPreindexWordSegments segments) throws IOException {
         FullPreindexDocuments.positionsFileConstructor = positionsFileConstructor;
 
-        createUnsortedDocsFile(docsFile, workDir, journalInstance, segments, docIdRewriter);
-
-        LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
-        sortDocsFile(docsFileMap, segments);
-
-        return new FullPreindexDocuments(docsFileMap, docsFile);
-    }
-
-    public LongArray slice(long start, long end) {
-        return documents.range(start, end);
-    }
-
-    public long size() {
-        return documents.size();
-    }
-
-    private static void createUnsortedDocsFile(Path docsFile,
-                                               Path workDir,
-                                               IndexJournalPage instance,
-                                               FullPreindexWordSegments segments,
-                                               DocIdRewriter docIdRewriter) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
         final ByteBuffer tempBuffer = ByteBuffer.allocate(1024*1024*100);
 
-        try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var slopTable = new SlopTable(instance.baseDir(), instance.page()))
+        try (RandomFileAssembler assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
+             SlopTable slopTable = new SlopTable(journalInstance.baseDir(), journalInstance.page()))
         {
-            var docIds = instance.openCombinedId(slopTable);
-            var termIds = instance.openTermIds(slopTable);
-            var termMeta = instance.openTermMetadata(slopTable);
-            var positions = instance.openTermPositions(slopTable);
+            LongColumn.Reader docIds = journalInstance.openCombinedId(slopTable);
+            LongArrayColumn.Reader termIds = journalInstance.openTermIds(slopTable);
+            ByteArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
+            VarintCodedSequenceArrayColumn.Reader positions = journalInstance.openTermPositions(slopTable);
 
-            var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
+            EnumColumn.Reader languageIsoCodes = journalInstance.openLanguageIsoCode(slopTable);
+            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
+
+            Long2LongOpenHashMap offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
-            var positionsBlock = positionsFileConstructor.getBlock();
+            PositionsFileConstructor.PositionsFileBlock positionsBlock = positionsFileConstructor.getBlock();
 
-            while (docIds.hasRemaining()) {
+            while (languageIsoCodes.hasRemaining()) {
+                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
+                    slopTable.prealignAll(languageIsoCodes);
+                }
+                else continue;
+
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
@@ -102,15 +96,15 @@ public class FullPreindexDocuments {
                     assembly.put(offset + 1, encodedPosOffset);
                 }
             }
-            positionsBlock.commit();
 
+            slopTable.alignAll(languageIsoCodes);
+
+            positionsBlock.commit();
             assembly.write(docsFile);
         }
-    }
 
-    private static void sortDocsFile(LongArray docsFileMap, FullPreindexWordSegments segments) {
-
-        var iter = segments.iterator(RECORD_SIZE_LONGS);
+        LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
+        FullPreindexWordSegments.SegmentIterator iter = segments.iterator(RECORD_SIZE_LONGS);
 
         while (iter.next()) {
             long iterStart = iter.startOffset;
@@ -118,6 +112,16 @@ public class FullPreindexDocuments {
 
             docsFileMap.quickSortN(RECORD_SIZE_LONGS, iterStart, iterEnd);
         }
+
+        return new FullPreindexDocuments(docsFileMap, docsFile);
+    }
+
+    public LongArray slice(long start, long end) {
+        return documents.range(start, end);
+    }
+
+    public long size() {
+        return documents.size();
     }
 
     public void delete() throws IOException {

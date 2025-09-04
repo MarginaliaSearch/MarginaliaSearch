@@ -234,7 +234,7 @@ dependencyResolutionManagement {
             library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
 
-            library('slop', 'nu.marginalia', 'slop').version('0.0.11-SNAPSHOT')
+            library('slop', 'nu.marginalia', 'slop').version('0.0.15-SNAPSHOT')
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
             library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)

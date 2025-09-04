@@ -47,15 +47,20 @@ public record IndexJournal(Path journalDir) {
         return instances;
     }
 
-    public Set<String> languages() throws IOException {
-        Set<String> languages = new HashSet<>(languages());
+    public Set<String> languages() {
+        try {
+            Set<String> languages = new HashSet<>(languages());
 
-        for (var instance : pages()) {
-            try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
-                languages.addAll(instance.openLanguageIsoCode(slopTable).getDictionary());
+            for (var instance : pages()) {
+                try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
+                    languages.addAll(instance.openLanguageIsoCode(slopTable).getDictionary());
+                }
             }
-        }
 
-        return languages;
+            return languages;
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to read langauges from index journal");
+        }
     }
 }

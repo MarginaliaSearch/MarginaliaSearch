@@ -18,6 +18,7 @@ import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.CombinedIndexReader;
+import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.language.keywords.KeywordHasher;
@@ -73,9 +74,12 @@ public class SearchContext {
     public final LongList termIdsExcludes;
     public final LongList termIdsPriority;
 
+    public final IndexLanguageContext languageContext;
+
     public static SearchContext create(CombinedIndexReader currentIndex,
                                        KeywordHasher keywordHasher,
-                                       SearchSpecification specsSet, SearchSet searchSet) {
+                                       SearchSpecification specsSet,
+                                       SearchSet searchSet) {
 
         var queryParams = new QueryParams(specsSet.quality, specsSet.year, specsSet.size, specsSet.rank, searchSet, specsSet.queryStrategy);
         var rankingParams = specsSet.rankingParams;
@@ -83,6 +87,7 @@ public class SearchContext {
 
         return new SearchContext(
                 keywordHasher,
+                "en", // FIXME: This path currently only supports english
                 currentIndex,
                 specsSet.query.compiledQuery,
                 queryParams,
@@ -109,6 +114,7 @@ public class SearchContext {
 
         return new SearchContext(
                 keywordHasher,
+                request.getLangIsoCode(),
                 currentIndex,
                 query.compiledQuery,
                 queryParams,
@@ -119,6 +125,7 @@ public class SearchContext {
 
     public SearchContext(
                          KeywordHasher keywordHasher,
+                         String langIsoCode,
                          CombinedIndexReader currentIndex,
                          String queryExpression,
                          QueryParams queryParams,
@@ -127,6 +134,7 @@ public class SearchContext {
                          RpcQueryLimits limits)
     {
         this.docCount = currentIndex.totalDocCount();
+        this.languageContext = currentIndex.createLanguageContext(langIsoCode);
 
         this.budget = new IndexSearchBudget(Math.max(limits.getTimeoutMs()/2, limits.getTimeoutMs()-50));
         this.searchQuery = query;
@@ -148,8 +156,8 @@ public class SearchContext {
 
         for (int idx = 0; idx < compiledQueryIds.size(); idx++) {
             long id = compiledQueryIds.at(idx);
-            full[idx] = currentIndex.numHits(id);
-            prio[idx] = currentIndex.numHitsPrio(id);
+            full[idx] = currentIndex.numHits(this.languageContext, id);
+            prio[idx] = currentIndex.numHitsPrio(this.languageContext, id);
 
             if (compiledQuery.at(idx).contains("_")) {
                 ngramsMask.set(idx);

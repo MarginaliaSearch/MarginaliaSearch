@@ -14,6 +14,7 @@ import nu.marginalia.index.model.QueryParams;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
+import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
@@ -53,24 +54,33 @@ public class CombinedIndexReader {
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
-    public IndexQueryBuilder newQueryBuilder(IndexQuery query) {
-        return new IndexQueryBuilder(reverseIndexFullReader, query);
+    public IndexLanguageContext createLanguageContext(String languageIsoCode) {
+        return new IndexLanguageContext(languageIsoCode,
+                reverseIndexFullReader.getWordLexicon(languageIsoCode),
+                reverseIndexPriorityReader.getWordLexicon(languageIsoCode)
+        );
     }
 
-    public QueryFilterStepIf hasWordFull(long termId, IndexSearchBudget budget) {
-        return reverseIndexFullReader.also(termId, budget);
+    public IndexQueryBuilder newQueryBuilder(IndexLanguageContext context, IndexQuery query) {
+        return new IndexQueryBuilder(reverseIndexFullReader, context, query);
+    }
+
+    public QueryFilterStepIf hasWordFull(IndexLanguageContext languageContext, long termId, IndexSearchBudget budget) {
+        return reverseIndexFullReader.also(languageContext, termId, budget);
     }
 
     /** Creates a query builder for terms in the priority index */
-    public IndexQueryBuilder findPriorityWord(long wordId) {
-        return newQueryBuilder(new IndexQuery(reverseIndexPriorityReader.documents(wordId), true))
-                .withSourceTerms(wordId);
+    public IndexQueryBuilder findPriorityWord(IndexLanguageContext languageContext, long wordId) {
+        IndexQuery query = new IndexQuery(reverseIndexPriorityReader.documents(languageContext, wordId), true);
+
+        return newQueryBuilder(languageContext, query).withSourceTerms(wordId);
     }
 
     /** Creates a query builder for terms in the full index */
-    public IndexQueryBuilder findFullWord(long wordId) {
-        return newQueryBuilder(new IndexQuery(reverseIndexFullReader.documents(wordId), false))
-                .withSourceTerms(wordId);
+    public IndexQueryBuilder findFullWord(IndexLanguageContext languageContext, long wordId) {
+        IndexQuery query = new IndexQuery(reverseIndexFullReader.documents(languageContext, wordId), false);
+
+        return newQueryBuilder(languageContext, query).withSourceTerms(wordId);
     }
 
     /** Creates a parameter matching filter step for the provided parameters */
@@ -79,8 +89,8 @@ public class CombinedIndexReader {
     }
 
     /** Returns the number of occurrences of the word in the full index */
-    public int numHits(long word) {
-        return reverseIndexFullReader.numDocuments(word);
+    public int numHits(IndexLanguageContext languageContext, long word) {
+        return reverseIndexFullReader.numDocuments(languageContext, word);
     }
 
     /** Reset caches and buffers */
@@ -95,7 +105,13 @@ public class CombinedIndexReader {
             return Collections.emptyList();
         }
 
-        final long[] termPriority = context.sortedDistinctIncludes(this::compareKeywords);
+        final IndexLanguageContext languageContext = context.languageContext;
+        final long[] termPriority = context.sortedDistinctIncludes((a,b) -> {
+            return Long.compare(
+                numHits(languageContext, a),
+                numHits(languageContext, b)
+            );
+        });
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(context.compiledQueryIds);
@@ -117,18 +133,18 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(elements.getLong(0));
+            var head = findFullWord(languageContext, elements.getLong(0));
 
             for (int i = 1; i < elements.size(); i++) {
-                head.addInclusionFilter(hasWordFull(elements.getLong(i), context.budget));
+                head.addInclusionFilter(hasWordFull(languageContext, elements.getLong(i), context.budget));
             }
             queryHeads.add(head);
 
             // If there are few paths, we can afford to check the priority index as well
             if (paths.size() < 4) {
-                var prioHead = findPriorityWord(elements.getLong(0));
+                var prioHead = findPriorityWord(languageContext, elements.getLong(0));
                 for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordFull(elements.getLong(i), context.budget));
+                    prioHead.addInclusionFilter(hasWordFull(languageContext, elements.getLong(i), context.budget));
                 }
                 queryHeads.add(prioHead);
             }
@@ -162,25 +178,20 @@ public class CombinedIndexReader {
         return permittedTerms::containsAll;
     }
 
-    private int compareKeywords(long a, long b) {
-        return Long.compare(
-                numHits(a),
-                numHits(b)
-        );
-    }
     /** Returns the number of occurrences of the word in the priority index */
-    public int numHitsPrio(long word) {
-        return reverseIndexPriorityReader.numDocuments(word);
+    public int numHitsPrio(IndexLanguageContext languageContext, long word) {
+        return reverseIndexPriorityReader.numDocuments(languageContext, word);
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
     public TermMetadataList[] getTermMetadata(Arena arena,
+                                              IndexLanguageContext languageContext,
                                               IndexSearchBudget budget,
                                               long[] wordIds,
                                               CombinedDocIdList docIds)
     throws TimeoutException
     {
-        return reverseIndexFullReader.getTermData(arena, budget, wordIds, docIds);
+        return reverseIndexFullReader.getTermData(arena, languageContext, budget, wordIds, docIds);
     }
 
     /** Retrieves the document metadata for the specified document */

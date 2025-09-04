@@ -165,6 +165,7 @@ public class SkipListReaderTest {
 
             long[] keys = keysSet.toLongArray();
 
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -215,6 +216,7 @@ public class SkipListReaderTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -261,6 +263,7 @@ public class SkipListReaderTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -320,6 +323,7 @@ public class SkipListReaderTest {
             long[] keys = keysSet.toLongArray();
 
             long blockStart;
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -381,6 +385,7 @@ public class SkipListReaderTest {
                 keysForBlocks.add(keys);
             }
             List<Long> offsets = new ArrayList<>();
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {

@@ -1,9 +1,9 @@
 package nu.marginalia.index.reverse.construction.full;
 
-import nu.marginalia.index.reverse.construction.DocIdRewriter;
-import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalPage;
+import nu.marginalia.index.reverse.construction.DocIdRewriter;
+import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,17 +22,20 @@ public class FullIndexConstructor {
         FINISHED
     }
 
+    private final String languageIsoCode;
     private final Path outputFileDocs;
     private final Path outputFileWords;
     private final Path outputFilePositions;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
-    public FullIndexConstructor(Path outputFileDocs,
+    public FullIndexConstructor(String languageIsoCode,
+                                Path outputFileDocs,
                                 Path outputFileWords,
                                 Path outputFilePositions,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
+        this.languageIsoCode = languageIsoCode;
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
         this.outputFilePositions = outputFilePositions;
@@ -80,7 +83,7 @@ public class FullIndexConstructor {
     private FullPreindexReference construct(IndexJournalPage journalInstance, PositionsFileConstructor positionsFileConstructor) {
         try {
             return FullPreindex
-                    .constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, tmpDir)
+                    .constructPreindex(journalInstance, languageIsoCode, positionsFileConstructor, docIdRewriter, tmpDir)
                     .closeToReference();
         }
         catch (IOException e) {

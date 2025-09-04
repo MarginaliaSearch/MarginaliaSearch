@@ -2,7 +2,9 @@ package nu.marginalia.index.reverse.construction.prio;
 
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.hash.MurmurHash3_128;
+import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
+import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.full.TestJournalFactory;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -73,7 +75,7 @@ class PrioPreindexTest {
                 new EntryDataWithWordMeta(106, 101, wm(50, 52))
         );
 
-        var preindex = PrioPreindex.constructPreindex(journalReader, DocIdRewriter.identity(), tempDir);
+        var preindex = PrioPreindex.constructPreindex(journalReader, "en", DocIdRewriter.identity(), tempDir);
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
         preindex.delete();
 
@@ -83,9 +85,10 @@ class PrioPreindexTest {
         assertTrue(Files.exists(wordsFile));
         assertTrue(Files.exists(docsFile));
 
-        var indexReader = new PrioReverseIndexReader("test", wordsFile, docsFile);
+        var indexReader = new PrioReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile);
+        var lc = new IndexLanguageContext("en", null, indexReader.getWordLexicon("en"));
 
-        var entrySource = indexReader.documents(termId("50"));
+        var entrySource = indexReader.documents(lc, termId("50"));
         var lqb = new LongQueryBuffer(32);
         entrySource.read(lqb);
 
@@ -133,7 +136,7 @@ class PrioPreindexTest {
         }
         var journalReader = journalFactory.createReader(entries);
 
-        var preindex = PrioPreindex.constructPreindex(journalReader, DocIdRewriter.identity(), tempDir);
+        var preindex = PrioPreindex.constructPreindex(journalReader, "en", DocIdRewriter.identity(), tempDir);
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
         preindex.delete();
 
@@ -143,12 +146,14 @@ class PrioPreindexTest {
         assertTrue(Files.exists(wordsFile));
         assertTrue(Files.exists(docsFile));
 
-        var indexReader = new PrioReverseIndexReader("test", wordsFile, docsFile);
+        var indexReader = new PrioReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile);
 
-        int items = indexReader.numDocuments(termId("50"));
+        var lc = new IndexLanguageContext("en", null, indexReader.getWordLexicon("en"));
+
+        int items = indexReader.numDocuments(lc, termId("50"));
         assertEquals(documentIds.length, items);
 
-        var entrySource = indexReader.documents(termId("50"));
+        var entrySource = indexReader.documents(lc, termId("50"));
         var lqb = new LongQueryBuffer(32);
 
         for (int pos = 0; pos < documentIds.length;) {

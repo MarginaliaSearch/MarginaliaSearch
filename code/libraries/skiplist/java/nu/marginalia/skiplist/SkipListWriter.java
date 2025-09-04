@@ -17,12 +17,11 @@ import static nu.marginalia.skiplist.SkipListConstants.*;
 public class SkipListWriter implements AutoCloseable {
     private final FileChannel documentsChannel;
 
-
     private final ByteBuffer docsBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
     private final LongArrayList maxValuesList = new LongArrayList();
 
     public SkipListWriter(Path documentsFileName) throws IOException {
-        this.documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        this.documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     @Override

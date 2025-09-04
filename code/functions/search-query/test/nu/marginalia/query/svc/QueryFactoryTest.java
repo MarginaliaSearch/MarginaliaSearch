@@ -3,14 +3,9 @@ package nu.marginalia.query.svc;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
-import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
-import nu.marginalia.api.searchquery.model.query.QueryStrategy;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.Assertions;
@@ -216,6 +211,12 @@ public class QueryFactoryTest {
         System.out.println(subquery);
     }
 
+
+    @Test
+    public void testExpansion10() {
+        var subquery = parseAndGetSpecs("when was captain james cook born");
+        System.out.println(subquery);
+    }
 
     @Test
     public void testContractionWordNum() {

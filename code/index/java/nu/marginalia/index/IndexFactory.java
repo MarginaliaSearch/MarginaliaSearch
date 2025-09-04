@@ -3,30 +3,34 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.config.ForwardIndexFileNames;
-import nu.marginalia.index.config.ReverseIndexFullFileNames;
-import nu.marginalia.index.config.ReverseIndexPrioFileNames;
+import nu.marginalia.index.config.IndexFileName;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
-import nu.marginalia.index.reverse.positions.PositionsFileReader;
+import nu.marginalia.index.reverse.WordLexicon;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.storage.FileStorageService;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 @Singleton
 public class IndexFactory {
     private final FileStorageService fileStorageService;
     private final Path liveStorage;
+    private final LanguageConfiguration languageConfiguration;
 
     @Inject
-    public IndexFactory(FileStorageService fileStorageService) {
+    public IndexFactory(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) {
 
         this.fileStorageService = fileStorageService;
         this.liveStorage = IndexLocations.getCurrentIndex(fileStorageService);
+        this.languageConfiguration = languageConfiguration;
     }
 
     public CombinedIndexReader getCombinedIndexReader() throws IOException {
@@ -42,47 +46,78 @@ public class IndexFactory {
     }
 
     public FullReverseIndexReader getReverseIndexReader() throws IOException {
+
+        Path docsFile = getCurrentPath(new IndexFileName.FullDocs());
+        Path positionsFile = getCurrentPath(new IndexFileName.FullPositions());
+
+        List<WordLexicon> wordLexicons = new ArrayList<>();
+
+        for (LanguageDefinition languageDefinition : languageConfiguration.languages()) {
+            String languageIsoCode = languageDefinition.isoCode();
+            Path wordsFile = getCurrentPath(new IndexFileName.FullWords(languageIsoCode));
+            if (Files.exists(wordsFile)) {
+                wordLexicons.add(new WordLexicon(languageIsoCode, wordsFile));
+            }
+        }
+
+
         return new FullReverseIndexReader("full",
-                ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.CURRENT),
-                ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT),
-                new PositionsFileReader(ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.CURRENT))
+                wordLexicons,
+                docsFile,
+                positionsFile
         );
     }
 
     public PrioReverseIndexReader getReverseIndexPrioReader() throws IOException {
-        return new PrioReverseIndexReader("prio",
-                ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
-                ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT)
-        );
+
+        List<WordLexicon> wordLexicons = new ArrayList<>();
+
+        for (LanguageDefinition languageDefinition : languageConfiguration.languages()) {
+            String languageIsoCode = languageDefinition.isoCode();
+            Path wordsFile = getCurrentPath(new IndexFileName.PrioWords(languageIsoCode));
+            if (Files.exists(wordsFile)) {
+                wordLexicons.add(new WordLexicon(languageIsoCode, wordsFile));
+            }
+        }
+
+        Path docsFile = getCurrentPath(new IndexFileName.PrioDocs());
+
+        return new PrioReverseIndexReader("prio", wordLexicons, docsFile);
     }
 
     public ForwardIndexReader getForwardIndexReader() throws IOException {
-        return new ForwardIndexReader(
-                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.CURRENT),
-                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.CURRENT),
-                ForwardIndexFileNames.resolve(liveStorage, ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.CURRENT)
-        );
+        Path docIdsFile = getCurrentPath(new IndexFileName.ForwardDocIds());
+        Path docDataFile = getCurrentPath(new IndexFileName.ForwardDocData());
+        Path spansFile = getCurrentPath(new IndexFileName.ForwardSpansData());
+
+        return new ForwardIndexReader(docIdsFile, docDataFile, spansFile);
+    }
+
+    private Path getCurrentPath(IndexFileName fileName) {
+        return IndexFileName.resolve(liveStorage, fileName, IndexFileName.Version.CURRENT);
     }
 
     /** Switches the current index to the next index */
     public void switchFiles() throws IOException {
 
-        for (var file : ReverseIndexFullFileNames.FileIdentifier.values()) {
+        for (var file : IndexFileName.forwardIndexFiles()) {
             switchFile(
-                    ReverseIndexFullFileNames.resolve(liveStorage, file, ReverseIndexFullFileNames.FileVersion.NEXT),
-                    ReverseIndexFullFileNames.resolve(liveStorage, file, ReverseIndexFullFileNames.FileVersion.CURRENT)
+                    IndexFileName.resolve(liveStorage, file, IndexFileName.Version.NEXT),
+                    IndexFileName.resolve(liveStorage, file, IndexFileName.Version.CURRENT)
             );
         }
-        for (var file : ReverseIndexPrioFileNames.FileIdentifier.values()) {
+
+        for (IndexFileName file : IndexFileName.revPrioIndexFiles(languageConfiguration)) {
             switchFile(
-                    ReverseIndexPrioFileNames.resolve(liveStorage, file, ReverseIndexPrioFileNames.FileVersion.NEXT),
-                    ReverseIndexPrioFileNames.resolve(liveStorage, file, ReverseIndexPrioFileNames.FileVersion.CURRENT)
+                    IndexFileName.resolve(liveStorage, file, IndexFileName.Version.NEXT),
+                    IndexFileName.resolve(liveStorage, file, IndexFileName.Version.CURRENT)
             );
         }
-        for (var file : ForwardIndexFileNames.FileIdentifier.values()) {
+
+        for (IndexFileName file : IndexFileName.revFullIndexFiles(languageConfiguration)) {
             switchFile(
-                    ForwardIndexFileNames.resolve(liveStorage, file, ForwardIndexFileNames.FileVersion.NEXT),
-                    ForwardIndexFileNames.resolve(liveStorage, file, ForwardIndexFileNames.FileVersion.CURRENT)
+                    IndexFileName.resolve(liveStorage, file, IndexFileName.Version.NEXT),
+                    IndexFileName.resolve(liveStorage, file, IndexFileName.Version.CURRENT)
             );
         }
     }

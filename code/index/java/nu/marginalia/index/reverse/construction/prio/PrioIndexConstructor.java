@@ -1,8 +1,8 @@
 package nu.marginalia.index.reverse.construction.prio;
 
-import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalPage;
+import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,15 +21,18 @@ public class PrioIndexConstructor {
         FINISHED
     }
 
+    private final String languageIsoCode;
     private final Path outputFileDocs;
     private final Path outputFileWords;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
-    public PrioIndexConstructor(Path outputFileDocs,
+    public PrioIndexConstructor(String languageIsoCode,
+                                Path outputFileDocs,
                                 Path outputFileWords,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
+        this.languageIsoCode = languageIsoCode;
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
         this.docIdRewriter = docIdRewriter;
@@ -75,7 +78,7 @@ public class PrioIndexConstructor {
     private PrioPreindexReference construct(IndexJournalPage journalInstance) {
         try {
             return PrioPreindex
-                    .constructPreindex(journalInstance, docIdRewriter, tmpDir)
+                    .constructPreindex(journalInstance, languageIsoCode, docIdRewriter, tmpDir)
                     .closeToReference();
         }
         catch (IOException ex) {

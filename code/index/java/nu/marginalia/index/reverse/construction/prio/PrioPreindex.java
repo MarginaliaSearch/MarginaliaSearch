@@ -43,6 +43,7 @@ public class PrioPreindex {
      * will have randomly assigned names.
      */
     public static PrioPreindex constructPreindex(IndexJournalPage indexJournalPage,
+                                                 String languageIsoCode,
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
     {
@@ -50,8 +51,8 @@ public class PrioPreindex {
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
-        var segments = PrioPreindexWordSegments.construct(indexJournalPage, segmentWordsFile, segmentCountsFile);
-        var docs = PrioPreindexDocuments.construct(docsFile, workDir, indexJournalPage, docIdRewriter, segments);
+        var segments = PrioPreindexWordSegments.construct(indexJournalPage, languageIsoCode, segmentWordsFile, segmentCountsFile);
+        var docs = PrioPreindexDocuments.construct(docsFile, workDir, indexJournalPage, languageIsoCode, docIdRewriter, segments);
         return new PrioPreindex(segments, docs);
     }
 
@@ -75,7 +76,6 @@ public class PrioPreindex {
     public void finalizeIndex(Path outputFileDocs, Path outputFileWords) throws IOException {
         var offsets = segments.counts;
 
-        Files.deleteIfExists(outputFileDocs);
         Files.deleteIfExists(outputFileWords);
 
         // Estimate the size of the docs index data
@@ -83,9 +83,10 @@ public class PrioPreindex {
 
         // Write the docs file
         try (var intermediateDocChannel = documents.createDocumentsFileChannel();
-             var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+             var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
              var transformer = new PrioDocIdsTransformer(destFileChannel, intermediateDocChannel)
         ) {
+            destFileChannel.position(destFileChannel.size());
             offsets.transformEachIO(0, offsets.size(), transformer);
         }
 

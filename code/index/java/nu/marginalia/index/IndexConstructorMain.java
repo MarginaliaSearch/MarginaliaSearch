@@ -3,11 +3,9 @@ package nu.marginalia.index;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.index.config.ForwardIndexFileNames;
+import nu.marginalia.index.config.IndexFileName;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
-import nu.marginalia.index.config.ReverseIndexFullFileNames;
-import nu.marginalia.index.config.ReverseIndexPrioFileNames;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.searchset.DomainRankings;
@@ -29,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class IndexConstructorMain extends ProcessMainClass {
@@ -96,50 +95,74 @@ public class IndexConstructorMain extends ProcessMainClass {
 
     private void createFullReverseIndex() throws IOException {
 
-        Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileDocs = findNextFile(new IndexFileName.FullDocs());
+        Path outputFilePositions = findNextFile(new IndexFileName.FullPositions());
+
+        Files.deleteIfExists(outputFileDocs);
+        Files.deleteIfExists(outputFilePositions);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor(
-                outputFileDocs,
-                outputFileWords,
-                outputFilePositions,
-                this::addRankToIdEncoding,
-                tmpDir);
+        Set<String> languageIsoCodes = IndexJournal.findJournal(workDir)
+                .map(IndexJournal::languages)
+                .orElseGet(Set::of);
 
-        constructor.createReverseIndex(heartbeat, "createReverseIndexFull", workDir);
+        for (String languageIsoCode : languageIsoCodes) {
+            Path outputFileWords = findNextFile(new IndexFileName.FullWords(languageIsoCode));
 
+            FullIndexConstructor constructor = new FullIndexConstructor(
+                    languageIsoCode,
+                    outputFileDocs,
+                    outputFileWords,
+                    outputFilePositions,
+                    this::addRankToIdEncoding,
+                    tmpDir);
+
+            String processName = "createReverseIndexFull[%s]".formatted(languageIsoCode);
+
+            constructor.createReverseIndex(heartbeat, processName, workDir);
+        }
     }
 
     private void createPrioReverseIndex() throws IOException {
 
-        Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+        Path outputFileDocs = findNextFile(new IndexFileName.PrioDocs());
+        Files.deleteIfExists(outputFileDocs);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        var constructor = new PrioIndexConstructor(
-                outputFileDocs,
-                outputFileWords,
-                this::addRankToIdEncoding,
-                tmpDir);
+        Set<String> languageIsoCodes = IndexJournal.findJournal(workDir)
+                .map(IndexJournal::languages)
+                .orElseGet(Set::of);
 
-        constructor.createReverseIndex(heartbeat, "createReverseIndexPrio", workDir);
+        for (String languageIsoCode : languageIsoCodes) {
+            Path outputFileWords = findNextFile(new IndexFileName.PrioWords(languageIsoCode));
+            Files.deleteIfExists(outputFileWords);
+
+            PrioIndexConstructor constructor = new PrioIndexConstructor(
+                    languageIsoCode,
+                    outputFileDocs,
+                    outputFileWords,
+                    this::addRankToIdEncoding,
+                    tmpDir);
+
+            String processName = "createReverseIndexPrio[%s]".formatted(languageIsoCode);
+
+            constructor.createReverseIndex(heartbeat, processName, workDir);
+        }
     }
 
     private void createForwardIndex() throws IOException {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
 
-        Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
-        Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
-        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileDocsId = findNextFile(new IndexFileName.ForwardDocIds());
+        Path outputFileDocsData = findNextFile(new IndexFileName.ForwardDocIds());
+        Path outputFileSpansData = findNextFile(new IndexFileName.ForwardSpansData());
 
         ForwardIndexConverter converter = new ForwardIndexConverter(heartbeat,
                 outputFileDocsId,
@@ -150,6 +173,10 @@ public class IndexConstructorMain extends ProcessMainClass {
         );
 
         converter.convert();
+    }
+
+    private Path findNextFile(IndexFileName fileName) {
+        return IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), fileName, IndexFileName.Version.NEXT);
     }
 
     /** Append the domain's ranking to the high bits of a document ID

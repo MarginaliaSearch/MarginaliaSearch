@@ -19,7 +19,7 @@ import nu.marginalia.index.results.DomainRankingOverrides;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
-import nu.marginalia.index.reverse.positions.PositionsFileReader;
+import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.language.keywords.KeywordHasher;
@@ -89,13 +89,13 @@ public class PerfTestMain {
                 ),
                 new FullReverseIndexReader(
                         "full",
-                        indexDir.resolve("ir/rev-words.dat"),
+                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-en.dat"))),
                         indexDir.resolve("ir/rev-docs.dat"),
-                        new PositionsFileReader(indexDir.resolve("ir/rev-positions.dat"))
+                        indexDir.resolve("ir/rev-positions.dat")
                 ),
                 new PrioReverseIndexReader(
                         "prio",
-                        indexDir.resolve("ir/rev-prio-words.dat"),
+                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-prio-en.dat"))),
                         indexDir.resolve("ir/rev-prio-docs.dat")
                 )
         );

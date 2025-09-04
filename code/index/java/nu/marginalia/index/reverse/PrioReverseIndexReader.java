@@ -1,75 +1,53 @@
 package nu.marginalia.index.reverse;
 
-import nu.marginalia.array.LongArray;
-import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.btree.BTreeReader;
-import nu.marginalia.ffi.LinuxSystemCalls;
-import nu.marginalia.index.config.ReverseIndexParameters;
 import nu.marginalia.index.reverse.query.EmptyEntrySource;
 import nu.marginalia.index.reverse.query.EntrySource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PrioReverseIndexReader {
-    private final LongArray words;
-    private final long wordsDataOffset;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final BTreeReader wordsBTreeReader;
     private final String name;
+
+    private final Map<String, WordLexicon> wordLexiconMap;
+
 
     private final FileChannel documentsChannel;
 
     public PrioReverseIndexReader(String name,
-                                  Path words,
+                                  List<WordLexicon> wordLexicons,
                                   Path documents) throws IOException {
         this.name = name;
 
-        if (!Files.exists(words) || !Files.exists(documents)) {
-            this.words = null;
-            this.wordsBTreeReader = null;
+        if (!Files.exists(documents)) {
             this.documentsChannel = null;
-            this.wordsDataOffset = -1;
+            this.wordLexiconMap = Map.of();
             return;
         }
 
-        logger.info("Switching reverse index");
-
-        this.words = LongArrayFactory.mmapForReadingShared(words);
-
-        LinuxSystemCalls.madviseRandom(this.words.getMemorySegment());
-
-        wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
-        wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
-
+        wordLexiconMap = wordLexicons.stream().collect(Collectors.toUnmodifiableMap(lexicon -> lexicon.languageIsoCode, v -> v));
         documentsChannel = (FileChannel) Files.newByteChannel(documents);
+
+        logger.info("Switching reverse index");
     }
 
-    /** Calculate the offset of the word in the documents.
-     * If the return-value is negative, the term does not exist
-     * in the index.
-     */
-    long wordOffset(long termId) {
-        long idx = wordsBTreeReader.findEntry(termId);
-
-        if (idx < 0)
-            return -1L;
-
-        return words.get(wordsDataOffset + idx + 1);
-    }
-
-    public EntrySource documents(long termId) {
-        if (null == words) {
+    public EntrySource documents(IndexLanguageContext languageContext, long termId) {
+        if (languageContext.wordLexiconPrio == null) {
             logger.warn("Reverse index is not ready, dropping query");
             return new EmptyEntrySource();
         }
 
-        long offset = wordOffset(termId);
+        long offset = languageContext.wordLexiconPrio.wordOffset(termId);
 
         if (offset < 0) // No documents
             return new EmptyEntrySource();
@@ -80,10 +58,16 @@ public class PrioReverseIndexReader {
                 termId);
     }
 
-    /** Return the number of documents with the termId in the index */
-    public int numDocuments(long termId) {
+    /**
+     * Return the number of documents with the termId in the index
+     */
+    public int numDocuments(IndexLanguageContext languageContext, long termId) {
 
-        long offset = wordOffset(termId);
+        var lexicon = languageContext.wordLexiconPrio;
+        if (null == lexicon)
+            return 0;
+
+        long offset = lexicon.wordOffset(termId);
 
         if (offset < 0) // No documents
             return 0;
@@ -91,8 +75,7 @@ public class PrioReverseIndexReader {
         ByteBuffer buffer = ByteBuffer.allocate(4);
         try {
             documentsChannel.read(buffer, offset);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             logger.error("Failed to read documents channel", e);
             return 0;
         }
@@ -105,13 +88,15 @@ public class PrioReverseIndexReader {
     public void close() {
         try {
             documentsChannel.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             logger.error("Failed to close documents channel", e);
         }
 
-        if (words != null)
-            words.close();
+        wordLexiconMap.values().forEach(WordLexicon::close);
     }
 
+    @Nullable
+    public WordLexicon getWordLexicon(String languageIsoCode) {
+        return wordLexiconMap.get(languageIsoCode);
+    }
 }

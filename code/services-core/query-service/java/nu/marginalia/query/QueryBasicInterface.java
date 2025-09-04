@@ -100,8 +100,7 @@ public class QueryBasicInterface {
         String queryString = request.queryParams("q");
         if (queryString == null) {
             // Show the default query form if no query is given
-            return qdebugRenderer.render(Map.of("rankingParams", PrototypeRankingParameters.sensibleDefaults())
-            );
+            return qdebugRenderer.render(Map.of("rankingParams", PrototypeRankingParameters.sensibleDefaults()));
         }
 
         int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));

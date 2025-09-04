@@ -42,6 +42,7 @@ public class FullPreindex {
      * will have randomly assigned names.
      */
     public static FullPreindex constructPreindex(IndexJournalPage journalInstance,
+                                                 String languageIsoCode,
                                                  PositionsFileConstructor positionsFileConstructor,
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
@@ -50,8 +51,8 @@ public class FullPreindex {
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
-        var segments = FullPreindexWordSegments.construct(journalInstance, segmentWordsFile, segmentCountsFile);
-        var docs = FullPreindexDocuments.construct(docsFile, workDir, journalInstance, docIdRewriter, positionsFileConstructor, segments);
+        var segments = FullPreindexWordSegments.construct(journalInstance, languageIsoCode, segmentWordsFile, segmentCountsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, workDir, journalInstance, languageIsoCode, docIdRewriter, positionsFileConstructor, segments);
         return new FullPreindex(segments, docs);
     }
 
@@ -75,7 +76,6 @@ public class FullPreindex {
     public void finalizeIndex(Path outputFileDocs, Path outputFileWords) throws IOException {
         var offsets = segments.counts;
 
-        Files.deleteIfExists(outputFileDocs);
         Files.deleteIfExists(outputFileWords);
 
         // Estimate the size of the docs index data

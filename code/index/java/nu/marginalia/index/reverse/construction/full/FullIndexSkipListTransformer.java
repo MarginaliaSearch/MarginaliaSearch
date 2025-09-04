@@ -7,7 +7,7 @@ import nu.marginalia.skiplist.SkipListWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Constructs the BTrees in a reverse index */
+/** Constructs the skiplists in a reverse index */
 public class FullIndexSkipListTransformer implements LongArrayTransformations.LongIOTransformer, AutoCloseable {
     private final SkipListWriter writer;
     private final LongArray documentsArray;

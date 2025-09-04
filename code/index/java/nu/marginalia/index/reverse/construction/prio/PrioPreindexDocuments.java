@@ -1,11 +1,16 @@
 package nu.marginalia.index.reverse.construction.prio;
 
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.journal.IndexJournalPage;
+import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.rwf.RandomFileAssembler;
 import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.array.ByteArrayColumn;
+import nu.marginalia.slop.column.array.LongArrayColumn;
+import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,46 +40,30 @@ public class PrioPreindexDocuments {
             Path docsFile,
             Path workDir,
             IndexJournalPage journalInstance,
-            DocIdRewriter docIdRewriter,
+            String languageIsoCode, DocIdRewriter docIdRewriter,
             PrioPreindexWordSegments segments) throws IOException {
-
-        createUnsortedDocsFile(docsFile, workDir, journalInstance, segments, docIdRewriter);
-
-        LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
-        sortDocsFile(docsFileMap, segments);
-
-        return new PrioPreindexDocuments(docsFileMap, docsFile);
-    }
-
-    public FileChannel createDocumentsFileChannel() throws IOException {
-        return (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ);
-    }
-
-
-    public long size() {
-        return documents.size();
-    }
-
-    private static void createUnsortedDocsFile(Path docsFile,
-                                               Path workDir,
-                                               IndexJournalPage instance,
-                                               PrioPreindexWordSegments segments,
-                                               DocIdRewriter docIdRewriter) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
         try (var assembly = RandomFileAssembler.create(workDir, fileSizeLongs);
-             var slopTable = new SlopTable(instance.baseDir(), instance.page()))
+             var slopTable = new SlopTable(journalInstance.baseDir(), journalInstance.page()))
         {
-            var docIds = instance.openCombinedId(slopTable);
-            var termIds = instance.openTermIds(slopTable);
-            var termMeta = instance.openTermMetadata(slopTable);
+            LongColumn.Reader docIds = journalInstance.openCombinedId(slopTable);
+            LongArrayColumn.Reader termIds = journalInstance.openTermIds(slopTable);
+            ByteArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
+            EnumColumn.Reader languageIsoCodes = journalInstance.openLanguageIsoCode(slopTable);
 
-            var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
+            Long2LongOpenHashMap offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
+            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
 
-            while (docIds.hasRemaining()) {
+            while (languageIsoCodes.hasRemaining()) {
+                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
+                    slopTable.prealignAll(languageIsoCodes);
+                }
+                else continue;
+
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
@@ -91,14 +80,14 @@ public class PrioPreindexDocuments {
                     }
                 }
             }
+            slopTable.alignAll(languageIsoCodes);
 
             assembly.write(docsFile);
         }
-    }
 
-    private static void sortDocsFile(LongArray docsFileMap, PrioPreindexWordSegments segments) {
+        LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
 
-        var iter = segments.iterator(RECORD_SIZE_LONGS);
+        PrioPreindexWordSegments.SegmentIterator iter = segments.iterator(RECORD_SIZE_LONGS);
 
         while (iter.next()) {
             long iterStart = iter.startOffset;
@@ -106,6 +95,17 @@ public class PrioPreindexDocuments {
 
             docsFileMap.sort(iterStart, iterEnd);
         }
+
+        return new PrioPreindexDocuments(docsFileMap, docsFile);
+    }
+
+    public FileChannel createDocumentsFileChannel() throws IOException {
+        return (FileChannel) Files.newByteChannel(file, StandardOpenOption.READ);
+    }
+
+
+    public long size() {
+        return documents.size();
     }
 
     public void delete() throws IOException {

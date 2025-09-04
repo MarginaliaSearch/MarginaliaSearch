@@ -7,6 +7,9 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.slop.SlopTable;
+import nu.marginalia.slop.column.array.ByteArrayColumn;
+import nu.marginalia.slop.column.array.LongArrayColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,6 +56,7 @@ public class PrioPreindexWordSegments {
     }
 
     public static PrioPreindexWordSegments construct(IndexJournalPage instance,
+                                                     String languageIsoCode,
                                                      Path wordIdsFile,
                                                      Path countsFile)
     throws IOException
@@ -61,10 +65,18 @@ public class PrioPreindexWordSegments {
         countsMap.defaultReturnValue(0);
 
         try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
-            var termIds = instance.openTermIds(slopTable);
-            var termMetas = instance.openTermMetadata(slopTable);
+            LongArrayColumn.Reader termIds = instance.openTermIds(slopTable);
+            ByteArrayColumn.Reader termMetas = instance.openTermMetadata(slopTable);
+            EnumColumn.Reader languageIsoCodes = instance.openLanguageIsoCode(slopTable);
 
-            while (termIds.hasRemaining()) {
+            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
+
+            while (languageIsoCodes.hasRemaining()) {
+                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
+                    slopTable.prealignAll(languageIsoCodes);
+                }
+                else continue;
+
                 long[] data = termIds.get();
                 byte[] meta = termMetas.get();
 
@@ -74,6 +86,8 @@ public class PrioPreindexWordSegments {
                     }
                 }
             }
+
+            slopTable.alignAll(languageIsoCodes);
         }
 
         LongArray words = LongArrayFactory.mmapForWritingConfined(wordIdsFile, countsMap.size());

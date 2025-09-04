@@ -65,8 +65,8 @@ class FullPreindexDocsTest {
                 new EntryData(-0xF00BA3L, 0, 4, 4)
         );
 
-        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(),
+        var segments = FullPreindexWordSegments.construct(reader, "en", wordsIdFile, countsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, "en", DocIdRewriter.identity(),
                 new PositionsFileConstructor(positionsFile),
                 segments);
 
@@ -94,8 +94,8 @@ class FullPreindexDocsTest {
                 new EntryData(0xF00BA4L, 0, 15, 30, -100, 33)
         );
 
-        var segments = FullPreindexWordSegments.construct(reader, wordsIdFile, countsFile);
-        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, DocIdRewriter.identity(),
+        var segments = FullPreindexWordSegments.construct(reader, "en", wordsIdFile, countsFile);
+        var docs = FullPreindexDocuments.construct(docsFile, tempDir, reader, "en", DocIdRewriter.identity(),
                 new PositionsFileConstructor(positionsFile),
                 segments);
 

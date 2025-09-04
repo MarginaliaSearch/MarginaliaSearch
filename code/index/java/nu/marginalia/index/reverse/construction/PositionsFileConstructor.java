@@ -28,6 +28,7 @@ public class PositionsFileConstructor implements AutoCloseable {
         this.file = file;
 
         channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        channel.position(channel.size());
     }
 
     /** Represents a block of positions lists.  Each writer thread should hold on to

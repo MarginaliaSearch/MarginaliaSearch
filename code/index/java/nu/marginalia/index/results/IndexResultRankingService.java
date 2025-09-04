@@ -81,7 +81,7 @@ public class IndexResultRankingService {
             // Perform expensive I/O operations
 
             try {
-                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext.budget, rankingContext.termIdsAll.array, resultIds);
+                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext.languageContext, rankingContext.budget, rankingContext.termIdsAll.array, resultIds);
                 this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds);
             }
             catch (TimeoutException|RuntimeException ex) {

@@ -2,11 +2,13 @@ package nu.marginalia.index;
 
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
+import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 
 public class IndexQueryBuilder {
+    private final IndexLanguageContext context;
     private final IndexQuery query;
     private final FullReverseIndexReader reverseIndexFullReader;
 
@@ -18,8 +20,9 @@ public class IndexQueryBuilder {
      * */
     private final TLongHashSet alreadyConsideredTerms = new TLongHashSet();
 
-    IndexQueryBuilder(FullReverseIndexReader reverseIndexFullReader, IndexQuery query)
+    IndexQueryBuilder(FullReverseIndexReader reverseIndexFullReader, IndexLanguageContext context, IndexQuery query)
     {
+        this.context = context;
         this.query = query;
         this.reverseIndexFullReader = reverseIndexFullReader;
     }
@@ -33,7 +36,7 @@ public class IndexQueryBuilder {
     public IndexQueryBuilder also(long termId, IndexSearchBudget budget) {
 
         if (alreadyConsideredTerms.add(termId)) {
-            query.addInclusionFilter(reverseIndexFullReader.also(termId, budget));
+            query.addInclusionFilter(reverseIndexFullReader.also(context, termId, budget));
         }
 
         return this;
@@ -41,7 +44,7 @@ public class IndexQueryBuilder {
 
     public IndexQueryBuilder not(long termId, IndexSearchBudget budget) {
 
-        query.addInclusionFilter(reverseIndexFullReader.not(termId, budget));
+        query.addInclusionFilter(reverseIndexFullReader.not(context, termId, budget));
 
         return this;
     }
