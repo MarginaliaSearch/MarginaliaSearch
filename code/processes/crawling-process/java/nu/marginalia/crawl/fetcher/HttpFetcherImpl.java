@@ -14,6 +14,9 @@ import nu.marginalia.model.body.ContentTypeLogic;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import nu.marginalia.proxy.SocksProxyConfiguration;
+import nu.marginalia.proxy.SocksProxyManager;
+import nu.marginalia.proxy.SocksProxyHttpClientFactory;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -70,6 +73,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     private final String userAgentIdentifier;
 
     private final CookieStore cookies = new BasicCookieStore();
+    private final SocksProxyManager proxyManager;
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
@@ -95,13 +99,17 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .setValidateAfterInactivity(TimeValue.ofSeconds(5))
                 .build();
 
-
-        connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+        PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
                 .setMaxConnPerRoute(2)
                 .setMaxConnTotal(5000)
                 .setDefaultConnectionConfig(connectionConfig)
-                .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()))
-                .build();
+                .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()));
+
+        // Configure SOCKS proxy if enabled
+        SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
+        SocksProxyHttpClientFactory.configureConnectionManager(connectionManagerBuilder, selectedProxy);
+
+        connectionManager = connectionManagerBuilder.build();
 
         connectionManager.setDefaultSocketConfig(SocketConfig.custom()
                 .setSoLinger(TimeValue.ofSeconds(-1))
@@ -181,6 +189,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     @Inject
     public HttpFetcherImpl(UserAgent userAgent)
     {
+        this.proxyManager = new SocksProxyManager(new SocksProxyConfiguration());
         try {
             this.client = createClient();
         } catch (NoSuchAlgorithmException e) {
@@ -193,6 +202,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     }
 
     public HttpFetcherImpl(String userAgent) {
+        this.proxyManager = new SocksProxyManager(new SocksProxyConfiguration());
         try {
             this.client = createClient();
         } catch (NoSuchAlgorithmException e) {

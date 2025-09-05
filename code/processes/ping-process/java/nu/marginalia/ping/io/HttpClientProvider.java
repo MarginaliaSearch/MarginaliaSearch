@@ -1,6 +1,9 @@
 package nu.marginalia.ping.io;
 
 import com.google.inject.Provider;
+import nu.marginalia.proxy.SocksProxyConfiguration;
+import nu.marginalia.proxy.SocksProxyManager;
+import nu.marginalia.proxy.SocksProxyHttpClientFactory;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
@@ -36,10 +39,12 @@ import java.util.concurrent.TimeUnit;
 public class HttpClientProvider implements Provider<HttpClient> {
     private static final HttpClient client;
     private static PoolingHttpClientConnectionManager connectionManager;
+    private static final SocksProxyManager proxyManager;
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientProvider.class);
 
     static {
+        proxyManager = new SocksProxyManager(new SocksProxyConfiguration());
         try {
             client = createClient();
         } catch (Exception e) {
@@ -85,13 +90,18 @@ public class HttpClientProvider implements Provider<HttpClient> {
         SSLContext sslContext = SSLContextBuilder.create().build();
         sslContext.init(null, new TrustManager[]{trustMeBro}, null);
 
-        connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+        PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
                 .setMaxConnPerRoute(2)
                 .setMaxConnTotal(50)
                 .setDefaultConnectionConfig(connectionConfig)
                 .setTlsSocketStrategy(
-                        new DefaultClientTlsStrategy(sslContext, NoopHostnameVerifier.INSTANCE))
-                .build();
+                        new DefaultClientTlsStrategy(sslContext, NoopHostnameVerifier.INSTANCE));
+
+        // Configure SOCKS proxy if enabled
+        SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
+        SocksProxyHttpClientFactory.configureConnectionManager(connectionManagerBuilder, selectedProxy);
+
+        connectionManager = connectionManagerBuilder.build();
 
         connectionManager.setDefaultSocketConfig(SocketConfig.custom()
                 .setSoLinger(TimeValue.ofSeconds(-1))
