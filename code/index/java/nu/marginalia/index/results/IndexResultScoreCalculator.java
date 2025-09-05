@@ -118,6 +118,13 @@ public class IndexResultScoreCalculator {
         double score_firstPosition = params.getTcfFirstPositionWeight() * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
         double score_proximity = params.getTcfProximityWeight() * proximitiyFac;
+        
+        // Calculate partial match bonus - reward documents that match some keywords well
+        // even if they don't match all keywords
+        double partialMatchBonus = calculatePartialMatchBonus(unorderedMatches.searchableKeywordCount, 
+                                                             compiledQuery.size(), 
+                                                             unorderedMatches.getWeightedCounts());
+        
         double score_bM25 = params.getBm25Weight()
                 * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
@@ -128,7 +135,7 @@ public class IndexResultScoreCalculator {
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
 
         double score = normalize(
-                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags),
+                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags + partialMatchBonus),
                 -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
         );
 
@@ -146,6 +153,7 @@ public class IndexResultScoreCalculator {
             debugRankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
             debugRankingFactors.addDocumentFactor("score.proximity", Double.toString(score_proximity));
             debugRankingFactors.addDocumentFactor("score.firstPosition", Double.toString(score_firstPosition));
+            debugRankingFactors.addDocumentFactor("score.partialMatchBonus", Double.toString(partialMatchBonus));
 
             for (int i = 0; i < searchTerms.termIdsAll.size(); i++) {
                 long termId = searchTerms.termIdsAll.at(i);
@@ -587,6 +595,51 @@ public class IndexResultScoreCalculator {
             value = 0;
 
         return Math.sqrt((1.0 + 500. + 10 * penalty) / (1.0 + value));
+    }
+
+    /**
+     * Calculate a bonus for partial matches to improve search relevancy.
+     * This rewards documents that match some keywords well, even if they don't match all keywords.
+     * This is particularly important for queries like "when was james cook born" where
+     * documents about James Cook should rank highly even if they don't contain "when" or "was".
+     * 
+     * @param matchedKeywordCount Number of keywords that matched in the document
+     * @param totalKeywordCount Total number of keywords in the query
+     * @param weightedCounts Array of weighted counts for each keyword
+     * @return A bonus score for partial matches
+     */
+    private double calculatePartialMatchBonus(int matchedKeywordCount, int totalKeywordCount, float[] weightedCounts) {
+        if (totalKeywordCount <= 1) {
+            return 0.0; // No bonus needed for single keyword queries
+        }
+        
+        // Calculate the match ratio (how many keywords matched)
+        double matchRatio = (double) matchedKeywordCount / totalKeywordCount;
+        
+        // Calculate the average weighted score of matched keywords
+        double totalWeightedScore = 0.0;
+        int nonZeroCount = 0;
+        for (float count : weightedCounts) {
+            if (count > 0) {
+                totalWeightedScore += count;
+                nonZeroCount++;
+            }
+        }
+        
+        double avgWeightedScore = nonZeroCount > 0 ? totalWeightedScore / nonZeroCount : 0.0;
+        
+        // The bonus is based on:
+        // 1. Match ratio - higher ratio gets more bonus
+        // 2. Average weighted score - higher quality matches get more bonus
+        // 3. Diminishing returns - the bonus doesn't grow linearly
+        
+        double baseBonus = matchRatio * avgWeightedScore * 0.5; // Base multiplier
+        
+        // Apply diminishing returns curve - rewards partial matches more than perfect matches
+        // This helps with queries where some keywords are less important (like stopwords)
+        double diminishingFactor = Math.pow(matchRatio, 0.7); // Slightly favors partial matches
+        
+        return baseBonus * diminishingFactor;
     }
 
 }
