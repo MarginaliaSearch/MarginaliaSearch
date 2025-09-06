@@ -62,9 +62,10 @@ public class HttpFetcherTimeoutConfigTest {
         System.setProperty("crawler.connectTimeout", "-5");
         
         try {
-            // This should still work as Integer.getInteger() handles invalid values gracefully
-            HttpFetcherImpl fetcher = new HttpFetcherImpl("test-agent");
-            assertNotNull(fetcher);
+            // This should throw an exception for invalid timeout values
+            assertThrows(Exception.class, () -> {
+                HttpFetcherImpl fetcher = new HttpFetcherImpl("test-agent");
+            });
         } finally {
             // Clean up system properties
             System.clearProperty("crawler.socketTimeout");
