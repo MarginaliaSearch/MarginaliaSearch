@@ -28,16 +28,16 @@ public class WordPatterns {
         "through", "during", "before", "after", "above", "below", "between", "among",
         
         // Conjunctions
-        "and", "or", "but", "so", "yet", "nor", "for", "as", "if", "because", "since",
-        "while", "although", "though", "unless", "until", "when", "where", "why", "how",
+        "and", "or", "but", "so", "yet", "nor", "as", "if", "because", "since",
+        "while", "although", "though", "unless", "until",
         
         // Pronouns
         "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
-        "my", "your", "his", "her", "its", "our", "their", "mine", "yours", "hers", "ours", "theirs",
+        "my", "your", "his", "its", "our", "their", "mine", "yours", "hers", "ours", "theirs",
         
         // Other common function words
         "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "not",
-        "only", "own", "same", "so", "than", "too", "very", "just", "now", "here", "there", "then"
+        "only", "own", "same", "than", "too", "very", "just", "now", "here", "there", "then"
     );
 
     /** Run checks on the word and exclude terms with too many special characters
