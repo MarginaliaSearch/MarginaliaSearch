@@ -45,6 +45,7 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.test.IntegrationTestModule;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -142,6 +143,29 @@ public class IntegrationTest {
                     "",
                     ContentTags.empty()
             );
+
+            warcRecorder.writeReferenceCopy(new EdgeUrl("https://www.example.com/sv"),
+                    new DomainCookies(),
+                    "text/html", 200,
+                    """
+                            <html>
+                            <head>
+                            <meta charset="utf-8"/>
+                            </head>
+                            <h1>Statens potatismjölsnämd</h1>
+                            <body>
+                            <p>
+                            Härigenom förordnas, att förordningen den 26 juni 1933 örn tillverkning
+                            av potatismjöl, vilken förordning jämlikt förordningen den 2 april 1937 (nr
+                            108) gäller till och med den 30 september 1940, skall äga fortsatt giltighet till
+                            och med den 30 september 1943. 
+                            </p>
+                            </body>
+                            </html>
+                            """.getBytes(),
+                    "",
+                    ContentTags.empty()
+            );
         }
 
         /** CONVERT WARC */
@@ -202,71 +226,102 @@ public class IntegrationTest {
 
         /** QUERY */
 
-        var request = RpcQsQuery.newBuilder()
-                .setQueryLimits(RpcQueryLimits.newBuilder()
-                        .setTimeoutMs(1000)
-                        .setResultsTotal(100)
-                        .setResultsByDomain(10)
-                        .setFetchSize(1000)
-                        .build())
-                .setLangIsoCode("en")
-                .setQueryStrategy("AUTO")
-                .setHumanQuery("\"is that there is\"")
-                .build();
+        {
+            var request = RpcQsQuery.newBuilder()
+                    .setQueryLimits(RpcQueryLimits.newBuilder()
+                            .setTimeoutMs(1000)
+                            .setResultsTotal(100)
+                            .setResultsByDomain(10)
+                            .setFetchSize(1000)
+                            .build())
+                    .setLangIsoCode("en")
+                    .setQueryStrategy("AUTO")
+                    .setHumanQuery("\"is that there is\"")
+                    .build();
 
-        var params = QueryProtobufCodec.convertRequest(request);
+            var params = QueryProtobufCodec.convertRequest(request);
+            var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
+            var query = queryFactory.createQuery(params, p);
 
-        var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
-        var query = queryFactory.createQuery(params, p);
+            var indexRequest = QueryProtobufCodec.convertQuery(request, query);
 
+            System.out.println(indexRequest);
 
-        var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
 
-        System.out.println(indexRequest);
+            System.out.println(rs);
+            Assertions.assertEquals(1, rs.size());
+        }
 
-        var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
+        {
+            var request = RpcQsQuery.newBuilder()
+                    .setQueryLimits(RpcQueryLimits.newBuilder()
+                            .setTimeoutMs(1000)
+                            .setResultsTotal(100)
+                            .setResultsByDomain(10)
+                            .setFetchSize(1000)
+                            .build())
+                    .setLangIsoCode("sv")
+                    .setQueryStrategy("AUTO")
+                    .setHumanQuery("härigenom förordnas")
+                    .build();
 
-        System.out.println(rs);
+            var params = QueryProtobufCodec.convertRequest(request);
+            var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
+            var query = queryFactory.createQuery(params, p);
+
+            var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+
+            System.out.println(indexRequest);
+
+            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
+
+            System.out.println(rs);
+            Assertions.assertEquals(1, rs.size());
+        }
     }
 
 
     private void createFullReverseIndex() throws IOException {
-
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
-        Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords("en"), IndexFileName.Version.NEXT);
         Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
+        for (String lang : List.of("sv", "en")) {
+            Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords(lang), IndexFileName.Version.NEXT);
 
-        var constructor = new FullIndexConstructor("en",
-                outputFileDocs,
-                outputFileWords,
-                outputFilePositions,
-                this::addRankToIdEncoding,
-                tmpDir);
+            if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", workDir);
+            var constructor = new FullIndexConstructor(lang,
+                    outputFileDocs,
+                    outputFileWords,
+                    outputFilePositions,
+                    this::addRankToIdEncoding,
+                    tmpDir);
 
+            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", workDir);
+        }
     }
 
     private void createPrioReverseIndex() throws IOException {
 
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.PrioDocs(), IndexFileName.Version.NEXT);
-        Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.PrioWords("en"), IndexFileName.Version.NEXT);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        var constructor = new PrioIndexConstructor("en",
-                outputFileDocs,
-                outputFileWords,
-                this::addRankToIdEncoding,
-                tmpDir);
+        for (String lang : List.of("sv", "en")) {
+            Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.PrioWords(lang), IndexFileName.Version.NEXT);
+            var constructor = new PrioIndexConstructor(lang,
+                    outputFileDocs,
+                    outputFileWords,
+                    this::addRankToIdEncoding,
+                    tmpDir);
 
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", workDir);
+            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", workDir);
+        }
     }
 
     private void createForwardIndex() throws IOException {
