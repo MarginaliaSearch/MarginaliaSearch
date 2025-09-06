@@ -22,7 +22,7 @@ public class SocksProxyManager {
         if (config.isEnabled()) {
             logger.info("SOCKS proxy support enabled with {} proxies using {} strategy", 
                        config.getProxies().size(), config.getStrategy());
-            for (SocksProxy proxy : config.getProxies()) {
+            for (SocksProxyConfiguration.SocksProxy proxy : config.getProxies()) {
                 logger.info("  - {}", proxy);
             }
         } else {
@@ -34,17 +34,17 @@ public class SocksProxyManager {
      * Selects the next proxy to use based on the configured strategy.
      * Returns null if proxy support is disabled or no proxies are available.
      */
-    public SocksProxy selectProxy() {
+    public SocksProxyConfiguration.SocksProxy selectProxy() {
         if (!config.isEnabled()) {
             return null;
         }
         
-        List<SocksProxy> proxies = config.getProxies();
+        List<SocksProxyConfiguration.SocksProxy> proxies = config.getProxies();
         if (proxies.isEmpty()) {
             return null;
         }
         
-        SocksProxy selectedProxy;
+        SocksProxyConfiguration.SocksProxy selectedProxy;
         switch (config.getStrategy()) {
             case ROUND_ROBIN:
                 int index = roundRobinIndex.getAndIncrement() % proxies.size();
