@@ -6,12 +6,15 @@ import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,13 +27,11 @@ public class QueryFactoryTest {
     static QueryFactory queryFactory;
 
     @BeforeAll
-    public static void setUpAll() throws IOException {
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
 
         var lm = WmsaHome.getLanguageModels();
 
-        queryFactory = new QueryFactory(
-                new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm))
-        );
+        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)), new LanguageConfiguration(lm));
     }
 
     public SearchSpecification parseAndGetSpecs(String query) {

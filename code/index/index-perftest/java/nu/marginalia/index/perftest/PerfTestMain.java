@@ -1,6 +1,7 @@
 package nu.marginalia.index.perftest;
 
 import gnu.trove.list.array.TLongArrayList;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
@@ -22,6 +23,7 @@ import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.segmentation.NgramLexicon;
@@ -37,7 +39,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 public class PerfTestMain {
     static Duration warmupTime = Duration.ofMinutes(1);
@@ -109,18 +110,19 @@ public class PerfTestMain {
         );
     }
 
-    static QueryFactory createQueryFactory(Path homeDir) throws IOException {
+    static QueryFactory createQueryFactory(Path homeDir) throws Exception {
         return new QueryFactory(
                 new QueryExpansion(
                         new TermFrequencyDict(homeDir.resolve("model/tfreq-new-algo3.bin")),
                         new NgramLexicon()
-                )
+                ),
+                new LanguageConfiguration(WmsaHome.getLanguageModels())
         );
     }
 
     public static void runValuation(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException, TimeoutException {
+                                    String rawQuery) throws Exception {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
@@ -192,7 +194,7 @@ public class PerfTestMain {
 
     public static void runExecution(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException, InterruptedException {
+                                    String rawQuery) throws Exception {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
@@ -245,7 +247,7 @@ public class PerfTestMain {
 
     public static void runLookup(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException
+                                    String rawQuery) throws Exception
     {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);

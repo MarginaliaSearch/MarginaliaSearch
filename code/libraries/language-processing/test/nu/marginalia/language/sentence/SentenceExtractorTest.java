@@ -11,6 +11,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
 
@@ -60,7 +61,8 @@ class SentenceExtractorTest {
     void testJava() {
         var dld = sentenceExtractor.extractSentence(languageConfig.getLanguage("en"), "Foreign Function & Memory API", EnumSet.noneOf(HtmlTag.class));
 
-        assertEquals(4, dld.wordsLowerCase.length);
+        System.out.println(Arrays.toString(dld.wordsLowerCase));
+
         assertArrayEquals(new String[] {"foreign", "function", "memory", "api"}, dld.wordsLowerCase);
     }
 

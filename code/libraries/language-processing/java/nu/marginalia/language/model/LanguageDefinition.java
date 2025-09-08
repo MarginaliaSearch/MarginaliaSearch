@@ -1,6 +1,7 @@
 package nu.marginalia.language.model;
 
 import nu.marginalia.language.WordPatterns;
+import nu.marginalia.language.encoding.UnicodeNormalization;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.pos.PosPattern;
 import nu.marginalia.language.pos.PosPatternCategory;
@@ -16,6 +17,7 @@ public final class LanguageDefinition {
     private final String isoCode;
     private final String name;
     private final Stemmer stemmer;
+    private final UnicodeNormalization unicodeNormalization;
     private final KeywordHasher keywordHasher;
 
     @Nullable
@@ -25,12 +27,14 @@ public final class LanguageDefinition {
     public LanguageDefinition(String isoCode,
                               String name,
                               Stemmer stemmer,
+                              UnicodeNormalization unicodeNormalization,
                               KeywordHasher keywordHasher,
                               @Nullable PosTagger posTagger,
                               Map<PosPatternCategory, List<PosPattern>> posPatterns) {
         this.isoCode = isoCode;
         this.name = name;
         this.stemmer = stemmer;
+        this.unicodeNormalization = unicodeNormalization;
         this.keywordHasher = keywordHasher;
         this.posTagger = posTagger;
         this.posPatterns = posPatterns;
@@ -55,6 +59,10 @@ public final class LanguageDefinition {
 
     public KeywordHasher keywordHasher() {
         return keywordHasher;
+    }
+
+    public UnicodeNormalization unicodeNormalization() {
+        return unicodeNormalization;
     }
 
     public long[] posTagSentence(String[] words) {

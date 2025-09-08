@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE languages [
         <!ELEMENT languages (language*,resource*)>
-        <!ELEMENT language (keywordHash,stemmer,sentenceDetector,rdrTagger?,ngrams*)>
+        <!ELEMENT language (keywordHash,unicodeNormalization,stemmer,sentenceDetector,rdrTagger?,ngrams*)>
 
         <!ELEMENT resource EMPTY>
         <!ATTLIST resource
@@ -17,6 +17,11 @@
                 display (rtl|ltr) #REQUIRED
                 disabled (true|false) "false"
                 >
+
+        <!ELEMENT unicodeNormalization EMPTY>
+        <!ATTLIST unicodeNormalization
+            algorithm (minimal|e-accents|maximal-latin) #REQUIRED
+            >
 
         <!ELEMENT stemmer (pospattern?)>
         <!ATTLIST stemmer
@@ -37,6 +42,7 @@
 
         <!ELEMENT ngrams (pospattern*)>
         <!ATTLIST ngrams type (noun|name|subject-suffix|title|keyword) #REQUIRED>
+
         <!ELEMENT pospattern (#PCDATA)>
 
         <!ELEMENT sentenceDetector EMPTY>
@@ -56,6 +62,7 @@
             <pospattern>!(IN TO CC DT)</pospattern>
         </stemmer>
         <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="maximal-latin" />
         <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
         <ngrams type="name">
             <pospattern>NNP*</pospattern>
@@ -106,6 +113,7 @@
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball" variant="SWEDISH" />
         <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="e-accents" />
         <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
         <ngrams type="name">
             <pospattern>PROPN</pospattern>

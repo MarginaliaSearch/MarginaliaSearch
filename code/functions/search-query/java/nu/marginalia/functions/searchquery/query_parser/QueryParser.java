@@ -1,9 +1,9 @@
 package nu.marginalia.functions.searchquery.query_parser;
 
-import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.language.encoding.AsciiFlattener;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.util.transform_list.TransformList;
 
 import java.util.ArrayList;
@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 public class QueryParser {
 
-    public List<QueryToken> parse(String query) {
-        List<QueryToken> basicTokens = tokenizeQuery(query);
+    public List<QueryToken> parse(LanguageDefinition languageDefinition, String query) {
+        List<QueryToken> basicTokens = tokenizeQuery(languageDefinition, query);
 
         TransformList<QueryToken> list = new TransformList<>(basicTokens);
 
@@ -30,10 +30,10 @@ public class QueryParser {
 
     private static final Pattern noisePattern = Pattern.compile("[,\\s]");
 
-    public List<QueryToken> tokenizeQuery(String rawQuery) {
+    public List<QueryToken> tokenizeQuery(LanguageDefinition languageDefinition, String rawQuery) {
         List<QueryToken> tokens = new ArrayList<>();
 
-        String query = AsciiFlattener.flattenUnicode(rawQuery);
+        String query = languageDefinition.unicodeNormalization().flattenUnicode(rawQuery);
         query = noisePattern.matcher(query).replaceAll(" ");
 
         int chr = -1;

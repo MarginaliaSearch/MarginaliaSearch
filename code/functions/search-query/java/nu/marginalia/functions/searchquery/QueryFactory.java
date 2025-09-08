@@ -8,9 +8,9 @@ import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
-import nu.marginalia.api.searchquery.model.query.QueryStrategy;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.LanguageDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +26,21 @@ public class QueryFactory {
 
     private final QueryParser queryParser = new QueryParser();
     private final QueryExpansion queryExpansion;
+    private final LanguageConfiguration languageConfiguration;
 
 
     @Inject
-    public QueryFactory(QueryExpansion queryExpansion)
+    public QueryFactory(QueryExpansion queryExpansion, LanguageConfiguration languageConfiguration)
     {
         this.queryExpansion = queryExpansion;
+        this.languageConfiguration = languageConfiguration;
     }
 
     public ProcessedQuery createQuery(QueryParams params,
                                       @Nullable RpcResultRankingParameters rankingParams) {
+
+        LanguageDefinition languageDefinition = languageConfiguration.getLanguage(params.langIsoCode());
+
         final var query = params.humanQuery();
 
         if (query.length() > 1000) {
@@ -45,7 +50,7 @@ public class QueryFactory {
         List<String> searchTermsHuman = new ArrayList<>();
         List<String> problems = new ArrayList<>();
 
-        List<QueryToken> basicQuery = queryParser.parse(query);
+        List<QueryToken> basicQuery = queryParser.parse(languageDefinition, query);
 
         if (basicQuery.size() >= 12) {
             problems.add("Your search query is too long");

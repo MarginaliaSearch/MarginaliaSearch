@@ -2,7 +2,8 @@ package nu.marginalia.language.sentence;
 
 import com.google.common.base.CharMatcher;
 import gnu.trove.list.array.TIntArrayList;
-import nu.marginalia.language.encoding.AsciiFlattener;
+import nu.marginalia.language.encoding.UnicodeNormalization;
+import nu.marginalia.language.model.LanguageDefinition;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -13,10 +14,11 @@ import static nu.marginalia.language.WordPatterns.MAX_WORD_LENGTH;
 
 public class SentenceSegmentSplitter {
 
+    private final UnicodeNormalization unicodeNormalization;
+
     public record SeparatedSentence(String[] words, BitSet separators) { }
 
     private static final CharMatcher noiseCharacterMatcher = CharMatcher.anyOf("/*-");
-
     private static final Pattern wordBreakPattern;
 
     static {
@@ -31,13 +33,17 @@ public class SentenceSegmentSplitter {
         }
     }
 
+    SentenceSegmentSplitter(LanguageDefinition languageDefinition) {
+        this.unicodeNormalization = languageDefinition.unicodeNormalization();
+    }
+
     /** Split a sentence into words and separators.
      *
      * @param segment The sentence to split
      * @return A list of words and separators
      */
-    public static SeparatedSentence splitSegment(String segment, int maxLength) {
-        String flatSegment = AsciiFlattener.flattenUnicode(segment);
+    public SeparatedSentence splitSegment(String segment, int maxLength) {
+        String flatSegment = unicodeNormalization.flattenUnicode(segment);
 
         var matcher = wordBreakPattern.matcher(flatSegment);
 

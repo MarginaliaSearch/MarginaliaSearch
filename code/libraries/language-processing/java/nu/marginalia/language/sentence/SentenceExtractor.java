@@ -129,7 +129,7 @@ public class SentenceExtractor {
                                             EnumSet<HtmlTag> htmlTags) {
         final Stemmer stemmer = language.stemmer();
 
-        var wordsAndSeps = SentenceSegmentSplitter.splitSegment(text, MAX_SENTENCE_LENGTH);
+        var wordsAndSeps = new SentenceSegmentSplitter(language).splitSegment(text, MAX_SENTENCE_LENGTH);
 
         String[] words = wordsAndSeps.words();
         BitSet seps = wordsAndSeps.separators();
@@ -218,11 +218,13 @@ public class SentenceExtractor {
 
         List<DocumentSentence> ret = new ArrayList<>(sentences.length);
 
+        SentenceSegmentSplitter sentenceSegmentSplitter = new SentenceSegmentSplitter(language);
+
         if (isNaturalLanguage) {
             // Natural language text;  do POS tagging and stemming
 
             for (String sent : sentences) {
-                var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
+                var wordsAndSeps = sentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
                 var posTags = language.posTagSentence(tokens);
@@ -274,7 +276,7 @@ public class SentenceExtractor {
             // as this is not likely to be useful
 
             for (String sent : sentences) {
-                var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
+                var wordsAndSeps = sentenceSegmentSplitter.splitSegment(sent, MAX_SENTENCE_LENGTH);
                 var tokens = wordsAndSeps.words();
                 var separators = wordsAndSeps.separators();
                 var posTags = new long[tokens.length];

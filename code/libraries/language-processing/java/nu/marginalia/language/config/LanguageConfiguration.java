@@ -4,6 +4,7 @@ import com.github.jfasttext.JFastText;
 import com.google.inject.Inject;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.encoding.UnicodeNormalization;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.pos.PosPattern;
@@ -136,14 +137,30 @@ public class LanguageConfiguration {
                 KeywordHasher keywordHasher = parseHasherTag(languageTag, isoCode);
                 Map<PosPatternCategory, List<PosPattern>> posPatterns =
                         parsePosPatterns(posTagger, languageTag, isoCode);
+                UnicodeNormalization unicodeNormalization = parseUnicodeNormalization(languageTag, isoCode);
 
                 languages.put(isoCode,
-                        new LanguageDefinition(isoCode, name, stemmer, keywordHasher, posTagger, posPatterns));
+                        new LanguageDefinition(isoCode, name, stemmer, unicodeNormalization, keywordHasher, posTagger, posPatterns));
             }
             catch (IOException ex) {
                 logger.error("Failed to set up language " + isoCode, ex);
             }
         }
+    }
+
+    private UnicodeNormalization parseUnicodeNormalization(Element languageTag, String isoCode) {
+        NodeList normalizationTags = languageTag.getElementsByTagName("unicodeNormalization");
+        if (normalizationTags.getLength() == 0)
+            return new UnicodeNormalization.JustNormalizeQuotes();
+        Element normalizationTag = (Element) normalizationTags.item(0);
+        String algorithm = normalizationTag.getAttribute("algorithm");
+
+        return switch(algorithm) {
+            case "minimal" -> new UnicodeNormalization.JustNormalizeQuotes();
+            case "e-accents" -> new UnicodeNormalization.FlattenEAccents();
+            case "maximal-latin" -> new UnicodeNormalization.FlattenAllLatin();
+            default -> throw new IllegalArgumentException("Invalida algorithm " + algorithm + " on language configuration for " + isoCode);
+        };
     }
 
     private Map<PosPatternCategory, List<PosPattern>> parsePosPatterns(@Nullable PosTagger posTagger,
