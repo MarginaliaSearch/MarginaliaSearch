@@ -49,7 +49,7 @@ public record IndexJournal(Path journalDir) {
 
     public Set<String> languages() {
         try {
-            Set<String> languages = new HashSet<>(languages());
+            Set<String> languages = new HashSet<>();
 
             for (var instance : pages()) {
                 try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
