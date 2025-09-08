@@ -2,6 +2,7 @@ package nu.marginalia.language.config;
 
 import com.github.jfasttext.JFastText;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.language.encoding.UnicodeNormalization;
@@ -39,6 +40,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+@Singleton
 public class LanguageConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(LanguageConfiguration.class);
 
