@@ -21,7 +21,8 @@ public class SkipListWriter implements AutoCloseable {
     private final LongArrayList maxValuesList = new LongArrayList();
 
     public SkipListWriter(Path documentsFileName) throws IOException {
-        this.documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        documentsChannel.position(documentsChannel.size());
     }
 
     @Override
