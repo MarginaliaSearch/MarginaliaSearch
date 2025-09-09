@@ -161,7 +161,7 @@ public class IndexConstructorMain extends ProcessMainClass {
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
 
         Path outputFileDocsId = findNextFile(new IndexFileName.ForwardDocIds());
-        Path outputFileDocsData = findNextFile(new IndexFileName.ForwardDocIds());
+        Path outputFileDocsData = findNextFile(new IndexFileName.ForwardDocData());
         Path outputFileSpansData = findNextFile(new IndexFileName.ForwardSpansData());
 
         ForwardIndexConverter converter = new ForwardIndexConverter(heartbeat,
