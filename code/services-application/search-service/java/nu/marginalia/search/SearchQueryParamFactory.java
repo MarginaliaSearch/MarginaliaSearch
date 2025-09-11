@@ -2,12 +2,7 @@ package nu.marginalia.search;
 
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
-import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
-import nu.marginalia.api.searchquery.model.query.QueryStrategy;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
@@ -55,7 +50,7 @@ public class SearchQueryParamFactory {
                 userParams.strategy(),
                 userParams.temporalBias(),
                 userParams.filterTier(),
-                "en",
+                userParams.languageIsoCode(),
                 userParams.page()
         );
 

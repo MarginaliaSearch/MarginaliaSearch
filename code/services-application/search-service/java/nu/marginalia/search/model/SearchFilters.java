@@ -59,6 +59,7 @@ public class SearchFilters {
                 SearchRecentParameter.DEFAULT,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
+                "en",
                 false,
                 1));
     }

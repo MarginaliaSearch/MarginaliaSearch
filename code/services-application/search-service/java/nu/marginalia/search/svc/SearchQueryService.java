@@ -39,6 +39,7 @@ public class SearchQueryService {
             @QueryParam String recent,
             @QueryParam String searchTitle,
             @QueryParam String adtech,
+            @QueryParam String lang,
             @QueryParam Integer page
     ) {
         try {
@@ -49,6 +50,7 @@ public class SearchQueryService {
                     SearchRecentParameter.parse(recent),
                     SearchTitleParameter.parse(searchTitle),
                     SearchAdtechParameter.parse(adtech),
+                    Objects.requireNonNullElse(lang, "en"),
                     false,
                     Objects.requireNonNullElse(page,1));
 
