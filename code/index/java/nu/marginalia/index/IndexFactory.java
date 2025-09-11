@@ -58,6 +58,11 @@ public class IndexFactory {
             if (Files.exists(wordsFile)) {
                 wordLexicons.add(new WordLexicon(languageIsoCode, wordsFile));
             }
+            else if ("en".equalsIgnoreCase(languageIsoCode)) {
+                // FIXME:  Backward compatibility, remove after ~ dec 2025
+                wordsFile = liveStorage.resolve("rev-words.dat");
+                wordLexicons.add(new WordLexicon("en", wordsFile));
+            }
         }
 
 
@@ -77,6 +82,11 @@ public class IndexFactory {
             Path wordsFile = getCurrentPath(new IndexFileName.PrioWords(languageIsoCode));
             if (Files.exists(wordsFile)) {
                 wordLexicons.add(new WordLexicon(languageIsoCode, wordsFile));
+            }
+            else if ("en".equalsIgnoreCase(languageIsoCode)) {
+                // FIXME:  Backward compatibility, remove after ~ dec 2025
+                wordsFile = liveStorage.resolve("rev-prio-words.dat");
+                wordLexicons.add(new WordLexicon("en", wordsFile));
             }
         }
 
