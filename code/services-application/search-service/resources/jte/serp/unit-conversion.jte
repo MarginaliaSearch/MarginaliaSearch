@@ -1,4 +1,4 @@
-@import nu.marginalia.search.command.SearchParameters
+@import nu.marginalia.search.model.SearchParameters
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.SearchFilters
 

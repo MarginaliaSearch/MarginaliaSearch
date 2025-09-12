@@ -1,4 +1,4 @@
-package nu.marginalia.search.command;
+package nu.marginalia.search.model;
 
 import javax.annotation.Nullable;
 

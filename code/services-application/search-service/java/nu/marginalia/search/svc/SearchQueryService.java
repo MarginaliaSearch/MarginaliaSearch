@@ -6,8 +6,8 @@ import io.jooby.annotation.GET;
 import io.jooby.annotation.Path;
 import io.jooby.annotation.QueryParam;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.*;
-import nu.marginalia.search.model.SearchProfile;
+import nu.marginalia.search.command.CommandEvaluator;
+import nu.marginalia.search.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

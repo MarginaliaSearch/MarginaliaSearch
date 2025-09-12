@@ -20,7 +20,7 @@
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
             <div class="w-full p-2 border-none backdrop-blur-sm">
-                @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters())
+                @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters(), languageIsoCode = results.getLanguageIsoCode())
             </div>
             <div class="grow"></div>
             <button class="fixed bottom-10 right-5 finepointer:hidden md:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="filter-button">

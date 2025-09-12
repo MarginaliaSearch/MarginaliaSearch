@@ -1,4 +1,4 @@
-package nu.marginalia.search.command;
+package nu.marginalia.search.model;
 
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
@@ -6,14 +6,13 @@ import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.search.model.SearchProfile;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import static nu.marginalia.search.command.SearchRecentParameter.RECENT;
+import static nu.marginalia.search.model.SearchRecentParameter.RECENT;
 
 public record SearchParameters(WebsiteUrl url,
                                String query,

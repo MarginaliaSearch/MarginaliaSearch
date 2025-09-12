@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.search.command.SearchCommandInterface;
-import nu.marginalia.search.command.SearchParameters;
+import nu.marginalia.search.model.SearchParameters;
 
 import java.util.Map;
 import java.util.Optional;

@@ -1,23 +1,24 @@
-package nu.marginalia.search.command;
+package nu.marginalia.search.model;
 
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 
-public enum SearchJsParameter {
+public enum SearchAdtechParameter {
     DEFAULT("default"),
-    DENY_JS("no-js", "special:scripts");
+    REDUCE("reduce", "special:ads", "special:affiliate");
+
     public final String value;
     public final String[] implictExcludeSearchTerms;
 
-    SearchJsParameter(String value, String... implictExcludeSearchTerms) {
+    SearchAdtechParameter(String value, String... implictExcludeSearchTerms) {
         this.value = value;
         this.implictExcludeSearchTerms = implictExcludeSearchTerms;
     }
 
-    public static SearchJsParameter parse(@Nullable String value) {
-        if (DENY_JS.value.equals(value)) return DENY_JS;
+    public static SearchAdtechParameter parse(@Nullable String value) {
+        if (REDUCE.value.equals(value)) return REDUCE;
 
         return DEFAULT;
     }

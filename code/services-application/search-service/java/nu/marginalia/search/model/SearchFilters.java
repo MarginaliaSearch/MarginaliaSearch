@@ -1,7 +1,6 @@
 package nu.marginalia.search.model;
 
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.*;
 
 import java.util.List;
 

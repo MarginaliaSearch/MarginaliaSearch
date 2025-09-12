@@ -3,7 +3,7 @@ package nu.marginalia.search;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.*;
-import nu.marginalia.search.command.SearchParameters;
+import nu.marginalia.search.model.SearchParameters;
 
 import java.util.List;
 

@@ -5,8 +5,8 @@ import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.search.JteRenderer;
 import nu.marginalia.search.command.SearchCommandInterface;
-import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.NavbarModel;
+import nu.marginalia.search.model.SearchParameters;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 
 import java.util.Map;

@@ -2,6 +2,7 @@
 
 @param String query
 @param String profile
+@param String languageIsoCode
 @param SearchFilters filters
 
 
@@ -40,6 +41,7 @@
     @if (filters.reduceAdtechOption.isSet()) <input type="hidden" name="adtech" value="${filters.reduceAdtechOption.value()}"> @endif
     @if (filters.searchTitleOption.isSet()) <input type="hidden" name="searchTitle" value="${filters.searchTitleOption.value()}"> @endif
     @if (filters.showRecentOption.isSet()) <input type="hidden" name="recent" value="${filters.showRecentOption.value()}"> @endif
+    @if (languageIsoCode != null && !"en".equalsIgnoreCase(languageIsoCode)) <input type="hidden" name="lang" value="${languageIsoCode}"> @endif
 
     <input type="hidden" name="profile" value="${profile}">
 

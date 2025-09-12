@@ -3,6 +3,7 @@ package nu.marginalia.search.command;
 import com.google.inject.Inject;
 import io.jooby.ModelAndView;
 import nu.marginalia.search.command.commands.*;
+import nu.marginalia.search.model.SearchParameters;
 
 import java.util.ArrayList;
 import java.util.List;
