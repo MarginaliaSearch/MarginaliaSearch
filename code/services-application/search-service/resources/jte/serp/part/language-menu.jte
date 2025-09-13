@@ -11,7 +11,7 @@
         <i class="fas fa-close mr-4"></i> Close
     </button>
     <div class="flex mx-auto flex-col my-10 px-4 max-w-xl">
-        <div class="text-xl my-4"><i class="fas fa-globe-europe mr-2 text-margeblue dark:text-slate-200"></i>Language</div>
+        <div class="text-xl my-4"><i class="fas fa-globe-europe mr-2 text-margeblue dark:text-slate-200"></i>Search Language</div>
         <ol>
         @for (LanguageDefinition languageDefinition: languageDefinitions)
             <li>
@@ -28,7 +28,8 @@
         </ol>
         <div class="my-4 text-xs">
             Multiple language support is currently in a public testing phase,
-            and does not yet work as well as the English portion of the search engine.
+            and does not yet work as well as the English portion of the search engine
+            and the non-English index is at this phase very small.
             The UI will also be streamlined when the functionality starts to work better.
             <p class="py-2"></p>
             Please report any issues at the <a class="underline text-liteblue dark:text-blue-200" href="https://github.com/MarginaliaSearch/MarginaliaSearch/issues">GitHub issue tracker</a>,
