@@ -67,6 +67,10 @@ public record SearchParameters(WebsiteUrl url,
         return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, true, page);
     }
 
+    public SearchParameters withLanguage(String languageIsoCode) {
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, true, page);
+    }
+
     public SearchParameters withPage(int page) {
         return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, false, page);
     }
@@ -115,8 +119,8 @@ public record SearchParameters(WebsiteUrl url,
         if (page != 1) {
             pathBuilder.append("&page=").append(page);
         }
-        if (Objects.equals(languageIsoCode, "en")) {
-            pathBuilder.append(languageIsoCode);
+        if (!Objects.equals(languageIsoCode, "en")) {
+            pathBuilder.append("&lang=").append(languageIsoCode);
         }
         if (newFilter) {
             pathBuilder.append("&newfilter=").append(Boolean.valueOf(newFilter).toString());

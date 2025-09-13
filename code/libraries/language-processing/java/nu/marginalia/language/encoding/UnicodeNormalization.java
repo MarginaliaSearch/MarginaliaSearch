@@ -63,6 +63,35 @@ public interface UnicodeNormalization {
         }
     }
 
+    class Flattenß implements UnicodeNormalization {
+        public String flattenUnicode(String s) {
+            if (NO_FLATTEN_UNICODE)
+                return s;
+
+            if (isPlainAscii(s)) {
+                return s;
+            }
+
+            StringBuilder sb = new StringBuilder(s.length() + 10);
+
+            int numCp = s.codePointCount(0, s.length());
+
+            for (int i = 0; i < numCp; i++) {
+                int c = s.codePointAt(i);
+
+                if ("\u201C\u201D".indexOf(c) >= 0) {
+                    sb.append('"');
+                } else if ('ß' == c) {
+                    sb.append("ss");
+                }
+
+                sb.appendCodePoint(c);
+            }
+
+            return sb.toString();
+        }
+    }
+
     class FlattenAllLatin implements UnicodeNormalization {
 
         public String flattenUnicode(String s) {

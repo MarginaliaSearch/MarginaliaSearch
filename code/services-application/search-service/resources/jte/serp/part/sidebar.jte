@@ -53,6 +53,16 @@
                             </button>
                     </label>
                 @endfor
+
+                <label class="flex items-center">
+                    <button title="Language" id="language-button-sidebar"  class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                        <span></span>
+                        <span class="text-sm">
+                            <i class="fas fa-globe-europe text-sm mr-3"></i>
+                            <span class="hidden md:inline">Language</span>
+                        </span>
+                    </button>
+                </label>
             </div>
         </div>
     </div>

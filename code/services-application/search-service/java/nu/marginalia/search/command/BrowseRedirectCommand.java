@@ -1,9 +1,8 @@
-package nu.marginalia.search.command.commands;
+package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
-import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.model.SearchParameters;
 
 import java.util.Map;
@@ -15,10 +14,7 @@ public class BrowseRedirectCommand implements SearchCommandInterface {
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^browse:[.A-Za-z\\-0-9:]+$").asPredicate();
 
     @Inject
-    public BrowseRedirectCommand()
-    {
-
-    }
+    public BrowseRedirectCommand() {}
 
     @Override
     public Optional<ModelAndView<?>> process(SearchParameters parameters) {

@@ -45,7 +45,7 @@ public class LanguageConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(LanguageConfiguration.class);
 
     private final Map<String, Path> resources = new HashMap<>();
-    private final Map<String, LanguageDefinition> languages = new HashMap<>();
+    private final Map<String, LanguageDefinition> languages = new LinkedHashMap<>();
     private final JFastText fastTextLanguageModel = new JFastText();
 
     public Optional<LanguageDefinition> identifyLanguage(org.jsoup.nodes.Document jsoupDoc) {
@@ -87,8 +87,6 @@ public class LanguageConfiguration {
         return languages.get(language);
     }
 
-
-
     @Inject
     public LanguageConfiguration() throws IOException, ParserConfigurationException, SAXException {
         this(WmsaHome.getLanguageModels());
@@ -98,26 +96,19 @@ public class LanguageConfiguration {
             throws IOException, ParserConfigurationException, SAXException {
         fastTextLanguageModel.loadModel(lm.fasttextLanguageModel.toString());
 
-        // TODO: Read from data directory
-
         try (var languagesXmlStream = ClassLoader.getSystemResourceAsStream("languages.xml")) {
             if (languagesXmlStream == null)
                 throw new IllegalStateException("languages.xml resource not found in classpath");
-            loadConfiguration(languagesXmlStream);
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(languagesXmlStream);
+
+            parseResources(doc);
+            parseLanguages(doc);
         }
 
         logger.info("Loaded language configuration: {}", languages);
-    }
-
-    private void loadConfiguration(InputStream xmlData)
-            throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(xmlData);
-
-        parseResources(doc);
-        parseLanguages(doc);
-
     }
 
     private void parseLanguages(Document doc) {
@@ -160,6 +151,7 @@ public class LanguageConfiguration {
         return switch(algorithm) {
             case "minimal" -> new UnicodeNormalization.JustNormalizeQuotes();
             case "e-accents" -> new UnicodeNormalization.FlattenEAccents();
+            case "german" -> new UnicodeNormalization.Flattenß();
             case "maximal-latin" -> new UnicodeNormalization.FlattenAllLatin();
             default -> throw new IllegalArgumentException("Invalida algorithm " + algorithm + " on language configuration for " + isoCode);
         };

@@ -20,7 +20,7 @@
 
         <!ELEMENT unicodeNormalization EMPTY>
         <!ATTLIST unicodeNormalization
-            algorithm (minimal|e-accents|maximal-latin) #REQUIRED
+            algorithm (minimal|e-accents|german|maximal-latin) #REQUIRED
             >
 
         <!ELEMENT stemmer (pospattern?)>
@@ -50,12 +50,6 @@
 ]>
 
 <languages>
-    <language isoCode="xx" name="Undefined" display="ltr" >
-        <keywordHash algorithm="asciish" />
-        <stemmer algorithm="none" />
-        <sentenceDetector algorithm="none"/>
-        <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
-    </language>
     <language isoCode="en" name="English" display="ltr">
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="porter">
@@ -126,6 +120,12 @@
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball" variant="FRENCH" />
         <sentenceDetector algorithm="opennlp"/>
+    </language>
+    <language isoCode="de" name="German" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="FRENCH" />
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="german" />
     </language>
     <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
     <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />

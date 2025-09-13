@@ -1,12 +1,15 @@
 @import nu.marginalia.api.math.model.DictionaryEntry
+@import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.search.model.SearchParameters
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.SearchFilters
 @import nu.marginalia.api.math.model.DictionaryResponse
+@import java.util.List
 
 @param SearchParameters parameters
 @param DictionaryResponse result
 @param NavbarModel navbar
+@param List<LanguageDefinition> languageDefinitions
 
 !{SearchFilters filters = new SearchFilters(parameters);}
 
@@ -31,6 +34,10 @@
                 <i class="fas fa-filter mr-3"></i>
                 Filters
             </button>
+            <button class="fixed bottom-30 right-5 sm:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="language-button">
+                <i class="fas fa-filter mr-3"></i>
+                Language
+            </button>
         </div>
     </div>
 </header>
@@ -38,7 +45,7 @@
 <div class="max-w-[1400px] mx-auto flex gap-6">
     <!-- Sidebar -->
     @template.serp.part.sidebar(filters = filters)
-
+    @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = parameters)
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
         <div class="border dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800">
@@ -81,6 +88,7 @@
 
 </body>
 <script lang="javascript" src="js/mobile-button.js"></script>
+<script lang="javascript" src="js/language-button.js"></script>
 <script lang="javascript" src="js/typeahead.js"></script>
 
 </html>

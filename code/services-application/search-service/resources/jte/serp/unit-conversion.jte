@@ -1,10 +1,13 @@
+@import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.search.model.SearchParameters
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.SearchFilters
+@import java.util.List
 
 @param SearchParameters parameters
 @param String result
 @param NavbarModel navbar
+@param List<LanguageDefinition> languageDefinitions
 
 !{SearchFilters filters = new SearchFilters(parameters);}
 
@@ -22,7 +25,7 @@
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
             <div class="w-full p-2 border-none backdrop-blur-sm">
-                @template.serp.part.searchform(query = parameters.query(), profile = parameters.profileStr(), filters = filters)
+                @template.serp.part.searchform(query = parameters.query(), profile = parameters.profileStr(), filters = filters, languageIsoCode = parameters.languageIsoCode())
             </div>
             <div class="grow"></div>
             <button class="fixed bottom-10 right-5 sm:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="filter-button">
@@ -36,7 +39,7 @@
 <div class="max-w-[1400px] mx-auto flex gap-6">
     <!-- Sidebar -->
     @template.serp.part.sidebar(filters = filters)
-
+    @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = parameters)
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
         <div class="border dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800 dark:text-white">
@@ -61,6 +64,7 @@
 
 </body>
 <script lang="javascript" src="js/mobile-button.js"></script>
+<script lang="javascript" src="js/language-button.js"></script>
 <script lang="javascript" src="js/typeahead.js"></script>
 
 </html>

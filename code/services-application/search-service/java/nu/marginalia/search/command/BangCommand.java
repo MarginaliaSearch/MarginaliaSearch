@@ -1,9 +1,8 @@
-package nu.marginalia.search.command.commands;
+package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
-import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.model.SearchParameters;
 
 import java.net.URLEncoder;

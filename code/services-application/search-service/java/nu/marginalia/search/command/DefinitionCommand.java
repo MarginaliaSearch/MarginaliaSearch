@@ -1,13 +1,13 @@
 
-package nu.marginalia.search.command.commands;
+package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.math.model.DictionaryResponse;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.search.JteRenderer;
-import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.model.SearchParameters;
 import org.slf4j.Logger;
@@ -23,15 +23,17 @@ public class DefinitionCommand implements SearchCommandInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MathClient mathClient;
+    private final LanguageConfiguration languageConfiguration;
     private final JteRenderer renderer;
 
 
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^define:[A-Za-z\\s-0-9]+$").asPredicate();
 
     @Inject
-    public DefinitionCommand(MathClient mathClient, JteRenderer renderer) {
+    public DefinitionCommand(MathClient mathClient, LanguageConfiguration languageConfiguration, JteRenderer renderer) {
 
         this.mathClient = mathClient;
+        this.languageConfiguration = languageConfiguration;
         this.renderer = renderer;
     }
 
@@ -46,6 +48,7 @@ public class DefinitionCommand implements SearchCommandInterface {
         return Optional.of(new MapModelAndView("serp/dict-lookup.jte",
                 Map.of("parameters", parameters,
                         "result", result,
+                        "languageDefinitions", languageConfiguration.languages(),
                         "navbar", NavbarModel.SEARCH)
         ));
     }

@@ -1,10 +1,13 @@
+@import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.search.model.DecoratedSearchResults
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.ResultsPage
+@import java.util.List
 
 @param DecoratedSearchResults results
 @param NavbarModel navbar
+@param List<LanguageDefinition> languageDefinitions
 
 <!DOCTYPE html>
 <html lang="en">
@@ -27,6 +30,10 @@
                 <i class="fas fa-filter mr-3"></i>
                 Filters
             </button>
+            <button class="fixed bottom-10 left-5 finepointer:hidden md:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="language-button">
+                <i class="fas fa-globe mr-3"></i>
+                Language
+            </button>
         </div>
     </div>
 </header>
@@ -34,6 +41,7 @@
 <div class="max-w-[1400px] mx-auto flex gap-6">
     <!-- Sidebar -->
     @template.serp.part.sidebar(filters = results.getFilters())
+    @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = results.getParams())
 
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
@@ -84,6 +92,7 @@
 
 </body>
 <script lang="javascript" src="js/mobile-button.js"></script>
+<script lang="javascript" src="js/language-button.js"></script>
 <script lang="javascript" src="js/typeahead.js"></script>
 
 </html>
