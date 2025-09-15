@@ -82,7 +82,7 @@ public class ZookeeperDomainCoordinator implements DomainCoordinator {
         }
     }
 
-    private InterProcessSemaphoreV2 createSemapore(String topDomain){
+    private InterProcessSemaphoreV2 createSemapore(String topDomain) {
         try {
             return serviceRegistry.getSemaphore(topDomain + ":" + nodeId, DefaultDomainPermits.defaultPermits(topDomain));
         }
