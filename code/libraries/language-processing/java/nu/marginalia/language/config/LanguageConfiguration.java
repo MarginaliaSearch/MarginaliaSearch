@@ -111,6 +111,19 @@ public class LanguageConfiguration {
         logger.info("Loaded language configuration: {}", languages);
     }
 
+    InputStream findLanguageConfiguration() throws IOException {
+        Path filesystemPath = WmsaHome.getLangugeConfig();
+        if (Files.exists(filesystemPath)) {
+            return Files.newInputStream(filesystemPath, StandardOpenOption.READ);
+        }
+        if (Boolean.getBoolean("language.experimental")) {
+            return ClassLoader.getSystemResourceAsStream("languages-experimental.xml");
+        }
+        else {
+            return ClassLoader.getSystemResourceAsStream("languages-default.xml");
+        }
+    }
+
     private void parseLanguages(Document doc) {
         NodeList languageNodes = doc.getElementsByTagName("language");
 

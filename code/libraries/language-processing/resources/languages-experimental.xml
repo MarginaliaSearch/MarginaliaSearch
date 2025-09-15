@@ -101,9 +101,35 @@
             <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
             <pospattern>NNP* (DT IN TO CC) (IN TO CC) NNP*</pospattern>
         </ngrams>
-    </language>
 
+    </language>
+    <language isoCode="sv" name="Swedish" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="SWEDISH" />
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="e-accents" />
+        <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+        </ngrams>
+    </language>
+    <language isoCode="fr" name="French" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="FRENCH" />
+        <sentenceDetector algorithm="opennlp"/>
+    </language>
+    <language isoCode="de" name="German" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="FRENCH" />
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="german" />
+    </language>
     <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
     <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
+    <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-sv" md5="" path="rdr/Swedish.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.RDR" />
 
 </languages>
