@@ -67,7 +67,15 @@ public abstract class AbstractDocumentProcessorPlugin {
         }
 
         public MetaTagsBuilder addLanguage(String language) {
-            add("lang", language);
+            /* For now let's hold back on adding a language keyword, since
+              language selection is implemented via partitioning in the index
+              service already!
+
+              While the index can certainly cope with keywords that hold basically every document
+              in the index, this is not free and should be avoided without a good cause.
+             */
+
+            // add("lang", language);
 
             return this;
         }
