@@ -18,10 +18,9 @@ public interface UnicodeNormalization {
 
             StringBuilder sb = new StringBuilder(s.length() + 10);
 
-            int numCp = s.codePointCount(0, s.length());
-
-            for (int i = 0; i < numCp; i++) {
+            for (int i = 0; i < s.length(); ) {
                 int c = s.codePointAt(i);
+                i += Character.charCount(c);
 
                 if ("\u201C\u201D".indexOf(c) >= 0) {
                     sb.append('"');
@@ -46,8 +45,9 @@ public interface UnicodeNormalization {
 
             int numCp = s.codePointCount(0, s.length());
 
-            for (int i = 0; i < numCp; i++) {
+            for (int i = 0; i < numCp;) {
                 int c = s.codePointAt(i);
+                i+=Character.charCount(c);
 
                 if ("\u201C\u201D".indexOf(c) >= 0) {
                     sb.append('"');
@@ -74,10 +74,9 @@ public interface UnicodeNormalization {
 
             StringBuilder sb = new StringBuilder(s.length() + 10);
 
-            int numCp = s.codePointCount(0, s.length());
-
-            for (int i = 0; i < numCp; i++) {
+            for (int i = 0; i < s.length(); ) {
                 int c = s.codePointAt(i);
+                i += Character.charCount(c);
 
                 if ("\u201C\u201D".indexOf(c) >= 0) {
                     sb.append('"');
@@ -104,12 +103,10 @@ public interface UnicodeNormalization {
 
             StringBuilder sb = new StringBuilder(s.length() + 10);
 
-            int numCp = s.codePointCount(0, s.length());
-
             // Falsehoods programmers believe about the latin alphabet ;-)
-
-            for (int i = 0; i < numCp; i++) {
+            for (int i = 0; i < s.length(); ) {
                 int c = s.codePointAt(i);
+                i += Character.charCount(c);
 
                 if ("\u201C\u201D".indexOf(c) >= 0) {
                     sb.append('"');
@@ -209,13 +206,13 @@ public interface UnicodeNormalization {
     }
 
     private static boolean isPlainAscii(String s) {
-        int i;
-
-        int numCp = s.codePointCount(0, s.length());
-
-        for (i = 0; i < numCp && isAscii(s.codePointAt(i)); i++);
-
-        return i == s.length();
+        for (int i = 0; i < s.length(); ) {
+            int c = s.codePointAt(i);
+            if (!isAscii(c))
+                return false;
+            i += Character.charCount(c);
+        }
+        return true;
     }
 
     private static boolean isAscii(int c) {
