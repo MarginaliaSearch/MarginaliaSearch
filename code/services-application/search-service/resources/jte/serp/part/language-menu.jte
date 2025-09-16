@@ -1,10 +1,11 @@
 @import java.util.List
+@import java.util.Map
 @import java.util.Objects
 @import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.search.model.SearchParameters
 
 @param SearchParameters parameters
-@param List<LanguageDefinition> languageDefinitions
+@param Map<String, LanguageDefinition> languageDefinitions
 
 <aside id="language-menu" class="fixed inset-0 z-50 flex justify-center bg-white/90 dark:bg-black/90 backdrop-blur-sm hidden">
     <button id="hide-language-button" class="fixed bottom-10 right-5 text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200">
@@ -13,7 +14,7 @@
     <div class="flex mx-auto flex-col my-10 px-4 max-w-xl">
         <div class="text-xl my-4"><i class="fas fa-globe-europe mr-2 text-margeblue dark:text-slate-200"></i>Search Language</div>
         <ol>
-        @for (LanguageDefinition languageDefinition: languageDefinitions)
+        @for (LanguageDefinition languageDefinition: languageDefinitions.values())
             <li>
                 <a href="${parameters.withLanguage(languageDefinition.isoCode()).renderUrl()}" class="flex-1 p-2 my-1 rounded flex flex-col place-items-center has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 dark:has-[:checked]:bg-gray-800 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-800 text-margeblue dark:text-slate-200 outline-1 active:outline border border-gray-700">
                     @if (Objects.equals(parameters.languageIsoCode(), languageDefinition.isoCode()))

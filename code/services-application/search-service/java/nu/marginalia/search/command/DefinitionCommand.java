@@ -48,7 +48,7 @@ public class DefinitionCommand implements SearchCommandInterface {
         return Optional.of(new MapModelAndView("serp/dict-lookup.jte",
                 Map.of("parameters", parameters,
                         "result", result,
-                        "languageDefinitions", languageConfiguration.languages(),
+                        "languageDefinitions", languageConfiguration.languagesMap(),
                         "navbar", NavbarModel.SEARCH)
         ));
     }

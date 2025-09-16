@@ -4,10 +4,12 @@
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.ResultsPage
 @import java.util.List
+@import java.util.Map
+@import java.util.Optional
 
 @param DecoratedSearchResults results
 @param NavbarModel navbar
-@param List<LanguageDefinition> languageDefinitions
+@param Map<String, LanguageDefinition> languageDefinitions
 
 <!DOCTYPE html>
 <html lang="en">
@@ -50,7 +52,13 @@
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
                 <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a></div>
                 <div class="grow"></div>
-                <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove"></a>
+                <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove" title="Remove Filter"></a>
+            </div>
+        @elseif (!"en".equalsIgnoreCase(results.getLanguageIsoCode()))
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+                <div>Showing search results in <em>${Optional.ofNullable(languageDefinitions.get(results.getLanguageIsoCode())).map(LanguageDefinition::displayName).orElse("UNKNOWN LANGUAGE, PLEASE REPORT AS BUG!")}</em>.</div>
+                <div class="grow"></div>
+                <a href="${results.getParams().withLanguage("en").renderUrl()}" class="fa fa-remove" title="Remove Filter"></a>
             </div>
         @elseif (results.isEmpty())
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">

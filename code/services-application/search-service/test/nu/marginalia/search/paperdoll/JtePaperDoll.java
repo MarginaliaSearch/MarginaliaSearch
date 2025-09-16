@@ -68,7 +68,7 @@ public class JtePaperDoll {
         });
         Spark.get("/",
                 (rq, rs) -> MockedSearchResults.mockRegularSearchResults(),
-                ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH, "languageDefinitions", languageConfiguration.languages()))
+                ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH, "languageDefinitions", languageConfiguration.languagesMap()))
         );
         Spark.get("/site-focus",
                 (rq, rs) -> MockedSearchResults.mockSiteFocusResults(),
@@ -76,7 +76,7 @@ public class JtePaperDoll {
         );
         Spark.get("/errors",
                 (rq, rs) ->  MockedSearchResults.mockErrorData(),
-                ret -> this.render("serp/error.jte", Map.of("model", ret, "navbar", NavbarModel.LIMBO, "languageDefinitions", languageConfiguration.languages()))
+                ret -> this.render("serp/error.jte", Map.of("model", ret, "navbar", NavbarModel.LIMBO, "languageDefinitions", languageConfiguration.languagesMap()))
         );
         Spark.get("/first",
                 (rq, rs) ->  new Object(),

@@ -5,11 +5,12 @@
 @import nu.marginalia.search.model.SearchFilters
 @import nu.marginalia.api.math.model.DictionaryResponse
 @import java.util.List
+@import java.util.Map
 
 @param SearchParameters parameters
 @param DictionaryResponse result
 @param NavbarModel navbar
-@param List<LanguageDefinition> languageDefinitions
+@param Map<String, LanguageDefinition> languageDefinitions
 
 !{SearchFilters filters = new SearchFilters(parameters);}
 

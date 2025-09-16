@@ -3,11 +3,12 @@
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.SearchFilters
 @import java.util.List
+@import java.util.Map
 
 @param SearchParameters parameters
 @param String result
 @param NavbarModel navbar
-@param List<LanguageDefinition> languageDefinitions
+@param Map<String, LanguageDefinition> languageDefinitions
 
 !{SearchFilters filters = new SearchFilters(parameters);}
 

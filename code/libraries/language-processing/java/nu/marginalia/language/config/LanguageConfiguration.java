@@ -81,7 +81,9 @@ public class LanguageConfiguration {
     public List<LanguageDefinition> languages() {
         return new ArrayList<>(this.languages.values());
     }
-
+    public Map<String, LanguageDefinition> languagesMap() {
+        return Collections.unmodifiableMap(languages);
+    }
     @Nullable
     public LanguageDefinition getLanguage(String language) {
         return languages.get(language);

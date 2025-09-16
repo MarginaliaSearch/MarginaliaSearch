@@ -37,7 +37,7 @@ public class SearchErrorPageService {
                                 parameters,
                                 new SearchFilters(parameters)
                         ),
-                        "languageDefinitions", languageConfiguration.languages()
+                        "languageDefinitions", languageConfiguration.languagesMap()
                     )
                 );
     }

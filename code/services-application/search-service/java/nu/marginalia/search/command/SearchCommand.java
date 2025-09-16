@@ -29,7 +29,7 @@ public class SearchCommand implements SearchCommandInterface {
         return Optional.of(new MapModelAndView("serp/main.jte",
                 Map.of("results", results,
                         "navbar", NavbarModel.SEARCH,
-                        "languageDefinitions", languageConfiguration.languages()
+                        "languageDefinitions", languageConfiguration.languagesMap()
                 )
         ));
     }

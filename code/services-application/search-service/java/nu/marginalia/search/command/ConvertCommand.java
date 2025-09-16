@@ -34,7 +34,7 @@ public class ConvertCommand implements SearchCommandInterface {
                 Map.of(
                 "parameters", parameters,
                 "navbar", NavbarModel.SEARCH,
-                "languageDefinitions", languageConfiguration.languages(),
+                "languageDefinitions", languageConfiguration.languagesMap(),
                 "result", s)
         ));
 
