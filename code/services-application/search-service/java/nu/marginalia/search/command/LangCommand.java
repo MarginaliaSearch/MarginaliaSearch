@@ -32,7 +32,10 @@ public class LangCommand implements SearchCommandInterface {
             if (lang.equalsIgnoreCase(parameters.languageIsoCode()))
                 return Optional.empty();
 
-            String newUrl = parameters.withLanguage(lang).renderUrl();
+            StringBuilder newQuery = new StringBuilder(query);
+            newQuery.replace(matcher.start(), matcher.end(), " ");
+
+            String newUrl = parameters.withLanguage(lang).withQuery(newQuery.toString().trim()).renderUrl();
             return Optional.of(
                     new MapModelAndView("redirect.jte", Map.of("url", newUrl))
             );
