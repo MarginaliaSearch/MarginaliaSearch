@@ -9,11 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 sealed public interface LanguageConfigLocation {
-    InputStream findLanguageConfiguration(LanguageConfigLocation languageFile) throws IOException;
+    InputStream findLanguageConfiguration() throws IOException;
 
     final class Auto implements LanguageConfigLocation {
         @Override
-        public InputStream findLanguageConfiguration(LanguageConfigLocation languageFile) throws IOException {
+        public InputStream findLanguageConfiguration() throws IOException {
             Path filesystemPath = WmsaHome.getLangugeConfig();
             if (Files.exists(filesystemPath)) {
                 return Files.newInputStream(filesystemPath, StandardOpenOption.READ);
@@ -28,7 +28,7 @@ sealed public interface LanguageConfigLocation {
 
     final class Experimental implements LanguageConfigLocation {
         @Override
-        public InputStream findLanguageConfiguration(LanguageConfigLocation languageFile) throws IOException {
+        public InputStream findLanguageConfiguration() throws IOException {
             return ClassLoader.getSystemResourceAsStream("languages-experimental.xml");
         }
     }
@@ -36,7 +36,7 @@ sealed public interface LanguageConfigLocation {
     final class Default implements LanguageConfigLocation {
 
         @Override
-        public InputStream findLanguageConfiguration(LanguageConfigLocation languageFile) throws IOException {
+        public InputStream findLanguageConfiguration() throws IOException {
             return ClassLoader.getSystemResourceAsStream("languages-default.xml");
         }
     }
