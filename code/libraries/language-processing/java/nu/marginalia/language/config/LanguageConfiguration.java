@@ -91,16 +91,20 @@ public class LanguageConfiguration {
 
     @Inject
     public LanguageConfiguration() throws IOException, ParserConfigurationException, SAXException {
-        this(WmsaHome.getLanguageModels());
+        this(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Auto());
     }
 
-    public LanguageConfiguration(LanguageModels lm)
+    public LanguageConfiguration(LanguageConfigLocation languageFile) throws IOException, ParserConfigurationException, SAXException {
+        this(WmsaHome.getLanguageModels(), languageFile);
+    }
+
+    public LanguageConfiguration(LanguageModels lm, LanguageConfigLocation languageFile)
             throws IOException, ParserConfigurationException, SAXException {
         fastTextLanguageModel.loadModel(lm.fasttextLanguageModel.toString());
 
-        try (var languagesXmlStream = findLanguageConfiguration()) {
+        try (var languagesXmlStream = languageFile.findLanguageConfiguration(languageFile)) {
             if (languagesXmlStream == null)
-                throw new IllegalStateException("languages.xml resource not found in classpath");
+                throw new IllegalStateException("languages-default.xml resource not found in classpath");
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -111,19 +115,6 @@ public class LanguageConfiguration {
         }
 
         logger.info("Loaded language configuration: {}", languages);
-    }
-
-    InputStream findLanguageConfiguration() throws IOException {
-        Path filesystemPath = WmsaHome.getLangugeConfig();
-        if (Files.exists(filesystemPath)) {
-            return Files.newInputStream(filesystemPath, StandardOpenOption.READ);
-        }
-        if (Boolean.getBoolean("language.experimental")) {
-            return ClassLoader.getSystemResourceAsStream("languages-experimental.xml");
-        }
-        else {
-            return ClassLoader.getSystemResourceAsStream("languages-default.xml");
-        }
     }
 
     private void parseLanguages(Document doc) {

@@ -1,6 +1,7 @@
 package nu.marginalia.atags;
 
 import nu.marginalia.atags.source.AnchorTagsImpl;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeDomain;
@@ -37,7 +38,7 @@ class DomainAnchorTagsImplTest {
             System.out.println(tags.forUrl(new EdgeUrl("http://www.chiark.greenend.org.uk/~sgtatham/putty/")));
             System.out.println(tags.forUrl(new EdgeUrl("http://www.chiark.greenend.org.uk/~sgtatham/putt")));
 
-            var languageConfig = new LanguageConfiguration(TestLanguageModels.getLanguageModels());
+            var languageConfig = new LanguageConfiguration(TestLanguageModels.getLanguageModels(), new LanguageConfigLocation.Experimental());
             var atagsKeywords = new AnchorTextKeywords(new SentenceExtractor(languageConfig, TestLanguageModels.getLanguageModels()), languageConfig);
 
             System.out.println(

@@ -2,6 +2,7 @@ package nu.marginalia.keyword;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.dom.DomPruningFilter;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -31,7 +32,7 @@ class DocumentKeywordExtractorTest {
 
     @BeforeAll
     public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
-        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental()), WmsaHome.getLanguageModels());
     }
 
     @Test

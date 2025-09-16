@@ -2,6 +2,7 @@ package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -49,7 +50,7 @@ class SubjectLikeKeywordsTest {
 
     @BeforeAll
     public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
-        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental()), WmsaHome.getLanguageModels());
     }
 
     @Test

@@ -2,14 +2,25 @@ package nu.marginalia.search.command;
 
 import io.jooby.ModelAndView;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.language.config.LanguageConfigLocation;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.search.model.SearchParameters;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.util.Optional;
 
 class LangCommandTest {
-    LangCommand langCommand = new LangCommand();
+    static LangCommand langCommand;
+
+    @BeforeAll
+    static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        langCommand = new LangCommand(new LanguageConfiguration(new LanguageConfigLocation.Experimental()));
+    }
 
     @Test
     void testProcess() {

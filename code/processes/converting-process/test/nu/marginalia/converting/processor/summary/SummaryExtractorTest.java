@@ -4,6 +4,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.summary.heuristic.*;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -31,7 +32,7 @@ class SummaryExtractorTest {
     @BeforeEach
     public void setUp() throws IOException, ParserConfigurationException, SAXException {
         keywordExtractor = new DocumentKeywordExtractor();
-        setenceExtractor = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
+        setenceExtractor = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental()), WmsaHome.getLanguageModels());
 
         summaryExtractor = new SummaryExtractor(255,
                 new DomFilterHeuristic(255),

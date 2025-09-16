@@ -7,6 +7,7 @@ import io.jooby.ModelAndView;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.extractors.*;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
@@ -33,7 +34,7 @@ public class LanguageProcessingTool extends Jooby {
             termFrequencyDict = new TermFrequencyDict(languageModels);
 
             sentenceExtractorProvider = new ThreadLocalSentenceExtractorProvider(
-                    new LanguageConfiguration(languageModels),
+                    new LanguageConfiguration(languageModels, new LanguageConfigLocation.Experimental()),
                     languageModels
             );
             Path basePath = Path.of("code/libraries/language-processing/").toAbsolutePath();

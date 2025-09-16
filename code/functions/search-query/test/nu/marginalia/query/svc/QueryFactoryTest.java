@@ -6,6 +6,7 @@ import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -31,7 +32,7 @@ public class QueryFactoryTest {
 
         var lm = WmsaHome.getLanguageModels();
 
-        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)), new LanguageConfiguration(lm));
+        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)), new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()));
     }
 
     public SearchSpecification parseAndGetSpecs(String query) {

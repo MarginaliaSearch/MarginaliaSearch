@@ -1,5 +1,6 @@
 package nu.marginalia.keyword.extractors;
 
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.util.TestLanguageModels;
@@ -15,7 +16,7 @@ class ArtifactKeywordsTest {
 
     @Test
     public void testExtractArtifacts() throws IOException, ParserConfigurationException, SAXException {
-        SentenceExtractor se = new SentenceExtractor(new LanguageConfiguration(TestLanguageModels.getLanguageModels()), TestLanguageModels.getLanguageModels());
+        SentenceExtractor se = new SentenceExtractor(new LanguageConfiguration(TestLanguageModels.getLanguageModels(), new LanguageConfigLocation.Experimental()), TestLanguageModels.getLanguageModels());
 
         var artifacts = new ArtifactKeywords(se.extractSentences("Hello I'm <vlofgren@marginalia.nu>, what's up?", "hello!"));
         System.out.println(artifacts.getWords());

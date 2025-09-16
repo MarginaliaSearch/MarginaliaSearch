@@ -3,6 +3,7 @@ package nu.marginalia.keyword.extractors;
 import com.google.common.collect.Sets;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.dom.DomPruningFilter;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.UnsupportedLanguageException;
@@ -55,8 +56,8 @@ class NameLikeKeywordsTest {
 
     @BeforeAll
     public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
-        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels()), WmsaHome.getLanguageModels());
-        lc = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        se = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental()), WmsaHome.getLanguageModels());
+        lc = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
         en = lc.getLanguage("en");
     }
 

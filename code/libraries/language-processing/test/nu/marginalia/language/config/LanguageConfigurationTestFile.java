@@ -13,12 +13,12 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LanguageConfigurationTest {
+public class LanguageConfigurationTestFile {
     private static LanguageConfiguration languageConfiguration;
 
     @BeforeAll
     public static void setUpAll() throws IOException, SAXException, ParserConfigurationException {
-        languageConfiguration = new LanguageConfiguration(TestLanguageModels.getLanguageModels());
+        languageConfiguration = new LanguageConfiguration(TestLanguageModels.getLanguageModels(), new LanguageConfigLocation.Experimental());
     }
 
     @Test

@@ -2,6 +2,7 @@ package nu.marginalia.keyword;
 
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.model.UnsupportedLanguageException;
@@ -35,7 +36,7 @@ class SentenceExtractorTest {
 
     @BeforeAll
     public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
-        var config = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        var config = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
         se = new SentenceExtractor(config, WmsaHome.getLanguageModels());
         english = config.getLanguage("en");
 

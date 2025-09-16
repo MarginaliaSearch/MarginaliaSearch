@@ -1,6 +1,7 @@
 package nu.marginalia.keyword.extractors;
 
 import com.google.common.collect.Sets;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -192,7 +193,7 @@ class TitleKeywordsTest {
 
     @Test
     public void extractTitleWords() throws IOException, ParserConfigurationException, SAXException, UnsupportedLanguageException {
-        var languageConfiguration = new LanguageConfiguration(TestLanguageModels.getLanguageModels());
+        var languageConfiguration = new LanguageConfiguration(TestLanguageModels.getLanguageModels(), new LanguageConfigLocation.Experimental());
         var se = new SentenceExtractor(languageConfiguration, TestLanguageModels.getLanguageModels());
 
         var dld = se.extractSentences(Jsoup.parse(document));

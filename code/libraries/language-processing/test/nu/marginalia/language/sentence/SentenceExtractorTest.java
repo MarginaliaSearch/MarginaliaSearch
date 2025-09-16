@@ -1,6 +1,7 @@
 package nu.marginalia.language.sentence;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.tag.HtmlTag;
@@ -24,7 +25,7 @@ class SentenceExtractorTest {
 
     @BeforeAll
     public static void setUp() throws IOException, ParserConfigurationException, SAXException {
-        languageConfig = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        languageConfig = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
         sentenceExtractor = new SentenceExtractor(languageConfig, WmsaHome.getLanguageModels());
     }
 

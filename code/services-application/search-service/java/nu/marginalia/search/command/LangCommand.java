@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class LangCommand implements SearchCommandInterface {
 
-    private final Pattern queryPatternPredicate = Pattern.compile("(^|\\s)lang:[a-z]{2}(\\s|$)");
+    private final Pattern queryPatternPredicate = Pattern.compile("(^|\\s)lang:([a-z]{2})(\\s|$)");
     private final LanguageConfiguration languageConfiguration;
 
     @Inject
@@ -26,28 +26,24 @@ public class LangCommand implements SearchCommandInterface {
 
         String query = parameters.query();
         Matcher matcher = queryPatternPredicate.matcher(query);
-        if (matcher.find()) {
-            String lang = query.substring(matcher.start(), matcher.end()).trim().toLowerCase();
-            if (lang.length() <= 2)
-                return Optional.empty();
 
-            lang = lang.substring(lang.length() - 2, lang.length());
-            if (lang.equalsIgnoreCase(parameters.languageIsoCode()))
-                return Optional.empty();
+        if (!matcher.find())
+            return Optional.empty();
 
-            if (languageConfiguration.getLanguage(lang) == null)
-                return Optional.empty();
+        // Extract the language ISO code
+        String langIsoCode = matcher.group(2).toLowerCase();
 
-            StringBuilder newQuery = new StringBuilder(query);
-            newQuery.replace(matcher.start(), matcher.end(), " ");
+        if (languageConfiguration.getLanguage(langIsoCode) == null)
+            return Optional.empty();
 
-            String newUrl = parameters.withLanguage(lang).withQuery(newQuery.toString().trim()).renderUrl();
-            return Optional.of(
-                    new MapModelAndView("redirect.jte", Map.of("url", newUrl))
-            );
-        }
+        String newUrl = parameters
+                .withLanguage(langIsoCode)
+                .withQuery(matcher.replaceAll(" ").trim())
+                .renderUrl();
 
-        return Optional.empty();
+        return Optional.of(
+                new MapModelAndView("redirect.jte", Map.of("url", newUrl))
+        );
     }
 
 }

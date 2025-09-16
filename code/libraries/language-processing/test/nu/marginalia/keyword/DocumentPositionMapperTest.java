@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.keyword.model.DocumentWordSpan;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
@@ -34,7 +35,7 @@ class DocumentPositionMapperTest {
 
     @BeforeAll
     public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
-        var config = new LanguageConfiguration(WmsaHome.getLanguageModels());
+        var config = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
         se = new SentenceExtractor(config, WmsaHome.getLanguageModels());
         english = config.getLanguage("en");
     }

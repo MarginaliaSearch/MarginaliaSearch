@@ -23,6 +23,7 @@ import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -116,7 +117,7 @@ public class PerfTestMain {
                         new TermFrequencyDict(homeDir.resolve("model/tfreq-new-algo3.bin")),
                         new NgramLexicon()
                 ),
-                new LanguageConfiguration(WmsaHome.getLanguageModels())
+                new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental())
         );
     }
 

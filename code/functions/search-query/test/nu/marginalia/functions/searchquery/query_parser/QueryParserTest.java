@@ -2,6 +2,7 @@ package nu.marginalia.functions.searchquery.query_parser;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
+import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,7 @@ import java.util.List;
 
 class QueryParserTest {
 
-    LanguageConfiguration languageConfiguration = new LanguageConfiguration(WmsaHome.getLanguageModels());
+    LanguageConfiguration languageConfiguration = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
 
     QueryParserTest() throws IOException, ParserConfigurationException, SAXException {
     }
