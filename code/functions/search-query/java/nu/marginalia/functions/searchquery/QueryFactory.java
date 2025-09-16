@@ -125,6 +125,9 @@ public class QueryFactory {
                 case QueryToken.QualityTerm(SpecificationLimit limit, String displayStr) -> qualityLimit = limit;
                 case QueryToken.QsTerm(String str) -> queryStrategy = parseQueryStrategy(str);
 
+                // No-op for lang term
+                case QueryToken.LangTerm(String str, String displayStr) -> {}
+
                 default -> {}
             }
         }
