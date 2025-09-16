@@ -14,7 +14,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-@template.part.head(title = "Marginalia Search - " +  results.getQuery())
+@template.part.head(title = "Marginalia Search - " + results.getQuery())
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)

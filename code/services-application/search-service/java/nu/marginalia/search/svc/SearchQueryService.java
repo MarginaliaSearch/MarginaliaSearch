@@ -32,6 +32,7 @@ public class SearchQueryService {
             ConvertCommand convertCommand,
             DefinitionCommand definitionCommand,
             BangCommand bangCommand,
+            LangCommand langCommand,
             SiteRedirectCommand siteRedirectCommand,
             SearchCommand searchCommand
     ) {
@@ -42,6 +43,7 @@ public class SearchQueryService {
         specialCommands.add(convertCommand);
         specialCommands.add(definitionCommand);
         specialCommands.add(bangCommand);
+        specialCommands.add(langCommand);
         specialCommands.add(siteRedirectCommand);
 
         defaultCommand = searchCommand;
