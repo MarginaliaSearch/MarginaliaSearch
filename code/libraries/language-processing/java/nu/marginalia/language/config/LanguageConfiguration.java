@@ -98,7 +98,7 @@ public class LanguageConfiguration {
             throws IOException, ParserConfigurationException, SAXException {
         fastTextLanguageModel.loadModel(lm.fasttextLanguageModel.toString());
 
-        try (var languagesXmlStream = ClassLoader.getSystemResourceAsStream("languages.xml")) {
+        try (var languagesXmlStream = findLanguageConfiguration()) {
             if (languagesXmlStream == null)
                 throw new IllegalStateException("languages.xml resource not found in classpath");
 
