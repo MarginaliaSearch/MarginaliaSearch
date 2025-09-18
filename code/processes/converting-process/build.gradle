@@ -40,7 +40,7 @@ dependencies {
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:geo-ip')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
 
     implementation project(':code:processes:converting-process:model')
     implementation project(':code:processes:converting-process:ft-dom-classifier')
@@ -52,7 +52,7 @@ dependencies {
 
     implementation project(':code:functions:live-capture:api')
 
-    testImplementation project(':code:libraries:language-processing')
+    testImplementation project(':code:functions:language-processing')
 
     implementation libs.slop
     implementation libs.bundles.slf4j

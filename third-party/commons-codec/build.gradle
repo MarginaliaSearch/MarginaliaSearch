@@ -10,7 +10,7 @@ java {
 }
 
 dependencies {
-    jmhImplementation project(':code:libraries:language-processing')
+    jmhImplementation project(':code:functions:language-processing')
     jmhImplementation libs.guava
     jmhImplementation libs.commons.codec
 }

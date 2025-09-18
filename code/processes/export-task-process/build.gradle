@@ -28,7 +28,7 @@ dependencies {
 
     implementation project(':code:functions:link-graph:api')
     implementation project(':code:processes:process-mq-api')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:processes:crawling-process:ft-link-parser')
     implementation project(':code:processes:crawling-process:model')

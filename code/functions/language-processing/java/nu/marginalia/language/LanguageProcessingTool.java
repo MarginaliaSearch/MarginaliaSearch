@@ -37,7 +37,7 @@ public class LanguageProcessingTool extends Jooby {
                     new LanguageConfiguration(languageModels, new LanguageConfigLocation.Experimental()),
                     languageModels
             );
-            Path basePath = Path.of("code/libraries/language-processing/").toAbsolutePath();
+            Path basePath = Path.of("code/functions/language-processing/").toAbsolutePath();
             System.out.println("Base path: " + basePath);
 
             if (Files.exists(basePath.resolve("resources/ltt/jte")))

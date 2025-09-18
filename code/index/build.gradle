@@ -26,7 +26,7 @@ dependencies {
     implementation project(':code:libraries:native')
     implementation project(':code:libraries:random-write-funnel')
     implementation project(':code:libraries:coded-sequence')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:message-queue')
 
 
@@ -77,7 +77,7 @@ dependencies {
     testImplementation 'org.testcontainers:mariadb:1.17.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
     testImplementation project(':code:libraries:test-helpers')
-    testImplementation project(':code:libraries:language-processing')
+    testImplementation project(':code:functions:language-processing')
     testImplementation project(':code:libraries:braille-block-punch-cards')
     testImplementation project(':code:libraries:test-helpers')
 }

@@ -28,7 +28,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:processes:converting-process')
     implementation project(':code:processes:crawling-process:model')
 

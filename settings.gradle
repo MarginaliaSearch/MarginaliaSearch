@@ -50,7 +50,7 @@ include 'code:libraries:guarded-regex'
 include 'code:libraries:random-write-funnel'
 include 'code:libraries:blocking-thread-pool'
 include 'code:libraries:braille-block-punch-cards'
-include 'code:libraries:language-processing'
+include 'code:functions:language-processing'
 include 'code:libraries:test-helpers'
 include 'code:libraries:domain-lock'
 

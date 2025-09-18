@@ -32,7 +32,7 @@ dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:renderer')
     implementation project(':code:libraries:message-queue')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:execution:api')
     implementation project(':code:index:api')

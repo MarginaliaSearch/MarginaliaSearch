@@ -23,7 +23,7 @@ dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:native')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:common:linkdb')
     implementation project(':code:index')
     implementation project(':third-party:commons-codec')

@@ -22,7 +22,7 @@ dependencies {
     implementation project(':code:index')
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:index:index-journal')
     implementation project(':code:functions:link-graph:partition')

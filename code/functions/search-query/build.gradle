@@ -22,13 +22,13 @@ dependencies {
     implementation project(':code:functions:nsfw-domain-filter')
     implementation project(':code:functions:search-query:api')
 
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
 
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:openzim')
     implementation project(':third-party:commons-codec')
 
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
 
     implementation libs.bundles.slf4j
 
