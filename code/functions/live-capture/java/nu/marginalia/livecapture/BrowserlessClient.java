@@ -41,7 +41,7 @@ public class BrowserlessClient implements AutoCloseable {
     public Optional<String> content(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
         Map<String, Object> requestData = Map.of(
                 "url", url,
-                "userAgent", userAgent,
+                "userAgent", Map.of("userAgent", userAgent),
                 "gotoOptions", gotoOptions
         );
 
@@ -69,7 +69,7 @@ public class BrowserlessClient implements AutoCloseable {
     public Optional<String> annotatedContent(String url, GotoOptions gotoOptions) throws IOException, InterruptedException {
         Map<String, Object> requestData = Map.of(
                 "url", url,
-                "userAgent", userAgent,
+                "userAgent", Map.of("userAgent", userAgent),
                 "gotoOptions", gotoOptions,
                 "waitForSelector", Map.of("selector", "#marginaliahack", "timeout", 15000)
         );
@@ -104,7 +104,7 @@ public class BrowserlessClient implements AutoCloseable {
 
         Map<String, Object> requestData = Map.of(
                 "url", url,
-                "userAgent", userAgent,
+                "userAgent", Map.of("userAgent", userAgent),
                 "options", screenshotOptions,
                 "gotoOptions", gotoOptions
         );
