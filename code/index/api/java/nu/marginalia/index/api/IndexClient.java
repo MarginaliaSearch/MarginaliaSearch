@@ -16,12 +16,15 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -71,6 +74,8 @@ public class IndexClient {
         int filterTier = indexRequest.getNsfwFilterTierValue();
         AtomicInteger totalNumResults = new AtomicInteger(0);
 
+        Instant bailInstant  = Instant.now().plusMillis((int) (1.5 * indexRequest.getQueryLimits().getTimeoutMs()));
+
         List<RpcDecoratedResultItem> results =
                 channelPool.call(IndexApiGrpc.IndexApiBlockingStub::query)
                         .async(executor)
@@ -84,7 +89,13 @@ public class IndexClient {
                         }))
                         .mapMulti((CompletableFuture<List<RpcDecoratedResultItem>> fut, Consumer<List<RpcDecoratedResultItem>> c) ->{
                             try {
-                                c.accept(fut.join());
+                                Instant now = Instant.now();
+                                if (now.isAfter(bailInstant)) {
+                                    c.accept(fut.get(0, TimeUnit.MILLISECONDS));
+                                }
+                                else {
+                                    c.accept(fut.get(Duration.between(now, bailInstant).toMillis(), TimeUnit.SECONDS));
+                                }
                             } catch (Exception e) {
                                 logger.error("Error while fetching results", e);
                             }
