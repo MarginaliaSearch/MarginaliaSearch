@@ -79,8 +79,8 @@ public sealed interface IndexFileName {
                 case NEXT -> basePath.resolve("rev-prio-docs.dat.next");
             };
             case ForwardDocIds() -> switch (version) {
-                case CURRENT -> basePath.resolve("fwd-doc-ids.dat");
-                case NEXT -> basePath.resolve("fwd-doc-ids.dat.next");
+                case CURRENT -> basePath.resolve("fwd-doc-id.dat");
+                case NEXT -> basePath.resolve("fwd-doc-id.dat.next");
             };
             case ForwardDocData() -> switch (version) {
                 case CURRENT -> basePath.resolve("fwd-doc-data.dat");
