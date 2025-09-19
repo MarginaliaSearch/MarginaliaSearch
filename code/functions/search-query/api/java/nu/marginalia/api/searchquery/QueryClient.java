@@ -48,7 +48,7 @@ public class QueryClient  {
                     .async(virtualThreadService)
                     .run(query)
                     .thenApply(QueryProtobufCodec::convertQueryResponse)
-                    .get(params.limits().getTimeoutMs()*2, TimeUnit.MICROSECONDS)
+                    .get(params.limits().getTimeoutMs()*2, TimeUnit.MILLISECONDS)
         );
     }
 
