@@ -94,7 +94,7 @@ public class IndexClient {
                                     c.accept(fut.get(0, TimeUnit.MILLISECONDS));
                                 }
                                 else {
-                                    c.accept(fut.get(Duration.between(now, bailInstant).toMillis(), TimeUnit.SECONDS));
+                                    c.accept(fut.get(Duration.between(now, bailInstant).toMillis(), TimeUnit.MILLISECONDS));
                                 }
                             } catch (Exception e) {
                                 logger.error("Error while fetching results", e);
