@@ -14,6 +14,7 @@ import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.mq.MqRequest;
+import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -21,6 +22,8 @@ import org.slf4j.MarkerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
+
+import java.util.concurrent.TimeoutException;
 
 public class ApiService extends SparkService {
 
@@ -135,13 +138,20 @@ public class ApiService extends SparkService {
 
         logger.info(queryMarker, "{} Search {}", license.key, query);
 
-        return wmsa_api_query_time
-                .labels(license.key)
-                .time(() ->
-                        searchOperator
-                        .query(query, count, domainCount, index, nsfwFilterTier, langIsoCode)
-                        .withLicense(license.getLicense())
-                );
+        long startNanos = System.nanoTime();
+        try {
+            ApiSearchResults ret = searchOperator
+                    .query(query, count, domainCount, index, nsfwFilterTier, langIsoCode)
+                    .withLicense(license.getLicense());
+            wmsa_api_query_time
+                    .labels(license.key)
+                    .observe((System.nanoTime() - startNanos) / 1_000_000_000L);
+            return ret;
+        }
+        catch (TimeoutException ex) {
+            Spark.halt(HttpStatus.REQUEST_TIMEOUT_408);
+            return null; // <-- unreachable
+        }
     }
 
     private int intParam(Request request, String name, int defaultValue) {

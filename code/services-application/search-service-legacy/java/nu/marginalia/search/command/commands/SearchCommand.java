@@ -11,6 +11,7 @@ import spark.Response;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 public class SearchCommand implements SearchCommandInterface {
     private final SearchOperator searchOperator;
@@ -34,6 +35,8 @@ public class SearchCommand implements SearchCommandInterface {
         catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             return Optional.empty();
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
         }
     }
 }

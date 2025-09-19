@@ -11,6 +11,7 @@ import nu.marginalia.search.model.SearchParameters;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 public class SearchCommand implements SearchCommandInterface {
     private final SearchOperator searchOperator;
@@ -24,7 +25,7 @@ public class SearchCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<ModelAndView<?>> process(SearchParameters parameters) throws InterruptedException {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters) throws InterruptedException, TimeoutException {
         DecoratedSearchResults results = searchOperator.doSearch(parameters);
         return Optional.of(new MapModelAndView("serp/main.jte",
                 Map.of("results", results,

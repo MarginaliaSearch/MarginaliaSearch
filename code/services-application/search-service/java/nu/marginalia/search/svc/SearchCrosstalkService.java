@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 public class SearchCrosstalkService {
     private static final Logger logger = LoggerFactory.getLogger(SearchCrosstalkService.class);
@@ -34,7 +35,7 @@ public class SearchCrosstalkService {
 
     @GET
     @Path("/crosstalk")
-    public ModelAndView<?> crosstalk(@QueryParam String domains) throws SQLException {
+    public ModelAndView<?> crosstalk(@QueryParam String domains) throws SQLException, TimeoutException {
         String[] parts = StringUtils.split(domains, ',');
 
         if (parts.length != 2) {

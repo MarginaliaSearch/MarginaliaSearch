@@ -12,9 +12,15 @@ import nu.marginalia.service.discovery.property.ServicePartition;
 
 import javax.annotation.CheckReturnValue;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class QueryClient  {
+
+    private final ExecutorService virtualThreadService = Executors.newVirtualThreadPerTaskExecutor();
 
     private static final Summary wmsa_qs_api_search_time = Summary.build()
             .name("wmsa_qs_api_search_time")
@@ -34,13 +40,15 @@ public class QueryClient  {
     }
 
     @CheckReturnValue
-    public QueryResponse search(QueryParams params) {
+    public QueryResponse search(QueryParams params) throws TimeoutException  {
         var query = QueryProtobufCodec.convertQueryParams(params);
 
         return wmsa_qs_api_search_time.time(() ->
-                QueryProtobufCodec.convertQueryResponse(
-                        queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query).run(query)
-                )
+            queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query)
+                    .async(virtualThreadService)
+                    .run(query)
+                    .thenApply(QueryProtobufCodec::convertQueryResponse)
+                    .get(params.limits().getTimeoutMs()*2, TimeUnit.MICROSECONDS)
         );
     }
 

@@ -16,6 +16,7 @@ import spark.Spark;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 
 public class SearchToBanService {
     private final ControlBlacklistService blacklistService;
@@ -41,7 +42,7 @@ public class SearchToBanService {
         Spark.post("/search-to-ban", this::handle, searchToBanRenderer::render);
     }
 
-    public Object handle(Request request, Response response) {
+    public Object handle(Request request, Response response) throws TimeoutException {
         if (Objects.equals(request.requestMethod(), "POST")) {
             executeBlacklisting(request);
 
@@ -51,7 +52,7 @@ public class SearchToBanService {
         return findResults(request.queryParams("q"));
     }
 
-    private Object findResults(String q) {
+    private Object findResults(String q) throws TimeoutException {
         if (q == null || q.isBlank()) {
             return Map.of();
         } else {
@@ -72,7 +73,7 @@ public class SearchToBanService {
         }
     }
 
-    private Object executeQuery(String query) {
+    private Object executeQuery(String query) throws TimeoutException {
         return queryClient.search(new QueryParams(
                 query,
                 RpcQueryLimits.newBuilder()

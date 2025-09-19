@@ -38,10 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import static nu.marginalia.search.svc.SearchSiteInfoService.TrafficSample.*;
@@ -163,7 +160,7 @@ public class SearchSiteInfoService {
             @PathParam String domainName,
             @QueryParam String view,
             @QueryParam Integer page
-    ) throws SQLException, ExecutionException {
+    ) throws SQLException, ExecutionException, TimeoutException {
 
         if (null == domainName || domainName.isBlank()) {
             // If we don't get a domain name, we redirect to the /site endpoint
@@ -242,7 +239,7 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName, int page) {
+    private Backlinks listLinks(String domainName, int page) throws TimeoutException {
         var results = searchOperator.doBacklinkSearch(domainName, page);
         return new Backlinks(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
@@ -251,7 +248,7 @@ public class SearchSiteInfoService {
         );
     }
 
-    private SiteInfoWithContext listInfo(Context context, String domainName) throws ExecutionException {
+    private SiteInfoWithContext listInfo(Context context, String domainName) throws ExecutionException, TimeoutException {
 
         var domain = new EdgeDomain(domainName);
         final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);
@@ -382,7 +379,7 @@ public class SearchSiteInfoService {
                     .build();
     }
 
-    private Docs listDocs(String domainName, int page) {
+    private Docs listDocs(String domainName, int page) throws TimeoutException {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
         var results = searchOperator.doSiteSearch(domainName, domainId, 100, page);
 

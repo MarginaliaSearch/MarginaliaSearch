@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public class SearchSiteInfoService {
@@ -64,7 +65,7 @@ public class SearchSiteInfoService {
         this.screenshotService = screenshotService;
     }
 
-    public Object handle(Request request, Response response) throws SQLException {
+    public Object handle(Request request, Response response) throws SQLException, TimeoutException {
         String domainName = request.params("site");
         String view = request.queryParamOrDefault("view", "info");
 
@@ -123,13 +124,13 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName) {
+    private Backlinks listLinks(String domainName) throws TimeoutException {
         return new Backlinks(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 searchOperator.doBacklinkSearch(domainName));
     }
 
-    private SiteInfoWithContext listInfo(String domainName) {
+    private SiteInfoWithContext listInfo(String domainName) throws TimeoutException {
 
         final int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
 
@@ -240,7 +241,7 @@ public class SearchSiteInfoService {
                     .build();
     }
 
-    private Docs listDocs(String domainName) {
+    private Docs listDocs(String domainName) throws TimeoutException {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),

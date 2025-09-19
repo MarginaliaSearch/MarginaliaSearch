@@ -14,6 +14,7 @@ import spark.Response;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class SearchCrosstalkService {
     private static final Logger logger = LoggerFactory.getLogger(SearchCrosstalkService.class);
@@ -28,7 +29,7 @@ public class SearchCrosstalkService {
         this.renderer = rendererFactory.renderer("search/site-info/site-crosstalk");
     }
 
-    public Object handle(Request request, Response response) throws SQLException {
+    public Object handle(Request request, Response response) throws SQLException, TimeoutException {
         String domains = request.queryParams("domains");
         String[] parts = StringUtils.split(domains, ',');
 
