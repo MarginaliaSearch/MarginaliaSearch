@@ -1,5 +1,5 @@
 @import nu.marginalia.model.idx.DocumentFlags
-@import nu.marginalia.search.command.SearchParameters
+@import nu.marginalia.search.model.SearchParameters
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.UrlDetails
 @param ClusteredUrlDetails result

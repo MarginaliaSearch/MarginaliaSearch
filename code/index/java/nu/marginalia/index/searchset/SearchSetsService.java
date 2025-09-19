@@ -13,7 +13,6 @@ import nu.marginalia.domainranking.data.GraphSource;
 import nu.marginalia.domainranking.data.LinkGraphSource;
 import nu.marginalia.domainranking.data.SimilarityGraphSource;
 import nu.marginalia.index.IndexFactory;
-import nu.marginalia.index.domainrankings.DomainRankings;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;

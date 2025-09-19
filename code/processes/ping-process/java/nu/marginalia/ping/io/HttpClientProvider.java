@@ -99,18 +99,6 @@ public class HttpClientProvider implements Provider<HttpClient> {
                 .build()
         );
 
-        Thread.ofPlatform().daemon(true).start(() -> {
-            try {
-                for (;;) {
-                    TimeUnit.SECONDS.sleep(15);
-                    logger.info("Connection pool stats: {}", connectionManager.getTotalStats());
-                }
-            }
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.IGNORE)
                 .setResponseTimeout(10, TimeUnit.SECONDS)

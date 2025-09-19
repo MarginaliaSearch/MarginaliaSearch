@@ -1,7 +1,6 @@
 package nu.marginalia.search.model;
 
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.*;
 
 import java.util.List;
 
@@ -59,6 +58,7 @@ public class SearchFilters {
                 SearchRecentParameter.DEFAULT,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
+                "en",
                 false,
                 1));
     }

@@ -13,7 +13,6 @@ import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.*;
 import nu.marginalia.search.svc.SearchCrosstalkService;
 import nu.marginalia.search.svc.SearchFlagSiteService;
@@ -95,6 +94,7 @@ public class MockedSearchResults {
                 params,
                 List.of("Not enough search engine oil"),
                 null,
+                "en",
                 mockSearchResultsList(),
                 "",
                 -1,
@@ -110,6 +110,7 @@ public class MockedSearchResults {
                 params,
                 List.of("Not enough search engine oil"),
                 null,
+                "en",
                 mockSearchResultsList(),
                 "example.marginalia.nu",
                 1,

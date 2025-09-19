@@ -28,6 +28,7 @@ public class ProcessedDocumentDetails {
 
     public DocumentMetadata metadata;
     public GeneratorType generator;
+    public String languageIsoCode;
 
     public String toString() {
         return "ProcessedDocumentDetails(title=" + this.title + ", description=" + this.description + ", pubYear=" + this.pubYear + ", length=" + this.length + ", quality=" + this.quality + ", hashCode=" + this.hashCode + ", features=" + this.features + ", standard=" + this.format + ", linksInternal=" + this.linksInternal + ", linksExternal=" + this.linksExternal + ", metadata=" + this.metadata + ", generator=" + this.generator + ")";

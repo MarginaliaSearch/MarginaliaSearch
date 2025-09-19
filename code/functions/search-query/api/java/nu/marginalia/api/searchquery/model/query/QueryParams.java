@@ -2,8 +2,6 @@ package nu.marginalia.api.searchquery.model.query;
 
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -26,10 +24,11 @@ public record QueryParams(
         QueryStrategy queryStrategy,
         RpcTemporalBias.Bias temporalBias,
         NsfwFilterTier filterTier,
+        String langIsoCode,
         int page
 )
 {
-    public QueryParams(String query, RpcQueryLimits limits, String identifier, NsfwFilterTier filterTier) {
+    public QueryParams(String query, RpcQueryLimits limits, String identifier, NsfwFilterTier filterTier, String langIsoCode) {
         this(query, null,
                 List.of(),
                 List.of(),
@@ -45,6 +44,7 @@ public record QueryParams(
                 QueryStrategy.AUTO,
                 RpcTemporalBias.Bias.NONE,
                 filterTier,
+                langIsoCode,
                 1 // page
                 );
     }

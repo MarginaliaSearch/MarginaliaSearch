@@ -1,6 +1,6 @@
 package nu.marginalia.index.journal;
 
-import nu.marginalia.hash.MurmurHash3_128;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
@@ -8,6 +8,7 @@ import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,8 +28,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
     private final VarintCodedSequenceArrayColumn.Writer spansWriter;
     private final ByteArrayColumn.Writer spanCodesWriter;
-
-    private static final MurmurHash3_128 hash = new MurmurHash3_128();
+    private final EnumColumn.Writer languagesWriter;
 
     public IndexJournalSlopWriter(Path dir, int page) throws IOException {
 
@@ -50,14 +50,17 @@ public class IndexJournalSlopWriter extends SlopTable {
 
         spanCodesWriter = IndexJournalPage.spanCodes.create(this);
         spansWriter = IndexJournalPage.spans.create(this);
+
+        languagesWriter = IndexJournalPage.languageIsoCode.create(this);
     }
 
-    public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection) throws IOException {
+    public void put(long combinedId, SlopDocumentRecord.KeywordsProjection keywordsProjection, KeywordHasher hasher) throws IOException {
 
         combinedIdWriter.put(combinedId);
         featuresWriter.put(keywordsProjection.htmlFeatures());
         sizeWriter.put(keywordsProjection.length());
         documentMetaWriter.put(keywordsProjection.documentMetadata());
+        languagesWriter.put(keywordsProjection.languageIsoCode());
 
         // -- write keyword data --
 
@@ -66,7 +69,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         // termIds are the special hashes of the keywords
         long[] termIds = new long[keywordsProjection.words().size()];
         for (int i = 0; i < termIds.length; i++) {
-            termIds[i] = hash.hashKeyword(keywords.get(i));
+            termIds[i] = hasher.hashKeyword(keywords.get(i));
         }
 
         termIdsWriter.put(termIds);
@@ -87,6 +90,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         termIdsWriter.close();
         termMetadataWriter.close();
         termPositionsWriter.close();
+        languagesWriter.close();
         spansWriter.close();
         spanCodesWriter.close();
     }

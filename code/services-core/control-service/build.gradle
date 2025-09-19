@@ -32,13 +32,13 @@ dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:renderer')
     implementation project(':code:libraries:message-queue')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:execution:api')
     implementation project(':code:index:api')
     implementation project(':code:processes:process-mq-api')
     implementation project(':code:features-search:screenshots')
     implementation project(':code:index:index-journal')
-    implementation project(':code:index:query')
 
     implementation project(':code:processes:crawling-process:model')
 

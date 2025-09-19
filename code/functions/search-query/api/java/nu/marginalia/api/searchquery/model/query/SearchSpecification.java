@@ -2,8 +2,6 @@ package nu.marginalia.api.searchquery.model.query;
 
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 
 import javax.annotation.Nullable;
 import java.util.List;

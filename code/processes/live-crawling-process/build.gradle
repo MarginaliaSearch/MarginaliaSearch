@@ -33,7 +33,7 @@ dependencies {
     implementation project(':code:processes:process-mq-api')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:domain-lock')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:processes:crawling-process')
     implementation project(':code:processes:crawling-process:model')

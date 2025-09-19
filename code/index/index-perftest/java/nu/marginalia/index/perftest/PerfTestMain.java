@@ -1,6 +1,7 @@
 package nu.marginalia.index.perftest;
 
 import gnu.trove.list.array.TLongArrayList;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryParams;
@@ -9,22 +10,22 @@ import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
-import nu.marginalia.index.FullReverseIndexReader;
+import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.IndexQueryExecution;
-import nu.marginalia.index.PrioReverseIndexReader;
+import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.model.ResultRankingContext;
-import nu.marginalia.index.model.SearchParameters;
-import nu.marginalia.index.model.SearchTerms;
-import nu.marginalia.index.positions.PositionsFileReader;
-import nu.marginalia.index.query.IndexQuery;
-import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.model.CombinedDocIdList;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.DomainRankingOverrides;
 import nu.marginalia.index.results.IndexResultRankingService;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.reverse.FullReverseIndexReader;
+import nu.marginalia.index.reverse.PrioReverseIndexReader;
+import nu.marginalia.index.reverse.WordLexicon;
+import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.language.config.LanguageConfigLocation;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -39,7 +40,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 public class PerfTestMain {
     static Duration warmupTime = Duration.ofMinutes(1);
@@ -91,13 +91,13 @@ public class PerfTestMain {
                 ),
                 new FullReverseIndexReader(
                         "full",
-                        indexDir.resolve("ir/rev-words.dat"),
+                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-en.dat"))),
                         indexDir.resolve("ir/rev-docs.dat"),
-                        new PositionsFileReader(indexDir.resolve("ir/rev-positions.dat"))
+                        indexDir.resolve("ir/rev-positions.dat")
                 ),
                 new PrioReverseIndexReader(
                         "prio",
-                        indexDir.resolve("ir/rev-prio-words.dat"),
+                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-prio-en.dat"))),
                         indexDir.resolve("ir/rev-prio-docs.dat")
                 )
         );
@@ -111,18 +111,19 @@ public class PerfTestMain {
         );
     }
 
-    static QueryFactory createQueryFactory(Path homeDir) throws IOException {
+    static QueryFactory createQueryFactory(Path homeDir) throws Exception {
         return new QueryFactory(
                 new QueryExpansion(
                         new TermFrequencyDict(homeDir.resolve("model/tfreq-new-algo3.bin")),
                         new NgramLexicon()
-                )
+                ),
+                new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental())
         );
     }
 
     public static void runValuation(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException, TimeoutException {
+                                    String rawQuery) throws Exception {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
@@ -134,13 +135,12 @@ public class PerfTestMain {
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
                 .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
+        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
-        SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-
-        List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(10_000));
+        var rankingContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
+        List<IndexQuery> queries = indexReader.createQueries(rankingContext);
 
         TLongArrayList allResults = new TLongArrayList();
         LongQueryBuffer buffer = new LongQueryBuffer(512);
@@ -158,8 +158,7 @@ public class PerfTestMain {
             allResults.subList(512,  allResults.size()).clear();
         }
 
-        var rankingContext = ResultRankingContext.create(indexReader, searchParameters);
-        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()), null);
+        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()));
 
         int sum = 0;
 
@@ -170,9 +169,8 @@ public class PerfTestMain {
 
         int iter;
         for (iter = 0;; iter++) {
-            IndexSearchBudget budget = new IndexSearchBudget(10000);
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(budget, rankingContext, rankingData, false).size();
+            sum2 += rankingService.rankResults(rankingContext, rankingData, false).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 
@@ -197,7 +195,7 @@ public class PerfTestMain {
 
     public static void runExecution(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException, InterruptedException {
+                                    String rawQuery) throws Exception {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
@@ -209,7 +207,7 @@ public class PerfTestMain {
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
                 .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
+        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
         System.out.println("Running warmup loop!");
@@ -222,8 +220,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
-            SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
-            var execution = new IndexQueryExecution(searchParameters, 1, rankingService, indexReader);
+            var execution = new IndexQueryExecution(indexReader, rankingService, SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny()), 1);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();
@@ -251,7 +248,7 @@ public class PerfTestMain {
 
     public static void runLookup(Path homeDir,
                                     Path indexDir,
-                                    String rawQuery) throws IOException, SQLException
+                                    String rawQuery) throws Exception
     {
 
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
@@ -263,11 +260,11 @@ public class PerfTestMain {
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
                 .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF), PrototypeRankingParameters.sensibleDefaults()).specs;
+        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
 
         System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
 
-        SearchParameters searchParameters = new SearchParameters(parsedQuery, new SearchSetAny());
+        SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
 
 
         Instant runEndTime = Instant.now().plus(runTime);
@@ -281,7 +278,7 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
             indexReader.reset();
-            List<IndexQuery> queries = indexReader.createQueries(new SearchTerms(searchParameters.query, searchParameters.compiledQueryIds), searchParameters.queryParams, new IndexSearchBudget(150));
+            List<IndexQuery> queries = indexReader.createQueries(searchContext);
 
             long start = System.nanoTime();
             for (var query : queries) {

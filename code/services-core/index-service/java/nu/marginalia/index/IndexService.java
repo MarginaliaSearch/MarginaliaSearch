@@ -5,7 +5,6 @@ import nu.marginalia.IndexLocations;
 import nu.marginalia.execution.*;
 import nu.marginalia.functions.favicon.FaviconGrpcService;
 import nu.marginalia.index.api.IndexMqEndpoints;
-import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkgraph.DomainLinks;
 import nu.marginalia.linkgraph.PartitionLinkGraphService;

@@ -8,9 +8,9 @@ import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.LanguageDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +26,21 @@ public class QueryFactory {
 
     private final QueryParser queryParser = new QueryParser();
     private final QueryExpansion queryExpansion;
+    private final LanguageConfiguration languageConfiguration;
 
 
     @Inject
-    public QueryFactory(QueryExpansion queryExpansion)
+    public QueryFactory(QueryExpansion queryExpansion, LanguageConfiguration languageConfiguration)
     {
         this.queryExpansion = queryExpansion;
+        this.languageConfiguration = languageConfiguration;
     }
 
     public ProcessedQuery createQuery(QueryParams params,
                                       @Nullable RpcResultRankingParameters rankingParams) {
+
+        LanguageDefinition languageDefinition = languageConfiguration.getLanguage(params.langIsoCode());
+
         final var query = params.humanQuery();
 
         if (query.length() > 1000) {
@@ -45,7 +50,7 @@ public class QueryFactory {
         List<String> searchTermsHuman = new ArrayList<>();
         List<String> problems = new ArrayList<>();
 
-        List<QueryToken> basicQuery = queryParser.parse(query);
+        List<QueryToken> basicQuery = queryParser.parse(languageDefinition, query);
 
         if (basicQuery.size() >= 12) {
             problems.add("Your search query is too long");
@@ -120,6 +125,9 @@ public class QueryFactory {
                 case QueryToken.QualityTerm(SpecificationLimit limit, String displayStr) -> qualityLimit = limit;
                 case QueryToken.QsTerm(String str) -> queryStrategy = parseQueryStrategy(str);
 
+                // No-op for lang term
+                case QueryToken.LangTerm(String str, String displayStr) -> {}
+
                 default -> {}
             }
         }
@@ -167,7 +175,7 @@ public class QueryFactory {
         specs.query.searchTermsPriority.addAll(params.tacitPriority());
         specs.query.searchTermsExclude.addAll(params.tacitExcludes());
 
-        return new ProcessedQuery(specs, searchTermsHuman, domain);
+        return new ProcessedQuery(specs, searchTermsHuman, domain, params.langIsoCode());
     }
 
     private void analyzeSearchTerm(List<String> problems, String str, String displayStr) {

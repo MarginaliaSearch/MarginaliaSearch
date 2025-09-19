@@ -4,6 +4,9 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.summary.heuristic.*;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
+import nu.marginalia.language.config.LanguageConfigLocation;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
@@ -12,7 +15,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -25,9 +30,9 @@ class SummaryExtractorTest {
     private SentenceExtractor setenceExtractor;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws IOException, ParserConfigurationException, SAXException {
         keywordExtractor = new DocumentKeywordExtractor();
-        setenceExtractor = new SentenceExtractor(WmsaHome.getLanguageModels());
+        setenceExtractor = new SentenceExtractor(new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental()), WmsaHome.getLanguageModels());
 
         summaryExtractor = new SummaryExtractor(255,
                 new DomFilterHeuristic(255),
@@ -37,7 +42,7 @@ class SummaryExtractorTest {
                 new FallbackHeuristic());
     }
 
-    Set<String> getImportantWords(Document doc) throws URISyntaxException {
+    Set<String> getImportantWords(Document doc) throws URISyntaxException, UnsupportedLanguageException {
         var dld = setenceExtractor.extractSentences(doc);
         var keywords = keywordExtractor.extractKeywords(dld, new LinkTexts(), new EdgeUrl(
                 "https://www.marginalia.nu/"
@@ -48,7 +53,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    public void testTheRegister() throws IOException, URISyntaxException {
+    public void testTheRegister() throws IOException, URISyntaxException, UnsupportedLanguageException {
         String html = readClassPathFile("html/theregister.html");
         var doc = Jsoup.parse(html);
 
@@ -92,7 +97,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extractSurrey() throws IOException, URISyntaxException {
+    void extractSurrey() throws IOException, URISyntaxException, UnsupportedLanguageException {
         String html = readClassPathFile("html/summarization/surrey.html");
         var doc = Jsoup.parse(html);
         String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
@@ -104,7 +109,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extractSurrey1() throws IOException, URISyntaxException {
+    void extractSurrey1() throws IOException, URISyntaxException, UnsupportedLanguageException {
         String html = readClassPathFile("html/summarization/surrey.html.1");
         var doc = Jsoup.parse(html);
         String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
@@ -115,7 +120,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extract187() throws IOException, URISyntaxException {
+    void extract187() throws IOException, URISyntaxException, UnsupportedLanguageException {
         String html = readClassPathFile("html/summarization/187.shtml");
         var doc = Jsoup.parse(html);
         String summary = summaryExtractor.extractSummary(doc, getImportantWords(doc));
@@ -126,7 +131,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    void extractMonadnock() throws IOException, URISyntaxException {
+    void extractMonadnock() throws IOException, URISyntaxException, UnsupportedLanguageException {
         String html = readClassPathFile("html/monadnock.html");
 
         var doc = Jsoup.parse(html);
@@ -138,7 +143,7 @@ class SummaryExtractorTest {
     }
 
     @Test
-    public void testWorkSet() throws IOException, URISyntaxException {
+    public void testWorkSet() throws IOException, URISyntaxException, UnsupportedLanguageException {
         var workSet = readWorkSet();
         for (Map.Entry<Path, String> entry : workSet.entrySet()) {
             final Path path = entry.getKey();

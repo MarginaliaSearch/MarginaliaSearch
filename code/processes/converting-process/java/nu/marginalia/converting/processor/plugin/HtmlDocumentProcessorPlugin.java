@@ -10,19 +10,20 @@ import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.classifier.AcceptableAds;
 import nu.marginalia.converting.processor.logic.*;
-import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecializations;
 import nu.marginalia.converting.processor.pubdate.PubDateSniffer;
+import nu.marginalia.dom.MeasureLengthVisitor;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.DocumentFormat;
@@ -55,6 +56,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final DocumentKeywordExtractor keywordExtractor;
     private final PubDateSniffer pubDateSniffer;
 
+    private final LanguageConfiguration languageConfiguration;
     private final DocumentLengthLogic documentLengthLogic;
 
     private final MetaRobotsTag metaRobotsTag;
@@ -71,7 +73,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     @Inject
     public HtmlDocumentProcessorPlugin(
             @Named("min-document-quality") Double minDocumentQuality,
-            LanguageFilter languageFilter,
+            LanguageConfiguration languageConfiguration,
             FeatureExtractor featureExtractor,
             DocumentKeywordExtractor keywordExtractor,
             PubDateSniffer pubDateSniffer,
@@ -81,8 +83,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
             HtmlProcessorSpecializations specializations)
     {
-        super(languageFilter);
-
+        this.languageConfiguration = languageConfiguration;
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.featureExtractor = featureExtractor;
@@ -105,11 +106,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
                                           Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
-            throws DisqualifiedException, URISyntaxException, IOException {
-
-        if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody(512))) {
-            throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
-        }
+            throws DisqualifiedException, URISyntaxException, IOException, UnsupportedLanguageException {
 
         Document doc = crawledDocument.parseBody();
 
@@ -150,14 +147,14 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(prunedDoc);
-
-        checkDocumentLanguage(dld);
+        final String languageIsoCode = dld.language().isoCode();
 
         var ret = new ProcessedDocumentDetails();
 
         ret.length = length;
         ret.format = format;
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
+        ret.languageIsoCode = languageIsoCode;
 
         final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
 
@@ -191,7 +188,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addFeatures(features)
                 .addFormat(format)
                 .addGenerator(generatorParts.keywords())
+                .addLanguage(languageIsoCode)
                 .build();
+
 
 
         words.addAllSyntheticTerms(tagWords);

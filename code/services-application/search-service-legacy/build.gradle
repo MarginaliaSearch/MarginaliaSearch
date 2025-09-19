@@ -35,12 +35,10 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
-    implementation project(':code:index:query')
 
     implementation project(':code:libraries:easy-lsh')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:braille-block-punch-cards')
-    implementation project(':code:libraries:term-frequency-dict')
 
     implementation project(':code:functions:live-capture:api')
     implementation project(':code:functions:math:api')

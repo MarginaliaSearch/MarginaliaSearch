@@ -37,9 +37,6 @@ include 'code:execution:api'
 include 'code:index'
 include 'code:index:api'
 include 'code:index:index-journal'
-include 'code:index:query'
-include 'code:index:index-forward'
-include 'code:index:index-reverse'
 include 'code:index:index-perftest'
 
 include 'code:libraries:array'
@@ -53,8 +50,7 @@ include 'code:libraries:guarded-regex'
 include 'code:libraries:random-write-funnel'
 include 'code:libraries:blocking-thread-pool'
 include 'code:libraries:braille-block-punch-cards'
-include 'code:libraries:language-processing'
-include 'code:libraries:term-frequency-dict'
+include 'code:functions:language-processing'
 include 'code:libraries:test-helpers'
 include 'code:libraries:domain-lock'
 
@@ -62,8 +58,6 @@ include 'code:libraries:message-queue'
 
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
-
-include 'code:processes:converting-process:ft-anchor-keywords'
 
 include 'code:processes:crawling-process:ft-crawl-blocklist'
 include 'code:processes:crawling-process:ft-link-parser'
@@ -83,21 +77,18 @@ include 'code:common:renderer'
 
 include 'code:processes:converting-process'
 include 'code:processes:converting-process:model'
-include 'code:processes:converting-process:ft-keyword-extraction'
 include 'code:processes:converting-process:ft-dom-classifier'
 
 include 'code:processes:crawling-process'
 include 'code:processes:crawling-process:model'
 
 include 'code:processes:loading-process'
-include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
 
 include 'code:processes:export-task-process'
 
 include 'code:tools:experiment-runner'
 include 'code:tools:screenshot-capture-tool'
-include 'code:tools:load-test'
 include 'code:tools:integration-test'
 include 'code:tools:browserless'
 
@@ -243,7 +234,7 @@ dependencyResolutionManagement {
             library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
 
-            library('slop', 'nu.marginalia', 'slop').version('0.0.11-SNAPSHOT')
+            library('slop', 'nu.marginalia', 'slop').version('0.0.17-SNAPSHOT')
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
             library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)

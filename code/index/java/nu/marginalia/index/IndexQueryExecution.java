@@ -3,14 +3,11 @@ package nu.marginalia.index;
 import io.prometheus.client.Gauge;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.index.model.ResultRankingContext;
-import nu.marginalia.index.model.SearchParameters;
-import nu.marginalia.index.model.SearchTerms;
-import nu.marginalia.index.query.IndexQuery;
-import nu.marginalia.index.query.IndexSearchBudget;
+import nu.marginalia.index.model.CombinedDocIdList;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.reverse.query.IndexQuery;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.skiplist.SkipListConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,13 +32,16 @@ public class IndexQueryExecution {
     // operations per lookup and again optimize tail latency
     private static final int lookupBatchSize = SkipListConstants.BLOCK_SIZE / 16;
 
-    private static final ExecutorService threadPool = new ThreadPoolExecutor(indexValuationThreads, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+    private static final ExecutorService threadPool =
+            new ThreadPoolExecutor(indexValuationThreads, 256,
+                    60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
     private final String nodeName;
     private final IndexResultRankingService rankingService;
 
-    private final ResultRankingContext rankingContext;
+    private final SearchContext rankingContext;
     private final List<IndexQuery> queries;
     private final IndexSearchBudget budget;
     private final ResultPriorityQueue resultHeap;
@@ -84,21 +84,21 @@ public class IndexQueryExecution {
 
 
 
-    public IndexQueryExecution(SearchParameters params,
-                               int serviceNode,
+    public IndexQueryExecution(CombinedIndexReader currentIndex,
                                IndexResultRankingService rankingService,
-                               CombinedIndexReader currentIndex) {
+                               SearchContext rankingContext,
+                               int serviceNode) {
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
+        this.rankingContext = rankingContext;
 
-        resultHeap = new ResultPriorityQueue(params.fetchSize);
+        resultHeap = new ResultPriorityQueue(rankingContext.fetchSize);
 
-        budget = params.budget;
-        limitByDomain = params.limitByDomain;
-        limitTotal = params.limitTotal;
+        budget = rankingContext.budget;
+        limitByDomain = rankingContext.limitByDomain;
+        limitTotal = rankingContext.limitTotal;
 
-        rankingContext = ResultRankingContext.create(currentIndex, params);
-        queries = currentIndex.createQueries(new SearchTerms(params.query, params.compiledQueryIds), params.queryParams, budget);
+        queries = currentIndex.createQueries(rankingContext);
 
         lookupCountdown = new CountDownLatch(queries.size());
         preparationCountdown = new CountDownLatch(indexPreparationThreads * 2);
@@ -200,7 +200,7 @@ public class IndexQueryExecution {
                 if (docIds == null) continue;
 
                 long st = System.nanoTime();
-                var preparedData = rankingService.prepareRankingData(rankingContext, docIds, budget);
+                var preparedData = rankingService.prepareRankingData(rankingContext, docIds);
                 long et = System.nanoTime();
                 metric_index_prep_time_s
                         .labels(nodeName)
@@ -228,7 +228,7 @@ public class IndexQueryExecution {
 
                 try (rankingData) {
                     long st =  System.nanoTime();
-                    resultHeap.addAll(rankingService.rankResults(budget, rankingContext, rankingData, false));
+                    resultHeap.addAll(rankingService.rankResults(rankingContext, rankingData, false));
                     long et = System.nanoTime();
 
                     metric_index_rank_time_s

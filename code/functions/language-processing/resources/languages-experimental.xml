@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<!DOCTYPE languages [
+        <!ELEMENT languages (language*,resource*)>
+        <!ELEMENT language (keywordHash,unicodeNormalization,stemmer,sentenceDetector,rdrTagger?,ngrams*)>
+
+        <!ELEMENT resource EMPTY>
+        <!ATTLIST resource
+                id ID #REQUIRED
+                md5 CDATA #REQUIRED
+                path CDATA #REQUIRED
+                href CDATA #REQUIRED
+                >
+
+        <!ATTLIST language
+                isoCode ID #REQUIRED
+                name CDATA #REQUIRED
+                display (rtl|ltr) #REQUIRED
+                disabled (true|false) "false"
+                >
+
+        <!ELEMENT unicodeNormalization EMPTY>
+        <!ATTLIST unicodeNormalization
+            algorithm (minimal|e-accents|german|maximal-latin) #REQUIRED
+            >
+
+        <!ELEMENT stemmer (pospattern?)>
+        <!ATTLIST stemmer
+                algorithm (porter|snowball|none) #REQUIRED
+                variant CDATA #IMPLIED
+                >
+
+        <!ELEMENT keywordHash (#PCDATA)>
+        <!ATTLIST keywordHash
+                algorithm (asciish|utf8) #REQUIRED
+                >
+
+        <!ELEMENT rdrTagger EMPTY>
+        <!ATTLIST rdrTagger
+                dictId IDREF #REQUIRED
+                rdrId IDREF #REQUIRED
+                >
+
+        <!ELEMENT ngrams (pospattern*)>
+        <!ATTLIST ngrams type (noun|name|subject-suffix|title|keyword) #REQUIRED>
+
+        <!ELEMENT pospattern (#PCDATA)>
+
+        <!ELEMENT sentenceDetector EMPTY>
+        <!ATTLIST sentenceDetector algorithm (none|opennlp) #REQUIRED>
+]>
+
+<languages>
+    <language isoCode="en" name="English" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="porter">
+            <pospattern>!(IN TO CC DT)</pospattern>
+        </stemmer>
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="maximal-latin" />
+        <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
+        <ngrams type="name">
+            <pospattern>NNP*</pospattern>
+            <pospattern>NNP* NNP*</pospattern>
+            <pospattern>NNP* (NNP* IN DT CC) NNP*</pospattern>
+            <pospattern>NNP* (NNP* IN DT CC) (NNP* IN DT CC) NNP*</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>VBG</pospattern>
+            <pospattern>RB VBG</pospattern>
+            <pospattern>(NNP* JJ)</pospattern>
+            <pospattern>(NN* JJ) NN*</pospattern>
+            <pospattern>(NN* JJ) (NN* JJ) NN*</pospattern>
+            <pospattern>(NN* JJ) (NN* JJ) (NN* JJ) NN*</pospattern>
+            <pospattern>(NNP* JJ) (NNP* IN TO CC) NNP*</pospattern>
+            <pospattern>(NNP* JJ) (NNP* IN TO CC) DT NNP*</pospattern>
+            <pospattern>(NNP* JJ) (NNP* IN TO CC) (NNP* IN TO CC) NNP*</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(VBD VBZ)</pospattern>
+            <pospattern>MD VB</pospattern>
+            <pospattern>VBZ DT</pospattern>
+            <pospattern>(DT RB VBD VBP VBN JJ*) (VBD VBG VBP VBN VBZ)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>!(CC IN DT TO)</pospattern>
+            <pospattern>!CC !(IN DT TO)</pospattern>
+            <pospattern>!CC * !(IN DT TO)</pospattern>
+            <pospattern>!CC * * !(IN DT TO)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <!-- length = 1 -->
+            <pospattern>(N* VBG VBN JJ* R* VBG)</pospattern>
+            <!-- length = 2 -->
+            <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
+            <pospattern>(N* VBG VBN) CD</pospattern>
+            <!-- length = 3 -->
+            <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
+            <pospattern>NNP* (IN TO CC NNP*) (N* VBG VBN)</pospattern>
+            <pospattern>(N* VBG VBN) (N* VBG VBN) CD</pospattern>
+            <!-- length = 4 -->
+            <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
+            <pospattern>NNP* (DT IN TO CC) (IN TO CC) NNP*</pospattern>
+        </ngrams>
+
+    </language>
+    <language isoCode="sv" name="Swedish" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="SWEDISH" />
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="e-accents" />
+        <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+        </ngrams>
+    </language>
+    <language isoCode="fr" name="French" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="FRENCH" />
+        <sentenceDetector algorithm="opennlp"/>
+    </language>
+    <language isoCode="de" name="German" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <stemmer algorithm="snowball" variant="FRENCH" />
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="german" />
+    </language>
+    <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
+    <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
+    <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-sv" md5="" path="rdr/Swedish.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.RDR" />
+
+</languages>

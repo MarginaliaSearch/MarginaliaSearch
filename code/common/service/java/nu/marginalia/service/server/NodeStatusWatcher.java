@@ -66,7 +66,7 @@ public class NodeStatusWatcher {
             fileStorageService.createStorageBase("Crawl Data", Path.of("/storage"), nodeId, FileStorageBaseType.STORAGE);
             fileStorageService.createStorageBase("Work Area", Path.of("/work"), nodeId, FileStorageBaseType.WORK);
 
-            persistence.sendNewMessage("executor-service:"+nodeId,
+            persistence.sendNewMessage("index-service:"+nodeId,
                     null,
                     null,
                     "FIRST-BOOT",

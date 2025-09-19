@@ -6,16 +6,15 @@ import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
+import nu.marginalia.index.CombinedIndexReader;
+import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
-import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.index.index.StatefulIndex;
+import nu.marginalia.index.model.PhraseConstraintGroupList;
 import nu.marginalia.index.model.QueryParams;
-import nu.marginalia.index.model.ResultRankingContext;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.results.model.PhraseConstraintGroupList;
-import nu.marginalia.index.results.model.QuerySearchTerms;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
@@ -40,12 +39,12 @@ public class IndexResultScoreCalculator {
     private final QueryParams queryParams;
 
     private final DomainRankingOverrides domainRankingOverrides;
-    private final ResultRankingContext rankingContext;
+    private final SearchContext rankingContext;
     private final CompiledQuery<String> compiledQuery;
 
     public IndexResultScoreCalculator(StatefulIndex statefulIndex,
                                       DomainRankingOverrides domainRankingOverrides,
-                                      ResultRankingContext rankingContext)
+                                      SearchContext rankingContext)
     {
         this.index = statefulIndex.get();
         this.domainRankingOverrides = domainRankingOverrides;
@@ -58,7 +57,7 @@ public class IndexResultScoreCalculator {
     @Nullable
     public SearchResultItem calculateScore(@Nullable DebugRankingFactors debugRankingFactors,
                                            long combinedId,
-                                           QuerySearchTerms searchTerms,
+                                           SearchContext rankingContext,
                                            long[] wordFlags,
                                            CodedSequence[] positions,
                                            DocumentSpans spans)
@@ -106,23 +105,23 @@ public class IndexResultScoreCalculator {
             }
         }
 
-        var params = rankingContext.params;
+        var params = this.rankingContext.params;
 
         double documentBonus = calculateDocumentBonus(docMetadata, htmlFeatures, docSize, params, debugRankingFactors);
 
-        VerbatimMatches verbatimMatches = new VerbatimMatches(decodedPositions, searchTerms.phraseConstraints, spans);
-        UnorderedMatches unorderedMatches = new UnorderedMatches(decodedPositions, compiledQuery, rankingContext.regularMask, spans);
+        VerbatimMatches verbatimMatches = new VerbatimMatches(decodedPositions, rankingContext.phraseConstraints, spans);
+        UnorderedMatches unorderedMatches = new UnorderedMatches(decodedPositions, compiledQuery, this.rankingContext.regularMask, spans);
 
-        float proximitiyFac = getProximitiyFac(decodedPositions, searchTerms.phraseConstraints, verbatimMatches, unorderedMatches, spans);
+        float proximitiyFac = getProximitiyFac(decodedPositions, rankingContext.phraseConstraints, verbatimMatches, unorderedMatches, spans);
 
         double score_firstPosition = params.getTcfFirstPositionWeight() * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
         double score_proximity = params.getTcfProximityWeight() * proximitiyFac;
         double score_bM25 = params.getBm25Weight()
-                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
+                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, this.rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
         double score_bFlags = params.getBm25Weight()
-                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
+                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), this.rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
@@ -147,8 +146,8 @@ public class IndexResultScoreCalculator {
             debugRankingFactors.addDocumentFactor("score.proximity", Double.toString(score_proximity));
             debugRankingFactors.addDocumentFactor("score.firstPosition", Double.toString(score_firstPosition));
 
-            for (int i = 0; i < searchTerms.termIdsAll.size(); i++) {
-                long termId = searchTerms.termIdsAll.at(i);
+            for (int i = 0; i < rankingContext.termIdsAll.size(); i++) {
+                long termId = rankingContext.termIdsAll.at(i);
 
                 var flags = wordFlagsQuery.at(i);
 
@@ -183,7 +182,7 @@ public class IndexResultScoreCalculator {
                 docMetadata,
                 htmlFeatures,
                 score,
-                calculatePositionsMask(decodedPositions, searchTerms.phraseConstraints)
+                calculatePositionsMask(decodedPositions, rankingContext.phraseConstraints)
         );
     }
 

@@ -6,16 +6,21 @@ import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.string.EnumColumn;
 import nu.marginalia.slop.desc.StorageType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public record IndexJournalPage(Path baseDir, int page) {
     public static IntColumn features = new IntColumn("features", StorageType.PLAIN);
     public static IntColumn size = new IntColumn("size", StorageType.PLAIN);
+
     public static LongColumn combinedId = new LongColumn("combinedId", StorageType.PLAIN);
     public static LongColumn documentMeta = new LongColumn("documentMeta", StorageType.PLAIN);
+
+    public static EnumColumn languageIsoCode = new EnumColumn("languageIsoCode", StandardCharsets.US_ASCII, StorageType.PLAIN);
 
     public static LongArrayColumn termIds = new LongArrayColumn("termIds", StorageType.ZSTD);
     public static ByteArrayColumn termMeta = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
@@ -23,6 +28,7 @@ public record IndexJournalPage(Path baseDir, int page) {
 
     public static ByteArrayColumn spanCodes = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
     public static VarintCodedSequenceArrayColumn spans = new VarintCodedSequenceArrayColumn("spans", StorageType.ZSTD);
+
 
     public IndexJournalPage {
         if (!baseDir.toFile().isDirectory()) {
@@ -46,6 +52,9 @@ public record IndexJournalPage(Path baseDir, int page) {
         return size.open(table);
     }
 
+    public EnumColumn.Reader openLanguageIsoCode(SlopTable table) throws IOException {
+        return languageIsoCode.open(table);
+    }
 
     public LongArrayColumn.Reader openTermIds(SlopTable table) throws IOException {
         return termIds.open(table);

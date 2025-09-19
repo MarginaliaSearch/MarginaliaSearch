@@ -12,7 +12,6 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.*;
 import nu.marginalia.search.results.UrlDeduplicator;
 import nu.marginalia.search.svc.SearchQueryCountService;
@@ -141,6 +140,7 @@ public class SearchOperator {
                 .problems(problems)
                 .evalResult(evalResult)
                 .results(clusteredResults)
+                .languageIsoCode(userParams.languageIsoCode())
                 .filters(new SearchFilters(userParams))
                 .focusDomain(focusDomain)
                 .focusDomainId(focusDomainId)

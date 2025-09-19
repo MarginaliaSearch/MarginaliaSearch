@@ -3,7 +3,7 @@ package nu.marginalia.index.results;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
-import nu.marginalia.index.model.ResultRankingContext;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.model.idx.WordFlags;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public class TermFlagsGraphVisitor implements CqExpression.DoubleVisitor {
     public TermFlagsGraphVisitor(double k1,
                                  CqDataLong wordMetaData,
                                  float[] counts,
-                                 ResultRankingContext ctx) {
+                                 SearchContext ctx) {
         this.k1 = k1;
         this.counts = counts;
         this.docCount = ctx.termFreqDocCount();

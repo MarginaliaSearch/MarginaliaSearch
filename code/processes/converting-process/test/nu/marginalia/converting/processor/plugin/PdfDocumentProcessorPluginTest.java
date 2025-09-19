@@ -9,7 +9,8 @@ import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.converting.processor.summary.heuristic.*;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
-import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.config.LanguageConfigLocation;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -35,8 +36,8 @@ class PdfDocumentProcessorPluginTest {
     static void setUpBeforeClass() throws Exception {
         var lm = WmsaHome.getLanguageModels();
         plugin = new PdfDocumentProcessorPlugin(255,
-                new LanguageFilter(lm),
-                new ThreadLocalSentenceExtractorProvider(lm),
+                new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()),
+                new ThreadLocalSentenceExtractorProvider(new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()), lm),
                 new DocumentKeywordExtractor(new TermFrequencyDict(lm)),
                 new DocumentLengthLogic(100),
                 new DefaultSpecialization(new SummaryExtractor(

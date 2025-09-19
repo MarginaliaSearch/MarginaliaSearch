@@ -2,7 +2,7 @@ package nu.marginalia.index.results;
 
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqExpression;
-import nu.marginalia.index.model.ResultRankingContext;
+import nu.marginalia.index.model.SearchContext;
 
 import java.util.BitSet;
 import java.util.List;
@@ -26,7 +26,7 @@ public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
     public Bm25GraphVisitor(double k1, double b,
                             float[] counts,
                             int length,
-                            ResultRankingContext ctx) {
+                            SearchContext ctx) {
         this.length = length;
 
         this.k1 = k1;

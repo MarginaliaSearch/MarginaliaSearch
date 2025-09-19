@@ -1,7 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser.token;
 
 
-import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 
 public sealed interface QueryToken {
     String str();
@@ -12,6 +12,7 @@ public sealed interface QueryToken {
     record ExcludeTerm(String str, String displayStr) implements QueryToken {}
     record AdviceTerm(String str, String displayStr) implements QueryToken {}
     record PriorityTerm(String str, String displayStr) implements QueryToken {}
+    record LangTerm(String str, String displayStr) implements QueryToken {}
 
     record QualityTerm(SpecificationLimit limit, String displayStr) implements QueryToken {
         public String str() { return displayStr; }

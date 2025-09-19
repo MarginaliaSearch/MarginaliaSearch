@@ -2,7 +2,6 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.searchset.SearchSetsService;
 
 import javax.annotation.CheckReturnValue;

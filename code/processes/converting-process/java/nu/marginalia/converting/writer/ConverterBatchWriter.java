@@ -4,6 +4,7 @@ import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -11,14 +12,16 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.model.processed.SlopDomainLinkRecord;
 import nu.marginalia.model.processed.SlopDomainRecord;
-import nu.marginalia.sequence.VarintCodedSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.Set;
 
 /** Writer for a single batch of converter parquet files */
 public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriterIf {
@@ -100,17 +103,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                 continue;
             }
 
-            var wb = document.words.build();
-
-            List<VarintCodedSequence> spanSequences = new ArrayList<>(wb.spans.size());
-            byte[] spanCodes = new byte[wb.spans.size()];
-
-            for (int i = 0; i < wb.spans.size(); i++) {
-                var span = wb.spans.get(i);
-
-                spanCodes[i] = span.code();
-                spanSequences.add(span.spans());
-            }
+            DocumentKeywords wb = document.words.build();
 
             documentWriter.write(new SlopDocumentRecord(
                     domainName,
@@ -126,12 +119,13 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     document.details.hashCode,
                     (float) document.details.quality,
                     document.details.metadata.encode(),
+                    document.details.languageIsoCode,
                     document.details.pubYear,
-                    wb.keywords,
-                    wb.metadata,
-                    wb.positions,
-                    spanCodes,
-                    spanSequences
+                    wb.keywords(),
+                    wb.metadata(),
+                    wb.positions(),
+                    wb.spanCodes(),
+                    wb.spanSequences()
             ));
         }
 

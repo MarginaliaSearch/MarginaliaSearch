@@ -11,8 +11,9 @@ import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
@@ -39,6 +40,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
     private final int maxTitleLength;
     private final DocumentKeywordExtractor keywordExtractor;
+    private final LanguageConfiguration languageConfiguration;
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
     private final DefaultSpecialization defaultSpecialization;
@@ -48,14 +50,14 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
     @Inject
     public PdfDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
-                                      LanguageFilter languageFilter,
+                                      LanguageConfiguration languageConfiguration,
                                       ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                       DocumentKeywordExtractor keywordExtractor,
                                       DocumentLengthLogic documentLengthLogic,
                                       DefaultSpecialization defaultSpecialization)
 
     {
-        super(languageFilter);
+        this.languageConfiguration = languageConfiguration;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
@@ -79,13 +81,9 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
     public DetailsWithWords createDetails(CrawledDocument crawledDocument,
                                           LinkTexts linkTexts,
                                           Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass)
-            throws DisqualifiedException, URISyntaxException, IOException {
+            throws DisqualifiedException, URISyntaxException, IOException, UnsupportedLanguageException {
 
         String documentBody = crawledDocument.documentBody();
-
-        if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(documentBody)) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
-        }
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
@@ -100,11 +98,11 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(doc);
 
-        checkDocumentLanguage(dld);
-
         if (!lenientProcessing && !documentLengthLogic.validateLength(dld, 1.0)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
         }
+
+        final String languageIsoCode = dld.language().isoCode();
 
         var ret = new ProcessedDocumentDetails();
 
@@ -112,6 +110,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
 
         ret.format = DocumentFormat.PDF;
         ret.title = StringUtils.truncate(defaultSpecialization.getTitle(doc, dld, url.toString()), maxTitleLength);
+        ret.languageIsoCode = languageIsoCode;
 
         ret.quality = -5;
 
@@ -141,6 +140,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
                 .build();
 
         words.addAllSyntheticTerms(tagWords);
+        words.addSyntheticTerm("lang:" + languageIsoCode);
 
         if (pubDate.hasYear()) {
             ret.pubYear = pubDate.year();

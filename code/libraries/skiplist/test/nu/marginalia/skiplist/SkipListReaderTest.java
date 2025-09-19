@@ -62,7 +62,7 @@ public class SkipListReaderTest {
             LongQueryBuffer lqb = new LongQueryBuffer(20);
             while (!reader.atEnd()) {
                 System.out.println(reader.estimateSize());
-                System.out.println(reader.getData(lqb));
+                System.out.println(reader.getKeys(lqb));
                 System.out.println(Arrays.toString(lqb.copyData()));
                 lqb.zero();
             }
@@ -75,7 +75,7 @@ public class SkipListReaderTest {
             LongQueryBuffer lqb = new LongQueryBuffer(40);
             while (!reader.atEnd()) {
                 System.out.println(reader.estimateSize());
-                System.out.println(reader.getData(lqb));
+                System.out.println(reader.getKeys(lqb));
                 System.out.println(Arrays.toString(lqb.copyData()));
                 if (!lqb.fitsMore()) {
                     lqb.zero();
@@ -165,6 +165,7 @@ public class SkipListReaderTest {
 
             long[] keys = keysSet.toLongArray();
 
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -215,6 +216,7 @@ public class SkipListReaderTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -261,6 +263,7 @@ public class SkipListReaderTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -287,7 +290,7 @@ public class SkipListReaderTest {
 
     @Tag("slow")
     @Test
-    public void testGetDataFuzz() throws IOException {
+    public void testGetKeysFuzz() throws IOException {
 
         for (int seed = 0; seed < 256; seed++) {
             System.out.println("Seed: " + seed);
@@ -320,6 +323,7 @@ public class SkipListReaderTest {
             long[] keys = keysSet.toLongArray();
 
             long blockStart;
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -381,6 +385,7 @@ public class SkipListReaderTest {
                 keysForBlocks.add(keys);
             }
             List<Long> offsets = new ArrayList<>();
+            Files.delete(docsFile);
             try (var writer = new SkipListWriter(docsFile);
                  Arena arena = Arena.ofConfined()
             ) {
@@ -417,7 +422,7 @@ public class SkipListReaderTest {
     }
 
     @Test
-    public void getData2() throws IOException {
+    public void getKeys2() throws IOException {
         long[] keys = new long[] { 100,101 };
         long[] vals = new long[] { 50,51 };
 
@@ -430,7 +435,7 @@ public class SkipListReaderTest {
         try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             LongQueryBuffer lqb = new LongQueryBuffer(4);
-            reader.getData(lqb);
+            reader.getKeys(lqb);
             System.out.println(Arrays.toString(lqb.copyData()));
         }
     }
@@ -461,7 +466,7 @@ public class SkipListReaderTest {
             var reader = new SkipListReader(pool, 4104);
             long[] queryKeys = new long[] { 100 };
             var lqb = new LongQueryBuffer(32);
-            reader.getData(lqb);
+            reader.getKeys(lqb);
             System.out.println(Arrays.toString(lqb.copyData()));
 
 

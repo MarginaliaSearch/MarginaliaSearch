@@ -1,9 +1,9 @@
 package nu.marginalia.functions.searchquery.query_parser;
 
+import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.language.encoding.AsciiFlattener;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.util.transform_list.TransformList;
 
 import java.util.ArrayList;
@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 public class QueryParser {
 
-    public List<QueryToken> parse(String query) {
-        List<QueryToken> basicTokens = tokenizeQuery(query);
+    public List<QueryToken> parse(LanguageDefinition languageDefinition, String query) {
+        List<QueryToken> basicTokens = tokenizeQuery(languageDefinition, query);
 
         TransformList<QueryToken> list = new TransformList<>(basicTokens);
 
@@ -30,10 +30,10 @@ public class QueryParser {
 
     private static final Pattern noisePattern = Pattern.compile("[,\\s]");
 
-    public List<QueryToken> tokenizeQuery(String rawQuery) {
+    public List<QueryToken> tokenizeQuery(LanguageDefinition languageDefinition, String rawQuery) {
         List<QueryToken> tokens = new ArrayList<>();
 
-        String query = AsciiFlattener.flattenUnicode(rawQuery);
+        String query = languageDefinition.unicodeNormalization().flattenUnicode(rawQuery);
         query = noisePattern.matcher(query).replaceAll(" ");
 
         int chr = -1;
@@ -222,6 +222,8 @@ public class QueryParser {
             entity.replace(new QueryToken.QualityTerm(limit, str));
         } else if (str.startsWith("near:")) {
             entity.replace(new QueryToken.NearTerm(str.substring(5)));
+        } else if (str.startsWith("lang:")) {
+            entity.replace(new QueryToken.LangTerm(str.substring(5), str));
         } else if (str.startsWith("year") && str.matches("year[=><]\\d{4}")) {
             var limit = parseSpecificationLimit(str.substring(4));
             entity.replace(new QueryToken.YearTerm(limit, str));

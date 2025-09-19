@@ -8,3 +8,10 @@ lombok.config
 Dockerfile
 run
 jte-classes
+.classpath
+.project
+.settings
+.factorypath
+bin/
+*.log
+*.hprof

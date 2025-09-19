@@ -12,7 +12,7 @@ import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
@@ -32,6 +32,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     private final int maxTitleLength;
     private final DocumentKeywordExtractor keywordExtractor;
     private final PlainTextLogic plainTextLogic = new PlainTextLogic();
+    private final LanguageConfiguration languageConfiguration;
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
 
@@ -40,13 +41,13 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
     @Inject
     public PlainTextDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
-                                            LanguageFilter languageFilter,
+                                            LanguageConfiguration languageConfiguration,
                                             ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                             DocumentKeywordExtractor keywordExtractor,
                                             DocumentLengthLogic documentLengthLogic
                                             )
     {
-        super(languageFilter);
+        this.languageConfiguration = languageConfiguration;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
@@ -73,19 +74,14 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         String documentBody = crawledDocument.documentBody();
 
-        if (!lenientProcessing && languageFilter.isBlockedUnicodeRange(documentBody)) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
-        }
-
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
         var dld = sentenceExtractorProvider.get().extractSentences(documentBody, "");
-
-        checkDocumentLanguage(dld);
-
         if (!lenientProcessing && !documentLengthLogic.validateLength(dld, 1.0)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
         }
+
+        final String languageIsoCode = dld.language().isoCode();
 
         var ret = new ProcessedDocumentDetails();
 
@@ -95,6 +91,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         ret.format = DocumentFormat.PLAIN;
         ret.title = StringUtils.truncate(plainTextLogic.getTitle(url, firstFewLines), maxTitleLength);
+        ret.languageIsoCode = languageIsoCode;
 
         ret.quality = -1;
 
@@ -116,6 +113,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
                 .addUrl(url)
                 .addFeatures(ret.features)
                 .addFormat(ret.format)
+                .addLanguage(languageIsoCode)
                 .build();
 
         words.addAllSyntheticTerms(tagWords);

@@ -122,6 +122,7 @@ public class ApiService extends SparkService {
         int domainCount = intParam(request, "dc", 2);
         int index = intParam(request, "index", 3);
         int nsfw = intParam(request, "nsfw", 1);
+        String langIsoCode = strParam(request, "lang", "en");
 
         NsfwFilterTier nsfwFilterTier;
         try {
@@ -138,7 +139,7 @@ public class ApiService extends SparkService {
                 .labels(license.key)
                 .time(() ->
                         searchOperator
-                        .query(query, count, domainCount, index, nsfwFilterTier)
+                        .query(query, count, domainCount, index, nsfwFilterTier, langIsoCode)
                         .withLicense(license.getLicense())
                 );
     }
@@ -160,5 +161,11 @@ public class ApiService extends SparkService {
         }
     }
 
+    private String strParam(Request request, String name, String defaultValue) {
+        String value = request.queryParams(name);
+        if (value == null || value.isBlank())
+            return defaultValue;
+        return value;
+    }
 
 }

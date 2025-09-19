@@ -1,8 +1,0 @@
-# Term Frequency Dictionary
-
-This dictionary is used by various parts of the system to evaluate for example 
-the TF-IDF score of a keyword.
-
-## Central Classes
-
-* [TermFrequencyDict](java/nu/marginalia/term_frequency_dict/TermFrequencyDict.java)

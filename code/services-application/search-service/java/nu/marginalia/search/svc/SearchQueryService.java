@@ -7,27 +7,46 @@ import io.jooby.annotation.Path;
 import io.jooby.annotation.QueryParam;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.*;
-import nu.marginalia.search.model.SearchProfile;
+import nu.marginalia.search.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class SearchQueryService {
 
     private final WebsiteUrl websiteUrl;
     private final SearchErrorPageService errorPageService;
-    private final CommandEvaluator searchCommandEvaulator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final List<SearchCommandInterface> specialCommands = new ArrayList<>();
+    private final SearchCommand defaultCommand;
 
     @Inject
     public SearchQueryService(
             WebsiteUrl websiteUrl,
             SearchErrorPageService errorPageService,
-            CommandEvaluator searchCommandEvaulator) {
+            BrowseRedirectCommand redirectCommand,
+            ConvertCommand convertCommand,
+            DefinitionCommand definitionCommand,
+            BangCommand bangCommand,
+            LangCommand langCommand,
+            SiteRedirectCommand siteRedirectCommand,
+            SearchCommand searchCommand
+    ) {
         this.websiteUrl = websiteUrl;
         this.errorPageService = errorPageService;
-        this.searchCommandEvaulator = searchCommandEvaulator;
+
+        specialCommands.add(redirectCommand);
+        specialCommands.add(convertCommand);
+        specialCommands.add(definitionCommand);
+        specialCommands.add(bangCommand);
+        specialCommands.add(langCommand);
+        specialCommands.add(siteRedirectCommand);
+
+        defaultCommand = searchCommand;
     }
 
     @GET
@@ -39,6 +58,7 @@ public class SearchQueryService {
             @QueryParam String recent,
             @QueryParam String searchTitle,
             @QueryParam String adtech,
+            @QueryParam String lang,
             @QueryParam Integer page
     ) {
         try {
@@ -49,10 +69,17 @@ public class SearchQueryService {
                     SearchRecentParameter.parse(recent),
                     SearchTitleParameter.parse(searchTitle),
                     SearchAdtechParameter.parse(adtech),
+                    Objects.requireNonNullElse(lang, "en"),
                     false,
                     Objects.requireNonNullElse(page,1));
 
-            return searchCommandEvaulator.eval(parameters);
+            for (var cmd : specialCommands) {
+                var maybe = cmd.process(parameters);
+                if (maybe.isPresent())
+                    return maybe.get();
+            }
+
+            return defaultCommand.process(parameters).orElseThrow();
         }
         catch (Exception ex) {
             logger.error("Error", ex);

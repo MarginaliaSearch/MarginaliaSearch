@@ -1,7 +1,6 @@
 package nu.marginalia.search.model;
 
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
 
@@ -15,9 +14,12 @@ public class DecoratedSearchResults {
     private final List<String> problems;
     private final String evalResult;
 
+    private final String languageIsoCode;
+
     public DecoratedSearchResults(SearchParameters params,
                                   List<String> problems,
                                   String evalResult,
+                                  String languageIsoCode,
                                   List<ClusteredUrlDetails> results,
                                   String focusDomain,
                                   int focusDomainId,
@@ -26,6 +28,7 @@ public class DecoratedSearchResults {
         this.params = params;
         this.problems = problems;
         this.evalResult = evalResult;
+        this.languageIsoCode = languageIsoCode;
         this.results = results;
         this.focusDomain = focusDomain;
         this.focusDomainId = focusDomainId;
@@ -41,6 +44,10 @@ public class DecoratedSearchResults {
 
     public SearchParameters getParams() {
         return params;
+    }
+
+    public String getLanguageIsoCode() {
+        return languageIsoCode;
     }
 
     public List<String> getProblems() {
@@ -138,13 +145,20 @@ public class DecoratedSearchResults {
         private int focusDomainId;
         private SearchFilters filters;
         private List<ResultsPage> resultPages;
+        private String languageIsoCode;
         private WebsiteUrl websiteUrl;
 
         DecoratedSearchResultsBuilder() {
         }
 
+
         public DecoratedSearchResultsBuilder params(SearchParameters params) {
             this.params = params;
+            return this;
+        }
+
+        public DecoratedSearchResultsBuilder languageIsoCode(String languageIsoCode) {
+            this.languageIsoCode = languageIsoCode;
             return this;
         }
 
@@ -184,7 +198,7 @@ public class DecoratedSearchResults {
         }
 
         public DecoratedSearchResults build() {
-            return new DecoratedSearchResults(this.params, this.problems, this.evalResult, this.results, this.focusDomain, this.focusDomainId, this.filters, this.resultPages);
+            return new DecoratedSearchResults(this.params, this.problems, this.evalResult, this.languageIsoCode, this.results, this.focusDomain, this.focusDomainId, this.filters, this.resultPages);
         }
     }
 }

@@ -83,7 +83,8 @@ public class SearchToBanService {
                         .build()
                 ,
                 "NONE",
-                NsfwFilterTier.OFF
+                NsfwFilterTier.OFF,
+                "en"
         ));
     }
 }

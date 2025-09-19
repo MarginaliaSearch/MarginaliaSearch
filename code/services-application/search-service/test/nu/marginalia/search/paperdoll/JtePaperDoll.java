@@ -6,6 +6,7 @@ import gg.jte.TemplateEngine;
 import gg.jte.output.StringOutput;
 import gg.jte.resolve.DirectoryCodeResolver;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.rendering.MockedSearchResults;
 import nu.marginalia.search.svc.SearchFrontPageService;
@@ -25,6 +26,8 @@ public class JtePaperDoll {
     final CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(".").toAbsolutePath().resolve("resources/jte"));
     final TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
     final StaticResources staticResources = new StaticResources();
+    LanguageConfiguration languageConfiguration;
+
     private String render(String template, Object obj) {
         var str = new StringOutput();
         templateEngine.render(template, obj, str);
@@ -44,10 +47,11 @@ public class JtePaperDoll {
     }
 
     @Test
-    public void searchResults() {
+    public void searchResults() throws Exception {
         if (!Boolean.getBoolean("runPaperDoll")) {
             return;
         }
+        languageConfiguration = new LanguageConfiguration();
 
         System.setProperty("test-env", "true");
         System.out.println(Path.of(".").toAbsolutePath());
@@ -64,7 +68,7 @@ public class JtePaperDoll {
         });
         Spark.get("/",
                 (rq, rs) -> MockedSearchResults.mockRegularSearchResults(),
-                ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH))
+                ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH, "languageDefinitions", languageConfiguration.languagesMap()))
         );
         Spark.get("/site-focus",
                 (rq, rs) -> MockedSearchResults.mockSiteFocusResults(),
@@ -72,7 +76,7 @@ public class JtePaperDoll {
         );
         Spark.get("/errors",
                 (rq, rs) ->  MockedSearchResults.mockErrorData(),
-                ret -> this.render("serp/error.jte", Map.of("model", ret, "navbar", NavbarModel.LIMBO))
+                ret -> this.render("serp/error.jte", Map.of("model", ret, "navbar", NavbarModel.LIMBO, "languageDefinitions", languageConfiguration.languagesMap()))
         );
         Spark.get("/first",
                 (rq, rs) ->  new Object(),

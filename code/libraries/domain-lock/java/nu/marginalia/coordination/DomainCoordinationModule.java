@@ -12,6 +12,11 @@ public class DomainCoordinationModule extends AbstractModule {
     }
 
     public void configure() {
-        bind(DomainCoordinator.class).to(ZookeeperDomainCoordinator.class);
+        if (Boolean.getBoolean("system.zookeeperDomainCoordination")) {
+            bind(DomainCoordinator.class).to(ZookeeperDomainCoordinator.class);
+        }
+        else {
+            bind(DomainCoordinator.class).to(LocalDomainCoordinator.class);
+        }
     }
 }

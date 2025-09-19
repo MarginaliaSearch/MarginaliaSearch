@@ -6,8 +6,7 @@ import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.language.filter.LanguageFilter;
-import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -22,20 +21,13 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractDocumentProcessorPlugin {
-    protected LanguageFilter languageFilter;
-    public AbstractDocumentProcessorPlugin(LanguageFilter languageFilter) {
-        this.languageFilter = languageFilter;
-    }
-
-    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, LinkTexts linkTexts, Set<DomSampleClassification> domSampleClassifications, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException, IOException;
+    public abstract DetailsWithWords createDetails(
+            CrawledDocument crawledDocument,
+            LinkTexts linkTexts,
+            Set<DomSampleClassification> domSampleClassifications,
+            DocumentClass documentClass)
+            throws DisqualifiedException, UnsupportedLanguageException,  URISyntaxException, IOException;
     public abstract boolean isApplicable(CrawledDocument doc);
-
-    protected void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {
-        double languageAgreement = languageFilter.dictionaryAgreement(dld);
-        if (languageAgreement < 0.1) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
-        }
-    }
 
     protected static class MetaTagsBuilder {
         private final Set<String> tagWords = new HashSet<>();
@@ -70,6 +62,20 @@ public abstract class AbstractDocumentProcessorPlugin {
             for (var generator : generators) {
                 add("generator", generator);
             }
+
+            return this;
+        }
+
+        public MetaTagsBuilder addLanguage(String language) {
+            /* For now let's hold back on adding a language keyword, since
+              language selection is implemented via partitioning in the index
+              service already!
+
+              While the index can certainly cope with keywords that hold basically every document
+              in the index, this is not free and should be avoided without a good cause.
+             */
+
+            // add("lang", language);
 
             return this;
         }

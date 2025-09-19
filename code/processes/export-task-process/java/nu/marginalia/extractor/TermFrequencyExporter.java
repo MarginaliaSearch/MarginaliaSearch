@@ -4,10 +4,11 @@ import com.google.inject.Inject;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.dom.DomPruningFilter;
 import nu.marginalia.io.SerializableCrawlDataStream;
-import nu.marginalia.language.filter.LanguageFilter;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.process.log.WorkLog;
@@ -35,12 +36,13 @@ import static nu.marginalia.term_frequency_dict.TermFrequencyDict.longHash;
 
 public class TermFrequencyExporter implements ExporterIf {
     private final FileStorageService storageService;
-    private final LanguageFilter lf = new LanguageFilter(WmsaHome.getLanguageModels());
+    private final LanguageConfiguration languageConfiguration;
     private static final Logger logger = LoggerFactory.getLogger(TermFrequencyExporter.class);
 
     @Inject
-    public TermFrequencyExporter(FileStorageService storageService) {
+    public TermFrequencyExporter(FileStorageService storageService, LanguageConfiguration languageConfiguration) {
         this.storageService = storageService;
+        this.languageConfiguration = languageConfiguration;
     }
 
     @Override
@@ -48,7 +50,7 @@ public class TermFrequencyExporter implements ExporterIf {
         Path inputDir = storageService.getStorage(crawlId).asPath();
         FileStorage destStorage = storageService.getStorage(destId);
 
-        ThreadLocal<SentenceExtractor> se = ThreadLocal.withInitial(() -> new SentenceExtractor(WmsaHome.getLanguageModels()));
+        ThreadLocal<SentenceExtractor> se = ThreadLocal.withInitial(() -> new SentenceExtractor(languageConfiguration, WmsaHome.getLanguageModels()));
 
         TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
         AtomicInteger docCount = new AtomicInteger();
@@ -118,10 +120,13 @@ public class TermFrequencyExporter implements ExporterIf {
                 Document parsed = doc.parseBody();
                 parsed.body().filter(new DomPruningFilter(0.5));
 
-                DocumentLanguageData dld = se.extractSentences(parsed);
+                DocumentLanguageData dld;
 
-                if (lf.dictionaryAgreement(dld) < 0.1) {
-                    return;
+                try {
+                    dld = se.extractSentences(parsed);
+                }
+                catch (UnsupportedLanguageException ex) {
+                    continue; // This is ok
                 }
 
                 for (var sent : dld) {

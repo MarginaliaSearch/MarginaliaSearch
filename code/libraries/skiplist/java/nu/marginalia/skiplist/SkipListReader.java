@@ -34,6 +34,7 @@ public class SkipListReader {
         currentBlockIdx = 0;
     }
 
+    /** Reset the index to the root block so that it can be re-used for additional operations. */
     public void reset() {
         currentBlock = blockStart & -SkipListConstants.BLOCK_SIZE;
         currentBlockOffset = (int) (blockStart & (SkipListConstants.BLOCK_SIZE - 1));
@@ -54,6 +55,95 @@ public class SkipListReader {
             }
             else {
                 return headerNumRecords(page, currentBlockOffset);
+            }
+        }
+    }
+
+    /** The retain operation keeps all keys in the provided LongQueryBuffer that also
+     * exist in the skip list index.  This operation will return after intersecting with
+     * a single page, and return true if additional computation is available.
+     */
+    public boolean tryRetainData(@NotNull LongQueryBuffer data) {
+        try (var page = pool.get(currentBlock)) {
+
+            int n = headerNumRecords(page, currentBlockOffset);
+            int fc = headerForwardCount(page, currentBlockOffset);
+            int flags = headerFlags(page, currentBlockOffset);
+
+            int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
+            if (retainInPage(page, dataOffset, n, data)) {
+                atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
+                if (atEnd) {
+                    while (data.hasMore())
+                        data.rejectAndAdvance();
+                    return false;
+                }
+
+                if (!data.hasMore()) {
+                    currentBlock += SkipListConstants.BLOCK_SIZE;
+                    currentBlockOffset = 0;
+                    currentBlockIdx = 0;
+                }
+                else {
+                    long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
+                    long currentValue = data.currentValue();
+                    for (int i = 0; i < fc; i++) {
+                        long blockMaxValue = page.getLong(currentBlockOffset + SkipListConstants.HEADER_SIZE + 8 * i);
+                        nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE * SkipListConstants.skipOffsetForPointer(Math.max(0, i-1));
+                        if (blockMaxValue >= currentValue) {
+                            break;
+                        }
+                    }
+                    currentBlockOffset = 0;
+                    currentBlockIdx = 0;
+                    currentBlock = nextBlock;
+                }
+            }
+        }
+
+        return data.hasMore();
+    }
+
+    /** The retain operation keeps all keys in the provided LongQueryBuffer that also
+     * exist in the skip list index.
+     */
+    public void retainData(@NotNull LongQueryBuffer data) {
+        while (data.hasMore()) {
+            try (var page = pool.get(currentBlock)) {
+
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                int flags = headerFlags(page, currentBlockOffset);
+
+                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
+                if (retainInPage(page, dataOffset, n, data)) {
+                    atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
+                    if (atEnd) {
+                        while (data.hasMore())
+                            data.rejectAndAdvance();
+                        return;
+                    }
+
+                    if (!data.hasMore()) {
+                        currentBlock += SkipListConstants.BLOCK_SIZE;
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                    }
+                    else {
+                        long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
+                        long currentValue = data.currentValue();
+                        for (int i = 0; i < fc; i++) {
+                            long blockMaxValue = page.getLong(currentBlockOffset + SkipListConstants.HEADER_SIZE + 8 * i);
+                            nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE * SkipListConstants.skipOffsetForPointer(Math.max(0, i-1));
+                            if (blockMaxValue >= currentValue) {
+                                break;
+                            }
+                        }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                        currentBlock = nextBlock;
+                    }
+                }
             }
         }
     }
@@ -100,89 +190,10 @@ public class SkipListReader {
         return currentBlockIdx >= n;
     }
 
-    public boolean tryRetainData(@NotNull LongQueryBuffer data) {
-        try (var page = pool.get(currentBlock)) {
 
-            int n = headerNumRecords(page, currentBlockOffset);
-            int fc = headerForwardCount(page, currentBlockOffset);
-            int flags = headerFlags(page, currentBlockOffset);
-
-            int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
-            if (retainInPage(page, dataOffset, n, data)) {
-                atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
-                if (atEnd) {
-                    while (data.hasMore())
-                        data.rejectAndAdvance();
-                    return false;
-                }
-
-                if (!data.hasMore()) {
-                    currentBlock += SkipListConstants.BLOCK_SIZE;
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
-                }
-                else {
-                    long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
-                    long currentValue = data.currentValue();
-                    for (int i = 0; i < fc; i++) {
-                        long blockMaxValue = page.getLong(currentBlockOffset + SkipListConstants.HEADER_SIZE + 8 * i);
-                        nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE * SkipListConstants.skipOffsetForPointer(Math.max(0, i-1));
-                        if (blockMaxValue >= currentValue) {
-                            break;
-                        }
-                    }
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
-                    currentBlock = nextBlock;
-                }
-            }
-        }
-
-        return data.hasMore();
-    }
-
-
-    public void retainData(@NotNull LongQueryBuffer data) {
-        while (data.hasMore()) {
-            try (var page = pool.get(currentBlock)) {
-
-                int n = headerNumRecords(page, currentBlockOffset);
-                int fc = headerForwardCount(page, currentBlockOffset);
-                int flags = headerFlags(page, currentBlockOffset);
-
-                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
-                if (retainInPage(page, dataOffset, n, data)) {
-                    atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
-                    if (atEnd) {
-                        while (data.hasMore())
-                            data.rejectAndAdvance();
-                        return;
-                    }
-
-                    if (!data.hasMore()) {
-                        currentBlock += SkipListConstants.BLOCK_SIZE;
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                    }
-                    else {
-                        long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
-                        long currentValue = data.currentValue();
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + SkipListConstants.HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE * SkipListConstants.skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock = nextBlock;
-                    }
-                }
-            }
-        }
-    }
-
+    /** Gets the values associated with the keys provided as input.
+     * Values that are not found in the skip list index are set to zero.
+     * */
     public long[] getValueOffsets(long[] keys) {
         int pos = 0;
         long[] vals = new long[keys.length];
@@ -273,48 +284,11 @@ public class SkipListReader {
         return vals;
     }
 
-    boolean rejectInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
-        int matches = 0;
-
-        while (data.hasMore()
-                && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
-        {
-            if (data.currentValue() != page.getLong( dataOffset + currentBlockIdx * 8)) {
-                data.retainAndAdvance();
-            }
-            else {
-                data.rejectAndAdvance();
-                matches++;
-
-                if (++matches > 5) {
-                    break;
-                }
-            }
-        }
-
-        outer:
-        while (data.hasMore()) {
-            long bv = data.currentValue();
-
-            for (; currentBlockIdx < n; currentBlockIdx++) {
-                long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                if (bv < pv) {
-                    data.retainAndAdvance();
-                    continue outer;
-                }
-                else if (bv == pv) {
-                    data.rejectAndAdvance();
-                    currentBlockIdx++;
-                    continue outer;
-                }
-            }
-            break;
-        }
-
-        return currentBlockIdx >= n;
-    }
-
+    /** The retain operation keeps all keys in the provided LongQueryBuffer that also
+     * exist in the skip list index.  This operation will return after intersecting with
+     * a single page, and return true if additional computation is available.
+     */
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
         try (var page = pool.get(currentBlock)) {
 
@@ -356,6 +330,9 @@ public class SkipListReader {
         return data.hasMore();
     }
 
+    /** The retain operation keeps all keys in the provided LongQueryBuffer that also
+     * exist in the skip list index.
+     */
     public void rejectData(@NotNull LongQueryBuffer data) {
         while (data.hasMore()) {
             try (var page = pool.get(currentBlock)) {
@@ -400,7 +377,54 @@ public class SkipListReader {
         }
     }
 
-    public int getData(@NotNull LongQueryBuffer dest)
+    boolean rejectInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
+
+        int matches = 0;
+
+        while (data.hasMore()
+                && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
+        {
+            if (data.currentValue() != page.getLong( dataOffset + currentBlockIdx * 8)) {
+                data.retainAndAdvance();
+            }
+            else {
+                data.rejectAndAdvance();
+                matches++;
+
+                if (++matches > 5) {
+                    break;
+                }
+            }
+        }
+
+        outer:
+        while (data.hasMore()) {
+            long bv = data.currentValue();
+
+            for (; currentBlockIdx < n; currentBlockIdx++) {
+                long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                if (bv < pv) {
+                    data.retainAndAdvance();
+                    continue outer;
+                }
+                else if (bv == pv) {
+                    data.rejectAndAdvance();
+                    currentBlockIdx++;
+                    continue outer;
+                }
+            }
+            break;
+        }
+
+        return currentBlockIdx >= n;
+    }
+
+    /** Fills the buffer with keys from the index.  The caller should use
+     * atEnd() to decide when the index has been exhausted.
+     *
+     * @return the number of items added to the index
+     * */
+    public int getKeys(@NotNull LongQueryBuffer dest)
     {
         if (atEnd) return 0;
 

@@ -3,20 +3,19 @@ package nu.marginalia.query.svc;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
-import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.index.query.limit.SpecificationLimitType;
+import nu.marginalia.language.config.LanguageConfigLocation;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,13 +28,11 @@ public class QueryFactoryTest {
     static QueryFactory queryFactory;
 
     @BeforeAll
-    public static void setUpAll() throws IOException {
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
 
         var lm = WmsaHome.getLanguageModels();
 
-        queryFactory = new QueryFactory(
-                new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm))
-        );
+        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)), new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()));
     }
 
     public SearchSpecification parseAndGetSpecs(String query) {
@@ -60,6 +57,7 @@ public class QueryFactoryTest {
                         QueryStrategy.AUTO,
                         RpcTemporalBias.Bias.NONE,
                         NsfwFilterTier.OFF,
+                        "en",
                         0), null).specs;
     }
 
@@ -215,6 +213,12 @@ public class QueryFactoryTest {
         System.out.println(subquery);
     }
 
+
+    @Test
+    public void testExpansion10() {
+        var subquery = parseAndGetSpecs("when was captain james cook born");
+        System.out.println(subquery);
+    }
 
     @Test
     public void testContractionWordNum() {

@@ -5,18 +5,19 @@ import com.google.inject.Singleton;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.api.searchquery.model.query.SearchSpecification;
-import nu.marginalia.index.index.StatefulIndex;
-import nu.marginalia.index.model.SearchParameters;
+import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
+import nu.marginalia.language.config.LanguageConfiguration;
+import nu.marginalia.language.keywords.KeywordHasher;
+import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
@@ -24,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class IndexGrpcService
@@ -33,6 +36,7 @@ public class IndexGrpcService
 {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Map<String, KeywordHasher> keywordHasherByLangIso;
 
     // This marker is used to mark sensitive log messages that are related to queries
     // so that they can be filtered out in the production logging configuration
@@ -43,28 +47,11 @@ public class IndexGrpcService
             .help("Query timeout counter")
             .labelNames("node", "api")
             .register();
-    private static final Gauge wmsa_query_cost = Gauge.build()
-            .name("wmsa_index_query_cost")
-            .help("Computational cost of query")
-            .labelNames("node", "api")
-            .register();
     private static final Histogram wmsa_query_time = Histogram.build()
             .name("wmsa_index_query_time")
             .linearBuckets(0.05, 0.05, 15)
             .labelNames("node", "api")
             .help("Index-side query time")
-            .register();
-
-    private static final Gauge wmsa_index_query_exec_stall_time = Gauge.build()
-            .name("wmsa_index_query_exec_stall_time")
-            .help("Execution stall time")
-            .labelNames("node")
-            .register();
-
-    private static final Gauge wmsa_index_query_exec_block_time = Gauge.build()
-            .name("wmsa_index_query_exec_block_time")
-            .help("Execution stall time")
-            .labelNames("node")
             .register();
 
     private final StatefulIndex statefulIndex;
@@ -76,6 +63,7 @@ public class IndexGrpcService
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
+                            LanguageConfiguration languageConfiguration,
                             StatefulIndex statefulIndex,
                             SearchSetsService searchSetsService,
                             IndexResultRankingService rankingService)
@@ -85,40 +73,47 @@ public class IndexGrpcService
         this.statefulIndex = statefulIndex;
         this.searchSetsService = searchSetsService;
         this.rankingService = rankingService;
+        this.keywordHasherByLangIso = new HashMap<>();
+
+        for (LanguageDefinition definition : languageConfiguration.languages()) {
+            keywordHasherByLangIso.put(definition.isoCode(), definition.keywordHasher());
+        }
     }
 
     // GRPC endpoint
+
     public void query(RpcIndexQuery request,
                       StreamObserver<RpcDecoratedResultItem> responseObserver) {
 
         try {
-            var params = new SearchParameters(request, getSearchSet(request));
-
             long endTime = System.currentTimeMillis() + request.getQueryLimits().getTimeoutMs();
+            KeywordHasher hasher = findHasher(request);
 
             List<RpcDecoratedResultItem> results = wmsa_query_time
                     .labels(nodeName, "GRPC")
                     .time(() -> {
                         // Perform the search
                         try {
-
                             if (!statefulIndex.isLoaded()) {
                                 // Short-circuit if the index is not loaded, as we trivially know that there can be no results
                                 return List.of();
                             }
 
-                            return new IndexQueryExecution(params, nodeId, rankingService, statefulIndex.get()).run();
+                            CombinedIndexReader indexReader = statefulIndex.get();
+
+                            SearchContext rankingContext =
+                                    SearchContext.create(indexReader, hasher, request, getSearchSet(request));
+
+                            IndexQueryExecution queryExecution =
+                                    new IndexQueryExecution(indexReader, rankingService, rankingContext, nodeId);
+
+                            return queryExecution.run();
                         }
                         catch (Exception ex) {
                             logger.error("Error in handling request", ex);
                             return List.of();
                         }
                     });
-
-            // Prometheus bookkeeping
-            wmsa_query_cost
-                    .labels(nodeName, "GRPC")
-                    .set(params.getDataCost());
 
             if (System.currentTimeMillis() >= endTime) {
                 wmsa_query_timeouts
@@ -139,6 +134,21 @@ public class IndexGrpcService
         }
     }
 
+    /** Keywords are translated to a numeric format via a 64 bit hash algorithm,
+     * which varies depends on the language.
+     */
+    private KeywordHasher findHasher(RpcIndexQuery request) {
+        KeywordHasher hasher = keywordHasherByLangIso.get(request.getLangIsoCode());
+        if (hasher != null)
+            return hasher;
+
+        hasher = keywordHasherByLangIso.get("en");
+        if (hasher != null)
+            return hasher;
+
+        throw new IllegalStateException("Could not find fallback keyword hasher for iso code 'en'");
+    }
+
 
     // exists for test access
     public List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
@@ -148,7 +158,12 @@ public class IndexGrpcService
                 return List.of();
             }
 
-            return new IndexQueryExecution(new SearchParameters(specsSet, getSearchSet(specsSet)), 1, rankingService, statefulIndex.get()).run();
+            CombinedIndexReader currentIndex = statefulIndex.get();
+
+            SearchContext context = SearchContext.create(currentIndex,
+                    keywordHasherByLangIso.get("en"), specsSet, getSearchSet(specsSet));
+
+            return new IndexQueryExecution(currentIndex, rankingService, context, 1).run();
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);

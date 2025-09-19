@@ -1,7 +1,8 @@
 package nu.marginalia.search.command.commands;
 
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.SearchParameters;
+import nu.marginalia.search.command.BangCommand;
+import nu.marginalia.search.model.SearchParameters;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

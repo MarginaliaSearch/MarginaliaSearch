@@ -31,7 +31,6 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:renderer')
     implementation project(':code:index:api')
-    implementation project(':code:index:query')
 
     implementation project(':code:functions:search-query')
     implementation project(':code:functions:search-query:api')

@@ -77,7 +77,6 @@ public class LocalDomainCoordinator implements DomainCoordinator {
         @Override
         public void close() {
             semaphore.release();
-            Thread.currentThread().setName("[idle]");
         }
     }
 }

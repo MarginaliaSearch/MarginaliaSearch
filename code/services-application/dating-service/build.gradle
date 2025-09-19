@@ -30,7 +30,7 @@ dependencies {
     implementation project(':code:common:renderer')
     implementation project(':code:features-search:screenshots')
     implementation project(':code:features-search:random-websites')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
 
     implementation libs.bundles.slf4j
 

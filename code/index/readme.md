@@ -13,15 +13,87 @@ which is a gRPC service that exposes the index to the rest of the system.
 
 There are two indexes with accompanying tools for constructing them.
 
-* [index-reverse](index-reverse/) is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
+* Reverse Index is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
 
-* [index-forward](index-forward/) is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
+* Forward Index is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
 
 Additionally, the [index-journal](index-journal/) contains code for constructing a journal of the index, which is used to keep the index up to date.
 
-These indices rely heavily on the [libraries/btree](../libraries/btree) and [libraries/array](../libraries/array) components.
+These indices rely heavily on the [libraries/skiplist](../libraries/skiplist), [libraries/btree](../libraries/btree) and [libraries/array](../libraries/array) components.
 
----
+## Reverse Index
+
+The reverse index contains a mapping from word to document id.
+
+There are two tiers of this index.
+
+* A priority index which only indexes terms that are flagged with priority flags<sup>1</sup>.
+* A full index that indexes all terms.
+
+The full index also provides access to term-level metadata, while the priority index is
+a binary index that only offers information about which documents has a specific word.
+
+The priority index is also compressed, while the full index at this point is not.
+
+[1] See WordFlags in [common/model](../common/model/) and
+KeywordMetadata in [converting-process/ft-keyword-extraction](../processes/converting-process/ft-keyword-extraction).
+
+### Construction
+
+The reverse index is constructed by first building a series of preindexes.
+Preindexes consist of a Segment and a Documents object.  The segment contains
+information about which word identifiers are present and how many, and the
+documents contain information about in which documents the words can be found.
+
+![Memory layout illustrations](./preindex.svg)
+
+These would typically not fit in RAM, so the index journal is paged
+and the preindexes are constructed small enough to fit in memory, and
+then merged.  Merging sorted arrays is a very fast operation that does
+not require additional RAM.
+
+![Illustration of successively merged preindex files](./merging.svg)
+
+Once merged into  one large preindex, indexes are added to the preindex data
+to form a finalized reverse index.
+
+**FIXME**:  The illustration below is incorrect, the data is stored in a skiplist
+and not a btree.
+
+![Illustration of the data layout of the finalized index](index.svg)
+### Central Classes
+
+Full index:
+* [FullPreindex](java/nu/marginalia/index/reverse/construction/full/FullPreindex.java) intermediate reverse index state.
+* [FullIndexConstructor](java/nu/marginalia/index/reverse/construction/full/FullIndexConstructor.java) constructs the index.
+* [FullReverseIndexReader](java/nu/marginalia/index/reverse/FullReverseIndexReader.java) interrogates the index.
+
+Prio index:
+* [PrioPreindex](java/nu/marginalia/index/reverse/construction/prio/PrioPreindex.java) intermediate reverse index state.
+* [PrioIndexConstructor](java/nu/marginalia/index/reverse/construction/prio/PrioIndexConstructor.java) constructs the index.
+* [PrioIndexReader](java/nu/marginalia/index/reverse/PrioReverseIndexReader.java) interrogates the index.
+
+# Forward Index
+
+The forward index contains a mapping from document id to various forms of document metadata.
+
+In practice, the forward index consists of two files, an `id` file and a `data` file.
+
+The `id` file contains a list of sorted document ids, and the `data` file contains
+metadata for each document id, in the same order as the `id` file, with a fixed
+size record containing data associated with each document id.
+
+Each record contains a binary encoded [DocumentMetadata](../common/model/java/nu/marginalia/model/idx/DocumentMetadata.java) object,
+as well as a [HtmlFeatures](../common/model/java/nu/marginalia/model/crawl/HtmlFeature.java) bitmask.
+
+Unlike the reverse index, the forward index is not split into two tiers, and the data is in the same
+order as it is in the source data, and the cardinality of the document IDs is assumed to fit in memory,
+so it's relatively easy to construct.
+
+## Central Classes
+
+* [ForwardIndexConverter](java/nu/marginalia/index/forward/construction/ForwardIndexConverter.java) constructs the index.
+* [ForwardIndexReader](java/nu/marginalia/index/forward/ForwardIndexReader.java) interrogates the index.
 
 # Result Ranking
 

@@ -39,8 +39,7 @@ dependencies {
 
     implementation project(':code:libraries:domain-lock')
     implementation project(':code:libraries:geo-ip')
-    implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:term-frequency-dict')
+    implementation project(':code:functions:language-processing')
 
     implementation project(':third-party:symspell')
 

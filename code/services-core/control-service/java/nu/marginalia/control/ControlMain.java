@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -41,6 +42,9 @@ public class ControlMain extends MainClass {
         // Orchestrate the boot order for the services
         var registry = injector.getInstance(ServiceRegistryIf.class);
         var configuration = injector.getInstance(ServiceConfiguration.class);
+
+        // Ensures we download POS tag models from control svc at first boot
+        var languageConfig = injector.getInstance(LanguageConfiguration.class);
 
         // This must be run before orchestrateBoot, so that the other services don't
         // start up until we're done

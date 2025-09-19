@@ -35,6 +35,7 @@ public record SlopDocumentRecord(
         long hash,
         float quality,
         long documentMetadata,
+        String languageIsoCode,
         Integer pubYear,
         List<String> words,
         byte[] metas,
@@ -56,14 +57,12 @@ public record SlopDocumentRecord(
             int htmlFeatures,
             long documentMetadata,
             int length,
+            String languageIsoCode,
             List<String> words,
             byte[] metas,
             List<VarintCodedSequence> positions,
             byte[] spanCodes,
             List<VarintCodedSequence> spans) {
-        public static KeywordsProjectionBuilder builder() {
-            return new KeywordsProjectionBuilder();
-        }
 
         // Override the equals method since records don't generate default equals that deal with array fields properly
         @Override
@@ -71,7 +70,17 @@ public record SlopDocumentRecord(
             if (this == o) return true;
             if (!(o instanceof KeywordsProjection that)) return false;
 
-            return length == that.length && ordinal == that.ordinal && htmlFeatures == that.htmlFeatures && documentMetadata == that.documentMetadata && Arrays.equals(metas, that.metas) && Objects.equals(domain, that.domain) && Arrays.equals(spanCodes, that.spanCodes) && Objects.equals(words, that.words) && Objects.equals(spans, that.spans) && Objects.equals(positions, that.positions);
+            return length == that.length
+                    && ordinal == that.ordinal
+                    && htmlFeatures == that.htmlFeatures
+                    && documentMetadata == that.documentMetadata
+                    && Arrays.equals(metas, that.metas)
+                    && Objects.equals(domain, that.domain)
+                    && Objects.equals(languageIsoCode, that.languageIsoCode)
+                    && Arrays.equals(spanCodes, that.spanCodes)
+                    && Objects.equals(words, that.words)
+                    && Objects.equals(spans, that.spans)
+                    && Objects.equals(positions, that.positions);
         }
 
         @Override
@@ -82,85 +91,12 @@ public record SlopDocumentRecord(
             result = 31 * result + Long.hashCode(documentMetadata);
             result = 31 * result + length;
             result = 31 * result + Objects.hashCode(words);
+            result = 31 * result + Objects.hashCode(languageIsoCode);
             result = 31 * result + Arrays.hashCode(metas);
             result = 31 * result + Objects.hashCode(positions);
             result = 31 * result + Arrays.hashCode(spanCodes);
             result = 31 * result + Objects.hashCode(spans);
             return result;
-        }
-
-        public static class KeywordsProjectionBuilder {
-            private String domain;
-            private int ordinal;
-            private int htmlFeatures;
-            private long documentMetadata;
-            private int length;
-            private List<String> words;
-            private byte[] metas;
-            private List<VarintCodedSequence> positions;
-            private byte[] spanCodes;
-            private List<VarintCodedSequence> spans;
-
-            KeywordsProjectionBuilder() {
-            }
-
-            public KeywordsProjectionBuilder domain(String domain) {
-                this.domain = domain;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder ordinal(int ordinal) {
-                this.ordinal = ordinal;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder htmlFeatures(int htmlFeatures) {
-                this.htmlFeatures = htmlFeatures;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder documentMetadata(long documentMetadata) {
-                this.documentMetadata = documentMetadata;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder length(int length) {
-                this.length = length;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder words(List<String> words) {
-                this.words = words;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder metas(byte[] metas) {
-                this.metas = metas;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder positions(List<VarintCodedSequence> positions) {
-                this.positions = positions;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder spanCodes(byte[] spanCodes) {
-                this.spanCodes = spanCodes;
-                return this;
-            }
-
-            public KeywordsProjectionBuilder spans(List<VarintCodedSequence> spans) {
-                this.spans = spans;
-                return this;
-            }
-
-            public KeywordsProjection build() {
-                return new KeywordsProjection(this.domain, this.ordinal, this.htmlFeatures, this.documentMetadata, this.length, this.words, this.metas, this.positions, this.spanCodes, this.spans);
-            }
-
-            public String toString() {
-                return "SlopDocumentRecord.KeywordsProjection.KeywordsProjectionBuilder(domain=" + this.domain + ", ordinal=" + this.ordinal + ", htmlFeatures=" + this.htmlFeatures + ", documentMetadata=" + this.documentMetadata + ", length=" + this.length + ", words=" + this.words + ", metas=" + Arrays.toString(this.metas) + ", positions=" + this.positions + ", spanCodes=" + Arrays.toString(this.spanCodes) + ", spans=" + this.spans + ")";
-            }
         }
     }
 
@@ -172,6 +108,7 @@ public record SlopDocumentRecord(
             String description,
             int htmlFeatures,
             String htmlStandard,
+            String language,
             int length,
             long hash,
             float quality,
@@ -197,6 +134,7 @@ public record SlopDocumentRecord(
     private static final LongColumn hashesColumn = new LongColumn("hash", StorageType.PLAIN);
     private static final FloatColumn qualitiesColumn = new FloatColumn("quality", StorageType.PLAIN);
     private static final LongColumn domainMetadata = new LongColumn("domainMetadata", StorageType.PLAIN);
+    private static final EnumColumn languageColumn = new EnumColumn("languageIsoCode", StandardCharsets.UTF_8);
 
     // Keyword-level columns, these are enumerated by the counts column
 
@@ -215,6 +153,7 @@ public record SlopDocumentRecord(
         private final IntColumn.Reader htmlFeaturesReader;
         private final LongColumn.Reader domainMetadataReader;
         private final IntColumn.Reader lengthsReader;
+        private final EnumColumn.Reader languageReader;
 
         private final ObjectArrayColumn<String>.Reader keywordsReader;
         private final ByteArrayColumn.Reader termMetaReader;
@@ -230,6 +169,8 @@ public record SlopDocumentRecord(
             htmlFeaturesReader = htmlFeaturesColumn.open(this);
             domainMetadataReader = domainMetadata.open(this);
             lengthsReader = lengthsColumn.open(this);
+
+            languageReader =  languageColumn.open(this);
 
             keywordsReader = keywordsColumn.open(this);
             termMetaReader = termMetaColumn.open(this);
@@ -251,6 +192,8 @@ public record SlopDocumentRecord(
             long documentMetadata = domainMetadataReader.get();
             int length = lengthsReader.get();
 
+            String language = languageReader.get();
+
             List<String> words = keywordsReader.get();
             List<VarintCodedSequence> positions = termPositionsReader.get();
             byte[] metas = termMetaReader.get();
@@ -263,6 +206,7 @@ public record SlopDocumentRecord(
                     htmlFeatures,
                     documentMetadata,
                     length,
+                    language,
                     words,
                     metas,
                     positions,
@@ -279,6 +223,7 @@ public record SlopDocumentRecord(
         private final VarintColumn.Reader ordinalsReader;
         private final StringColumn.Reader titlesReader;
         private final StringColumn.Reader descriptionsReader;
+        private final EnumColumn.Reader languageReader;
 
         private final IntColumn.Reader htmlFeaturesReader;
         private final EnumColumn.Reader htmlStandardsReader;
@@ -297,6 +242,7 @@ public record SlopDocumentRecord(
             this.descriptionsReader = descriptionsColumn.open(this);
             this.htmlFeaturesReader = htmlFeaturesColumn.open(this);
             this.htmlStandardsReader = htmlStandardsColumn.open(this);
+            this.languageReader = languageColumn.open(this);
             this.lengthsReader = lengthsColumn.open(this);
             this.hashesReader = hashesColumn.open(this);
             this.qualitiesReader = qualitiesColumn.open(this);
@@ -321,6 +267,7 @@ public record SlopDocumentRecord(
                     descriptionsReader.get(),
                     htmlFeaturesReader.get(),
                     htmlStandardsReader.get(),
+                    languageReader.get(),
                     lengthsReader.get(),
                     hashesReader.get(),
                     qualitiesReader.get(),
@@ -345,6 +292,7 @@ public record SlopDocumentRecord(
         private final FloatColumn.Writer qualitiesWriter;
         private final LongColumn.Writer domainMetadataWriter;
         private final IntColumn.Writer pubYearWriter;
+        private final EnumColumn.Writer languageWriter;
         private final ObjectArrayColumn<String>.Writer keywordsWriter;
         private final ByteArrayColumn.Writer termMetaWriter;
         private final VarintCodedSequenceArrayColumn.Writer termPositionsWriter;
@@ -368,6 +316,7 @@ public record SlopDocumentRecord(
             qualitiesWriter = qualitiesColumn.create(this);
             domainMetadataWriter = domainMetadata.create(this);
             pubYearWriter = pubYearColumn.create(this);
+            languageWriter = languageColumn.create(this);
 
             keywordsWriter = keywordsColumn.create(this);
             termMetaWriter = termMetaColumn.create(this);
@@ -387,6 +336,8 @@ public record SlopDocumentRecord(
             descriptionsWriter.put(record.description());
             htmlFeaturesWriter.put(record.htmlFeatures());
             htmlStandardsWriter.put(record.htmlStandard());
+
+            languageWriter.put(record.languageIsoCode());
             lengthsWriter.put(record.length());
             hashesWriter.put(record.hash());
             qualitiesWriter.put(record.quality());

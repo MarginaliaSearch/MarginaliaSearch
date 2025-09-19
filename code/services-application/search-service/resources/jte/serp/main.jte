@@ -1,15 +1,20 @@
+@import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.search.model.DecoratedSearchResults
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.ResultsPage
+@import java.util.List
+@import java.util.Map
+@import java.util.Optional
 
 @param DecoratedSearchResults results
 @param NavbarModel navbar
+@param Map<String, LanguageDefinition> languageDefinitions
 
 <!DOCTYPE html>
 <html lang="en">
 
-@template.part.head(title = "Marginalia Search - " +  results.getQuery())
+@template.part.head(title = results.getQuery() + " - Marginalia Search" )
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)
@@ -20,12 +25,16 @@
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
             <div class="w-full p-2 border-none backdrop-blur-sm">
-                @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters())
+                @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters(), languageIsoCode = results.getLanguageIsoCode())
             </div>
             <div class="grow"></div>
             <button class="fixed bottom-10 right-5 finepointer:hidden md:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="filter-button">
                 <i class="fas fa-filter mr-3"></i>
                 Filters
+            </button>
+            <button class="fixed bottom-10 left-5 finepointer:hidden md:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="language-button">
+                <i class="fas fa-globe mr-3"></i>
+                Language
             </button>
         </div>
     </div>
@@ -34,6 +43,7 @@
 <div class="max-w-[1400px] mx-auto flex gap-6">
     <!-- Sidebar -->
     @template.serp.part.sidebar(filters = results.getFilters())
+    @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = results.getParams())
 
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
@@ -42,7 +52,13 @@
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
                 <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a></div>
                 <div class="grow"></div>
-                <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove"></a>
+                <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove" title="Remove Filter"></a>
+            </div>
+        @elseif (!"en".equalsIgnoreCase(results.getLanguageIsoCode()))
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+                <div>Showing search results in <em>${Optional.ofNullable(languageDefinitions.get(results.getLanguageIsoCode())).map(LanguageDefinition::displayName).orElse("UNKNOWN LANGUAGE, PLEASE REPORT AS BUG!")}</em>.</div>
+                <div class="grow"></div>
+                <a href="${results.getParams().withLanguage("en").renderUrl()}" class="fa fa-remove" title="Remove Filter"></a>
             </div>
         @elseif (results.isEmpty())
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
@@ -84,6 +100,7 @@
 
 </body>
 <script lang="javascript" src="js/mobile-button.js"></script>
+<script lang="javascript" src="js/language-button.js"></script>
 <script lang="javascript" src="js/typeahead.js"></script>
 
 </html>

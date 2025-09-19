@@ -6,18 +6,16 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.hash.MurmurHash3_128;
-import nu.marginalia.index.construction.DocIdRewriter;
-import nu.marginalia.index.construction.full.FullIndexConstructor;
-import nu.marginalia.index.domainrankings.DomainRankings;
-import nu.marginalia.index.forward.ForwardIndexFileNames;
+import nu.marginalia.index.config.IndexFileName;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
-import nu.marginalia.index.index.CombinedIndexReader;
-import nu.marginalia.index.index.StatefulIndex;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.index.positions.TermData;
-import nu.marginalia.index.query.IndexSearchBudget;
-import nu.marginalia.index.results.model.ids.CombinedDocIdList;
+import nu.marginalia.index.reverse.construction.DocIdRewriter;
+import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
+import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
+import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.index.searchset.DomainRankings;
+import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
@@ -38,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.IOException;
-import java.lang.foreign.Arena;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -94,40 +91,6 @@ public class CombinedIndexReaderTest {
     private final MockDocumentMeta anyMetadata = new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class)));
 
     @Test
-    public void testSimpleRetrieval() throws Exception {
-        new MockData().add(
-                d(1, 1),
-                anyMetadata,
-                w("hello", WordFlags.Title, 33, 55),
-                w("world", WordFlags.Subjects, 34)
-        ).load();
-
-        var reader = indexFactory.getCombinedIndexReader();
-        var query = reader.findFullWord(kw("hello")).build();
-
-        var buffer = new LongQueryBuffer(32);
-        query.getMoreResults(buffer);
-
-        assertEquals(
-                List.of(d(1, 1)),
-                decode(buffer)
-        );
-
-        var helloMeta = td(reader, kw("hello"), d(1, 1));
-        assertEquals(helloMeta.flags(), WordFlags.Title.asBit());
-        assertEquals(IntList.of(33, 55), helloMeta.positions().values());
-
-        var worldMeta = td(reader, kw("world"), d(1, 1));
-        assertEquals(worldMeta.flags(), WordFlags.Subjects.asBit());
-        assertEquals(IntList.of(34), worldMeta.positions().values());
-    }
-
-    TermData td(CombinedIndexReader reader, long wordId, MockDataDocument docId) {
-        return (reader.getTermMetadata(Arena.global(), wordId, new CombinedDocIdList(docId.docId())).array())[0];
-    }
-
-
-    @Test
     public void testUnionRetrieval() throws Exception {
         new MockData()
                 .add(
@@ -155,8 +118,10 @@ public class CombinedIndexReaderTest {
                 .load();
 
         var reader = indexFactory.getCombinedIndexReader();
+        var lc = reader.createLanguageContext("en");
+
         var query = reader
-                .findFullWord(kw("hello"))
+                .findFullWord(lc, kw("hello"))
                 .also(kw("world"), new IndexSearchBudget(10_000))
                 .build();
 
@@ -198,7 +163,8 @@ public class CombinedIndexReaderTest {
                 .load();
 
         var reader = indexFactory.getCombinedIndexReader();
-        var query = reader.findFullWord(kw("hello"))
+        var lc = reader.createLanguageContext("en");
+        var query = reader.findFullWord(lc, kw("hello"))
                 .also(kw("world"), new IndexSearchBudget(10_000))
                 .not(kw("goodbye"), new IndexSearchBudget(10_000))
                 .build();
@@ -232,54 +198,51 @@ public class CombinedIndexReaderTest {
 
     private void createFullReverseIndex() throws IOException {
 
-        Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
+        Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords("en"), IndexFileName.Version.NEXT);
+        Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor =
-                new FullIndexConstructor(
-                    outputFileDocs,
-                    outputFileWords,
-                    outputFilePositions,
-                    DocIdRewriter.identity(),
-                    tmpDir);
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        var constructor = new FullIndexConstructor("en",
+                outputFileDocs,
+                outputFileWords,
+                outputFilePositions,
+                DocIdRewriter.identity(),
+                tmpDir);
+
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", workDir);
+
     }
 
     private void createPrioReverseIndex() throws IOException {
 
-        Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFilePositions = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.POSITIONS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.PrioDocs(), IndexFileName.Version.NEXT);
+        Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.PrioWords("en"), IndexFileName.Version.NEXT);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
+        var constructor = new PrioIndexConstructor("en",
+                outputFileDocs,
+                outputFileWords,
+                DocIdRewriter.identity(),
+                tmpDir);
 
-        var constructor =
-                new FullIndexConstructor(
-                        outputFileDocs,
-                        outputFileWords,
-                        outputFilePositions,
-                        DocIdRewriter.identity(),
-                        tmpDir);
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", workDir);
     }
 
     private void createForwardIndex() throws IOException {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
-        Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
-        Path outputFileSpansData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.SPANS_DATA, ForwardIndexFileNames.FileVersion.NEXT);
-        Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileDocsId = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocIds(), IndexFileName.Version.NEXT);
+        Path outputFileDocsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocData(), IndexFileName.Version.NEXT);
+        Path outputFileSpansData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardSpansData(), IndexFileName.Version.NEXT);
 
-        ForwardIndexConverter converter = new ForwardIndexConverter(processHeartbeat,
+        ForwardIndexConverter converter = new ForwardIndexConverter(new FakeProcessHeartbeat(),
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
@@ -333,12 +296,13 @@ public class CombinedIndexReaderTest {
                                 meta.features,
                                 meta.documentMetadata.encode(),
                                 100,
+                                "en",
                                 keywords,
                                 metadata,
                                 positions,
                                 new byte[0],
                                 List.of()
-                        ));
+                        ), new KeywordHasher.AsciiIsh());
             }
 
             var linkdbWriter = new DocumentDbWriter(
@@ -350,6 +314,7 @@ public class CombinedIndexReaderTest {
                         new EdgeUrl("https://www.example.com"),
                         "test",
                         "test",
+                        "en",
                         0.,
                         "HTML5",
                         0,

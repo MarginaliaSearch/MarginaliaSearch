@@ -40,23 +40,19 @@ dependencies {
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:geo-ip')
-    implementation project(':code:libraries:language-processing')
+    implementation project(':code:functions:language-processing')
 
     implementation project(':code:processes:converting-process:model')
-    implementation project(':code:processes:crawling-process:model')
-
-    implementation project(':code:processes:converting-process:ft-anchor-keywords')
-    implementation project(':code:processes:converting-process:ft-keyword-extraction')
     implementation project(':code:processes:converting-process:ft-dom-classifier')
 
+    implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:ft-crawl-blocklist')
     implementation project(':code:processes:crawling-process:ft-link-parser')
     implementation project(':code:processes:crawling-process:ft-content-type')
 
     implementation project(':code:functions:live-capture:api')
 
-    testImplementation project(':code:libraries:term-frequency-dict')
-    testImplementation project(':code:processes:crawling-process:model')
+    testImplementation project(':code:functions:language-processing')
 
     implementation libs.slop
     implementation libs.bundles.slf4j

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -33,7 +32,6 @@ public class SlopDocumentRecordTest {
 
     @Test
     public void test() throws IOException {
-        ByteBuffer workArea = ByteBuffer.allocate(1024);
         var record = new SlopDocumentRecord("example.com", "https://example.com/foo", 1, "OK", "",
                 "test",
                 "testtest",
@@ -43,6 +41,7 @@ public class SlopDocumentRecordTest {
                 0xF00BAAL,
                 0.5f,
                 0xBEEFL,
+                "en",
                 null,
                 List.of("test1", "test2"),
                 new byte[] { 2, 3},
@@ -66,6 +65,7 @@ public class SlopDocumentRecordTest {
                     record.htmlFeatures(),
                     record.documentMetadata(),
                     record.length(),
+                    record.languageIsoCode(),
                     record.words(),
                     record.metas(),
                     record.positions(),
@@ -89,6 +89,7 @@ public class SlopDocumentRecordTest {
                     record.description(),
                     record.htmlFeatures(),
                     record.htmlStandard(),
+                    record.languageIsoCode(),
                     record.length(),
                     record.hash(),
                     record.quality(),
