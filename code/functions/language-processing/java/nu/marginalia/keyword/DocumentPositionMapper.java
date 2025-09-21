@@ -163,11 +163,14 @@ public class DocumentPositionMapper {
 
         int i = 0;
 
-        for (int run = 0; run < 15 && i < s.length(); run++, i++) {
-            char c = s.charAt(i);
-            if (c >= 'a' && c <= 'z') continue;
-            if (c >= 'A' && c <= 'Z') continue;
-            if (c >= '0' && c <= '9') continue;
+        for (int run = 0; run < 15 && i < s.length(); run++) {
+            int cp = s.charAt(i);
+
+            i += Character.charCount(cp);
+
+            if (Character.isAlphabetic(cp)) continue;
+            if (Character.isDigit(cp)) continue;
+
             break;
         }
 
@@ -183,12 +186,13 @@ public class DocumentPositionMapper {
 
             i++;
 
-            for (int run = 0; run < 10 && i < s.length(); run++, i++) {
-                char c = s.charAt(i);
-                if (c >= 'a' && c <= 'z') continue;
-                if (c >= 'A' && c <= 'Z') continue;
-                if (c >= '0' && c <= '9') continue;
-                break;
+            for (int run = 0; run < 10 && i < s.length(); run++) {
+                int cp = s.charAt(i);
+
+                i += Character.charCount(cp);
+
+                if (Character.isAlphabetic(cp)) continue;
+                if (Character.isDigit(cp)) continue;
             }
         }
 

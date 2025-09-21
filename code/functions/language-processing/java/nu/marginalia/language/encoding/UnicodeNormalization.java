@@ -25,7 +25,9 @@ public interface UnicodeNormalization {
                 if ("\u201C\u201D".indexOf(c) >= 0) {
                     sb.append('"');
                 }
-                sb.appendCodePoint(c);
+                else {
+                    sb.appendCodePoint(c);
+                }
             }
 
             return sb.toString();
@@ -55,8 +57,9 @@ public interface UnicodeNormalization {
                 else if ("é".indexOf(c) >= 0) {
                     sb.append('e');
                 }
-
-                sb.appendCodePoint(c);
+                else {
+                    sb.appendCodePoint(c);
+                }
             }
 
             return sb.toString();
@@ -83,8 +86,9 @@ public interface UnicodeNormalization {
                 } else if ('ß' == c) {
                     sb.append("ss");
                 }
-
-                sb.appendCodePoint(c);
+                else {
+                    sb.appendCodePoint(c);
+                }
             }
 
             return sb.toString();
