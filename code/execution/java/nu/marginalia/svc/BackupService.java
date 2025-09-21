@@ -5,6 +5,7 @@ import com.github.luben.zstd.ZstdOutputStream;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.linkdb.LinkdbFileNames;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
@@ -13,18 +14,18 @@ import nu.marginalia.storage.model.FileStorageType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 public class BackupService {
 
     private final FileStorageService storageService;
+    private final LanguageConfiguration languageConfiguration;
     private final ServiceHeartbeat serviceHeartbeat;
 
     public enum BackupHeartbeatSteps {
@@ -36,8 +37,10 @@ public class BackupService {
 
     @Inject
     public BackupService(FileStorageService storageService,
+                         LanguageConfiguration languageConfiguration,
                          ServiceHeartbeat serviceHeartbeat) {
         this.storageService = storageService;
+        this.languageConfiguration = languageConfiguration;
         this.serviceHeartbeat = serviceHeartbeat;
     }
 
@@ -98,22 +101,25 @@ public class BackupService {
     }
 
 
-    private void backupJournal(Path inputStorage, Path backupStorage) throws IOException
-    {
-        Optional<IndexJournal> journal = IndexJournal.findJournal(inputStorage);
-        if (journal.isEmpty()) {
-            throw new FileNotFoundException("No journal found in input storage");
+    private void backupJournal(Path inputStorage, Path backupStorage) throws IOException {
+        Map<String, IndexJournal> journals = IndexJournal.findJournals(inputStorage, languageConfiguration.languages());
+        for (IndexJournal journal : journals.values()) {
+            FileUtils.copyDirectory(journal.journalDir().toFile(), backupStorage.resolve(journal.journalDir().getFileName()).toFile());
         }
-
-        FileUtils.copyDirectory(journal.get().journalDir().toFile(), backupStorage.resolve(journal.get().journalDir().getFileName()).toFile());
     }
 
     private void restoreJournal(Path destStorage, Path backupStorage) throws IOException {
-        Optional<IndexJournal> journal = IndexJournal.findJournal(backupStorage);
-        if (journal.isEmpty()) {
-            throw new FileNotFoundException("No journal found in backup");
+        Map<String, IndexJournal> journals = IndexJournal.findJournals(backupStorage, languageConfiguration.languages());
+        for (IndexJournal journal : journals.values()) {
+            var journalFileName = journal.journalDir().getFileName();
+
+            // Ensure we delete any previous journal junk
+            if (Files.exists(destStorage.resolve(journalFileName))) {
+                FileUtils.deleteDirectory(destStorage.resolve(journalFileName).toFile());
+            }
+
+            FileUtils.copyDirectory(backupStorage.resolve(journalFileName).toFile(), destStorage.toFile());
         }
-        FileUtils.copyDirectory(backupStorage.resolve(journal.get().journalDir().getFileName()).toFile(), destStorage.toFile());
     }
 
     private void backupFileCompressed(String fileName, Path inputStorage, Path backupStorage) throws IOException

@@ -43,7 +43,6 @@ public class PrioPreindex {
      * will have randomly assigned names.
      */
     public static PrioPreindex constructPreindex(IndexJournalPage indexJournalPage,
-                                                 String languageIsoCode,
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
     {
@@ -51,8 +50,8 @@ public class PrioPreindex {
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
-        var segments = PrioPreindexWordSegments.construct(indexJournalPage, languageIsoCode, segmentWordsFile, segmentCountsFile);
-        var docs = PrioPreindexDocuments.construct(docsFile, workDir, indexJournalPage, languageIsoCode, docIdRewriter, segments);
+        var segments = PrioPreindexWordSegments.construct(indexJournalPage, segmentWordsFile, segmentCountsFile);
+        var docs = PrioPreindexDocuments.construct(docsFile, workDir, indexJournalPage, docIdRewriter, segments);
         return new PrioPreindex(segments, docs);
     }
 

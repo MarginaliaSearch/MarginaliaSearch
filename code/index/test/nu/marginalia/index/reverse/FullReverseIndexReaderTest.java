@@ -99,7 +99,6 @@ class FullReverseIndexReaderTest {
 
         try (var positionsFileConstructor = new PositionsFileConstructor(posFile)) {
             var preindex = FullPreindex.constructPreindex(reader,
-                    "en",
                     positionsFileConstructor,
                     DocIdRewriter.identity(), tempDir);
             preindex.finalizeIndex(docsFile, wordsFile);

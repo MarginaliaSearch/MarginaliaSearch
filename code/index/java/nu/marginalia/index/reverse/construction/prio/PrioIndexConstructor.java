@@ -21,18 +21,15 @@ public class PrioIndexConstructor {
         FINISHED
     }
 
-    private final String languageIsoCode;
     private final Path outputFileDocs;
     private final Path outputFileWords;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
-    public PrioIndexConstructor(String languageIsoCode,
-                                Path outputFileDocs,
+    public PrioIndexConstructor(Path outputFileDocs,
                                 Path outputFileWords,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
-        this.languageIsoCode = languageIsoCode;
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
         this.docIdRewriter = docIdRewriter;
@@ -41,14 +38,9 @@ public class PrioIndexConstructor {
 
     public void createReverseIndex(ProcessHeartbeat processHeartbeat,
                                    String processName,
+                                   IndexJournal journal,
                                    Path sourceBaseDir) throws IOException
     {
-        var journal = IndexJournal.findJournal(sourceBaseDir);
-        if (journal.isEmpty()) {
-            logger.error("No journal files in base dir {}", sourceBaseDir);
-            return;
-        }
-
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName);
              var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes")
         ) {
@@ -56,7 +48,7 @@ public class PrioIndexConstructor {
 
             AtomicInteger progress = new AtomicInteger(0);
 
-            var journalVersions = journal.get().pages();
+            var journalVersions = journal.pages();
 
             journalVersions
                 .parallelStream()
@@ -78,7 +70,7 @@ public class PrioIndexConstructor {
     private PrioPreindexReference construct(IndexJournalPage journalInstance) {
         try {
             return PrioPreindex
-                    .constructPreindex(journalInstance, languageIsoCode, docIdRewriter, tmpDir)
+                    .constructPreindex(journalInstance, docIdRewriter, tmpDir)
                     .closeToReference();
         }
         catch (IOException ex) {

@@ -12,7 +12,6 @@ import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
-import nu.marginalia.slop.column.string.EnumColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +42,6 @@ public class FullPreindexDocuments {
             Path docsFile,
             Path workDir,
             IndexJournalPage journalInstance,
-            String languageIsoCode,
             DocIdRewriter docIdRewriter,
             PositionsFileConstructor positionsFileConstructor,
             FullPreindexWordSegments segments) throws IOException {
@@ -62,20 +60,12 @@ public class FullPreindexDocuments {
             ByteArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
             VarintCodedSequenceArrayColumn.Reader positions = journalInstance.openTermPositions(slopTable);
 
-            EnumColumn.Reader languageIsoCodes = journalInstance.openLanguageIsoCode(slopTable);
-            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
-
             Long2LongOpenHashMap offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
             PositionsFileConstructor.PositionsFileBlock positionsBlock = positionsFileConstructor.getBlock();
 
-            while (languageIsoCodes.hasRemaining()) {
-                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
-                    slopTable.prealignAll(languageIsoCodes);
-                }
-                else continue;
-
+            while (docIds.hasRemaining()) {
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
@@ -96,8 +86,6 @@ public class FullPreindexDocuments {
                     assembly.put(offset + 1, encodedPosOffset);
                 }
             }
-
-            slopTable.alignAll(languageIsoCodes);
 
             positionsBlock.commit();
             assembly.write(docsFile);

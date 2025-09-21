@@ -470,14 +470,14 @@ public class IndexQueryServiceIntegrationTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor("en",
+        var constructor = new FullIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 outputFilePositions,
                 DocIdRewriter.identity(),
                 tmpDir);
 
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", workDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, "en").orElseThrow(), workDir);
 
     }
 
@@ -489,13 +489,13 @@ public class IndexQueryServiceIntegrationTest {
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        var constructor = new PrioIndexConstructor("en",
+        var constructor = new PrioIndexConstructor(
                 outputFileDocs,
                 outputFileWords,
                 DocIdRewriter.identity(),
                 tmpDir);
 
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", workDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", IndexJournal.findJournal(workDir, "en").orElseThrow(), workDir);
     }
 
     private void createForwardIndex() throws IOException {
@@ -509,7 +509,7 @@ public class IndexQueryServiceIntegrationTest {
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
-                IndexJournal.findJournal(workDir).orElseThrow(),
+                IndexJournal.findJournal(workDir, "en").stream().toList(),
                 domainRankings
         );
 

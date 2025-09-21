@@ -52,7 +52,7 @@ class ForwardIndexConverterTest {
 
         dataDir = Files.createTempDirectory(getClass().getSimpleName());
 
-        try (var writer = new IndexJournalSlopWriter(IndexJournal.allocateName(workDir), 0)) {
+        try (var writer = new IndexJournalSlopWriter(IndexJournal.allocateName(workDir, "en"), 0)) {
             for (int i = 1; i < workSetSize; i++) {
                 createEntry(writer, i);
             }
@@ -101,7 +101,7 @@ class ForwardIndexConverterTest {
                 docsFileId,
                 docsFileData,
                 docsSpanData,
-                IndexJournal.findJournal(workDir).orElseThrow(),
+                IndexJournal.findJournal(workDir, "en").stream().toList(),
                 new DomainRankings()).convert();
 
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData, docsSpanData);

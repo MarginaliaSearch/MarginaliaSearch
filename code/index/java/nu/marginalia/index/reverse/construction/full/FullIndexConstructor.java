@@ -22,20 +22,17 @@ public class FullIndexConstructor {
         FINISHED
     }
 
-    private final String languageIsoCode;
     private final Path outputFileDocs;
     private final Path outputFileWords;
     private final Path outputFilePositions;
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
-    public FullIndexConstructor(String languageIsoCode,
-                                Path outputFileDocs,
+    public FullIndexConstructor( Path outputFileDocs,
                                 Path outputFileWords,
                                 Path outputFilePositions,
                                 DocIdRewriter docIdRewriter,
                                 Path tmpDir) {
-        this.languageIsoCode = languageIsoCode;
         this.outputFileDocs = outputFileDocs;
         this.outputFileWords = outputFileWords;
         this.outputFilePositions = outputFilePositions;
@@ -45,14 +42,9 @@ public class FullIndexConstructor {
 
     public void createReverseIndex(ProcessHeartbeat processHeartbeat,
                                    String processName,
+                                   IndexJournal journal,
                                    Path sourceBaseDir) throws IOException
     {
-        var journal = IndexJournal.findJournal(sourceBaseDir);
-        if (journal.isEmpty()) {
-            logger.error("No journal files in base dir {}", sourceBaseDir);
-            return;
-        }
-
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName);
              var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
              var posConstructor = new PositionsFileConstructor(outputFilePositions)
@@ -61,7 +53,7 @@ public class FullIndexConstructor {
 
             AtomicInteger progress = new AtomicInteger(0);
 
-            var journalVersions = journal.get().pages();
+            var journalVersions = journal.pages();
 
             journalVersions
                 .parallelStream()
@@ -83,7 +75,7 @@ public class FullIndexConstructor {
     private FullPreindexReference construct(IndexJournalPage journalInstance, PositionsFileConstructor positionsFileConstructor) {
         try {
             return FullPreindex
-                    .constructPreindex(journalInstance, languageIsoCode, positionsFileConstructor, docIdRewriter, tmpDir)
+                    .constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, tmpDir)
                     .closeToReference();
         }
         catch (IOException e) {

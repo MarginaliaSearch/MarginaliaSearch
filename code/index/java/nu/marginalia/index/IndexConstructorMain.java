@@ -9,6 +9,7 @@ import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.searchset.DomainRankings;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -27,12 +28,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class IndexConstructorMain extends ProcessMainClass {
     private final FileStorageService fileStorageService;
     private final ProcessHeartbeatImpl heartbeat;
+    private final LanguageConfiguration languageConfiguration;
     private final DomainRankings domainRankings;
 
     private static final Logger logger = LoggerFactory.getLogger(IndexConstructorMain.class);
@@ -72,12 +74,14 @@ public class IndexConstructorMain extends ProcessMainClass {
                                 ProcessHeartbeatImpl heartbeat,
                                 MessageQueueFactory messageQueueFactory,
                                 ProcessConfiguration processConfiguration,
+                                LanguageConfiguration languageConfiguration,
                                 DomainRankings domainRankings) {
 
         super(messageQueueFactory, processConfiguration, GsonFactory.get(), ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX);
 
         this.fileStorageService = fileStorageService;
         this.heartbeat = heartbeat;
+        this.languageConfiguration = languageConfiguration;
         this.domainRankings = domainRankings;
     }
 
@@ -106,15 +110,14 @@ public class IndexConstructorMain extends ProcessMainClass {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        Set<String> languageIsoCodes = IndexJournal.findJournal(workDir)
-                .map(IndexJournal::languages)
-                .orElseGet(Set::of);
+        Map<String, IndexJournal> journalsByLanguage = IndexJournal.findJournals(workDir, languageConfiguration.languages());
 
-        for (String languageIsoCode : languageIsoCodes) {
+        for (Map.Entry<String, IndexJournal> entry : journalsByLanguage.entrySet()) {
+            String languageIsoCode = entry.getKey();
+
             Path outputFileWords = findNextFile(new IndexFileName.FullWords(languageIsoCode));
 
             FullIndexConstructor constructor = new FullIndexConstructor(
-                    languageIsoCode,
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
@@ -123,7 +126,7 @@ public class IndexConstructorMain extends ProcessMainClass {
 
             String processName = "createReverseIndexFull[%s]".formatted(languageIsoCode);
 
-            constructor.createReverseIndex(heartbeat, processName, workDir);
+            constructor.createReverseIndex(heartbeat, processName, entry.getValue(), workDir);
         }
     }
 
@@ -135,16 +138,15 @@ public class IndexConstructorMain extends ProcessMainClass {
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
 
-        Set<String> languageIsoCodes = IndexJournal.findJournal(workDir)
-                .map(IndexJournal::languages)
-                .orElseGet(Set::of);
+        Map<String, IndexJournal> journalsByLanguage = IndexJournal.findJournals(workDir, languageConfiguration.languages());
 
-        for (String languageIsoCode : languageIsoCodes) {
+        for (Map.Entry<String, IndexJournal> entry : journalsByLanguage.entrySet()) {
+            String languageIsoCode = entry.getKey();
+
             Path outputFileWords = findNextFile(new IndexFileName.PrioWords(languageIsoCode));
             Files.deleteIfExists(outputFileWords);
 
             PrioIndexConstructor constructor = new PrioIndexConstructor(
-                    languageIsoCode,
                     outputFileDocs,
                     outputFileWords,
                     this::addRankToIdEncoding,
@@ -152,7 +154,7 @@ public class IndexConstructorMain extends ProcessMainClass {
 
             String processName = "createReverseIndexPrio[%s]".formatted(languageIsoCode);
 
-            constructor.createReverseIndex(heartbeat, processName, workDir);
+            constructor.createReverseIndex(heartbeat, processName, entry.getValue(), workDir);
         }
     }
 
@@ -168,7 +170,7 @@ public class IndexConstructorMain extends ProcessMainClass {
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
-                IndexJournal.findJournal(workDir).orElseThrow(),
+                IndexJournal.findJournals(workDir, languageConfiguration.languages()).values(),
                 domainRankings
         );
 

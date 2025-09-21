@@ -8,7 +8,6 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.LongArrayColumn;
-import nu.marginalia.slop.column.string.EnumColumn;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,7 +54,6 @@ public class FullPreindexWordSegments {
     }
 
     public static FullPreindexWordSegments construct(IndexJournalPage instance,
-                                                     String languageIsoCode,
                                                      Path wordIdsFile,
                                                      Path countsFile)
     throws IOException
@@ -65,25 +63,13 @@ public class FullPreindexWordSegments {
 
         try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
             LongArrayColumn.Reader termIds = instance.openTermIds(slopTable);
-            EnumColumn.Reader languageIsoCodes = instance.openLanguageIsoCode(slopTable);
 
-            // Find out the integer representation of the enum value corresponding to the desired iso code,
-            // so that we don't have to do expensive string comparisons for each document in the journal
-            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
-
-            while (languageIsoCodes.hasRemaining()) {
-                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
-                    termIds.prealign(languageIsoCodes);
-                }
-                else continue;
-
+            while (termIds.hasRemaining()) {
                 long[] tids = termIds.get();
                 for (long termId : tids) {
                     countsMap.addTo(termId, 1);
                 }
             }
-
-            slopTable.alignAll(languageIsoCodes);
         }
 
 

@@ -10,7 +10,6 @@ import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
-import nu.marginalia.slop.column.string.EnumColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,7 @@ public class PrioPreindexDocuments {
             Path docsFile,
             Path workDir,
             IndexJournalPage journalInstance,
-            String languageIsoCode, DocIdRewriter docIdRewriter,
+            DocIdRewriter docIdRewriter,
             PrioPreindexWordSegments segments) throws IOException {
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
@@ -51,19 +50,11 @@ public class PrioPreindexDocuments {
             LongColumn.Reader docIds = journalInstance.openCombinedId(slopTable);
             LongArrayColumn.Reader termIds = journalInstance.openTermIds(slopTable);
             ByteArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
-            EnumColumn.Reader languageIsoCodes = journalInstance.openLanguageIsoCode(slopTable);
 
             Long2LongOpenHashMap offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
 
-            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
-
-            while (languageIsoCodes.hasRemaining()) {
-                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
-                    slopTable.prealignAll(languageIsoCodes);
-                }
-                else continue;
-
+            while (docIds.hasRemaining()) {
                 long docId = docIds.get();
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
@@ -80,8 +71,6 @@ public class PrioPreindexDocuments {
                     }
                 }
             }
-            slopTable.alignAll(languageIsoCodes);
-
             assembly.write(docsFile);
         }
 

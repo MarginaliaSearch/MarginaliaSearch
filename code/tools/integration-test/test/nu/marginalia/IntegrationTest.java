@@ -26,6 +26,7 @@ import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.io.SerializableCrawlDataStream;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
@@ -82,6 +83,8 @@ public class IntegrationTest {
     DocumentDbWriter documentDbWriter;
     @Inject
     LoaderIndexJournalWriter journalWriter;
+    @Inject
+    LanguageConfiguration languageConfiguration;
 
     Path warcData = null;
     Path crawlDataParquet = null;
@@ -294,14 +297,14 @@ public class IntegrationTest {
 
             if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-            var constructor = new FullIndexConstructor(lang,
+            var constructor = new FullIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     outputFilePositions,
                     this::addRankToIdEncoding,
                     tmpDir);
 
-            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", workDir);
+            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, lang).orElseThrow(), workDir);
         }
     }
 
@@ -314,13 +317,13 @@ public class IntegrationTest {
 
         for (String lang : List.of("sv", "en")) {
             Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.PrioWords(lang), IndexFileName.Version.NEXT);
-            var constructor = new PrioIndexConstructor(lang,
+            var constructor = new PrioIndexConstructor(
                     outputFileDocs,
                     outputFileWords,
                     this::addRankToIdEncoding,
                     tmpDir);
 
-            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", workDir);
+            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexPrio", IndexJournal.findJournal(workDir, lang).orElseThrow(), workDir);
         }
     }
 
@@ -335,7 +338,7 @@ public class IntegrationTest {
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
-                IndexJournal.findJournal(workDir).orElseThrow(),
+                IndexJournal.findJournals(workDir, languageConfiguration.languages()).values(),
                 domainRankings
         );
 

@@ -6,6 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.config.ForwardIndexParameters;
 import nu.marginalia.index.forward.spans.IndexSpansWriter;
 import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 public class ForwardIndexConverter {
@@ -31,23 +33,23 @@ public class ForwardIndexConverter {
 
     private final Path outputFileDocsId;
     private final Path outputFileDocsData;
+    private final Collection<IndexJournal> journals;
     private final DomainRankings domainRankings;
 
     private final Path outputFileSpansData;
-    private final IndexJournal journal;
 
     public ForwardIndexConverter(ProcessHeartbeat heartbeat,
                                  Path outputFileDocsId,
                                  Path outputFileDocsData,
                                  Path outputFileSpansData,
-                                 IndexJournal journal,
+                                 Collection<IndexJournal> journals,
                                  DomainRankings domainRankings
                                  ) {
         this.heartbeat = heartbeat;
         this.outputFileDocsId = outputFileDocsId;
         this.outputFileDocsData = outputFileDocsData;
         this.outputFileSpansData = outputFileSpansData;
-        this.journal = journal;
+        this.journals = journals;
         this.domainRankings = domainRankings;
     }
 
@@ -69,7 +71,7 @@ public class ForwardIndexConverter {
         ) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 
-            LongArray docsFileId = getDocIds(outputFileDocsId, journal);
+            LongArray docsFileId = getDocIds(outputFileDocsId, journals);
 
             progress.progress(TaskSteps.GATHER_OFFSETS);
 
@@ -85,49 +87,50 @@ public class ForwardIndexConverter {
             LongArray docFileData = LongArrayFactory.mmapForWritingConfined(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
             ByteBuffer workArea = ByteBuffer.allocate(1024*1024*100);
-            for (var instance : journal.pages()) {
-                try (var slopTable = new SlopTable(instance.baseDir(), instance.page()))
-                {
-                    var docIdReader = instance.openCombinedId(slopTable);
-                    var metaReader = instance.openDocumentMeta(slopTable);
-                    var featuresReader = instance.openFeatures(slopTable);
-                    var sizeReader = instance.openSize(slopTable);
+            for (IndexJournal journal : journals) {
+                for (IndexJournalPage instance : journal.pages()) {
+                    try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
+                        var docIdReader = instance.openCombinedId(slopTable);
+                        var metaReader = instance.openDocumentMeta(slopTable);
+                        var featuresReader = instance.openFeatures(slopTable);
+                        var sizeReader = instance.openSize(slopTable);
 
-                    var spansCodesReader = instance.openSpanCodes(slopTable);
-                    var spansSeqReader = instance.openSpans(slopTable);
+                        var spansCodesReader = instance.openSpanCodes(slopTable);
+                        var spansSeqReader = instance.openSpans(slopTable);
 
-                    while (docIdReader.hasRemaining()) {
-                        long docId = docIdReader.get();
-                        int domainId = UrlIdCodec.getDomainId(docId);
+                        while (docIdReader.hasRemaining()) {
+                            long docId = docIdReader.get();
+                            int domainId = UrlIdCodec.getDomainId(docId);
 
-                        long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(docId);
+                            long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(docId);
 
-                        int ranking = domainRankings.getRanking(domainId);
-                        long meta = DocumentMetadata.encodeRank(metaReader.get(), ranking);
+                            int ranking = domainRankings.getRanking(domainId);
+                            long meta = DocumentMetadata.encodeRank(metaReader.get(), ranking);
 
-                        final int docFeatures = featuresReader.get();
-                        final int docSize = sizeReader.get();
+                            final int docFeatures = featuresReader.get();
+                            final int docSize = sizeReader.get();
 
-                        long features = docFeatures | ((long) docSize << 32L);
+                            long features = docFeatures | ((long) docSize << 32L);
 
-                        // Write spans data
-                        byte[] spansCodes = spansCodesReader.get();
+                            // Write spans data
+                            byte[] spansCodes = spansCodesReader.get();
 
-                        spansWriter.beginRecord(spansCodes.length);
-                        workArea.clear();
-                        List<ByteBuffer> spans = spansSeqReader.getData(workArea);
+                            spansWriter.beginRecord(spansCodes.length);
+                            workArea.clear();
+                            List<ByteBuffer> spans = spansSeqReader.getData(workArea);
 
-                        for (int i = 0; i < spansCodes.length; i++) {
-                            spansWriter.writeSpan(spansCodes[i], spans.get(i));
+                            for (int i = 0; i < spansCodes.length; i++) {
+                                spansWriter.writeSpan(spansCodes[i], spans.get(i));
+                            }
+                            long encodedSpansOffset = spansWriter.endRecord();
+
+
+                            // Write the principal forward documents file
+                            docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
+                            docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, features);
+                            docFileData.set(entryOffset + ForwardIndexParameters.SPANS_OFFSET, encodedSpansOffset);
+
                         }
-                        long encodedSpansOffset = spansWriter.endRecord();
-
-
-                        // Write the principal forward documents file
-                        docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
-                        docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, features);
-                        docFileData.set(entryOffset + ForwardIndexParameters.SPANS_OFFSET, encodedSpansOffset);
-
                     }
                 }
             }
@@ -147,15 +150,17 @@ public class ForwardIndexConverter {
         }
     }
 
-    private LongArray getDocIds(Path outputFileDocs, IndexJournal journalReader) throws IOException {
+    private LongArray getDocIds(Path outputFileDocs, Collection<IndexJournal> journalReaders) throws IOException {
         Roaring64Bitmap rbm = new Roaring64Bitmap();
 
-        for (var instance : journalReader.pages()) {
-            try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
-                LongColumn.Reader idReader = instance.openCombinedId(slopTable);
+        for (IndexJournal journalReader : journalReaders) {
+            for (var instance : journalReader.pages()) {
+                try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
+                    LongColumn.Reader idReader = instance.openCombinedId(slopTable);
 
-                while (idReader.hasRemaining()) {
-                    rbm.add(idReader.get());
+                    while (idReader.hasRemaining()) {
+                        rbm.add(idReader.get());
+                    }
                 }
             }
         }

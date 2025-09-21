@@ -75,7 +75,7 @@ class PrioPreindexTest {
                 new EntryDataWithWordMeta(106, 101, wm(50, 52))
         );
 
-        var preindex = PrioPreindex.constructPreindex(journalReader, "en", DocIdRewriter.identity(), tempDir);
+        var preindex = PrioPreindex.constructPreindex(journalReader, DocIdRewriter.identity(), tempDir);
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
         preindex.delete();
 
@@ -136,7 +136,7 @@ class PrioPreindexTest {
         }
         var journalReader = journalFactory.createReader(entries);
 
-        var preindex = PrioPreindex.constructPreindex(journalReader, "en", DocIdRewriter.identity(), tempDir);
+        var preindex = PrioPreindex.constructPreindex(journalReader, DocIdRewriter.identity(), tempDir);
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
         preindex.delete();
 

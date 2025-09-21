@@ -23,53 +23,71 @@ import java.util.Map;
 public class LoaderIndexJournalWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
-    private final Path journalPath;
+    private final Map<String, WriteHead> writeHeads = new HashMap<>();
 
-    private IndexJournalSlopWriter currentWriter = null;
-    private long recordsWritten = 0;
-    private int page;
+    static class WriteHead {
+        private IndexJournalSlopWriter currentWriter = null;
+        private long recordsWritten = 0;
+        private int page;
 
-    private final Map<String, KeywordHasher> hasherByLanguage = new HashMap<>();
+        private final KeywordHasher keywordHasher;
+
+        private final Path journalPath;
+
+        WriteHead(Path indexArea, LanguageDefinition  languageDefinition) throws IOException {
+            keywordHasher = languageDefinition.keywordHasher();
+            journalPath = IndexJournal.allocateName(indexArea, languageDefinition.isoCode());
+            page = IndexJournal.numPages(journalPath);
+
+            switchToNextVersion();
+        }
+
+        private void switchToNextVersion() throws IOException {
+            if (currentWriter != null) {
+                currentWriter.close();
+            }
+
+            currentWriter = new IndexJournalSlopWriter(journalPath, page++);
+        }
+
+        public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
+        {
+            if (++recordsWritten > 200_000) {
+                recordsWritten = 0;
+                switchToNextVersion();
+            }
+
+            currentWriter.put(header, data, keywordHasher);
+        }
+
+        public void close() throws IOException {
+            currentWriter.close();
+        }
+
+    }
 
     @Inject
     public LoaderIndexJournalWriter(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) throws IOException {
+        final Path indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
 
         for (LanguageDefinition languageDefinition: languageConfiguration.languages()) {
-            hasherByLanguage.put(languageDefinition.isoCode(), languageDefinition.keywordHasher());
+            writeHeads.put(languageDefinition.isoCode(), new WriteHead(indexArea, languageDefinition));
         }
-
-        var indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
-
-        journalPath = IndexJournal.allocateName(indexArea);
-        page = IndexJournal.numPages(journalPath);
-
-        switchToNextVersion();
 
         logger.info("Creating Journal Writer {}", indexArea);
     }
 
-    private void switchToNextVersion() throws IOException {
-        if (currentWriter != null) {
-            currentWriter.close();
-        }
-
-        currentWriter = new IndexJournalSlopWriter(journalPath, page++);
-    }
-
     public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
     {
-        KeywordHasher hasher = hasherByLanguage.get(data.languageIsoCode());
-        if (null == hasher) return;
+        WriteHead head = writeHeads.get(data.languageIsoCode());
+        if (head == null) return;
 
-        if (++recordsWritten > 200_000) {
-            recordsWritten = 0;
-            switchToNextVersion();
-        }
-
-        currentWriter.put(header, data, hasher);
+        head.putWords(header, data);
     }
 
     public void close() throws IOException {
-        currentWriter.close();
+        for (WriteHead head : writeHeads.values()) {
+            head.close();
+        }
     }
 }

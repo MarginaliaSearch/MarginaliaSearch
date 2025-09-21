@@ -9,7 +9,6 @@ import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
-import nu.marginalia.slop.column.string.EnumColumn;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +55,6 @@ public class PrioPreindexWordSegments {
     }
 
     public static PrioPreindexWordSegments construct(IndexJournalPage instance,
-                                                     String languageIsoCode,
                                                      Path wordIdsFile,
                                                      Path countsFile)
     throws IOException
@@ -67,16 +65,8 @@ public class PrioPreindexWordSegments {
         try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
             LongArrayColumn.Reader termIds = instance.openTermIds(slopTable);
             ByteArrayColumn.Reader termMetas = instance.openTermMetadata(slopTable);
-            EnumColumn.Reader languageIsoCodes = instance.openLanguageIsoCode(slopTable);
 
-            final int desiredLanguageOrdinal = languageIsoCodes.getDictionary().indexOf(languageIsoCode);
-
-            while (languageIsoCodes.hasRemaining()) {
-                if (languageIsoCodes.getOrdinal() == desiredLanguageOrdinal) {
-                    slopTable.prealignAll(languageIsoCodes);
-                }
-                else continue;
-
+            while (termIds.hasRemaining()) {
                 long[] data = termIds.get();
                 byte[] meta = termMetas.get();
 
@@ -86,8 +76,6 @@ public class PrioPreindexWordSegments {
                     }
                 }
             }
-
-            slopTable.alignAll(languageIsoCodes);
         }
 
         LongArray words = LongArrayFactory.mmapForWritingConfined(wordIdsFile, countsMap.size());
