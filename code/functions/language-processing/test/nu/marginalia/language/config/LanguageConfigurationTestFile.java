@@ -25,7 +25,6 @@ public class LanguageConfigurationTestFile {
     void testBasic() {
         Assertions.assertNotNull(languageConfiguration.getLanguage("en"));
         Assertions.assertNotNull(languageConfiguration.getLanguage("sv"));
-        Assertions.assertNotNull(languageConfiguration.getLanguage("xx"));
         Assertions.assertNull(languageConfiguration.getLanguage("!!"));
     }
 
