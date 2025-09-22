@@ -39,28 +39,23 @@ public class DocumentLoaderService {
     {
         Collection<SlopTable.Ref<SlopDocumentRecord>> pageRefs = inputData.listDocumentFiles();
 
-        try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS")) {
+        try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS");
+             LinkdbLoader loader = new LinkdbLoader(domainIdRegistry)) {
 
             int processed = 0;
 
-            for (var pageRef : pageRefs) {
-                taskHeartbeat.progress("LOAD", processed++, pageRefs.size());
-
-                try (var reader = new SlopDocumentRecord.MetadataReader(pageRef);
-                     LinkdbLoader loader = new LinkdbLoader(domainIdRegistry))
+            for (var pageRef : taskHeartbeat.wrap("LOAD", pageRefs)) {
+                try (var reader = new SlopDocumentRecord.MetadataReader(pageRef))
                 {
                     while (reader.hasMore()) {
                         loader.accept(reader.next());
                     }
                 }
             }
-            taskHeartbeat.progress("LOAD", processed, pageRefs.size());
         } catch (IOException e) {
             logger.error("Failed to load documents", e);
             throw e;
         }
-
-        logger.info("Finished");
 
         return true;
     }

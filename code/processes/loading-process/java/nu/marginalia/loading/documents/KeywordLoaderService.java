@@ -34,9 +34,7 @@ public class KeywordLoaderService {
             Collection<SlopTable.Ref<SlopDocumentRecord>> documentFiles = inputData.listDocumentFiles();
             int processed = 0;
 
-            for (SlopTable.Ref<SlopDocumentRecord> pageRef : documentFiles) {
-                task.progress("LOAD", processed++, documentFiles.size());
-
+            for (SlopTable.Ref<SlopDocumentRecord> pageRef : task.wrap("LOAD", documentFiles)) {
                 try (var keywordsReader = new SlopDocumentRecord.KeywordsProjectionReader(pageRef)) {
                     logger.info("Loading keywords from {}", pageRef);
 
@@ -51,15 +49,11 @@ public class KeywordLoaderService {
                     }
                 }
             }
-
-            task.progress("LOAD", processed, documentFiles.size());
         }
         catch (IOException e) {
             logger.error("Failed to load keywords", e);
             throw e;
         }
-
-        logger.info("Finished");
 
         return true;
     }

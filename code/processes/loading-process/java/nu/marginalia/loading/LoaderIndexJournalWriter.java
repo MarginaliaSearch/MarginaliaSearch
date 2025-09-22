@@ -25,6 +25,31 @@ public class LoaderIndexJournalWriter {
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
     private final Map<String, WriteHead> writeHeads = new HashMap<>();
 
+    @Inject
+    public LoaderIndexJournalWriter(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) throws IOException {
+        final Path indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
+
+        for (LanguageDefinition languageDefinition: languageConfiguration.languages()) {
+            writeHeads.put(languageDefinition.isoCode(), new WriteHead(indexArea, languageDefinition));
+        }
+
+        logger.info("Creating Journal Writer {}", indexArea);
+    }
+
+    public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
+    {
+        WriteHead head = writeHeads.get(data.languageIsoCode());
+        if (head == null) return;
+
+        head.putWords(header, data);
+    }
+
+    public void close() throws IOException {
+        for (WriteHead head : writeHeads.values()) {
+            head.close();
+        }
+    }
+
     static class WriteHead {
         private IndexJournalSlopWriter currentWriter = null;
         private long recordsWritten = 0;
@@ -64,30 +89,5 @@ public class LoaderIndexJournalWriter {
             currentWriter.close();
         }
 
-    }
-
-    @Inject
-    public LoaderIndexJournalWriter(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) throws IOException {
-        final Path indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
-
-        for (LanguageDefinition languageDefinition: languageConfiguration.languages()) {
-            writeHeads.put(languageDefinition.isoCode(), new WriteHead(indexArea, languageDefinition));
-        }
-
-        logger.info("Creating Journal Writer {}", indexArea);
-    }
-
-    public void putWords(long header, SlopDocumentRecord.KeywordsProjection data) throws IOException
-    {
-        WriteHead head = writeHeads.get(data.languageIsoCode());
-        if (head == null) return;
-
-        head.putWords(header, data);
-    }
-
-    public void close() throws IOException {
-        for (WriteHead head : writeHeads.values()) {
-            head.close();
-        }
     }
 }

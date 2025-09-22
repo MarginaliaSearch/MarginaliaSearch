@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
 
@@ -40,7 +39,8 @@ public class LoaderMain extends ProcessMainClass {
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
 
-    private static boolean insertFoundDomains = Boolean.getBoolean("loader.insertFoundDomains");
+    private static boolean insertFoundDomains = Boolean.getBoolean("loader.insertFoundDomains")
+                                                || (null == System.getProperty("loader.insertFoundDomains"));
 
     public static void main(String... args) {
         try {
@@ -99,42 +99,20 @@ public class LoaderMain extends ProcessMainClass {
 
         DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(heartbeat, inputData);
 
-        try {
-            var results = ForkJoinPool.commonPool()
-                .invokeAll(List.of());
+        boolean executionOk;
+        try (var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism())) {
+            pool.submit(() -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData));
+            pool.submit(() -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData));
+            pool.submit(() -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData));
 
-            if ( true == insertFoundDomains ) {
-                results = ForkJoinPool.commonPool()
-                        .invokeAll(
-                            List.of(
-                                () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData),
-                                () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
-                                () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData),
-                                () -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)
-                            )
-                );
-            }
-            else {
-                results = ForkJoinPool.commonPool()
-                        .invokeAll(
-                            List.of(
-                                () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
-                                () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData),
-                                () -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)
-                            )
-                );
+            if (insertFoundDomains) {
+                pool.submit(() -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData));
             }
 
-            for (var result : results) {
-                if (result.state() == Future.State.FAILED) {
-                    throw result.exceptionNow();
-                }
-            }
-
-            instructions.ok();
+            executionOk = true;
         }
         catch (Exception ex) {
-            instructions.err();
+            executionOk = false;
             logger.error("Error", ex);
         }
         finally {
@@ -142,6 +120,9 @@ public class LoaderMain extends ProcessMainClass {
             documentDbWriter.close();
             heartbeat.shutDown();
         }
+
+        if (executionOk) instructions.ok();
+        else instructions.err();
 
         System.exit(0);
     }

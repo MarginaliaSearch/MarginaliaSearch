@@ -54,6 +54,30 @@ public record SlopDomainLinkRecord(
         }
     }
 
+
+    /** Projection that only reads the destination column */
+    public static class DestReader extends SlopTable {
+        private final TxtStringColumn.Reader destsReader;
+
+        public DestReader(SlopTable.Ref<SlopDomainLinkRecord> ref) throws IOException {
+            super(ref);
+
+            destsReader = destsColumn.open(this);
+        }
+
+        public DestReader(Path baseDir, int page) throws IOException {
+            this(new Ref<>(baseDir, page));
+        }
+
+        public boolean hasMore() throws IOException {
+            return destsReader.hasRemaining();
+        }
+
+        public String next() throws IOException {
+            return destsReader.get();
+        }
+    }
+
     public static class Writer extends SlopTable {
         private final TxtStringColumn.Writer sourcesWriter;
         private final TxtStringColumn.Writer destsWriter;
