@@ -6,10 +6,16 @@ import gg.jte.TemplateEngine;
 import gg.jte.output.StringOutput;
 import gg.jte.resolve.DirectoryCodeResolver;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.language.config.LanguageConfigLocation;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.svc.SearchFrontPageService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
@@ -18,16 +24,21 @@ import java.util.Map;
 /** This test class verifies that the templates render successfully.
  * It does not perform checks that the output is correct */
 public class RenderingTest {
+    private static LanguageConfiguration languageConfiguration;
     final CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(".").toAbsolutePath().resolve("resources/jte"));
     final TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
 
-
+    @BeforeAll
+    public static void setUpAll() throws IOException, ParserConfigurationException, SAXException {
+        languageConfiguration = new LanguageConfiguration(new LanguageConfigLocation.Experimental());
+    }
 
     @Test
     public void testSerp_Main() throws URISyntaxException {
         templateEngine.render("serp/main.jte",
                 Map.of("results", MockedSearchResults.mockRegularSearchResults(),
-                        "navbar", NavbarModel.SEARCH),
+                        "navbar", NavbarModel.SEARCH,
+                        "languageDefinitions", languageConfiguration.languagesMap()),
                 new StringOutput());
     }
 
@@ -35,7 +46,8 @@ public class RenderingTest {
     public void testSerp_SiteFocus() throws URISyntaxException {
         templateEngine.render("serp/main.jte",
                 Map.of("results", MockedSearchResults.mockSiteFocusResults(),
-                        "navbar", NavbarModel.SEARCH),
+                        "navbar", NavbarModel.SEARCH,
+                        "languageDefinitions", languageConfiguration.languagesMap()),
                 new StringOutput());
     }
 
