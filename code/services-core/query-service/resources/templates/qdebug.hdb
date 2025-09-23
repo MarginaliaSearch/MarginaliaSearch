@@ -113,7 +113,7 @@
     <div><small class="text-muted">{{url}}</small></div>
     <p>{{description}}</p>
 
-    <div><small class="text-muted">dataHash: {{dataHash}} wordsTotal: {{wordsTotal}} bestPositions: {{bestPositions}} rankingScore: {{rankingScore}} urlQuality: {{urlQuality}}</small></div>
+    <div><small class="text-muted">dataHash: {{dataHash}} wordsTotal: {{wordsTotal}} bestPositions: {{bestPositions}} rankingScore: {{rankingScore}} urlQuality: {{urlQuality}} features: {{features}}</small></div>
     {{#with rankingDetails.docFactorGroups}}
         {{#each .}}
             <div><small>{{name}}</small></div>

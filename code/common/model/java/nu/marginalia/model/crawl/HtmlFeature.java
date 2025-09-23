@@ -95,16 +95,24 @@ public enum HtmlFeature {
     public static int encode(Collection<HtmlFeature> featuresAll) {
         int ret = 0;
         for (var feature : featuresAll) {
+            if (feature.ordinal() > 32) continue;
+
             ret |= (1 << (feature.ordinal()));
         }
         return ret;
     }
 
     public static boolean hasFeature(int value, HtmlFeature feature) {
-        return (value & (1<< feature.ordinal())) != 0;
+        int ord = feature.ordinal();
+        if (ord > 32) return false;
+
+        return (value & (1<<ord)) != 0;
     }
 
     public int getFeatureBit() {
-        return (1<< ordinal());
+        int ord = ordinal();
+        if (ord > 32) return 0;
+
+        return (1<<ord);
     }
 }
