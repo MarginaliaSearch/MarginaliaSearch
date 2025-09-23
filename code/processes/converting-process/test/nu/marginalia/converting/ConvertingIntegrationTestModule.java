@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.service.module.ServiceConfiguration;
@@ -23,5 +24,8 @@ public class ConvertingIntegrationTestModule  extends AbstractModule {
         ));
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
         bind(ConverterDomainTypes.class).toInstance(Mockito.mock(ConverterDomainTypes.class));
+
+        DomSampleClient domSampleClientMock = Mockito.mock(DomSampleClient.class);
+        bind(DomSampleClient.class).toInstance(domSampleClientMock);
     }
 }

@@ -4,21 +4,24 @@ package nu.marginalia.converting;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.util.*;
@@ -28,10 +31,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("slow")
 public class ConvertingIntegrationTest {
 
-    private DomainProcessor domainProcessor;
+    private static DomainProcessor domainProcessor;
 
-    @BeforeEach
-    public void setUp() {
+    @BeforeAll
+    public static void setUp() {
         Injector injector = Guice.createInjector(
                 new ConvertingIntegrationTestModule()
         );
@@ -51,6 +54,25 @@ public class ConvertingIntegrationTest {
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
         assertTrue(ret.documents.isEmpty());
     }
+
+    @Test
+    public void testBuggyCase() throws IOException {
+
+        // Test used to inspect processing of crawl data, change path below to use
+        Path problemCase = Path.of("/home/vlofgren/TestEnv/index-1/storage/crawl-data__25-09-15T16_33_57.245/46/64/4664ef43-blog.fermi.chat.slop.zip");
+        if (!Files.exists(problemCase))
+            return;
+
+        ProcessedDomain result = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(problemCase));
+        for (ProcessedDocument doc : result.documents) {
+            System.out.println(doc.url);
+            if (doc.details == null) continue;
+
+            System.out.println(doc.details.features);
+            System.out.println(HtmlFeature.encode(doc.details.features) & HtmlFeature.AFFILIATE_LINK.getFeatureBit());
+        }
+    }
+
     @Test
     public void testMemexMarginaliaNuDateInternalConsistency() throws IOException {
         var ret = domainProcessor.fullProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
