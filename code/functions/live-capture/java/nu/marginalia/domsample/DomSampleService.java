@@ -61,7 +61,11 @@ public class DomSampleService {
             var stmt = conn.prepareStatement("""
                 SELECT DOMAIN_NAME 
                 FROM EC_DOMAIN 
+                INNER JOIN DOMAIN_AVAILABILITY_INFORMATION
+                ON EC_DOMAIN.ID=DOMAIN_ID
                 WHERE NODE_AFFINITY>0
+                AND BACKOFF_CONSECUTIVE_FAILURES<15
+                AND HTTP_SCHEMA='HTTPS'
                 """)
         ) {
             var rs = stmt.executeQuery();
