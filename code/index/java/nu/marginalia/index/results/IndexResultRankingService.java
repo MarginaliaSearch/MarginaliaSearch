@@ -684,22 +684,24 @@ public class IndexResultRankingService {
             PhraseConstraintGroupList.PhraseConstraintGroup fullGroup = constraints.getFullGroup();
             IntList fullGroupIntersections = fullGroup.findIntersections(positions);
 
-            int totalFullCnts = 0;
+            if (!fullGroupIntersections.isEmpty()) {
+                int totalFullCnts = 0;
 
-            // Capture full query matches
-            for (var tag : HtmlTag.includedTags) {
-                int cnts =  spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
-                if (cnts > 0) {
-                    matches.set(tag.ordinal());
-                    score += (float) (weights_full[tag.ordinal()] * fullGroup.size + (1 + Math.log(2 + cnts)));
-                    totalFullCnts += cnts;
+                // Capture full query matches
+                for (var tag : HtmlTag.includedTags) {
+                    int cnts = spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
+                    if (cnts > 0) {
+                        matches.set(tag.ordinal());
+                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size + (1 + Math.log(2 + cnts)));
+                        totalFullCnts += cnts;
+                    }
                 }
-            }
 
-            // Handle matches that span multiple tags; treat them as BODY matches
-            if (totalFullCnts != fullGroupIntersections.size()) {
-                int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
-                score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(2 + mixedCnts)));
+                // Handle matches that span multiple tags; treat them as BODY matches
+                if (totalFullCnts != fullGroupIntersections.size()) {
+                    int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
+                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(2 + mixedCnts)));
+                }
             }
 
             /**
