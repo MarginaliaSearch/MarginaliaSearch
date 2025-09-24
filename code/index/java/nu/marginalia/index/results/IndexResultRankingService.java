@@ -677,12 +677,33 @@ public class IndexResultRankingService {
         public VerbatimMatches(IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
             matches = new BitSet(HtmlTag.includedTags.length);
 
+            PhraseConstraintGroupList.PhraseConstraintGroup fullGroup = constraints.getFullGroup();
+            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
+
+            if (fullGroup.size == 1) {
+                var titleSpan = spans.getSpan(HtmlTag.TITLE);
+                if (titleSpan.length() == fullGroup.size
+                        && titleSpan.containsRange(fullGroupIntersections, fullGroup.size))
+                {
+                    score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
+                }
+
+                var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
+                if (extLinkSpan.length() >= fullGroup.size) {
+                    int cnt = extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size);
+                    if (cnt > 0) {
+                        score += 2 * cnt;
+                    }
+                }
+
+                return;
+            }
+
+
             /**
              *  FULL GROUP MATCHING
              */
 
-            PhraseConstraintGroupList.PhraseConstraintGroup fullGroup = constraints.getFullGroup();
-            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
 
             if (!fullGroupIntersections.isEmpty()) {
                 int totalFullCnts = 0;
