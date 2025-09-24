@@ -604,14 +604,13 @@ public class IndexResultRankingService {
         float proximitiyFac = 0;
 
         if (positions.length > 2) {
-            int minDist = constraintGroups.getFullGroup().minDistance(positions);
+            var fullGroup = constraintGroups.getFullGroup();
+
+            int minDist = fullGroup.minDistance(positions);
             if (minDist > 0 && minDist < Integer.MAX_VALUE) {
-                if (minDist < 32) {
+                if (minDist < fullGroup.size + 8) {
                     // If min-dist is sufficiently small, we give a tapering reward to the document
                     proximitiyFac = 2.0f / (0.1f + (float) Math.sqrt(minDist));
-                } else {
-                    // if it is too large, we add a mounting penalty
-                    proximitiyFac = -1.0f * (float) Math.sqrt(minDist);
                 }
             }
         }
@@ -663,13 +662,13 @@ public class IndexResultRankingService {
 
             for (int i = 0; i < weights_partial.length; i++) {
                 weights_partial[i] = switch(HtmlTag.includedTags[i]) {
-                    case TITLE -> 1.5f;
+                    case TITLE -> 2.5f;
                     case HEADING -> 1.f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
                     case EXTERNAL_LINKTEXT -> 2.0f;
-                    case BODY -> 0.25f;
+                    case BODY -> 0.5f;
                     default -> 0.0f;
                 };
             }
@@ -681,8 +680,7 @@ public class IndexResultRankingService {
             var fullGroup = constraints.getFullGroup();
             IntList fullGroupIntersections = fullGroup.findIntersections(positions);
 
-            int largestOptional = constraints.getFullGroup().size;
-            if (largestOptional < 2) {
+            if (fullGroup.size <= 2) {
                 var titleSpan = spans.getSpan(HtmlTag.TITLE);
                 if (titleSpan.length() == fullGroup.size
                         && titleSpan.containsRange(fullGroupIntersections, fullGroup.size))
@@ -719,8 +717,7 @@ public class IndexResultRankingService {
 
             // For optional groups, we scale the score by the size of the group relative to the full group
             for (var optionalGroup : constraints.getOptionalGroups()) {
-                int groupSize = optionalGroup.size;
-                float sizeScalingFactor = groupSize / (float) largestOptional;
+                float sizeScalingFactor = optionalGroup.size / (float) fullGroup.size;
 
                 IntList intersections = optionalGroup.findIntersections(positions);
 
