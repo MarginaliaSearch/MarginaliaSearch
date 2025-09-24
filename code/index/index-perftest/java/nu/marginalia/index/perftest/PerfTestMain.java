@@ -170,7 +170,7 @@ public class PerfTestMain {
         int iter;
         for (iter = 0;; iter++) {
             long start = System.nanoTime();
-            sum2 += rankingService.rankResults(rankingContext, rankingData, false).size();
+            sum2 += rankingService.rankResults(rankingContext, rankingData).size();
             long end = System.nanoTime();
             times.add((end - start)/1_000_000.);
 

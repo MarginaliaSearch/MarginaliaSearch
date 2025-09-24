@@ -228,7 +228,7 @@ public class IndexQueryExecution {
 
                 try (rankingData) {
                     long st =  System.nanoTime();
-                    resultHeap.addAll(rankingService.rankResults(rankingContext, rankingData, false));
+                    resultHeap.addAll(rankingService.rankResults(rankingContext, rankingData));
                     long et = System.nanoTime();
 
                     metric_index_rank_time_s
