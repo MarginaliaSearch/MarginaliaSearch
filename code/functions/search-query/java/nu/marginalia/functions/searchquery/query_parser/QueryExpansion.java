@@ -175,9 +175,6 @@ public class QueryExpansion {
 
         Set<List<String>> constraints = new HashSet<>();
 
-        Set<NgramLexicon.SentenceSegment> bestSegmentation =
-                findBestSegmentation(allSegments);
-
         for (var segment : allSegments) {
 
             int start = segment.start();
