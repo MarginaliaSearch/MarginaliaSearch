@@ -115,6 +115,13 @@ public class LongQueryBuffer {
         return ++read < end;
     }
 
+    public boolean isAscending() {
+        for (int i = read + 1; i < end; i++) {
+            if (data.get(i-1) > data.get(i))
+                return false;
+        }
+        return true;
+    }
     /** Retains the current value at the read pointer and advances the read and write pointers.
      *  Returns true if there are more values to read.
      *  <p></p> To enable "or" style criterias, the method swaps the current value with the value

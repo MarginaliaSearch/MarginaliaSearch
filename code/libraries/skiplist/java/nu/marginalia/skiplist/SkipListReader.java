@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SkipListReader {
@@ -64,6 +65,8 @@ public class SkipListReader {
      * a single page, and return true if additional computation is available.
      */
     public boolean tryRetainData(@NotNull LongQueryBuffer data) {
+        assert data.isAscending();
+
         try (var page = pool.get(currentBlock)) {
 
             int n = headerNumRecords(page, currentBlockOffset);
@@ -108,6 +111,8 @@ public class SkipListReader {
      * exist in the skip list index.
      */
     public void retainData(@NotNull LongQueryBuffer data) {
+        assert data.isAscending();
+
         while (data.hasMore()) {
             try (var page = pool.get(currentBlock)) {
 
@@ -197,6 +202,12 @@ public class SkipListReader {
     public long[] getValueOffsets(long[] keys) {
         int pos = 0;
         long[] vals = new long[keys.length];
+
+        if (getClass().desiredAssertionStatus()) {
+            for (int i = 1; i < keys.length; i++) {
+                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
+            }
+        }
 
         while (pos < keys.length) {
             try (var page = pool.get(currentBlock)) {
@@ -290,6 +301,8 @@ public class SkipListReader {
      * a single page, and return true if additional computation is available.
      */
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
+        assert data.isAscending();
+
         try (var page = pool.get(currentBlock)) {
 
             int n = headerNumRecords(page, currentBlockOffset);
@@ -427,6 +440,7 @@ public class SkipListReader {
     public int getKeys(@NotNull LongQueryBuffer dest)
     {
         if (atEnd) return 0;
+        assert dest.isAscending();
 
         int totalCopied = 0;
         while (dest.fitsMore() && !atEnd) {
