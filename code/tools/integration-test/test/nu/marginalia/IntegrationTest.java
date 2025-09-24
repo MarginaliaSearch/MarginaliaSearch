@@ -285,6 +285,117 @@ public class IntegrationTest {
     }
 
 
+    @Test
+    public void testCook() throws Exception {
+
+        /** CREATE WARC */
+        try (WarcRecorder warcRecorder = new WarcRecorder(warcData)) {
+            warcRecorder.writeWarcinfoHeader("127.0.0.1", new EdgeDomain("www.example.com"),
+                    new HttpFetcherImpl.DomainProbeResult.Ok(new EdgeUrl("https://www.example.com/")));
+
+            warcRecorder.writeReferenceCopy(new EdgeUrl("https://www.example.com/cook.html"),
+                    new DomainCookies(),
+                    "text/html", 200,
+                    getClass().getClassLoader().getResourceAsStream("captain-james-cook.html").readAllBytes(),
+                    "",
+                    ContentTags.empty()
+            );
+            warcRecorder.writeReferenceCopy(new EdgeUrl("https://www.example.com/brady.html"),
+                    new DomainCookies(),
+                    "text/html", 200,
+                    getClass().getClassLoader().getResourceAsStream("samuel-brady.html").readAllBytes(),
+                    "",
+                    ContentTags.empty()
+            );
+        }
+
+        /** CONVERT WARC */
+        CrawledDocumentParquetRecordFileWriter.convertWarc(
+                "www.example.com",
+                new UserAgent("search.marginalia.nu",
+                        "search.marginalia.nu"),
+                warcData,
+                crawlDataParquet);
+
+        /** PROCESS CRAWL DATA */
+
+        var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataParquet));
+
+        System.out.println(processedDomain);
+
+        /** WRITE PROCESSED DATA */
+
+        try (ConverterBatchWriter cbw = new ConverterBatchWriter(processedDataDir, 0)) {
+            cbw.writeProcessedDomain(processedDomain);
+
+        }
+        // Write a single batch-switch marker in the process log so that the loader will read the data
+        Files.writeString(processedDataDir.resolve("processor.log"), "F\n", StandardOpenOption.CREATE_NEW);
+
+        /** LOAD PROCESSED DATA */
+
+        LoaderInputData inputData = new LoaderInputData(List.of(processedDataDir));
+
+        DomainIdRegistry domainIdRegistry = Mockito.mock(CachingDomainIdRegistry.class);
+        when(domainIdRegistry.getDomainId(any())).thenReturn(1);
+
+        linksService.loadLinks(domainIdRegistry, new FakeProcessHeartbeat(), inputData);
+        keywordLoaderService.loadKeywords(domainIdRegistry, new FakeProcessHeartbeat(), inputData);
+        documentLoaderService.loadDocuments(domainIdRegistry, new FakeProcessHeartbeat(), inputData);
+
+        // These must be closed to finalize the associated files
+        documentDbWriter.close();
+        keywordLoaderService.close();
+
+        /** CONSTRUCT INDEX */
+
+        createForwardIndex();
+        createFullReverseIndex();
+        createPrioReverseIndex();
+
+        /** SWITCH INDEX */
+
+        statefulIndex.switchIndex();
+
+        // Move the docdb file to the live location
+        Files.move(
+                IndexLocations.getLinkdbWritePath(fileStorageService).resolve(DOCDB_FILE_NAME),
+                IndexLocations.getLinkdbLivePath(fileStorageService).resolve(DOCDB_FILE_NAME)
+        );
+        // Reconnect the document reader to the new docdb file
+        documentDbReader.reconnect();
+
+        /** QUERY */
+
+        {
+            var request = RpcQsQuery.newBuilder()
+                    .setQueryLimits(RpcQueryLimits.newBuilder()
+                            .setTimeoutMs(10000000)
+                            .setResultsTotal(100)
+                            .setResultsByDomain(10)
+                            .setFetchSize(1000)
+                            .build())
+                    .setLangIsoCode("en")
+                    .setQueryStrategy("AUTO")
+                    .setHumanQuery("when was captain james cook born")
+                    .build();
+
+            var params = QueryProtobufCodec.convertRequest(request);
+            var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
+            var query = queryFactory.createQuery(params, p);
+
+            var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+
+            System.out.println(indexRequest);
+
+            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
+
+            System.out.println(rs);
+            Assertions.assertEquals(2, rs.size());
+        }
+    }
+
+
     private void createFullReverseIndex() throws IOException {
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
         Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
