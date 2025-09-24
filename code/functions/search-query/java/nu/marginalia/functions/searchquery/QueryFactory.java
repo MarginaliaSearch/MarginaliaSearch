@@ -175,8 +175,6 @@ public class QueryFactory {
         specs.query.searchTermsPriority.addAll(params.tacitPriority());
         specs.query.searchTermsExclude.addAll(params.tacitExcludes());
 
-        System.out.println(specs);
-
         return new ProcessedQuery(specs, searchTermsHuman, domain, params.langIsoCode());
     }
 
