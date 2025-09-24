@@ -677,27 +677,14 @@ public class IndexResultRankingService {
         public VerbatimMatches(IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
             matches = new BitSet(HtmlTag.includedTags.length);
 
-            var fullGroup = constraints.getFullGroup();
+            /**
+             *  FULL GROUP MATCHING
+             */
+
+            PhraseConstraintGroupList.PhraseConstraintGroup fullGroup = constraints.getFullGroup();
             IntList fullGroupIntersections = fullGroup.findIntersections(positions);
 
-            if (fullGroup.size <= 2) {
-                var titleSpan = spans.getSpan(HtmlTag.TITLE);
-                if (titleSpan.length() == fullGroup.size
-                        && titleSpan.containsRange(fullGroupIntersections, fullGroup.size))
-                {
-                    score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
-                }
-
-                var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
-                if (extLinkSpan.length() >= fullGroup.size) {
-                    int cnt = extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size);
-                    if (cnt > 0) {
-                        score += 2 * cnt;
-                    }
-                }
-
-                return;
-            }
+            int totalFullCnts = 0;
 
             // Capture full query matches
             for (var tag : HtmlTag.includedTags) {
@@ -705,18 +692,22 @@ public class IndexResultRankingService {
                 if (cnts > 0) {
                     matches.set(tag.ordinal());
                     score += (float) (weights_full[tag.ordinal()] * fullGroup.size + (1 + Math.log(2 + cnts)));
+                    totalFullCnts += cnts;
                 }
             }
 
-            // Bonus if there's a perfect match with an atag span
-            var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
-            if (extLinkSpan.length() >= fullGroup.size) {
-                int cnt = extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size);
-                score += 2*cnt;
+            // Handle matches that span multiple tags; treat them as BODY matches
+            if (totalFullCnts != fullGroupIntersections.size()) {
+                int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
+                score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(2 + mixedCnts)));
             }
 
+            /**
+             *  OPTIONAL GROUP MATCHING
+             */
+
             // For optional groups, we scale the score by the size of the group relative to the full group
-            for (var optionalGroup : constraints.getOptionalGroups()) {
+            for (PhraseConstraintGroupList.PhraseConstraintGroup optionalGroup : constraints.getOptionalGroups()) {
                 float sizeScalingFactor = (float) Math.sqrt(optionalGroup.size / (float) fullGroup.size);
 
                 IntList intersections = optionalGroup.findIntersections(positions);
@@ -733,6 +724,7 @@ public class IndexResultRankingService {
                     totalCnts += cnts;
                 }
 
+                // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalCnts != intersections.size()) {
                     int mixedCnts = intersections.size() - totalCnts;
                     score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
