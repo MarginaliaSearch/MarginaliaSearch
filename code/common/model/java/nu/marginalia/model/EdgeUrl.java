@@ -4,13 +4,12 @@ import nu.marginalia.util.QueryParams;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
-public class EdgeUrl implements Serializable {
+public class EdgeUrl {
     public final String proto;
     public final EdgeDomain domain;
     public final Integer port;

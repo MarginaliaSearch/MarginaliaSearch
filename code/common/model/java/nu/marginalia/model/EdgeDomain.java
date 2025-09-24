@@ -1,13 +1,12 @@
 package nu.marginalia.model;
 
 import javax.annotation.Nonnull;
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class EdgeDomain implements Serializable {
+public class EdgeDomain {
 
     @Nonnull
     public final String subDomain;

@@ -2,7 +2,6 @@ package nu.marginalia.model.idx;
 
 import nu.marginalia.model.crawl.PubDate;
 
-import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -28,7 +27,6 @@ public record DocumentMetadata(int avgSentLength,
                                int sets,
                                int quality,
                                byte flags)
-    implements Serializable
 {
 
     public String toString() {
