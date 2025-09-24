@@ -178,7 +178,7 @@ public class QueryExpansion {
         Set<NgramLexicon.SentenceSegment> bestSegmentation =
                 findBestSegmentation(allSegments);
 
-        for (var segment : bestSegmentation) {
+        for (var segment : allSegments) {
 
             int start = segment.start();
             int end = segment.start() + segment.length();
@@ -195,42 +195,6 @@ public class QueryExpansion {
         }
 
         return new ArrayList<>(constraints);
-    }
-
-    private Set<NgramLexicon.SentenceSegment> findBestSegmentation(List<NgramLexicon.SentenceSegment> allSegments) {
-        Set<NgramLexicon.SentenceSegment> bestSet = Set.of();
-        double bestScore = Double.MIN_VALUE;
-
-        for (int i = 0; i < allSegments.size(); i++) {
-            Set<NgramLexicon.SentenceSegment> parts = new HashSet<>();
-            parts.add(allSegments.get(i));
-
-            outer:
-            for (int j = i+1; j < allSegments.size(); j++) {
-                var candidate = allSegments.get(j);
-                for (var part : parts) {
-                    if (part.overlaps(candidate)) {
-                        continue outer;
-                    }
-                }
-                parts.add(candidate);
-            }
-
-            double score = 0.;
-            for (var part : parts) {
-                // |s|^|s|-normalization per M Hagen et al
-                double normFactor = Math.pow(part.length(), part.length());
-
-                score += normFactor * part.count();
-            }
-
-            if (bestScore < score) {
-                bestScore = score;
-                bestSet = parts;
-            }
-        }
-
-        return bestSet;
     }
 
     public interface ExpansionStrategy {
