@@ -204,6 +204,7 @@ public class IndexResultRankingService {
             for (var item : resultsList) {
                 combinedIdsList.add(item.combinedId);
             }
+            combinedIdsList.sort(Long::compareTo);
 
             resultsList.clear();
 
