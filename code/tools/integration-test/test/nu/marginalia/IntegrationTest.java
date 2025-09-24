@@ -307,6 +307,13 @@ public class IntegrationTest {
                     "",
                     ContentTags.empty()
             );
+            warcRecorder.writeReferenceCopy(new EdgeUrl("https://www.example.com/covey.html"),
+                    new DomainCookies(),
+                    "text/html", 200,
+                    getClass().getClassLoader().getResourceAsStream("james-covey.html").readAllBytes(),
+                    "",
+                    ContentTags.empty()
+            );
         }
 
         /** CONVERT WARC */
@@ -327,7 +334,6 @@ public class IntegrationTest {
 
         try (ConverterBatchWriter cbw = new ConverterBatchWriter(processedDataDir, 0)) {
             cbw.writeProcessedDomain(processedDomain);
-
         }
         // Write a single batch-switch marker in the process log so that the loader will read the data
         Files.writeString(processedDataDir.resolve("processor.log"), "F\n", StandardOpenOption.CREATE_NEW);
@@ -391,7 +397,13 @@ public class IntegrationTest {
             var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
-            Assertions.assertEquals(2, rs.size());
+
+            for (var result : rs) {
+                System.out.println(result.getRankingScore() + ": " + result.getUrl());
+            }
+
+            Assertions.assertEquals(3, rs.size());
+            Assertions.assertEquals("https://www.example.com/cook.html", rs.get(0).getUrl());
         }
     }
 

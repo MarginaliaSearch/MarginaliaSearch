@@ -23,13 +23,9 @@ public class TestUtil {
                     }
                 }
                 else {
-                    System.out.println("Deleting " + f + " (" + fileSize(f.toPath()) + ")");
                     f.delete();
                 }
             }
-        }
-        else {
-            System.out.println("Deleting " + path + " (" + fileSize(path) + ")");
         }
         path.toFile().delete();
     }
