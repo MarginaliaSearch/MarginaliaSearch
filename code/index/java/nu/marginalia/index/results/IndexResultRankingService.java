@@ -717,15 +717,25 @@ public class IndexResultRankingService {
 
             // For optional groups, we scale the score by the size of the group relative to the full group
             for (var optionalGroup : constraints.getOptionalGroups()) {
-                float sizeScalingFactor = optionalGroup.size / (float) fullGroup.size;
+                float sizeScalingFactor = (float) Math.sqrt(optionalGroup.size / (float) fullGroup.size);
 
                 IntList intersections = optionalGroup.findIntersections(positions);
 
+                if (intersections.isEmpty())
+                    continue;
+
+                int totalCnts = 0;
                 for (var tag : HtmlTag.includedTags) {
                     int cnts =  spans.getSpan(tag).countRangeMatches(intersections, fullGroup.size);
-                    if (cnts > 0) {
-                        score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
-                    }
+                    if (cnts == 0) continue;
+
+                    score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
+                    totalCnts += cnts;
+                }
+
+                if (totalCnts != intersections.size()) {
+                    int mixedCnts = intersections.size() - totalCnts;
+                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
                 }
             }
         }
