@@ -3,8 +3,10 @@ package nu.marginalia.domsample;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.inject.Named;
+import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.livecapture.BrowserlessClient;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -15,31 +17,39 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 public class DomSampleService {
     private final DomSampleDb db;
     private final HikariDataSource mariadbDataSource;
+    private final DomainCoordinator domainCoordinator;
     private final URI browserlessURI;
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
+    private final ForkJoinPool pool;
 
     @Inject
     public DomSampleService(DomSampleDb db,
                             HikariDataSource mariadbDataSource,
                             @Named("browserless-uri") String browserlessAddress,
+                            @Named("browserless-sample-threads") int threads,
+                            DomainCoordinator domainCoordinator,
                             ServiceConfiguration serviceConfiguration)
             throws URISyntaxException
     {
         this.db = db;
         this.mariadbDataSource = mariadbDataSource;
+        this.domainCoordinator = domainCoordinator;
 
         if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
             logger.warn("Live capture service will not run");
             browserlessURI = null;
+            pool = null;
         }
         else {
             browserlessURI = new URI(browserlessAddress);
+            pool = new ForkJoinPool(threads);
         }
     }
 
@@ -96,8 +106,14 @@ public class DomSampleService {
                     syncDomains();
                     var domains = db.getScheduledDomains();
 
-                    for (var domain : domains) {
-                        updateDomain(client, domain);
+                    for (String domain : domains) {
+                        pool.submit(() -> {
+                            try (var lock = domainCoordinator.lockDomain(new EdgeDomain(domain))) {
+                                updateDomain(client, domain);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

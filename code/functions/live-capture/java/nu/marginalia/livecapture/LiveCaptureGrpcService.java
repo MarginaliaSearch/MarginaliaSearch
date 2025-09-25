@@ -6,6 +6,7 @@ import io.grpc.stub.StreamObserver;
 import jakarta.inject.Named;
 import nu.marginalia.api.livecapture.Empty;
 import nu.marginalia.api.livecapture.LiveCaptureApiGrpc;
+import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
@@ -33,6 +34,7 @@ public class LiveCaptureGrpcService
     private final boolean serviceEnabled;
     private final LinkedBlockingQueue<ScheduledScreenshot> requestedScreenshots = new LinkedBlockingQueue<>(128);
     private final HikariDataSource dataSource;
+    private final DomainCoordinator domainCoordinator;
 
     record ScheduledScreenshot(int domainId) {}
 
@@ -46,9 +48,11 @@ public class LiveCaptureGrpcService
     public LiveCaptureGrpcService(HikariDataSource dataSource,
                                   @Named("browserless-uri") String browserlessAddress,
                                   @Named("browserless-agent-threads") int threads,
+                                  DomainCoordinator domainCoordinator,
                                   ServiceConfiguration serviceConfiguration
                                   ) throws URISyntaxException {
         this.dataSource = dataSource;
+        this.domainCoordinator = domainCoordinator;
 
         if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
             logger.warn("Live capture service will not run");
@@ -163,7 +167,7 @@ public class LiveCaptureGrpcService
         }
 
         private void grab(BrowserlessClient client, Connection conn, EdgeDomain domain) {
-            try {
+            try (var lock = domainCoordinator.lockDomain(domain)) {
                 logger.info("Capturing {}", domain);
 
                 byte[] pngBytes = client.screenshot(domain.toRootUrlHttps().toString(),

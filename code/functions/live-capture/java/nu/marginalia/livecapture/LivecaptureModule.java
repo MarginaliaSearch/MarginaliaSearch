@@ -11,5 +11,8 @@ public class LivecaptureModule extends AbstractModule {
         bind(Integer.class)
                 .annotatedWith(Names.named("browserless-agent-threads"))
                 .toInstance(Integer.parseInt(System.getProperty("live-capture.browserless-agent-threads", "4")));
+        bind(Integer.class)
+                .annotatedWith(Names.named("browserless-sample-threads"))
+                .toInstance(Integer.parseInt(System.getProperty("live-capture.browserless-sample-threads", "4")));
     }
 }
