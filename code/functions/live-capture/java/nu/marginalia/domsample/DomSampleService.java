@@ -112,14 +112,6 @@ public class DomSampleService {
 
                     for (String domain : domains) {
                         samplingQueue.offer(new EdgeDomain(domain));
-
-                        pool.submit(() -> {
-                            try (var lock = domainCoordinator.lockDomain(new EdgeDomain(domain))) {
-                                updateDomain(client, domain);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
