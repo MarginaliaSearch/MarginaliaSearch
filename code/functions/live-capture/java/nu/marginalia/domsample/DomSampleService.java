@@ -17,7 +17,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class DomSampleService {
@@ -27,7 +27,7 @@ public class DomSampleService {
     private final URI browserlessURI;
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
-    private final ForkJoinPool pool;
+    private final ArrayBlockingQueue<EdgeDomain> samplingQueue = new ArrayBlockingQueue<>(4);
 
     @Inject
     public DomSampleService(DomSampleDb db,
@@ -45,11 +45,10 @@ public class DomSampleService {
         if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
             logger.warn("Live capture service will not run");
             browserlessURI = null;
-            pool = null;
         }
         else {
             browserlessURI = new URI(browserlessAddress);
-            pool = new ForkJoinPool(threads);
+
         }
     }
 
@@ -59,7 +58,10 @@ public class DomSampleService {
             return;
         }
 
-        Thread.ofPlatform().daemon().start(this::run);
+        Thread.ofPlatform().daemon().start(this::mainThread);
+        for (int i = 0; i < threads; i++) {
+            Thread.ofPlatform().daemon().start(this::samplingThread);
+        }
     }
 
     public void syncDomains() {
@@ -93,7 +95,7 @@ public class DomSampleService {
         logger.info("Synced domains to sqlite");
     }
 
-    public void run() {
+    public void mainThread() {
 
         try (var client = new BrowserlessClient(browserlessURI)) {
 
@@ -107,6 +109,8 @@ public class DomSampleService {
                     var domains = db.getScheduledDomains();
 
                     for (String domain : domains) {
+                        samplingQueue.offer(new EdgeDomain(domain));
+
                         pool.submit(() -> {
                             try (var lock = domainCoordinator.lockDomain(new EdgeDomain(domain))) {
                                 updateDomain(client, domain);
@@ -123,7 +127,26 @@ public class DomSampleService {
                     logger.error("Error in DomSampleService run loop", e);
                 }
             }
+        }
+    }
 
+    void samplingThread() {
+        try (var client = new BrowserlessClient(browserlessURI)) {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    EdgeDomain domain = samplingQueue.take();
+                    try (var lock = domainCoordinator.lockDomain(domain)) {
+                        updateDomain(client, domain.toString());
+                    } catch (Exception e) {
+                        logger.error("Error in DomSampleService run loop", e);
+                    }
+                }
+                catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    logger.info("DomSampleService interrupted, stopping...");
+                    return;
+                }
+            }
         }
     }
 
