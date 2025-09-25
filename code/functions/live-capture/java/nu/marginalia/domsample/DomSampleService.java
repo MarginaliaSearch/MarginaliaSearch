@@ -111,7 +111,7 @@ public class DomSampleService {
                     var domains = db.getScheduledDomains();
 
                     for (String domain : domains) {
-                        samplingQueue.offer(new EdgeDomain(domain));
+                        samplingQueue.put(new EdgeDomain(domain));
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
