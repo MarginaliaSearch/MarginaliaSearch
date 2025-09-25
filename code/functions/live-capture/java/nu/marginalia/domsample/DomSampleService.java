@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class DomSampleService {
     private final DomSampleDb db;
     private final HikariDataSource mariadbDataSource;
+    private final int sampleThreads;
     private final DomainCoordinator domainCoordinator;
     private final URI browserlessURI;
 
@@ -33,13 +34,14 @@ public class DomSampleService {
     public DomSampleService(DomSampleDb db,
                             HikariDataSource mariadbDataSource,
                             @Named("browserless-uri") String browserlessAddress,
-                            @Named("browserless-sample-threads") int threads,
+                            @Named("browserless-sample-threads") int sampleThreads,
                             DomainCoordinator domainCoordinator,
                             ServiceConfiguration serviceConfiguration)
             throws URISyntaxException
     {
         this.db = db;
         this.mariadbDataSource = mariadbDataSource;
+        this.sampleThreads = sampleThreads;
         this.domainCoordinator = domainCoordinator;
 
         if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
@@ -59,7 +61,7 @@ public class DomSampleService {
         }
 
         Thread.ofPlatform().daemon().start(this::mainThread);
-        for (int i = 0; i < threads; i++) {
+        for (int i = 0; i < sampleThreads; i++) {
             Thread.ofPlatform().daemon().start(this::samplingThread);
         }
     }
