@@ -33,6 +33,7 @@ public class AssistantMain extends MainClass {
                 new DomainCoordinationModule(),
                 new ServiceConfigurationModule(ServiceId.Assistant),
                 new ServiceDiscoveryModule(),
+                new DomainCoordinationModule(),
                 new DatabaseModule(false)
         );
 
