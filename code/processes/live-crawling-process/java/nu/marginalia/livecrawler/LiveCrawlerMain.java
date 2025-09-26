@@ -108,8 +108,10 @@ public class LiveCrawlerMain extends ProcessMainClass {
         System.setProperty("http.agent", WmsaHome.getUserAgent().uaString());
 
         // If these aren't set properly, the JVM will hang forever on some requests
-        System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
-        System.setProperty("sun.net.client.defaultReadTimeout", "30000");
+        System.setProperty("sun.net.client.defaultConnectTimeout", 
+                System.getProperty("crawler.jvmConnectTimeout", "30000"));
+        System.setProperty("sun.net.client.defaultReadTimeout", 
+                System.getProperty("crawler.jvmReadTimeout", "30000"));
 
         // We don't want to use too much memory caching sessions for https
         System.setProperty("javax.net.ssl.sessionCacheSize", "2048");
