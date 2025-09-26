@@ -120,6 +120,17 @@ public class ProcessSpawnerService {
             args.add("-Dsystem.serviceNode=" + System.getProperty("system.serviceNode"));
         }
 
+        // Add SOCKS proxy properties for crawler processes
+        if (System.getProperty("crawler.socksProxy.enabled") != null) {
+            args.add("-Dcrawler.socksProxy.enabled=" + System.getProperty("crawler.socksProxy.enabled"));
+        }
+        if (System.getProperty("crawler.socksProxy.list") != null) {
+            args.add("-Dcrawler.socksProxy.list=" + System.getProperty("crawler.socksProxy.list"));
+        }
+        if (System.getProperty("crawler.socksProxy.strategy") != null) {
+            args.add("-Dcrawler.socksProxy.strategy=" + System.getProperty("crawler.socksProxy.strategy"));
+        }
+
         if (Boolean.getBoolean("system.profile")) {
             // add jfr options
             args.add("-XX:+FlightRecorder");

@@ -19,6 +19,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
     implementation libs.bundles.mariadb
+    implementation libs.bundles.httpcomponents
     implementation libs.mockito
     implementation libs.guava
     implementation dependencies.create(libs.guice.get()) {
