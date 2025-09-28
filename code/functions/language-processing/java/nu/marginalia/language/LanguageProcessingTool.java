@@ -6,16 +6,20 @@ import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.keyword.DocumentKeywordExtractor;
+import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -56,7 +60,7 @@ public class LanguageProcessingTool extends Jooby {
     // Assign colors to the POS tags
 
     @NotNull
-    private ModelAndView<?> handleKeywords(Context context) {
+    private ModelAndView<?> handleKeywords(Context context) throws URISyntaxException {
         if ("GET".equals(context.getMethod())) {
            return new MapModelAndView("keywords.jte")
                    .put("textSample", "");
@@ -66,28 +70,38 @@ public class LanguageProcessingTool extends Jooby {
         }
 
         String textSample = context.form("textSample").value();
-        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(textSample);
-        Map<Long, String> posStyles = posTagStyles(dld);
 
+        // Run sentende extration on the text as-is
+        DocumentLanguageData dld = sentenceExtractorProvider.get().extractSentences(textSample);
+
+        // Run individual extraction logic
         var tfIdfCounts = new WordsTfIdfCounts(termFrequencyDict, dld);
         var titleKeywords = new TitleKeywords(dld);
         var nameLikeKeywords = new NameLikeKeywords(dld, 2);
         var subjectLikeKeywords = new SubjectLikeKeywords(tfIdfCounts, dld);
         var artifactKeywords = new ArtifactKeywords(dld);
-//        var urlKeywords = new UrlKeywords(url);
+
+        // Run full extraction logic to capture positioning etc
+        var extractedKeywords = new DocumentKeywordExtractor(termFrequencyDict)
+                .extractKeywords(dld, new LinkTexts(), new EdgeUrl("https://www.example.com/"));
 
         return new MapModelAndView("keywords.jte")
                 .put("textSample", textSample)
                 .put("language", dld.language())
-                .put("tagColors", posStyles)
+                .put("tagColors", posTagStyles(dld))
                 .put("sentences", dld.sentences())
                 .put("tfIdfReps", tfIdfCounts.getReps())
                 .put("titleReps", titleKeywords.getReps())
                 .put("nameLikeReps", nameLikeKeywords.getReps())
                 .put("subjectLikeReps", subjectLikeKeywords.getReps())
-                .put("artifacts", artifactKeywords.getWords());
+                .put("artifacts", artifactKeywords.getWords())
+                .put("importantWords", extractedKeywords.importantWords)
+                .put("positionedWords", extractedKeywords.wordToPos);
     }
 
+    /**
+     * Generate unique colors for each POS tag, to help the UI rendering
+     */
     public static Map<Long, String> posTagStyles(DocumentLanguageData dld) {
         Map<Long, String> styles = new HashMap<>();
 

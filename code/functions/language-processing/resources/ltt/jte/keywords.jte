@@ -1,7 +1,9 @@
+@import it.unimi.dsi.fastutil.ints.IntList
 @import nu.marginalia.language.model.WordRep
 @import nu.marginalia.language.model.DocumentSentence
 @import nu.marginalia.language.model.LanguageDefinition
 @import java.util.*
+@import java.util.stream.Collectors
 @import java.util.stream.IntStream
 
 @param String textSample
@@ -13,6 +15,8 @@
 @param Collection<WordRep> nameLikeReps
 @param Collection<WordRep> subjectLikeReps
 @param Collection<String> artifacts
+@param Collection<String> importantWords
+@param Map<String, IntList> positionedWords
 
 
 <!DOCTYPE html>
@@ -209,7 +213,7 @@
                         <div>
                             <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                                 <i class="fas fa-star text-yellow-500 mr-2"></i>
-                                Title
+                                Artifacts
                             </h3>
                             <div class="space-y-2">
                                 @for (String word : artifacts)
@@ -220,9 +224,53 @@
                             </div>
                         </div>
                     @endif
+
+                    @if (importantWords != null && !importantWords.isEmpty())
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                Important Words
+                            </h3>
+                            <div class="space-y-2">
+                                @for (String word : importantWords)
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm font-medium">${word}</span>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
+        <!-- Full simulation outcome from keyword extraction -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-list-ol text-purple-600 mr-2"></i>
+                    Outcome
+                </h2>
+            </div>
+            <div class="p-4">
+            @if (positionedWords != null && !positionedWords.isEmpty())
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-star text-yellow-500 mr-2"></i>
+                        Positioned Words
+                    </h3>
+                    <div class="space-y-2">
+                        @for (String word : positionedWords.keySet())
+                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                <span class="text-sm font-medium">${word}</span>
+                                <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${positionedWords.get(word).stream().map(Object::toString).collect(Collectors.joining(", "))}</span>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+            @endif
+            </div>
+        </div>
+
     </div>
 </div>
 </body>
