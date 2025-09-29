@@ -1,0 +1,16 @@
+<h1 class="my-3">Export DOM Sample Data</h1>
+
+<div class="my-3 p-3 border bg-light">
+	This will create an export of the system's DOM sample data, in a format that is more accessible than used internally.
+	This data is only gathered if the system is set up to run a headless browser.
+</div>
+
+<form method="post" action="actions/export-dom-sample-data" onsubmit="return confirm('Confirm export')">
+    <div class="my-3 py-3">
+        <div class="row">
+            <div class="col">
+                <button type="submit" class="btn btn-primary">Export</button>
+            </div>
+        </div>
+    </div>
+</form>

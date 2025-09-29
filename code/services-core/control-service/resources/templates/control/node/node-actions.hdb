@@ -22,6 +22,7 @@
     {{#if view.export-db-data}} {{> control/node/actions/partial-export-db-data }} {{/if}}
     {{#if view.export-from-crawl-data}} {{> control/node/actions/partial-export-from-crawl-data }} {{/if}}
     {{#if view.export-sample-data}} {{> control/node/actions/partial-export-sample-data }} {{/if}}
+    {{#if view.export-dom-sample-data}} {{> control/node/actions/partial-export-dom-sample-data }} {{/if}}
     {{#if view.restore-backup}} {{> control/node/actions/partial-restore-backup }} {{/if}}
     {{#if view.download-sample-data}} {{> control/node/actions/partial-download-sample-data }} {{/if}}
     <div class="mt-10">&nbsp;</div>

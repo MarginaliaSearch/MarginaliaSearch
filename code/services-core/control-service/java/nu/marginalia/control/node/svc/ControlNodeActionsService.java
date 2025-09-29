@@ -107,6 +107,9 @@ public class ControlNodeActionsService {
         Spark.post("/nodes/:id/actions/export-sample-data", this::exportSampleData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
+        Spark.post("/nodes/:id/actions/export-dom-sample-data", this::exportDomSampleData,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
+        );
     }
 
     private Object downloadSampleData(Request request, Response response) {
@@ -325,6 +328,17 @@ public class ControlNodeActionsService {
         String name = req.queryParams("name");
 
         exportClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, ctFilter, name);
+
+        return "";
+    }
+
+    private Object exportDomSampleData(Request req, Response rsp) throws Exception {
+        // Sanity check to ensure we run this on the right node,
+        // should be ensured by the UI as well.
+        if (1 != Integer.parseInt(req.params("id")))
+            throw new IllegalArgumentException("Must only be run on node 1");
+
+        exportClient.exportDomSampleData();
 
         return "";
     }

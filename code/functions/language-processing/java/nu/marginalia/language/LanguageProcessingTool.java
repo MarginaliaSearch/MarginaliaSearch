@@ -28,6 +28,7 @@ public class LanguageProcessingTool extends Jooby {
     private static final Logger logger = LoggerFactory.getLogger(LanguageProcessingTool.class);
     private final ThreadLocalSentenceExtractorProvider  sentenceExtractorProvider;
     private final TermFrequencyDict termFrequencyDict;
+
     static void main(String[] args) {
         Jooby.runApp(args, LanguageProcessingTool::new);
     }

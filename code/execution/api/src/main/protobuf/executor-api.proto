@@ -44,6 +44,7 @@ service ExecutorExportApi {
   rpc exportAtags(RpcExportRequest) returns (Empty) {}
   rpc exportSegmentationModel(RpcExportSegmentationModel) returns (Empty) {}
   rpc exportSampleData(RpcExportSampleData) returns (Empty) {}
+  rpc exportDomSampleData(RpcExportDomSampleData) returns (Empty) {}
   rpc exportRssFeeds(RpcExportRequest) returns (Empty) {}
   rpc exportTermFrequencies(RpcExportRequest) returns (Empty) {}
   rpc exportData(Empty) returns (Empty) {}
@@ -107,6 +108,11 @@ message RpcExportSampleData {
   string name = 3;
   string ctFilter = 4;
 }
+
+message RpcExportDomSampleData {
+  int64 msgId = 1;
+}
+
 message RpcDownloadSampleData {
   string sampleSet = 1;
 }
