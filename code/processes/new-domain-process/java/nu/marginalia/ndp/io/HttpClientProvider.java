@@ -3,7 +3,6 @@ package nu.marginalia.ndp.io;
 import com.google.inject.Provider;
 import nu.marginalia.proxy.SocksProxyConfiguration;
 import nu.marginalia.proxy.SocksProxyManager;
-import nu.marginalia.proxy.SocksProxyHttpClientFactory;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
@@ -24,6 +23,7 @@ import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -57,17 +57,22 @@ public class HttpClientProvider implements Provider<HttpClient> {
                 .setMaxConnTotal(50)
                 .setDefaultConnectionConfig(connectionConfig);
 
-        // Configure SOCKS proxy if enabled
-        SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
-        SocksProxyHttpClientFactory.configureConnectionManager(connectionManagerBuilder, selectedProxy);
+        connectionManagerBuilder.setSocketConfigResolver(route -> {
+            SocketConfig.Builder socketConfigBuilder = SocketConfig.custom();
+            // Configure SOCKS proxy if enabled
+            if (proxyManager.isProxyEnabled()) {
+                SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
+                InetSocketAddress socksProxyAddress = new InetSocketAddress(selectedProxy.getHost(), selectedProxy.getPort());
+                socketConfigBuilder.setSocksProxyAddress(socksProxyAddress);
+            }
+            socketConfigBuilder
+                    .setSoTimeout(Timeout.ofSeconds(10))
+                    .setSoLinger(TimeValue.ofSeconds(-1));
+
+            return socketConfigBuilder.build();
+        });
 
         connectionManager = connectionManagerBuilder.build();
-
-        connectionManager.setDefaultSocketConfig(SocketConfig.custom()
-                .setSoLinger(TimeValue.ofSeconds(-1))
-                .setSoTimeout(Timeout.ofSeconds(10))
-                .build()
-        );
 
         Thread.ofPlatform().daemon(true).start(() -> {
             try {

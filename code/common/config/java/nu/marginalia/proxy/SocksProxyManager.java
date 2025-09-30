@@ -3,9 +3,10 @@ package nu.marginalia.proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages SOCKS proxy selection and rotation for crawler requests.
@@ -29,19 +30,19 @@ public class SocksProxyManager {
             logger.info("SOCKS proxy support disabled");
         }
     }
-    
+
     /**
      * Selects the next proxy to use based on the configured strategy.
-     * Returns null if proxy support is disabled or no proxies are available.
      */
+    @Nonnull
     public SocksProxyConfiguration.SocksProxy selectProxy() {
         if (!config.isEnabled()) {
-            return null;
+            throw new IllegalStateException("Proxies not configured");
         }
         
         List<SocksProxyConfiguration.SocksProxy> proxies = config.getProxies();
         if (proxies.isEmpty()) {
-            return null;
+            throw new IllegalStateException("Proxies not configured");
         }
         
         SocksProxyConfiguration.SocksProxy selectedProxy;
@@ -59,7 +60,6 @@ public class SocksProxyManager {
                 break;
         }
         
-        logger.debug("Selected SOCKS proxy: {}", selectedProxy);
         return selectedProxy;
     }
     
@@ -74,6 +74,6 @@ public class SocksProxyManager {
      * Checks if proxy support is enabled and proxies are available.
      */
     public boolean isProxyEnabled() {
-        return config.isEnabled();
+        return config.isEnabled() && !config.getProxies().isEmpty();
     }
 }

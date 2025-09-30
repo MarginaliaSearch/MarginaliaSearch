@@ -16,7 +16,6 @@ import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import nu.marginalia.proxy.SocksProxyConfiguration;
 import nu.marginalia.proxy.SocksProxyManager;
-import nu.marginalia.proxy.SocksProxyHttpClientFactory;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -52,6 +51,7 @@ import org.slf4j.MarkerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -105,17 +105,22 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 .setDefaultConnectionConfig(connectionConfig)
                 .setTlsSocketStrategy(new DefaultClientTlsStrategy(SSLContext.getDefault()));
 
-        // Configure SOCKS proxy if enabled
-        SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
-        SocksProxyHttpClientFactory.configureConnectionManager(connectionManagerBuilder, selectedProxy);
+        connectionManagerBuilder.setSocketConfigResolver(route -> {
+            SocketConfig.Builder socketConfigBuilder = SocketConfig.custom();
+            // Configure SOCKS proxy if enabled
+            if (proxyManager.isProxyEnabled()) {
+                SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
+                InetSocketAddress socksProxyAddress = new InetSocketAddress(selectedProxy.getHost(), selectedProxy.getPort());
+                socketConfigBuilder.setSocksProxyAddress(socksProxyAddress);
+            }
+            socketConfigBuilder
+                .setSoTimeout(Timeout.ofSeconds(10))
+                .setSoLinger(TimeValue.ofSeconds(-1));
+
+            return socketConfigBuilder.build();
+        });
 
         connectionManager = connectionManagerBuilder.build();
-
-        connectionManager.setDefaultSocketConfig(SocketConfig.custom()
-                .setSoLinger(TimeValue.ofSeconds(-1))
-                .setSoTimeout(Timeout.ofSeconds(10))
-                .build()
-        );
 
         Thread.ofPlatform().daemon(true).start(() -> {
             try {
