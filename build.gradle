@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.0"
-    id "me.champeau.jmh" version "0.6.6"
+    id "me.champeau.jmh" version "0.7.3"
 
     // This is a workaround for a bug in the Jib plugin that causes it to stall randomly
     // https://github.com/GoogleContainerTools/jib/issues/3347
@@ -47,8 +47,8 @@ subprojects.forEach {it ->
 }
 
 ext {
-    jvmVersion = 24
-    dockerImageBase='container-registry.oracle.com/graalvm/jdk:24'
+    jvmVersion = 25
+    dockerImageBase='container-registry.oracle.com/graalvm/jdk:25'
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
     jibVersion = '3.4.5'

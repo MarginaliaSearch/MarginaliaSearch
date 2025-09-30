@@ -91,6 +91,11 @@ dependencies {
     testImplementation dependencies.create(libs.spark.get())
 }
 
+interface InjectedExecOps {
+    @Inject //@javax.inject.Inject
+    ExecOperations getExecOps()
+}
+
 task compileTailwind {
     def inputFile = file('tailwind/globals.css')
     def configFile = file('tailwind/tailwind.config.js')
@@ -103,7 +108,8 @@ task compileTailwind {
     outputs.file outputFile
 
     doLast {
-        exec {
+        def injected = project.objects.newInstance(InjectedExecOps)
+        injected.execOps.exec {
             // If you're getting a build error like 'npm error could not determine executable to run'
             // pointing you here, you need to run  `npm install -D tailwindcss`
             workingDir projectDir
