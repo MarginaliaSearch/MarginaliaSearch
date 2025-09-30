@@ -93,7 +93,7 @@ public class IndexService extends SparkService {
 
     @MqRequest(endpoint="FIRST-BOOT")
     public void setUpDefaultActors(String message) throws Exception {
-        logger.info("Initializing default actors");
+        eventLog.logEvent("FIRST-BOOT", "Initializing default actors");
 
         executionInit.initDefaultActors();
     }
