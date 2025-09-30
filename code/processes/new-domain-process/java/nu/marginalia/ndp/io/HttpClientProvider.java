@@ -1,6 +1,8 @@
 package nu.marginalia.ndp.io;
 
 import com.google.inject.Provider;
+import nu.marginalia.proxy.SocksProxyConfiguration;
+import nu.marginalia.proxy.SocksProxyManager;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
@@ -21,6 +23,7 @@ import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -29,10 +32,12 @@ import java.util.concurrent.TimeUnit;
 public class HttpClientProvider implements Provider<HttpClient> {
     private static final HttpClient client;
     private static PoolingHttpClientConnectionManager connectionManager;
+    private static final SocksProxyManager proxyManager;
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientProvider.class);
 
     static {
+        proxyManager = new SocksProxyManager(new SocksProxyConfiguration());
         try {
             client = createClient();
         } catch (Exception e) {
@@ -47,18 +52,27 @@ public class HttpClientProvider implements Provider<HttpClient> {
                 .setValidateAfterInactivity(TimeValue.ofSeconds(5))
                 .build();
 
-
-        connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+        PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
                 .setMaxConnPerRoute(2)
                 .setMaxConnTotal(50)
-                .setDefaultConnectionConfig(connectionConfig)
-                .build();
+                .setDefaultConnectionConfig(connectionConfig);
 
-        connectionManager.setDefaultSocketConfig(SocketConfig.custom()
-                .setSoLinger(TimeValue.ofSeconds(-1))
-                .setSoTimeout(Timeout.ofSeconds(10))
-                .build()
-        );
+        connectionManagerBuilder.setSocketConfigResolver(route -> {
+            SocketConfig.Builder socketConfigBuilder = SocketConfig.custom();
+            // Configure SOCKS proxy if enabled
+            if (proxyManager.isProxyEnabled()) {
+                SocksProxyConfiguration.SocksProxy selectedProxy = proxyManager.selectProxy();
+                InetSocketAddress socksProxyAddress = new InetSocketAddress(selectedProxy.getHost(), selectedProxy.getPort());
+                socketConfigBuilder.setSocksProxyAddress(socksProxyAddress);
+            }
+            socketConfigBuilder
+                    .setSoTimeout(Timeout.ofSeconds(10))
+                    .setSoLinger(TimeValue.ofSeconds(-1));
+
+            return socketConfigBuilder.build();
+        });
+
+        connectionManager = connectionManagerBuilder.build();
 
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.IGNORE)
