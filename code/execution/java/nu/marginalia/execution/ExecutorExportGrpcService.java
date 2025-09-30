@@ -63,6 +63,20 @@ public class ExecutorExportGrpcService
     }
 
     @Override
+    public void exportDomSampleData(RpcExportDomSampleData request, StreamObserver<Empty> responseObserver) {
+        try {
+            actorControlService.startFrom(ExecutorActor.EXPORT_DOM_SAMPLE_DATA,
+                    new ExportDomSampleDataActor.Export(request.getMsgId())
+            );
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
+        }
+    }
+
+    @Override
     public void exportRssFeeds(RpcExportRequest request, StreamObserver<Empty> responseObserver) {
         try {
             actorControlService.startFrom(ExecutorActor.EXPORT_FEEDS,

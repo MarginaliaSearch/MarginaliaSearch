@@ -59,6 +59,7 @@ public class ExecutorActorControlService {
                                        IndexConstructorMonitorActor indexConstructorMonitorActor,
                                        TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
                                        ExportDataActor exportDataActor,
+                                       ExportDomSampleDataActor exportDomSampleDataActor,
                                        ExportAtagsActor exportAtagsActor,
                                        ExportFeedsActor exportFeedsActor,
                                        ExportSampleDataActor exportSampleDataActor,
@@ -103,6 +104,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.EXPORT_DATA, exportDataActor);
         register(ExecutorActor.EXPORT_ATAGS, exportAtagsActor);
         register(ExecutorActor.EXPORT_FEEDS, exportFeedsActor);
+        register(ExecutorActor.EXPORT_DOM_SAMPLE_DATA, exportDomSampleDataActor);
         register(ExecutorActor.EXPORT_SAMPLE_DATA, exportSampleDataActor);
         register(ExecutorActor.EXPORT_TERM_FREQUENCIES, exportTermFrequenciesActor);
         register(ExecutorActor.EXPORT_SEGMENTATION_MODEL, exportSegmentationModelActor);

@@ -59,6 +59,15 @@ public class ExecutorExportClient {
                         .build());
     }
 
+    public void exportDomSampleData() throws Exception {
+        long msgId = createTrackingTokenMsg("dom-sample", 1, Duration.ofHours(6));
+        channelPool.call(ExecutorExportApiBlockingStub::exportDomSampleData)
+                .forNode(1)
+                .run(
+                        RpcExportDomSampleData.newBuilder().setMsgId(msgId).build()
+                );
+    }
+
     public long exportRssFeeds(int node, FileStorageId fid) throws Exception {
         long msgId = createTrackingTokenMsg("rss", node, Duration.ofHours(6));
         channelPool.call(ExecutorExportApiBlockingStub::exportRssFeeds)

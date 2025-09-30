@@ -22,6 +22,7 @@ public enum ExecutorActor {
     EXPORT_TERM_FREQUENCIES(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_FEEDS(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_SAMPLE_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    EXPORT_DOM_SAMPLE_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     DOWNLOAD_SAMPLE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     MIGRATE_CRAWL_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
 

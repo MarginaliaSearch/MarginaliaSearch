@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator;
-import nu.marginalia.extractor.AtagExporter;
-import nu.marginalia.extractor.FeedExporter;
-import nu.marginalia.extractor.SampleDataExporter;
-import nu.marginalia.extractor.TermFrequencyExporter;
+import nu.marginalia.extractor.*;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.tasks.ExportTaskRequest;
@@ -28,6 +25,7 @@ public class ExportTasksMain extends ProcessMainClass {
     private final FeedExporter feedExporter;
     private final SampleDataExporter sampleDataExporter;
     private final TermFrequencyExporter termFrequencyExporter;
+    private final DomSampleDataExporter domSampleDataExporter;
     private final WebsiteAdjacenciesCalculator websiteAdjacenciesCalculator;
     private final ProcessHeartbeat heartbeat;
 
@@ -60,6 +58,7 @@ public class ExportTasksMain extends ProcessMainClass {
                            FeedExporter feedExporter,
                            SampleDataExporter sampleDataExporter,
                            TermFrequencyExporter termFrequencyExporter,
+                           DomSampleDataExporter domSampleDataExporter,
                            Gson gson,
                            WebsiteAdjacenciesCalculator websiteAdjacenciesCalculator, ProcessHeartbeat heartbeat)
     {
@@ -68,6 +67,7 @@ public class ExportTasksMain extends ProcessMainClass {
         this.feedExporter = feedExporter;
         this.sampleDataExporter = sampleDataExporter;
         this.termFrequencyExporter = termFrequencyExporter;
+        this.domSampleDataExporter = domSampleDataExporter;
         this.websiteAdjacenciesCalculator = websiteAdjacenciesCalculator;
         this.heartbeat = heartbeat;
     }
@@ -93,6 +93,9 @@ public class ExportTasksMain extends ProcessMainClass {
                     break;
                 case SAMPLE_DATA:
                     sampleDataExporter.export(request.crawlId, request.destId, request.size, request.ctFilter, request.name);
+                    break;
+                case DOM_SAMPLE_DATA:
+                    domSampleDataExporter.export(request.destId);
                     break;
                 case ADJACENCIES:
                     websiteAdjacenciesCalculator.export();
