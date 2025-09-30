@@ -94,8 +94,8 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     private CloseableHttpClient createClient() throws NoSuchAlgorithmException, KeyManagementException {
         final ConnectionConfig connectionConfig = ConnectionConfig.custom()
-                .setSocketTimeout(10, TimeUnit.SECONDS)
-                .setConnectTimeout(30, TimeUnit.SECONDS)
+                .setSocketTimeout(Integer.getInteger("crawler.socketTimeout", 10), TimeUnit.SECONDS)
+                .setConnectTimeout(Integer.getInteger("crawler.connectTimeout", 30), TimeUnit.SECONDS)
                 .setValidateAfterInactivity(TimeValue.ofSeconds(5))
                 .build();
 
@@ -114,7 +114,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 socketConfigBuilder.setSocksProxyAddress(socksProxyAddress);
             }
             socketConfigBuilder
-                .setSoTimeout(Timeout.ofSeconds(10))
+                .setSoTimeout(Timeout.ofSeconds(Integer.getInteger("crawler.socketTimeout", 10)))
                 .setSoLinger(TimeValue.ofSeconds(-1));
 
             return socketConfigBuilder.build();
@@ -124,8 +124,8 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.RELAXED)
-                .setResponseTimeout(10, TimeUnit.SECONDS)
-                .setConnectionRequestTimeout(5, TimeUnit.MINUTES)
+                .setResponseTimeout(Integer.getInteger("crawler.responseTimeout", 10), TimeUnit.SECONDS)
+                .setConnectionRequestTimeout(Integer.getInteger("crawler.connectionRequestTimeout", 5), TimeUnit.MINUTES)
                 .build();
 
         return HttpClients.custom()

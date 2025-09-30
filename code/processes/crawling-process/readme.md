@@ -29,6 +29,37 @@ documents from each domain, to avoid wasting time and resources on domains that 
 
 On top of organic links, the crawler can use sitemaps and rss-feeds to discover new documents.
 
+## Configuration
+
+The crawler supports various configuration options via system properties that can be set in `system.properties`:
+
+### Crawler Behavior
+- `crawler.crawlSetGrowthFactor` (default: 1.25) - Growth factor for crawl depth
+- `crawler.minUrlsPerDomain` (default: 100) - Minimum URLs to crawl per domain
+- `crawler.maxUrlsPerDomain` (default: 10000) - Maximum URLs to crawl per domain
+- `crawler.poolSize` (default: 256) - Thread pool size for concurrent crawling
+- `crawler.useVirtualThreads` (default: false) - Use virtual threads instead of platform threads
+- `crawler.maxConcurrentRequests` (default: 512) - Maximum concurrent HTTP requests
+- `crawler.maxFetchSize` (default: 33554432) - Maximum fetch size in bytes
+
+### Timeout Configuration
+- `crawler.socketTimeout` (default: 10) - Socket timeout in seconds
+- `crawler.connectTimeout` (default: 30) - Connection timeout in seconds
+- `crawler.responseTimeout` (default: 10) - Response timeout in seconds
+- `crawler.connectionRequestTimeout` (default: 5) - Connection request timeout in minutes
+- `crawler.jvmConnectTimeout` (default: 30000) - JVM-level connect timeout in milliseconds
+- `crawler.jvmReadTimeout` (default: 30000) - JVM-level read timeout in milliseconds
+- `crawler.httpClientIdleTimeout` (default: 15) - HTTP client idle timeout in seconds
+- `crawler.httpClientConnectionPoolSize` (default: 256) - HTTP client connection pool size
+
+### User Agent Configuration
+- `crawler.userAgentString` - Custom user agent string
+- `crawler.userAgentIdentifier` - User agent identifier
+
+### Other Options
+- `links.block_mailing_lists` (default: false) - Block mailing list links
+- `ip-blocklist.disabled` (default: false) - Disable IP blocklist
+
 ## Central Classes
 
 * [CrawlerMain](java/nu/marginalia/crawl/CrawlerMain.java) orchestrates the crawling.
