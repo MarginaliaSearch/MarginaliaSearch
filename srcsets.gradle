@@ -17,8 +17,12 @@ tasks.register('fastTests', Test) {
     useJUnitPlatform {
         excludeTags("slow", "flaky")
     }
+    classpath = sourceSets.test.runtimeClasspath
+    testClassesDirs = sourceSets.test.output.classesDirs
 }
-
+dependencies {
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
 sourceSets {
     main {
         java {
