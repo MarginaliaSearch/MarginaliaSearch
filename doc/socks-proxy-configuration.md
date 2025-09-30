@@ -25,20 +25,22 @@ SOCKS proxy support is configured via system properties. The following propertie
 
 ### Example Configuration
 
-To enable SOCKS proxy with 3 remote servers using round-robin selection:
+To enable SOCKS proxy with 3 remote servers using round-robin selection,
+in `conf/properties/system.properties` or passed as system properties to
+the java processes via `-D`:
 
 ```bash
--Dcrawler.socksProxy.enabled=true
--Dcrawler.socksProxy.list=1.1.1.5:1080,1.1.1.10:1080,1.1.1.15:1080
--Dcrawler.socksProxy.strategy=ROUND_ROBIN
+crawler.socksProxy.enabled=true
+crawler.socksProxy.list=1.1.1.5:1080,1.1.1.10:1080,1.1.1.15:1080
+crawler.socksProxy.strategy=ROUND_ROBIN
 ```
 
 For authenticated proxies:
 
 ```bash
--Dcrawler.socksProxy.enabled=true
--Dcrawler.socksProxy.list=1.1.1.5:1080:user1:pass1,1.1.1.10:1080:user2:pass2,1.1.1.15:1080:user3:pass3
--Dcrawler.socksProxy.strategy=RANDOM
+crawler.socksProxy.enabled=true
+crawler.socksProxy.list=1.1.1.5:1080:user1:pass1,1.1.1.10:1080:user2:pass2,1.1.1.15:1080:user3:pass3
+crawler.socksProxy.strategy=RANDOM
 ```
 
 ## Setting Up SOCKS Proxies
