@@ -135,4 +135,6 @@ tasks.register('paperDoll', Test) {
         includeTags "paperdoll"
     }
     jvmArgs = [ '-DrunPaperDoll=true', '--enable-preview' ]
+    classpath = sourceSets.test.runtimeClasspath
+    testClassesDirs = sourceSets.test.output.classesDirs
 }
