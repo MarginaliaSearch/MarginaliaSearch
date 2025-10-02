@@ -123,7 +123,7 @@
     </language>
     <language isoCode="de" name="German" display="ltr">
         <keywordHash algorithm="asciish" />
-        <stemmer algorithm="snowball" variant="FRENCH" />
+        <stemmer algorithm="snowball" variant="GERMAN" />
         <sentenceDetector algorithm="opennlp"/>
         <unicodeNormalization algorithm="german" />
     </language>
