@@ -79,9 +79,9 @@
             <div class="mt-8 flex justify-center space-x-2 font-mono text-sm">
                 @for(ResultsPage page : results.getResultPages())
                     @if (page.current())
-                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 border dark:border-gray-600 border-gray-300 bg-gray-100 dark:bg-gray-900">${page.number()}</a>
+                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 border dark:border-gray-600 border-gray-400 bg-gray-200 dark:bg-gray-900">${page.number()}</a>
                     @else
-                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">${page.number()}</a>
+                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-900">${page.number()}</a>
                     @endif
                 @endfor
             </div>
