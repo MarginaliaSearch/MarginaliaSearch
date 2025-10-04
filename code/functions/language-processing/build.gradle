@@ -2,12 +2,17 @@ plugins {
     id 'java'
     id 'jvm-test-suite'
     id 'gg.jte.gradle' version '3.1.15'
+    id 'application'
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
     }
+}
+application {
+    mainClass = 'nu.marginalia.language.LanguageProcessingTool'
+    applicationName = 'language-processing-tool'
 }
 
 apply from: "$rootProject.projectDir/srcsets.gradle"

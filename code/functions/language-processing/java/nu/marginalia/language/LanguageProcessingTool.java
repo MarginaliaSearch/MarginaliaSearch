@@ -28,6 +28,7 @@ public class LanguageProcessingTool extends Jooby {
     private static final Logger logger = LoggerFactory.getLogger(LanguageProcessingTool.class);
     private final ThreadLocalSentenceExtractorProvider  sentenceExtractorProvider;
     private final TermFrequencyDict termFrequencyDict;
+
     static void main(String[] args) {
         Jooby.runApp(args, LanguageProcessingTool::new);
     }
@@ -41,7 +42,14 @@ public class LanguageProcessingTool extends Jooby {
                     new LanguageConfiguration(languageModels, new LanguageConfigLocation.Experimental()),
                     languageModels
             );
+
+            // Depending on how the tool is started, we may be in the project root, or the module root;
+            // so here's some guesswork to try to suss out which one it is...
             Path basePath = Path.of("code/functions/language-processing/").toAbsolutePath();
+            if (!Files.exists(basePath)) {
+                basePath = Path.of(".").toAbsolutePath();
+            }
+
             System.out.println("Base path: " + basePath);
 
             if (Files.exists(basePath.resolve("resources/ltt/jte")))
