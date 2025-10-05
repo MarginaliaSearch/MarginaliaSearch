@@ -237,8 +237,10 @@ public class DomainTestingQueue {
         // This acts not only to clean up domains that we've flagged as ACCEPTED, but also to
         // repair inconsistent states where domains might have incorrectly been added to NDP_NEW_DOMAINS
         try (var stmt = conn.createStatement()) {
+            conn.setAutoCommit(false);
             stmt.executeUpdate("DELETE FROM NDP_NEW_DOMAINS WHERE DOMAIN_ID IN (SELECT ID FROM EC_DOMAIN WHERE NODE_AFFINITY>=0)");
             stmt.executeUpdate("UPDATE NDP_NEW_DOMAINS INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=NDP_NEW_DOMAINS.DOMAIN_ID SET PRIORITY=1 WHERE DOMAIN_TOP='tumblr.com'");
+            conn.commit();
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to clean up NDP_NEW_DOMAINS", e);
