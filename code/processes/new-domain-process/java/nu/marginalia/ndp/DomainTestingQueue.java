@@ -38,6 +38,7 @@ public class DomainTestingQueue {
         this.dataSource = dataSource;
         this.linkGraphClient = linkGraphClient;
 
+
         Thread.ofPlatform()
                 .name("DomainTestingQueue::fetch()")
                 .start(this::fetch);
@@ -92,6 +93,13 @@ public class DomainTestingQueue {
     }
 
     public void fetch() {
+        try (var conn = dataSource.getConnection()) {
+            refreshQueue(conn);
+        } catch (Exception e) {
+            logger.error("Error refreshing the ndp queue");
+            throw new RuntimeException(e);
+        }
+
         while (true) {
             List<DomainToTest> domains = new ArrayList<>(2000);
             try (var conn = dataSource.getConnection();
@@ -126,6 +134,7 @@ public class DomainTestingQueue {
                 throw e; // Rethrow runtime exceptions to avoid wrapping them in another runtime exception
             }
             catch (Exception e) {
+                logger.error("Error in ndp process");
                 throw new RuntimeException("Failed to fetch domains from database", e);
             }
 
@@ -193,7 +202,8 @@ public class DomainTestingQueue {
 
         /* Insert new domains into NDP_NEW_DOMAINS table */
         try (var insertStmt = conn.prepareStatement("""
-                INSERT IGNORE INTO NDP_NEW_DOMAINS (DOMAIN_ID, PRIORITY) VALUES (?, ?)
+                INSERT INTO NDP_NEW_DOMAINS (DOMAIN_ID, PRIORITY) VALUES (?, ?)
+                       ON CONFLICT(DOMAIN_ID) DO UPDATE SET PRIORITY = excluded.PRIORITY
                 """)) {
             conn.setAutoCommit(false);
 
