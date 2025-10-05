@@ -3,6 +3,14 @@
 This function gathers various tools used in language processing,
 keyword extraction, and so on.
 
+## Language Configuration
+
+The files [resources/languages-default.xml](resources/languages-default.xml) and [resources/languages-experimental.xml](resources/languages-experimental.xml) hold the laguage definitions used by the search engine,
+the former is used in production and the latter in most tests that require language processing. 
+
+The search engine excludes any languages not configured in these files, though it is relatively easy to define a stub
+configuration that gets a simpler behavior out of the search engine.  
+
 ## Language Processing Tool
 
 It also houses a tool for inspecting the output of keyword extraction,
