@@ -58,7 +58,6 @@ public class NdpMain extends ProcessMainClass {
 
 
     public void run(int goalCount) throws InterruptedException {
-        logger.info("Wait for blacklist to load...");
         domainBlacklist.waitUntilLoaded();
 
         SimpleBlockingThreadPool threadPool = new SimpleBlockingThreadPool(
