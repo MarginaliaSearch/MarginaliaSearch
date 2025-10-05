@@ -38,7 +38,6 @@ public class DomainTestingQueue {
         this.dataSource = dataSource;
         this.linkGraphClient = linkGraphClient;
 
-
         Thread.ofPlatform()
                 .name("DomainTestingQueue::fetch()")
                 .start(this::fetch);
@@ -203,7 +202,7 @@ public class DomainTestingQueue {
         /* Insert new domains into NDP_NEW_DOMAINS table */
         try (var insertStmt = conn.prepareStatement("""
                 INSERT INTO NDP_NEW_DOMAINS (DOMAIN_ID, PRIORITY) VALUES (?, ?)
-                       ON CONFLICT(DOMAIN_ID) DO UPDATE SET PRIORITY = excluded.PRIORITY
+                ON DUPLICATE KEY UPDATE PRIORITY = VALUES(PRIORITY)
                 """)) {
             conn.setAutoCommit(false);
 
