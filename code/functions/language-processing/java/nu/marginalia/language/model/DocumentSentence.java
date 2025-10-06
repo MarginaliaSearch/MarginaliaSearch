@@ -172,7 +172,9 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < wordsLowerCase.length; i++) {
-            sb.append(wordsLowerCase[i]).append('[').append(posTags[i]).append(']');
+            sb.append(wordsLowerCase[i]);
+            if (posTags.length > 0)
+                sb.append('[').append(posTags[i]).append(']');
             if (isSeparatorComma(i)) {
                 sb.append(',');
             }

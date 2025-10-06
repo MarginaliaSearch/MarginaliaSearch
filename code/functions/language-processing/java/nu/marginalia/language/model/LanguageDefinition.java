@@ -16,6 +16,7 @@ import java.util.Map;
 public final class LanguageDefinition {
     private final String isoCode;
     private final String name;
+    private final String displayDir;
     private final Stemmer stemmer;
     private final UnicodeNormalization unicodeNormalization;
     private final KeywordHasher keywordHasher;
@@ -26,6 +27,7 @@ public final class LanguageDefinition {
     private final Map<PosPatternCategory, List<PosPattern>> posPatterns;
     public LanguageDefinition(String isoCode,
                               String name,
+                              String displayDir,
                               Stemmer stemmer,
                               UnicodeNormalization unicodeNormalization,
                               KeywordHasher keywordHasher,
@@ -33,6 +35,7 @@ public final class LanguageDefinition {
                               Map<PosPatternCategory, List<PosPattern>> posPatterns) {
         this.isoCode = isoCode;
         this.name = name;
+        this.displayDir = displayDir;
         this.stemmer = stemmer;
         this.unicodeNormalization = unicodeNormalization;
         this.keywordHasher = keywordHasher;
@@ -50,6 +53,10 @@ public final class LanguageDefinition {
 
     public Stemmer stemmer() {
         return stemmer;
+    }
+
+    public String displayDir() {
+        return displayDir;
     }
 
     @Nullable

@@ -1,13 +1,24 @@
 package nu.marginalia.language.encoding;
 
+import java.util.regex.Pattern;
+
 public interface UnicodeNormalization {
 
     String flattenUnicode(String s);
+    Pattern wordBreakPattern();
+
+    static Pattern basicWordBreaks = Pattern.compile("((\\s+[(]?)|[|,]|([.;\\-()]+(\\s+|$)))");
+    static Pattern europeanWordBreaks = Pattern.compile("([^/<>$:_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
 
     static final boolean NO_FLATTEN_UNICODE =
             Boolean.getBoolean("system.noFlattenUnicode");
 
     class JustNormalizeQuotes implements UnicodeNormalization {
+
+        public Pattern wordBreakPattern() {
+            return basicWordBreaks;
+        }
+
         public String flattenUnicode(String s) {
             if (NO_FLATTEN_UNICODE)
                 return s;
@@ -35,6 +46,13 @@ public interface UnicodeNormalization {
     }
 
     class FlattenEAccents implements UnicodeNormalization {
+        public Pattern wordBreakPattern() {
+            if (NO_FLATTEN_UNICODE)
+                return basicWordBreaks;
+
+            return europeanWordBreaks;
+        }
+
         public String flattenUnicode(String s) {
             if (NO_FLATTEN_UNICODE)
                 return s;
@@ -67,6 +85,14 @@ public interface UnicodeNormalization {
     }
 
     class Flattenß implements UnicodeNormalization {
+
+        public Pattern wordBreakPattern() {
+            if (NO_FLATTEN_UNICODE)
+                return basicWordBreaks;
+
+            return europeanWordBreaks;
+        }
+
         public String flattenUnicode(String s) {
             if (NO_FLATTEN_UNICODE)
                 return s;
@@ -96,6 +122,12 @@ public interface UnicodeNormalization {
     }
 
     class FlattenAllLatin implements UnicodeNormalization {
+        public Pattern wordBreakPattern() {
+            if (NO_FLATTEN_UNICODE)
+                return basicWordBreaks;
+
+            return europeanWordBreaks;
+        }
 
         public String flattenUnicode(String s) {
             if (NO_FLATTEN_UNICODE)

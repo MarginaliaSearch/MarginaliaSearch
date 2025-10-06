@@ -8,7 +8,7 @@ import nu.marginalia.language.model.LanguageDefinition;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import static nu.marginalia.language.WordPatterns.MAX_WORD_LENGTH;
 
@@ -19,19 +19,7 @@ public class SentenceSegmentSplitter {
     public record SeparatedSentence(String[] words, BitSet separators) { }
 
     private static final CharMatcher noiseCharacterMatcher = CharMatcher.anyOf("/*-");
-    private static final Pattern wordBreakPattern;
 
-    static {
-        if (Boolean.getBoolean("system.noFlattenUnicode")) {
-            // If we don't flatten unicode, we split words on whitespace and punctuation.
-            wordBreakPattern = Pattern.compile("(\\s+|[|]|([.,;\\-]+(\\s+|$)))");
-        }
-        else {
-            // If we flatten unicode, we do this...
-            // FIXME: This can almost definitely be cleaned up and simplified.
-            wordBreakPattern = Pattern.compile("([^/<>$:_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
-        }
-    }
 
     SentenceSegmentSplitter(LanguageDefinition languageDefinition) {
         this.unicodeNormalization = languageDefinition.unicodeNormalization();
@@ -45,7 +33,7 @@ public class SentenceSegmentSplitter {
     public SeparatedSentence splitSegment(String segment, int maxLength) {
         String flatSegment = unicodeNormalization.flattenUnicode(segment);
 
-        var matcher = wordBreakPattern.matcher(flatSegment);
+        Matcher matcher = unicodeNormalization.wordBreakPattern().matcher(flatSegment);
 
         List<String> words = new ArrayList<>(flatSegment.length()/6);
         TIntArrayList separators = new TIntArrayList(flatSegment.length()/6);

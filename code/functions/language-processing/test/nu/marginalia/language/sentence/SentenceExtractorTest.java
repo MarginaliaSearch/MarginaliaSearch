@@ -7,6 +7,7 @@ import nu.marginalia.language.model.UnsupportedLanguageException;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
@@ -27,6 +28,19 @@ class SentenceExtractorTest {
     public static void setUp() throws IOException, ParserConfigurationException, SAXException {
         languageConfig = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
         sentenceExtractor = new SentenceExtractor(languageConfig, WmsaHome.getLanguageModels());
+    }
+
+    @Test
+    @Disabled
+    void testFarsi() {
+        String text = """
+                فارسی دری، در طولِ تاریخ، زبانِ فرهنگی و ارجمند امپراتوری‌های پرشماری در آسیای غربی، میانه و جنوبی بوده است. این زبان تأثیرات بزرگی را بر زبان‌های همسایه خویش، از جمله دیگر زبان‌های ایرانی، زبان‌های ترکی (به ویژه ازبکی و آذربایجانی)، ارمنی، گرجی و زبان‌های هندوآریایی (به ویژه اردو) گذاشته است. فارسی بر عربی نیز تأثیر گذاشته و از آن تأثیر پذیرفته است. این زبان حتی در میان کسانی که گویشور بومی آن نبوده‌اند، همانند ترکان عثمانی در امپراتوری عثمانی یا پشتون‌ها در افغانستان، و هند در دوره گورکانیان برای دورانی زبان رسمی دیوان‌سالاری بوده است.
+                """;
+        var dld = sentenceExtractor.extractSentence(languageConfig.getLanguage("fa"), text, EnumSet.noneOf(HtmlTag.class));
+
+        String text2 = " (به ویژه اردو) ";
+        dld = sentenceExtractor.extractSentence(languageConfig.getLanguage("fa"), text2, EnumSet.noneOf(HtmlTag.class));
+        System.out.println(dld);
     }
 
     @Test

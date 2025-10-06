@@ -127,6 +127,14 @@
         <sentenceDetector algorithm="opennlp"/>
         <unicodeNormalization algorithm="german" />
     </language>
+    <!--
+    <language isoCode="fa" name="Farsi" display="rtl">
+        <keywordHash algorithm="utf8" />
+        <stemmer algorithm="none" />
+        <sentenceDetector algorithm="opennlp"/>
+        <unicodeNormalization algorithm="minimal" />
+    </language>
+    -->
     <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
     <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
     <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />

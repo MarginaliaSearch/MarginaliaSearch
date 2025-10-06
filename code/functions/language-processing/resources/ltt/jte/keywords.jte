@@ -86,7 +86,7 @@
             </div>
             @if (sentences != null)
             @for (DocumentSentence sentence : sentences)
-            <div class="p-4 space-y-4">
+            <div class="p-4 space-y-4" dir="${language.displayDir()}">
                 <div class="sentence-boundary pl-4 py-4 rounded">
                     @for (int pos : IntStream.range(0, sentence.length()).toArray())
                         <ruby class="p-4">

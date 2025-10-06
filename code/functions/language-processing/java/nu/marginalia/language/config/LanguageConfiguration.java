@@ -129,6 +129,7 @@ public class LanguageConfiguration {
 
             String isoCode = languageTag.getAttribute("isoCode").toLowerCase();
             String name = languageTag.getAttribute("name");
+            String displayDir = languageTag.getAttribute("display");
 
             try {
                 PosTagger posTagger = parsePosTag(languageTag, isoCode);
@@ -139,7 +140,7 @@ public class LanguageConfiguration {
                 UnicodeNormalization unicodeNormalization = parseUnicodeNormalization(languageTag, isoCode);
 
                 languages.put(isoCode,
-                        new LanguageDefinition(isoCode, name, stemmer, unicodeNormalization, keywordHasher, posTagger, posPatterns));
+                        new LanguageDefinition(isoCode, name, displayDir, stemmer, unicodeNormalization, keywordHasher, posTagger, posPatterns));
             }
             catch (IOException ex) {
                 logger.error("Failed to set up language " + isoCode, ex);
