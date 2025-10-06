@@ -34,6 +34,9 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-db-data">Export Database Data</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-sample-data">Export Sample Crawl Data</a></li>
+            {{#eq 1 node.id}}
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-dom-sample-data">Export DOM Sample Crawl Data</a></li>
+            {{/eq}}
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-from-crawl-data">Export From Crawl Data</a></li>
             <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-segmentation">Export Segmentation Model</a></li>
             <li><hr class="dropdown-divider"></li>

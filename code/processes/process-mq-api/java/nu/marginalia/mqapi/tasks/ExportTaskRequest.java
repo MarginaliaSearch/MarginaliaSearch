@@ -9,6 +9,7 @@ public class ExportTaskRequest {
         TERM_FREQ,
         SAMPLE_DATA,
         ADJACENCIES,
+        DOM_SAMPLE_DATA
     }
 
     public Task task;
@@ -55,5 +56,11 @@ public class ExportTaskRequest {
 
     public static ExportTaskRequest adjacencies() {
         return new ExportTaskRequest(Task.ADJACENCIES);
+    }
+
+    public static ExportTaskRequest domSampleData(FileStorageId destId) {
+       ExportTaskRequest request = new ExportTaskRequest(Task.DOM_SAMPLE_DATA);
+       request.destId = destId;
+       return request;
     }
 }
