@@ -19,6 +19,9 @@ tasks.register('fastTests', Test) {
     }
 }
 
+dependencies {
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
 sourceSets {
     main {
         java {
