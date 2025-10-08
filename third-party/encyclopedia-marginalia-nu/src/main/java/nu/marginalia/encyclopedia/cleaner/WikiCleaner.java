@@ -7,7 +7,9 @@ import nu.marginalia.encyclopedia.model.Link;
 import nu.marginalia.encyclopedia.model.LinkList;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
@@ -73,7 +75,7 @@ public class WikiCleaner {
 
         doc.filter(CleanerFilter.builder()
                 .badIds(Set.of("toc", "catlinks", "Notes", "mw-navigation", "mw-data-after-content", "jump-to-nav"))
-                .badClasses(Set.of("mw-references-wrap", "references", "reference", "siteSub", "refbegin"))
+                .badClasses(Set.of("zim-footer", "mw-references-wrap", "references", "reference", "siteSub", "refbegin"))
                 .build()
         );
 

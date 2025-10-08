@@ -9,12 +9,9 @@ import org.jsoup.nodes.Document;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class SummaryExtractor {
     private final int maxSummaryLength;
-
-    private final Pattern truncatedCharacters = Pattern.compile("[^a-zA-Z0-9]{3,}");
 
     private final List<SummaryHeuristic> heuristics = new ArrayList<>();
 
@@ -41,8 +38,7 @@ public class SummaryExtractor {
         for (var heuristic : heuristics) {
             String maybe = heuristic.summarize(parsed, importantWords);
             if (!maybe.isBlank()) {
-                String cleaned = truncatedCharacters.matcher(maybe).replaceAll(" ");
-                return abbreivateSummary(cleaned);
+                return abbreivateSummary(maybe);
             }
         }
         return "";

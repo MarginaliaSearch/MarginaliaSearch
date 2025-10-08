@@ -187,14 +187,14 @@ public class SummarizingDOMFilter implements NodeFilter {
                 if ((!reachedNonWhite) || lastWasWhite)
                     continue;
 
-                if (isAscii(c) && Character.isAlphabetic(c)) {
+                if (Character.isAlphabetic(c)) {
                     length++;
                 }
 
                 lastWasWhite = true;
             }
             else if (!isInvisibleChar(c)) {
-                if (isAscii(c) && Character.isAlphabetic(c)) {
+                if (Character.isAlphabetic(c)) {
                     length++;
                 }
                 lastWasWhite = false;
@@ -203,10 +203,6 @@ public class SummarizingDOMFilter implements NodeFilter {
         }
 
         return length;
-    }
-
-    public boolean isAscii(int cp) {
-        return (cp & ~0x7F) == 0;
     }
 
     public record NodeStatistics(Node node, int tagLength, int textLength, int pos) {
