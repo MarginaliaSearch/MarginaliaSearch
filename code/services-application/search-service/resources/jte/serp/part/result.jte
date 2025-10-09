@@ -1,7 +1,9 @@
+@import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.model.idx.DocumentFlags
 @import nu.marginalia.search.model.SearchParameters
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.UrlDetails
+
 @param ClusteredUrlDetails result
 @param SearchParameters parameters
 @param boolean domainSearch
@@ -17,7 +19,7 @@
                     <div class="flex grow justify-between items-start">
                         <div class="flex-1">
                             <h2 class="text-md sm:text-xl ${result.colorScheme.textColor} font-serif mr-4 break-words hyphens-auto">
-                                <a href="${result.first.url.toString()}" rel="noopener noreferrer">$unsafe{result.first.displayTitle()}</a>
+                                <a href="${result.first.url.toString()}" rel="noopener noreferrer" dir="auto">$unsafe{result.first.displayTitle()}</a>
                             </h2>
 
                             <div class="text-sm mt-1">
@@ -33,7 +35,7 @@
 
 
                 <div class="overflow-auto flex-1">
-                <p class="mt-2 text-sm text-black dark:text-white leading-relaxed break-words">
+                <p class="mt-2 text-sm text-black dark:text-white leading-relaxed break-words" dir="auto">
                     $unsafe{result.first.displayDescription()}
                 </p>
                 </div>
