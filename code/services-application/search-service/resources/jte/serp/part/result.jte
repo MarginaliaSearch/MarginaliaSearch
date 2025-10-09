@@ -64,7 +64,7 @@
                             @if ("PDF".equals(item.format))
                                 <i title="PDF" class="fas fa-file-pdf text-red-500"></i>
                             @endif
-                            <a href="${item.url.toString()}" class="underline" rel="noopener noreferrer">$unsafe{item.displayTitle()}</a>
+                            <a href="${item.url.toString()}" class="underline" rel="noopener noreferrer" dir="auto">$unsafe{item.displayTitle()}</a>
                         </li>
                     @endfor
                 </ul>
