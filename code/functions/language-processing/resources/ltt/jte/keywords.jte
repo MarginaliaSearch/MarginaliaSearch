@@ -60,6 +60,7 @@
             <textarea name="textSample"
                     class="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     rows="4"
+                    dir="auto"
                     placeholder="Enter your text here to analyze...">${textSample}</textarea>
             <div class="flex justify-between items-center mt-3">
                 <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
@@ -91,7 +92,7 @@
                     @for (int pos : IntStream.range(0, sentence.length()).toArray())
                         <ruby class="p-4">
                             @if (language.hasPosParsing())
-                                <span class="text-xl font-serif ${tagColors.get(sentence.posTags[pos])}">
+                                <span class="text-xl font-serif ${tagColors.get(sentence.posTags[pos])}"  dir="${language.displayDir()}">
                                     ${sentence.wordsLowerCase[pos]}
                                 </span>
                                 <rt>
@@ -146,7 +147,7 @@
                         <div class="space-y-2">
                             @for (WordRep rep : tfIdfReps)
                             <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span class="text-sm font-medium">${rep.word}</span>
+                                <span class="text-sm font-medium"  dir="${language.displayDir()}">${rep.word}</span>
                                 @if (rep.length > 1)
                                     <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
                                 @endif
@@ -164,7 +165,7 @@
                             <div class="space-y-2">
                                 @for (WordRep rep : nameLikeReps)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                        <span class="text-sm font-medium">${rep.word}</span>
+                                        <span class="text-sm font-medium"  dir="${language.displayDir()}">${rep.word}</span>
                                         @if (rep.length > 1)
                                         <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
                                         @endif
@@ -182,7 +183,7 @@
                             <div class="space-y-2">
                                 @for (WordRep rep : subjectLikeReps)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                        <span class="text-sm font-medium">${rep.word}</span>
+                                        <span class="text-sm font-medium"  dir="${language.displayDir()}">${rep.word}</span>
                                         @if (rep.length > 1)
                                             <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
                                         @endif
@@ -200,7 +201,7 @@
                             <div class="space-y-2">
                                 @for (WordRep rep : titleReps)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                        <span class="text-sm font-medium">${rep.word}</span>
+                                        <span class="text-sm font-medium"  dir="${language.displayDir()}">${rep.word}</span>
                                         @if (rep.length > 1)
                                             <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${rep.length}</span>
                                         @endif
@@ -218,7 +219,7 @@
                             <div class="space-y-2">
                                 @for (String word : artifacts)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                        <span class="text-sm font-medium">${word}</span>
+                                        <span class="text-sm font-medium"  dir="${language.displayDir()}">${word}</span>
                                     </div>
                                 @endfor
                             </div>
@@ -234,7 +235,7 @@
                             <div class="space-y-2">
                                 @for (String word : importantWords)
                                     <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                        <span class="text-sm font-medium">${word}</span>
+                                        <span class="text-sm font-medium"  dir="${language.displayDir()}">${word}</span>
                                     </div>
                                 @endfor
                             </div>
@@ -261,7 +262,7 @@
                     <div class="space-y-2">
                         @for (String word : positionedWords.keySet())
                             <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span class="text-sm font-medium">${word}</span>
+                                <span class="text-sm font-medium" dir="${language.displayDir()}">${word}</span>
                                 <span class="text-xs text-gray-600 bg-yellow-100 px-2 py-1 rounded">${positionedWords.get(word).stream().map(Object::toString).collect(Collectors.joining(", "))}</span>
                             </div>
                         @endfor
