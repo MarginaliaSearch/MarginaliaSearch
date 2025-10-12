@@ -1,15 +1,14 @@
 package nu.marginalia.index.results;
 
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
-import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 import nu.marginalia.index.model.SearchContext;
 
 import java.util.BitSet;
-import java.util.List;
+import java.util.function.IntToDoubleFunction;
 
 /** Visitor for calculating the best BM25 score for a graph representing a search query
  */
-public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
+public class Bm25GraphVisitor implements IntToDoubleFunction {
     private static final long AVG_LENGTH = 5000;
 
     private final float[] counts;
@@ -39,27 +38,7 @@ public class Bm25GraphVisitor implements CqExpression.DoubleVisitor {
     }
 
     @Override
-    public double onAnd(List<? extends CqExpression> parts) {
-        double value = 0;
-
-        for (var part : parts) {
-            value += part.visit(this);
-        }
-
-        return value;
-    }
-
-    @Override
-    public double onOr(List<? extends CqExpression> parts) {
-        double value = 0;
-        for (var part : parts) {
-            value = Math.max(value, part.visit(this));
-        }
-        return value;
-    }
-
-    @Override
-    public double onLeaf(int idx) {
+    public double applyAsDouble(int idx) {
         if (!mask.get(idx)) {
             return 0;
         }

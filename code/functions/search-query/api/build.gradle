@@ -3,6 +3,7 @@ plugins {
 
     id "com.google.protobuf" version "0.9.4"
     id 'jvm-test-suite'
+    id "me.champeau.jmh" version "0.7.3"
 }
 
 java {
@@ -49,4 +50,16 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 
+}
+
+jmh {
+    jvmArgs = [ "--enable-preview" ]
+}
+tasks.withType(me.champeau.jmh.WithJavaToolchain).configureEach {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    })
+}
+tasks.withType(me.champeau.jmh.JmhBytecodeGeneratorTask).configureEach {
+    jvmArgs = ["--enable-preview"]
 }

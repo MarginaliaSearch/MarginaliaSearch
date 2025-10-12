@@ -2,13 +2,12 @@ package nu.marginalia.index.results;
 
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
-import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.model.idx.WordFlags;
 
-import java.util.List;
+import java.util.function.IntToDoubleFunction;
 
-public class TermFlagsGraphVisitor implements CqExpression.DoubleVisitor {
+public class TermFlagsGraphVisitor implements IntToDoubleFunction {
     private static final long AVG_LENGTH = 5000;
 
     private final CqDataLong wordMetaData;
@@ -28,26 +27,7 @@ public class TermFlagsGraphVisitor implements CqExpression.DoubleVisitor {
         this.frequencies = ctx.fullCounts;
     }
 
-    @Override
-    public double onAnd(List<? extends CqExpression> parts) {
-        double value = 0;
-        for (var part : parts) {
-            value += part.visit(this);
-        }
-        return value;
-    }
-
-    @Override
-    public double onOr(List<? extends CqExpression> parts) {
-        double value = 0;
-        for (var part : parts) {
-            value = Math.max(value, part.visit(this));
-        }
-        return value;
-    }
-
-    @Override
-    public double onLeaf(int idx) {
+    public double applyAsDouble(int idx) {
         double count = evaluatePriorityScore(idx);
 
         int freq = frequencies.get(idx);

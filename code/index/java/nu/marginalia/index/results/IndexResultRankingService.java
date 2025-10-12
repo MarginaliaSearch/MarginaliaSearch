@@ -12,6 +12,7 @@ import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
@@ -351,12 +352,12 @@ public class IndexResultRankingService {
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
 
-        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
+        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.forData(positions);
 
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
 
-        CompiledQueryLong wordFlagsQuery = compiledQuery.root.newQuery(wordFlags);
+        CompiledQueryLong wordFlagsQuery = compiledQuery.forData(wordFlags);
         if (!meetsQueryStrategyRequirements(wordFlagsQuery, queryParams)) {
             return null;
         }
@@ -406,10 +407,10 @@ public class IndexResultRankingService {
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
         double score_proximity = params.getTcfProximityWeight() * proximitiyFac;
         double score_bM25 = params.getBm25Weight()
-                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
+                * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
         double score_bFlags = params.getBm25Weight()
-                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
+                * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
