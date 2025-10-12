@@ -13,6 +13,7 @@ public class CompiledQueryParser {
         if (parts.isEmpty()) {
             return new CompiledQuery<>(
                     CqExpression.empty(),
+                    List.of(),
                     new CqData<>(new String[0])
             );
         }
@@ -62,8 +63,7 @@ public class CompiledQueryParser {
         String[] cqData = new String[wordIds.size()];
         wordIds.forEach((w, i) -> cqData[i] = w);
 
-        return root.newQuery(cqData);
-
+        return new CompiledQuery<>(root, CqExpression.allPaths(root), cqData);
     }
 
     private static class AndOrState {
