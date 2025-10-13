@@ -11,6 +11,8 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static nu.marginalia.skiplist.SkipListConstants.*;
 
@@ -72,10 +74,10 @@ public class SkipListWriter implements AutoCloseable {
         assert (buffer.position() % 8) == 0;
     }
 
-    public long writeList(LongArray input, long offset, int n) throws IOException {
+    public long writeList(LongArray input, long inputOffset, int n) throws IOException {
         long startPos = documentsChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
-        assert input.isSortedN(2, offset, offset + 2L*n) : "Not sorted @ " + input.hashCode();
+        assert input.isSortedN(RECORD_SIZE, inputOffset, inputOffset + RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(inputOffset, inputOffset+RECORD_SIZE*n).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
         maxValuesList.clear();
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
@@ -89,12 +91,14 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < n; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i));
+                docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i));
             }
 
             // Write the values
             for (int i = 0; i < n; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i + 1));
+                for (int j = 1; j < RECORD_SIZE; j++) {
+                    docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i + j));
+                }
             }
 
             docsBuffer.flip();
@@ -137,7 +141,7 @@ public class SkipListWriter implements AutoCloseable {
             writeCompactBlockHeader(docsBuffer, rootBlockCapacity, (byte) rootBlockPointerCount, flags);
 
             findBlockHighestValues(input, maxValuesList,
-                    offset + (long) RECORD_SIZE * rootBlockCapacity,
+                    inputOffset + (long) RECORD_SIZE * rootBlockCapacity,
                     numBlocks,
                     n - rootBlockCapacity);
 
@@ -152,16 +156,18 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < rootBlockCapacity; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i));
+                docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i));
             }
 
             // Write the values
             for (int i = 0; i < rootBlockCapacity; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i + 1));
+                for (int j = 1; j < RECORD_SIZE; j++) {
+                    docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i + j));
+                }
             }
 
             // Move offset to next block's data
-            offset += 2L * rootBlockCapacity;
+            inputOffset += RECORD_SIZE * rootBlockCapacity;
             writtenRecords += rootBlockCapacity;
 
             // Align block with page size
@@ -206,18 +212,19 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < blockSize; i++) {
-                long docId = input.get(offset + 2L * i);
+                long docId = input.get(inputOffset + RECORD_SIZE * i);
                 docsBuffer.putLong(docId);
             }
 
             // Write the values
             for (int i = 0; i < blockSize; i++) {
-                long val = input.get(offset + 2L * i + 1);
-                docsBuffer.putLong(val);
+                for (int j = 1; j < RECORD_SIZE; j++) {
+                    docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i + j));
+                }
             }
 
             // Move offset to next block's data
-            offset += 2L * Math.min(nRemaining, blockCapacity);
+            inputOffset += RECORD_SIZE * Math.min(nRemaining, blockCapacity);
             writtenRecords += Math.min(nRemaining, blockCapacity);
 
             // Align block with page size everywhere but the last
@@ -251,8 +258,8 @@ public class SkipListWriter implements AutoCloseable {
             assert n >= 0;
 
             int blockCapacity = nonRootBlockCapacity(i);
-            long offsetEnd =  offsetStart + 2L*Math.min(n, blockCapacity) - 2L;
-            offsetStart += 2L*Math.min(n, blockCapacity);
+            long offsetEnd =  offsetStart + RECORD_SIZE * Math.min(n, blockCapacity) - RECORD_SIZE;
+            offsetStart += RECORD_SIZE * Math.min(n, blockCapacity);
 
             n -= blockCapacity;
             output.add(input.get(offsetEnd));
@@ -273,7 +280,5 @@ public class SkipListWriter implements AutoCloseable {
 
         return blocks;
     }
-
-
 
 }

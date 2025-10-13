@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.LongStream;
 
+import static nu.marginalia.skiplist.SkipListConstants.RECORD_SIZE;
+
 public class SkipListReaderTest {
     Path docsFile;
 
@@ -40,10 +42,12 @@ public class SkipListReaderTest {
 
     LongArray createArray(Arena arena, long[] keys, long[] values) {
         assert keys.length == values.length;
-        MemorySegment ms = arena.allocate(keys.length * 16);
+        MemorySegment ms = arena.allocate(keys.length * RECORD_SIZE*8);
         for (int i = 0; i < keys.length; i++) {
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i, keys[i]);
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i+1, values[i]);
+            ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE*i, keys[i]);
+            for (int vi = 1; vi < RECORD_SIZE; vi++) {
+                ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE * i + vi, values[i]);
+            }
         }
         return LongArrayFactory.wrap(ms);
     }
