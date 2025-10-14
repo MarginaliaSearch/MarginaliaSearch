@@ -26,9 +26,10 @@ public class DocumentKeywordsBuilder {
     // |------64 letters is this long-------------------------------|
     // granted, some of these words are word n-grams, but 64 ought to
     // be plenty. The lexicon writer has another limit that's higher.
-    private final int MAX_WORD_LENGTH = 64;
-    private final int MAX_POSITIONS_PER_WORD = 512;
-    private final int MAX_SPANS_PER_TYPE = 8192;
+    static final int MAX_WORD_LENGTH = 64;
+    static final int MAX_POSITIONS_PER_WORD = 512;
+    static final int MAX_SPANS_PER_TYPE = 8192;
+    static final int POSITIONS_BITMASK_WINDOW_SIZE = 24;
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentKeywordsBuilder.class);
 
@@ -65,16 +66,7 @@ public class DocumentKeywordsBuilder {
             positions.add(VarintCodedSequence.generate(posList));
 
             // Construct a positions bit mask and add it to bits 8 - 64 in the term metadata
-
-            long termMetadata = entry.getLongValue();
-
-            for (int i = 0; i < posList.size(); i++) {
-                int pos = posList.getInt(i);
-                int bit = (pos / 32) % 56;
-                termMetadata |= 1L << (8 + bit);
-            }
-
-            meta.add(termMetadata);
+            meta.add(calculatePositionMask(entry.getLongValue(), posList));
         }
 
         // Encode spans
@@ -98,6 +90,22 @@ public class DocumentKeywordsBuilder {
         return new DocumentKeywords(wordArray, meta.toLongArray(), positions, spanCodes, spanSequences);
     }
 
+    long calculatePositionMask(long termMeta, IntList positions) {
+        long ret = termMeta;
+
+        for (int i = 0; i < positions.size(); i++) {
+            int pos = positions.getInt(i);
+            int bit = (pos / POSITIONS_BITMASK_WINDOW_SIZE) % 56;
+            ret |= 1L << (8 + bit);
+
+            // Also flag the next bit if we are past the half-way point to make the mask a bit more lenient to
+            // rounding errors; we actually want (actually) adjacent words to overlap on the same bit
+            bit = ((pos + POSITIONS_BITMASK_WINDOW_SIZE / 2) / POSITIONS_BITMASK_WINDOW_SIZE) % 56;
+            ret |= 1L << (8 + bit);
+        }
+
+        return ret;
+    }
 
     public void addMeta(String word, byte meta) {
         if (word.length() > MAX_WORD_LENGTH)
