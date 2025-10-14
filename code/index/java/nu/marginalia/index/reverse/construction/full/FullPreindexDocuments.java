@@ -9,7 +9,6 @@ import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.rwf.RandomFileAssembler;
 import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
-import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
 import org.slf4j.Logger;
@@ -57,7 +56,7 @@ public class FullPreindexDocuments {
         {
             LongColumn.Reader docIds = journalInstance.openCombinedId(slopTable);
             LongArrayColumn.Reader termIds = journalInstance.openTermIds(slopTable);
-            ByteArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
+            LongArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
             VarintCodedSequenceArrayColumn.Reader positions = journalInstance.openTermPositions(slopTable);
 
             Long2LongOpenHashMap offsetMap = segments.asMap(RECORD_SIZE_LONGS);
@@ -70,20 +69,22 @@ public class FullPreindexDocuments {
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
                 long[] tIds = termIds.get();
-                byte[] tMeta = termMeta.get();
+                long[] tMeta = termMeta.get();
                 tempBuffer.clear();
                 List<ByteBuffer> tPos = positions.getData(tempBuffer);
 
                 for (int i = 0; i < tIds.length; i++) {
                     long termId = tIds[i];
-                    byte meta = tMeta[i];
+                    long meta = tMeta[i];
                     ByteBuffer pos = tPos.get(i);
 
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
-                    long encodedPosOffset = positionsFileConstructor.add(positionsBlock, meta, pos);
+                    long encodedPosOffset = positionsFileConstructor.add(positionsBlock, (byte) (meta & 0xFFL), pos);
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);
+                   // FIXME: next step is to add
+                    //  assembly.put(offset + 2, meta);
                 }
             }
 

@@ -23,7 +23,7 @@ public class IndexJournalSlopWriter extends SlopTable {
     private final LongColumn.Writer documentMetaWriter;
 
     private final LongArrayColumn.Writer termIdsWriter;
-    private final ByteArrayColumn.Writer termMetadataWriter;
+    private final LongArrayColumn.Writer termMetadataWriter;
     private final VarintCodedSequenceArrayColumn.Writer termPositionsWriter;
 
     private final VarintCodedSequenceArrayColumn.Writer spansWriter;
@@ -74,7 +74,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
         termIdsWriter.put(termIds);
         termPositionsWriter.put(keywordsProjection.positions());
-        termMetadataWriter.put(keywordsProjection.metas());
+        termMetadataWriter.put(keywordsProjection.metas()); // FIXME
 
         // -- write spans --
 
