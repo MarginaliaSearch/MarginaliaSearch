@@ -178,7 +178,7 @@ public class FullReverseIndexReader {
             }
 
             // Read the size and offset of the position data
-            long[] offsetsForTerm = getReader(offset).getValueOffsets(docIds.array());
+            long[] offsetsForTerm = getReader(offset).getValues(docIds.array(), 0);
 
             // Add to the big array of term data offsets
             System.arraycopy(offsetsForTerm, 0, offsetsAll, i * docIds.size(), docIds.size());

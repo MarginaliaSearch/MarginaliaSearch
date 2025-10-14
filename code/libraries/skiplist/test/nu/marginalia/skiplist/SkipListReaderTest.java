@@ -342,7 +342,7 @@ public class SkipListReaderTest {
                 }
 
                 long[] queryKeys = qbSet.toLongArray();
-                long[] queryVals = reader.getValueOffsets(queryKeys);
+                long[] queryVals = reader.getValues(queryKeys, 0);
 
                 LongSortedSet presentValues = new LongAVLTreeSet();
                 for (int i = 0; i < queryKeys.length; i++) {
@@ -420,11 +420,66 @@ public class SkipListReaderTest {
         try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, 0);
             long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
-            long[] queryVals = reader.getValueOffsets(queryKeys);
+            long[] queryVals = reader.getValues(queryKeys, 0);
+            long[] expectedVals = new long[] { -4, 0, -30, 0, -270, -300, 0 };
+
+            System.out.println(Arrays.toString(expectedVals));
             System.out.println(Arrays.toString(queryVals));
+
+            Assertions.assertArrayEquals(expectedVals, queryVals);
         }
     }
 
+    @Test
+    public void testGetValueOffsets_idx1() throws IOException {
+        if (RECORD_SIZE != 3)
+            return;
+
+        long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 300).map(v -> -2*v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
+            long[] queryVals = reader.getValues(queryKeys, 1);
+            long[] expectedVals = new long[] { -4, 0, -30, 0, -270, -300, 0 };
+
+            System.out.println(Arrays.toString(expectedVals));
+            System.out.println(Arrays.toString(queryVals));
+
+            Assertions.assertArrayEquals(expectedVals, queryVals);
+        }
+    }
+
+    @Test
+    public void testGetAllValueOffsets() throws IOException {
+        if (RECORD_SIZE != 3)
+            return;
+
+        long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 300).map(v -> -2*v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
+            long[] queryVals = reader.getAllValues(queryKeys);
+            long[] expectedVals = new long[] { -4, 0, -30, 0, -270, -300, 0,
+                                               -4, 0, -30, 0, -270, -300, 0 };
+
+            System.out.println(Arrays.toString(expectedVals));
+            System.out.println(Arrays.toString(queryVals));
+
+            Assertions.assertArrayEquals(expectedVals, queryVals);
+        }
+    }
     @Test
     public void getKeys2() throws IOException {
         long[] keys = new long[] { 100,101 };
@@ -491,7 +546,7 @@ public class SkipListReaderTest {
         try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
             var reader = new SkipListReader(pool, pos);
             long[] queryKeys = new long[] { 100 };
-            long[] queryVals = reader.getValueOffsets(queryKeys);
+            long[] queryVals = reader.getValues(queryKeys, 0);
             System.out.println(Arrays.toString(queryVals));
         }
     }
