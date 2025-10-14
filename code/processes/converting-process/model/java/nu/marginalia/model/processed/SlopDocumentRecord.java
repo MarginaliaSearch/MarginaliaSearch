@@ -4,6 +4,7 @@ import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.sequence.slop.VarintCodedSequenceArrayColumn;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
+import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.array.ObjectArrayColumn;
 import nu.marginalia.slop.column.dynamic.VarintColumn;
 import nu.marginalia.slop.column.primitive.FloatColumn;
@@ -38,7 +39,7 @@ public record SlopDocumentRecord(
         String languageIsoCode,
         Integer pubYear,
         List<String> words,
-        byte[] metas,
+        long[] metas,
         List<VarintCodedSequence> positions,
         byte[] spanCodes,
         List<VarintCodedSequence> spans
@@ -59,7 +60,7 @@ public record SlopDocumentRecord(
             int length,
             String languageIsoCode,
             List<String> words,
-            byte[] metas,
+            long[] metas,
             List<VarintCodedSequence> positions,
             byte[] spanCodes,
             List<VarintCodedSequence> spans) {
@@ -139,7 +140,7 @@ public record SlopDocumentRecord(
     // Keyword-level columns, these are enumerated by the counts column
 
     private static final ObjectArrayColumn<String> keywordsColumn = new StringColumn("keywords", StandardCharsets.UTF_8, StorageType.ZSTD).asArray();
-    private static final ByteArrayColumn termMetaColumn = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
+    private static final LongArrayColumn termMetaColumn = new LongArrayColumn("termMetadata");
     private static final VarintCodedSequenceArrayColumn termPositionsColumn = new VarintCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
 
     // Spans columns
@@ -156,7 +157,7 @@ public record SlopDocumentRecord(
         private final EnumColumn.Reader languageReader;
 
         private final ObjectArrayColumn<String>.Reader keywordsReader;
-        private final ByteArrayColumn.Reader termMetaReader;
+        private final LongArrayColumn.Reader termMetaReader;
         private final VarintCodedSequenceArrayColumn.Reader termPositionsReader;
 
         private final ByteArrayColumn.Reader spanCodesReader;
@@ -196,7 +197,7 @@ public record SlopDocumentRecord(
 
             List<String> words = keywordsReader.get();
             List<VarintCodedSequence> positions = termPositionsReader.get();
-            byte[] metas = termMetaReader.get();
+            long[] metas = termMetaReader.get();
             byte[] spanCodes = spanCodesReader.get();
             List<VarintCodedSequence> spans = spansReader.get();
 
@@ -294,7 +295,7 @@ public record SlopDocumentRecord(
         private final IntColumn.Writer pubYearWriter;
         private final EnumColumn.Writer languageWriter;
         private final ObjectArrayColumn<String>.Writer keywordsWriter;
-        private final ByteArrayColumn.Writer termMetaWriter;
+        private final LongArrayColumn.Writer termMetaWriter;
         private final VarintCodedSequenceArrayColumn.Writer termPositionsWriter;
         private final ByteArrayColumn.Writer spansCodesWriter;
         private final VarintCodedSequenceArrayColumn.Writer spansWriter;

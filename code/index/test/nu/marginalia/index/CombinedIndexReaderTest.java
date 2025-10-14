@@ -282,7 +282,7 @@ public class CombinedIndexReaderTest {
                 var meta = metaByDoc.get(doc);
 
                 List<String> keywords = words.stream().map(w -> w.keyword).toList();
-                byte[] metadata = new byte[words.size()];
+                long[] metadata = new long[words.size()];
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = words.get(i).termMetadata;
                 }

@@ -1,9 +1,10 @@
 package nu.marginalia.keyword.model;
 
-import gnu.trove.list.array.TByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.Object2ByteOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.VarintCodedSequence;
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 public class DocumentKeywordsBuilder {
-    public final Object2ByteOpenHashMap<String> wordToMeta;
+    public final Object2LongOpenHashMap<String> wordToMeta;
     public final HashMap<String, IntList> wordToPos;
     public final Map<HtmlTag, List<DocumentWordSpan>> wordSpans = new HashMap<>();
 
@@ -36,34 +37,44 @@ public class DocumentKeywordsBuilder {
     }
 
     public DocumentKeywordsBuilder(int capacity) {
-        wordToMeta = new Object2ByteOpenHashMap<>(capacity);
+        wordToMeta = new Object2LongOpenHashMap<>(capacity);
         wordToPos = new HashMap<>(capacity);
     }
 
 
     public DocumentKeywords build() {
         final List<String> wordArray = new ArrayList<>(wordToMeta.size());
-        final TByteArrayList meta = new TByteArrayList(wordToMeta.size());
+        final LongArrayList meta = new LongArrayList(wordToMeta.size());
         final List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
         final List<VarintCodedSequence> spanSequences = new ArrayList<>(wordSpans.size());
         final byte[] spanCodes = new byte[wordSpans.size()];
 
-        var iter = wordToMeta.object2ByteEntrySet().fastIterator();
+        var iter = wordToMeta.object2LongEntrySet().fastIterator();
 
         // Encode positions
         while (iter.hasNext()) {
-            var entry = iter.next();
+            Object2LongMap.Entry<String> entry = iter.next();
 
-            meta.add(entry.getByteValue());
             wordArray.add(entry.getKey());
 
+            // Truncate and encode exact positions
             IntList posList = wordToPos.getOrDefault(entry.getKey(), IntList.of());
-
             if (posList.size() > MAX_POSITIONS_PER_WORD) {
                 posList.subList(MAX_POSITIONS_PER_WORD, posList.size()).clear();
             }
-
             positions.add(VarintCodedSequence.generate(posList));
+
+            // Construct a positions bit mask and add it to bits 8 - 64 in the term metadata
+
+            long termMetadata = entry.getLongValue();
+
+            for (int i = 0; i < posList.size(); i++) {
+                int pos = posList.getInt(i);
+                int bit = (pos / 32) % 56;
+                termMetadata |= 1L << (8 + bit);
+            }
+
+            meta.add(termMetadata);
         }
 
         // Encode spans
@@ -84,7 +95,7 @@ public class DocumentKeywordsBuilder {
             spanSequences.add(VarintCodedSequence.generate(positionsForTag));
         });
 
-        return new DocumentKeywords(wordArray, meta.toArray(), positions, spanCodes, spanSequences);
+        return new DocumentKeywords(wordArray, meta.toLongArray(), positions, spanCodes, spanSequences);
     }
 
 
@@ -108,7 +119,7 @@ public class DocumentKeywordsBuilder {
 
     public void setFlagOnMetadataForWords(WordFlags flag, Collection<String> flagWords) {
         flagWords.forEach(word ->
-                wordToMeta.mergeByte(word, flag.asBit(), (a, b) -> (byte) (a | b))
+                wordToMeta.mergeLong(word, flag.asBit(), (a, b) -> (byte) (a | b))
         );
     }
 
@@ -130,9 +141,9 @@ public class DocumentKeywordsBuilder {
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 
-        for (var iter = wordToMeta.object2ByteEntrySet().fastIterator(); iter.hasNext(); ) {
+        for (var iter = wordToMeta.object2LongEntrySet().fastIterator(); iter.hasNext(); ) {
             var entry = iter.next();
-            if ((flags & entry.getByteValue()) != 0) {
+            if ((flags & entry.getLongValue()) != 0) {
                 ret.add(entry.getKey());
             }
         }
@@ -158,7 +169,7 @@ public class DocumentKeywordsBuilder {
         wordToMeta.forEach((word, meta) -> {
             sb.append(word)
                     .append("->")
-                    .append(WordFlags.decode(meta))
+                    .append(WordFlags.decode((byte) meta.longValue()))
                     .append(',')
                     .append(wordToPos.getOrDefault(word, new IntArrayList()))
                     .append(' ');
@@ -173,7 +184,7 @@ public class DocumentKeywordsBuilder {
         return sb.append(']').toString();
     }
 
-    public Object2ByteOpenHashMap<String> getWordToMeta() {
+    public Object2LongOpenHashMap<String> getWordToMeta() {
         return this.wordToMeta;
     }
 

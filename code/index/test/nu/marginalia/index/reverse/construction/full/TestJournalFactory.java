@@ -62,7 +62,7 @@ public class TestJournalFactory {
         var writer = new IndexJournalSlopWriter(ji, 0);
         for (var entry : entries) {
             String[] termIds = new String[entry.wordIds.length];
-            byte[] meta = new byte[entry.wordIds.length];
+            long[] meta = new long[entry.wordIds.length];
 
             VarintCodedSequence[] positions = new VarintCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
@@ -100,7 +100,7 @@ public class TestJournalFactory {
         for (var entry : entries) {
 
             String[] termIds = new String[entry.wordIds.length];
-            byte[] meta = new byte[entry.wordIds.length];
+            long[] meta = new long[entry.wordIds.length];
             VarintCodedSequence[] positions = new VarintCodedSequence[entry.wordIds.length];
             for (int i = 0; i < entry.wordIds.length; i++) {
                 termIds[i] = entry.wordIds[i].wordId;

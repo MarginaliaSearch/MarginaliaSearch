@@ -23,7 +23,7 @@ public record IndexJournalPage(Path baseDir, int page) {
     public static EnumColumn languageIsoCode = new EnumColumn("languageIsoCode", StandardCharsets.US_ASCII, StorageType.PLAIN);
 
     public static LongArrayColumn termIds = new LongArrayColumn("termIds", StorageType.ZSTD);
-    public static ByteArrayColumn termMeta = new ByteArrayColumn("termMetadata", StorageType.ZSTD);
+    public static LongArrayColumn termMeta = new LongArrayColumn("termMetadata");
     public static VarintCodedSequenceArrayColumn positions = new VarintCodedSequenceArrayColumn("termPositions", StorageType.ZSTD);
 
     public static ByteArrayColumn spanCodes = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
@@ -60,7 +60,7 @@ public record IndexJournalPage(Path baseDir, int page) {
         return termIds.open(table);
     }
 
-    public ByteArrayColumn.Reader openTermMetadata(SlopTable table) throws IOException {
+    public LongArrayColumn.Reader openTermMetadata(SlopTable table) throws IOException {
         return termMeta.open(table);
     }
 

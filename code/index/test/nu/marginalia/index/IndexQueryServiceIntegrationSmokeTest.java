@@ -413,7 +413,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         ));
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
-        byte[] metadata = new byte[factors.length];
+        long[] metadata = new long[factors.length];
         for (int i = 0; i < factors.length; i++) {
             metadata[i] = WordFlags.Title.asBit();
         }
@@ -453,7 +453,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
-        byte[] metadata = new byte[factors.length];
+        long[] metadata = new long[factors.length];
         for (int i = 0; i < factors.length; i++) {
             metadata[i] = WordFlags.Title.asBit();
         }

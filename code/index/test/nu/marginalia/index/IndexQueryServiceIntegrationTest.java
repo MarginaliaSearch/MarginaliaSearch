@@ -542,7 +542,7 @@ public class IndexQueryServiceIntegrationTest {
 
                 List<String> keywords = words.stream().map(w -> w.keyword).toList();
 
-                byte[] metadata = new byte[keywords.size()];
+                long[] metadata = new long[keywords.size()];
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = (byte) words.get(i).termMetadata;
                 }
