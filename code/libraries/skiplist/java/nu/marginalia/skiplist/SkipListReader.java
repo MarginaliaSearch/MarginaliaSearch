@@ -199,9 +199,15 @@ public class SkipListReader {
     /** Gets the values associated with the keys provided as input.
      * Values that are not found in the skip list index are set to zero.
      * */
-    public long[] getValueOffsets(long[] keys) {
+    public long[] getValues(long[] keys, int valueIdx) {
         int pos = 0;
+
+        final int valueRecordSize = (SkipListConstants.RECORD_SIZE-1);
+
         long[] vals = new long[keys.length];
+
+        if (valueIdx < 0 || valueIdx >= SkipListConstants.RECORD_SIZE)
+            throw new IllegalArgumentException("Bad valueIdx: " + valueIdx);
 
         if (getClass().desiredAssertionStatus()) {
             for (int i = 1; i < keys.length; i++) {
@@ -236,7 +242,7 @@ public class SkipListReader {
                         pos++;
                     }
                     else {
-                        vals[pos++] = page.getLong(valuesOffset + currentBlockIdx * 8);
+                        vals[pos++] = page.getLong(valuesOffset + (valueRecordSize * currentBlockIdx + valueIdx) * 8);
                         matches++;
 
                         if (++matches > 5) {
@@ -256,7 +262,119 @@ public class SkipListReader {
                             continue outer;
                         }
                         else if (kv == pv) {
-                            vals[pos++] = page.getLong(valuesOffset + currentBlockIdx * 8);
+                            vals[pos++] = page.getLong(valuesOffset + (valueRecordSize * currentBlockIdx + valueIdx) * 8);
+                            continue outer;
+                        }
+                    }
+                    break;
+                }
+
+                if (currentBlockIdx >= n) {
+                    atEnd = (flags & SkipListConstants.FLAG_END_BLOCK) != 0;
+                    if (atEnd) {
+                        break;
+                    }
+
+                    if (pos >= keys.length) {
+                        currentBlock += SkipListConstants.BLOCK_SIZE;
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                    }
+                    else {
+                        long nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE;
+                        long currentValue = keys[pos];
+                        for (int i = 0; i < fc; i++) {
+                            long blockMaxValue = page.getLong(currentBlockOffset + SkipListConstants.HEADER_SIZE + 8 * i);
+                            nextBlock = currentBlock + (long) SkipListConstants.BLOCK_SIZE * SkipListConstants.skipOffsetForPointer(Math.max(0, i-1));
+                            if (blockMaxValue >= currentValue) {
+                                break;
+                            }
+                        }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                        currentBlock = nextBlock;
+                    }
+                }
+            }
+        }
+
+        return vals;
+    }
+
+    /** Gets all of the values associated with the keys provided as input.
+     * Values that are not found in the skip list index are set to zero.
+     *
+     * To help with cache locality when utilizing the data, the values are
+     * de-interleaved in the result array, so for a record size of 3,
+     * the result array will look like [ 1, 2, 3, 4, ..., 1, 2, 3, 4, ... ]
+     * */
+    public long[] getAllValues(long[] keys) {
+        int pos = 0;
+
+        final int valueRecordSize = (SkipListConstants.RECORD_SIZE-1);
+
+        long[] vals = new long[keys.length * valueRecordSize];
+
+        if (getClass().desiredAssertionStatus()) {
+            for (int i = 1; i < keys.length; i++) {
+                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
+            }
+        }
+
+        while (pos < keys.length) {
+            try (var page = pool.get(currentBlock)) {
+                MemorySegment ms = page.getMemorySegment();
+                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                if (n == 0) {
+                    throw new IllegalStateException("Reading null memory!");
+                }
+
+                int dataOffset = SkipListConstants.pageDataOffset(currentBlockOffset, fc);
+                int valuesOffset = dataOffset + 8 * n;
+                if ((valuesOffset & 7) != 0) {
+                    throw new IllegalStateException(parseBlock(ms, currentBlockOffset).toString());
+                }
+
+                int matches = 0;
+
+                while (pos < keys.length
+                        && n > (currentBlockIdx = page.binarySearchLong(keys[pos], dataOffset, currentBlockIdx, n)))
+                {
+                    if (keys[pos] != page.getLong( dataOffset + currentBlockIdx * 8)) {
+                        pos++;
+                    }
+                    else {
+                        for (int i = 0; i < valueRecordSize; i++) {
+                            vals[i * keys.length + pos] = page.getLong(valuesOffset + (valueRecordSize * currentBlockIdx + i) * 8);
+                        }
+                        pos++;
+                        matches++;
+
+                        if (++matches > 5) {
+                            break;
+                        }
+                    }
+                }
+
+                outer:
+                while (pos < keys.length) {
+                    long kv = keys[pos];
+
+                    for (; currentBlockIdx < n; currentBlockIdx++) {
+                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                        if (kv < pv) {
+                            pos++;
+                            continue outer;
+                        }
+                        else if (kv == pv) {
+                            for (int i = 0; i < valueRecordSize; i++) {
+                                vals[i * keys.length + pos] = page.getLong(valuesOffset + (valueRecordSize * currentBlockIdx + i) * 8);
+                            }
+                            pos++;
                             continue outer;
                         }
                     }
