@@ -252,8 +252,8 @@ public class FullReverseIndexReader {
                 for (int i = 0; i < nDocIds; i++) {
                     long value = values[nDocIds + i];
 
-                    // apply the mask only if it is not flagged
-                    if ((value & 0xFF) == 0)
+                    // apply the mask only if it is not flagged and the count is low
+                    if ((value & 0xFF) == 0 || Long.bitCount(value) <= 5)
                         thisMask[i] &= value;
                 }
             }
