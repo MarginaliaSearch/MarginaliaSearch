@@ -75,6 +75,7 @@ public class IndexResultRankingService {
         private final long[] flags;
         private final CodedSequence[] positions;
         private final CombinedDocIdList resultIds;
+
         private AtomicBoolean closed = new AtomicBoolean(false);
         int pos = -1;
 
@@ -122,18 +123,24 @@ public class IndexResultRankingService {
         }
 
         public boolean next() {
-            if (++pos < resultIds.size()) {
-                for (int ti = 0; ti < flags.length; ti++) {
-                    var tfd = termsForDocs[ti];
+            BitSet viableDocuments = termsForDocs[0].viableDocuments();
 
-                    assert tfd != null : "No term data for term " + ti;
-
-                    flags[ti] = tfd.flag(pos);
-                    positions[ti] = tfd.position(pos);
+            do {
+                if (++pos >= resultIds.size()) {
+                    return false;
                 }
-                return true;
+            } while (!viableDocuments.get(pos));
+
+            for (int ti = 0; ti < flags.length; ti++) {
+                var tfd = termsForDocs[ti];
+
+                assert tfd != null : "No term data for term " + ti;
+
+                flags[ti] = tfd.flag(pos);
+                positions[ti] = tfd.position(pos);
             }
-            return false;
+
+            return true;
         }
 
         public int size() {
