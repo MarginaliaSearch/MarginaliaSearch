@@ -13,6 +13,9 @@ test {
 }
 
 tasks.register('fastTests', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     maxHeapSize = "8G"
     useJUnitPlatform {
         excludeTags("slow", "flaky")
