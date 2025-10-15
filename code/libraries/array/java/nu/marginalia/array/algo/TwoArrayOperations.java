@@ -80,7 +80,7 @@ public class TwoArrayOperations {
             return mergeArrays(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
         if (n == 2)
             return mergeArrays2(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-        if (n == 4)
+        if (n == 3)
             return mergeArrays3(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
 
         throw new UnsupportedOperationException("Implement a merge(n)");
