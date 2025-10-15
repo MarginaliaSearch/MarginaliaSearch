@@ -5,7 +5,7 @@ public class SkipListConstants {
     static final int MIN_TRUNCATED_BLOCK_SIZE = Math.min(1024, BLOCK_SIZE / 2);
 
     static final int HEADER_SIZE = 8;
-    static final int RECORD_SIZE = 2;
+    static final int RECORD_SIZE = 3;
     static final int MAX_RECORDS_PER_BLOCK = (BLOCK_SIZE/8 - 2)/RECORD_SIZE;
 
     static final int POINTER_TARGET_COUNT = 64;

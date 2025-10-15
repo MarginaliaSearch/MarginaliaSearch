@@ -77,7 +77,7 @@ public class SkipListWriter implements AutoCloseable {
     public long writeList(LongArray input, long inputOffset, int n) throws IOException {
         long startPos = documentsChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
-        assert input.isSortedN(RECORD_SIZE, inputOffset, inputOffset + RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(inputOffset, inputOffset+RECORD_SIZE*n).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
+        assert input.isSortedN(RECORD_SIZE, inputOffset, inputOffset + RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(inputOffset, inputOffset+n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
         maxValuesList.clear();
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));

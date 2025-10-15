@@ -127,6 +127,8 @@ public interface LongArraySort extends LongArrayBase {
         else {
             SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
         }
+
+        assert isSortedN(wordSize, start, end);
     }
 
     static void quickSortJavaN(LongArray array, int wordSize, long start, long end) {
