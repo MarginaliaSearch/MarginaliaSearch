@@ -27,7 +27,7 @@ public class FullPreindexDocuments {
     public final LongArray documents;
 
     private static PositionsFileConstructor positionsFileConstructor;
-    private static final int RECORD_SIZE_LONGS = 2;
+    public static final int RECORD_SIZE_LONGS = 3;
     private static final Logger logger = LoggerFactory.getLogger(FullPreindexDocuments.class);
 
     public final Path file;
@@ -83,8 +83,7 @@ public class FullPreindexDocuments {
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);
-                   // FIXME: next step is to add
-                    //  assembly.put(offset + 2, meta);
+                    assembly.put(offset + 2, meta);
                 }
             }
 
