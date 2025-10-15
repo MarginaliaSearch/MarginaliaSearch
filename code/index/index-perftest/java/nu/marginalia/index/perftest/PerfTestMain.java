@@ -97,7 +97,7 @@ public class PerfTestMain {
                 ),
                 new PrioReverseIndexReader(
                         "prio",
-                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-prio-en.dat"))),
+                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-prio-words-en.dat"))),
                         indexDir.resolve("ir/rev-prio-docs.dat")
                 )
         );
