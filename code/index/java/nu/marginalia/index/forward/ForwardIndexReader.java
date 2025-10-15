@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.BitSet;
 import java.util.concurrent.TimeoutException;
 
 import static nu.marginalia.index.config.ForwardIndexParameters.*;
@@ -141,10 +142,16 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList combinedIds) throws TimeoutException {
+    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList combinedIds, BitSet docIdsMask) throws TimeoutException {
         long[] offsets = new long[combinedIds.size()];
 
         for (int i = 0; i < offsets.length; i++) {
+
+            if (!docIdsMask.get(i)) {
+                offsets[i] = -1;
+                continue;
+            }
+
             long docId = UrlIdCodec.removeRank(combinedIds.at(i));
             long offset = idxForDoc(docId);
             if (offset >= 0) {

@@ -79,7 +79,7 @@ public class FullPreindexDocuments {
                     ByteBuffer pos = tPos.get(i);
 
                     long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
-                    long encodedPosOffset = positionsFileConstructor.add(positionsBlock, (byte) (meta & 0xFFL), pos);
+                    long encodedPosOffset = positionsFileConstructor.add(positionsBlock, pos);
 
                     assembly.put(offset + 0, rankEncodedId);
                     assembly.put(offset + 1, encodedPosOffset);
