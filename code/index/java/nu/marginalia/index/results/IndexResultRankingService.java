@@ -31,6 +31,7 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,8 +95,12 @@ public class IndexResultRankingService {
             // Perform expensive I/O operations
 
             try {
-                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext.languageContext, rankingContext.budget, rankingContext.termIdsAll.array, resultIds);
-                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds);
+                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext, resultIds);
+
+                @NotNull
+                BitSet documentMask = termsForDocs[0].viableDocuments();
+
+                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds, documentMask);
             }
             catch (TimeoutException|RuntimeException ex) {
                 arena.close();

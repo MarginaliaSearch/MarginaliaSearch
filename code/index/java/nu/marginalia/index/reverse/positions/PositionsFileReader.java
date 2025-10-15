@@ -1,6 +1,8 @@
 package nu.marginalia.index.reverse.positions;
 
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.uring.UringFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +41,7 @@ public class PositionsFileReader implements AutoCloseable {
 
     /** Get the positions for a keywords in the index, as pointed out by the encoded offsets;
      * intermediate buffers are allocated from the provided arena allocator. */
-    public TermData[] getTermData(Arena arena, IndexSearchBudget budget, long[] offsets) throws TimeoutException {
+    public CodedSequence[] getTermData(Arena arena, IndexSearchBudget budget, long[] offsets) throws TimeoutException {
 
         int cnt = 0;
 
@@ -50,7 +52,7 @@ public class PositionsFileReader implements AutoCloseable {
         }
 
         if (cnt == 0) {
-            return new TermData[offsets.length];
+            return new CodedSequence[offsets.length];
         }
 
         long[] readOffsets = new long[cnt];
@@ -67,11 +69,15 @@ public class PositionsFileReader implements AutoCloseable {
 
         List<MemorySegment> buffers = uringFileReader.readUnaligned(arena, budget.timeLeft(), readOffsets, readSizes, 4096);
 
-        TermData[] ret = new TermData[offsets.length];
+        CodedSequence[] ret = new CodedSequence[offsets.length];
+
         for (int i = 0, j=0; i < offsets.length; i++) {
             long encodedOffset = offsets[i];
             if (encodedOffset == 0) continue;
-            ret[i] = new TermData(buffers.get(j++).asByteBuffer());
+
+            var buffer = buffers.get(j++).asByteBuffer();
+
+            ret[i] = new VarintCodedSequence(buffer, 0, buffer.capacity());
         }
 
         return ret;
