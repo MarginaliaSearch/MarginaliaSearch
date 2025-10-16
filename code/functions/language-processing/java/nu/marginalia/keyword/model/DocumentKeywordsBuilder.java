@@ -29,7 +29,7 @@ public class DocumentKeywordsBuilder {
     static final int MAX_WORD_LENGTH = 64;
     static final int MAX_POSITIONS_PER_WORD = 512;
     static final int MAX_SPANS_PER_TYPE = 8192;
-    static final int POSITIONS_BITMASK_WINDOW_SIZE = 24;
+    static final int POSITIONS_BITMASK_WINDOW_SIZE = 48;
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentKeywordsBuilder.class);
 
