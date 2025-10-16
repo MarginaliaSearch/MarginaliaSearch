@@ -24,7 +24,10 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -228,19 +231,33 @@ public class FullReverseIndexReader {
 
     /** Find all docIds with non-flagged terms adjacent in the document */
     BitSet preselectViableDocuments(SearchContext context, int nDocIds, long[][] valuesForTerm) {
+        final int valueStartOffset = nDocIds;
+
         BitSet ret = new BitSet(nDocIds);
-        List<IntList> paths = context.compiledQueryIds.paths;
 
-        long[] combinedMasks = new long[nDocIds];
-        long[] thisMask = new long[nDocIds];
+        short[] sparseCount = new short[nDocIds];
 
-        long valueStartOffset = nDocIds;
+        for (long[] vals : valuesForTerm) {
+            if (null == vals)
+                continue;
+
+            for (int i = 0; i < nDocIds; i++) {
+                if ((vals[i] & 0xFF) != 0)
+                    continue;
+
+                int pc = Long.bitCount(vals[valueStartOffset + i]);
+                if (pc <= 5) sparseCount[i]++;
+            }
+        }
 
         // Looks icky and O(n^3), but paths and paths[i] are typically very small
         // Algo below gives good memory access patterns
 
+        long[] combinedMasks = new long[nDocIds];
+        long[] thisMask = new long[nDocIds];
+
         outer:
-        for (IntList path : paths) {
+        for (IntList path : context.compiledQueryIds.paths) {
             Arrays.fill(thisMask, ~0L);
 
             for (int pathIdx : path) {
@@ -250,10 +267,13 @@ public class FullReverseIndexReader {
                 if (values.length != 2*nDocIds) throw new IllegalArgumentException("values.length had unexpected value");
 
                 for (int i = 0; i < nDocIds; i++) {
-                    long value = values[nDocIds + i];
+                    long value = values[valueStartOffset + i];
 
-                    // apply the mask only if it is not flagged and the count is low
-                    if ((value & 0xFF) == 0 || Long.bitCount(value) <= 5)
+                    // apply the mask only if it is not flagged,
+                    // and the count is low, and we have sparse words to mask with,
+                    // or all terms are non-sparse
+
+                    if ((value & 0xFF) == 0 || (sparseCount[i] <= 2 || Long.bitCount(value) <= 5))
                         thisMask[i] &= value;
                 }
             }
