@@ -144,7 +144,7 @@ public class IndexResultRankingService {
         }
 
         public int size() {
-            return resultIds.size();
+            return termsForDocs[0].viableDocuments().cardinality();
         }
 
         public void close() {
