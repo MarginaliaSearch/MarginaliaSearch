@@ -195,6 +195,13 @@ public class FullReverseIndexReader {
             for (int di = 0; di < docIds.size(); di++) {
                 if (!viableDocuments.get(di))
                     continue;
+
+                // We can omit the position data retrieval if the position mask is zero
+                // (likely a synthetic keyword, n-gram, etc.)
+                long positionMask = values[docIds.size() + di] & ~0xFFL;
+                if (positionMask == 0)
+                    continue;
+
                 offsetsAll[i * docIds.size() + di] = values[di];
             }
         }
@@ -218,7 +225,6 @@ public class FullReverseIndexReader {
             }
 
             // Build the return array
-
             ret[i] = new TermMetadataList(
                     Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size()),
                     flags,
