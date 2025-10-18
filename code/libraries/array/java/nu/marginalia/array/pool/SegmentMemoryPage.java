@@ -102,6 +102,12 @@ public class SegmentMemoryPage implements MemoryPage, AutoCloseable {
 
     @Override
     public int binarySearchLong(long key, int baseOffset, int fromIndex, int toIndex) {
+        assert fromIndex <= toIndex;
+        assert fromIndex >= 0;
+        assert toIndex >= 0;
+        assert baseOffset <= segment.byteSize();
+        assert baseOffset + toIndex * 8 <= segment.byteSize() : baseOffset + toIndex * 8 + " vs " + segment.byteSize();
+
         int low = 0;
         int len = toIndex - fromIndex;
 

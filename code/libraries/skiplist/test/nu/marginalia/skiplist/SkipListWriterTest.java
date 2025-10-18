@@ -25,6 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SkipListWriterTest {
+    static {
+        System.setProperty("system.noSunMiscUnsafe", "TRUE");
+    }
+
     Path docsFile;
 
     @BeforeEach
@@ -78,7 +82,7 @@ class SkipListWriterTest {
             var ms = arr.getMemorySegment();
 
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
-            var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK,
+            var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 0,1,2,3,4,5,6,7})
             );
@@ -88,7 +92,7 @@ class SkipListWriterTest {
             assertEquals(expected1, actual1);
 
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
-            var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK,
+            var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
                     new LongArrayList(new long[] { 2,3}));
 
@@ -145,8 +149,8 @@ class SkipListWriterTest {
     @Test
     public void testTenBlocks() throws IOException {
         long pos1;
-        long[] keys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        long[] vals = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64)*10).toArray();
+        long[] vals = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64)*10).map(v -> -v).toArray();
 
         try (var writer = new SkipListWriter(docsFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
@@ -293,10 +297,10 @@ class SkipListWriterTest {
     public void testTenBlocksReadOffset() throws IOException {
         long pos1;
 
-        long[] readKeys = LongStream.range(-2, (MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        long[] readVals = LongStream.range(-2, (MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
+        long[] readKeys = LongStream.range(-2, (MAX_RECORDS_PER_BLOCK-64)*10).toArray();
+        long[] readVals = LongStream.range(-2, (MAX_RECORDS_PER_BLOCK-64)*10).map(v -> -v).toArray();
 
-        long[] expectedKeys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).toArray();
+        long[] expectedKeys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64)*10).toArray();
         try (var writer = new SkipListWriter(docsFile)) {
             pos1 = writer.writeList(createArray(readKeys, readVals), 2*RECORD_SIZE, expectedKeys.length);
         }
