@@ -13,6 +13,7 @@ import nu.marginalia.index.reverse.query.*;
 import nu.marginalia.index.reverse.query.filter.QueryFilterLetThrough;
 import nu.marginalia.index.reverse.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
@@ -241,58 +242,58 @@ public class FullReverseIndexReader {
 
         BitSet ret = new BitSet(nDocIds);
 
-        short[] sparseCount = new short[nDocIds];
+        // Operate in slices of 16 documents.  This should line up with 2 cache lines for L1 for the long arrays,
+        // and reduces the allocation overhead significantly for expected nDocIds values.
 
-        for (long[] vals : valuesForTerm) {
-            if (null == vals)
-                continue;
+        final int sliceSize = 16;
 
-            for (int i = 0; i < nDocIds; i++) {
-                if ((vals[i] & 0xFF) != 0)
-                    continue;
+        long[] combinedMasks = new long[sliceSize];
+        long[] thisMask = new long[sliceSize];
 
-                int pc = Long.bitCount(vals[valueStartOffset + i]);
-                if (pc <= 5) sparseCount[i]++;
-            }
-        }
+        int[] bestFlagsCount = new int[sliceSize];
+        int[] minFlagCount = new int[sliceSize];
 
-        // Looks icky and O(n^3), but paths and paths[i] are typically very small
-        // Algo below gives good memory access patterns
+        for (int slice = 0; slice < nDocIds; slice += sliceSize) {
+            int sliceEnd = Math.min(slice + sliceSize, nDocIds);
 
-        long[] combinedMasks = new long[nDocIds];
-        long[] thisMask = new long[nDocIds];
+            outer:
+            for (IntList path : context.compiledQueryIds.paths) {
+                Arrays.fill(thisMask, ~0L);
+                Arrays.fill(minFlagCount, Integer.MAX_VALUE);
 
-        outer:
-        for (IntList path : context.compiledQueryIds.paths) {
-            Arrays.fill(thisMask, ~0L);
+                for (int pathIdx : path) {
+                    long[] values = valuesForTerm[pathIdx];
 
-            for (int pathIdx : path) {
-                long[] values = valuesForTerm[pathIdx];
+                    if (null == values) continue outer; // We can skip this branch
+                    if (values.length != 2 * nDocIds)
+                        throw new IllegalArgumentException("values.length had unexpected value");
 
-                if (null == values) continue outer; // We can skip this branch
-                if (values.length != 2*nDocIds) throw new IllegalArgumentException("values.length had unexpected value");
+                    for (int i = slice; i < sliceEnd; i++) {
+                        long value = values[valueStartOffset + i];
 
-                for (int i = 0; i < nDocIds; i++) {
-                    long value = values[valueStartOffset + i];
+                        minFlagCount[i] = Math.min(minFlagCount[i], Long.bitCount((value & 0xFF)));
 
-                    // apply the mask only if it is not flagged,
-                    // and the count is low, and we have sparse words to mask with,
-                    // or all terms are non-sparse
+                        if (WordFlags.Synthetic.isPresent((byte) value))
+                            continue;
 
-                    if ((value & 0xFF) == 0 || (sparseCount[i] <= 2 || Long.bitCount(value) <= 5))
-                        thisMask[i] &= value;
+                        if ((value & 0xFF) == 0)
+                            thisMask[i] &= value;
+                    }
+                }
+
+                // combine values of alternative evaluation paths
+                for (int i = slice; i < sliceEnd; i++) {
+                    combinedMasks[i] |= thisMask[i];
+                }
+                for (int i = slice; i < sliceEnd; i++) {
+                    bestFlagsCount[i] = Math.max(minFlagCount[i], bestFlagsCount[i]);
                 }
             }
 
-            // combine values of alternative evaluation paths
-            for (int i = 0; i < nDocIds; i++) {
-                combinedMasks[i] |= thisMask[i];
+            for (int i = slice; i < sliceEnd; i++) {
+                if (combinedMasks[i] != 0L || minFlagCount[i] > 0)
+                    ret.set(i);
             }
-        }
-
-        for (int i = 0; i < combinedMasks.length; i++) {
-            if (combinedMasks[i] != 0L)
-                ret.set(i);
         }
 
         return ret;
