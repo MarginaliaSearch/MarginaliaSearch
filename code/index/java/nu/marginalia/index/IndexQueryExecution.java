@@ -28,9 +28,7 @@ public class IndexQueryExecution {
     // this should probably be 128*1024 / 512 = 256 to reduce queue depth and optimize tail latency
     private static final int evaluationBatchSize = 256;
 
-    // This should probably be SkipListConstants.BLOCK_SIZE / 16 in order to reduce the number of unnecessary read
-    // operations per lookup and again optimize tail latency
-    private static final int lookupBatchSize = SkipListConstants.BLOCK_SIZE / 16;
+    private static final int lookupBatchSize = SkipListConstants.MAX_RECORDS_PER_BLOCK;
 
     private static final ExecutorService threadPool =
             new ThreadPoolExecutor(indexValuationThreads, 256,

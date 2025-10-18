@@ -84,7 +84,7 @@ class ForwardIndexConverterTest {
                         15,
                         "en",
                         List.of(),
-                        new byte[0],
+                        new long[0],
                         List.of(),
                         new byte[0],
                         List.of()

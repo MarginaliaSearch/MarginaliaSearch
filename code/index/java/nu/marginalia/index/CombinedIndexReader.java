@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -185,13 +186,11 @@ public class CombinedIndexReader {
 
     /** Retrieves the term metadata for the specified word for the provided documents */
     public TermMetadataList[] getTermMetadata(Arena arena,
-                                              IndexLanguageContext languageContext,
-                                              IndexSearchBudget budget,
-                                              long[] wordIds,
+                                              SearchContext searchContext,
                                               CombinedDocIdList docIds)
     throws TimeoutException
     {
-        return reverseIndexFullReader.getTermData(arena, languageContext, budget, wordIds, docIds);
+        return reverseIndexFullReader.getTermData(arena, searchContext, docIds);
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -215,8 +214,12 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList docIds) throws TimeoutException {
-        return forwardIndexReader.getDocumentSpans(arena, budget, docIds);
+    public DocumentSpans[] getDocumentSpans(Arena arena,
+                                            IndexSearchBudget budget,
+                                            CombinedDocIdList docIds,
+                                            BitSet docIdsMask
+                                            ) throws TimeoutException {
+        return forwardIndexReader.getDocumentSpans(arena, budget, docIds, docIdsMask);
     }
 
     /** Close the indexes (this is not done immediately)

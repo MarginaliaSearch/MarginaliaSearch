@@ -78,7 +78,7 @@ public class FullPreindex {
         Files.deleteIfExists(outputFileWords);
 
         // Estimate the size of the docs index data
-        offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(2));
+        offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(FullPreindexDocuments.RECORD_SIZE_LONGS));
 
         // Write the docs file
         try (var transformer = new FullIndexSkipListTransformer(outputFileDocs, documents.documents)) {
@@ -125,9 +125,9 @@ public class FullPreindex {
         FullPreindexWordSegments mergingSegment =
                 createMergedSegmentWordFile(destDir, left.segments, right.segments);
 
-        var mergingIter = mergingSegment.constructionIterator(2);
-        var leftIter = left.segments.iterator(2);
-        var rightIter = right.segments.iterator(2);
+        var mergingIter = mergingSegment.constructionIterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
+        var leftIter = left.segments.iterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
+        var rightIter = right.segments.iterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
 
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
@@ -182,7 +182,7 @@ public class FullPreindex {
         // duplicates in the data, so we need to shrink it to the actual size we wrote.
 
         mergedDocuments = shrinkMergedDocuments(mergedDocuments,
-                docsFile, 2 * mergingSegment.totalSize());
+                docsFile, FullPreindexDocuments.RECORD_SIZE_LONGS * mergingSegment.totalSize());
 
         return new FullPreindex(
                 mergingSegment,
@@ -249,14 +249,15 @@ public class FullPreindex {
                                       LongArray dest,
                                       FullPreindexWordSegments.SegmentConstructionIterator destIter)
     {
-        long segSize = mergeArrays2(dest,
+        long segSize = mergeArraysN(FullPreindexDocuments.RECORD_SIZE_LONGS,
+                dest,
                 left.documents,
                 right.documents,
                 destIter.startOffset,
                 leftIter.startOffset, leftIter.endOffset,
                 rightIter.startOffset, rightIter.endOffset);
 
-        long distinct = segSize / 2;
+        long distinct = segSize / FullPreindexDocuments.RECORD_SIZE_LONGS;
         destIter.putNext(distinct);
         leftIter.next();
         rightIter.next();
@@ -279,7 +280,7 @@ public class FullPreindex {
                 mergingIter.startOffset,
                 end);
 
-        boolean putNext = mergingIter.putNext(size / 2);
+        boolean putNext = mergingIter.putNext(size / FullPreindexDocuments.RECORD_SIZE_LONGS);
         boolean iterNext = sourceIter.next();
 
         if (!putNext && iterNext)

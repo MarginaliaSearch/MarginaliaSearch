@@ -23,7 +23,7 @@ public class FullIndexSkipListTransformer implements LongArrayTransformations.Lo
     @Override
     public long transform(long pos, long end) throws IOException {
 
-        final int size = (int) ((end - start) / 2);
+        final int size = (int) ((end - start) / FullPreindexDocuments.RECORD_SIZE_LONGS);
 
         if (size == 0) {
             return -1;

@@ -1,15 +1,17 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
+import it.unimi.dsi.fastutil.ints.IntList;
+
+import java.util.List;
 import java.util.stream.IntStream;
 
 
 /** A compiled index service query */
-public class CompiledQueryInt {
-    public final CqExpression root;
+public class CompiledQueryInt extends CompiledQueryTopology {
     public final CqDataInt data;
 
-    public CompiledQueryInt(CqExpression root, CqDataInt data) {
-        this.root = root;
+    public CompiledQueryInt(CqExpression root, List<IntList> paths, CqDataInt data) {
+        super(root, paths);
         this.data = data;
     }
 
