@@ -20,6 +20,8 @@ public class SkipListWriter implements AutoCloseable {
     private final FileChannel documentsChannel;
 
     private final ByteBuffer docsBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
+    private final ByteBuffer valuesBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE * (RECORD_SIZE-1)).order(ByteOrder.nativeOrder());
+
     private final LongArrayList maxValuesList = new LongArrayList();
 
     public SkipListWriter(Path documentsFileName) throws IOException {
@@ -74,45 +76,92 @@ public class SkipListWriter implements AutoCloseable {
         assert (buffer.position() % 8) == 0;
     }
 
+    private void writeValueBlockHeader(ByteBuffer buffer, int nItems, byte flags) {
+        assert nItems >= 0;
+        assert nItems <= (BLOCK_SIZE - VALUE_BLOCK_HEADER_SIZE) / (8 * (RECORD_SIZE-1));
+
+        buffer.putInt(nItems);
+        buffer.put((byte) 0); // space reserved for fc
+        buffer.put((byte) flags);
+        buffer.putShort((short) 0);
+
+        assert (buffer.position() % 8) == 0;
+    }
+
+    private void copyValues(ByteBuffer dest, LongArray input, long inputOffset, int n) {
+
+        int itemsPerBlock = (BLOCK_SIZE - VALUE_BLOCK_HEADER_SIZE) / (8 * (RECORD_SIZE-1));
+        int itemsCopied = 0;
+
+        while (n > 0) {
+            int itemsInBlock = Math.min(n, itemsPerBlock);
+
+            int flags = FLAG_VALUE_BLOCK;
+            boolean atEnd;
+            if ((atEnd = (itemsInBlock == n)))
+                flags |= FLAG_END_BLOCK;
+
+            writeValueBlockHeader(valuesBuffer, itemsInBlock, (byte) flags);
+
+            for (int i = 0; i < itemsInBlock; i++) {
+                for (int j = 1; j < RECORD_SIZE; j++) {
+                    valuesBuffer.putLong(input.get(inputOffset + RECORD_SIZE * (i + itemsCopied) + j));
+                }
+            }
+
+            if (!atEnd) {
+                // pad to block boundary for non-terminal blocks
+
+                while ((valuesBuffer.position() & (BLOCK_SIZE-1)) != 0) {
+                    valuesBuffer.putLong(0L);
+                }
+            }
+
+            itemsCopied += itemsInBlock;
+            n -= itemsInBlock;
+        }
+
+    }
+
     public long writeList(LongArray input, long inputOffset, int n) throws IOException {
         long startPos = documentsChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
         assert input.isSortedN(RECORD_SIZE, inputOffset, inputOffset + RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(inputOffset, inputOffset+n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
         maxValuesList.clear();
 
+
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
 
-        if (blockRemaining >= (HEADER_SIZE + RECORD_SIZE * n * ValueLayout.JAVA_LONG.byteSize())) {
+        if (blockRemaining >= (DATA_BLOCK_HEADER_SIZE + RECORD_SIZE * n * ValueLayout.JAVA_LONG.byteSize() + VALUE_BLOCK_HEADER_SIZE)) {
+            docsBuffer.clear();
+            valuesBuffer.clear();
+
             /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK */
 
-            docsBuffer.clear();
-
-            writeCompactBlockHeader(docsBuffer, n, (byte) 0, FLAG_END_BLOCK);
+            writeCompactBlockHeader(docsBuffer, n, (byte) 0, (byte) (FLAG_END_BLOCK | FLAG_COMPACT_BLOCK));
 
             // Write the keys
             for (int i = 0; i < n; i++) {
                 docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i));
             }
 
-            // Write the values
-            for (int i = 0; i < n; i++) {
-                for (int j = 1; j < RECORD_SIZE; j++) {
-                    docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i + j));
-                }
-            }
+            copyValues(valuesBuffer, input, inputOffset, n);
 
             docsBuffer.flip();
-            while (docsBuffer.hasRemaining()) {
-                documentsChannel.write(docsBuffer);
+            valuesBuffer.flip();
+
+            while (docsBuffer.hasRemaining() || valuesBuffer.hasRemaining()) {
+                documentsChannel.write(new ByteBuffer[] { docsBuffer, valuesBuffer });
             }
 
             return startPos;
         }
 
         if (blockRemaining < SkipListConstants.MIN_TRUNCATED_BLOCK_SIZE) {
+            docsBuffer.clear();
+            valuesBuffer.clear();
 
             /** REMAINING BLOCK TOO SMALL TO RECLAIM - INSERT PADDING */
-            docsBuffer.clear();
             for (int i = 0; i < blockRemaining; i++) {
                 docsBuffer.put((byte) 0);
             }
@@ -127,16 +176,21 @@ public class SkipListWriter implements AutoCloseable {
         int numBlocks = calculateActualNumBlocks(blockRemaining, n);
 
         {
+            docsBuffer.clear();
+            valuesBuffer.clear();
+
             int rootBlockCapacity = rootBlockCapacity(blockRemaining, n);
             int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, n);
 
             /** WRITE THE ROOT BLOCK **/
 
-            docsBuffer.clear();
+            boolean isLastBlock = numBlocks == 1;
+            boolean isCompactBlock = isLastBlock && canGenerateCompactBlock(n, rootBlockCapacity);
+
             byte flags = 0;
-            if (numBlocks == 1) {
-                flags = FLAG_END_BLOCK;
-            }
+
+            if (isLastBlock) flags |= FLAG_END_BLOCK;
+            if (isCompactBlock) flags |= FLAG_COMPACT_BLOCK;
 
             writeCompactBlockHeader(docsBuffer, rootBlockCapacity, (byte) rootBlockPointerCount, flags);
 
@@ -156,36 +210,40 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < rootBlockCapacity; i++) {
-                docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i));
+                long docId = input.get(inputOffset + RECORD_SIZE * i);
+                docsBuffer.putLong(docId);
             }
 
             // Write the values
-            for (int i = 0; i < rootBlockCapacity; i++) {
-                for (int j = 1; j < RECORD_SIZE; j++) {
-                    docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i + j));
-                }
-            }
+            copyValues(valuesBuffer, input, inputOffset, rootBlockCapacity);
 
             // Move offset to next block's data
             inputOffset += RECORD_SIZE * rootBlockCapacity;
             writtenRecords += rootBlockCapacity;
 
+            while (docsBuffer.position() < blockRemaining)
+                docsBuffer.putLong(0L);
+
             // Align block with page size
-            if (numBlocks > 1) {
-                while (docsBuffer.position() < blockRemaining) {
-                    docsBuffer.putLong(0L);
-                }
+            if (!isLastBlock) {
+                while (valuesBuffer.position() < valuesBuffer.capacity())
+                    valuesBuffer.putLong(0L);
             }
 
             docsBuffer.flip();
-            while (docsBuffer.hasRemaining()) {
-                documentsChannel.write(docsBuffer);
+            valuesBuffer.flip();
+
+            while (docsBuffer.hasRemaining() || valuesBuffer.hasRemaining()) {
+                documentsChannel.write(new ByteBuffer[] { docsBuffer, valuesBuffer });
             }
         }
 
         /** WRITE REMAINING BLOCKS **/
 
         for (int blockIdx = 1; blockIdx < numBlocks; blockIdx++) {
+            docsBuffer.clear();
+            valuesBuffer.clear();
+
             int nRemaining = n - writtenRecords;
             int blockCapacity = nonRootBlockCapacity(blockIdx);
 
@@ -197,13 +255,15 @@ public class SkipListWriter implements AutoCloseable {
             }
 
             boolean isLastBlock = blockIdx == (numBlocks - 1);
+            boolean isCompactBlock = isLastBlock && canGenerateCompactBlock(nRemaining, blockCapacity);
+
             int blockSize = Math.min(nRemaining, blockCapacity);
-            docsBuffer.clear();
 
             byte flags = 0;
-            if (isLastBlock) {
-                flags = FLAG_END_BLOCK;
-            }
+
+            if (isLastBlock) flags |= FLAG_END_BLOCK;
+            if (isCompactBlock) flags |= FLAG_COMPACT_BLOCK;
+
             writeCompactBlockHeader(docsBuffer, blockSize, (byte) forwardPointers, flags);
 
             for (int pi = 0; pi < forwardPointers; pi++) {
@@ -217,30 +277,35 @@ public class SkipListWriter implements AutoCloseable {
             }
 
             // Write the values
-            for (int i = 0; i < blockSize; i++) {
-                for (int j = 1; j < RECORD_SIZE; j++) {
-                    docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i + j));
-                }
-            }
+            copyValues(valuesBuffer, input, inputOffset, blockSize);
 
             // Move offset to next block's data
-            inputOffset += RECORD_SIZE * Math.min(nRemaining, blockCapacity);
-            writtenRecords += Math.min(nRemaining, blockCapacity);
+            inputOffset += RECORD_SIZE * blockSize;
+            writtenRecords += blockSize;
 
-            // Align block with page size everywhere but the last
-            if (!isLastBlock) {
-                while (docsBuffer.position() < docsBuffer.capacity()) {
+            // Align block with page size everywhere but the last, unless this is a compact block
+            if (!isLastBlock || !isCompactBlock) {
+                while (docsBuffer.position() < docsBuffer.capacity())
                     docsBuffer.putLong(0L);
-                }
+                while (valuesBuffer.position() < valuesBuffer.capacity())
+                    valuesBuffer.putLong(0L);
             }
 
             docsBuffer.flip();
-            while (docsBuffer.hasRemaining()) {
-                documentsChannel.write(docsBuffer);
+            valuesBuffer.flip();
+
+            while (docsBuffer.hasRemaining() || valuesBuffer.hasRemaining()) {
+                documentsChannel.write(new ByteBuffer[] { docsBuffer, valuesBuffer });
             }
         }
 
         return startPos;
+    }
+
+    private boolean canGenerateCompactBlock(int nItems, int blockCapacity) {
+        long spareCapacity = blockCapacity - nItems;
+
+        return spareCapacity > (RECORD_SIZE-1)*nItems + VALUE_BLOCK_HEADER_SIZE/8;
     }
 
 
