@@ -279,7 +279,7 @@ public class FullReverseIndexReader {
                     // and the count is low, and we have sparse words to mask with,
                     // or all terms are non-sparse
 
-                    if ((value & 0xFF) == 0 || (sparseCount[i] <= 2 || Long.bitCount(value) <= 5))
+                    if ((value & 0xFF) == 0 && (sparseCount[i] >= 2 && Long.bitCount(value) <= 5))
                         thisMask[i] &= value;
                 }
             }
