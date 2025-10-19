@@ -238,23 +238,26 @@ public class FullReverseIndexReader {
 
     /** Find all docIds with non-flagged terms adjacent in the document */
     BitSet preselectViableDocuments(SearchContext context, int nDocIds, long[][] valuesForTerm) {
-        final int valueStartOffset = nDocIds;
 
         BitSet ret = new BitSet(nDocIds);
 
         // Operate in slices of 16 documents.  This should line up with 2 cache lines for L1 for the long arrays,
         // and reduces the allocation overhead significantly for expected nDocIds values.
 
-        final int sliceSize = 16;
+        final int sliceStep = 16;
 
-        long[] combinedMasks = new long[sliceSize];
-        long[] thisMask = new long[sliceSize];
 
-        int[] bestFlagsCount = new int[sliceSize];
-        int[] minFlagCount = new int[sliceSize];
+        long[] combinedMasks = new long[sliceStep];
+        long[] thisMask = new long[sliceStep];
 
-        for (int slice = 0; slice < nDocIds; slice += sliceSize) {
-            int sliceEnd = Math.min(slice + sliceSize, nDocIds);
+        int[] bestFlagsCount = new int[sliceStep];
+        int[] minFlagCount = new int[sliceStep];
+
+        for (int sliceStart = 0; sliceStart < nDocIds; sliceStart += sliceStep) {
+            int sliceEnd = Math.min(sliceStart + sliceStep, nDocIds);
+            int sliceSize = sliceEnd - sliceStart;
+
+            final int valueStartOffset = nDocIds + sliceStart;
 
             outer:
             for (IntList path : context.compiledQueryIds.paths) {
@@ -268,7 +271,7 @@ public class FullReverseIndexReader {
                     if (values.length != 2 * nDocIds)
                         throw new IllegalArgumentException("values.length had unexpected value");
 
-                    for (int i = slice; i < sliceEnd; i++) {
+                    for (int i = 0; i < sliceSize; i++) {
                         long value = values[valueStartOffset + i];
 
                         minFlagCount[i] = Math.min(minFlagCount[i], Long.bitCount((value & 0xFF)));
@@ -282,17 +285,17 @@ public class FullReverseIndexReader {
                 }
 
                 // combine values of alternative evaluation paths
-                for (int i = slice; i < sliceEnd; i++) {
+                for (int i = 0; i < sliceSize; i++) {
                     combinedMasks[i] |= thisMask[i];
                 }
-                for (int i = slice; i < sliceEnd; i++) {
+                for (int i = 0; i < sliceSize; i++) {
                     bestFlagsCount[i] = Math.max(minFlagCount[i], bestFlagsCount[i]);
                 }
             }
 
-            for (int i = slice; i < sliceEnd; i++) {
+            for (int i = 0; i < sliceSize; i++) {
                 if (combinedMasks[i] != 0L || minFlagCount[i] > 0)
-                    ret.set(i);
+                    ret.set(sliceStart + i);
             }
         }
 
