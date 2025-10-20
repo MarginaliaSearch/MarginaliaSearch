@@ -16,9 +16,9 @@ public class PrioIndexEntrySource implements EntrySource {
     private final ByteBuffer readData = ByteBuffer.allocate(8*1024);
     private final BitReader bitReader = new BitReader(readData, this::fillReadBuffer);
 
+    private final String term;
     private final FileChannel docsFileChannel;
     private long dataOffsetStartB;
-    private final long wordId;
 
     private final int numItems;
     private int readItems = 0;
@@ -28,14 +28,14 @@ public class PrioIndexEntrySource implements EntrySource {
     int prevDocOrd = -1;
 
     public PrioIndexEntrySource(String name,
+                                String term,
                                 FileChannel docsFileChannel,
-                                long dataOffsetStartB,
-                                long wordId)
+                                long dataOffsetStartB)
     {
         this.name = name;
+        this.term = term;
         this.docsFileChannel = docsFileChannel;
         this.dataOffsetStartB = dataOffsetStartB;
-        this.wordId = wordId;
 
         // sneaky read of the header to get item count upfront
 
@@ -133,6 +133,11 @@ public class PrioIndexEntrySource implements EntrySource {
 
     @Override
     public String indexName() {
-        return name + ":" + Long.toHexString(wordId);
+        return name + ":" + term;
+    }
+
+    @Override
+    public int readEntries() {
+        return readItems;
     }
 }

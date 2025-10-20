@@ -93,22 +93,22 @@ public class FullReverseIndexReader {
     }
 
 
-    public EntrySource documents(IndexLanguageContext languageContext, long termId) {
+    public EntrySource documents(IndexLanguageContext languageContext, String term, long termId) {
         if (null == languageContext.wordLexiconFull) {
             logger.warn("Reverse index is not ready, dropping query");
-            return new EmptyEntrySource();
+            return new EmptyEntrySource("full", term);
         }
 
         long offset = languageContext.wordLexiconFull.wordOffset(termId);
 
         if (offset < 0) // No documents
-            return new EmptyEntrySource();
+            return new EmptyEntrySource("full", term);
 
-        return new FullIndexEntrySource(name, getReader(offset), termId);
+        return new FullIndexEntrySource(name, term, getReader(offset));
     }
 
     /** Create a filter step requiring the specified termId to exist in the documents */
-    public QueryFilterStepIf also(IndexLanguageContext languageContext, long termId, IndexSearchBudget budget) {
+    public QueryFilterStepIf also(IndexLanguageContext languageContext, String term, long termId, IndexSearchBudget budget) {
         var lexicon = languageContext.wordLexiconFull;
         if (null == lexicon)
             return new QueryFilterNoPass();
@@ -117,11 +117,11 @@ public class FullReverseIndexReader {
         if (offset < 0) // No documents
             return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(getReader(offset), name, termId, budget);
+        return new ReverseIndexRetainFilter(getReader(offset), name, term, budget);
     }
 
     /** Create a filter step requiring the specified termId to be absent from the documents */
-    public QueryFilterStepIf not(IndexLanguageContext languageContext, long termId, IndexSearchBudget budget) {
+    public QueryFilterStepIf not(IndexLanguageContext languageContext, String term, long termId, IndexSearchBudget budget) {
         var lexicon = languageContext.wordLexiconFull;
         if (null == lexicon)
             return new QueryFilterLetThrough();
@@ -131,7 +131,7 @@ public class FullReverseIndexReader {
         if (offset < 0) // No documents
             return new QueryFilterLetThrough();
 
-        return new ReverseIndexRejectFilter(getReader(offset), budget);
+        return new ReverseIndexRejectFilter(getReader(offset), term, budget);
     }
 
     /** Return the number of documents with the termId in the index */

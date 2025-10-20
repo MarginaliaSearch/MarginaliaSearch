@@ -41,21 +41,21 @@ public class PrioReverseIndexReader {
         logger.info("Switching reverse index");
     }
 
-    public EntrySource documents(IndexLanguageContext languageContext, long termId) {
+    public EntrySource documents(IndexLanguageContext languageContext, String term, long termId) {
         if (languageContext.wordLexiconPrio == null) {
             logger.warn("Reverse index is not ready, dropping query");
-            return new EmptyEntrySource();
+            return new EmptyEntrySource("prio", term);
         }
 
         long offset = languageContext.wordLexiconPrio.wordOffset(termId);
 
         if (offset < 0) // No documents
-            return new EmptyEntrySource();
+            return new EmptyEntrySource("prio", term);
 
         return new PrioIndexEntrySource(name,
+                term,
                 documentsChannel,
-                offset,
-                termId);
+                offset);
     }
 
     /**
