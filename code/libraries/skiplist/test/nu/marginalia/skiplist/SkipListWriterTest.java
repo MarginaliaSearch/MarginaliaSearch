@@ -232,7 +232,7 @@ class SkipListWriterTest {
 
         try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
 
-            var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), 0);
+            var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), pos1);
             for (int i = 0; i + 1 < blocks.size(); i++) {
                 if (blocks.get(i).fowardPointers().isEmpty()) {
                     continue;
@@ -278,7 +278,7 @@ class SkipListWriterTest {
 
             try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
 
-                var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), 0);
+                var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), off);
                 for (int i = 0; i + 1 < blocks.size(); i++) {
                     if (blocks.get(i).fowardPointers().isEmpty()) {
                         continue;

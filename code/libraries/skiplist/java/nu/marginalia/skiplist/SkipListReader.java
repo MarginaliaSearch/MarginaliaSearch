@@ -562,10 +562,10 @@ public class SkipListReader {
         }
     }
 
-    public static RecordView parseBlock(MemorySegment seg, int offset) {
-        int n = headerNumRecords(seg, offset);
-        int fc = headerForwardCount(seg, offset);
-        int flags = headerFlags(seg, offset);
+    public static RecordView parseBlock(MemorySegment seg, long offset) {
+        int n = headerNumRecords(seg, (int) offset);
+        int fc = headerForwardCount(seg, (int) offset);
+        int flags = headerFlags(seg, (int) offset);
 
         assert n <= MAX_RECORDS_PER_BLOCK : "Invalid header, n = " + n;
         assert (flags & FLAG_VALUE_BLOCK) == 0 : "Attempting to parse value block";
@@ -601,7 +601,7 @@ public class SkipListReader {
         return new RecordView(n, fc, flags, forwardPointers, docIds);
     }
 
-    public static List<RecordView> parseBlocks(MemorySegment seg, int offset) {
+    public static List<RecordView> parseBlocks(MemorySegment seg, long offset) {
         List<RecordView> ret = new ArrayList<>();
         RecordView block;
         do {
