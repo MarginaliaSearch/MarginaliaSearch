@@ -8,6 +8,7 @@ import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.CountToOffsetTransformer;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
+import nu.marginalia.skiplist.SkipListWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,8 @@ public class FullPreindex {
         try (var transformer = new FullIndexSkipListTransformer(outputFileDocs, documents.documents)) {
             offsets.transformEachIO(0, offsets.size(), transformer);
         }
+
+        SkipListWriter.writeFooter(outputFileDocs, "skplist-docs-file");
 
         LongArray wordIds = segments.wordIds;
 

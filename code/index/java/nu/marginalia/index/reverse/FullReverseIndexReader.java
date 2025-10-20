@@ -17,6 +17,7 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.SkipListWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public class FullReverseIndexReader {
     {
         this.name = name;
 
-        if (!Files.exists(documents)) {
+        if (!Files.exists(documents) || !validateDocumentsFooter(documents)) {
             this.documents = null;
             this.dataPool = null;
             this.positionsFileReader = null;
@@ -74,6 +75,17 @@ public class FullReverseIndexReader {
                 (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE)
         );
 
+    }
+
+    private boolean validateDocumentsFooter(Path documents) {
+        try {
+            SkipListWriter.validateFooter(documents, "skplist-docs-file");
+            return true;
+        }
+        catch (IllegalArgumentException|IOException ex) {
+            logger.error("Failed to validate documents file footer", ex);
+            return false;
+        }
     }
 
     public void reset() {
