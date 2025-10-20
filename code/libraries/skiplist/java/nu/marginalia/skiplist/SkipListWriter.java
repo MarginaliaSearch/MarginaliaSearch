@@ -8,9 +8,11 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -44,6 +46,76 @@ public class SkipListWriter implements AutoCloseable {
         }
         documentsChannel.close();
     }
+
+    public static void writeFooter(Path documentsFileName, String magicWord) throws IOException {
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
+        buffer.putInt(BLOCK_SIZE);
+        buffer.put((byte) 0);
+        buffer.put((byte) FLAG_FOOTER_BLOCK);
+        buffer.putShort((short) SKIP_LIST_VERSION);
+
+        // reserve some space for future parameters
+        buffer.putLong(0);
+        buffer.putLong(0);
+        buffer.putLong(0);
+        buffer.putLong(0);
+
+        byte[] magicWordBytes = magicWord.getBytes(StandardCharsets.UTF_8);
+        if (magicWordBytes.length >= buffer.remaining()) {
+            throw new IllegalArgumentException("Magic word string is too long");
+        }
+
+        buffer.put(magicWordBytes);
+
+        buffer.position(0);
+        buffer.limit(BLOCK_SIZE);
+
+        try (var documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.WRITE))
+        {
+            documentsChannel.position(documentsChannel.size());
+            while (buffer.hasRemaining()) {
+                documentsChannel.write(buffer);
+            }
+        }
+    }
+
+    public static void validateFooter(Path documentsFileName, String expectedMagicWord) throws IOException {
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
+
+        try (var documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.READ))
+        {
+            documentsChannel.position(documentsChannel.size() - BLOCK_SIZE);
+            while (buffer.hasRemaining()) {
+                documentsChannel.read(buffer);
+            }
+        }
+        buffer.flip();
+
+        int blockSize = buffer.getInt();
+        buffer.get(); // padding
+        byte flags = buffer.get();
+        short listVersion = buffer.getShort();
+
+        buffer.getLong();
+        buffer.getLong();
+        buffer.getLong();
+        buffer.getLong();
+
+        byte[] expectedMagicWordBytes = expectedMagicWord.getBytes(StandardCharsets.UTF_8);
+        if (expectedMagicWordBytes.length >= buffer.remaining()) {
+            throw new IllegalArgumentException("Magic word string is too long");
+        }
+        byte[] actualMagicWordBytes = new byte[expectedMagicWord.length()];
+        buffer.get(actualMagicWordBytes);
+
+        if (!Arrays.equals(expectedMagicWordBytes, actualMagicWordBytes)) throw new IllegalArgumentException("Invalid skip list footer, mismatching magic word bytes: + " + Arrays.toString(actualMagicWordBytes));
+        if ((flags & FLAG_FOOTER_BLOCK) == 0) throw new IllegalArgumentException("Invalid skip list footer, missing footer flag");
+        if (listVersion != SKIP_LIST_VERSION) throw new IllegalArgumentException("Invalid skip list footer, invalid version");
+        if (blockSize != BLOCK_SIZE) throw new IllegalArgumentException("Incompatible skip list, block size mismatch");
+    }
+
 
     public long documentsPosition() throws IOException {
         return documentsChannel.position();

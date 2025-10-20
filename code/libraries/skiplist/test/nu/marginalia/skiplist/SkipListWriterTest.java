@@ -102,6 +102,66 @@ class SkipListWriterTest {
         }
     }
 
+
+    @Test
+    public void testWriteSingleBlockWithFooter() throws IOException {
+        long pos1, pos2;
+        try (var writer = new SkipListWriter(docsFile)) {
+            pos1 = writer.writeList(
+                    createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
+            pos2 = writer.writeList(
+                    createArray(new long[] {0,1,2,3}, new long[] { -0,-1,-2,-3}), 2*RECORD_SIZE, 2);
+        }
+
+        SkipListWriter.writeFooter(docsFile, "test123");
+        SkipListWriter.validateFooter(docsFile, "test123");
+
+        System.out.println(pos1);
+        System.out.println(pos2);
+
+        try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
+            var ms = arr.getMemorySegment();
+
+            var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
+            var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
+                    new LongArrayList(),
+                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7})
+            );
+
+            System.out.println(actual1);
+            System.out.println(expected1);
+            assertEquals(expected1, actual1);
+
+            var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
+            var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
+                    new LongArrayList(),
+                    new LongArrayList(new long[] { 2,3}));
+
+            System.out.println(actual2);
+            System.out.println(expected2);
+            assertEquals(expected2, actual2);
+        }
+    }
+
+    @Test
+    public void testWriteSingleBlockWithInvalidFooter() throws IOException {
+        long pos1, pos2;
+        try (var writer = new SkipListWriter(docsFile)) {
+            pos1 = writer.writeList(
+                    createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
+            pos2 = writer.writeList(
+                    createArray(new long[] {0,1,2,3}, new long[] { -0,-1,-2,-3}), 2*RECORD_SIZE, 2);
+        }
+
+        try {
+            SkipListWriter.validateFooter(docsFile, "test123");
+            Assertions.fail("Expected an exception");
+        }
+        catch (IllegalArgumentException ex) {
+            // expected
+        }
+    }
+
     @Test
     public void testTwoBlocks() throws IOException {
         long pos1;
