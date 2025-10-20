@@ -134,19 +134,22 @@ public class CombinedIndexReader {
             });
 
             var head = findFullWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
-
-            for (int i = 1; i < elements.size(); i++) {
-                head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+            if (!head.isNoOp()) {
+                for (int i = 1; i < elements.size(); i++) {
+                    head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                }
+                queryHeads.add(head);
             }
-            queryHeads.add(head);
 
             // If there are few paths, we can afford to check the priority index as well
             if (paths.size() < 4) {
                 var prioHead = findPriorityWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
-                for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                if (!prioHead.isNoOp()) {
+                    for (int i = 1; i < elements.size(); i++) {
+                        prioHead.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                    }
+                    queryHeads.add(prioHead);
                 }
-                queryHeads.add(prioHead);
             }
         }
 
@@ -169,7 +172,6 @@ public class CombinedIndexReader {
 
         return queryHeads
                 .stream()
-//                .filter(query -> !query.isNoOp())
                 .map(IndexQueryBuilder::build)
                 .toList();
     }
