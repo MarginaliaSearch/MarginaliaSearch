@@ -23,6 +23,7 @@ public class IndexQueryExecution {
 
     private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
     private static final int indexPreparationThreads = Integer.getInteger("index.preparationThreads", 2);
+    private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
 
     // Since most NVMe drives have a maximum read size of 128 KB, and most small reads are 512B
     // this should probably be 128*1024 / 512 = 256 to reduce queue depth and optimize tail latency
@@ -130,6 +131,12 @@ public class IndexQueryExecution {
         }
         for (var data : fullEvaluationQueue) {
             data.close();
+        }
+
+        if (printDebugSummary) {
+            for (var query : queries) {
+                query.printDebugInformation();
+            }
         }
 
         metric_index_documents_ranked
