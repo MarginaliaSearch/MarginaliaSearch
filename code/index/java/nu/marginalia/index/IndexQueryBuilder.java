@@ -33,18 +33,18 @@ public class IndexQueryBuilder {
         return this;
     }
 
-    public IndexQueryBuilder also(long termId, IndexSearchBudget budget) {
+    public IndexQueryBuilder also(String term, long termId, IndexSearchBudget budget) {
 
         if (alreadyConsideredTerms.add(termId)) {
-            query.addInclusionFilter(reverseIndexFullReader.also(context, termId, budget));
+            query.addInclusionFilter(reverseIndexFullReader.also(context, term, termId, budget));
         }
 
         return this;
     }
 
-    public IndexQueryBuilder not(long termId, IndexSearchBudget budget) {
+    public IndexQueryBuilder not(String term, long termId, IndexSearchBudget budget) {
 
-        query.addInclusionFilter(reverseIndexFullReader.not(context, termId, budget));
+        query.addInclusionFilter(reverseIndexFullReader.not(context, term, termId, budget));
 
         return this;
     }
@@ -54,6 +54,10 @@ public class IndexQueryBuilder {
         query.addInclusionFilter(filterStep);
 
         return this;
+    }
+
+    public boolean isNoOp() {
+        return query.isNoOp();
     }
 
     public IndexQuery build() {

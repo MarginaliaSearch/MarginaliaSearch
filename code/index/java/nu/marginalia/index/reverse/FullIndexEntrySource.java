@@ -7,20 +7,21 @@ import nu.marginalia.skiplist.SkipListReader;
 public class FullIndexEntrySource implements EntrySource {
     private final String name;
 
+    private final String term;
     private final SkipListReader reader;
-    private final long wordId;
+    private int readEntries = 0;
 
     public FullIndexEntrySource(String name,
-                                SkipListReader reader,
-                                long wordId) {
+                                String term,
+                                SkipListReader reader) {
         this.name = name;
+        this.term = term;
         this.reader = reader;
-        this.wordId = wordId;
     }
 
     @Override
     public void read(LongQueryBuffer buffer) {
-        reader.getKeys(buffer);
+        readEntries += reader.getKeys(buffer);
     }
 
     @Override
@@ -30,6 +31,11 @@ public class FullIndexEntrySource implements EntrySource {
 
     @Override
     public String indexName() {
-        return name + ":" + Long.toHexString(wordId);
+        return name + ":" + term;
+    }
+
+    @Override
+    public int readEntries() {
+        return readEntries;
     }
 }

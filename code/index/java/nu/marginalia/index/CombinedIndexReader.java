@@ -1,9 +1,6 @@
 package nu.marginalia.index;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongList;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -66,22 +63,22 @@ public class CombinedIndexReader {
         return new IndexQueryBuilder(reverseIndexFullReader, context, query);
     }
 
-    public QueryFilterStepIf hasWordFull(IndexLanguageContext languageContext, long termId, IndexSearchBudget budget) {
-        return reverseIndexFullReader.also(languageContext, termId, budget);
+    public QueryFilterStepIf hasWordFull(IndexLanguageContext languageContext, String term, long termId, IndexSearchBudget budget) {
+        return reverseIndexFullReader.also(languageContext, term, termId, budget);
     }
 
     /** Creates a query builder for terms in the priority index */
-    public IndexQueryBuilder findPriorityWord(IndexLanguageContext languageContext, long wordId) {
-        IndexQuery query = new IndexQuery(reverseIndexPriorityReader.documents(languageContext, wordId), true);
+    public IndexQueryBuilder findPriorityWord(IndexLanguageContext languageContext, String term, long termId) {
+        IndexQuery query = new IndexQuery(reverseIndexPriorityReader.documents(languageContext, term, termId), true);
 
-        return newQueryBuilder(languageContext, query).withSourceTerms(wordId);
+        return newQueryBuilder(languageContext, query).withSourceTerms(termId);
     }
 
     /** Creates a query builder for terms in the full index */
-    public IndexQueryBuilder findFullWord(IndexLanguageContext languageContext, long wordId) {
-        IndexQuery query = new IndexQuery(reverseIndexFullReader.documents(languageContext, wordId), false);
+    public IndexQueryBuilder findFullWord(IndexLanguageContext languageContext, String term, long termId) {
+        IndexQuery query = new IndexQuery(reverseIndexFullReader.documents(languageContext, term, termId), false);
 
-        return newQueryBuilder(languageContext, query).withSourceTerms(wordId);
+        return newQueryBuilder(languageContext, query).withSourceTerms(termId);
     }
 
     /** Creates a parameter matching filter step for the provided parameters */
@@ -90,8 +87,8 @@ public class CombinedIndexReader {
     }
 
     /** Returns the number of occurrences of the word in the full index */
-    public int numHits(IndexLanguageContext languageContext, long word) {
-        return reverseIndexFullReader.numDocuments(languageContext, word);
+    public int numHits(IndexLanguageContext languageContext, long term) {
+        return reverseIndexFullReader.numDocuments(languageContext, term);
     }
 
     /** Reset caches and buffers */
@@ -121,6 +118,8 @@ public class CombinedIndexReader {
         // the term is missing from the index and can never be found
         paths.removeIf(containsAll(termPriority).negate());
 
+        Long2ObjectOpenHashMap<String> termIdToString = context.termIdToString;
+
         for (var path : paths) {
             LongList elements = new LongArrayList(path);
 
@@ -134,18 +133,18 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(languageContext, elements.getLong(0));
+            var head = findFullWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
 
             for (int i = 1; i < elements.size(); i++) {
-                head.addInclusionFilter(hasWordFull(languageContext, elements.getLong(i), context.budget));
+                head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
             }
             queryHeads.add(head);
 
             // If there are few paths, we can afford to check the priority index as well
             if (paths.size() < 4) {
-                var prioHead = findPriorityWord(languageContext, elements.getLong(0));
+                var prioHead = findPriorityWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
                 for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordFull(languageContext, elements.getLong(i), context.budget));
+                    prioHead.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
                 }
                 queryHeads.add(prioHead);
             }
@@ -155,12 +154,12 @@ public class CombinedIndexReader {
         for (var query : queryHeads) {
 
             // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
-            for (long term : context.termIdsAdvice) {
-                query = query.also(term, context.budget);
+            for (long termId : context.termIdsAdvice) {
+                query = query.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
             }
 
-            for (long term : context.termIdsExcludes) {
-                query = query.not(term, context.budget);
+            for (long termId : context.termIdsExcludes) {
+                query = query.not(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
             }
 
             // Run these filter steps last, as they'll worst-case cause as many page faults as there are
@@ -170,6 +169,7 @@ public class CombinedIndexReader {
 
         return queryHeads
                 .stream()
+//                .filter(query -> !query.isNoOp())
                 .map(IndexQueryBuilder::build)
                 .toList();
     }

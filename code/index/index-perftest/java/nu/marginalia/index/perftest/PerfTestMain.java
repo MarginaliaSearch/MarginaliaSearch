@@ -283,11 +283,14 @@ public class PerfTestMain {
 
             long start = System.nanoTime();
             for (var query : queries) {
+
                 while (query.hasMore()) {
                     query.getMoreResults(buffer);
                     sum1 += buffer.end;
                     buffer.reset();
                 }
+
+                query.printDebugInformation();
             }
             long end = System.nanoTime();
             times.add((end - start)/1_000_000_000.);

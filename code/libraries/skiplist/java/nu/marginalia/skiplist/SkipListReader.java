@@ -28,6 +28,9 @@ public class SkipListReader {
 
     private boolean atEnd;
 
+    public int[] __stats_match_histo_retain = new int[512];
+    public int[] __stats_match_histo_reject = new int[512];
+
     public int __stats__valueReads = 0;
 
     public SkipListReader(BufferPool pool, long blockStart) {
@@ -191,12 +194,15 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.retainAndAdvance();
+                    matches++;
                     currentBlockIdx++;
                     continue outer;
                 }
             }
             break;
         }
+
+        __stats_match_histo_retain[Math.min(matches, __stats_match_histo_retain.length-1)]++;
 
         return currentBlockIdx >= n;
     }
@@ -493,6 +499,7 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.rejectAndAdvance();
+                    matches++;
                     currentBlockIdx++;
                     continue outer;
                 }
@@ -500,6 +507,7 @@ public class SkipListReader {
             break;
         }
 
+        __stats_match_histo_reject[Math.min(matches, __stats_match_histo_reject.length-1)]++;
         return currentBlockIdx >= n;
     }
 
