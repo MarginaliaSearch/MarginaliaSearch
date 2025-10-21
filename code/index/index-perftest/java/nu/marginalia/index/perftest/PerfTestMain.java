@@ -256,7 +256,7 @@ public class PerfTestMain {
         QueryFactory queryFactory = createQueryFactory(homeDir);
 
         var queryLimits = RpcQueryLimits.newBuilder()
-                .setTimeoutMs(10_000)
+                .setTimeoutMs(1_000_000_000)
                 .setResultsTotal(1000)
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
