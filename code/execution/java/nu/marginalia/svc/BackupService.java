@@ -118,7 +118,7 @@ public class BackupService {
                 FileUtils.deleteDirectory(destStorage.resolve(journalFileName).toFile());
             }
 
-            FileUtils.copyDirectory(backupStorage.resolve(journalFileName).toFile(), destStorage.toFile());
+            FileUtils.copyDirectory(backupStorage.resolve(journalFileName).toFile(), destStorage.resolve(journalFileName).toFile());
         }
     }
 
