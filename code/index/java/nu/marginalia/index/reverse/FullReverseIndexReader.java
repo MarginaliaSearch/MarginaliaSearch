@@ -316,7 +316,8 @@ public class FullReverseIndexReader {
 
     public void close() {
         try {
-            dataPool.close();
+            if(dataPool != null)
+                dataPool.close();
         }
         catch (Exception e) {
             logger.warn("Error while closing bufferPool", e);
