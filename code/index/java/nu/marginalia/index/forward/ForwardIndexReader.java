@@ -8,6 +8,7 @@ import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public class ForwardIndexReader {
     private volatile Long2IntOpenHashMap idsMap;
 
     private final IndexSpansReader spansReader;
+    private final DomainRankings domainRankings;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -48,6 +50,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             spansReader = null;
+            domainRankings = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
@@ -55,6 +58,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             spansReader = null;
+            domainRankings = null;
             return;
         }
         else if (!Files.exists(spansFile)) {
@@ -62,6 +66,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             spansReader = null;
+            domainRankings = null;
             return;
         }
 
@@ -69,6 +74,9 @@ public class ForwardIndexReader {
 
         ids = loadIds(idsFile);
         data = loadData(dataFile);
+
+        domainRankings = new DomainRankings();
+        domainRankings.load(dataFile.getParent());
 
         LinuxSystemCalls.madviseRandom(data.getMemorySegment());
         LinuxSystemCalls.madviseRandom(ids.getMemorySegment());
@@ -93,6 +101,27 @@ public class ForwardIndexReader {
 
     private static LongArray loadData(Path dataFile) throws IOException {
         return LongArrayFactory.mmapForReadingShared(dataFile);
+    }
+
+    /** For a given domain id, return the lowest document id including its encoded rank as seen in the reverse index.
+     *
+     * This function is needed to help find documents for a particular domain on disk, an operation which is not
+     * part of the regular index lookups, but are needed when filtering search results efficiently.
+     *
+     * When document ids are written to disk, they are prefixed with a rank byte, to affect their sort order.
+     * This function encodes a document id with the appropriate rank, domain id provider, and document ordinal zero.
+     *
+     * If ret is the return value of this function for some domain id, all the documents from that domain will have ids
+     * ranging between ret and ret | 0x03FF_FFFF.
+     */
+    public long getRankEncodedDocumentIdBase(int domainId) {
+
+        // This is a bit awkward since we need to match the exact order of operations used in the index construction logic,
+        // where "idWithNoRank" is already provided!
+        long idWithNoRank = UrlIdCodec.encodeId(domainId, 0);
+        float rank = domainRankings.getSortRanking(idWithNoRank);
+
+        return UrlIdCodec.addRank(rank, idWithNoRank);
     }
 
     public long getDocMeta(long docId) {
