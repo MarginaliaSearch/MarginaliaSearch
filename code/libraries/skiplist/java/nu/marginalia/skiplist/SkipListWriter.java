@@ -50,23 +50,34 @@ public class SkipListWriter implements AutoCloseable {
     public static void writeFooter(Path documentsFileName, String magicWord) throws IOException {
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
-        buffer.putInt(BLOCK_SIZE);
+
+        // Write a header that is compatible with the other block types so that we can diagnose
+        // reader errors easier.  Actual footer goes at the end of the block though, to be able to
+        // parse it regardless of block size.
+
+        buffer.putInt(0);
         buffer.put((byte) 0);
         buffer.put((byte) FLAG_FOOTER_BLOCK);
-        buffer.putShort((short) SKIP_LIST_VERSION);
-
-        // reserve some space for future parameters
-        buffer.putLong(0);
-        buffer.putLong(0);
-        buffer.putLong(0);
-        buffer.putLong(0);
 
         byte[] magicWordBytes = magicWord.getBytes(StandardCharsets.UTF_8);
+
+        int trailerPosition = BLOCK_SIZE
+                - magicWord.getBytes(StandardCharsets.UTF_8).length
+                - 8; // trailer
+
+        buffer.position(trailerPosition);
         if (magicWordBytes.length >= buffer.remaining()) {
             throw new IllegalArgumentException("Magic word string is too long");
         }
 
         buffer.put(magicWordBytes);
+
+        buffer.put((byte) 0);    // reserved for future use
+        buffer.put((byte) 0);    // reserved for future use
+        buffer.put((byte) 0);    // reserved for future use
+
+        buffer.put((byte) magicWordBytes.length);
+        buffer.putInt(BLOCK_SIZE);
 
         buffer.position(0);
         buffer.limit(BLOCK_SIZE);
@@ -93,27 +104,32 @@ public class SkipListWriter implements AutoCloseable {
         }
         buffer.flip();
 
-        int blockSize = buffer.getInt();
-        buffer.get(); // padding
-        byte flags = buffer.get();
-        short listVersion = buffer.getShort();
-
-        buffer.getLong();
-        buffer.getLong();
-        buffer.getLong();
-        buffer.getLong();
-
         byte[] expectedMagicWordBytes = expectedMagicWord.getBytes(StandardCharsets.UTF_8);
+        byte[] actualMagicWordBytes = new byte[expectedMagicWord.length()];
+
         if (expectedMagicWordBytes.length >= buffer.remaining()) {
             throw new IllegalArgumentException("Magic word string is too long");
         }
-        byte[] actualMagicWordBytes = new byte[expectedMagicWord.length()];
+
+        int trailerPosition = BLOCK_SIZE
+                - expectedMagicWord.getBytes(StandardCharsets.UTF_8).length
+                - 8; // trailer
+
+        buffer.position(trailerPosition);
+
         buffer.get(actualMagicWordBytes);
 
-        if (!Arrays.equals(expectedMagicWordBytes, actualMagicWordBytes)) throw new IllegalArgumentException("Invalid skip list footer, mismatching magic word bytes: + " + Arrays.toString(actualMagicWordBytes));
-        if ((flags & FLAG_FOOTER_BLOCK) == 0) throw new IllegalArgumentException("Invalid skip list footer, missing footer flag");
-        if (listVersion != SKIP_LIST_VERSION) throw new IllegalArgumentException("Invalid skip list footer, invalid version");
-        if (blockSize != BLOCK_SIZE) throw new IllegalArgumentException("Incompatible skip list, block size mismatch");
+        // reserved space
+        buffer.get();
+        buffer.get();
+        buffer.get();
+
+        int magicStringLength = buffer.get();
+        int blockSize = buffer.getInt();
+        assert buffer.position() == BLOCK_SIZE;
+
+        if (!Arrays.equals(expectedMagicWordBytes, actualMagicWordBytes) || magicStringLength != expectedMagicWord.length()) throw new IllegalArgumentException("Invalid skip list footer, mismatching magic word bytes: + " + Arrays.toString(actualMagicWordBytes));
+        if (blockSize != BLOCK_SIZE) throw new IllegalArgumentException("Incompatible skip list, block size mismatch: " + blockSize + ", expected " + BLOCK_SIZE);
     }
 
 
