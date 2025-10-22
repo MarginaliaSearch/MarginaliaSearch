@@ -29,6 +29,10 @@ public class SkipListValueRanges {
         this(other.starts, other.ends);
     }
 
+    public boolean isEmpty() {
+        return starts.length == 0;
+    }
+
     public boolean next() {
         return ++position < starts.length;
     }
@@ -42,6 +46,16 @@ public class SkipListValueRanges {
     }
     public long end() {
         return ends[position];
+    }
+
+    public boolean equals(Object other) {
+        if (!(other instanceof SkipListValueRanges r)) {
+            return false;
+        }
+
+        return Arrays.equals(starts, r.starts)
+                && Arrays.equals(ends, r.ends)
+                && position == r.position;
     }
 
 }

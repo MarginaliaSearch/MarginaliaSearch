@@ -1,5 +1,7 @@
 package nu.marginalia.index.searchset;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,13 @@ public class RankingSearchSet implements SearchSet {
 
         // TODO
         return false;
+    }
+
+    @Override
+    public IntList domainIds() {
+        IntList ret = new IntArrayList(set);
+        ret.sort(Integer::compareTo);
+        return ret;
     }
 
     public void write() throws IOException {

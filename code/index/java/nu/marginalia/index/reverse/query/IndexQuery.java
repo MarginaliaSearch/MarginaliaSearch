@@ -1,8 +1,10 @@
 package nu.marginalia.index.reverse.query;
 
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.index.reverse.FullIndexEntrySourceWithRangeFilter;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.SkipListValueRanges;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +60,18 @@ public class IndexQuery {
                 return false;
         }
         return true;
+    }
+
+
+    public boolean isFiltered(SkipListValueRanges ranges) {
+        if (sources.isEmpty()) return false;
+
+        if (sources.size() != 1) return false;
+
+        if (sources.getFirst() instanceof FullIndexEntrySourceWithRangeFilter filteredSource) {
+            return filteredSource.usesFilter(ranges);
+        }
+        return false;
     }
 
     /** Fills the given buffer with more results from the sources.

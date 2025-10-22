@@ -29,8 +29,9 @@ package nu.marginalia.model.id;
  * </pre></code>
  */
 public class UrlIdCodec {
-    private static final long RANK_MASK = 0xFE00_0000_0000_0000L;
-    private static final int DOCORD_MASK = 0x03FF_FFFF;
+    public static final long RANK_MASK = 0xFE00_0000_0000_0000L;
+    public static final int DOCORD_MASK = 0x03FF_FFFF;
+    public static final int DOCORD_COUNT = 0x0400_0000;
 
     /** Encode a URL id without a ranking element */
     public static long encodeId(int domainId, int documentOrdinal) {

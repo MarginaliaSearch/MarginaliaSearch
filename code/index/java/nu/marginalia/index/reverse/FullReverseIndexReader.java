@@ -17,6 +17,7 @@ import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.SkipListValueRanges;
 import nu.marginalia.skiplist.SkipListWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +106,20 @@ public class FullReverseIndexReader {
             return new EmptyEntrySource("full", term);
 
         return new FullIndexEntrySource(name, term, getReader(offset));
+    }
+
+    public EntrySource documents(IndexLanguageContext languageContext, SkipListValueRanges ranges, String term, long termId) {
+        if (null == languageContext.wordLexiconFull) {
+            logger.warn("Reverse index is not ready, dropping query");
+            return new EmptyEntrySource("full", term);
+        }
+
+        long offset = languageContext.wordLexiconFull.wordOffset(termId);
+
+        if (offset < 0) // No documents
+            return new EmptyEntrySource("full", term);
+
+        return new FullIndexEntrySourceWithRangeFilter(name, term, getReader(offset), ranges);
     }
 
     /** Create a filter step requiring the specified termId to exist in the documents */

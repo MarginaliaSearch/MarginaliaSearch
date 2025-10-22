@@ -1,5 +1,6 @@
 package nu.marginalia.index.model;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparator;
@@ -77,6 +78,7 @@ public class SearchContext {
     public final IndexLanguageContext languageContext;
 
     public final Long2ObjectOpenHashMap<String> termIdToString;
+    public final IntList searchSetIds;
 
     public static SearchContext create(CombinedIndexReader currentIndex,
                                        KeywordHasher keywordHasher,
@@ -142,6 +144,7 @@ public class SearchContext {
         this.searchQuery = query;
         this.params = rankingParams;
         this.queryParams = queryParams;
+        this.searchSetIds = queryParams.searchSet().domainIds();
 
         this.fetchSize = limits.getFetchSize();
         this.limitByDomain = limits.getResultsByDomain();
