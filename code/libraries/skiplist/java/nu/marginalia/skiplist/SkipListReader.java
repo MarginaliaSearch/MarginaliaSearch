@@ -559,11 +559,98 @@ public class SkipListReader {
     }
 
 
+    /** Fills the buffer with keys from the index.  The caller should use
+     * atEnd() to decide when the index has been exhausted.
+     *
+     * @return the number of items added to the index
+     * */
+    public int getKeys(@NotNull LongQueryBuffer dest, @NotNull SkipListValueRanges ranges)
+    {
+        if (atEnd) return 0;
+        assert dest.isAscending();
+
+        int totalCopied = 0;
+        outer:
+        while (dest.fitsMore() && !atEnd && !ranges.atEnd()) {
+            try (var page = pool.get(currentBlock)) {
+                MemorySegment ms = page.getMemorySegment();
+
+                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+
+                if (n == 0) {
+                    throw new IllegalStateException("Reading null memory!");
+                }
+
+                assert fc >= 0;
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                int dataOffset = pageDataOffset(currentBlockOffset, fc);
+
+                long blockMinValue = ms.get(ValueLayout.JAVA_LONG, dataOffset);
+                long blockMaxValue = ms.get(ValueLayout.JAVA_LONG, dataOffset + (n-1) * 8);
+                boolean inRange = false;
+
+                do {
+                    long rangeEnd;
+                    while ((rangeEnd = ranges.end()) < blockMinValue) {
+                        if (!ranges.next()) break outer;
+                    }
+
+                    long rangeStart = ranges.start();
+
+                    int dataStart = page.binarySearchLong(rangeStart, dataOffset, 0, n);
+                    int dataEnd = page.binarySearchLong(rangeEnd, dataOffset, dataStart, n);
+
+                    if (dataStart == n) {
+                        break;
+                    }
+
+                    if (dataStart != dataEnd) {
+                        totalCopied += dest.addData(ms, dataOffset + dataStart * 8, (dataEnd - dataStart));
+                        if (dataEnd == n) {
+                            inRange = true;
+                            break;
+                        }
+                    }
+                } while (ranges.next());
+
+                atEnd = (flags & FLAG_END_BLOCK) != 0 || ranges.atEnd();
+
+                if (atEnd)
+                    break;
+
+                long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+                long currentValue = ranges.start();
+
+                if (!inRange) {
+                    for (int i = 0; i < fc; i++) {
+                        long nextBlockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                        nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i - 1));
+                        if (nextBlockMaxValue >= currentValue) {
+                            break;
+                        }
+                    }
+                }
+
+                currentBlockOffset = 0;
+                currentBlockIdx = 0;
+                currentBlock = nextBlock;
+            }
+        }
+
+        return totalCopied;
+    }
+
+
     public record RecordView(int n,
                              int fc,
                              int flags,
                              LongList fowardPointers,
-                             LongList docIds)
+                             LongList docIds,
+                             long offset
+                             )
     {
         public long highestDocId() {
             return docIds.getLast();
@@ -574,6 +661,7 @@ public class SkipListReader {
         int n = headerNumRecords(seg, (int) offset);
         int fc = headerForwardCount(seg, (int) offset);
         int flags = headerFlags(seg, (int) offset);
+        long recordOffset = offset;
 
         assert n <= MAX_RECORDS_PER_BLOCK : "Invalid header, n = " + n;
         assert (flags & FLAG_VALUE_BLOCK) == 0 : "Attempting to parse value block";
@@ -601,12 +689,12 @@ public class SkipListReader {
 
         for (int i = 1; i < docIds.size(); i++) {
             if (docIds.getLong(i-1) >= docIds.getLong(i)) {
-                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, forwardPointers, docIds));
+                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset));
             }
         }
 
 
-        return new RecordView(n, fc, flags, forwardPointers, docIds);
+        return new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset);
     }
 
     public static List<RecordView> parseBlocks(MemorySegment seg, long offset) {

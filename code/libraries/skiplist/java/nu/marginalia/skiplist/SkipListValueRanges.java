@@ -6,7 +6,7 @@ public class SkipListValueRanges {
     private long[] starts;
     private long[] ends;
 
-    int position = -1;
+    int position = 0;
 
     public SkipListValueRanges(long[] starts, long[] ends) {
         if (starts.length != ends.length)
@@ -33,8 +33,8 @@ public class SkipListValueRanges {
         return ++position < starts.length;
     }
 
-    public boolean hasMore() {
-        return position + 1 < starts.length;
+    public boolean atEnd() {
+        return position >= starts.length;
     }
 
     public long start() {

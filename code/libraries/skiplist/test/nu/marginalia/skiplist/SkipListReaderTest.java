@@ -59,6 +59,220 @@ public class SkipListReaderTest {
     }
 
     @Test
+    public void testGetKeysWithRange__sunny_day() throws IOException {
+        long[] keys = LongStream.range(0, 1000).toArray();
+        long[] vals = LongStream.range(0, 1000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(
+                0, 1, 2, 3, 4, 5,
+                100, 101, 102, 103, 104, 105,
+                995, 996, 997, 998, 999));
+
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { 0, 100, 995 }, new long[] { 6, 106, 1000 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+    @Test
+    public void testGetKeysWithRange__gaps() throws IOException {
+        long[] keys = LongStream.range(0, 500).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 500).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(
+                0, 2, 4,
+                102, 104, 106,
+                996, 998));
+
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { 0, 101, 995 }, new long[] { 6, 107, 1000 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testGetKeysWithRange__edges_1block() throws IOException {
+        long[] keys = LongStream.range(0, 1000).toArray();
+        long[] vals = LongStream.range(0, 1000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(
+                0, 1,
+                998, 999));
+
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { -2, 998 }, new long[] { 2, 1002 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+    @Test
+    public void testGetKeysWithRange__edges_2block() throws IOException {
+        long[] keys = LongStream.range(0, 32000).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet();
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            int nValuesInFirstBlock = SkipListReader.parseBlocks(pool, 0).getFirst().n();
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { nValuesInFirstBlock-2 }, new long[] { nValuesInFirstBlock+2 });
+            for (long i = ranges.start(); i < ranges.end(); i++) {
+                expectedKeys.add(i);
+            }
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testGetKeysWithRange__find_block() throws IOException {
+        long[] keys = LongStream.range(0, 32000).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet();
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            var thirdBlock = SkipListReader.parseBlocks(pool, 0).get(2);
+            var thirdBlockValues = thirdBlock.docIds();
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { thirdBlockValues.getLong(3) }, new long[] { thirdBlockValues.getLong(5) });
+            for (long i = ranges.start(); i < ranges.end(); i++) {
+                expectedKeys.add(i);
+            }
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testGetKeysWithRange__find_block__missing() throws IOException {
+        long[] keys = LongStream.range(0, 32000).map(v -> v*5).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet();
+
+        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(pool, 0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            var thirdBlock = SkipListReader.parseBlocks(pool, 0).get(2);
+            var thirdBlockValues = thirdBlock.docIds();
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { thirdBlockValues.getLong(3)+1 }, new long[] { thirdBlockValues.getLong(3)+2 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
     public void testTenBlocks() throws IOException {
         long[] keys = LongStream.range(0, 32000).toArray();
         long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();

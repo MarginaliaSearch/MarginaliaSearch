@@ -9,36 +9,33 @@ class SkipListValueRangesTest {
     @Test
     public void test0() {
         var ranges = new SkipListValueRanges(new long[] { }, new long[] { });
-        assertFalse(ranges.hasMore());
+        assertTrue(ranges.atEnd());
         assertFalse(ranges.next());
-        assertFalse(ranges.hasMore());
+        assertTrue(ranges.atEnd());
     }
 
     @Test
     public void test1() {
         var ranges = new SkipListValueRanges(new long[] { 1 }, new long[] { 2 });
-        assertTrue(ranges.hasMore());
-        assertTrue(ranges.next());
+        assertFalse(ranges.atEnd());
         assertEquals(1, ranges.start());
         assertEquals(2, ranges.end());
-        assertFalse(ranges.hasMore());
         assertFalse(ranges.next());
-        assertFalse(ranges.hasMore());
+        assertTrue(ranges.atEnd());
     }
 
     @Test
     public void test2() {
         var ranges = new SkipListValueRanges(new long[] { 1, 3 }, new long[] { 2, 4 });
-        assertTrue(ranges.hasMore());
-        assertTrue(ranges.next());
+        assertFalse(ranges.atEnd());
         assertEquals(1, ranges.start());
         assertEquals(2, ranges.end());
-        assertTrue(ranges.hasMore());
+        assertFalse(ranges.atEnd());
         assertTrue(ranges.next());
         assertEquals(3, ranges.start());
         assertEquals(4, ranges.end());
-        assertFalse(ranges.hasMore());
+        assertFalse(ranges.atEnd());
         assertFalse(ranges.next());
-        assertFalse(ranges.hasMore());
+        assertTrue(ranges.atEnd());
     }
 }
