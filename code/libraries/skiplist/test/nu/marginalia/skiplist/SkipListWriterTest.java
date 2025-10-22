@@ -84,7 +84,8 @@ class SkipListWriterTest {
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
             var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
-                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7})
+                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7}),
+                    0
             );
 
             System.out.println(actual1);
@@ -94,7 +95,8 @@ class SkipListWriterTest {
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
             var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
-                    new LongArrayList(new long[] { 2,3}));
+                    new LongArrayList(new long[] { 2,3}),
+                    208);
 
             System.out.println(actual2);
             System.out.println(expected2);
@@ -125,7 +127,8 @@ class SkipListWriterTest {
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
             var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
-                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7})
+                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7}),
+                    0
             );
 
             System.out.println(actual1);
@@ -135,7 +138,9 @@ class SkipListWriterTest {
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
             var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
-                    new LongArrayList(new long[] { 2,3}));
+                    new LongArrayList(new long[] { 2,3}),
+                    208
+            );
 
             System.out.println(actual2);
             System.out.println(expected2);
