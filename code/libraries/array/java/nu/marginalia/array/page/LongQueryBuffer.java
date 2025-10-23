@@ -112,6 +112,9 @@ public class LongQueryBuffer {
 
     /** Advances the read pointer and returns true if there are more values to read. */
     public boolean rejectAndAdvance() {
+        assert read < end;
+        assert write < end;
+
         return ++read < end;
     }
 
@@ -128,6 +131,9 @@ public class LongQueryBuffer {
      *  at the write pointer, so that it's retained at the end of the buffer.
      */
     public boolean retainAndAdvance() {
+        assert read < end;
+        assert write < end;
+
         if (read != write) {
             long tmp = data.get(write);
             data.set(write, data.get(read));

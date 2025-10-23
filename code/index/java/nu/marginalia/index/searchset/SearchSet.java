@@ -1,5 +1,7 @@
 package nu.marginalia.index.searchset;
 
+import it.unimi.dsi.fastutil.ints.IntList;
+
 public interface SearchSet {
 
     /**
@@ -8,6 +10,9 @@ public interface SearchSet {
      *
      */
     boolean contains(int domainId);
+
+    public IntList domainIds();
+
 
     default boolean imposesConstraint() {
         return true;

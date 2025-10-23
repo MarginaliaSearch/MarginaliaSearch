@@ -1,9 +1,10 @@
 package nu.marginalia.keyword.model;
 
-import gnu.trove.list.array.TByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.Object2ByteOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.VarintCodedSequence;
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 public class DocumentKeywordsBuilder {
-    public final Object2ByteOpenHashMap<String> wordToMeta;
+    public final Object2LongOpenHashMap<String> wordToMeta;
     public final HashMap<String, IntList> wordToPos;
     public final Map<HtmlTag, List<DocumentWordSpan>> wordSpans = new HashMap<>();
 
@@ -25,9 +26,10 @@ public class DocumentKeywordsBuilder {
     // |------64 letters is this long-------------------------------|
     // granted, some of these words are word n-grams, but 64 ought to
     // be plenty. The lexicon writer has another limit that's higher.
-    private final int MAX_WORD_LENGTH = 64;
-    private final int MAX_POSITIONS_PER_WORD = 512;
-    private final int MAX_SPANS_PER_TYPE = 8192;
+    static final int MAX_WORD_LENGTH = 64;
+    static final int MAX_POSITIONS_PER_WORD = 512;
+    static final int MAX_SPANS_PER_TYPE = 8192;
+    static final int POSITIONS_BITMASK_WINDOW_SIZE = 256;
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentKeywordsBuilder.class);
 
@@ -36,34 +38,35 @@ public class DocumentKeywordsBuilder {
     }
 
     public DocumentKeywordsBuilder(int capacity) {
-        wordToMeta = new Object2ByteOpenHashMap<>(capacity);
+        wordToMeta = new Object2LongOpenHashMap<>(capacity);
         wordToPos = new HashMap<>(capacity);
     }
 
 
     public DocumentKeywords build() {
         final List<String> wordArray = new ArrayList<>(wordToMeta.size());
-        final TByteArrayList meta = new TByteArrayList(wordToMeta.size());
+        final LongArrayList meta = new LongArrayList(wordToMeta.size());
         final List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
         final List<VarintCodedSequence> spanSequences = new ArrayList<>(wordSpans.size());
         final byte[] spanCodes = new byte[wordSpans.size()];
 
-        var iter = wordToMeta.object2ByteEntrySet().fastIterator();
+        var iter = wordToMeta.object2LongEntrySet().fastIterator();
 
         // Encode positions
         while (iter.hasNext()) {
-            var entry = iter.next();
+            Object2LongMap.Entry<String> entry = iter.next();
 
-            meta.add(entry.getByteValue());
             wordArray.add(entry.getKey());
 
+            // Truncate and encode exact positions
             IntList posList = wordToPos.getOrDefault(entry.getKey(), IntList.of());
-
             if (posList.size() > MAX_POSITIONS_PER_WORD) {
                 posList.subList(MAX_POSITIONS_PER_WORD, posList.size()).clear();
             }
-
             positions.add(VarintCodedSequence.generate(posList));
+
+            // Construct a positions bit mask and add it to bits 8 - 64 in the term metadata
+            meta.add(calculatePositionMask(entry.getLongValue(), posList));
         }
 
         // Encode spans
@@ -84,9 +87,25 @@ public class DocumentKeywordsBuilder {
             spanSequences.add(VarintCodedSequence.generate(positionsForTag));
         });
 
-        return new DocumentKeywords(wordArray, meta.toArray(), positions, spanCodes, spanSequences);
+        return new DocumentKeywords(wordArray, meta.toLongArray(), positions, spanCodes, spanSequences);
     }
 
+    long calculatePositionMask(long termMeta, IntList positions) {
+        long ret = termMeta;
+
+        for (int i = 0; i < positions.size(); i++) {
+            int pos = positions.getInt(i);
+            int bit = (pos / POSITIONS_BITMASK_WINDOW_SIZE) % 56;
+            ret |= 1L << (8 + bit);
+
+            // Also flag the next bit if we are past the half-way point to make the mask a bit more lenient to
+            // rounding errors; we actually want (actually) adjacent words to overlap on the same bit
+            bit = ((pos + POSITIONS_BITMASK_WINDOW_SIZE / 2) / POSITIONS_BITMASK_WINDOW_SIZE) % 56;
+            ret |= 1L << (8 + bit);
+        }
+
+        return ret;
+    }
 
     public void addMeta(String word, byte meta) {
         if (word.length() > MAX_WORD_LENGTH)
@@ -108,7 +127,7 @@ public class DocumentKeywordsBuilder {
 
     public void setFlagOnMetadataForWords(WordFlags flag, Collection<String> flagWords) {
         flagWords.forEach(word ->
-                wordToMeta.mergeByte(word, flag.asBit(), (a, b) -> (byte) (a | b))
+                wordToMeta.mergeLong(word, flag.asBit(), (a, b) -> (byte) (a | b))
         );
     }
 
@@ -130,9 +149,9 @@ public class DocumentKeywordsBuilder {
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 
-        for (var iter = wordToMeta.object2ByteEntrySet().fastIterator(); iter.hasNext(); ) {
+        for (var iter = wordToMeta.object2LongEntrySet().fastIterator(); iter.hasNext(); ) {
             var entry = iter.next();
-            if ((flags & entry.getByteValue()) != 0) {
+            if ((flags & entry.getLongValue()) != 0) {
                 ret.add(entry.getKey());
             }
         }
@@ -158,7 +177,7 @@ public class DocumentKeywordsBuilder {
         wordToMeta.forEach((word, meta) -> {
             sb.append(word)
                     .append("->")
-                    .append(WordFlags.decode(meta))
+                    .append(WordFlags.decode((byte) meta.longValue()))
                     .append(',')
                     .append(wordToPos.getOrDefault(word, new IntArrayList()))
                     .append(' ');
@@ -173,7 +192,7 @@ public class DocumentKeywordsBuilder {
         return sb.append(']').toString();
     }
 
-    public Object2ByteOpenHashMap<String> getWordToMeta() {
+    public Object2LongOpenHashMap<String> getWordToMeta() {
         return this.wordToMeta;
     }
 

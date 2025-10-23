@@ -8,9 +8,13 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static nu.marginalia.skiplist.SkipListConstants.*;
 
@@ -18,6 +22,8 @@ public class SkipListWriter implements AutoCloseable {
     private final FileChannel documentsChannel;
 
     private final ByteBuffer docsBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
+    private final ByteBuffer valuesBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE * (RECORD_SIZE-1)).order(ByteOrder.nativeOrder());
+
     private final LongArrayList maxValuesList = new LongArrayList();
 
     public SkipListWriter(Path documentsFileName) throws IOException {
@@ -40,6 +46,92 @@ public class SkipListWriter implements AutoCloseable {
         }
         documentsChannel.close();
     }
+
+    public static void writeFooter(Path documentsFileName, String magicWord) throws IOException {
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
+
+        // Write a header that is compatible with the other block types so that we can diagnose
+        // reader errors easier.  Actual footer goes at the end of the block though, to be able to
+        // parse it regardless of block size.
+
+        buffer.putInt(0);
+        buffer.put((byte) 0);
+        buffer.put((byte) FLAG_FOOTER_BLOCK);
+
+        byte[] magicWordBytes = magicWord.getBytes(StandardCharsets.UTF_8);
+
+        int trailerPosition = BLOCK_SIZE
+                - magicWord.getBytes(StandardCharsets.UTF_8).length
+                - 8; // trailer
+
+        buffer.position(trailerPosition);
+        if (magicWordBytes.length >= buffer.remaining()) {
+            throw new IllegalArgumentException("Magic word string is too long");
+        }
+
+        buffer.put(magicWordBytes);
+
+        buffer.put((byte) 0);    // reserved for future use
+        buffer.put((byte) 0);    // reserved for future use
+        buffer.put((byte) 0);    // reserved for future use
+
+        buffer.put((byte) magicWordBytes.length);
+        buffer.putInt(BLOCK_SIZE);
+
+        buffer.position(0);
+        buffer.limit(BLOCK_SIZE);
+
+        try (var documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.WRITE))
+        {
+            documentsChannel.position(documentsChannel.size());
+            while (buffer.hasRemaining()) {
+                documentsChannel.write(buffer);
+            }
+        }
+    }
+
+    public static void validateFooter(Path documentsFileName, String expectedMagicWord) throws IOException {
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
+
+        try (var documentsChannel = (FileChannel) Files.newByteChannel(documentsFileName, StandardOpenOption.READ))
+        {
+            documentsChannel.position(documentsChannel.size() - BLOCK_SIZE);
+            while (buffer.hasRemaining()) {
+                documentsChannel.read(buffer);
+            }
+        }
+        buffer.flip();
+
+        byte[] expectedMagicWordBytes = expectedMagicWord.getBytes(StandardCharsets.UTF_8);
+        byte[] actualMagicWordBytes = new byte[expectedMagicWord.length()];
+
+        if (expectedMagicWordBytes.length >= buffer.remaining()) {
+            throw new IllegalArgumentException("Magic word string is too long");
+        }
+
+        int trailerPosition = BLOCK_SIZE
+                - expectedMagicWord.getBytes(StandardCharsets.UTF_8).length
+                - 8; // trailer
+
+        buffer.position(trailerPosition);
+
+        buffer.get(actualMagicWordBytes);
+
+        // reserved space
+        buffer.get();
+        buffer.get();
+        buffer.get();
+
+        int magicStringLength = buffer.get();
+        int blockSize = buffer.getInt();
+        assert buffer.position() == BLOCK_SIZE;
+
+        if (!Arrays.equals(expectedMagicWordBytes, actualMagicWordBytes) || magicStringLength != expectedMagicWord.length()) throw new IllegalArgumentException("Invalid skip list footer, mismatching magic word bytes: + " + Arrays.toString(actualMagicWordBytes));
+        if (blockSize != BLOCK_SIZE) throw new IllegalArgumentException("Incompatible skip list, block size mismatch: " + blockSize + ", expected " + BLOCK_SIZE);
+    }
+
 
     public long documentsPosition() throws IOException {
         return documentsChannel.position();
@@ -72,43 +164,113 @@ public class SkipListWriter implements AutoCloseable {
         assert (buffer.position() % 8) == 0;
     }
 
-    public long writeList(LongArray input, long offset, int n) throws IOException {
+    private void writeValueBlockHeader(ByteBuffer buffer, int nItems, byte flags) {
+        assert nItems >= 0;
+        assert nItems <= (BLOCK_SIZE - VALUE_BLOCK_HEADER_SIZE) / (8 * (RECORD_SIZE-1));
+
+        buffer.putInt(nItems);
+        buffer.put((byte) 0); // space reserved for fc
+        buffer.put((byte) flags);
+        buffer.putShort((short) 0);
+
+        assert (buffer.position() % 8) == 0;
+    }
+
+    private void copyValues(ByteBuffer dest, LongArray input, long inputOffset, int n) {
+
+        int itemsPerBlock = (BLOCK_SIZE - VALUE_BLOCK_HEADER_SIZE) / (8 * (RECORD_SIZE-1));
+        int itemsCopied = 0;
+
+        while (n > 0) {
+            int itemsInBlock = Math.min(n, itemsPerBlock);
+
+            int flags = FLAG_VALUE_BLOCK;
+            boolean atEnd;
+            if ((atEnd = (itemsInBlock == n)))
+                flags |= FLAG_END_BLOCK;
+
+            writeValueBlockHeader(valuesBuffer, itemsInBlock, (byte) flags);
+
+            for (int i = 0; i < itemsInBlock; i++) {
+                for (int j = 1; j < RECORD_SIZE; j++) {
+                    valuesBuffer.putLong(input.get(inputOffset + RECORD_SIZE * (i + itemsCopied) + j));
+                }
+            }
+
+            if (!atEnd) {
+                // pad to block boundary for non-terminal blocks
+
+                while ((valuesBuffer.position() & (BLOCK_SIZE-1)) != 0) {
+                    valuesBuffer.putLong(0L);
+                }
+            }
+
+            itemsCopied += itemsInBlock;
+            n -= itemsInBlock;
+        }
+
+    }
+
+    public boolean shouldUseRemainingBlock(int blockRemaining, int n) {
+        // given:  The data does not all fit in the block
+
+        long truncatedBlockCapacity = rootBlockCapacity(blockRemaining, n);
+
+        if (truncatedBlockCapacity >= n) {
+
+            // It only makes sense to reclaim the block if all the values fit in the subsequent block,
+            // otherwise the dead air between the value blocks will always match or exceed the dead air
+            // generated by padding to the next block
+
+            return BLOCK_SIZE >= VALUE_BLOCK_HEADER_SIZE + (RECORD_SIZE-1)*n*8;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public long writeList(LongArray input, long inputOffset, int n) throws IOException {
         long startPos = documentsChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
-        assert input.isSortedN(2, offset, offset + 2L*n) : "Not sorted @ " + input.hashCode();
+        assert input.isSortedN(RECORD_SIZE, inputOffset, inputOffset + RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(inputOffset, inputOffset+n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
         maxValuesList.clear();
+
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
 
-        if (blockRemaining >= (HEADER_SIZE + RECORD_SIZE * n * ValueLayout.JAVA_LONG.byteSize())) {
+        if (blockRemaining >= (DATA_BLOCK_HEADER_SIZE + RECORD_SIZE * n * ValueLayout.JAVA_LONG.byteSize() + VALUE_BLOCK_HEADER_SIZE)) {
+            docsBuffer.clear();
+            valuesBuffer.clear();
+
             /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK */
 
-            docsBuffer.clear();
-
-            writeCompactBlockHeader(docsBuffer, n, (byte) 0, FLAG_END_BLOCK);
+            writeCompactBlockHeader(docsBuffer, n, (byte) 0, (byte) (FLAG_END_BLOCK | FLAG_COMPACT_BLOCK));
 
             // Write the keys
             for (int i = 0; i < n; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i));
+                docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i));
             }
 
-            // Write the values
-            for (int i = 0; i < n; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i + 1));
-            }
+            copyValues(valuesBuffer, input, inputOffset, n);
 
             docsBuffer.flip();
-            while (docsBuffer.hasRemaining()) {
-                documentsChannel.write(docsBuffer);
+            valuesBuffer.flip();
+
+            while (docsBuffer.hasRemaining() || valuesBuffer.hasRemaining()) {
+                documentsChannel.write(new ByteBuffer[] { docsBuffer, valuesBuffer });
             }
 
             return startPos;
         }
 
-        if (blockRemaining < SkipListConstants.MIN_TRUNCATED_BLOCK_SIZE) {
+
+        if (blockRemaining != BLOCK_SIZE && !shouldUseRemainingBlock(blockRemaining, n)) {
+            // Add padding if we cannot reclaim the remaining parts of this block
+
+            docsBuffer.clear();
+            valuesBuffer.clear();
 
             /** REMAINING BLOCK TOO SMALL TO RECLAIM - INSERT PADDING */
-            docsBuffer.clear();
             for (int i = 0; i < blockRemaining; i++) {
                 docsBuffer.put((byte) 0);
             }
@@ -117,27 +279,33 @@ public class SkipListWriter implements AutoCloseable {
                 startPos += documentsChannel.write(docsBuffer);
             }
             blockRemaining = BLOCK_SIZE;
+            docsBuffer.clear();
         }
 
         int writtenRecords = 0;
         int numBlocks = calculateActualNumBlocks(blockRemaining, n);
 
         {
+            docsBuffer.clear();
+            valuesBuffer.clear();
+
             int rootBlockCapacity = rootBlockCapacity(blockRemaining, n);
             int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, n);
 
             /** WRITE THE ROOT BLOCK **/
 
-            docsBuffer.clear();
+            boolean isLastBlock = numBlocks == 1;
+            boolean isCompactBlock = isLastBlock && canGenerateCompactBlock(n, rootBlockCapacity);
+
             byte flags = 0;
-            if (numBlocks == 1) {
-                flags = FLAG_END_BLOCK;
-            }
+
+            if (isLastBlock) flags |= FLAG_END_BLOCK;
+            if (isCompactBlock) flags |= FLAG_COMPACT_BLOCK;
 
             writeCompactBlockHeader(docsBuffer, rootBlockCapacity, (byte) rootBlockPointerCount, flags);
 
             findBlockHighestValues(input, maxValuesList,
-                    offset + (long) RECORD_SIZE * rootBlockCapacity,
+                    inputOffset + (long) RECORD_SIZE * rootBlockCapacity,
                     numBlocks,
                     n - rootBlockCapacity);
 
@@ -152,34 +320,40 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < rootBlockCapacity; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i));
+                long docId = input.get(inputOffset + RECORD_SIZE * i);
+                docsBuffer.putLong(docId);
             }
 
             // Write the values
-            for (int i = 0; i < rootBlockCapacity; i++) {
-                docsBuffer.putLong(input.get(offset + 2L * i + 1));
-            }
+            copyValues(valuesBuffer, input, inputOffset, rootBlockCapacity);
 
             // Move offset to next block's data
-            offset += 2L * rootBlockCapacity;
+            inputOffset += RECORD_SIZE * rootBlockCapacity;
             writtenRecords += rootBlockCapacity;
 
+            while (docsBuffer.position() < blockRemaining)
+                docsBuffer.putLong(0L);
+
             // Align block with page size
-            if (numBlocks > 1) {
-                while (docsBuffer.position() < blockRemaining) {
-                    docsBuffer.putLong(0L);
-                }
+            if (!isLastBlock) {
+                while (valuesBuffer.position() < valuesBuffer.capacity())
+                    valuesBuffer.putLong(0L);
             }
 
             docsBuffer.flip();
-            while (docsBuffer.hasRemaining()) {
-                documentsChannel.write(docsBuffer);
+            valuesBuffer.flip();
+
+            while (docsBuffer.hasRemaining() || valuesBuffer.hasRemaining()) {
+                documentsChannel.write(new ByteBuffer[] { docsBuffer, valuesBuffer });
             }
         }
 
         /** WRITE REMAINING BLOCKS **/
 
         for (int blockIdx = 1; blockIdx < numBlocks; blockIdx++) {
+            docsBuffer.clear();
+            valuesBuffer.clear();
+
             int nRemaining = n - writtenRecords;
             int blockCapacity = nonRootBlockCapacity(blockIdx);
 
@@ -191,13 +365,15 @@ public class SkipListWriter implements AutoCloseable {
             }
 
             boolean isLastBlock = blockIdx == (numBlocks - 1);
+            boolean isCompactBlock = isLastBlock && canGenerateCompactBlock(nRemaining, blockCapacity);
+
             int blockSize = Math.min(nRemaining, blockCapacity);
-            docsBuffer.clear();
 
             byte flags = 0;
-            if (isLastBlock) {
-                flags = FLAG_END_BLOCK;
-            }
+
+            if (isLastBlock) flags |= FLAG_END_BLOCK;
+            if (isCompactBlock) flags |= FLAG_COMPACT_BLOCK;
+
             writeCompactBlockHeader(docsBuffer, blockSize, (byte) forwardPointers, flags);
 
             for (int pi = 0; pi < forwardPointers; pi++) {
@@ -206,34 +382,40 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < blockSize; i++) {
-                long docId = input.get(offset + 2L * i);
+                long docId = input.get(inputOffset + RECORD_SIZE * i);
                 docsBuffer.putLong(docId);
             }
 
             // Write the values
-            for (int i = 0; i < blockSize; i++) {
-                long val = input.get(offset + 2L * i + 1);
-                docsBuffer.putLong(val);
-            }
+            copyValues(valuesBuffer, input, inputOffset, blockSize);
 
             // Move offset to next block's data
-            offset += 2L * Math.min(nRemaining, blockCapacity);
-            writtenRecords += Math.min(nRemaining, blockCapacity);
+            inputOffset += RECORD_SIZE * blockSize;
+            writtenRecords += blockSize;
 
-            // Align block with page size everywhere but the last
-            if (!isLastBlock) {
-                while (docsBuffer.position() < docsBuffer.capacity()) {
+            // Align block with page size everywhere but the last, unless this is a compact block
+            if (!isLastBlock || !isCompactBlock) {
+                while (docsBuffer.position() < docsBuffer.capacity())
                     docsBuffer.putLong(0L);
-                }
+                while (valuesBuffer.position() < valuesBuffer.capacity())
+                    valuesBuffer.putLong(0L);
             }
 
             docsBuffer.flip();
-            while (docsBuffer.hasRemaining()) {
-                documentsChannel.write(docsBuffer);
+            valuesBuffer.flip();
+
+            while (docsBuffer.hasRemaining() || valuesBuffer.hasRemaining()) {
+                documentsChannel.write(new ByteBuffer[] { docsBuffer, valuesBuffer });
             }
         }
 
         return startPos;
+    }
+
+    private boolean canGenerateCompactBlock(int nItems, int blockCapacity) {
+        long spareCapacity = blockCapacity - nItems;
+
+        return spareCapacity > (RECORD_SIZE-1)*nItems + VALUE_BLOCK_HEADER_SIZE/8;
     }
 
 
@@ -251,8 +433,8 @@ public class SkipListWriter implements AutoCloseable {
             assert n >= 0;
 
             int blockCapacity = nonRootBlockCapacity(i);
-            long offsetEnd =  offsetStart + 2L*Math.min(n, blockCapacity) - 2L;
-            offsetStart += 2L*Math.min(n, blockCapacity);
+            long offsetEnd =  offsetStart + RECORD_SIZE * Math.min(n, blockCapacity) - RECORD_SIZE;
+            offsetStart += RECORD_SIZE * Math.min(n, blockCapacity);
 
             n -= blockCapacity;
             output.add(input.get(offsetEnd));
@@ -273,7 +455,5 @@ public class SkipListWriter implements AutoCloseable {
 
         return blocks;
     }
-
-
 
 }

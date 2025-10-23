@@ -1,27 +1,27 @@
 package nu.marginalia.index.model;
 
-import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.sequence.CodedSequence;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
+import java.util.BitSet;
 
 public final class TermMetadataList {
-    private final TermData[] array;
+    private final CodedSequence[] positions;
+    private final byte[] flags;
+    private final BitSet viableDocuments;
 
-    public TermMetadataList(TermData[] array) {
-        this.array = array;
+    public TermMetadataList(CodedSequence[] positions, byte[] flags, BitSet viableDocuments) {
+        this.positions = positions;
+        this.flags = flags;
+        this.viableDocuments = viableDocuments;
     }
 
     public int size() {
-        return array.length;
+        return positions.length;
     }
 
     public long flag(int i) {
-        if (array[i] == null)
-            return 0;
-
-        return array[i].flags();
+        return flags[i];
     }
 
     /** Returns the position data for the given document index,
@@ -29,27 +29,13 @@ public final class TermMetadataList {
      */
     @Nullable
     public CodedSequence position(int i) {
-        if (array[i] == null)
+        if (positions[i] == null)
             return null;
 
-        return array[i].positions();
+        return positions[i];
     }
 
-    public TermData[] array() {
-        return array;
+    public BitSet viableDocuments() {
+        return viableDocuments;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (TermMetadataList) obj;
-        return Arrays.equals(this.array, that.array);
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(array);
-    }
-
 }

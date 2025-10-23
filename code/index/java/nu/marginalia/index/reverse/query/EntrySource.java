@@ -13,4 +13,6 @@ public interface EntrySource {
 
     /** Returns the name of the index, for debugging purposes. */
     String indexName();
+
+    public int readEntries();
 }

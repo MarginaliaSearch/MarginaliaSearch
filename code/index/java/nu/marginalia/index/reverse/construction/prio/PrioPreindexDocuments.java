@@ -7,7 +7,6 @@ import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.rwf.RandomFileAssembler;
 import nu.marginalia.slop.SlopTable;
-import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
 import org.slf4j.Logger;
@@ -49,7 +48,7 @@ public class PrioPreindexDocuments {
         {
             LongColumn.Reader docIds = journalInstance.openCombinedId(slopTable);
             LongArrayColumn.Reader termIds = journalInstance.openTermIds(slopTable);
-            ByteArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
+            LongArrayColumn.Reader termMeta = journalInstance.openTermMetadata(slopTable);
 
             Long2LongOpenHashMap offsetMap = segments.asMap(RECORD_SIZE_LONGS);
             offsetMap.defaultReturnValue(0);
@@ -59,13 +58,14 @@ public class PrioPreindexDocuments {
                 long rankEncodedId = docIdRewriter.rewriteDocId(docId);
 
                 long[] tIds = termIds.get();
-                byte[] tMeta = termMeta.get();
+                long[] tMeta = termMeta.get();
 
                 for (int i = 0; i < tIds.length; i++) {
                     long termId = tIds[i];
-                    byte meta = tMeta[i];
+                    long meta = tMeta[i];
 
-                    if (meta != 0) {
+                    // Term metadata flags are at the lowest byte
+                    if ((meta & 0xFFL) != 0) {
                         long offset = offsetMap.addTo(termId, RECORD_SIZE_LONGS);
                         assembly.put(offset, rankEncodedId);
                     }

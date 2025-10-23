@@ -82,7 +82,7 @@ class FullReverseIndexReaderTest {
 
     private long[] readEntries(FullReverseIndexReader reader, long wordId) {
         IndexLanguageContext languageContext = new IndexLanguageContext("en", reader.getWordLexicon("en"), null);
-        var es = reader.documents(languageContext, wordId);
+        var es = reader.documents(languageContext, Long.toString(wordId), wordId);
         assertTrue(es.hasMore());
         LongQueryBuffer buffer = new LongQueryBuffer(4);
         es.read(buffer);

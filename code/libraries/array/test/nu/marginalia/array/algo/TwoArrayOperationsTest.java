@@ -9,7 +9,8 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TwoArrayOperationsTest {
 
@@ -106,4 +107,102 @@ class TwoArrayOperationsTest {
         longArray.get(0, vals);
         return vals;
     }
+
+
+    @Test
+    void mergeArrays3__overlap_left() {
+        LongArray left = LongArrayFactory.onHeapShared(6);
+        LongArray right = LongArrayFactory.onHeapShared(3);
+        LongArray out = LongArrayFactory.onHeapShared(6);
+        LongArray out9 = LongArrayFactory.onHeapShared(9);
+
+        left.set(0, 40, 3, -3, 41, 4, -4);
+        right.set(0, 40, 5, -5);
+        long numDistinct = TwoArrayOperations.countDistinctElementsN(3, left, right, 0, 6, 0, 3);
+
+        // merge l, r
+        long ret = TwoArrayOperations.mergeArrays3(out, left, right, 0, 0, 6, 0, 3);
+        assertEquals(numDistinct * 3, ret);
+
+        long[] expected = new long[]{40, 3, -3, 41, 4, -4};
+        long[] actual = longArrayToJavaArray(out);
+
+        System.out.println(Arrays.toString(expected));
+        System.out.println(Arrays.toString(actual));
+
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void mergeArrays3__overlap_right() {
+        LongArray left = LongArrayFactory.onHeapShared(6);
+        LongArray right = LongArrayFactory.onHeapShared(3);
+        LongArray out = LongArrayFactory.onHeapShared(6);
+        LongArray out9 = LongArrayFactory.onHeapShared(9);
+
+        left.set(0, 40, 3, -3, 41, 4, -4);
+        right.set(0, 40, 5, -5);
+        long numDistinct = TwoArrayOperations.countDistinctElementsN(3, left, right, 0, 6, 0, 3);
+
+        // merge l, r
+        long ret = TwoArrayOperations.mergeArrays3(out, right, left, 0, 0, 3, 0, 6);
+        assertEquals(numDistinct * 3, ret);
+
+        long[] expected = new long[] { 40, 5, -5, 41, 4, -4 };
+        long[] actual = longArrayToJavaArray(out);
+
+        System.out.println(Arrays.toString(expected));
+        System.out.println(Arrays.toString(actual));
+
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void mergeArrays3__distinct_2_1() {
+        LongArray left = LongArrayFactory.onHeapShared(6);
+        LongArray right = LongArrayFactory.onHeapShared(3);
+        LongArray out = LongArrayFactory.onHeapShared(9);
+
+        left.set(0, 40, 3, -3, 41, 4, -4);
+        right.set(0, 39, 5, -5);
+
+        long numDistinct = TwoArrayOperations.countDistinctElementsN(3, left, right, 0, 6, 0, 3);
+
+        // merge l, r
+        long ret = TwoArrayOperations.mergeArrays3(out, left, right, 0, 0, 6, 0, 3);
+        assertEquals(numDistinct * 3, ret);
+
+        long[] expected = new long[] { 39, 5, -5, 40, 3, -3, 41, 4, -4 };
+        long[] actual = longArrayToJavaArray(out);
+
+        System.out.println(Arrays.toString(expected));
+        System.out.println(Arrays.toString(actual));
+
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void mergeArrays3__distinct_1_2() {
+        LongArray left = LongArrayFactory.onHeapShared(6);
+        LongArray right = LongArrayFactory.onHeapShared(3);
+        LongArray out = LongArrayFactory.onHeapShared(9);
+
+        left.set(0, 40, 3, -3, 41, 4, -4);
+        right.set(0, 39, 5, -5);
+
+        long numDistinct = TwoArrayOperations.countDistinctElementsN(3, left, right, 0, 6, 0, 3);
+
+        // merge l, r
+        long ret = TwoArrayOperations.mergeArrays3(out, left, right, 0, 0, 6, 0, 3);
+        assertEquals(numDistinct * 3, ret);
+
+        long[] expected = new long[] { 39, 5, -5, 40, 3, -3, 41, 4, -4 };
+        long[] actual = longArrayToJavaArray(out);
+
+        System.out.println(Arrays.toString(expected));
+        System.out.println(Arrays.toString(actual));
+
+        assertArrayEquals(expected, actual);
+    }
+
 }

@@ -121,8 +121,8 @@ public class CombinedIndexReaderTest {
         var lc = reader.createLanguageContext("en");
 
         var query = reader
-                .findFullWord(lc, kw("hello"))
-                .also(kw("world"), new IndexSearchBudget(10_000))
+                .findFullWord(lc, "hello", kw("hello"))
+                .also("word", kw("world"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);
@@ -164,9 +164,9 @@ public class CombinedIndexReaderTest {
 
         var reader = indexFactory.getCombinedIndexReader();
         var lc = reader.createLanguageContext("en");
-        var query = reader.findFullWord(lc, kw("hello"))
-                .also(kw("world"), new IndexSearchBudget(10_000))
-                .not(kw("goodbye"), new IndexSearchBudget(10_000))
+        var query = reader.findFullWord(lc, "hello", kw("hello"))
+                .also("world", kw("world"), new IndexSearchBudget(10_000))
+                .not("goodbye", kw("goodbye"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);
@@ -282,7 +282,7 @@ public class CombinedIndexReaderTest {
                 var meta = metaByDoc.get(doc);
 
                 List<String> keywords = words.stream().map(w -> w.keyword).toList();
-                byte[] metadata = new byte[words.size()];
+                long[] metadata = new long[words.size()];
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = words.get(i).termMetadata;
                 }

@@ -1,19 +1,21 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 
 /** A compiled index service query */
-public class CompiledQueryLong implements Iterable<Long> {
-    public final CqExpression root;
+public class CompiledQueryLong extends CompiledQueryTopology implements Iterable<Long> {
+
     public final CqDataLong data;
 
-    public CompiledQueryLong(CqExpression root, CqDataLong data) {
-        this.root = root;
+    public CompiledQueryLong(CqExpression root, List<IntList> paths, CqDataLong data) {
+        super(root, paths);
         this.data = data;
     }
 

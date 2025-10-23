@@ -3,8 +3,8 @@ package nu.marginalia.index.reverse;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;
-import nu.marginalia.index.reverse.positions.TermData;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,9 +36,9 @@ class PositionsFileReaderTest {
         long key1, key2, key3;
         try (PositionsFileConstructor constructor = new PositionsFileConstructor(file)) {
             var block = constructor.getBlock();
-            key1 = constructor.add(block, (byte) 43, VarintCodedSequence.generate(1, 2, 3).buffer());
-            key2 = constructor.add(block, (byte) 51, VarintCodedSequence.generate(2, 3, 5, 1000, 5000, 20241).buffer());
-            key3 = constructor.add(block, (byte) 61, VarintCodedSequence.generate(3, 5, 7).buffer());
+            key1 = constructor.add(block, VarintCodedSequence.generate(1, 2, 3).buffer());
+            key2 = constructor.add(block, VarintCodedSequence.generate(2, 3, 5, 1000, 5000, 20241).buffer());
+            key3 = constructor.add(block, VarintCodedSequence.generate(3, 5, 7).buffer());
             block.commit();
         }
 
@@ -49,16 +49,11 @@ class PositionsFileReaderTest {
         try (Arena arena = Arena.ofShared();
             PositionsFileReader reader = new PositionsFileReader(file))
         {
-            TermData[] data = reader.getTermData(arena, new IndexSearchBudget(10000), new long[] { key1, key2, key3 });
+            CodedSequence[] data = reader.getTermData(arena, new IndexSearchBudget(10000), new long[] { key1, key2, key3 });
 
-            assertEquals(43, data[0].flags());
-            assertEquals(IntList.of( 1, 2, 3), data[0].positions().values());
-
-            assertEquals(51, data[1].flags());
-            assertEquals(IntList.of(2, 3, 5, 1000, 5000, 20241), data[1].positions().values());
-
-            assertEquals(61, data[2].flags());
-            assertEquals(IntList.of(3, 5, 7), data[2].positions().values());
+            assertEquals(IntList.of( 1, 2, 3), data[0].values());
+            assertEquals(IntList.of(2, 3, 5, 1000, 5000, 20241), data[1].values());
+            assertEquals(IntList.of(3, 5, 7), data[2].values());
         }
     }
 }
