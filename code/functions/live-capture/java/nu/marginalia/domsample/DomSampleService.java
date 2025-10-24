@@ -29,6 +29,7 @@ public class DomSampleService {
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
     private final ArrayBlockingQueue<EdgeDomain> samplingQueue = new ArrayBlockingQueue<>(4);
+    private final Set<String> httpOnlyDomains = new HashSet<>(10_000);
 
     @Inject
     public DomSampleService(DomSampleDb db,
@@ -73,18 +74,22 @@ public class DomSampleService {
 
         try (var conn = mariadbDataSource.getConnection();
             var stmt = conn.prepareStatement("""
-                SELECT DOMAIN_NAME 
+                SELECT DOMAIN_NAME, HTTP_SCHEMA
                 FROM EC_DOMAIN 
                 INNER JOIN DOMAIN_AVAILABILITY_INFORMATION
                 ON EC_DOMAIN.ID=DOMAIN_ID
                 WHERE NODE_AFFINITY>0
                 AND BACKOFF_CONSECUTIVE_FAILURES<15
-                AND HTTP_SCHEMA='HTTPS'
                 """)
         ) {
             var rs = stmt.executeQuery();
             while (rs.next()) {
-                dbDomains.add(rs.getString("DOMAIN_NAME"));
+                String domainName = rs.getString("DOMAIN_NAME").toLowerCase();
+                dbDomains.add(domainName);
+
+                if ("HTTP".equalsIgnoreCase(rs.getString("HTTP_SCHEMA"))) {
+                    httpOnlyDomains.add(domainName);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to sync domains", e);
@@ -145,7 +150,16 @@ public class DomSampleService {
     }
 
     private void updateDomain(BrowserlessClient client, String domain) {
-        var rootUrl = "https://" + domain + "/";
+
+        String rootUrl;
+
+        if (httpOnlyDomains.contains(domain.toLowerCase())) {
+            rootUrl = "http://" + domain + "/";
+        }
+        else {
+            rootUrl = "https://" + domain + "/";
+        }
+
         try {
             var content = client.annotatedContent(rootUrl, new BrowserlessClient.GotoOptions("load", Duration.ofSeconds(10).toMillis()));
 
