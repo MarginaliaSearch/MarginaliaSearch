@@ -7,7 +7,9 @@ import nu.marginalia.IndexLocations;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorStateMachines;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.actor.state.Resume;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
@@ -37,7 +39,9 @@ public class LiveCrawlActor extends RecordActorPrototype {
     private final FileStorageService fileStorageService;
 
     public record Initial() implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Monitor(String feedsHash) implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RESTART)
     public record LiveCrawl(String feedsHash, long msgId) implements ActorStep {
         public LiveCrawl(String feedsHash) { this(feedsHash, -1); }
     }
