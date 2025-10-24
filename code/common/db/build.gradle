@@ -44,6 +44,7 @@ dependencies {
     implementation libs.commons.lang3
 
     implementation libs.trove
+    implementation libs.fastutil
 
     implementation libs.bundles.mariadb
     flywayMigration 'org.flywaydb:flyway-mysql:10.0.1'
