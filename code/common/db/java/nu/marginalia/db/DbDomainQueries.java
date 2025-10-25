@@ -73,7 +73,7 @@ public class DbDomainQueries {
             try (var connection = dataSource.getConnection();
                  var idStmt = connection.prepareStatement("SELECT ID, DOMAIN_NAME, NODE_AFFINITY FROM EC_DOMAIN"))
             {
-                idStmt.setFetchSize(10_000);
+
                 var rsp = idStmt.executeQuery();
 
                 while (rsp.next()) {
