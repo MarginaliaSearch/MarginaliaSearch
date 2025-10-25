@@ -103,7 +103,6 @@ public class DbDomainQueries {
             try (var connection = dataSource.getConnection();
                  var topStmt = connection.prepareStatement("SELECT ID, DOMAIN_TOP FROM EC_DOMAIN")
             ) {
-                topStmt.setFetchSize(10_000);
 
                 var rsp = topStmt.executeQuery();
                 while (rsp.next()) {
