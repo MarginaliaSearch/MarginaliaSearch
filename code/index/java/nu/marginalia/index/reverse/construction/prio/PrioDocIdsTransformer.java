@@ -41,6 +41,7 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
             throw new IllegalStateException("Empty range");
 
         int toBeRead = 8 * (sizeL);
+        int distinctEntries = findDistinctEntries(sizeL);
 
         var bitWriter = new BitWriter(writeBuffer);
 
@@ -49,15 +50,13 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
         int prevDocOrd = -1;
         boolean wroteHeader = false;
 
-        do {
-            readChannel.position(startL * 8);
-            readBuffer.clear();
+        readChannel.position(startL * 8);
+        readBuffer.clear();
 
+        do {
             readBuffer.limit(Math.min(readBuffer.capacity(), toBeRead));
             readChannel.read(readBuffer);
             readBuffer.flip();
-
-            int distinctEntries = findDistinctEntries(readBuffer);
 
             if (writeBuffer.remaining() < 32) {
                 writeBuffer.flip();
@@ -141,25 +140,36 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
         return startOffsetB;
     }
 
-    private int findDistinctEntries(ByteBuffer readBuffer) {
-        if (readBuffer.limit() == 0)
-            return 0;
+    private int findDistinctEntries(int sizeL) throws IOException {
+        int toBeRead = sizeL * 8;
+        int distinctEntries = 0;
 
-        readBuffer.mark();
+        readChannel.position(startL * 8);
 
-        int count = 1;
-        long prev = readBuffer.getLong();
-        long current;
+        while (toBeRead > 0) {
+            readBuffer.clear();
+            readBuffer.limit(Math.min(readBuffer.capacity(), toBeRead));
+            toBeRead -= readChannel.read(readBuffer);
+            readBuffer.flip();
 
-        while (readBuffer.hasRemaining()) {
-            if ((current = readBuffer.getLong()) != prev)
-                count++;
-            prev = current;
+            if (readBuffer.limit() == 0)
+                continue;
+
+            int count = 1;
+            long prev = readBuffer.getLong();
+            long current;
+
+            while (readBuffer.hasRemaining()) {
+
+                if ((current = readBuffer.getLong()) != prev)
+                    count++;
+                prev = current;
+            }
+
+            distinctEntries += count;
         }
 
-        readBuffer.rewind();
-
-        return count;
+        return distinctEntries;
     }
 
     @Override
