@@ -50,7 +50,12 @@
 
         @if (results.hasFocusDomain())
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
-                <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a></div>
+                @if (results.isWildcardSiteQuery())
+                    <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a> and its subdomains.</div>
+                @else
+                    <div>Showing results from <a class="underline text-liteblue dark:text-blue-200" href="/site/${results.getFocusDomain()}">${results.getFocusDomain()}</a> alone,
+                        <a class="underline text-liteblue dark:text-blue-200" href="${results.getParams().toggleSiteWildcard()}">widen query</a> include all subdomains?</div>
+                @endif
                 <div class="grow"></div>
                 <a href="${results.getParams().renderUrlWithoutSiteFocus()}" class="fa fa-remove" title="Remove Filter"></a>
             </div>

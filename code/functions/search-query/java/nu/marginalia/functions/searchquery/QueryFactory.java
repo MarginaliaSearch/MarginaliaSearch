@@ -5,20 +5,20 @@ import com.google.inject.Singleton;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.model.query.*;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
+import nu.marginalia.model.EdgeDomain;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Singleton
 public class QueryFactory {
@@ -26,13 +26,17 @@ public class QueryFactory {
 
     private final QueryParser queryParser = new QueryParser();
     private final QueryExpansion queryExpansion;
+    private final DbDomainQueries domainQueries;
     private final LanguageConfiguration languageConfiguration;
 
 
     @Inject
-    public QueryFactory(QueryExpansion queryExpansion, LanguageConfiguration languageConfiguration)
+    public QueryFactory(QueryExpansion queryExpansion,
+                        DbDomainQueries domainQueries,
+                        LanguageConfiguration languageConfiguration)
     {
         this.queryExpansion = queryExpansion;
+        this.domainQueries = domainQueries;
         this.languageConfiguration = languageConfiguration;
     }
 
@@ -67,6 +71,8 @@ public class QueryFactory {
 
         String domain = null;
 
+        List<Integer> domainIds = params.domainIds();
+
         for (QueryToken t : basicQuery) {
             switch (t) {
                 case QueryToken.QuotTerm(String str, String displayStr) -> {
@@ -80,7 +86,7 @@ public class QueryFactory {
                         String part = parts[i];
 
                         if (part.endsWith("'s") && part.length() > 2) {
-                            part = part.substring(0, part.length()-2);
+                            part = part.substring(0, part.length() - 2);
                         }
 
                         parts[i] = part;
@@ -95,8 +101,7 @@ public class QueryFactory {
 
                         // Prefer that the actual n-gram is present
                         queryBuilder.priority(str);
-                    }
-                    else {
+                    } else {
                         // If the quoted word is a single word, we don't need to do more than include it in the search
                         queryBuilder.include(str);
                     }
@@ -109,32 +114,40 @@ public class QueryFactory {
                     queryBuilder.include(str);
                 }
 
-                case QueryToken.ExcludeTerm(String str, String displayStr) -> queryBuilder.exclude(str);
-                case QueryToken.PriorityTerm(String str, String displayStr) -> queryBuilder.priority(str);
-                case QueryToken.AdviceTerm(String str, String displayStr) -> {
-                    queryBuilder.advice(str);
+                case QueryToken.ExcludeTerm(String str, _) -> queryBuilder.exclude(str);
+                case QueryToken.PriorityTerm(String str, _) -> queryBuilder.priority(str);
+                case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:*.") -> {
+                    String prefix = "site:*.";
+                    domain = str.substring(prefix.length());
 
-                    if (str.toLowerCase().startsWith("site:")) {
-                        domain = str.substring("site:".length());
+                    queryBuilder.advice("site:" + domain);
+                }
+                case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:") -> {
+                    domain = str.substring("site:".length());
+
+                    OptionalInt domainIdMaybe = domainQueries.tryGetDomainId(new EdgeDomain(domain));
+                    if (domainIdMaybe.isPresent()) {
+                        domainIds = List.of(domainIdMaybe.getAsInt());
+                    } else {
+                        domainIds = List.of(-1);
                     }
                 }
+                case QueryToken.AdviceTerm(String str, _) -> queryBuilder.advice(str);
 
-                case QueryToken.YearTerm(SpecificationLimit limit, String displayStr) -> year = limit;
-                case QueryToken.SizeTerm(SpecificationLimit limit, String displayStr) -> size = limit;
-                case QueryToken.RankTerm(SpecificationLimit limit, String displayStr) -> rank = limit;
-                case QueryToken.QualityTerm(SpecificationLimit limit, String displayStr) -> qualityLimit = limit;
+                case QueryToken.YearTerm(SpecificationLimit limit, _) -> year = limit;
+                case QueryToken.SizeTerm(SpecificationLimit limit, _) -> size = limit;
+                case QueryToken.RankTerm(SpecificationLimit limit, _) -> rank = limit;
+                case QueryToken.QualityTerm(SpecificationLimit limit, _) -> qualityLimit = limit;
                 case QueryToken.QsTerm(String str) -> queryStrategy = parseQueryStrategy(str);
 
                 // No-op for lang term
-                case QueryToken.LangTerm(String str, String displayStr) -> {}
-
+                case QueryToken.LangTerm(String str, _) -> {}
                 default -> {}
             }
         }
 
         queryBuilder.promoteNonRankingTerms();
 
-        List<Integer> domainIds = params.domainIds();
 
         var limits = params.limits();
         // Disable limits on number of results per domain if we're searching with a site:-type term

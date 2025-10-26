@@ -8,6 +8,16 @@ public class ProcessedQuery {
     public final String domain;
     public final String langIsoCode;
 
+    @Override
+    public String toString() {
+        return "ProcessedQuery{" +
+                "specs=" + specs +
+                ", searchTermsHuman=" + searchTermsHuman +
+                ", domain='" + domain + '\'' +
+                ", langIsoCode='" + langIsoCode + '\'' +
+                '}';
+    }
+
     public ProcessedQuery(SearchSpecification specs,
                           List<String> searchTermsHuman,
                           String domain,
