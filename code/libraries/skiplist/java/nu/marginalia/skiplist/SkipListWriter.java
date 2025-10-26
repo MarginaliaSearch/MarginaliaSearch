@@ -224,7 +224,7 @@ public class SkipListWriter implements AutoCloseable {
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
 
-        if (blockRemaining >= (DATA_BLOCK_HEADER_SIZE + n * ValueLayout.JAVA_LONG.byteSize() + VALUE_BLOCK_HEADER_SIZE)) {
+        if (blockRemaining >= (DATA_BLOCK_HEADER_SIZE + n * ValueLayout.JAVA_LONG.byteSize())) {
             docsBuffer.clear();
 
             /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK */
@@ -248,7 +248,7 @@ public class SkipListWriter implements AutoCloseable {
         }
 
 
-        if (blockRemaining < 1024) {
+        if (blockRemaining < Math.min(1024, BLOCK_SIZE / 2)) {
             // Add padding if we cannot reclaim the remaining parts of this block
 
             docsBuffer.clear();
