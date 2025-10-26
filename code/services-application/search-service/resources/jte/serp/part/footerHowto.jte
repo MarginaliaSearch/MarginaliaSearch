@@ -62,6 +62,7 @@
 
             <tr><td>site:<em>example.com</em></td><td>Display site information about <em>example.com</em></td></tr>
             <tr><td>site:<em>example.com</em> <em>keyword</em></td><td>Search <em>example.com</em> for <em>keyword</em></td></tr>
+            <tr><td>site:<em>*.example.com</em> <em>keyword</em></td><td>Search <em>example.com</em> and its subdomains for <em>keyword</em></td></tr>
             <tr><td>browse:<em>example.com</em></td><td>Show similar websites to <em>example.com</em></td></tr>
             <tr><td>ip:<em>127.0.0.1</em></td><td>Search documents hosted at <em>127.0.0.1</em></td></tr>
             <tr><td>links:<em>example.com</em></td><td>Search documents linking to <em>example.com</em></td></tr>

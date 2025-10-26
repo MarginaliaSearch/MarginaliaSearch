@@ -90,6 +90,25 @@ public record SearchParameters(WebsiteUrl url,
         return withQuery(newQuery.toString()).renderUrl();
     }
 
+    public String toggleSiteWildcard() {
+        String[] parts = query.split("\\s+");
+        StringJoiner newQuery = new StringJoiner(" ");
+        for (var part : parts) {
+            if (!part.startsWith("site:")) {
+                newQuery.add(part);
+            }
+            else if (part.startsWith("site:*.")) {
+                String domain = part.substring("site:*.".length());
+                newQuery.add("site:" + domain);
+            }
+            else { // starts with "site:"
+                var domain = new EdgeDomain(part.substring("site:".length()));
+                newQuery.add("site:*." + domain.topDomain);
+            }
+        }
+        return withQuery(newQuery.toString()).renderUrl();
+    }
+
     public String renderUrlWithSiteFocus(EdgeDomain domain) {
         return withQuery(query + " site:"+domain.toString()).renderUrl();
     }

@@ -22,7 +22,7 @@ public class QueryProtobufCodec {
     public static RpcIndexQuery convertQuery(RpcQsQuery request, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
-        builder.addAllDomains(request.getDomainIdsList());
+        builder.addAllDomains(query.specs.domains);
 
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
@@ -73,6 +73,7 @@ public class QueryProtobufCodec {
     public static RpcIndexQuery convertQuery(String humanQuery, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
+        builder.addAllDomains(query.specs.domains);
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);

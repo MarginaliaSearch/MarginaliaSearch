@@ -117,6 +117,7 @@ public class PerfTestMain {
                         new TermFrequencyDict(homeDir.resolve("model/tfreq-new-algo3.bin")),
                         new NgramLexicon()
                 ),
+                null,
                 new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental())
         );
     }

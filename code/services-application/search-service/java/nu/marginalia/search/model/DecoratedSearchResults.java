@@ -74,6 +74,10 @@ public class DecoratedSearchResults {
         return focusDomainId >= 0;
     }
 
+    public boolean isWildcardSiteQuery() {
+        return params.query().contains("site:*.");
+    }
+
     public boolean isEmpty() {
         return results.isEmpty();
     }

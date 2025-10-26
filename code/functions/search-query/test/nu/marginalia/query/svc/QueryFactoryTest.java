@@ -4,6 +4,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.*;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.QueryFactory;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.language.config.LanguageConfigLocation;
@@ -13,6 +14,7 @@ import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,8 +22,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.OptionalInt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class QueryFactoryTest {
 
@@ -32,7 +37,12 @@ public class QueryFactoryTest {
 
         var lm = WmsaHome.getLanguageModels();
 
-        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)), new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()));
+        DbDomainQueries domainQueriesMock = Mockito.mock(DbDomainQueries.class);
+        when(domainQueriesMock.tryGetDomainId(any())).thenReturn(OptionalInt.of(451));
+
+        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)),
+                domainQueriesMock,
+                new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()));
     }
 
     public SearchSpecification parseAndGetSpecs(String query) {
@@ -61,6 +71,31 @@ public class QueryFactoryTest {
                         0), null).specs;
     }
 
+    public ProcessedQuery parse(String query) {
+        return queryFactory.createQuery(
+                new QueryParams(query, null,
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        SpecificationLimit.none(),
+                        SpecificationLimit.none(),
+                        SpecificationLimit.none(),
+                        SpecificationLimit.none(),
+                        null,
+                        RpcQueryLimits.newBuilder()
+                                .setResultsTotal(100)
+                                .setResultsByDomain(100)
+                                .setTimeoutMs(100)
+                                .setFetchSize(100)
+                                .build(),
+                        "NONE",
+                        QueryStrategy.AUTO,
+                        RpcTemporalBias.Bias.NONE,
+                        NsfwFilterTier.OFF,
+                        "en",
+                        0), null);
+    }
 
     @Test
     void qsec10() {
@@ -93,6 +128,45 @@ public class QueryFactoryTest {
         assertEquals(SpecificationLimitType.NONE, quality.type());
     }
 
+    @Test
+    public void testParseSite() {
+        var query = parse("plato site:en.wikipedia.org");
+        Assertions.assertEquals("en.wikipedia.org", query.domain);
+        Assertions.assertEquals(List.of(), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("plato"), query.specs.query.searchTermsInclude);
+        Assertions.assertEquals(List.of(451), query.specs.domains);
+    }
+
+    @Test
+    public void testParseSite__only_site_tag() {
+        // This is a special flow that ensures we are enable to enumerate all documents for a domain
+
+        var query = parse("site:en.wikipedia.org");
+        Assertions.assertEquals("en.wikipedia.org", query.domain);
+        Assertions.assertEquals(List.of(), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("site:en.wikipedia.org"), query.specs.query.searchTermsInclude);
+        Assertions.assertEquals(List.of(451), query.specs.domains);
+    }
+
+    @Test
+    public void testParseSiteWildcard() {
+        var query = parse("plato site:*.wikipedia.org");
+        Assertions.assertEquals("wikipedia.org", query.domain);
+        Assertions.assertEquals(List.of("site:wikipedia.org"), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("plato"), query.specs.query.searchTermsInclude);
+        Assertions.assertNull(query.specs.domains);
+    }
+
+    @Test
+    public void testParseSiteWildcard__only_site_tag() {
+        // This is a special flow that ensures we are enable to enumerate all documents for a domain
+
+        var query = parse("site:*.wikipedia.org");
+        Assertions.assertEquals("wikipedia.org", query.domain);
+        Assertions.assertEquals(List.of(), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("site:wikipedia.org"), query.specs.query.searchTermsInclude);
+        Assertions.assertNull(query.specs.domains);
+    }
 
     @Test
     public void testParseYearEq() {
