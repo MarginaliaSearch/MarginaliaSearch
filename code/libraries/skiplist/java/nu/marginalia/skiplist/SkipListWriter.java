@@ -188,7 +188,6 @@ public class SkipListWriter implements AutoCloseable {
 
         long valueBufferPosition = valueBlockOffset + valuesBuffer.position();
         assert (valueBufferPosition & 15) == 0;
-        System.out.println("Pos:" + valueBufferPosition);
 
         buffer.putLong(valueBufferPosition);
 
