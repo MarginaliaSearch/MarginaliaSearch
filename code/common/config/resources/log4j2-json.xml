@@ -55,6 +55,7 @@
         <Logger name="org.apache.pdfbox" level="ERROR" />
         <Logger name="org.apache.fontbox.ttf" level="ERROR" />
         <Logger name="org.tartarus.snowball" level="OFF" />
+        <Logger name="opennlp.tools.stemmer.snowball" level="OFF" />
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="ProcessConsole"/>
