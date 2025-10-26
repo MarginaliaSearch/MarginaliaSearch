@@ -241,24 +241,24 @@ public class SkipListFuzzTests {
 
             Random r = new Random(seed);
 
-            int nKeys = 8; r.nextInt(100, 1000);
+            int nKeys = r.nextInt(100, 20000);
             LongSortedSet intersectionsSet = new LongAVLTreeSet();
             LongSortedSet keysSet = new LongAVLTreeSet();
             LongSortedSet qbSet = new LongAVLTreeSet();
 
             while (intersectionsSet.size() < 64) {
-                long val = r.nextLong(0, 10_000);
+                long val = r.nextLong(1, 1_000_000);
                 keysSet.add(val);
                 qbSet.add(val);
                 intersectionsSet.add(val);
             }
             while (keysSet.size() < nKeys) {
-                long val = r.nextLong(0, 10_000);
+                long val = r.nextLong(1, 1_000_000);
                 keysSet.add(val);
             }
 
             while (qbSet.size() < 512) {
-                long val = r.nextLong(0, 10_000);
+                long val = r.nextLong(1, 1_000_000);
                 if (keysSet.contains(val)) continue;
 
                 qbSet.add(val);
@@ -268,6 +268,7 @@ public class SkipListFuzzTests {
 
             long blockStart;
             Files.delete(docsFile);
+            Files.delete(valuesFile);
             try (var writer = new SkipListWriter(docsFile, valuesFile);
                  Arena arena = Arena.ofConfined()
             ) {

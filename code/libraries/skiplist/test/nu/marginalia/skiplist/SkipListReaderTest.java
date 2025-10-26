@@ -1,17 +1,11 @@
 package nu.marginalia.skiplist;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongArraySet;
-import it.unimi.dsi.fastutil.longs.LongList;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.array.pool.BufferPool;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -551,6 +545,80 @@ public class SkipListReaderTest {
             var qb = new LongQueryBuffer(qbdata, qbdata.length);
             reader.retainData(qb);
             System.out.println(Arrays.toString(qb.copyData()));
+        }
+    }
+
+
+    @Tag("slow")
+    @Test
+    public void testGetKeysFuzz_case370() throws IOException {
+
+        long seed = 370;
+        Random r = new Random(seed);
+
+        int nKeys = r.nextInt(100, 20000);
+        LongSortedSet intersectionsSet = new LongAVLTreeSet();
+        LongSortedSet keysSet = new LongAVLTreeSet();
+        LongSortedSet qbSet = new LongAVLTreeSet();
+
+        while (intersectionsSet.size() < 64) {
+            long val = r.nextLong(1, 1_000_000);
+            keysSet.add(val);
+            qbSet.add(val);
+            intersectionsSet.add(val);
+        }
+        while (keysSet.size() < nKeys) {
+            long val = r.nextLong(1, 1_000_000);
+            keysSet.add(val);
+        }
+
+        while (qbSet.size() < 512) {
+            long val = r.nextLong(1, 1_000_000);
+            if (keysSet.contains(val)) continue;
+
+            qbSet.add(val);
+        }
+
+        long[] keys = keysSet.toLongArray();
+
+        long blockStart;
+        Files.delete(docsFile);
+        Files.delete(valuesFile);
+        try (var writer = new SkipListWriter(docsFile, valuesFile);
+             Arena arena = Arena.ofConfined()
+        ) {
+            writer.padDocuments(r.nextInt(0, 4096/8) * 8);
+            blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+        }
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+
+            var reader = new SkipListReader(indexPool, valuePool, blockStart);
+            try (var page = indexPool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
+                reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
+            }
+
+            long[] queryKeys = qbSet.toLongArray();
+            long[] queryVals = reader.getAllValues(queryKeys);
+
+            LongSortedSet presentValues = new LongAVLTreeSet();
+            for (int i = 0; i < queryKeys.length; i++) {
+                if (queryVals[i] != 0) {
+                    presentValues.add(queryKeys[i]);
+                }
+
+            }
+
+            System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
+            System.out.println("QB Input: " + Arrays.toString(qbSet.toLongArray()));
+
+            long[] actual = presentValues.toLongArray();
+            long[] expected = intersectionsSet.toLongArray();
+
+            System.out.println("Expected intersection: " + Arrays.toString(intersectionsSet.toLongArray()));
+            System.out.println("Actual intersection: " + Arrays.toString(presentValues.toLongArray()));
+            Assertions.assertArrayEquals(expected, actual);
         }
     }
 }

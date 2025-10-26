@@ -497,6 +497,7 @@ public class SkipListReader {
 
                 int nCopied = dest.addData(ms, dataOffset + currentBlockIdx * 8L, n - currentBlockIdx);
                 currentBlockIdx += nCopied;
+                totalCopied += nCopied;
 
                 if (currentBlockIdx >= n) {
                     atEnd = (flags & FLAG_END_BLOCK) != 0;
@@ -507,7 +508,6 @@ public class SkipListReader {
                     }
                 }
 
-                totalCopied += nCopied;
             }
         }
 

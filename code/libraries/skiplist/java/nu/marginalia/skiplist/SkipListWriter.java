@@ -310,12 +310,9 @@ public class SkipListWriter implements AutoCloseable {
             inputOffset += RECORD_SIZE * rootBlockCapacity;
             writtenRecords += rootBlockCapacity;
 
-            while (docsBuffer.position() < blockRemaining)
-                docsBuffer.putLong(0L);
-
             // Align block with page size
             if (!isLastBlock) {
-                while (docsBuffer.position() < docsBuffer.capacity())
+                while (docsBuffer.position() < blockRemaining)
                     docsBuffer.putLong(0L);
             }
 
