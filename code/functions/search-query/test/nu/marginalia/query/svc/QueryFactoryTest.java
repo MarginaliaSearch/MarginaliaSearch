@@ -133,6 +133,18 @@ public class QueryFactoryTest {
         var query = parse("plato site:en.wikipedia.org");
         Assertions.assertEquals("en.wikipedia.org", query.domain);
         Assertions.assertEquals(List.of(), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("plato"), query.specs.query.searchTermsInclude);
+        Assertions.assertEquals(List.of(451), query.specs.domains);
+    }
+
+    @Test
+    public void testParseSite__only_site_tag() {
+        // This is a special flow that ensures we are enable to enumerate all documents for a domain
+
+        var query = parse("site:en.wikipedia.org");
+        Assertions.assertEquals("en.wikipedia.org", query.domain);
+        Assertions.assertEquals(List.of(), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("site:en.wikipedia.org"), query.specs.query.searchTermsInclude);
         Assertions.assertEquals(List.of(451), query.specs.domains);
     }
 
@@ -141,6 +153,18 @@ public class QueryFactoryTest {
         var query = parse("plato site:*.wikipedia.org");
         Assertions.assertEquals("wikipedia.org", query.domain);
         Assertions.assertEquals(List.of("site:wikipedia.org"), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("plato"), query.specs.query.searchTermsInclude);
+        Assertions.assertNull(query.specs.domains);
+    }
+
+    @Test
+    public void testParseSiteWildcard__only_site_tag() {
+        // This is a special flow that ensures we are enable to enumerate all documents for a domain
+
+        var query = parse("site:*.wikipedia.org");
+        Assertions.assertEquals("wikipedia.org", query.domain);
+        Assertions.assertEquals(List.of(), query.specs.query.searchTermsAdvice);
+        Assertions.assertEquals(List.of("site:wikipedia.org"), query.specs.query.searchTermsInclude);
         Assertions.assertNull(query.specs.domains);
     }
 

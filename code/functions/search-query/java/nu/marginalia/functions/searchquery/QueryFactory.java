@@ -131,6 +131,13 @@ public class QueryFactory {
                     } else {
                         domainIds = List.of(-1);
                     }
+
+                    if (basicQuery.size() == 1) {
+                        // Ensure we can enumerate documents from a website by adding this dummy term
+                        // when this is the only token in the query
+                        
+                        queryBuilder.advice("site:" + domain);
+                    }
                 }
                 case QueryToken.AdviceTerm(String str, _) -> queryBuilder.advice(str);
 
