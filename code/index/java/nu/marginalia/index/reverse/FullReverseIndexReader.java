@@ -96,6 +96,7 @@ public class FullReverseIndexReader {
 
     public void reset() {
         dataPool.reset();
+        valuesPool.reset();
     }
 
 
