@@ -11,6 +11,8 @@ import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.storage.FileStorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +26,7 @@ public class IndexFactory {
     private final FileStorageService fileStorageService;
     private final Path liveStorage;
     private final LanguageConfiguration languageConfiguration;
+    private static final Logger logger = LoggerFactory.getLogger(IndexFactory.class);
 
     @Inject
     public IndexFactory(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) {
@@ -48,6 +51,7 @@ public class IndexFactory {
     public FullReverseIndexReader getReverseIndexReader() throws IOException {
 
         Path docsFile = getCurrentPath(new IndexFileName.FullDocs());
+        Path docsValuesFile = getCurrentPath(new IndexFileName.FullDocsValues());
         Path positionsFile = getCurrentPath(new IndexFileName.FullPositions());
 
         List<WordLexicon> wordLexicons = new ArrayList<>();
@@ -69,6 +73,7 @@ public class IndexFactory {
         return new FullReverseIndexReader("full",
                 wordLexicons,
                 docsFile,
+                docsValuesFile,
                 positionsFile
         );
     }
@@ -134,6 +139,7 @@ public class IndexFactory {
 
     public void switchFile(Path from, Path to) throws IOException {
         if (Files.exists(from)) {
+            logger.info("Switching {} -> {} ({}b)", from.getFileName(), to.getFileName(), Files.size(from));
             Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
         }
     }

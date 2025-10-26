@@ -93,6 +93,7 @@ public class PerfTestMain {
                         "full",
                         List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-en.dat"))),
                         indexDir.resolve("ir/rev-docs.dat"),
+                        indexDir.resolve("ir/rev-docs-values.dat"),
                         indexDir.resolve("ir/rev-positions.dat")
                 ),
                 new PrioReverseIndexReader(

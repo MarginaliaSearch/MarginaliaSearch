@@ -14,6 +14,7 @@ public sealed interface IndexFileName {
 
     record FullWords(String languageIsoCode) implements IndexFileName {}
     record FullDocs() implements IndexFileName {}
+    record FullDocsValues() implements IndexFileName {}
     record FullPositions() implements IndexFileName {}
 
     record PrioWords(String languageIsoCode) implements IndexFileName {}
@@ -27,6 +28,7 @@ public sealed interface IndexFileName {
         List<IndexFileName> ret = new ArrayList<>();
 
         ret.add(new FullDocs());
+        ret.add(new FullDocsValues());
         ret.add(new FullPositions());
 
         for (LanguageDefinition ld : languageConfiguration.languages()) {
@@ -65,6 +67,10 @@ public sealed interface IndexFileName {
             case FullDocs() -> switch (version) {
                 case CURRENT -> basePath.resolve("rev-docs.dat");
                 case NEXT -> basePath.resolve("rev-docs.dat.next");
+            };
+            case FullDocsValues() -> switch (version) {
+                case CURRENT -> basePath.resolve("rev-docs-values.dat");
+                case NEXT -> basePath.resolve("rev-docs-values.dat.next");
             };
             case FullPositions() -> switch (version) {
                 case CURRENT -> basePath.resolve("rev-positions.dat");

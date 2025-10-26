@@ -42,19 +42,22 @@ public class FullReverseIndexReader {
     private final LongArray documents;
     private final PositionsFileReader positionsFileReader;
     private final BufferPool dataPool;
+    private final BufferPool valuesPool;
     private final String name;
 
     public FullReverseIndexReader(String name,
                                   Collection<WordLexicon> wordLexicons,
                                   Path documents,
+                                  Path documentValues,
                                   Path positionsFile)
             throws IOException
     {
         this.name = name;
 
-        if (!Files.exists(documents) || !validateDocumentsFooter(documents)) {
+        if (!Files.exists(documents) || !Files.exists(documentValues) || !validateDocumentsFooter(documents)) {
             this.documents = null;
             this.dataPool = null;
+            this.valuesPool = null;
             this.positionsFileReader = null;
             this.wordLexiconMap = Map.of();
 
@@ -75,7 +78,9 @@ public class FullReverseIndexReader {
         dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE,
                 (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE)
         );
-
+        valuesPool = new BufferPool(documentValues, SkipListConstants.VALUE_BLOCK_SIZE,
+                (int) (Long.getLong("index.bufferValuePoolSize", 4*1024*1024L) / SkipListConstants.VALUE_BLOCK_SIZE)
+        );
     }
 
     private boolean validateDocumentsFooter(Path documents) {
@@ -165,7 +170,7 @@ public class FullReverseIndexReader {
 
     /** Create a BTreeReader for the document offset associated with a termId */
     private SkipListReader getReader(long offset) {
-        return new SkipListReader(dataPool, offset);
+        return new SkipListReader(dataPool, valuesPool, offset);
     }
 
     /** Get term metadata for each document, return an array of TermMetadataList of the same
@@ -335,7 +340,15 @@ public class FullReverseIndexReader {
                 dataPool.close();
         }
         catch (Exception e) {
-            logger.warn("Error while closing bufferPool", e);
+            logger.warn("Error while closing documents bufferPool", e);
+        }
+
+        try {
+            if(valuesPool != null)
+                valuesPool.close();
+        }
+        catch (Exception e) {
+            logger.warn("Error while closing values bufferPool", e);
         }
 
         if (documents != null)

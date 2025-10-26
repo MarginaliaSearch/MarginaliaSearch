@@ -17,9 +17,11 @@ import static nu.marginalia.skiplist.SkipListConstants.*;
 
 public class SkipListReader {
 
-    static final int BLOCK_STRIDE = RECORD_SIZE * BLOCK_SIZE;
+    static final int BLOCK_STRIDE = BLOCK_SIZE;
 
-    private final BufferPool pool;
+    private final BufferPool indexPool;
+    private final BufferPool valuesPool;
+
     private final long blockStart;
 
     private long currentBlock;
@@ -33,8 +35,9 @@ public class SkipListReader {
 
     public int __stats__valueReads = 0;
 
-    public SkipListReader(BufferPool pool, long blockStart) {
-        this.pool = pool;
+    public SkipListReader(BufferPool indexPool, BufferPool valuesPool, long blockStart) {
+        this.indexPool = indexPool;
+        this.valuesPool = valuesPool;
         this.blockStart = blockStart;
 
         currentBlock = blockStart & -BLOCK_SIZE;
@@ -58,7 +61,7 @@ public class SkipListReader {
     }
 
     public int estimateSize() {
-        try (var page = pool.get(currentBlock)) {
+        try (var page = indexPool.get(currentBlock)) {
             int fc = headerForwardCount(page, currentBlockOffset);
             if (fc > 0) {
                 return MAX_RECORDS_PER_BLOCK * skipOffsetForPointer(fc);
@@ -76,7 +79,7 @@ public class SkipListReader {
     public boolean tryRetainData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
-        try (var page = pool.get(currentBlock)) {
+        try (var page = indexPool.get(currentBlock)) {
 
             int n = headerNumRecords(page, currentBlockOffset);
             int fc = headerForwardCount(page, currentBlockOffset);
@@ -123,7 +126,7 @@ public class SkipListReader {
         assert data.isAscending();
 
         while (data.hasMore()) {
-            try (var page = pool.get(currentBlock)) {
+            try (var page = indexPool.get(currentBlock)) {
 
                 int n = headerNumRecords(page, currentBlockOffset);
                 int fc = headerForwardCount(page, currentBlockOffset);
@@ -218,6 +221,7 @@ public class SkipListReader {
         int pos = 0;
 
         long[] vals = new long[keys.length * (RECORD_SIZE-1)];
+        Arrays.fill(vals, 0, keys.length, -1L);
 
         if (getClass().desiredAssertionStatus()) {
             for (int i = 1; i < keys.length; i++) {
@@ -226,12 +230,14 @@ public class SkipListReader {
         }
 
         while (pos < keys.length) {
-            try (var page = pool.get(currentBlock)) {
+            try (var page = indexPool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
                 int n = headerNumRecords(page, currentBlockOffset);
                 int fc = headerForwardCount(page, currentBlockOffset);
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                long valuesOffset = headerValueOffset(page, currentBlockOffset);
 
                 if (n == 0) {
                     throw new IllegalStateException("Reading null memory!");
@@ -239,46 +245,29 @@ public class SkipListReader {
 
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
-                if ((flags & FLAG_COMPACT_BLOCK) != 0) {
-                    int valuesOffset = dataOffset + 8 * n + VALUE_BLOCK_HEADER_SIZE;
-                    if ((valuesOffset & 7) != 0) {
-                        throw new IllegalStateException(parseBlock(ms, currentBlockOffset).toString());
-                    }
-                    assert valuesOffset + 8*n*(RECORD_SIZE-1) <= ms.byteSize() : "This won't fit";
+                int remainingToRead = n - currentBlockIdx;
+                if (remainingToRead <= 0)
+                    break;
 
-                    // For compact blocks, the values are in the same block as the keys
-                    pos += copyValuesInPage(n, n, pos, keys, vals, page, dataOffset, page, valuesOffset);
-                }
-                else {
-                    int valsPerBlock = (BLOCK_SIZE - VALUE_BLOCK_HEADER_SIZE) / (8 * (RECORD_SIZE-1));
+                int searchStart = currentBlockIdx;
 
-                    for (int i = 1; i < RECORD_SIZE; i++) {
-                        int remainingToRead = Math.min(n - currentBlockIdx, valsPerBlock);
-                        if (remainingToRead <= 0)
-                            break;
+                outer:
+                while (pos < keys.length) {
+                    long kv = keys[pos];
 
-                        if (pos >= keys.length)
-                            break;
-
-                        long minValue = page.getLong(dataOffset + currentBlockIdx*8);
-                        long maxValue = page.getLong(dataOffset + (currentBlockIdx + remainingToRead - 1)*8);
-
-                        // Check if we can skip processing this block
-                        if (keys[pos] > maxValue) {
-                            currentBlockIdx += remainingToRead;
-                            continue;
+                    for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                        if (kv < pv) {
+                            pos++;
+                            continue outer;
                         }
-                        if (keys[keys.length-1] < minValue) {
-                            currentBlockIdx = n;
-                            pos = keys.length;
-                            break;
-                        }
-
-                        try (var valuePage = pool.get(currentBlock + BLOCK_SIZE*i)) {
-                            __stats__valueReads++;
-                            pos = copyValuesInPage(n, remainingToRead, pos, keys, vals, page, dataOffset, valuePage, VALUE_BLOCK_HEADER_SIZE);
+                        else if (kv == pv) {
+                            vals[pos] = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE-1);
+                            pos++;
+                            continue outer;
                         }
                     }
+                    break;
                 }
 
                 if (currentBlockIdx >= n) {
@@ -310,68 +299,35 @@ public class SkipListReader {
             }
         }
 
-        return vals;
-    }
-
-    private int copyValuesInPage(int nTotal,
-                                 int nBlock,
-                                 int pos,
-                                 long[] keys,
-                                 long[] vals,
-                                 MemoryPage keysPage,
-                                 int dataOffset,
-                                 MemoryPage valuesPage,
-                                 int valuesOffset) {
-
-        int matches = 0;
-        final int valueRecordSize = 2;
-
-        int searchStart = currentBlockIdx;
-        while (pos < keys.length
-                && Math.min(nTotal, searchStart+nBlock) > (currentBlockIdx = keysPage.binarySearchLong(keys[pos], dataOffset, currentBlockIdx, searchStart+nBlock)))
-        {
-            if (keys[pos] != keysPage.getLong( dataOffset + currentBlockIdx * 8)) {
-                pos++;
+        int i = 0;
+        while (i < keys.length) {
+            if (vals[i] < 0) {
+                vals[i] = 0;
+                i++;
             }
             else {
-                int relativePosInBlock = currentBlockIdx - searchStart;
-                for (int i = 0; i < valueRecordSize; i++) {
-                    vals[i * keys.length + pos] = valuesPage.getLong(valuesOffset + (valueRecordSize * relativePosInBlock + i) * 8);
-                }
-                pos++;
-                matches++;
+                long valBlock = vals[i] & -VALUE_BLOCK_SIZE;
 
-                if (++matches > 5) {
-                    break;
-                }
-            }
-        }
+                try (var page = valuesPool.get(valBlock)) {
+                    for (; i < keys.length; i++) {
+                        if (vals[i] < 0) {
+                            vals[i] = 0;
+                        }
+                        else {
+                            if ((vals[i] & -VALUE_BLOCK_SIZE) != valBlock)
+                                break;
 
-        outer:
-        while (pos < keys.length) {
-            long kv = keys[pos];
-
-            for (; currentBlockIdx < searchStart + nBlock; currentBlockIdx++) {
-                long pv = keysPage.getLong( dataOffset + currentBlockIdx * 8);
-                if (kv < pv) {
-                    pos++;
-                    continue outer;
-                }
-                else if (kv == pv) {
-                    int relativePosInBlock = currentBlockIdx - searchStart;
-                    for (int i = 0; i < valueRecordSize; i++) {
-                        vals[i * keys.length + pos] = valuesPage.getLong(valuesOffset + (valueRecordSize * relativePosInBlock + i) * 8);
+                            int offsetBase = (int) (vals[i] & (VALUE_BLOCK_SIZE - 1));
+                            for (int j = 0; j < RECORD_SIZE - 1; j++) {
+                                vals[i + j * keys.length] = page.getLong(offsetBase + 8*j);
+                            }
+                        }
                     }
-                    pos++;
-                    continue outer;
                 }
             }
-            break;
         }
-
-        return pos;
+        return vals;
     }
-
 
     /** The retain operation keeps all keys in the provided LongQueryBuffer that also
      * exist in the skip list index.  This operation will return after intersecting with
@@ -380,7 +336,7 @@ public class SkipListReader {
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
-        try (var page = pool.get(currentBlock)) {
+        try (var page = indexPool.get(currentBlock)) {
 
             int n = headerNumRecords(page, currentBlockOffset);
             int fc = headerForwardCount(page, currentBlockOffset);
@@ -425,7 +381,7 @@ public class SkipListReader {
      */
     public void rejectData(@NotNull LongQueryBuffer data) {
         while (data.hasMore()) {
-            try (var page = pool.get(currentBlock)) {
+            try (var page = indexPool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
 
                 int n = headerNumRecords(page, currentBlockOffset);
@@ -523,7 +479,7 @@ public class SkipListReader {
 
         int totalCopied = 0;
         while (dest.fitsMore() && !atEnd) {
-            try (var page = pool.get(currentBlock)) {
+            try (var page = indexPool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
 
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
@@ -539,7 +495,7 @@ public class SkipListReader {
 
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
-                int nCopied = dest.addData(ms, dataOffset + currentBlockIdx * 8, n - currentBlockIdx);
+                int nCopied = dest.addData(ms, dataOffset + currentBlockIdx * 8L, n - currentBlockIdx);
                 currentBlockIdx += nCopied;
 
                 if (currentBlockIdx >= n) {
@@ -572,7 +528,7 @@ public class SkipListReader {
         int totalCopied = 0;
         outer:
         while (dest.fitsMore() && !atEnd && !ranges.atEnd()) {
-            try (var page = pool.get(currentBlock)) {
+            try (var page = indexPool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
 
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
@@ -649,7 +605,8 @@ public class SkipListReader {
                              int flags,
                              LongList fowardPointers,
                              LongList docIds,
-                             long offset
+                             long segmentOffset,
+                             long valuesOffset
                              )
     {
         public long highestDocId() {
@@ -661,6 +618,7 @@ public class SkipListReader {
         int n = headerNumRecords(seg, (int) offset);
         int fc = headerForwardCount(seg, (int) offset);
         int flags = headerFlags(seg, (int) offset);
+        long valueOffset = headerValueOffset(seg, (int) offset);
         long recordOffset = offset;
 
         assert n <= MAX_RECORDS_PER_BLOCK : "Invalid header, n = " + n;
@@ -689,12 +647,16 @@ public class SkipListReader {
 
         for (int i = 1; i < docIds.size(); i++) {
             if (docIds.getLong(i-1) >= docIds.getLong(i)) {
-                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset));
+                throw new IllegalStateException("docIds are not increasing" + new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset, valueOffset));
             }
         }
 
+        if ((valueOffset & 7) != 0) {
+            throw new IllegalStateException("Value offset is not a multiple of 8: " +  new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset, valueOffset));
+        }
 
-        return new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset);
+
+        return new RecordView(n, fc, flags, forwardPointers, docIds, recordOffset, valueOffset);
     }
 
     public static List<RecordView> parseBlocks(MemorySegment seg, long offset) {
@@ -705,7 +667,7 @@ public class SkipListReader {
             block = parseBlock(seg, offset);
             System.out.println(block);
             ret.add(block);
-            offset = (offset + RECORD_SIZE* BLOCK_SIZE) & -BLOCK_SIZE;
+            offset = (offset + BLOCK_SIZE) & -BLOCK_SIZE;
         } while (0 == (block.flags & FLAG_END_BLOCK));
 
         return ret;
@@ -718,7 +680,7 @@ public class SkipListReader {
             try (var page = pool.get(offset & -BLOCK_SIZE)) {
                 block = parseBlock(page.getMemorySegment(), (int) (offset & (BLOCK_SIZE - 1)));
                 ret.add(block);
-                offset = (offset + RECORD_SIZE* BLOCK_SIZE) & -BLOCK_SIZE;
+                offset = (offset + BLOCK_SIZE) & -BLOCK_SIZE;
             }
 
         } while (0 == (block.flags & FLAG_END_BLOCK));
@@ -742,16 +704,20 @@ public class SkipListReader {
         return block.get(ValueLayout.JAVA_BYTE, offset + 4);
     }
 
-    private long headerValuesBaseOffset(MemoryPage buffer, int blockOffset) {
-        return buffer.getLong(blockOffset + 8 * (1+headerForwardCount(buffer, blockOffset)));
-    }
-
     public static int headerFlags(MemoryPage buffer, int offset) {
         return buffer.getByte(offset + 5);
     }
 
     public static int headerFlags(MemorySegment block, int offset) {
         return block.get(ValueLayout.JAVA_BYTE, offset + 5);
+    }
+
+    public static long headerValueOffset(MemoryPage block, int offset) {
+        return block.getLong(offset + 8);
+    }
+
+    public static long headerValueOffset(MemorySegment block, int offset) {
+        return block.get(ValueLayout.JAVA_LONG, offset + 8);
     }
 
     public static int docIdsOffset(MemorySegment block, int offset) {

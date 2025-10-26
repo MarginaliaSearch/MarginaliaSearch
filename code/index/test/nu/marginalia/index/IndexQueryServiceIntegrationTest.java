@@ -462,6 +462,7 @@ public class IndexQueryServiceIntegrationTest {
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
+        Path outputFileDocsValues = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocsValues(), IndexFileName.Version.NEXT);
         Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords("en"), IndexFileName.Version.NEXT);
         Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
 
@@ -472,6 +473,7 @@ public class IndexQueryServiceIntegrationTest {
 
         var constructor = new FullIndexConstructor(
                 outputFileDocs,
+                outputFileDocsValues,
                 outputFileWords,
                 outputFilePositions,
                 DocIdRewriter.identity(),

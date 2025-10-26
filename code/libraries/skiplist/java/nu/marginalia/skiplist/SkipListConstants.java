@@ -2,12 +2,13 @@ package nu.marginalia.skiplist;
 
 public class SkipListConstants {
     public static final int BLOCK_SIZE = Integer.getInteger("index.documentsSkipListBlockSize", 32768);
+    public static final int VALUE_BLOCK_SIZE = Integer.getInteger("index.documentsSkipListValueBlockSize", 4096);
 
-    static final int DATA_BLOCK_HEADER_SIZE = 8;
+    static final int DATA_BLOCK_HEADER_SIZE = 16;
     static final int VALUE_BLOCK_HEADER_SIZE = 8;
 
     static final int RECORD_SIZE = 3;
-    public static final int MAX_RECORDS_PER_BLOCK = (BLOCK_SIZE/8 - 2);
+    public static final int MAX_RECORDS_PER_BLOCK = (BLOCK_SIZE/8 - 3);
 
     static final int POINTER_TARGET_COUNT = 64;
 
@@ -60,6 +61,6 @@ public class SkipListConstants {
     }
 
     public static int pageDataOffset(int baseBlockOffset, int fc) {
-        return baseBlockOffset + 8 * (1 + fc);
+        return baseBlockOffset + 8 * (2 + fc);
     }
 }
