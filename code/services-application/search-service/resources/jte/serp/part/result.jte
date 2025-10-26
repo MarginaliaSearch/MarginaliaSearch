@@ -96,8 +96,9 @@
                 <span class="px-1 bg-yellow-100 text-yellow-700 dark:border dark:border-yellow-600 dark:text-yellow-400 dark:bg-black rounded" title="Contains Cookies">Cookies</span>
             @endif
 
-            @if(result.getFirst().isTracking())
-                <span class="px-1 bg-yellow-100 text-yellow-700 dark:border dark:border-yellow-600 dark:text-yellow-400 dark:bg-black rounded" title="Uses tracking scripts">Tracking</span>
+            @if(result.getFirst().isAds())
+                <a href="/site/${result.getDomain().toString()}?view=traffic"
+                   class="px-1 cursor-hand bg-red-100 text-red-700 dark:border dark:border-yellow-600 dark:text-yellow-400 dark:bg-black rounded" title="Uses tracking scripts">Tracking</a>
             @endif
 
             @if(result.getFirst().isScripts())
@@ -105,7 +106,8 @@
             @endif
 
             @if(result.getFirst().isAds())
-                <span class="px-1 bg-red-100 text-red-700 dark:border dark:border-red-600 dark:text-red-400 dark:bg-black rounded" title="Contains adtech">Has Ads</span>
+                <a href="/site/${result.getDomain().toString()}?view=traffic"
+                   class="px-1 cursor-hand bg-red-100 text-red-700 dark:border dark:border-red-600 dark:text-red-400 dark:bg-black rounded" title="Contains adtech">Has Ads</a>
             @endif
 
             @if(result.getFirst().isAffiliate())
