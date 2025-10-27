@@ -95,7 +95,6 @@ public class IndexClient {
                                 }
                             }
                             catch (TimeoutException e) {
-                                // we don't need 200 lines of stacktrace for this
                                 logger.error("Index request timeout");
                             }
                             catch (Exception e) {
