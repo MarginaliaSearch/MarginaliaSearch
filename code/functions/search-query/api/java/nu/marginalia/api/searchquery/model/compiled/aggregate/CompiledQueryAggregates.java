@@ -166,10 +166,9 @@ public class CompiledQueryAggregates {
         double bestPath = Double.MIN_VALUE;
 
         for (IntList path: query.paths) {
-            double sumForPath = Integer.MAX_VALUE;
+            double sumForPath = 0;
 
             for (int i = 0; i < path.size(); i++) {
-
                 final int dataIdx = path.getInt(i);
 
                 final double calculationResult = operator.applyAsDouble(dataIdx);
