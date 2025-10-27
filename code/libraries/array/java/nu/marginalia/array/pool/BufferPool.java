@@ -208,6 +208,7 @@ public class BufferPool implements AutoCloseable {
             if (!buffer.pinCount().compareAndSet(-1, 1)) {
                 throw new IllegalStateException("Panic! Write lock was not held during write!");
             }
+            diskReadCount.incrementAndGet();
         }
         else {
             if (!buffer.pinCount().compareAndSet(-1, 0)) {
@@ -215,7 +216,6 @@ public class BufferPool implements AutoCloseable {
             }
         }
 
-        diskReadCount.incrementAndGet();
 
         return buffer;
     }
