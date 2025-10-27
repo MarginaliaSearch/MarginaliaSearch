@@ -11,6 +11,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,6 +21,7 @@ public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
 
     private final MemoryPage[] pages;
+    private Thread monitorThread;
 
     private final long fileSize;
     private final Arena arena;
@@ -27,11 +31,14 @@ public class BufferPool implements AutoCloseable {
 
     private final AtomicInteger diskReadCount = new AtomicInteger();
     private final AtomicInteger cacheReadCount = new AtomicInteger();
+    private final AtomicInteger prefetchReadCount = new AtomicInteger();
+
+    private final Prefetcher prefetcher;
 
     private volatile boolean running = true;
 
     /** Unassociate all buffers with their addresses, ensuring they will not be cacheable */
-    public synchronized void reset() {
+    public synchronized void reset() throws InterruptedException {
         for (var page : pages) {
             page.pageAddress(-1);
         }
@@ -41,7 +48,9 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         poolLru = new PoolLru(pages);
+        prefetcher.reset();
     }
+
 
     public BufferPool(Path filename, int pageSizeBytes, int poolSize) {
         this.fd = LinuxSystemCalls.openDirect(filename);
@@ -66,7 +75,7 @@ public class BufferPool implements AutoCloseable {
 
         this.poolLru = new PoolLru(pages);
 
-        Thread.ofPlatform().start(() -> {
+        monitorThread = Thread.ofPlatform().start(() -> {
             int diskReadOld = 0;
             int cacheReadOld = 0;
 
@@ -79,6 +88,7 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 int diskRead = diskReadCount.get();
+                int prefetchRead = prefetchReadCount.get();
                 int cacheRead = cacheReadCount.get();
                 int heldCount = 0;
                 for (var page : pages) {
@@ -88,10 +98,16 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}", hashCode(), pageSizeBytes, diskRead, cacheRead, heldCount, pages.length, poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
+                    logger.info("[#{}:{}] Disk/Prefetched/Cached: {}/{}/{}, heldCount={}/{}, fqs={}, rcc={}",
+                            hashCode(), pageSizeBytes,
+                            diskRead, prefetchRead, cacheRead,
+                            heldCount, pages.length,
+                            poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
                 }
             }
         });
+
+        this.prefetcher = new Prefetcher(Math.max(1, 128*1024/pageSizeBytes));
     }
 
     public void close() {
@@ -107,6 +123,17 @@ public class BufferPool implements AutoCloseable {
 
         System.out.println("Disk read count: " + diskReadCount.get());
         System.out.println("Cached read count: " + cacheReadCount.get());
+
+        try {
+            monitorThread.interrupt();
+            monitorThread.join();
+
+            prefetcher.stop();
+        }
+        catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
+
     }
 
     @Nullable
@@ -146,6 +173,24 @@ public class BufferPool implements AutoCloseable {
 
         return buffer;
     }
+
+    public void prefetch(long address) {
+        prefetcher.requestPrefetch(address);
+    }
+
+    private void prefetchNow(long address) {
+        // Look through available pages for the one we're looking for
+        MemoryPage buffer = poolLru.get(address);
+
+        if (buffer != null) // already cached
+            return;
+
+        buffer = read(address, false);
+        buffer.touchClock(1);
+        prefetchReadCount.incrementAndGet();
+        // read is unacquired, no need to close
+    }
+
 
     private MemoryPage read(long address, boolean acquire) {
         // If the page is not available, read it from the caller's thread
@@ -192,10 +237,8 @@ public class BufferPool implements AutoCloseable {
         assert buffer.getMemorySegment().get(ValueLayout.JAVA_INT, 0) != 9999;
         buffer.dirty(false);
 
-        if (buffer.pinCount().get() > 1) {
-            synchronized (buffer) {
-                buffer.notifyAll();
-            }
+        synchronized (buffer) {
+            buffer.notifyAll();
         }
     }
 
@@ -216,5 +259,58 @@ public class BufferPool implements AutoCloseable {
         }
     }
 
+    class Prefetcher {
+        private final List<Thread> threads;
+        private final int nThreads;
+        private final ArrayBlockingQueue<Long> prefetchQueue;
+
+        public Prefetcher(int nThreads) {
+            this.threads = new ArrayList<>(nThreads);
+            this.prefetchQueue = new ArrayBlockingQueue<>(4*nThreads);
+            this.nThreads = nThreads;
+
+            start(nThreads);
+        }
+
+        public void reset() throws InterruptedException {
+            stop();
+            start(nThreads);
+        }
+
+        public void stop() throws InterruptedException {
+            var iter = threads.iterator();
+            while (iter.hasNext()) {
+                var thread = iter.next();
+                thread.interrupt();
+                thread.join();
+                iter.remove();
+            }
+        }
+
+        private void start(int n) {
+            for (int i = 0; i < n; i++) {
+                threads.add(Thread.ofPlatform().name("BufferPool:Prefetcher").daemon().start(this::prefetchThread));
+            }
+        }
+
+        private void prefetchThread() {
+            try {
+                for (;;) {
+                    Long address = prefetchQueue.poll(1, TimeUnit.SECONDS);
+                    if (null == address) {
+                        continue;
+                    }
+                    prefetchNow(address);
+                }
+            }
+            catch (InterruptedException ex) {
+                //
+            }
+        }
+
+        public void requestPrefetch(long address) {
+            prefetchQueue.offer(address);
+        }
+    }
 
 }

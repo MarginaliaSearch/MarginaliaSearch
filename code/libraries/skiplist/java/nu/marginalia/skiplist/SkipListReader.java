@@ -19,6 +19,8 @@ public class SkipListReader {
 
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
+    private static final boolean enablePrefetching = Boolean.getBoolean("index.enablePrefetching");
+
     private final BufferPool indexPool;
     private final BufferPool valuesPool;
 
@@ -229,6 +231,8 @@ public class SkipListReader {
             }
         }
 
+        long lastValueBlock = -1;
+
         while (pos < keys.length) {
             try (var page = indexPool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
@@ -262,7 +266,18 @@ public class SkipListReader {
                             continue outer;
                         }
                         else if (kv == pv) {
-                            vals[pos] = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE-1);
+                            long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE-1);
+                            vals[pos] = val;
+
+                            // will be C2:ed out of existence if this is set to false
+                            if (enablePrefetching) {
+                                long valBlock = val & -VALUE_BLOCK_SIZE;
+                                if (valBlock != lastValueBlock) {
+                                    lastValueBlock = valBlock;
+                                    valuesPool.prefetch(valBlock);
+                                }
+                            }
+
                             pos++;
                             continue outer;
                         }

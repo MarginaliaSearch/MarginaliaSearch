@@ -95,8 +95,13 @@ public class FullReverseIndexReader {
     }
 
     public void reset() {
-        dataPool.reset();
-        valuesPool.reset();
+        try {
+            dataPool.reset();
+            valuesPool.reset();
+        }
+        catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
 
