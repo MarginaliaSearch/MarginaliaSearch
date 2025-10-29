@@ -40,6 +40,22 @@ public interface LongArraySearch extends LongArrayBase {
         return fromIndex + low;
     }
 
+    /** Find the lowest position strictly greater than the key */
+    default long binarySearchStrictlyLT(long key, long fromIndex, long toIndex) {
+        long low = 0;
+        long len = toIndex - fromIndex;
+
+        while (len > 0) {
+            var half = len / 2;
+            long val = get(fromIndex + low + half);
+            if (val <= key) {
+                low += len - half;
+            }
+            len = half;
+        }
+
+        return fromIndex + low;
+    }
 
     default long binarySearchN(int sz, long key, long fromIndex, long toIndex) {
         long low = 0;

@@ -19,7 +19,8 @@ public class SkipListReader {
 
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
-    private static final boolean enablePrefetching = Boolean.getBoolean("index.enablePrefetching");
+    private static final boolean enableValuePrefetching = Boolean.getBoolean("index.enableValuePrefetching");
+    private static final boolean enableIndexPrefetching = !Boolean.getBoolean("index.enableIndexPrefetching");
 
     private final BufferPool indexPool;
     private final BufferPool valuesPool;
@@ -45,6 +46,10 @@ public class SkipListReader {
         currentBlock = blockStart & -BLOCK_SIZE;
         currentBlockOffset = (int) (blockStart & (BLOCK_SIZE - 1));
         atEnd = false;
+
+        if (enableIndexPrefetching) {
+            indexPool.prefetch(currentBlock);
+        }
 
         currentBlockIdx = 0;
     }
@@ -88,7 +93,23 @@ public class SkipListReader {
             int flags = headerFlags(page, currentBlockOffset);
 
             int dataOffset = pageDataOffset(currentBlockOffset, fc);
-            if (retainInPage(page, dataOffset, n, data)) {
+
+            long maxVal = maxValueInBlock(page, fc, n);
+            long targetValue = data.peekValueLt(maxVal);
+            long nextBlock;
+
+            if (targetValue > maxVal) {
+                nextBlock = findNextBlock(page, fc, maxVal);
+            }
+            else {
+                nextBlock = currentBlock + BLOCK_STRIDE;
+            }
+
+            if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
+                indexPool.prefetch(nextBlock);
+            }
+
+            if (data.currentValue() > maxVal || retainInPage(page, dataOffset, n, data)) {
                 atEnd = (flags & FLAG_END_BLOCK) != 0;
                 if (atEnd) {
                     while (data.hasMore())
@@ -96,25 +117,9 @@ public class SkipListReader {
                     return false;
                 }
 
-                if (!data.hasMore()) {
-                    currentBlock += BLOCK_STRIDE;
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
-                }
-                else {
-                    long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                    long currentValue = data.currentValue();
-                    for (int i = 0; i < fc; i++) {
-                        long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                        nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                        if (blockMaxValue >= currentValue) {
-                            break;
-                        }
-                    }
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
-                    currentBlock = nextBlock;
-                }
+                currentBlockOffset = 0;
+                currentBlockIdx = 0;
+                currentBlock = nextBlock;
             }
         }
 
@@ -127,44 +132,7 @@ public class SkipListReader {
     public void retainData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
-        while (data.hasMore()) {
-            try (var page = indexPool.get(currentBlock)) {
-
-                int n = headerNumRecords(page, currentBlockOffset);
-                int fc = headerForwardCount(page, currentBlockOffset);
-                int flags = headerFlags(page, currentBlockOffset);
-
-                int dataOffset = pageDataOffset(currentBlockOffset, fc);
-                if (retainInPage(page, dataOffset, n, data)) {
-                    atEnd = (flags & FLAG_END_BLOCK) != 0;
-                    if (atEnd) {
-                        while (data.hasMore())
-                            data.rejectAndAdvance();
-                        return;
-                    }
-
-                    if (!data.hasMore()) {
-                        currentBlock += BLOCK_STRIDE;
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                    }
-                    else {
-                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                        long currentValue = data.currentValue();
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock = nextBlock;
-                    }
-                }
-            }
-        }
+        while (tryRetainData(data));
     }
 
     boolean retainInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
@@ -180,10 +148,7 @@ public class SkipListReader {
             else {
                 data.retainAndAdvance();
                 matches++;
-
-                if (++matches > 5) {
-                    break;
-                }
+                break;
             }
         }
 
@@ -270,7 +235,7 @@ public class SkipListReader {
                             vals[pos] = val;
 
                             // will be C2:ed out of existence if this is set to false
-                            if (enablePrefetching) {
+                            if (enableValuePrefetching) {
                                 long valBlock = val & -VALUE_BLOCK_SIZE;
                                 if (valBlock != lastValueBlock) {
                                     lastValueBlock = valBlock;
@@ -351,6 +316,8 @@ public class SkipListReader {
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
+        assert data.isAscending();
+
         try (var page = indexPool.get(currentBlock)) {
 
             int n = headerNumRecords(page, currentBlockOffset);
@@ -358,33 +325,33 @@ public class SkipListReader {
             int flags = headerFlags(page, currentBlockOffset);
 
             int dataOffset = pageDataOffset(currentBlockOffset, fc);
-            if (rejectInPage(page, dataOffset, n, data)) {
+
+            long maxVal = maxValueInBlock(page, fc, n);
+            long targetValue = data.peekValueLt(maxVal);
+            long nextBlock;
+
+            if (targetValue > maxVal) {
+                nextBlock = findNextBlock(page, fc, maxVal);
+            }
+            else {
+                nextBlock = currentBlock + BLOCK_STRIDE;
+            }
+
+            if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
+                indexPool.prefetch(nextBlock);
+            }
+
+            if (data.currentValue() > maxVal || rejectInPage(page, dataOffset, n, data)) {
                 atEnd = (flags & FLAG_END_BLOCK) != 0;
                 if (atEnd) {
                     while (data.hasMore())
-                        data.retainAndAdvance();
+                        data.rejectAndAdvance();
                     return false;
                 }
 
-                if (!data.hasMore()) {
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
-                    currentBlock += BLOCK_STRIDE;
-                }
-                else {
-                    long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                    long currentValue = data.currentValue();
-                    for (int i = 0; i < fc; i++) {
-                        long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                        nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                        if (blockMaxValue >= currentValue) {
-                            break;
-                        }
-                    }
-                    currentBlockOffset = 0;
-                    currentBlockIdx = 0;
-                    currentBlock = nextBlock;
-                }
+                currentBlockOffset = 0;
+                currentBlockIdx = 0;
+                currentBlock = nextBlock;
             }
         }
 
@@ -395,47 +362,7 @@ public class SkipListReader {
      * exist in the skip list index.
      */
     public void rejectData(@NotNull LongQueryBuffer data) {
-        while (data.hasMore()) {
-            try (var page = indexPool.get(currentBlock)) {
-                MemorySegment ms = page.getMemorySegment();
-
-                int n = headerNumRecords(page, currentBlockOffset);
-                int fc = headerForwardCount(page, currentBlockOffset);
-                byte flags = (byte) headerFlags(page, currentBlockOffset);
-
-                int dataOffset = pageDataOffset(currentBlockOffset, fc);
-
-                if (rejectInPage(page, dataOffset, n, data)) {
-                    atEnd = (flags & FLAG_END_BLOCK) != 0;
-                    if (atEnd) {
-                        while (data.hasMore())
-                            data.retainAndAdvance();
-                        break;
-                    }
-                    if (!data.hasMore()) {
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock += BLOCK_STRIDE;
-                    }
-                    else {
-                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                        long currentValue = data.currentValue();
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock = nextBlock;
-                    }
-                }
-            }
-
-
-        }
+        while (tryRejectData(data));
     }
 
     boolean rejectInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
@@ -451,10 +378,7 @@ public class SkipListReader {
             else {
                 data.rejectAndAdvance();
                 matches++;
-
-                if (++matches > 5) {
-                    break;
-                }
+                break;
             }
         }
 
@@ -508,6 +432,10 @@ public class SkipListReader {
                 assert fc >= 0;
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
 
+                if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
+                    indexPool.prefetch(currentBlock + BLOCK_STRIDE);
+                }
+
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
                 int nCopied = dest.addData(ms, dataOffset + currentBlockIdx * 8L, n - currentBlockIdx);
@@ -560,7 +488,6 @@ public class SkipListReader {
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
                 long blockMinValue = ms.get(ValueLayout.JAVA_LONG, dataOffset);
-                long blockMaxValue = ms.get(ValueLayout.JAVA_LONG, dataOffset + (n-1) * 8);
                 boolean inRange = false;
 
                 do {
@@ -572,12 +499,12 @@ public class SkipListReader {
                     long rangeStart = ranges.start();
 
                     int dataStart = page.binarySearchLong(rangeStart, dataOffset, 0, n);
-                    int dataEnd = page.binarySearchLong(rangeEnd, dataOffset, dataStart, n);
 
                     if (dataStart == n) {
                         break;
                     }
 
+                    int dataEnd = page.binarySearchLong(rangeEnd, dataOffset, dataStart, n);
                     if (dataStart != dataEnd) {
                         totalCopied += dest.addData(ms, dataOffset + dataStart * 8, (dataEnd - dataStart));
                         if (dataEnd == n) {
@@ -612,6 +539,24 @@ public class SkipListReader {
         }
 
         return totalCopied;
+    }
+
+    /** Return the last (and largest) value in this page */
+    private long maxValueInBlock(MemoryPage page, int fc, int n) {
+        return page.getLong(pageDataOffset(currentBlockOffset, fc) + 8*(n-1));
+    }
+
+    /** Return the next block we need to look in if we are looking for targetValue */
+    private long findNextBlock(MemoryPage page, int fc, long targetValue) {
+        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+        for (int i = 0; i < fc; i++) {
+            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
+            if (blockMaxValue >= targetValue) {
+                break;
+            }
+        }
+        return nextBlock;
     }
 
 
@@ -702,6 +647,7 @@ public class SkipListReader {
 
         return ret;
     }
+
 
     public static int headerNumRecords(MemoryPage buffer, int offset) {
         return buffer.getInt(offset);

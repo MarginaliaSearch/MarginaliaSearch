@@ -110,6 +110,16 @@ public class LongQueryBuffer {
         return data.get(read);
     }
 
+    /** Peeking ahead, return the first value in the buffer
+     * larger than target, or Long.MIN_VALUE if no such value is found.
+     */
+    public long peekValueLt(long target) {
+        int pos = (int) data.binarySearchStrictlyLT(target, read, end);
+        if (pos == end)
+            return Long.MIN_VALUE;
+        return data.get(pos);
+    }
+
     /** Advances the read pointer and returns true if there are more values to read. */
     public boolean rejectAndAdvance() {
         assert read < end;
