@@ -1,6 +1,7 @@
 package nu.marginalia.keyword.model;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntComparator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
@@ -44,11 +45,11 @@ public class DocumentKeywordsBuilder {
 
 
     public DocumentKeywords build() {
-        final List<String> wordArray = new ArrayList<>(wordToMeta.size());
-        final LongArrayList meta = new LongArrayList(wordToMeta.size());
-        final List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
-        final List<VarintCodedSequence> spanSequences = new ArrayList<>(wordSpans.size());
-        final byte[] spanCodes = new byte[wordSpans.size()];
+        List<String> wordArray = new ArrayList<>(wordToMeta.size());
+        LongArrayList meta = new LongArrayList(wordToMeta.size());
+        List<VarintCodedSequence> positions = new ArrayList<>(wordToMeta.size());
+        List<VarintCodedSequence> spanSequences = new ArrayList<>(wordSpans.size());
+        byte[] spanCodes = new byte[wordSpans.size()];
 
         var iter = wordToMeta.object2LongEntrySet().fastIterator();
 
@@ -69,6 +70,17 @@ public class DocumentKeywordsBuilder {
             meta.add(calculatePositionMask(entry.getLongValue(), posList));
         }
 
+        // Reorganize the word-level information in a way we are more likely to be able to
+        // perform efficient disk reads later
+
+        IntList sortOrder = new IntArrayList(wordArray.size());
+        for (int i = 0; i < wordArray.size(); i++) sortOrder.add(i);
+        sortOrder.sort(new SortOrderComparator(positions, meta));
+
+        wordArray = reorderList(wordArray, sortOrder);
+        meta = reorderList(meta, sortOrder);
+        positions = reorderList(positions, sortOrder);
+
         // Encode spans
         wordSpans.forEach((tag, spansForTag) -> {
             spansForTag.sort(Comparator.comparingInt(DocumentWordSpan::start));
@@ -88,6 +100,45 @@ public class DocumentKeywordsBuilder {
         });
 
         return new DocumentKeywords(wordArray, meta.toLongArray(), positions, spanCodes, spanSequences);
+    }
+
+    static class SortOrderComparator implements IntComparator {
+
+        private final List<VarintCodedSequence> positions;
+        private final LongArrayList meta;
+
+        public SortOrderComparator(List<VarintCodedSequence> positions, LongArrayList meta) {
+            this.positions = positions;
+            this.meta = meta;
+        }
+
+        @Override
+        public int compare(int k1, int k2) {
+            int sizeCmp = Integer.compare(positions.get(k2).bufferSize(), positions.get(k1).bufferSize());
+            if (sizeCmp != 0) return sizeCmp;
+
+            long meta1 = meta.getLong(k1) & 0xFF;
+            long meta2 = meta.getLong(k2 & 0xFF);
+
+            return Integer.compare(Long.bitCount(meta2), Long.bitCount(meta1));
+        }
+
+    }
+
+    private <T> List<T> reorderList(List<T> source, IntList order) {
+        List<T> ret = new ArrayList<>(source.size());
+        for (int i = 0; i < order.size(); i++) {
+            ret.add(source.get(order.getInt(i)));
+        }
+        return ret;
+    }
+
+    private LongArrayList reorderList(LongArrayList source, IntList order) {
+        LongArrayList ret = new LongArrayList(source.size());
+        for (int i = 0; i < order.size(); i++) {
+            ret.add(source.getLong(order.getInt(i)));
+        }
+        return ret;
     }
 
     long calculatePositionMask(long termMeta, IntList positions) {
