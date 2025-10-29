@@ -20,7 +20,7 @@ public class SkipListReader {
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
     private static final boolean enableValuePrefetching = Boolean.getBoolean("index.enableValuePrefetching");
-    private static final boolean enableIndexPrefetching = !Boolean.getBoolean("index.enableIndexPrefetching");
+    private static final boolean enableIndexPrefetching = Boolean.getBoolean("index.enableIndexPrefetching");
 
     private final BufferPool indexPool;
     private final BufferPool valuesPool;
