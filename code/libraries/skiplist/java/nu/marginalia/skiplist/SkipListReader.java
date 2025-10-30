@@ -345,7 +345,7 @@ public class SkipListReader {
                 atEnd = (flags & FLAG_END_BLOCK) != 0;
                 if (atEnd) {
                     while (data.hasMore())
-                        data.rejectAndAdvance();
+                        data.retainAndAdvance();
                     return false;
                 }
 
