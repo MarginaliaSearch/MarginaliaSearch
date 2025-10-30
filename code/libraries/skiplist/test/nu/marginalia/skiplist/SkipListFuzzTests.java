@@ -24,6 +24,7 @@ import java.util.stream.LongStream;
 import static nu.marginalia.skiplist.SkipListConstants.RECORD_SIZE;
 import static nu.marginalia.skiplist.SkipListConstants.VALUE_BLOCK_SIZE;
 
+@Tag("slow")
 public class SkipListFuzzTests {
     static {
         System.setProperty("system.noSunMiscUnsafe", "TRUE");
