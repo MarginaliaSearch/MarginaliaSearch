@@ -182,8 +182,8 @@ public class IndexGrpcService
 
     private SearchSet getSearchSet(RpcIndexQuery request) {
 
-        if (request.getDomainsCount() > 0) {
-            return new SmallSearchSet(request.getDomainsList());
+        if (request.getRequiredDomainIdsCount() > 0) {
+            return new SmallSearchSet(request.getRequiredDomainIdsList());
         }
 
         return searchSetsService.getSearchSetByName(request.getSearchSetIdentifier());

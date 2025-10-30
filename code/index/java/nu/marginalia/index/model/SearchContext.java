@@ -1,5 +1,6 @@
 package nu.marginalia.index.model;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -78,7 +79,8 @@ public class SearchContext {
     public final IndexLanguageContext languageContext;
 
     public final Long2ObjectOpenHashMap<String> termIdToString;
-    public final IntList searchSetIds;
+    public final IntList mandatoryDomainIds;
+    public final IntList excludedDomainIds;
 
     public static SearchContext create(CombinedIndexReader currentIndex,
                                        KeywordHasher keywordHasher,
@@ -97,6 +99,7 @@ public class SearchContext {
                 queryParams,
                 specsSet.query,
                 rankingParams,
+                List.of(), // FIXME: this path does not support excluded domain ids
                 limits);
     }
 
@@ -124,18 +127,20 @@ public class SearchContext {
                 queryParams,
                 query,
                 rankingParams,
+                request.getExcludedDomainIdsList(),
                 limits);
     }
 
     public SearchContext(
-                         KeywordHasher keywordHasher,
-                         String langIsoCode,
-                         CombinedIndexReader currentIndex,
-                         String queryExpression,
-                         QueryParams queryParams,
-                         SearchQuery query,
-                         RpcResultRankingParameters rankingParams,
-                         RpcQueryLimits limits)
+            KeywordHasher keywordHasher,
+            String langIsoCode,
+            CombinedIndexReader currentIndex,
+            String queryExpression,
+            QueryParams queryParams,
+            SearchQuery query,
+            RpcResultRankingParameters rankingParams,
+            List<Integer> excludedDomainIdsList,
+            RpcQueryLimits limits)
     {
         this.docCount = currentIndex.totalDocCount();
         this.languageContext = currentIndex.createLanguageContext(langIsoCode);
@@ -144,7 +149,8 @@ public class SearchContext {
         this.searchQuery = query;
         this.params = rankingParams;
         this.queryParams = queryParams;
-        this.searchSetIds = queryParams.searchSet().domainIds();
+        this.mandatoryDomainIds = queryParams.searchSet().domainIds();
+        this.excludedDomainIds = new IntArrayList(excludedDomainIdsList);
 
         this.fetchSize = limits.getFetchSize();
         this.limitByDomain = limits.getResultsByDomain();

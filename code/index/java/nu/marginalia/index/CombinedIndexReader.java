@@ -81,12 +81,10 @@ public class CombinedIndexReader {
         }
 
         final IndexLanguageContext languageContext = context.languageContext;
-        final long[] termPriority = context.sortedDistinctIncludes((a,b) -> {
-            return Long.compare(
-                numHits(languageContext, a),
-                numHits(languageContext, b)
-            );
-        });
+        final long[] termPriority = context.sortedDistinctIncludes((a,b) -> Long.compare(
+            numHits(languageContext, a),
+            numHits(languageContext, b)
+        ));
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(context.compiledQueryIds);
@@ -98,7 +96,9 @@ public class CombinedIndexReader {
         Long2ObjectOpenHashMap<String> termIdToString = context.termIdToString;
 
         @Nullable
-        SkipListValueRanges documentRanges = context.searchSetIds.isEmpty() ? null : getDocumentRangesForDomains(context.searchSetIds);
+        SkipListValueRanges mandatoryDocumentRanges = context.mandatoryDomainIds.isEmpty() ? null : getDocumentRangesForDomains(context.mandatoryDomainIds);
+        @Nullable
+        SkipListValueRanges excludedDocumentRanges = context.excludedDomainIds.isEmpty() ? null : getDocumentRangesForDomains(context.excludedDomainIds);
 
         for (var path : paths) {
             LongList elements = new LongArrayList(path);
@@ -113,7 +113,7 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(languageContext, documentRanges, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+            var head = findFullWord(languageContext, mandatoryDocumentRanges, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
             if (!head.isNoOp()) {
                 for (int i = 1; i < elements.size(); i++) {
                     head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
@@ -136,6 +136,9 @@ public class CombinedIndexReader {
         // Add additional conditions to the query heads
         for (var query : queryHeads) {
 
+            if (mandatoryDocumentRanges != null) query.requiringDomains(mandatoryDocumentRanges);
+            if (excludedDocumentRanges != null) query.rejectingDomains(excludedDocumentRanges);
+
             // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
             for (long termId : context.termIdsAdvice) {
                 query = query.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
@@ -147,9 +150,6 @@ public class CombinedIndexReader {
 
             // Run these filter steps last, as they'll worst-case cause as many page faults as there are
             // items in the buffer
-            if (documentRanges != null) {
-                query.requiringDomains(documentRanges);
-            }
 
             query.addInclusionFilter(filterForParams(context.queryParams));
         }

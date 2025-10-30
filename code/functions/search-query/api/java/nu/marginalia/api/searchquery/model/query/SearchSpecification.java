@@ -13,6 +13,7 @@ public class SearchSpecification {
      * If present and not empty, limit the search to these domain IDs
      */
     public List<Integer> domains;
+    public List<Integer> excludedDomains;
 
     public String searchSetIdentifier;
 
@@ -30,6 +31,7 @@ public class SearchSpecification {
 
     public SearchSpecification(SearchQuery query,
                                List<Integer> domains,
+                               List<Integer> excludedDomains,
                                String searchSetIdentifier,
                                SpecificationLimit quality,
                                SpecificationLimit year,
@@ -41,6 +43,7 @@ public class SearchSpecification {
     {
         this.query = query;
         this.domains = domains;
+        this.excludedDomains = excludedDomains;
         this.searchSetIdentifier = searchSetIdentifier;
         this.quality = quality;
         this.year = year;
@@ -102,6 +105,7 @@ public class SearchSpecification {
     public static class SearchSpecificationBuilder {
         private SearchQuery query;
         private List<Integer> domains;
+        private List<Integer> excludedDomains;
         private String searchSetIdentifier;
         private SpecificationLimit quality$value;
         private boolean quality$set;
@@ -125,6 +129,11 @@ public class SearchSpecification {
 
         public SearchSpecificationBuilder domains(List<Integer> domains) {
             this.domains = domains;
+            return this;
+        }
+
+        public SearchSpecificationBuilder excludedDomains(List<Integer> excludedDomains) {
+            this.excludedDomains = excludedDomains;
             return this;
         }
 
@@ -189,7 +198,17 @@ public class SearchSpecification {
             if (!this.rank$set) {
                 rank$value = SpecificationLimit.none();
             }
-            return new SearchSpecification(this.query, this.domains, this.searchSetIdentifier, quality$value, year$value, size$value, rank$value, this.queryLimits, this.queryStrategy, this.rankingParams);
+            return new SearchSpecification(this.query,
+                    this.domains,
+                    this.excludedDomains,
+                    this.searchSetIdentifier,
+                    quality$value,
+                    year$value,
+                    size$value,
+                    rank$value,
+                    this.queryLimits,
+                    this.queryStrategy,
+                    this.rankingParams);
         }
     }
 }
