@@ -69,6 +69,7 @@ public class IndexResultRankingService {
 
     public final class RankingData implements AutoCloseable {
         final Arena arena;
+        private static final DocumentSpans emptySpansInstance = new DocumentSpans();
 
         private final TermMetadataList[] termsForDocs;
         private final DocumentSpans[] documentSpans;
@@ -119,7 +120,7 @@ public class IndexResultRankingService {
             return resultIds.at(pos);
         }
         public DocumentSpans documentSpans() {
-            return documentSpans[pos];
+            return Objects.requireNonNullElse(documentSpans[pos], emptySpansInstance);
         }
 
         public boolean next() {
@@ -383,7 +384,7 @@ public class IndexResultRankingService {
         }
 
         long docId = UrlIdCodec.removeRank(combinedId);
-        long docMetadata = index.getDocumentMetadata(docId);
+        long docMetadata = index.getDocumentMetadata(combinedId);
         int htmlFeatures = index.getHtmlFeatures(docId);
 
         int docSize = index.getDocumentSize(docId);
