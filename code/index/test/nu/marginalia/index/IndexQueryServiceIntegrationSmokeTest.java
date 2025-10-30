@@ -467,7 +467,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
             positions.add(VarintCodedSequence.generate(i + 1));
         }
 
-        indexJournalWriter.put(fullId,
+        indexJournalWriter.put(UrlIdCodec.addRank(1.0f, fullId),
                 new SlopDocumentRecord.KeywordsProjection(
                         "",
                         -1,
