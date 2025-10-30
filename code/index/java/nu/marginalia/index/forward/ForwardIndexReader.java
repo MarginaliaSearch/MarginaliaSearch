@@ -124,46 +124,39 @@ public class ForwardIndexReader {
         return UrlIdCodec.addRank(rank, idWithNoRank);
     }
 
-    public long getDocMeta(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
-
-        long offset = idxForDoc(docId);
+    public long getDocMeta(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
         return data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
     }
 
-    public int getHtmlFeatures(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
-
-        long offset = idxForDoc(docId);
+    public int getHtmlFeatures(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
         return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) & 0xFFFF_FFFFL);
     }
 
-    public int getDocumentSize(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
-
-        long offset = idxForDoc(docId);
+    public int getDocumentSize(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
         return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L);
     }
 
 
-    private int idxForDoc(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+    private int idxForDoc(long combinedDocId) {
 
         if (idsMap != null) {
-            return idsMap.getOrDefault(docId, -1);
+            return idsMap.getOrDefault(combinedDocId, -1);
         }
 
-        long offset = ids.binarySearch2(docId, 0, ids.size());
+        long offset = ids.binarySearch2(combinedDocId, 0, ids.size());
 
-        if (offset >= ids.size() || offset < 0 || ids.get(offset) != docId) {
+        if (offset >= ids.size() || offset < 0 || ids.get(offset) != combinedDocId) {
             if (getClass().desiredAssertionStatus()) {
-                logger.warn("Could not find offset for doc {}", docId);
+                logger.warn("Could not find offset for doc {}", combinedDocId);
             }
             return -1;
         }
@@ -181,8 +174,7 @@ public class ForwardIndexReader {
                 continue;
             }
 
-            long docId = UrlIdCodec.removeRank(combinedIds.at(i));
-            long offset = idxForDoc(docId);
+            long offset = idxForDoc(combinedIds.at(i));
             if (offset >= 0) {
                 offsets[i] = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
             }

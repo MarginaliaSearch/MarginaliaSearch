@@ -328,8 +328,7 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
     }
 
     public boolean test(long combinedId) {
-        long docId = UrlIdCodec.removeRank(combinedId);
-        long meta = forwardIndexReader.getDocMeta(docId);
+        long meta = forwardIndexReader.getDocMeta(combinedId);
 
         if (!validateQuality(meta)) {
             return false;
