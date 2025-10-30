@@ -53,7 +53,7 @@ class DocumentKeywordsBuilderTest {
     void calculatePositionMask__verifyFullRangeOfBitsUsed() {
         long totalMask = 0L;
 
-        for (int i = 0; i < 8000; i++) {
+        for (int i = 0; i < 16000; i++) {
             totalMask |= builder.calculatePositionMask(0L, IntList.of(i));
         }
 
