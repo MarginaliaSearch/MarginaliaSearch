@@ -158,6 +158,10 @@ public class EdgeUrl {
         return new EdgeUrl(proto, domain, port, path, param);
     }
 
+    public EdgeUrl withProto(String newProto) {
+        return new EdgeUrl(newProto, domain, port, path, param);
+    }
+
     public boolean equals(Object other) {
         if (other == null) return false;
         if (other == this) return true;

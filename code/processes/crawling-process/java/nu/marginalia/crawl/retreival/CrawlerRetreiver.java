@@ -108,6 +108,8 @@ public class CrawlerRetreiver implements AutoCloseable {
             return switch (probeResult) {
                 case HttpFetcher.DomainProbeResult.Ok(EdgeUrl probedUrl) -> {
 
+                    crawlFrontier.setSupportsHttps(probedUrl.proto.equalsIgnoreCase("https"));
+
                     // Sleep after the initial probe, we don't have access to the robots.txt yet
                     // so we don't know the crawl delay
                     TimeUnit.SECONDS.sleep(1);

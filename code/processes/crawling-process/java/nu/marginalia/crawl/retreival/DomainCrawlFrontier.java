@@ -1,5 +1,7 @@
 package nu.marginalia.crawl.retreival;
 
+import it.unimi.dsi.fastutil.longs.Long2BooleanOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
@@ -24,15 +26,9 @@ public class DomainCrawlFrontier {
     private static final MurmurHash3_128 hasher = new MurmurHash3_128();
     private final ArrayDeque<String> queue;
 
-    // To save the number of strings kept in memory,
-    // do an approximate check using 64 bit hashes instead
-    // ..
-    // This isn't perfect, and may lead to false positives,
-    // but this is relatively unlikely, since the cardinality of these
-    // need to be in the billions to approach Birthday Paradox
-    // territory
-    private final LongOpenHashSet visited;
-    private final LongOpenHashSet known;
+    // A value of false signifies the url is known but not visited
+    // A value of true signifies the url is visited
+    private final Long2BooleanOpenHashMap visited;
 
     private final EdgeDomain thisDomain;
     private final UrlBlocklist urlBlocklist;
@@ -40,6 +36,7 @@ public class DomainCrawlFrontier {
     private Predicate<EdgeUrl> linkFilter = url -> true;
 
     private int depth;
+    private boolean supportsHttps = true;
 
     public DomainCrawlFrontier(EdgeDomain thisDomain, Collection<String> urls, int depth) {
         this.thisDomain = thisDomain;
@@ -47,12 +44,15 @@ public class DomainCrawlFrontier {
         this.depth = depth;
 
         queue = new ArrayDeque<>(depth);
-        visited = new LongOpenHashSet(depth);
-        known = new LongOpenHashSet(depth);
+        visited = new Long2BooleanOpenHashMap(depth);
 
         for (String urlStr : urls) {
             EdgeUrl.parse(urlStr).ifPresent(this::addToQueue);
         }
+    }
+
+    public void setSupportsHttps(boolean val) {
+        this.supportsHttps = val;
     }
 
     public EdgeDomain getDomain() {
@@ -111,22 +111,35 @@ public class DomainCrawlFrontier {
     }
 
     public boolean addVisited(EdgeUrl url) {
-        long hashCode = hasher.hashNearlyASCII(url.toString());
-
-        return visited.add(hashCode);
+        return !visited.put(hashUrl(url), true);
     }
+
     public boolean addKnown(EdgeUrl url) {
-        long hashCode = hasher.hashNearlyASCII(url.toString());
-        return known.add(hashCode);
+        long hash = hashUrl(url);
+        if (!visited.containsKey(hash)) {
+            visited.put(hash, false);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isKnown(EdgeUrl url) {
+        long hash = hashUrl(url);
+        return visited.containsKey(hash);
     }
 
     public boolean isVisited(EdgeUrl url) {
-        long hashCode = hasher.hashNearlyASCII(url.toString());
-        return visited.contains(hashCode);
+        long hash = hashUrl(url);
+        return visited.get(hash);
     }
-    public boolean isKnown(EdgeUrl url) {
-        long hashCode = hasher.hashNearlyASCII(url.toString());
-        return known.contains(hashCode);
+
+    long hashUrl(EdgeUrl url) {
+        long hash = hasher.hashNearlyASCII(url.domain.toString());
+        hash ^= hasher.hashNearlyASCII(url.path);
+        if (url.param != null) {
+            hash ^= hasher.hashNearlyASCII(url.param);
+        }
+        return hash;
     }
 
     public boolean filterLink(EdgeUrl url) {
@@ -147,11 +160,32 @@ public class DomainCrawlFrontier {
         if (queue.size() + visited.size() >= depth + 10_000)
             return;
 
+        url = correctSchema(url);
+
         if (isVisited(url))
             return;
 
         if (addKnown(url)) {
             queue.addLast(url.toString());
+        }
+    }
+
+    private EdgeUrl correctSchema(EdgeUrl url) {
+        if ("http".equalsIgnoreCase(url.proto) && supportsHttps) {
+            url = url.withProto("https");
+        }
+        else if ("https".equalsIgnoreCase(url.proto) && !supportsHttps) {
+            url = url.withProto("http");
+        }
+        return url;
+    }
+
+    public boolean hasCorrectSchema(EdgeUrl url) {
+        if (supportsHttps) {
+            return "https".equalsIgnoreCase(url.proto);
+        }
+        else {
+            return "http".equalsIgnoreCase(url.proto);
         }
     }
 

@@ -79,6 +79,9 @@ public class CrawlerRevisitor {
             if (!doc.hasBody())
                 continue;
 
+            if (!crawlFrontier.hasCorrectSchema(url))
+                continue;
+
             if (!crawlFrontier.filterLink(url))
                 continue;
 
