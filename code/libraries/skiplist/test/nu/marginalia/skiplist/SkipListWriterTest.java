@@ -20,38 +20,50 @@ import java.nio.file.Path;
 import java.util.Random;
 import java.util.stream.LongStream;
 
+import static nu.marginalia.skiplist.SkipListConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SkipListWriterTest {
+    static {
+        System.setProperty("system.noSunMiscUnsafe", "TRUE");
+    }
+
     Path docsFile;
+    Path valuesFile;
 
     @BeforeEach
     void setUp() throws IOException {
         docsFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".docs.dat");
+        valuesFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".values.dat");
     }
 
     @AfterEach
     void tearDown() throws IOException {
         Files.deleteIfExists(docsFile);
+        Files.deleteIfExists(valuesFile);
     }
 
     LongArray createArray(long[] keys, long[] values) {
         assert keys.length == values.length;
-        MemorySegment ms = Arena.ofAuto().allocate(keys.length * 16);
+        MemorySegment ms = Arena.ofAuto().allocate(keys.length * 8 * RECORD_SIZE + 32);
         for (int i = 0; i < keys.length; i++) {
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i, keys[i]);
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i+1, values[i]);
+            ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE*i, keys[i]);
+            for (int vi = 1; vi < RECORD_SIZE; vi++) {
+                ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE * i + vi, values[i]);
+            }
         }
         return LongArrayFactory.wrap(ms);
     }
 
     LongArray createArray(Arena arena, long[] keys, long[] values) {
         assert keys.length == values.length;
-        MemorySegment ms = arena.allocate(keys.length * 16);
+        MemorySegment ms = arena.allocate(keys.length * 8 * RECORD_SIZE);
         for (int i = 0; i < keys.length; i++) {
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i, keys[i]);
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i+1, values[i]);
+            ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE*i, keys[i]);
+            for (int vi = 1; vi < RECORD_SIZE; vi++) {
+                ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE * i + vi, values[i]);
+            }
         }
         return LongArrayFactory.wrap(ms);
     }
@@ -59,11 +71,11 @@ class SkipListWriterTest {
     @Test
     public void testWriteSingleBlock() throws IOException {
         long pos1, pos2;
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             pos1 = writer.writeList(
                     createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
             pos2 = writer.writeList(
-                    createArray(new long[] {0,1,2,3}, new long[] { -0,-1,-2,-3}), 4, 2);
+                    createArray(new long[] {0,1,2,3}, new long[] { -0,-1,-2,-3}), 2*RECORD_SIZE, 2);
         }
 
         System.out.println(pos1);
@@ -73,9 +85,11 @@ class SkipListWriterTest {
             var ms = arr.getMemorySegment();
 
             var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
-            var expected1 = new SkipListReader.RecordView(8, 0,  SkipListConstants.FLAG_END_BLOCK,
+            var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
-                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7})
+                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7}),
+                    0,
+                    0
             );
 
             System.out.println(actual1);
@@ -83,9 +97,57 @@ class SkipListWriterTest {
             assertEquals(expected1, actual1);
 
             var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
-            var expected2 = new SkipListReader.RecordView(2, 0,  SkipListConstants.FLAG_END_BLOCK,
+            var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
                     new LongArrayList(),
-                    new LongArrayList(new long[] { 2,3}));
+                    new LongArrayList(new long[] { 2,3}),
+                    80,
+                    128);
+
+            System.out.println(actual2);
+            System.out.println(expected2);
+            assertEquals(expected2, actual2);
+        }
+    }
+
+
+    @Test
+    public void testWriteSingleBlockWithFooter() throws IOException {
+        long pos1, pos2;
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            pos1 = writer.writeList(
+                    createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
+            pos2 = writer.writeList(
+                    createArray(new long[] {0,1,2,3}, new long[] { -0,-1,-2,-3}), 2*RECORD_SIZE, 2);
+        }
+
+        SkipListWriter.writeFooter(docsFile, "test123");
+        SkipListWriter.validateFooter(docsFile, "test123");
+
+        System.out.println(pos1);
+        System.out.println(pos2);
+
+        try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
+            var ms = arr.getMemorySegment();
+
+            var actual1 = SkipListReader.parseBlock(ms, (int) pos1);
+            var expected1 = new SkipListReader.RecordView(8, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
+                    new LongArrayList(),
+                    new LongArrayList(new long[] { 0,1,2,3,4,5,6,7}),
+                    0,
+                    0
+            );
+
+            System.out.println(actual1);
+            System.out.println(expected1);
+            assertEquals(expected1, actual1);
+
+            var actual2 = SkipListReader.parseBlock(ms, (int) pos2);
+            var expected2 = new SkipListReader.RecordView(2, 0,  FLAG_END_BLOCK | FLAG_COMPACT_BLOCK,
+                    new LongArrayList(),
+                    new LongArrayList(new long[] { 2,3}),
+                    80,
+                    128
+            );
 
             System.out.println(actual2);
             System.out.println(expected2);
@@ -94,12 +156,31 @@ class SkipListWriterTest {
     }
 
     @Test
+    public void testWriteSingleBlockWithInvalidFooter() throws IOException {
+        long pos1, pos2;
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            pos1 = writer.writeList(
+                    createArray(new long[] {0,1,2,3,4,5,6,7}, new long[] { -0,-1,-2,-3,-4,-5,-6,-7}), 0, 8);
+            pos2 = writer.writeList(
+                    createArray(new long[] {0,1,2,3}, new long[] { -0,-1,-2,-3}), 2*RECORD_SIZE, 2);
+        }
+
+        try {
+            SkipListWriter.validateFooter(docsFile, "test123");
+            Assertions.fail("Expected an exception");
+        }
+        catch (IllegalArgumentException ex) {
+            // expected
+        }
+    }
+
+    @Test
     public void testTwoBlocks() throws IOException {
         long pos1;
-        long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32) * 2).toArray();
-        long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32) * 2).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64) * 2).toArray();
+        long[] vals = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64) * 2).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -140,10 +221,10 @@ class SkipListWriterTest {
     @Test
     public void testTenBlocks() throws IOException {
         long pos1;
-        long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64)*10).toArray();
+        long[] vals = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64)*10).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -174,7 +255,7 @@ class SkipListWriterTest {
             for (int i = 0; i < blocks.size(); i++) {
                 SkipListReader.RecordView block = blocks.get(i);
                 for (int fci = 0; fci < block.fc(); fci++) {
-                    int skipOffset = SkipListConstants.skipOffsetForPointer(fci);
+                    int skipOffset = skipOffsetForPointer(fci);
                     assertTrue(i + skipOffset < blocks.size());
                     Assertions.assertEquals(block.fowardPointers().getLong(fci), blocks.get(i+skipOffset).highestDocId());
                 }
@@ -186,10 +267,10 @@ class SkipListWriterTest {
     @Test
     public void testTenBlockFps() throws IOException {
         long pos1;
-        long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).toArray();
+        long[] vals = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
@@ -213,17 +294,17 @@ class SkipListWriterTest {
     @Test
     public void testTenBlockFpsPadded() throws IOException {
         long pos1;
-        long[] keys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        long[] vals = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).toArray();
+        long[] vals = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.padDocuments(64);
             pos1 = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
         try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
 
-            var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), 0);
+            var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), pos1);
             for (int i = 0; i + 1 < blocks.size(); i++) {
                 if (blocks.get(i).fowardPointers().isEmpty()) {
                     continue;
@@ -248,7 +329,7 @@ class SkipListWriterTest {
 
             LongSortedSet keyset = new LongAVLTreeSet();
 
-            int nkeys = r.nextInt(SkipListConstants.BLOCK_SIZE/2, SkipListConstants.BLOCK_SIZE*4);
+            int nkeys = r.nextInt(BLOCK_SIZE/2, BLOCK_SIZE*4);
             while (keyset.size() < nkeys) {
                 long val = r.nextLong(0, 10_000_000);
 
@@ -259,17 +340,17 @@ class SkipListWriterTest {
             long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
 
             long off = 0;
-            try (var writer = new SkipListWriter(docsFile);
+            try (var writer = new SkipListWriter(docsFile, valuesFile);
                  Arena arena = Arena.ofConfined()
             ) {
-                writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
+                writer.padDocuments(8*r.nextInt(0, BLOCK_SIZE/8));
                 off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
             }
 
 
             try (var arr = LongArrayFactory.mmapForReadingConfined(docsFile)) {
 
-                var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), 0);
+                var blocks = SkipListReader.parseBlocks(arr.getMemorySegment(), off);
                 for (int i = 0; i + 1 < blocks.size(); i++) {
                     if (blocks.get(i).fowardPointers().isEmpty()) {
                         continue;
@@ -288,12 +369,12 @@ class SkipListWriterTest {
     public void testTenBlocksReadOffset() throws IOException {
         long pos1;
 
-        long[] readKeys = LongStream.range(-2, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        long[] readVals = LongStream.range(-2, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).map(v -> -v).toArray();
+        long[] readKeys = LongStream.range(-2, (MAX_RECORDS_PER_BLOCK-64)*10).toArray();
+        long[] readVals = LongStream.range(-2, (MAX_RECORDS_PER_BLOCK-64)*10).map(v -> -v).toArray();
 
-        long[] expectedKeys = LongStream.range(0, (SkipListConstants.MAX_RECORDS_PER_BLOCK-32)*10).toArray();
-        try (var writer = new SkipListWriter(docsFile)) {
-            pos1 = writer.writeList(createArray(readKeys, readVals), 4, expectedKeys.length);
+        long[] expectedKeys = LongStream.range(0, (MAX_RECORDS_PER_BLOCK-64)*10).toArray();
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            pos1 = writer.writeList(createArray(readKeys, readVals), 2*RECORD_SIZE, expectedKeys.length);
         }
 
         System.out.println(pos1);
@@ -323,52 +404,53 @@ class SkipListWriterTest {
             for (int i = 0; i < blocks.size(); i++) {
                 SkipListReader.RecordView block = blocks.get(i);
                 for (int fci = 0; fci < block.fc(); fci++) {
-                    int skipOffset = SkipListConstants.skipOffsetForPointer(fci);
+                    int skipOffset = skipOffsetForPointer(fci);
                     assertTrue(i + skipOffset < blocks.size());
                     Assertions.assertEquals(block.fowardPointers().getLong(fci), blocks.get(i+skipOffset).highestDocId());
                 }
             }
         }
-
     }
+
+
     @Test
     public void testSkipOffsetForPointer() {
         for (int i = 0; i < 64; i++) {
-            System.out.println(i + ":" + SkipListConstants.skipOffsetForPointer(i));
+            System.out.println(i + ":" + skipOffsetForPointer(i));
         }
     }
     @Test
     public void testNumPointersForBlock() {
         for (int i = 1; i < 64; i++) {
-            System.out.println(i + ":" + SkipListConstants.numPointersForBlock(i));
+            System.out.println(i + ":" + numPointersForBlock(i));
         }
     }
 
     @Test
     public void testNonRootBlockCapacity() {
         for (int i = 1; i < 64; i++) {
-            System.out.println(i + ":" + SkipListConstants.nonRootBlockCapacity(i));
+            System.out.println(i + ":" + nonRootBlockCapacity(i));
         }
     }
 
     @Test
     public void testEstimateNumBlocks() {
         for (int i = 1; i < 1024; i++) {
-            System.out.println(i + ":" + SkipListConstants.estimateNumBlocks(i));
+            System.out.println(i + ":" + estimateNumBlocks(i));
         }
     }
 
     @Test
     public void testNumPointersForRootBlock() {
         for (int i = 1; i < 1024; i++) {
-            System.out.println(i + ":" + SkipListConstants.estimateNumBlocks(i) + ":" + SkipListConstants.numPointersForRootBlock(512, i));
+            System.out.println(i + ":" + estimateNumBlocks(i) + ":" + numPointersForRootBlock(512, i));
         }
     }
 
     @Test
     public void calculateNumBlocks() {
         for (int i = 1; i < 1024; i++) {
-            System.out.println(i + ":" + SkipListWriter.calculateActualNumBlocks(2048, i) + ":" + SkipListConstants.estimateNumBlocks(i));
+            System.out.println(i + ":" + SkipListWriter.calculateActualNumBlocks(2048, i) + ":" + estimateNumBlocks(i));
         }
     }
 

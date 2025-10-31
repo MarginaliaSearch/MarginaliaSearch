@@ -44,7 +44,7 @@ public class SlopDocumentRecordTest {
                 "en",
                 null,
                 List.of("test1", "test2"),
-                new byte[] { 2, 3},
+                new long[] { 2, 3},
                 List.of(VarintCodedSequence.generate(1, 3, 5), VarintCodedSequence.generate(2, 4, 6)),
                 new byte[] { 'a', 'b' },
                 List.of(VarintCodedSequence.generate(2, 3, 5), VarintCodedSequence.generate(3, 4, 6))

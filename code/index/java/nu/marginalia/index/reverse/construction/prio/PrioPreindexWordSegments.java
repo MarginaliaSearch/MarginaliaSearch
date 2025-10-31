@@ -7,7 +7,6 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.slop.SlopTable;
-import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 
 import java.io.IOException;
@@ -64,14 +63,15 @@ public class PrioPreindexWordSegments {
 
         try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
             LongArrayColumn.Reader termIds = instance.openTermIds(slopTable);
-            ByteArrayColumn.Reader termMetas = instance.openTermMetadata(slopTable);
+            LongArrayColumn.Reader termMetas = instance.openTermMetadata(slopTable);
 
             while (termIds.hasRemaining()) {
                 long[] data = termIds.get();
-                byte[] meta = termMetas.get();
+                long[] meta = termMetas.get();
 
                 for (int i = 0; i < data.length; i++) {
-                    if (meta[i] != 0) {
+                    // Term metadata flags are at the lowest byte
+                    if ((meta[i] & 0xFFL) != 0) {
                         countsMap.addTo(data[i], 1);
                     }
                 }

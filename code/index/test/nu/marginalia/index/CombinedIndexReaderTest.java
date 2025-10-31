@@ -121,8 +121,8 @@ public class CombinedIndexReaderTest {
         var lc = reader.createLanguageContext("en");
 
         var query = reader
-                .findFullWord(lc, kw("hello"))
-                .also(kw("world"), new IndexSearchBudget(10_000))
+                .findFullWord(lc, "hello", kw("hello"))
+                .also("word", kw("world"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);
@@ -164,9 +164,9 @@ public class CombinedIndexReaderTest {
 
         var reader = indexFactory.getCombinedIndexReader();
         var lc = reader.createLanguageContext("en");
-        var query = reader.findFullWord(lc, kw("hello"))
-                .also(kw("world"), new IndexSearchBudget(10_000))
-                .not(kw("goodbye"), new IndexSearchBudget(10_000))
+        var query = reader.findFullWord(lc, "hello", kw("hello"))
+                .also("world", kw("world"), new IndexSearchBudget(10_000))
+                .not("goodbye", kw("goodbye"), new IndexSearchBudget(10_000))
                 .build();
 
         var buffer = new LongQueryBuffer(32);
@@ -199,6 +199,7 @@ public class CombinedIndexReaderTest {
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
+        Path outputFileDocsValues = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocsValues(), IndexFileName.Version.NEXT);
         Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords("en"), IndexFileName.Version.NEXT);
         Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
 
@@ -207,7 +208,9 @@ public class CombinedIndexReaderTest {
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var constructor = new FullIndexConstructor(outputFileDocs,
+        var constructor = new FullIndexConstructor(
+                outputFileDocs,
+                outputFileDocsValues,
                 outputFileWords,
                 outputFilePositions,
                 DocIdRewriter.identity(),
@@ -282,7 +285,7 @@ public class CombinedIndexReaderTest {
                 var meta = metaByDoc.get(doc);
 
                 List<String> keywords = words.stream().map(w -> w.keyword).toList();
-                byte[] metadata = new byte[words.size()];
+                long[] metadata = new long[words.size()];
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = words.get(i).termMetadata;
                 }

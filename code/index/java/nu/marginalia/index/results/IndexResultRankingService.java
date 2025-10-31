@@ -12,6 +12,7 @@ import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
+import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
@@ -30,6 +31,7 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,12 +69,14 @@ public class IndexResultRankingService {
 
     public final class RankingData implements AutoCloseable {
         final Arena arena;
+        private static final DocumentSpans emptySpansInstance = new DocumentSpans();
 
         private final TermMetadataList[] termsForDocs;
         private final DocumentSpans[] documentSpans;
         private final long[] flags;
         private final CodedSequence[] positions;
         private final CombinedDocIdList resultIds;
+
         private AtomicBoolean closed = new AtomicBoolean(false);
         int pos = -1;
 
@@ -93,8 +97,12 @@ public class IndexResultRankingService {
             // Perform expensive I/O operations
 
             try {
-                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext.languageContext, rankingContext.budget, rankingContext.termIdsAll.array, resultIds);
-                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds);
+                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext, resultIds);
+
+                @NotNull
+                BitSet documentMask = termsForDocs[0].viableDocuments();
+
+                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds, documentMask);
             }
             catch (TimeoutException|RuntimeException ex) {
                 arena.close();
@@ -112,26 +120,32 @@ public class IndexResultRankingService {
             return resultIds.at(pos);
         }
         public DocumentSpans documentSpans() {
-            return documentSpans[pos];
+            return Objects.requireNonNullElse(documentSpans[pos], emptySpansInstance);
         }
 
         public boolean next() {
-            if (++pos < resultIds.size()) {
-                for (int ti = 0; ti < flags.length; ti++) {
-                    var tfd = termsForDocs[ti];
+            BitSet viableDocuments = termsForDocs[0].viableDocuments();
 
-                    assert tfd != null : "No term data for term " + ti;
-
-                    flags[ti] = tfd.flag(pos);
-                    positions[ti] = tfd.position(pos);
+            do {
+                if (++pos >= resultIds.size()) {
+                    return false;
                 }
-                return true;
+            } while (!viableDocuments.get(pos));
+
+            for (int ti = 0; ti < flags.length; ti++) {
+                var tfd = termsForDocs[ti];
+
+                assert tfd != null : "No term data for term " + ti;
+
+                flags[ti] = tfd.flag(pos);
+                positions[ti] = tfd.position(pos);
             }
-            return false;
+
+            return true;
         }
 
         public int size() {
-            return resultIds.size();
+            return termsForDocs[0].viableDocuments().cardinality();
         }
 
         public void close() {
@@ -351,12 +365,12 @@ public class IndexResultRankingService {
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
 
-        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.root.newQuery(positions);
+        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.forData(positions);
 
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
 
-        CompiledQueryLong wordFlagsQuery = compiledQuery.root.newQuery(wordFlags);
+        CompiledQueryLong wordFlagsQuery = compiledQuery.forData(wordFlags);
         if (!meetsQueryStrategyRequirements(wordFlagsQuery, queryParams)) {
             return null;
         }
@@ -370,7 +384,7 @@ public class IndexResultRankingService {
         }
 
         long docId = UrlIdCodec.removeRank(combinedId);
-        long docMetadata = index.getDocumentMetadata(docId);
+        long docMetadata = index.getDocumentMetadata(combinedId);
         int htmlFeatures = index.getHtmlFeatures(docId);
 
         int docSize = index.getDocumentSize(docId);
@@ -406,10 +420,10 @@ public class IndexResultRankingService {
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
         double score_proximity = params.getTcfProximityWeight() * proximitiyFac;
         double score_bM25 = params.getBm25Weight()
-                * wordFlagsQuery.root.visit(new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
+                * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
         double score_bFlags = params.getBm25Weight()
-                * wordFlagsQuery.root.visit(new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
+                * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));

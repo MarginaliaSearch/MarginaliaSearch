@@ -1,8 +1,6 @@
 package nu.marginalia.skiplist;
 
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongSortedSet;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -15,23 +13,30 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.stream.LongStream;
 
+import static nu.marginalia.skiplist.SkipListConstants.*;
+
 public class SkipListReaderTest {
+    static {
+        System.setProperty("system.noSunMiscUnsafe", "TRUE");
+    }
+
     Path docsFile;
+    Path valuesFile;
 
     @BeforeEach
     void setUp() throws IOException {
         docsFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".docs.dat");
+        valuesFile = Files.createTempFile(SkipListWriterTest.class.getSimpleName(), ".values.dat");
     }
 
     @AfterEach
     void tearDown() throws IOException {
         Files.deleteIfExists(docsFile);
+        Files.deleteIfExists(valuesFile);
     }
 
     LongArray createArray(long[] keys, long[] values) {
@@ -40,65 +45,289 @@ public class SkipListReaderTest {
 
     LongArray createArray(Arena arena, long[] keys, long[] values) {
         assert keys.length == values.length;
-        MemorySegment ms = arena.allocate(keys.length * 16);
+        MemorySegment ms = arena.allocate(keys.length * RECORD_SIZE*8);
         for (int i = 0; i < keys.length; i++) {
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i, keys[i]);
-            ms.setAtIndex(ValueLayout.JAVA_LONG, 2L*i+1, values[i]);
+            ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE*i, keys[i]);
+            for (int vi = 1; vi < RECORD_SIZE; vi++) {
+                ms.setAtIndex(ValueLayout.JAVA_LONG, RECORD_SIZE * i + vi, values[i]);
+            }
         }
         return LongArrayFactory.wrap(ms);
     }
 
     @Test
-    public void testTenBlocks() throws IOException {
-        long[] keys = LongStream.range(0, 300).toArray();
-        long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
+    public void testGetKeysWithRange__sunny_day() throws IOException {
+        long[] keys = LongStream.range(0, 1000).toArray();
+        long[] vals = LongStream.range(0, 1000).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 0);
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(
+                0, 1, 2, 3, 4, 5,
+                100, 101, 102, 103, 104, 105,
+                995, 996, 997, 998, 999));
+
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
-            while (!reader.atEnd()) {
-                System.out.println(reader.estimateSize());
-                System.out.println(reader.getKeys(lqb));
-                System.out.println(Arrays.toString(lqb.copyData()));
-                lqb.zero();
-            }
-        }
 
-        System.out.println("---");
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { 0, 100, 995 }, new long[] { 6, 106, 1000 });
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 0);
-            LongQueryBuffer lqb = new LongQueryBuffer(40);
             while (!reader.atEnd()) {
-                System.out.println(reader.estimateSize());
-                System.out.println(reader.getKeys(lqb));
-                System.out.println(Arrays.toString(lqb.copyData()));
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
                 if (!lqb.fitsMore()) {
                     lqb.zero();
                 }
             }
         }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+    @Test
+    public void testGetKeysWithRange__gaps() throws IOException {
+        long[] keys = LongStream.range(0, 500).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 500).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(
+                0, 2, 4,
+                102, 104, 106,
+                996, 998));
+
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { 0, 101, 995 }, new long[] { 6, 107, 1000 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testGetKeysWithRange__edges_1block() throws IOException {
+        long[] keys = LongStream.range(0, 1000).toArray();
+        long[] vals = LongStream.range(0, 1000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(
+                0, 1,
+                998, 999));
+
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { -2, 998 }, new long[] { 2, 1002 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+    @Test
+    public void testGetKeysWithRange__edges_2block() throws IOException {
+        long[] keys = LongStream.range(0, 32000).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet();
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            int nValuesInFirstBlock = SkipListReader.parseBlocks(indexPool, 0).getFirst().n();
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { nValuesInFirstBlock-2 }, new long[] { nValuesInFirstBlock+2 });
+            for (long i = ranges.start(); i < ranges.end(); i++) {
+                expectedKeys.add(i);
+            }
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testGetKeysWithRange__find_block() throws IOException {
+        long[] keys = LongStream.range(0, 32000).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet();
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            var thirdBlock = SkipListReader.parseBlocks(indexPool, 0).get(2);
+            var thirdBlockValues = thirdBlock.docIds();
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { thirdBlockValues.getLong(3) }, new long[] { thirdBlockValues.getLong(5) });
+            for (long i = ranges.start(); i < ranges.end(); i++) {
+                expectedKeys.add(i);
+            }
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testGetKeysWithRange__find_block__missing() throws IOException {
+        long[] keys = LongStream.range(0, 32000).map(v -> v*5).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet();
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+
+            var thirdBlock = SkipListReader.parseBlocks(indexPool, 0).get(2);
+            var thirdBlockValues = thirdBlock.docIds();
+
+            SkipListValueRanges ranges = new SkipListValueRanges(new long[] { thirdBlockValues.getLong(3)+1 }, new long[] { thirdBlockValues.getLong(3)+2 });
+
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb, ranges);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
+    }
+
+
+    @Test
+    public void testTenBlocks() throws IOException {
+        long[] keys = LongStream.range(0, 32000).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        LongSet actualKeys = new LongArraySet(keys.length);
+        LongSet expectedKeys = new LongArraySet(LongList.of(keys));
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(20);
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb);
+                actualKeys.addAll(LongList.of(lqb.copyData()));
+                if (!lqb.fitsMore()) {
+                    lqb.zero();
+                }
+            }
+        }
+
+        Assertions.assertEquals(expectedKeys, actualKeys);
+
     }
 
     @Test
     public void testRetainTenBlocks() throws IOException {
-        long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
-        long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, 32000).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 0);
-            LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
+
+        long[] requestKeys = new long[] { 4, 5, 30, 39, 270, 300, 551, 8000, 9981, 16600 };
+        long[] expectedResult = new long[] { 4, 30, 270, 300, 8000, 16600 };
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(requestKeys, requestKeys.length);
             reader.retainData(lqb);
             lqb.finalizeFiltering();
-            System.out.println(Arrays.toString(lqb.copyData()));
+
+            long[] actualResult = lqb.copyData();
+
+            System.out.println(Arrays.toString(actualResult));
+            Assertions.assertArrayEquals(expectedResult, actualResult);
         }
     }
 
@@ -109,13 +338,14 @@ public class SkipListReaderTest {
         long[] vals = LongStream.range(0, 30000).map(v -> -v).toArray();
 
         long start;
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.padDocuments(512);
             start = writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, start);
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  start);
             long[] values = LongStream.range(0, 4059).toArray();
             LongQueryBuffer lqb = new LongQueryBuffer(values, values.length);
 
@@ -133,291 +363,86 @@ public class SkipListReaderTest {
     }
 
     @Test
-    public void testRetainFuzz() throws IOException {
-
-        for (int seed = 0; seed < 100; seed++) {
-            System.out.println("Seed: " + seed);
-
-            Random r = new Random(seed);
-
-            int nKeys = 8; r.nextInt(100, 1000);
-            LongSortedSet intersectionsSet = new LongAVLTreeSet();
-            LongSortedSet keysSet = new LongAVLTreeSet();
-            LongSortedSet qbSet = new LongAVLTreeSet();
-
-            while (intersectionsSet.size() < 64) {
-                long val = r.nextLong(0, 10_000);
-                keysSet.add(val);
-                qbSet.add(val);
-                intersectionsSet.add(val);
-            }
-            while (keysSet.size() < nKeys) {
-                long val = r.nextLong(0, 10_000);
-                keysSet.add(val);
-            }
-
-            while (qbSet.size() < 512) {
-                long val = r.nextLong(0, 10_000);
-                if (keysSet.contains(val)) continue;
-
-                qbSet.add(val);
-            }
-
-            long[] keys = keysSet.toLongArray();
-
-            Files.delete(docsFile);
-            try (var writer = new SkipListWriter(docsFile);
-                 Arena arena = Arena.ofConfined()
-            ) {
-                writer.writeList(createArray(arena, keys, keys), 0, keys.length);
-            }
-
-            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(pool, 0);
-                LongQueryBuffer lqb = new LongQueryBuffer(qbSet.toLongArray(), qbSet.size());
-
-                System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
-                System.out.println("QB Input: " + Arrays.toString(qbSet.toLongArray()));
-
-                reader.retainData(lqb);
-                lqb.finalizeFiltering();
-                long[] actual = lqb.copyData();
-                long[] expected = intersectionsSet.toLongArray();
-
-
-                System.out.println("Expected intersection: " + Arrays.toString(intersectionsSet.toLongArray()));
-                System.out.println("Actual intersection: " + Arrays.toString(lqb.copyData()));
-                Assertions.assertArrayEquals(expected, actual);
-            }
-        }
-    }
-
-
-    @Test
-    public void testRetainFuzz1() throws IOException {
-
-        long seedOffset = System.nanoTime();
-
-        for (int seed = 0; seed < 100; seed++) {
-            System.out.println("Seed: " + (seed + seedOffset));
-
-            Random r = new Random(seed + seedOffset);
-
-            LongSortedSet keyset = new LongAVLTreeSet();
-
-            int nkeys = r.nextInt(SkipListConstants.BLOCK_SIZE/2, SkipListConstants.BLOCK_SIZE*4);
-            while (keyset.size() < nkeys) {
-                long val = r.nextLong(0, 10_000_000);
-
-                keyset.add(val);
-            }
-
-            long[] keys = keyset.toLongArray();
-            long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
-
-            long off = 0;
-            Files.delete(docsFile);
-            try (var writer = new SkipListWriter(docsFile);
-                 Arena arena = Arena.ofConfined()
-            ) {
-                writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
-                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
-            }
-
-            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(pool, off);
-                LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
-
-                reader.retainData(lqb);
-                lqb.finalizeFiltering();
-                long[] actual = lqb.copyData();
-                long[] expected = qbs;
-
-
-                System.out.println(Arrays.toString(expected));
-                System.out.println(Arrays.toString(actual));
-                Assertions.assertArrayEquals(expected, actual);
-            }
-        }
-    }
-
-    @Test
-    public void testRejectFuzz1() throws IOException {
-
-        long seedOffset = System.nanoTime();
-        for (int seed = 0; seed < 100; seed++) {
-            System.out.println("Seed: " + (seed + seedOffset));
-
-            Random r = new Random(seed + seedOffset);
-
-            LongSortedSet keyset = new LongAVLTreeSet();
-
-            int nkeys = r.nextInt(SkipListConstants.BLOCK_SIZE/2, SkipListConstants.BLOCK_SIZE*4);
-            while (keyset.size() < nkeys) {
-                long val = r.nextLong(0, 10_000_000);
-
-                keyset.add(val);
-            }
-
-            long[] keys = keyset.toLongArray();
-            long[] qbs = new long[] { keys[r.nextInt(0, keys.length)] };
-
-            long off = 0;
-            Files.delete(docsFile);
-            try (var writer = new SkipListWriter(docsFile);
-                 Arena arena = Arena.ofConfined()
-            ) {
-                writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
-                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
-            }
-
-            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(pool, off);
-                LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
-
-                reader.rejectData(lqb);
-                lqb.finalizeFiltering();
-                long[] actual = lqb.copyData();
-                long[] expected = new long[0];
-
-
-                System.out.println(Arrays.toString(expected));
-                System.out.println(Arrays.toString(actual));
-                Assertions.assertArrayEquals(expected, actual);
-            }
-        }
-    }
-
-    @Tag("slow")
-    @Test
-    public void testGetKeysFuzz() throws IOException {
-
-        for (int seed = 0; seed < 256; seed++) {
-            System.out.println("Seed: " + seed);
-
-            Random r = new Random(seed);
-
-            int nKeys = 8; r.nextInt(100, 1000);
-            LongSortedSet intersectionsSet = new LongAVLTreeSet();
-            LongSortedSet keysSet = new LongAVLTreeSet();
-            LongSortedSet qbSet = new LongAVLTreeSet();
-
-            while (intersectionsSet.size() < 64) {
-                long val = r.nextLong(0, 10_000);
-                keysSet.add(val);
-                qbSet.add(val);
-                intersectionsSet.add(val);
-            }
-            while (keysSet.size() < nKeys) {
-                long val = r.nextLong(0, 10_000);
-                keysSet.add(val);
-            }
-
-            while (qbSet.size() < 512) {
-                long val = r.nextLong(0, 10_000);
-                if (keysSet.contains(val)) continue;
-
-                qbSet.add(val);
-            }
-
-            long[] keys = keysSet.toLongArray();
-
-            long blockStart;
-            Files.delete(docsFile);
-            try (var writer = new SkipListWriter(docsFile);
-                 Arena arena = Arena.ofConfined()
-            ) {
-                writer.padDocuments(r.nextInt(0, 4096/8) * 8);
-                blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
-            }
-
-            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(pool, blockStart);
-                try (var page = pool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
-                    reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
-                }
-
-                long[] queryKeys = qbSet.toLongArray();
-                long[] queryVals = reader.getValueOffsets(queryKeys);
-
-                LongSortedSet presentValues = new LongAVLTreeSet();
-                for (int i = 0; i < queryKeys.length; i++) {
-                    if (queryVals[i] != 0) {
-                        presentValues.add(queryKeys[i]);
-                    }
-
-                }
-
-                System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
-                System.out.println("QB Input: " + Arrays.toString(qbSet.toLongArray()));
-
-                long[] actual = presentValues.toLongArray();
-                long[] expected = intersectionsSet.toLongArray();
-
-                System.out.println("Expected intersection: " + Arrays.toString(intersectionsSet.toLongArray()));
-                System.out.println("Actual intersection: " + Arrays.toString(presentValues.toLongArray()));
-                Assertions.assertArrayEquals(expected, actual);
-            }
-        }
-    }
-
-    @Test
-    @Tag("slow")
-    public void testParseFuzz() throws IOException {
-
-        long seedOffset = System.nanoTime();
-        for (int seed = 0; seed < 100; seed++) {
-            System.out.println("Seed: " + (seed + seedOffset));
-
-            Random r = new Random(seed);
-
-            List<long[]> keysForBlocks = new ArrayList<>();
-
-            for (int i = 0; i < 1000; i++) {
-
-                int nVals = r.nextInt(8, SkipListConstants.MAX_RECORDS_PER_BLOCK);
-                long[] keys = new long[nVals];
-                for (int ki = 0; ki < keys.length; ki++) {
-                    keys[ki] = r.nextLong(0, Long.MAX_VALUE);
-                }
-
-                Arrays.sort(keys);
-                keysForBlocks.add(keys);
-            }
-            List<Long> offsets = new ArrayList<>();
-            Files.delete(docsFile);
-            try (var writer = new SkipListWriter(docsFile);
-                 Arena arena = Arena.ofConfined()
-            ) {
-                writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
-                for (var block : keysForBlocks) {
-                    offsets.add(writer.writeList(createArray(arena, block, block), 0, block.length));
-                }
-            }
-
-            try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-                for (var offset: offsets) {
-                    var reader = new SkipListReader(pool, offset);
-                    reader.parseBlocks(pool, offset);
-                }
-            }
-        }
-    }
-
-    @Test
-    public void testGetValueOffsets() throws IOException {
+    public void testGetAllValues__compactBlock() throws IOException {
         long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
         long[] vals = LongStream.range(0, 300).map(v -> -2*v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 0);
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
             long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
-            long[] queryVals = reader.getValueOffsets(queryKeys);
+            long[] queryVals = reader.getAllValues(queryKeys);
+            long[] expectedVals = new long[] { -4, 0, -30, 0, -270, -300, 0,
+                                               -4, 0, -30, 0, -270, -300, 0 };
+
+            System.out.println(Arrays.toString(expectedVals));
             System.out.println(Arrays.toString(queryVals));
+
+            Assertions.assertArrayEquals(expectedVals, queryVals);
+        }
+    }
+
+    @Test
+    public void testGetAllValues__largeBlock__fuzz_case_1() throws IOException {
+
+        long[] keys = LongStream.range(0, 32000).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -2*v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        Random r = new Random();
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+
+            SkipListReader.parseBlocks(indexPool, 0).forEach(System.out::println);
+
+            long[] queryKeys = new long[]{2504, 55152};
+            Arrays.sort(queryKeys);
+            long[] expectedVals = new long[]{-2504, -55152, -2504, -55152};
+
+            long[] queryVals = reader.getAllValues(queryKeys);
+
+            System.out.println(Arrays.toString(expectedVals));
+            System.out.println(Arrays.toString(queryVals));
+
+            Assertions.assertArrayEquals(expectedVals, queryVals);
+        }
+    }
+
+
+    @Test
+    public void testGetAllValues__largeBlock__fuzz_23970_5180308326906() throws IOException {
+        long[] keys = LongStream.range(0, 64971).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 64971).map(v -> -2*v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), 0, keys.length);
+        }
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+
+            long[] queryKeys = new long[]{ 21312, 29194, 42856, 47940 };
+            long[] expectedVals = new long[]{ -21312, -29194, -42856, -47940,
+                                              -21312, -29194, -42856, -47940};
+
+            long[] queryVals = reader.getAllValues(queryKeys);
+
+            System.out.println(Arrays.toString(expectedVals));
+            System.out.println(Arrays.toString(queryVals));
+
+            Assertions.assertArrayEquals(expectedVals, queryVals);
+
+            reader.reset();
         }
     }
 
@@ -427,13 +452,14 @@ public class SkipListReaderTest {
         long[] vals = new long[] { 50,51 };
 
         long pos = 0;
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             pos = writer.writeList(createArray(keys, vals), 0, keys.length);
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, pos);
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  pos);
             LongQueryBuffer lqb = new LongQueryBuffer(4);
             reader.getKeys(lqb);
             System.out.println(Arrays.toString(lqb.copyData()));
@@ -449,7 +475,7 @@ public class SkipListReaderTest {
         }
 
         try (LongArray array = LongArrayFactory.onHeapConfined(4096);
-             var writer = new SkipListWriter(docsFile)) {
+             var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.padDocuments(4104);
             for (int i = 0; i < vals.size(); i++) {
                 array.set(i, vals.getLong(i));
@@ -462,8 +488,9 @@ public class SkipListReaderTest {
             throw new RuntimeException(e);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 4104);
+            try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  4104);
             long[] queryKeys = new long[] { 100 };
             var lqb = new LongQueryBuffer(32);
             reader.getKeys(lqb);
@@ -474,39 +501,29 @@ public class SkipListReaderTest {
     }
 
     @Test
-    public void testGetValueOffsets1() throws IOException {
-        long[] keys = new long[] { 100 };
-        long[] vals = new long[] { 50 };
-
-        long pos = 0;
-        try (var writer = new SkipListWriter(docsFile)) {
-            pos = writer.writeList(createArray(keys, vals), 0, keys.length);
-            writer.writeList(createArray(keys, vals), 0, keys.length);
-        }
-
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, pos);
-            long[] queryKeys = new long[] { 100 };
-            long[] queryVals = reader.getValueOffsets(queryKeys);
-            System.out.println(Arrays.toString(queryVals));
-        }
-    }
-
-
-    @Test
     public void testRejectTenBlocks() throws IOException {
-        long[] keys = LongStream.range(0, 300).map(v -> 2*v).toArray();
-        long[] vals = LongStream.range(0, 300).map(v -> -v).toArray();
+        long[] keys = LongStream.range(0, 32000).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 32000).map(v -> -v).toArray();
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 0);
-            LongQueryBuffer lqb = new LongQueryBuffer(new long[] { 4, 5, 30, 39, 270, 300, 551 }, 7);
+
+        long[] requestKeys = new long[] { 4, 5, 30, 39, 270, 300, 551, 8000, 9981, 16600 };
+        long[] expectedResult = new long[] { 5, 39, 551, 9981 };
+
+            try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
+            LongQueryBuffer lqb = new LongQueryBuffer(requestKeys, requestKeys.length);
             reader.rejectData(lqb);
-            System.out.println(Arrays.toString(lqb.copyData()));
+            lqb.finalizeFiltering();
+
+            long[] actualResult = lqb.copyData();
+
+            System.out.println(Arrays.toString(actualResult));
+            Assertions.assertArrayEquals(expectedResult, actualResult);
         }
     }
 
@@ -516,17 +533,92 @@ public class SkipListReaderTest {
         long[] vals = Arrays.copyOf(keys, keys.length);
         long[] qbdata = new long[] { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 67108964, 67108969, 67108974, 67108979, 67108984, 67108989, 67108994, 67108999, 67109004, 67109009, 67109014, 67109019, 67109024, 67109029, 67109034, 67109039, 67109044, 67109049, 67109054, 67109059, 134217928, 134217933, 134217938, 134217943, 134217948, 134217953, 134217958, 134217963, 134217968, 134217973, 134217978, 134217983, 134217988, 134217993, 134217998, 134218003, 134218008, 134218013, 134218018, 134218023, 201326892, 201326897, 201326902, 201326907, 201326912, 201326917, 201326922, 201326927, 201326932, 201326937, 201326942, 201326947, 201326952, 201326957, 201326962, 201326967, 201326972, 201326977, 201326982, 201326987, 268435856, 268435861, 268435866, 268435871, 268435876, 268435881, 268435886, 268435891, 268435896, 268435901, 268435906, 268435911, 268435916, 268435921, 268435926, 268435931, 268435936, 268435941, 268435946, 268435951, 335544820, 335544825, 335544830 };
 
-        try (var writer = new SkipListWriter(docsFile)) {
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
             writer.writeList(createArray(keys, vals), 0, keys.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        try (var pool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(pool, 0);
+            try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+            var reader = new SkipListReader(indexPool, valuePool,  0);
             var qb = new LongQueryBuffer(qbdata, qbdata.length);
             reader.retainData(qb);
             System.out.println(Arrays.toString(qb.copyData()));
+        }
+    }
+
+
+    @Tag("slow")
+    @Test
+    public void testGetKeysFuzz_case370() throws IOException {
+
+        long seed = 370;
+        Random r = new Random(seed);
+
+        int nKeys = r.nextInt(100, 20000);
+        LongSortedSet intersectionsSet = new LongAVLTreeSet();
+        LongSortedSet keysSet = new LongAVLTreeSet();
+        LongSortedSet qbSet = new LongAVLTreeSet();
+
+        while (intersectionsSet.size() < 64) {
+            long val = r.nextLong(1, 1_000_000);
+            keysSet.add(val);
+            qbSet.add(val);
+            intersectionsSet.add(val);
+        }
+        while (keysSet.size() < nKeys) {
+            long val = r.nextLong(1, 1_000_000);
+            keysSet.add(val);
+        }
+
+        while (qbSet.size() < 512) {
+            long val = r.nextLong(1, 1_000_000);
+            if (keysSet.contains(val)) continue;
+
+            qbSet.add(val);
+        }
+
+        long[] keys = keysSet.toLongArray();
+
+        long blockStart;
+        Files.delete(docsFile);
+        Files.delete(valuesFile);
+        try (var writer = new SkipListWriter(docsFile, valuesFile);
+             Arena arena = Arena.ofConfined()
+        ) {
+            writer.padDocuments(r.nextInt(0, 4096/8) * 8);
+            blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+        }
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+
+            var reader = new SkipListReader(indexPool, valuePool, blockStart);
+            try (var page = indexPool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
+                reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
+            }
+
+            long[] queryKeys = qbSet.toLongArray();
+            long[] queryVals = reader.getAllValues(queryKeys);
+
+            LongSortedSet presentValues = new LongAVLTreeSet();
+            for (int i = 0; i < queryKeys.length; i++) {
+                if (queryVals[i] != 0) {
+                    presentValues.add(queryKeys[i]);
+                }
+
+            }
+
+            System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
+            System.out.println("QB Input: " + Arrays.toString(qbSet.toLongArray()));
+
+            long[] actual = presentValues.toLongArray();
+            long[] expected = intersectionsSet.toLongArray();
+
+            System.out.println("Expected intersection: " + Arrays.toString(intersectionsSet.toLongArray()));
+            System.out.println("Actual intersection: " + Arrays.toString(presentValues.toLongArray()));
+            Assertions.assertArrayEquals(expected, actual);
         }
     }
 }

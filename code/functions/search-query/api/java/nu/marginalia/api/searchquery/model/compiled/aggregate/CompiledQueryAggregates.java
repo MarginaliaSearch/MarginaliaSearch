@@ -1,9 +1,9 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryInt;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
+import nu.marginalia.api.searchquery.model.compiled.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +16,47 @@ public class CompiledQueryAggregates {
      * the query where the provided predicate returns true for each item.
      */
     static public <T> boolean booleanAggregate(CompiledQuery<T> query, Predicate<T> predicate) {
-        return query.root.visit(new CqBooleanAggregate(query, predicate));
+        final CqData<T> data = query.data;
+
+        outer:
+        for (IntList path: query.paths) {
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final T dataVal = data.get(dataIdx);
+
+                if (!predicate.test(dataVal)) {
+                    continue outer;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
+
     static public boolean booleanAggregate(CompiledQueryLong query, LongPredicate predicate) {
-        return query.root.visit(new CqBooleanAggregate(query, predicate));
+        final CqDataLong data = query.data;
+
+        outer:
+        for (IntList path: query.paths) {
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final long dataVal = data.get(dataIdx);
+
+                if (!predicate.test(dataVal)) {
+                    continue outer;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -27,36 +64,168 @@ public class CompiledQueryAggregates {
      * and and-branches as logical AND operations.
      */
     public static <T> long longBitmaskAggregate(CompiledQuery<T> query, ToLongFunction<T> operator) {
-        return query.root.visit(new CqLongBitmaskOperator(query, operator));
+        final CqData<T> data = query.data;
+        long orResult = 0;
+
+        for (IntList path: query.paths) {
+            int andResult = ~0;
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final T dataVal = data.get(dataIdx);
+
+                final long calculationResult = operator.applyAsLong(dataVal);
+
+                andResult &= calculationResult;
+            }
+
+            orResult |= andResult;
+        }
+
+        return orResult;
     }
+
     public static long longBitmaskAggregate(CompiledQueryLong query, LongUnaryOperator operator) {
-        return query.root.visit(new CqLongBitmaskOperator(query, operator));
+        final CqDataLong data = query.data;
+        long orResult = 0;
+
+        for (IntList path: query.paths) {
+            int andResult = ~0;
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final long dataVal = data.get(dataIdx);
+
+                final long calculationResult = operator.applyAsLong(dataVal);
+
+                andResult &= calculationResult;
+            }
+
+            orResult |= andResult;
+        }
+
+        return orResult;
     }
 
     /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
     public static <T> int intMaxMinAggregate(CompiledQuery<T> query, ToIntFunction<T> operator) {
-        return query.root.visit(new CqIntMaxMinOperator(query, operator));
-    }
-    /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
-    public static <T> int intMaxMinAggregate(CompiledQueryInt query, IntUnaryOperator operator) {
-        return query.root.visit(new CqIntMaxMinOperator(query, operator));
-    }
-    /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
-    public static int intMaxMinAggregate(CompiledQueryLong query, LongToIntFunction operator) {
-        return query.root.visit(new CqIntMaxMinOperator(query, operator));
+        final CqData<T> data = query.data;
+        int bestPath = Integer.MIN_VALUE;
+
+        for (IntList path: query.paths) {
+            int minForPath = Integer.MAX_VALUE;
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final T dataVal = data.get(dataIdx);
+
+                final int calculationResult = operator.applyAsInt(dataVal);
+
+                minForPath = Math.min(minForPath, calculationResult);
+            }
+
+            bestPath = Math.max(bestPath, minForPath);
+        }
+
+        return bestPath;
     }
 
-    /** Apply the operator to each leaf node, and then return the highest sum of values possible
-     * through each branch in the compiled query.
+    /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
+    public static int intMaxMinAggregate(CompiledQueryInt query, IntUnaryOperator operator) {
+        final CqDataInt data = query.data;
+        int bestPath = Integer.MIN_VALUE;
+
+        for (IntList path: query.paths) {
+            int minForPath = Integer.MAX_VALUE;
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final int dataVal = data.get(dataIdx);
+
+                final int calculationResult = operator.applyAsInt(dataVal);
+
+                minForPath = Math.min(minForPath, calculationResult);
+            }
+
+            bestPath = Math.max(bestPath, minForPath);
+        }
+
+        return bestPath;
+    }
+
+    /** Apply the operator to each leaf node, then return the highest sum of values found along any path.
+     * Math-heads call this a tropical semiring for some reason.
      *
-     */
-    public static <T> double doubleSumAggregate(CompiledQuery<T> query, ToDoubleFunction<T> operator) {
-        return query.root.visit(new CqDoubleSumOperator(query, operator));
+     * This function is applied directly to the node indexes, not to the data associated with the graph.
+     * */
+    public static double intMaxSumAggregateOfIndexes(CompiledQueryTopology query, IntToDoubleFunction operator) {
+        double bestPath = Double.MIN_VALUE;
+
+        for (IntList path: query.paths) {
+            double sumForPath = 0;
+
+            for (int i = 0; i < path.size(); i++) {
+                final int dataIdx = path.getInt(i);
+
+                final double calculationResult = operator.applyAsDouble(dataIdx);
+
+                sumForPath += calculationResult;
+            }
+
+            bestPath = Math.max(bestPath, sumForPath);
+        }
+
+        return bestPath;
+    }
+
+    /** Apply the operator to each leaf node, then return the highest minimum value found along any path */
+    public static int intMaxMinAggregate(CompiledQueryLong query, LongToIntFunction operator) {
+        final CqDataLong data = query.data;
+        int bestPath = Integer.MIN_VALUE;
+
+        for (IntList path: query.paths) {
+            int minForPath = Integer.MAX_VALUE;
+
+            for (int i = 0; i < path.size(); i++) {
+
+                final int dataIdx = path.getInt(i);
+                final long dataVal = data.get(dataIdx);
+
+                final int calculationResult = operator.applyAsInt(dataVal);
+
+                minForPath = Math.min(minForPath, calculationResult);
+            }
+
+            bestPath = Math.max(bestPath, minForPath);
+        }
+
+        return bestPath;
     }
 
     /** Enumerate all possible paths through the compiled query */
     public static List<LongSet> queriesAggregate(CompiledQueryLong query) {
-        return new ArrayList<>(query.root().visit(new CqQueryPathsOperator(query)));
+        final CqDataLong data = query.data;
+
+        List<LongSet> ret = new ArrayList<>();
+
+        for (IntList path : query.paths) {
+            LongSet set = new LongArraySet(path.size());
+
+            for (int i = 0; i < path.size(); i++) {
+                final int dataIdx = path.getInt(i);
+                final long dataVal = data.get(dataIdx);
+
+                set.add(dataVal);
+            }
+
+            ret.add(set);
+        }
+
+        return ret;
     }
 
 }

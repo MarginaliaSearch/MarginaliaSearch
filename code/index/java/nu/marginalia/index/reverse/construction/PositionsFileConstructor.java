@@ -92,8 +92,8 @@ public class PositionsFileConstructor implements AutoCloseable {
      *
      * @return the offset of the term in the file, with the size of the data in the highest byte
      */
-    public long add(PositionsFileBlock block, byte termMeta, ByteBuffer positionsBuffer) throws IOException {
-        int size = 1 + positionsBuffer.remaining();
+    public long add(PositionsFileBlock block, ByteBuffer positionsBuffer) throws IOException {
+        int size = positionsBuffer.remaining();
 
         if (!block.fitsData(size)) {
             synchronized (this) {
@@ -104,7 +104,6 @@ public class PositionsFileConstructor implements AutoCloseable {
         synchronized (file) {
             long offset = block.position();
 
-            block.put(termMeta);
             block.put(positionsBuffer);
 
             return PositionCodec.encode(size, offset);

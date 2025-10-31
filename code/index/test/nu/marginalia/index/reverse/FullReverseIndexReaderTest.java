@@ -82,7 +82,7 @@ class FullReverseIndexReaderTest {
 
     private long[] readEntries(FullReverseIndexReader reader, long wordId) {
         IndexLanguageContext languageContext = new IndexLanguageContext("en", reader.getWordLexicon("en"), null);
-        var es = reader.documents(languageContext, wordId);
+        var es = reader.documents(languageContext, Long.toString(wordId), wordId);
         assertTrue(es.hasMore());
         LongQueryBuffer buffer = new LongQueryBuffer(4);
         es.read(buffer);
@@ -95,17 +95,18 @@ class FullReverseIndexReaderTest {
 
         Path posFile = tempDir.resolve("positions.dat");
         Path docsFile = tempDir.resolve("docs.dat");
+        Path docsValuesFile = tempDir.resolve("docs-values.dat");
         Path wordsFile = tempDir.resolve("words.dat");
 
         try (var positionsFileConstructor = new PositionsFileConstructor(posFile)) {
             var preindex = FullPreindex.constructPreindex(reader,
                     positionsFileConstructor,
                     DocIdRewriter.identity(), tempDir);
-            preindex.finalizeIndex(docsFile, wordsFile);
+            preindex.finalizeIndex(docsFile, docsValuesFile, wordsFile);
             preindex.delete();
         }
 
-        return new FullReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile, posFile);
+        return new FullReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile, docsValuesFile, posFile);
 
     }
 }

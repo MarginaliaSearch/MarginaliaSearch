@@ -185,19 +185,19 @@ public class IndexQueryServiceIntegrationTest {
                 .add( // Case 1: Document is dated 1999
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(1999), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 ).add( // Case 2: Document is dated 2000
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2000), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 )
                 .add( // Case 2: Document is dated 2001
                         d(3, 3),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 )
                 .load();
 
@@ -240,26 +240,26 @@ public class IndexQueryServiceIntegrationTest {
                 .add(
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(1999), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 ).add(
                         d(1, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2000), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 )
                 // docs from domain 2
                 .add(
                         d(2, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 )
                 .add(
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, PubDate.toYearByte(2001), 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 )
                 .load();
 
@@ -293,13 +293,13 @@ public class IndexQueryServiceIntegrationTest {
                 .add( // Case 1: The required include is present, exclude is absent; should be a result
                         d(1, 1),
                         new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("world", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("world", EnumSet.allOf(WordFlags.class), 1)
                 ).add( // Case 2: The required include is present, excluded term is absent; should not be a result
                         d(2, 2),
                         new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                        w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                        w("my_darling", EnumSet.noneOf(WordFlags.class), 1)
+                        w("hello", EnumSet.allOf(WordFlags.class), 1),
+                        w("my_darling", EnumSet.allOf(WordFlags.class), 1)
                 ).load();
 
         var query = basicQuery(builder ->
@@ -360,14 +360,14 @@ public class IndexQueryServiceIntegrationTest {
             .add( // Case 1: Both positions overlap; should be included
                 d(1, 1),
                 new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                w("world", EnumSet.noneOf(WordFlags.class), 1)
+                w("hello", EnumSet.allOf(WordFlags.class), 1),
+                w("world", EnumSet.allOf(WordFlags.class), 1)
             )
             .add( // Case 2: Positions do not overlap, do not include
                 d(2, 2),
                 new MockDocumentMeta(0, new DocumentMetadata(2, 0, 14, EnumSet.noneOf(DocumentFlags.class))),
-                w("hello", EnumSet.noneOf(WordFlags.class), 1),
-                w("world", EnumSet.noneOf(WordFlags.class), 2)
+                w("hello", EnumSet.allOf(WordFlags.class), 1),
+                w("world", EnumSet.allOf(WordFlags.class), 2)
             )
         .load();
 
@@ -462,6 +462,7 @@ public class IndexQueryServiceIntegrationTest {
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
+        Path outputFileDocsValues = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocsValues(), IndexFileName.Version.NEXT);
         Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords("en"), IndexFileName.Version.NEXT);
         Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
 
@@ -472,6 +473,7 @@ public class IndexQueryServiceIntegrationTest {
 
         var constructor = new FullIndexConstructor(
                 outputFileDocs,
+                outputFileDocsValues,
                 outputFileWords,
                 outputFilePositions,
                 DocIdRewriter.identity(),
@@ -526,7 +528,7 @@ public class IndexQueryServiceIntegrationTest {
                         MockDocumentMeta meta,
                         MockDataKeyword... words)
         {
-            long id = UrlIdCodec.encodeId(document.domainId, document.ordinal);
+            long id = UrlIdCodec.encodeId(0x3F, document.domainId, document.ordinal);
 
             allData.computeIfAbsent(id, l -> new ArrayList<>()).addAll(List.of(words));
             metaByDoc.put(id, meta);
@@ -542,7 +544,7 @@ public class IndexQueryServiceIntegrationTest {
 
                 List<String> keywords = words.stream().map(w -> w.keyword).toList();
 
-                byte[] metadata = new byte[keywords.size()];
+                long[] metadata = new long[keywords.size()];
                 for (int i = 0; i < words.size(); i++) {
                     metadata[i] = (byte) words.get(i).termMetadata;
                 }
@@ -573,7 +575,7 @@ public class IndexQueryServiceIntegrationTest {
             );
             for (Long key : allData.keySet()) {
                 linkdbWriter.add(new DocdbUrlDetail(
-                        key,
+                        UrlIdCodec.removeRank(key),
                         new EdgeUrl("https://www.example.com"),
                         "test",
                         "test",
@@ -597,7 +599,7 @@ public class IndexQueryServiceIntegrationTest {
 
     record MockDataDocument(int domainId, int ordinal) {
         public long docId() {
-            return UrlIdCodec.encodeId(domainId, ordinal);
+            return UrlIdCodec.encodeId(0x3F, domainId, ordinal);
         }
 
     }

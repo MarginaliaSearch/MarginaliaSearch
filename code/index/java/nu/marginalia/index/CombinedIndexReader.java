@@ -1,9 +1,7 @@
 package nu.marginalia.index;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongList;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -21,12 +19,16 @@ import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.skiplist.SkipListValueRanges;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -61,36 +63,9 @@ public class CombinedIndexReader {
         );
     }
 
-    public IndexQueryBuilder newQueryBuilder(IndexLanguageContext context, IndexQuery query) {
-        return new IndexQueryBuilder(reverseIndexFullReader, context, query);
-    }
-
-    public QueryFilterStepIf hasWordFull(IndexLanguageContext languageContext, long termId, IndexSearchBudget budget) {
-        return reverseIndexFullReader.also(languageContext, termId, budget);
-    }
-
-    /** Creates a query builder for terms in the priority index */
-    public IndexQueryBuilder findPriorityWord(IndexLanguageContext languageContext, long wordId) {
-        IndexQuery query = new IndexQuery(reverseIndexPriorityReader.documents(languageContext, wordId), true);
-
-        return newQueryBuilder(languageContext, query).withSourceTerms(wordId);
-    }
-
-    /** Creates a query builder for terms in the full index */
-    public IndexQueryBuilder findFullWord(IndexLanguageContext languageContext, long wordId) {
-        IndexQuery query = new IndexQuery(reverseIndexFullReader.documents(languageContext, wordId), false);
-
-        return newQueryBuilder(languageContext, query).withSourceTerms(wordId);
-    }
-
-    /** Creates a parameter matching filter step for the provided parameters */
-    public QueryFilterStepIf filterForParams(QueryParams params) {
-        return new ParamMatchingQueryFilter(params, forwardIndexReader);
-    }
-
     /** Returns the number of occurrences of the word in the full index */
-    public int numHits(IndexLanguageContext languageContext, long word) {
-        return reverseIndexFullReader.numDocuments(languageContext, word);
+    public int numHits(IndexLanguageContext languageContext, long term) {
+        return reverseIndexFullReader.numDocuments(languageContext, term);
     }
 
     /** Reset caches and buffers */
@@ -106,12 +81,10 @@ public class CombinedIndexReader {
         }
 
         final IndexLanguageContext languageContext = context.languageContext;
-        final long[] termPriority = context.sortedDistinctIncludes((a,b) -> {
-            return Long.compare(
-                numHits(languageContext, a),
-                numHits(languageContext, b)
-            );
-        });
+        final long[] termPriority = context.sortedDistinctIncludes((a,b) -> Long.compare(
+            numHits(languageContext, a),
+            numHits(languageContext, b)
+        ));
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<LongSet> paths = CompiledQueryAggregates.queriesAggregate(context.compiledQueryIds);
@@ -119,6 +92,13 @@ public class CombinedIndexReader {
         // Remove any paths that do not contain all prioritized terms, as this means
         // the term is missing from the index and can never be found
         paths.removeIf(containsAll(termPriority).negate());
+
+        Long2ObjectOpenHashMap<String> termIdToString = context.termIdToString;
+
+        @Nullable
+        SkipListValueRanges mandatoryDocumentRanges = context.mandatoryDomainIds.isEmpty() ? null : getDocumentRangesForDomains(context.mandatoryDomainIds);
+        @Nullable
+        SkipListValueRanges excludedDocumentRanges = context.excludedDomainIds.isEmpty() ? null : getDocumentRangesForDomains(context.excludedDomainIds);
 
         for (var path : paths) {
             LongList elements = new LongArrayList(path);
@@ -133,37 +113,44 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(languageContext, elements.getLong(0));
-
-            for (int i = 1; i < elements.size(); i++) {
-                head.addInclusionFilter(hasWordFull(languageContext, elements.getLong(i), context.budget));
+            var head = findFullWord(languageContext, mandatoryDocumentRanges, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+            if (!head.isNoOp()) {
+                for (int i = 1; i < elements.size(); i++) {
+                    head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                }
+                queryHeads.add(head);
             }
-            queryHeads.add(head);
 
             // If there are few paths, we can afford to check the priority index as well
             if (paths.size() < 4) {
-                var prioHead = findPriorityWord(languageContext, elements.getLong(0));
-                for (int i = 1; i < elements.size(); i++) {
-                    prioHead.addInclusionFilter(hasWordFull(languageContext, elements.getLong(i), context.budget));
+                var prioHead = findPriorityWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+                if (!prioHead.isNoOp()) {
+                    for (int i = 1; i < elements.size(); i++) {
+                        prioHead.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                    }
+                    queryHeads.add(prioHead);
                 }
-                queryHeads.add(prioHead);
             }
         }
 
         // Add additional conditions to the query heads
         for (var query : queryHeads) {
 
+            if (mandatoryDocumentRanges != null) query.requiringDomains(mandatoryDocumentRanges);
+            if (excludedDocumentRanges != null) query.rejectingDomains(excludedDocumentRanges);
+
             // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
-            for (long term : context.termIdsAdvice) {
-                query = query.also(term, context.budget);
+            for (long termId : context.termIdsAdvice) {
+                query = query.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
             }
 
-            for (long term : context.termIdsExcludes) {
-                query = query.not(term, context.budget);
+            for (long termId : context.termIdsExcludes) {
+                query = query.not(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
             }
 
             // Run these filter steps last, as they'll worst-case cause as many page faults as there are
             // items in the buffer
+
             query.addInclusionFilter(filterForParams(context.queryParams));
         }
 
@@ -183,15 +170,66 @@ public class CombinedIndexReader {
         return reverseIndexPriorityReader.numDocuments(languageContext, word);
     }
 
+
+    public IndexQueryBuilder newQueryBuilder(IndexLanguageContext context, IndexQuery query) {
+        return new IndexQueryBuilder(reverseIndexFullReader, context, query);
+    }
+
+    public QueryFilterStepIf hasWordFull(IndexLanguageContext languageContext, String term, long termId, IndexSearchBudget budget) {
+        return reverseIndexFullReader.also(languageContext, term, termId, budget);
+    }
+
+    /** Creates a query builder for terms in the priority index */
+    public IndexQueryBuilder findPriorityWord(IndexLanguageContext languageContext, String term, long termId) {
+        IndexQuery query = new IndexQuery(reverseIndexPriorityReader.documents(languageContext, term, termId), true);
+
+        return newQueryBuilder(languageContext, query).withSourceTerms(termId);
+    }
+
+    /** Creates a query builder for terms in the full index */
+    public IndexQueryBuilder findFullWord(IndexLanguageContext languageContext, String term, long termId) {
+        IndexQuery query = new IndexQuery(reverseIndexFullReader.documents(languageContext, term, termId), false);
+
+        return newQueryBuilder(languageContext, query).withSourceTerms(termId);
+    }
+
+    /** Creates a query builder for terms in the full index */
+    public IndexQueryBuilder findFullWord(IndexLanguageContext languageContext,
+                                          @Nullable SkipListValueRanges ranges,
+                                          String term,
+                                          long termId) {
+
+        if (null == ranges || ranges.isEmpty()) return findFullWord(languageContext, term, termId);
+
+        IndexQuery query = new IndexQuery(reverseIndexFullReader.documents(languageContext, ranges, term, termId), false);
+
+        return newQueryBuilder(languageContext, query).withSourceTerms(termId);
+    }
+
+    private SkipListValueRanges getDocumentRangesForDomains(@NotNull IntList domainIds) {
+        long[] rangesStarts = new long[domainIds.size()];
+        long[] rangesEnds = new long[domainIds.size()];
+
+        for (int i = 0; i < domainIds.size(); i++) {
+            rangesStarts[i] = forwardIndexReader.getRankEncodedDocumentIdBase(domainIds.getInt(i));
+            rangesEnds[i] = rangesStarts[i] + UrlIdCodec.DOCORD_COUNT;
+        }
+
+        return new SkipListValueRanges(rangesStarts, rangesEnds);
+    }
+
+    /** Creates a parameter matching filter step for the provided parameters */
+    public QueryFilterStepIf filterForParams(QueryParams params) {
+        return new ParamMatchingQueryFilter(params, forwardIndexReader);
+    }
+
     /** Retrieves the term metadata for the specified word for the provided documents */
     public TermMetadataList[] getTermMetadata(Arena arena,
-                                              IndexLanguageContext languageContext,
-                                              IndexSearchBudget budget,
-                                              long[] wordIds,
+                                              SearchContext searchContext,
                                               CombinedDocIdList docIds)
     throws TimeoutException
     {
-        return reverseIndexFullReader.getTermData(arena, languageContext, budget, wordIds, docIds);
+        return reverseIndexFullReader.getTermData(arena, searchContext, docIds);
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -215,8 +253,12 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList docIds) throws TimeoutException {
-        return forwardIndexReader.getDocumentSpans(arena, budget, docIds);
+    public DocumentSpans[] getDocumentSpans(Arena arena,
+                                            IndexSearchBudget budget,
+                                            CombinedDocIdList docIds,
+                                            BitSet docIdsMask
+                                            ) throws TimeoutException {
+        return forwardIndexReader.getDocumentSpans(arena, budget, docIds, docIdsMask);
     }
 
     /** Close the indexes (this is not done immediately)
@@ -258,6 +300,7 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
     private final QueryParams params;
     private final ForwardIndexReader forwardIndexReader;
     private final boolean imposesMetaConstraint;
+
     public ParamMatchingQueryFilter(QueryParams params,
                                     ForwardIndexReader forwardIndexReader)
     {
@@ -268,7 +311,7 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {
-        if (!imposesMetaConstraint && !params.searchSet().imposesConstraint()) {
+        if (!imposesMetaConstraint) {
             return;
         }
 
@@ -285,18 +328,7 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
     }
 
     public boolean test(long combinedId) {
-        long docId = UrlIdCodec.removeRank(combinedId);
-        int domainId = UrlIdCodec.getDomainId(docId);
-
-        if (!validateDomain(domainId)) {
-            return false;
-        }
-
-        if (!imposesMetaConstraint) {
-            return true;
-        }
-
-        long meta = forwardIndexReader.getDocMeta(docId);
+        long meta = forwardIndexReader.getDocMeta(combinedId);
 
         if (!validateQuality(meta)) {
             return false;
@@ -315,10 +347,6 @@ class ParamMatchingQueryFilter implements QueryFilterStepIf {
         }
 
         return true;
-    }
-
-    private boolean validateDomain(int domainId) {
-        return params.searchSet().contains(domainId);
     }
 
     private boolean validateQuality(long meta) {

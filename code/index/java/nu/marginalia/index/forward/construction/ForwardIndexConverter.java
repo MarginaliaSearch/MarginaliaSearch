@@ -57,6 +57,7 @@ public class ForwardIndexConverter {
         GET_DOC_IDS,
         GATHER_OFFSETS,
         SUPPLEMENTAL_INDEXES,
+        DOMAIN_METADATA,
         FORCE,
         FINISHED
     }
@@ -142,6 +143,12 @@ public class ForwardIndexConverter {
 
             docFileData.close();
             docsFileId.close();
+
+            progress.progress(TaskSteps.DOMAIN_METADATA);
+
+            // Save a copy of the domain rankings as they look at the time of index construction
+
+            domainRankings.save(outputFileDocsData.getParent());
 
             progress.progress(TaskSteps.FINISHED);
         } catch (IOException ex) {

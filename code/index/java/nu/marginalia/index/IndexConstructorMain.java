@@ -100,9 +100,11 @@ public class IndexConstructorMain extends ProcessMainClass {
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = findNextFile(new IndexFileName.FullDocs());
+        Path outputFileDocsValues = findNextFile(new IndexFileName.FullDocsValues());
         Path outputFilePositions = findNextFile(new IndexFileName.FullPositions());
 
         Files.deleteIfExists(outputFileDocs);
+        Files.deleteIfExists(outputFileDocsValues);
         Files.deleteIfExists(outputFilePositions);
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
@@ -119,6 +121,7 @@ public class IndexConstructorMain extends ProcessMainClass {
 
             FullIndexConstructor constructor = new FullIndexConstructor(
                     outputFileDocs,
+                    outputFileDocsValues,
                     outputFileWords,
                     outputFilePositions,
                     this::addRankToIdEncoding,

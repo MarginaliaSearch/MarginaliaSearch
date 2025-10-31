@@ -1,9 +1,10 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
-import static nu.marginalia.api.searchquery.model.compiled.CompiledQueryParser.parse;
-import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.*;
 import org.junit.jupiter.api.Test;
 
+import static nu.marginalia.api.searchquery.model.compiled.CompiledQueryParser.parse;
+import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
+import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CompiledQueryAggregatesTest {
@@ -26,10 +27,4 @@ class CompiledQueryAggregatesTest {
         assertEquals(6, intMaxMinAggregate(parse("5 3 | 6 7"), Integer::parseInt));
     }
 
-    @Test
-    void doubleSumAggregates() {
-        assertEquals(5, (int) doubleSumAggregate(parse("5"), Double::parseDouble));
-        assertEquals(8, (int) doubleSumAggregate(parse("5 3"), Double::parseDouble));
-        assertEquals(13, (int) doubleSumAggregate(parse("1 ( 5 3 | 2 10 )"), Double::parseDouble));
-    }
 }

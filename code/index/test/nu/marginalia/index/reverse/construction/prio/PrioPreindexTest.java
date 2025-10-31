@@ -88,7 +88,7 @@ class PrioPreindexTest {
         var indexReader = new PrioReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile);
         var lc = new IndexLanguageContext("en", null, indexReader.getWordLexicon("en"));
 
-        var entrySource = indexReader.documents(lc, termId("50"));
+        var entrySource = indexReader.documents(lc, "50", termId("50"));
         var lqb = new LongQueryBuffer(32);
         entrySource.read(lqb);
 
@@ -153,7 +153,7 @@ class PrioPreindexTest {
         int items = indexReader.numDocuments(lc, termId("50"));
         assertEquals(documentIds.length, items);
 
-        var entrySource = indexReader.documents(lc, termId("50"));
+        var entrySource = indexReader.documents(lc, "50", termId("50"));
         var lqb = new LongQueryBuffer(32);
 
         for (int pos = 0; pos < documentIds.length;) {

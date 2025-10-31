@@ -110,8 +110,21 @@ public class LongQueryBuffer {
         return data.get(read);
     }
 
+    /** Peeking ahead, return the first value in the buffer
+     * larger than target, or Long.MIN_VALUE if no such value is found.
+     */
+    public long peekValueLt(long target) {
+        int pos = (int) data.binarySearchStrictlyLT(target, read, end);
+        if (pos == end)
+            return Long.MIN_VALUE;
+        return data.get(pos);
+    }
+
     /** Advances the read pointer and returns true if there are more values to read. */
     public boolean rejectAndAdvance() {
+        assert read < end;
+        assert write < end;
+
         return ++read < end;
     }
 
@@ -128,6 +141,9 @@ public class LongQueryBuffer {
      *  at the write pointer, so that it's retained at the end of the buffer.
      */
     public boolean retainAndAdvance() {
+        assert read < end;
+        assert write < end;
+
         if (read != write) {
             long tmp = data.get(write);
             data.set(write, data.get(read));

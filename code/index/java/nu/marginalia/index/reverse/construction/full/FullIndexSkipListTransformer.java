@@ -15,15 +15,16 @@ public class FullIndexSkipListTransformer implements LongArrayTransformations.Lo
     long start = 0;
 
     public FullIndexSkipListTransformer(Path docsOutputFile,
+                                        Path docsValuesOutputFile,
                                         LongArray documentsArray) throws IOException {
         this.documentsArray = documentsArray;
-        this.writer = new SkipListWriter(docsOutputFile);
+        this.writer = new SkipListWriter(docsOutputFile, docsValuesOutputFile);
     }
 
     @Override
     public long transform(long pos, long end) throws IOException {
 
-        final int size = (int) ((end - start) / 2);
+        final int size = (int) ((end - start) / FullPreindexDocuments.RECORD_SIZE_LONGS);
 
         if (size == 0) {
             return -1;

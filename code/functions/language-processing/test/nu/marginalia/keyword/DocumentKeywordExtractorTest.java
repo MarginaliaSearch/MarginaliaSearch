@@ -47,7 +47,7 @@ class DocumentKeywordExtractorTest {
 
         keywords.getWordToMeta().forEach((k, v) -> {
             if (k.contains("_")) {
-                System.out.println(k + " " + WordFlags.decode(v));
+                System.out.println(k + " " + WordFlags.decode((byte) v.longValue()));
             }
         });
     }
@@ -68,13 +68,12 @@ class DocumentKeywordExtractorTest {
 
         var keywordsBuilt = keywords.build();
 
-        Map<String, Byte> flags = new HashMap<>();
+        Map<String, Long> flags = new HashMap<>();
         Map<String, CodedSequence> positions = new HashMap<>();
 
         for (int i = 0; i < keywordsBuilt.size(); i++) {
             String keyword = keywordsBuilt.keywords().get(i);
-            byte metadata = keywordsBuilt.metadata()[i]
-                    ;
+            long metadata = keywordsBuilt.metadata()[i];
 
             if (Set.of("dirty", "blues").contains(keyword)) {
                 flags.put(keyword, metadata);

@@ -1,5 +1,12 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntImmutableList;
+import it.unimi.dsi.fastutil.ints.IntList;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
@@ -8,36 +15,30 @@ import java.util.stream.Stream;
  *
  */
 public sealed interface CqExpression {
-    /**  Create a new query for the provided data using this expression as the root */
-    default <T> CompiledQuery<T> newQuery(T[] data) {
-        return new CompiledQuery<>(this, data);
-    }
-    /**  Create a new query for the provided data using this expression as the root */
-    default CompiledQueryInt newQuery(int[] data) {
-        return new CompiledQueryInt(this, new CqDataInt(data));
-    }
-    /**  Create a new query for the provided data using this expression as the root */
-    default CompiledQueryLong newQuery(long[] data) {
-        return new CompiledQueryLong(this, new CqDataLong(data));
-    }
 
     Stream<Word> stream();
-
-    /** @see nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates */
-    long visit(LongVisitor visitor);
-    /** @see nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates */
-    double visit(DoubleVisitor visitor);
-    /** @see nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates */
-    int visit(IntVisitor visitor);
-    /** @see nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates */
-    boolean visit(BoolVisitor visitor);
-
-    <T> T visit(ObjectVisitor<T> visitor);
+    List<IntList> paths();
 
     static CqExpression empty() {
         return new Or(List.of());
     }
 
+    static List<IntList> allPaths(CqExpression expression) {
+
+        var pathsRaw = expression.paths();
+
+        if (pathsRaw.isEmpty())
+            return pathsRaw;
+
+        List<IntList> ret = new ArrayList<>(pathsRaw.size());
+
+        for (IntList list: pathsRaw) {
+            // sort, unique, and make immutable each the paths list
+            ret.add(new IntImmutableList(new IntAVLTreeSet(list)));
+        }
+
+        return Collections.unmodifiableList(ret);
+    }
 
     record And(List<? extends CqExpression> parts) implements CqExpression {
         @Override
@@ -46,27 +47,36 @@ public sealed interface CqExpression {
         }
 
         @Override
-        public long visit(LongVisitor visitor) {
-            return visitor.onAnd(parts);
-        }
+        public List<IntList> paths() {
 
-        @Override
-        public double visit(DoubleVisitor visitor) {
-            return visitor.onAnd(parts);
-        }
+            if (parts.isEmpty()) return List.of();
+            if (parts.size() == 1) return parts.getFirst().paths();
 
-        @Override
-        public int visit(IntVisitor visitor) {
-            return visitor.onAnd(parts);
-        }
+            List<IntList> ret = new ArrayList<>();
 
-        @Override
-        public boolean visit(BoolVisitor visitor) {
-            return visitor.onAnd(parts);
-        }
+            ret.addAll(parts.getFirst().paths());
 
-        @Override
-        public <T> T visit(ObjectVisitor<T> visitor) { return visitor.onAnd(parts); }
+            for (int i = 1; i < parts.size(); i++) {
+                var toCombine = parts.get(i).paths();
+                List<IntList> newRet = new ArrayList<>(ret.size() * toCombine.size());
+
+                for (int a = 0; a < ret.size(); a++) {
+                    IntList aList = ret.get(a);
+                    for (int b = 0; b < toCombine.size(); b++) {
+                        IntList bList = toCombine.get(b);
+
+                        IntList combinedList = new IntArrayList(aList.size() * bList.size());
+
+                        combinedList.addAll(aList);
+                        combinedList.addAll(bList);
+
+                        newRet.add(combinedList);
+                    }
+                }
+                ret = newRet;
+            }
+            return ret;
+        }
 
         public String toString() {
             StringJoiner sj = new StringJoiner(", ", "And[ ", "]");
@@ -83,27 +93,13 @@ public sealed interface CqExpression {
         }
 
         @Override
-        public long visit(LongVisitor visitor) {
-            return visitor.onOr(parts);
+        public List<IntList> paths() {
+            List<IntList> ret = new ArrayList<>(parts.size());
+            for (var part : parts) {
+                ret.addAll(part.paths());
+            }
+            return ret;
         }
-
-        @Override
-        public double visit(DoubleVisitor visitor) {
-            return visitor.onOr(parts);
-        }
-
-        @Override
-        public int visit(IntVisitor visitor) {
-            return visitor.onOr(parts);
-        }
-
-        @Override
-        public boolean visit(BoolVisitor visitor) {
-            return visitor.onOr(parts);
-        }
-
-        @Override
-        public <T> T visit(ObjectVisitor<T> visitor) { return visitor.onOr(parts); }
 
         public String toString() {
             StringJoiner sj = new StringJoiner(", ", "Or[ ", "]");
@@ -121,62 +117,14 @@ public sealed interface CqExpression {
         }
 
         @Override
-        public long visit(LongVisitor visitor) {
-            return visitor.onLeaf(idx);
+        public List<IntList> paths() {
+            return List.of(IntList.of(idx));
         }
-
-        @Override
-        public double visit(DoubleVisitor visitor) {
-            return visitor.onLeaf(idx);
-        }
-
-        @Override
-        public int visit(IntVisitor visitor) {
-            return visitor.onLeaf(idx);
-        }
-
-        @Override
-        public boolean visit(BoolVisitor visitor) {
-            return visitor.onLeaf(idx);
-        }
-
-        @Override
-        public <T> T visit(ObjectVisitor<T> visitor) { return visitor.onLeaf(idx); }
 
         @Override
         public String toString() {
             return Integer.toString(idx);
         }
-    }
-
-    interface LongVisitor {
-        long onAnd(List<? extends CqExpression> parts);
-        long onOr(List<? extends CqExpression> parts);
-        long onLeaf(int idx);
-    }
-
-    interface IntVisitor {
-        int onAnd(List<? extends CqExpression> parts);
-        int onOr(List<? extends CqExpression> parts);
-        int onLeaf(int idx);
-    }
-
-    interface BoolVisitor {
-        boolean onAnd(List<? extends CqExpression> parts);
-        boolean onOr(List<? extends CqExpression> parts);
-        boolean onLeaf(int idx);
-    }
-
-    interface DoubleVisitor {
-        double onAnd(List<? extends CqExpression> parts);
-        double onOr(List<? extends CqExpression> parts);
-        double onLeaf(int idx);
-    }
-
-    interface ObjectVisitor<T> {
-        T onAnd(List<? extends CqExpression> parts);
-        T onOr(List<? extends CqExpression> parts);
-        T onLeaf(int idx);
     }
 
 }

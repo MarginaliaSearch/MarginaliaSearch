@@ -1,6 +1,8 @@
 package nu.marginalia.index.model;
 
-import gnu.trove.map.hash.TObjectLongHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparator;
 import it.unimi.dsi.fastutil.longs.LongList;
@@ -76,6 +78,10 @@ public class SearchContext {
 
     public final IndexLanguageContext languageContext;
 
+    public final Long2ObjectOpenHashMap<String> termIdToString;
+    public final IntList mandatoryDomainIds;
+    public final IntList excludedDomainIds;
+
     public static SearchContext create(CombinedIndexReader currentIndex,
                                        KeywordHasher keywordHasher,
                                        SearchSpecification specsSet,
@@ -93,6 +99,7 @@ public class SearchContext {
                 queryParams,
                 specsSet.query,
                 rankingParams,
+                List.of(), // FIXME: this path does not support excluded domain ids
                 limits);
     }
 
@@ -120,18 +127,20 @@ public class SearchContext {
                 queryParams,
                 query,
                 rankingParams,
+                request.getExcludedDomainIdsList(),
                 limits);
     }
 
     public SearchContext(
-                         KeywordHasher keywordHasher,
-                         String langIsoCode,
-                         CombinedIndexReader currentIndex,
-                         String queryExpression,
-                         QueryParams queryParams,
-                         SearchQuery query,
-                         RpcResultRankingParameters rankingParams,
-                         RpcQueryLimits limits)
+            KeywordHasher keywordHasher,
+            String langIsoCode,
+            CombinedIndexReader currentIndex,
+            String queryExpression,
+            QueryParams queryParams,
+            SearchQuery query,
+            RpcResultRankingParameters rankingParams,
+            List<Integer> excludedDomainIdsList,
+            RpcQueryLimits limits)
     {
         this.docCount = currentIndex.totalDocCount();
         this.languageContext = currentIndex.createLanguageContext(langIsoCode);
@@ -140,6 +149,8 @@ public class SearchContext {
         this.searchQuery = query;
         this.params = rankingParams;
         this.queryParams = queryParams;
+        this.mandatoryDomainIds = queryParams.searchSet().domainIds();
+        this.excludedDomainIds = new IntArrayList(excludedDomainIdsList);
 
         this.fetchSize = limits.getFetchSize();
         this.limitByDomain = limits.getResultsByDomain();
@@ -187,22 +198,27 @@ public class SearchContext {
         }
 
         LongArrayList termIdsList = new LongArrayList();
-        TObjectLongHashMap<Object> termToId = new TObjectLongHashMap<>();
+        termIdToString = new Long2ObjectOpenHashMap<>();
 
-        for (String word : compiledQuery) {
-            long id = keywordHasher.hashKeyword(word);
+        for (String term : compiledQuery) {
+            long id = keywordHasher.hashKeyword(term);
             termIdsList.add(id);
-            termToId.put(word, id);
+            termIdToString.put(id, term);
         }
 
         for (var term : searchQuery.searchTermsPriority) {
-            if (termToId.containsKey(term)) {
-                continue;
-            }
-
             long id = keywordHasher.hashKeyword(term);
+            if (termIdToString.containsKey(id))
+                continue;
             termIdsList.add(id);
-            termToId.put(term, id);
+            termIdToString.put(id, term);
+        }
+
+        for (var term : searchQuery.searchTermsAdvice) {
+            long id = keywordHasher.hashKeyword(term);
+            if (termIdToString.containsKey(id))
+                continue;
+            termIdToString.put(id, term);
         }
 
         termIdsAll = new TermIdList(termIdsList);

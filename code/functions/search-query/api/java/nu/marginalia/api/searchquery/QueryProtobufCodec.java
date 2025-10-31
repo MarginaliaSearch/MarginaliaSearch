@@ -22,7 +22,8 @@ public class QueryProtobufCodec {
     public static RpcIndexQuery convertQuery(RpcQsQuery request, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
-        builder.addAllDomains(query.specs.domains);
+        builder.addAllRequiredDomainIds(query.specs.domains);
+        builder.addAllExcludedDomainIds(request.getExcludedDomainIdsList());
 
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
@@ -36,6 +37,7 @@ public class QueryProtobufCodec {
         builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
         builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
         builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
+
 
         builder.setQueryLimits(query.specs.queryLimits);
 
@@ -73,7 +75,8 @@ public class QueryProtobufCodec {
     public static RpcIndexQuery convertQuery(String humanQuery, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
-        builder.addAllDomains(query.specs.domains);
+        builder.addAllRequiredDomainIds(query.specs.domains);
+        builder.addAllExcludedDomainIds(List.of()); // TODO: Hook in
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
@@ -111,7 +114,7 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(request.getYear()),
                 IndexProtobufCodec.convertSpecLimit(request.getSize()),
                 IndexProtobufCodec.convertSpecLimit(request.getRank()),
-                request.getDomainIdsList(),
+                request.getRequiredDomainIdsList(),
                 request.getQueryLimits(),
                 request.getSearchSetIdentifier(),
                 QueryStrategy.valueOf(request.getQueryStrategy()),
@@ -306,7 +309,8 @@ public class QueryProtobufCodec {
     private static SearchSpecification convertSearchSpecification(RpcIndexQuery specs) {
         return new SearchSpecification(
                 IndexProtobufCodec.convertRpcQuery(specs.getQuery()),
-                specs.getDomainsList(),
+                specs.getRequiredDomainIdsList(),
+                specs.getExcludedDomainIdsList(),
                 specs.getSearchSetIdentifier(),
                 IndexProtobufCodec.convertSpecLimit(specs.getQuality()),
                 IndexProtobufCodec.convertSpecLimit(specs.getYear()),
@@ -320,7 +324,8 @@ public class QueryProtobufCodec {
 
     public static RpcQsQuery convertQueryParams(QueryParams params) {
         var builder = RpcQsQuery.newBuilder()
-                .addAllDomainIds(params.domainIds())
+                .addAllRequiredDomainIds(params.domainIds())
+                .addAllExcludedDomainIds(List.of()) // TODO: Hook in
                 .addAllTacitAdvice(params.tacitAdvice())
                 .addAllTacitExcludes(params.tacitExcludes())
                 .addAllTacitPriority(params.tacitPriority())

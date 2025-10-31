@@ -1,10 +1,15 @@
 package nu.marginalia.index.reverse.query;
 
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.index.reverse.FullIndexEntrySourceWithRangeFilter;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
+import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.SkipListValueRanges;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /** A query to the index.  The query is composed of a list of sources
@@ -49,6 +54,26 @@ public class IndexQuery {
         return si < sources.size();
     }
 
+    public boolean isNoOp() {
+        for (var source : sources) {
+            if (!(source instanceof EmptyEntrySource))
+                return false;
+        }
+        return true;
+    }
+
+
+    public boolean isFiltered(SkipListValueRanges ranges) {
+        if (sources.isEmpty()) return false;
+
+        if (sources.size() != 1) return false;
+
+        if (sources.getFirst() instanceof FullIndexEntrySourceWithRangeFilter filteredSource) {
+            return filteredSource.usesFilter(ranges);
+        }
+        return false;
+    }
+
     /** Fills the given buffer with more results from the sources.
      *  The results are filtered by the inclusion filters.
      *  <p></p>
@@ -91,6 +116,45 @@ public class IndexQuery {
         dataCost += dest.size();
 
         return !dest.isEmpty();
+    }
+
+    public void printDebugInformation() {
+        System.out.println("Debug information for query: ");
+
+        for (var source: sources) {
+            System.out.println(source.indexName() + ": " + source.readEntries());
+        }
+
+        for (var step : inclusionFilter) {
+
+            if (step instanceof ReverseIndexRetainFilter(SkipListReader range, String name, String term, _)) {
+                Map<Integer, Integer> histoMap = new TreeMap<>();
+                int sum = 0;
+
+                for (int i = 0; i < range.__stats_match_histo_retain.length; i++) {
+                    int val = range.__stats_match_histo_retain[i];
+                    if (val == 0) continue;
+
+                    histoMap.put(i, val);
+                    sum += i;
+                }
+
+                System.out.println("Retain " + name + " " + term + ": " + sum +  "=" + histoMap.toString());
+            }
+            else if (step instanceof ReverseIndexRejectFilter(SkipListReader range, String term, _)) {
+                Map<Integer, Integer> histoMap = new TreeMap<>();
+                int sum = 0;
+                for (int i = 0; i < range.__stats_match_histo_reject.length; i++) {
+                    int val = range.__stats_match_histo_reject[i];
+                    if (val == 0) continue;
+
+                    histoMap.put(i, val);
+                    sum += i;
+                }
+
+                System.out.println("Reject " + term + ": " + sum +  "=" + histoMap.toString());
+            }
+        }
     }
 
     public long dataCost() {

@@ -21,10 +21,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -96,7 +93,11 @@ public class IndexClient {
                                 else {
                                     c.accept(fut.get(Duration.between(now, bailInstant).toMillis(), TimeUnit.MILLISECONDS));
                                 }
-                            } catch (Exception e) {
+                            }
+                            catch (TimeoutException e) {
+                                logger.error("Index request timeout");
+                            }
+                            catch (Exception e) {
                                 logger.error("Error while fetching results", e);
                             }
                         })

@@ -341,6 +341,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocs(), IndexFileName.Version.NEXT);
+        Path outputFileDocsValues = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullDocsValues(), IndexFileName.Version.NEXT);
         Path outputFileWords = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullWords("en"), IndexFileName.Version.NEXT);
         Path outputFilePositions = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.FullPositions(), IndexFileName.Version.NEXT);
 
@@ -351,6 +352,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         var constructor = new FullIndexConstructor(
                 outputFileDocs,
+                outputFileDocsValues,
                 outputFileWords,
                 outputFilePositions,
                 DocIdRewriter.identity(),
@@ -413,7 +415,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         ));
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
-        byte[] metadata = new byte[factors.length];
+        long[] metadata = new long[factors.length];
         for (int i = 0; i < factors.length; i++) {
             metadata[i] = WordFlags.Title.asBit();
         }
@@ -453,7 +455,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
-        byte[] metadata = new byte[factors.length];
+        long[] metadata = new long[factors.length];
         for (int i = 0; i < factors.length; i++) {
             metadata[i] = WordFlags.Title.asBit();
         }
@@ -465,7 +467,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
             positions.add(VarintCodedSequence.generate(i + 1));
         }
 
-        indexJournalWriter.put(fullId,
+        indexJournalWriter.put(UrlIdCodec.addRank(1.0f, fullId),
                 new SlopDocumentRecord.KeywordsProjection(
                         "",
                         -1,

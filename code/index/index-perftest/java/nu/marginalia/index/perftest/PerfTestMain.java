@@ -93,11 +93,12 @@ public class PerfTestMain {
                         "full",
                         List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-en.dat"))),
                         indexDir.resolve("ir/rev-docs.dat"),
+                        indexDir.resolve("ir/rev-docs-values.dat"),
                         indexDir.resolve("ir/rev-positions.dat")
                 ),
                 new PrioReverseIndexReader(
                         "prio",
-                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-prio-en.dat"))),
+                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-prio-words-en.dat"))),
                         indexDir.resolve("ir/rev-prio-docs.dat")
                 )
         );
@@ -256,7 +257,7 @@ public class PerfTestMain {
         QueryFactory queryFactory = createQueryFactory(homeDir);
 
         var queryLimits = RpcQueryLimits.newBuilder()
-                .setTimeoutMs(10_000)
+                .setTimeoutMs(1_000_000_000)
                 .setResultsTotal(1000)
                 .setResultsByDomain(10)
                 .setFetchSize(4096)
@@ -283,11 +284,14 @@ public class PerfTestMain {
 
             long start = System.nanoTime();
             for (var query : queries) {
+
                 while (query.hasMore()) {
                     query.getMoreResults(buffer);
                     sum1 += buffer.end;
                     buffer.reset();
                 }
+
+                query.printDebugInformation();
             }
             long end = System.nanoTime();
             times.add((end - start)/1_000_000_000.);

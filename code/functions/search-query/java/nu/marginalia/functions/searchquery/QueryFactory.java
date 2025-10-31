@@ -185,6 +185,7 @@ public class QueryFactory {
                 .rank(rank)
                 .rankingParams(rankingParams)
                 .domains(domainIds)
+                .excludedDomains(List.of()) // TBI
                 .queryLimits(limits)
                 .searchSetIdentifier(params.identifier())
                 .queryStrategy(queryStrategy);

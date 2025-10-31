@@ -8,6 +8,7 @@ import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.BitSet;
 import java.util.concurrent.TimeoutException;
 
 import static nu.marginalia.index.config.ForwardIndexParameters.*;
@@ -36,6 +38,7 @@ public class ForwardIndexReader {
     private volatile Long2IntOpenHashMap idsMap;
 
     private final IndexSpansReader spansReader;
+    private final DomainRankings domainRankings;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -47,6 +50,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             spansReader = null;
+            domainRankings = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
@@ -54,6 +58,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             spansReader = null;
+            domainRankings = null;
             return;
         }
         else if (!Files.exists(spansFile)) {
@@ -61,6 +66,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             spansReader = null;
+            domainRankings = null;
             return;
         }
 
@@ -68,6 +74,9 @@ public class ForwardIndexReader {
 
         ids = loadIds(idsFile);
         data = loadData(dataFile);
+
+        domainRankings = new DomainRankings();
+        domainRankings.load(dataFile.getParent());
 
         LinuxSystemCalls.madviseRandom(data.getMemorySegment());
         LinuxSystemCalls.madviseRandom(ids.getMemorySegment());
@@ -94,46 +103,60 @@ public class ForwardIndexReader {
         return LongArrayFactory.mmapForReadingShared(dataFile);
     }
 
-    public long getDocMeta(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+    /** For a given domain id, return the lowest document id including its encoded rank as seen in the reverse index.
+     *
+     * This function is needed to help find documents for a particular domain on disk, an operation which is not
+     * part of the regular index lookups, but are needed when filtering search results efficiently.
+     *
+     * When document ids are written to disk, they are prefixed with a rank byte, to affect their sort order.
+     * This function encodes a document id with the appropriate rank, domain id provider, and document ordinal zero.
+     *
+     * If ret is the return value of this function for some domain id, all the documents from that domain will have ids
+     * ranging between ret and ret | 0x03FF_FFFF.
+     */
+    public long getRankEncodedDocumentIdBase(int domainId) {
 
-        long offset = idxForDoc(docId);
+        // This is a bit awkward since we need to match the exact order of operations used in the index construction logic,
+        // where "idWithNoRank" is already provided!
+        long idWithNoRank = UrlIdCodec.encodeId(domainId, 0);
+        float rank = domainRankings.getSortRanking(idWithNoRank);
+
+        return UrlIdCodec.addRank(rank, idWithNoRank);
+    }
+
+    public long getDocMeta(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
         return data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
     }
 
-    public int getHtmlFeatures(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
-
-        long offset = idxForDoc(docId);
+    public int getHtmlFeatures(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
         return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) & 0xFFFF_FFFFL);
     }
 
-    public int getDocumentSize(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
-
-        long offset = idxForDoc(docId);
+    public int getDocumentSize(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
         return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L);
     }
 
 
-    private int idxForDoc(long docId) {
-        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+    private int idxForDoc(long combinedDocId) {
 
         if (idsMap != null) {
-            return idsMap.getOrDefault(docId, -1);
+            return idsMap.getOrDefault(combinedDocId, -1);
         }
 
-        long offset = ids.binarySearch2(docId, 0, ids.size());
+        long offset = ids.binarySearch2(combinedDocId, 0, ids.size());
 
-        if (offset >= ids.size() || offset < 0 || ids.get(offset) != docId) {
+        if (offset >= ids.size() || offset < 0 || ids.get(offset) != combinedDocId) {
             if (getClass().desiredAssertionStatus()) {
-                logger.warn("Could not find offset for doc {}", docId);
+                logger.warn("Could not find offset for doc {}", combinedDocId);
             }
             return -1;
         }
@@ -141,12 +164,17 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList combinedIds) throws TimeoutException {
+    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList combinedIds, BitSet docIdsMask) throws TimeoutException {
         long[] offsets = new long[combinedIds.size()];
 
         for (int i = 0; i < offsets.length; i++) {
-            long docId = UrlIdCodec.removeRank(combinedIds.at(i));
-            long offset = idxForDoc(docId);
+
+            if (!docIdsMask.get(i)) {
+                offsets[i] = -1;
+                continue;
+            }
+
+            long offset = idxForDoc(combinedIds.at(i));
             if (offset >= 0) {
                 offsets[i] = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
             }
