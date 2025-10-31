@@ -75,7 +75,8 @@ public class QueryProtobufCodec {
     public static RpcIndexQuery convertQuery(String humanQuery, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
-        builder.addAllDomains(query.specs.domains);
+        builder.addAllRequiredDomainIds(query.specs.domains);
+        builder.addAllExcludedDomainIds(List.of()); // TODO: Hook in
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
