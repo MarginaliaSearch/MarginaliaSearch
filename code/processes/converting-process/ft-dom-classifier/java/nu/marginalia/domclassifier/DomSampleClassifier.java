@@ -120,6 +120,11 @@ public class DomSampleClassifier {
             catch (URISyntaxException ex) {
                 continue;
             }
+            catch (Exception ex) {
+                // Log only the alien exceptions
+                logger.error("Unexpected error parsing URL", ex);
+                continue;
+            }
 
             if (!url.domain.hasSameTopDomain(sampleDomain)) {
                 classifications.add(DomSampleClassification.THIRD_PARTY_REQUESTS);

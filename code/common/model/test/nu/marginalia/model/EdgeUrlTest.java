@@ -20,6 +20,11 @@ class EdgeUrlTest {
                 new EdgeUrl("https://memex.marginalia.nu/"),
                 new EdgeUrl("https://memex.marginalia.nu/#here")
         );
+
+        assertEquals(
+                new EdgeUrl("https://memex.marginalia.nu/"),
+                new EdgeUrl("https://memex.marginalia.nu#here")
+        );
     }
 
     @Test
@@ -86,5 +91,8 @@ class EdgeUrlTest {
 
         Assertions.assertNull(new EdgeUrl("https://search.marginalia.nu/?m=123").param);
         Assertions.assertNull(new EdgeUrl("https://search.marginalia.nu/?follow=123").param);
+
+        Assertions.assertNull(new EdgeUrl("https://search.marginalia.nu?/").param);
+        Assertions.assertEquals("/", new EdgeUrl("https://search.marginalia.nu?/").path);
     }
 }
