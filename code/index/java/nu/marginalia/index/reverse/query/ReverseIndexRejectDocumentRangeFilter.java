@@ -12,12 +12,12 @@ public record ReverseIndexRejectDocumentRangeFilter(SkipListValueRanges ranges) 
         while (!ranges.atEnd() && buffer.hasMore()) {
             long rangeStart = ranges.start();
             long rangeEnd = ranges.end();
-            long cv;
+            long cv = Long.MIN_VALUE;
 
-            while ((cv = buffer.currentValue()) < rangeStart && buffer.hasMore()) buffer.retainAndAdvance();
+            while (buffer.hasMore() && (cv = buffer.currentValue()) < rangeStart) buffer.retainAndAdvance();
             if (!buffer.hasMore()) break;
 
-            while ((cv = buffer.currentValue()) < rangeEnd && buffer.hasMore()) buffer.rejectAndAdvance();
+            while (buffer.hasMore() && (cv = buffer.currentValue()) < rangeEnd) buffer.rejectAndAdvance();
             if (!buffer.hasMore()) break;
 
             if (cv >= rangeEnd && !ranges.next()) break;
