@@ -186,9 +186,9 @@ public class BufferPool implements AutoCloseable {
             return;
 
         buffer = read(address, false);
-        buffer.touchClock(1);
         prefetchReadCount.incrementAndGet();
-        // read is unacquired, no need to close
+
+        // buffer is read unacquired, no need to close
     }
 
 
