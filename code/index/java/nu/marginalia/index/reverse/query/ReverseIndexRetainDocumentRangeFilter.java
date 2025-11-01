@@ -17,7 +17,7 @@ public record ReverseIndexRetainDocumentRangeFilter(SkipListValueRanges ranges) 
             while (buffer.hasMore() && (cv = buffer.currentValue()) < rangeStart) buffer.rejectAndAdvance();
             if (!buffer.hasMore()) break;
 
-            while (buffer.hasMore() && (cv = buffer.currentValue()) < rangeEnd)) buffer.retainAndAdvance();
+            while (buffer.hasMore() && (cv = buffer.currentValue()) < rangeEnd) buffer.retainAndAdvance();
             if (!buffer.hasMore()) break;
 
             if (cv >= rangeEnd && !ranges.next()) break;
