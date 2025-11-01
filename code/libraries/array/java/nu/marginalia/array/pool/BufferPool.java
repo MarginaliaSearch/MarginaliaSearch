@@ -185,10 +185,9 @@ public class BufferPool implements AutoCloseable {
         if (buffer != null) // already cached
             return;
 
-        buffer = read(address, false);
-        prefetchReadCount.incrementAndGet();
+        // buffer is read unacquired, no need to close the return value
+        read(address, false);
 
-        // buffer is read unacquired, no need to close
     }
 
 
@@ -214,6 +213,7 @@ public class BufferPool implements AutoCloseable {
             if (!buffer.pinCount().compareAndSet(-1, 0)) {
                 throw new IllegalStateException("Panic! Write lock was not held during write!");
             }
+            prefetchReadCount.incrementAndGet();
         }
 
 
