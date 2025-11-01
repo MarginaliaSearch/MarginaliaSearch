@@ -36,7 +36,7 @@ public class FullIndexEntrySourceWithRangeFilter implements EntrySource {
 
     @Override
     public boolean hasMore() {
-        return !reader.atEnd();
+        return !reader.atEnd() && !ranges.atEnd();
     }
 
     @Override
