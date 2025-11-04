@@ -17,6 +17,13 @@ struct __attribute__((packed)) p64x2 {
     int64_t b;
 };
 
+/* Same as above for 192 bits */
+struct __attribute__((packed)) p64x3 {
+    int64_t a;
+    int64_t b;
+    int64_t c;
+};
+
 void ms_sort_64(int64_t* area, uint64_t start, uint64_t end) {
   std::sort(&area[start], &area[end]);
 }
@@ -30,5 +37,13 @@ void ms_sort_128(int64_t* area, uint64_t start, uint64_t end) {
   });
 }
 
+void ms_sort_192(int64_t* area, uint64_t start, uint64_t end) {
+  std::sort(
+    reinterpret_cast<p64x3 *>(&area[start]),
+    reinterpret_cast<p64x3 *>(&area[end]),
+    [](const p64x3& fst, const p64x3& snd) {
+    return fst.a < snd.a;
+  });
+}
 
 }

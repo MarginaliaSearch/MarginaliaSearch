@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+
 public interface LongArraySort extends LongArrayBase {
 
     default boolean isSorted(long start, long end) {
@@ -125,7 +127,11 @@ public interface LongArraySort extends LongArrayBase {
             }
         }
         else {
-            SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
+            if (NativeAlgos.isAvailable) {
+                NativeAlgos.sort192(getMemorySegment(), start, end);
+            } else {
+                SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
+            }
         }
 
         assert isSortedN(wordSize, start, end);

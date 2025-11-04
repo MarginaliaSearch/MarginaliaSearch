@@ -27,6 +27,7 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 public class NativeAlgos {
     private final MethodHandle qsortHandle;
     private final MethodHandle qsort128Handle;
+    private final MethodHandle qsort192Handle;
 
     public static final NativeAlgos instance;
 
@@ -44,6 +45,11 @@ public class NativeAlgos {
 
         handle = libraryLookup.findOrThrow("ms_sort_128");
         qsort128Handle = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
+
+
+        handle = libraryLookup.findOrThrow("ms_sort_192");
+        qsort192Handle = nativeLinker.downcallHandle(handle,
                 FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
     }
 
@@ -104,4 +110,12 @@ public class NativeAlgos {
         }
     }
 
+    public static void sort192(MemorySegment ms, long start, long end) {
+        try {
+            instance.qsort192Handle.invoke(ms, start, end);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
 }
