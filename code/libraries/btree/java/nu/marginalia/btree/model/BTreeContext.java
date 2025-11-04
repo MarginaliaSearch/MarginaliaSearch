@@ -42,7 +42,7 @@ public class BTreeContext {
     }
 
     public int numIndexLayers(int numEntries) {
-        if (entrySize * numEntries <= pageSize - 3) {
+        if ((long) entrySize * numEntries <= pageSize - 3) {
             return 0;
         }
         for (int i = 1; i < maxLayers; i++) {
