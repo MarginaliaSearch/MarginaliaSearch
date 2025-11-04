@@ -1,6 +1,7 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.ffi.NativeAlgos;
 
 
 /** Functions for operating on pairs of arrays.
@@ -11,6 +12,16 @@ public class TwoArrayOperations {
      * Merge two sorted arrays into a third array, removing duplicates.
      */
     public static long mergeArrays(LongArray out, LongArray a, LongArray b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
+
+        if (NativeAlgos.isAvailable) {
+            return NativeAlgos.mergeArrays1(
+                    out.getMemorySegment(),
+                    a.getMemorySegment(),
+                    b.getMemorySegment(),
+                    outStart,
+                    aStart, aEnd,
+                    bStart, bEnd);
+        }
         // Ensure that the arrays are sorted and that the output array is large enough
         if (TwoArrayOperations.class.desiredAssertionStatus()) {
             assert (a.isSorted(aStart, aEnd));
@@ -76,13 +87,22 @@ public class TwoArrayOperations {
                                     long aStart, long aEnd,
                                     long bStart, long bEnd) {
 
-        if (n == 1)
-            return mergeArrays(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-        if (n == 2)
-            return mergeArrays2(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-        if (n == 3)
-            return mergeArrays3(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-
+        if (NativeAlgos.isAvailable) {
+            if (n == 1)
+                return NativeAlgos.mergeArrays1(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 2)
+                return NativeAlgos.mergeArrays2(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 3)
+                return NativeAlgos.mergeArrays3(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
+        }
+        else {
+            if (n == 1)
+                return mergeArrays(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 2)
+                return mergeArrays2(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 3)
+                return mergeArrays3(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
+        }
         throw new UnsupportedOperationException("Implement a merge(n)");
     }
 
@@ -173,7 +193,7 @@ public class TwoArrayOperations {
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
      * <p>
-     * The operation is performed with a step size of 2. For each pair of values,
+     * The operation is performed with a step size of 3. For each pair of values,
      * only the first is considered to signify a key. The second value is retained along
      * with the first.  In the case of a duplicate, the value associated with array 'a'
      * is retained, the other is discarded.
@@ -273,7 +293,12 @@ public class TwoArrayOperations {
             assert (b.isSorted(bStart, bEnd));
         }
 
-        return countDistinctElementsDirect(a, b, aStart, aEnd, bStart, bEnd);
+        if (NativeAlgos.isAvailable) {
+            return NativeAlgos.countDistinct(a.getMemorySegment(), b.getMemorySegment(), aStart, aEnd, bStart, bEnd);
+        }
+        else {
+            return countDistinctElementsDirect(a, b, aStart, aEnd, bStart, bEnd);
+        }
     }
 
     /**

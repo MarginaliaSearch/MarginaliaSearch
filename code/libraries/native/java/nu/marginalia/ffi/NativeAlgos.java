@@ -9,8 +9,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
 
-import static java.lang.foreign.ValueLayout.ADDRESS;
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static java.lang.foreign.ValueLayout.*;
 
 /** This class provides access to native implementations of key algorithms
  *  used in index construction and querying.
@@ -28,6 +27,10 @@ public class NativeAlgos {
     private final MethodHandle qsortHandle;
     private final MethodHandle qsort128Handle;
     private final MethodHandle qsort192Handle;
+    private final MethodHandle countDistinct;
+    private final MethodHandle mergeArrays1;
+    private final MethodHandle mergeArrays2;
+    private final MethodHandle mergeArrays3;
 
     public static final NativeAlgos instance;
 
@@ -51,6 +54,23 @@ public class NativeAlgos {
         handle = libraryLookup.findOrThrow("ms_sort_192");
         qsort192Handle = nativeLinker.downcallHandle(handle,
                 FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
+
+        handle = libraryLookup.findOrThrow("count_distinct");
+        countDistinct = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS, JAVA_LONG, JAVA_LONG));
+
+        handle = libraryLookup.findOrThrow("merge_arrays_3");
+        mergeArrays3 = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG, JAVA_LONG));
+
+
+        handle = libraryLookup.findOrThrow("merge_arrays_2");
+        mergeArrays2 = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG, JAVA_LONG));
+
+        handle = libraryLookup.findOrThrow("merge_arrays_1");
+        mergeArrays1 = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG, JAVA_LONG));
     }
 
     static {
@@ -118,4 +138,61 @@ public class NativeAlgos {
             throw new RuntimeException("Failed to invoke native function", t);
         }
     }
+
+    public static long countDistinct(MemorySegment a, MemorySegment b, long aStart, long aEnd, long bStart, long bEnd) {
+        try {
+            return (Long) instance.countDistinct.invoke(
+                    a.asSlice(aStart * JAVA_LONG.byteSize()),
+                    b.asSlice(bStart * JAVA_LONG.byteSize()),
+                    aEnd - aStart,
+                    bEnd - bStart);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static long mergeArrays1(MemorySegment out, MemorySegment a, MemorySegment b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
+        try {
+            return (Long) instance.mergeArrays1.invoke(
+                    out.asSlice(outStart * JAVA_LONG.byteSize()),
+                    a.asSlice(aStart * JAVA_LONG.byteSize()),
+                    b.asSlice(bStart * JAVA_LONG.byteSize()),
+                    aEnd - aStart,
+                    bEnd - bStart) - outStart;
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static long mergeArrays2(MemorySegment out, MemorySegment a, MemorySegment b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
+        try {
+            return (Long) instance.mergeArrays2.invoke(
+                    out.asSlice(outStart * JAVA_LONG.byteSize()),
+                    a.asSlice(aStart * JAVA_LONG.byteSize()),
+                    b.asSlice(bStart * JAVA_LONG.byteSize()),
+                    aEnd - aStart,
+                    bEnd - bStart);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static long mergeArrays3(MemorySegment out, MemorySegment a, MemorySegment b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
+        try {
+            return (Long) instance.mergeArrays3.invoke(
+                    out.asSlice(outStart * JAVA_LONG.byteSize()),
+                    a.asSlice(aStart * JAVA_LONG.byteSize()),
+                    b.asSlice(bStart * JAVA_LONG.byteSize()),
+                    aEnd - aStart,
+                    bEnd - bStart);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+
 }
