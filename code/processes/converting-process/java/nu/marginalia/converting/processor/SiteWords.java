@@ -10,10 +10,8 @@ import nu.marginalia.converting.processor.logic.links.CommonKeywordExtractor;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 
 import com.google.inject.Singleton;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -21,27 +19,27 @@ public class SiteWords {
 
     private static final CommonKeywordExtractor commonKeywordExtractor = new CommonKeywordExtractor();
 
-    public void flagAdjacentWords(TopKeywords topKeywords, LinkGraph invertedLinkGraph, ProcessedDomain processedDomain) {
+    public void flagAdjacentWords(TopKeywords topKeywords, LinkGraph invertedLinkGraph, List<ProcessedDocument> documents) {
         Map<EdgeUrl, Set<String>> linkedKeywords = getAdjacentWords(topKeywords, invertedLinkGraph);
 
-        for (var doc : processedDomain.documents) {
+        for (var doc : documents) {
             applyKeywordsToDoc(doc, WordFlags.SiteAdjacent, linkedKeywords.get(doc.url));
         }
 
     }
 
-    public void flagCommonSiteWords(ProcessedDomain processedDomain) {
+    public void flagCommonSiteWords(List<ProcessedDocument> documents) {
         Set<String> commonSiteWords = new HashSet<>(10);
 
-        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain,
+        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(documents,
                 WordFlags.Subjects));
 
-        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain,
+        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(documents,
                 WordFlags.NamesWords));
 
         if (commonSiteWords.isEmpty()) return;
 
-        for (var doc : processedDomain.documents) {
+        for (var doc : documents) {
             applyKeywordsToDoc(doc, WordFlags.Site, commonSiteWords);
         }
     }

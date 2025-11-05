@@ -406,8 +406,8 @@ public class DomainProcessor {
             doc.details.metadata = doc.details.metadata.withSizeAndTopology(size, topology);
         });
 
-        siteWords.flagCommonSiteWords(ret);
-        siteWords.flagAdjacentWords(topKeywords, invertedLinkGraph, ret);
+        siteWords.flagCommonSiteWords(documents);
+        siteWords.flagAdjacentWords(topKeywords, invertedLinkGraph, documents);
     }
 
     private DomainIndexingState getState(String crawlerStatus) {
