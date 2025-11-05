@@ -188,7 +188,7 @@ public class ConverterMain extends ProcessMainClass {
 
         final int defaultPoolSize = Boolean.getBoolean("system.conserveMemory")
                 ? Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 1, 4)   // <-- conserve memory
-                : Math.clamp(Runtime.getRuntime().availableProcessors() - 2, 1, 32); // <-- a more liberal pool size
+                : Math.clamp(Runtime.getRuntime().availableProcessors() - 5, 1, 32); // <-- a more liberal pool size
 
         final int maxPoolSize = Integer.getInteger("converter.poolSize", defaultPoolSize);
 
