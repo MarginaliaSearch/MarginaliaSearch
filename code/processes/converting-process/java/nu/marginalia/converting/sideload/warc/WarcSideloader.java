@@ -5,6 +5,7 @@ import nu.marginalia.contenttype.ContentTypeParser;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDocumentFinal;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -84,7 +85,7 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
     }
 
     @Override
-    public Iterator<ProcessedDocument> getDocumentsStream() {
+    public Iterator<ProcessedDocumentFinal> getDocumentsStream() {
         return reader.records()
                 .filter(record -> record instanceof WarcResponse)
                 .map(WarcResponse.class::cast)
@@ -92,6 +93,7 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
                 .map(this::process)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
+                .map(ProcessedDocument::finalizeDocument)
                 .iterator();
     }
 

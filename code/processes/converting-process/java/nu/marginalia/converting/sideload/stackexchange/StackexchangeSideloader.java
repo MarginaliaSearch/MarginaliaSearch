@@ -1,9 +1,6 @@
 package nu.marginalia.converting.sideload.stackexchange;
 
-import nu.marginalia.converting.model.GeneratorType;
-import nu.marginalia.converting.model.ProcessedDocument;
-import nu.marginalia.converting.model.ProcessedDocumentDetails;
-import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.model.*;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.integration.stackexchange.sqlite.StackExchangePostsDb;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -71,7 +68,7 @@ public class StackexchangeSideloader implements SideloadSource {
     }
 
     @Override
-    public Iterator<ProcessedDocument> getDocumentsStream() {
+    public Iterator<ProcessedDocumentFinal> getDocumentsStream() {
 
         var postsReader = new PostsReader();
         Thread readerThread = new Thread(postsReader);
@@ -80,7 +77,7 @@ public class StackexchangeSideloader implements SideloadSource {
 
         return new Iterator<>() {
 
-            ProcessedDocument nextModel = null;
+            ProcessedDocumentFinal nextModel = null;
 
             @Override
             public boolean hasNext() {
@@ -97,7 +94,7 @@ public class StackexchangeSideloader implements SideloadSource {
             }
 
             @Override
-            public ProcessedDocument next() {
+            public ProcessedDocumentFinal next() {
                 if (hasNext()) {
                     var ret = nextModel;
                     nextModel = null;
@@ -182,7 +179,7 @@ public class StackexchangeSideloader implements SideloadSource {
     }
 
     class PostsReader implements Runnable {
-        private final ArrayBlockingQueue<ProcessedDocument> results = new ArrayBlockingQueue<>(16);
+        private final ArrayBlockingQueue<ProcessedDocumentFinal> results = new ArrayBlockingQueue<>(16);
         private final SimpleBlockingThreadPool pool = new SimpleBlockingThreadPool("Sideloading Stackexchange", 16, 4);
         volatile boolean isRunning = true;
 
@@ -198,7 +195,7 @@ public class StackexchangeSideloader implements SideloadSource {
 
         private boolean enqueue(StackExchangePostsDb.CombinedPostModel model) {
             try {
-                pool.submit(() -> results.put(convert(model)));
+                pool.submit(() -> results.put(convert(model).finalizeDocument()));
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -208,7 +205,7 @@ public class StackexchangeSideloader implements SideloadSource {
             return true;
         }
 
-        public ProcessedDocument next() throws InterruptedException {
+        public ProcessedDocumentFinal next() throws InterruptedException {
             do {
                 var next = results.poll(1, TimeUnit.SECONDS);
                 if (next != null) {

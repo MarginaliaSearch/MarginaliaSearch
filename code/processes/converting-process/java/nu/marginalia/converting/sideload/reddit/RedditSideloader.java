@@ -4,6 +4,7 @@ import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDocumentFinal;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -54,7 +55,7 @@ public class RedditSideloader implements SideloadSource {
     }
 
     @Override
-    public Iterator<ProcessedDocument> getDocumentsStream() {
+    public Iterator<ProcessedDocumentFinal> getDocumentsStream() {
         return ProcessingIterator.factory(24, 16).create((taskConsumer) -> {
             DomainLinks domainLinks = new DomainLinks();
 
@@ -71,6 +72,7 @@ public class RedditSideloader implements SideloadSource {
                                         entry.created_utc,
                                         entry.score,
                                         domainLinks)
+                                        .finalizeDocument()
                         );
                     }
                 } catch (Exception e) {
@@ -89,6 +91,7 @@ public class RedditSideloader implements SideloadSource {
                                         entry.created_utc,
                                         entry.score,
                                         domainLinks)
+                                        .finalizeDocument()
                         );
                     }
                 } catch (Exception e) {

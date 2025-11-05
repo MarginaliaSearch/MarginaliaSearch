@@ -3,6 +3,7 @@ package nu.marginalia.converting.sideload.dirtree;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDocumentFinal;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -58,11 +59,12 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
     }
 
     @Override
-    public Iterator<ProcessedDocument> getDocumentsStream() {
+    public Iterator<ProcessedDocumentFinal> getDocumentsStream() {
         return filesStream
                 .filter(Files::isRegularFile)
                 .filter(this::isHtmlFile)
                 .map(this::process)
+                .map(ProcessedDocument::finalizeDocument)
                 .iterator();
     }
 

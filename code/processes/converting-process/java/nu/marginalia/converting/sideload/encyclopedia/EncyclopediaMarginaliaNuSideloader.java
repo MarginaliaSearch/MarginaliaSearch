@@ -6,10 +6,7 @@ import com.google.gson.Gson;
 import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
-import nu.marginalia.converting.model.DisqualifiedException;
-import nu.marginalia.converting.model.GeneratorType;
-import nu.marginalia.converting.model.ProcessedDocument;
-import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.model.*;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
@@ -77,7 +74,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     }
 
     @Override
-    public Iterator<ProcessedDocument> getDocumentsStream() {
+    public Iterator<ProcessedDocumentFinal> getDocumentsStream() {
         // This leaks a thread pool, but it doesn't matter since this is a one-off process
         return ProcessingIterator.factory(24, 16).create((taskConsumer) -> {
             DomainLinks domainLinks = getDomainLinks();
@@ -94,7 +91,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                 String title = rs.getString("title");
                 String url = rs.getString("url");
 
-                taskConsumer.accept(() -> convertDocument(articleParts.parts, title, url, domainLinks));
+                taskConsumer.accept(() -> convertDocument(articleParts.parts, title, url, domainLinks).finalizeDocument());
             }
         });
     }
