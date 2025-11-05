@@ -8,6 +8,7 @@ import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDocumentFinal;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
@@ -134,6 +135,7 @@ public class DomainProcessor {
             processDomain(crawledDomain, ret, documentDecorator);
             ret.documents = new ArrayList<>();
 
+            List<ProcessedDocument> documentsWip = new ArrayList<>();
             // Process Documents
 
             Set<DomSampleClassification> classifications = getDomainClassifications(crawledDomain.getDomain());
@@ -166,7 +168,7 @@ public class DomainProcessor {
                             });
                         }
 
-                        ret.documents.add(processedDoc);
+                        documentsWip.add(processedDoc);
                     } catch (Exception ex) {
                         logger.warn("Failed to process " + doc.url, ex);
                     }
@@ -175,7 +177,11 @@ public class DomainProcessor {
 
             // Add late keywords and features from domain-level information
 
-            calculateStatistics(ret, externalDomainLinks);
+            calculateStatistics(ret, documentsWip, externalDomainLinks);
+
+            for (var document : documentsWip) {
+                ret.documents.add(new ProcessedDocumentFinal(document));
+            }
 
             return ret;
         }
@@ -233,7 +239,7 @@ public class DomainProcessor {
         }
 
         @Override
-        public Iterator<ProcessedDocument> getDocumentsStream() {
+        public Iterator<ProcessedDocumentFinal> getDocumentsStream() {
             return iteratorFactory.create((taskConsumer) -> {
 
                 while (dataStream.hasNext())
@@ -272,7 +278,7 @@ public class DomainProcessor {
                             }
                         }
 
-                        return processedDoc;
+                        return new ProcessedDocumentFinal(processedDoc);
                     });
                 }
             });
@@ -378,12 +384,12 @@ public class DomainProcessor {
         return false;
     }
 
-    private void calculateStatistics(ProcessedDomain ret, DomainLinks externalDomainLinks) {
+    private void calculateStatistics(ProcessedDomain ret, List<ProcessedDocument> documents, DomainLinks externalDomainLinks) {
         LinkGraph linkGraph = new LinkGraph();
         TopKeywords topKeywords = new TopKeywords();
 
-        ret.documents.forEach(topKeywords::accept);
-        ret.documents.forEach(linkGraph::add);
+        documents.forEach(topKeywords::accept);
+        documents.forEach(linkGraph::add);
 
         var invertedLinkGraph = linkGraph.invert();
 

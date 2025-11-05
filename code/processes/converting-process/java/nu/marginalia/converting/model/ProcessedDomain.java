@@ -13,7 +13,7 @@ import java.util.Optional;
 public class ProcessedDomain implements ConverterBatchWritableIf {
     public EdgeDomain domain;
 
-    public List<ProcessedDocument> documents;
+    public List<ProcessedDocumentFinal> documents;
     public DomainIndexingState state;
     public EdgeDomain redirect;
     public String ip;

@@ -1,5 +1,6 @@
 package nu.marginalia.converting.model;
 
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.UrlIndexingState;
@@ -7,19 +8,25 @@ import nu.marginalia.model.crawl.UrlIndexingState;
 import javax.annotation.Nullable;
 import java.util.OptionalDouble;
 
-public class ProcessedDocument {
+public class ProcessedDocumentFinal {
     public EdgeUrl url;
 
     @Nullable
     public ProcessedDocumentDetails details;
     @Nullable
-    public DocumentKeywordsBuilder words;
+    public DocumentKeywords words;
 
     public UrlIndexingState state;
     public String stateReason;
 
-    public ProcessedDocumentFinal finalizeDocument() {
-        return new ProcessedDocumentFinal(this);
+    public ProcessedDocumentFinal(ProcessedDocument processedDocument) {
+        url = processedDocument.url;
+        details = processedDocument.details;
+        if (processedDocument.words != null) {
+            words = processedDocument.words.build();
+        }
+        state = processedDocument.state;
+        stateReason = processedDocument.stateReason;
     }
 
     public boolean isOk() {
@@ -53,7 +60,7 @@ public class ProcessedDocument {
     }
 
     @Nullable
-    public DocumentKeywordsBuilder getWords() {
+    public DocumentKeywords getWords() {
         return this.words;
     }
 
@@ -66,6 +73,6 @@ public class ProcessedDocument {
     }
 
     public String toString() {
-        return "ProcessedDocument(url=" + this.getUrl() + ", details=" + this.getDetails() + ", words=" + this.getWords() + ", state=" + this.getState() + ", stateReason=" + this.getStateReason() + ")";
+        return "ProcessedDocumentFinal(url=" + this.getUrl() + ", details=" + this.getDetails() + ", words=" + this.getWords() + ", state=" + this.getState() + ", stateReason=" + this.getStateReason() + ")";
     }
 }

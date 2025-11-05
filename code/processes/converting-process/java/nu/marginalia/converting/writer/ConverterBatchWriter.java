@@ -1,6 +1,7 @@
 package nu.marginalia.converting.writer;
 
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDocumentFinal;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
@@ -18,10 +19,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.Future;
 
 /** Writer for a single batch of converter parquet files */
 public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriterIf {
@@ -29,6 +31,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     private final SlopDomainLinkRecord.Writer domainLinkWriter;
     private final SlopDocumentRecord.Writer documentWriter;
 
+    private final ForkJoinPool writePool = new ForkJoinPool(4);
     private int ordinalOffset = 0;
 
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
@@ -68,18 +71,46 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     public void writeSideloadSource(SideloadSource sideloadSource) throws IOException {
         var domain = sideloadSource.getDomain();
 
-        writeDomainData(domain);
-        writeDocumentData(domain.domain, sideloadSource.getDocumentsStream());
+        try {
+            List<Callable<Void>> tasks = List.of(
+                    () -> { writeDomainData(domain); return null; },
+                    () -> { writeDocumentData(domain.domain, sideloadSource.getDocumentsStream()); return null; }
+            );
+            for (var outcome : writePool.invokeAll(tasks)) {
+                if (outcome.state() == Future.State.FAILED) {
+                    throw new IOException(outcome.exceptionNow());
+                }
+            }
+        }
+        catch (IOException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
+            throw new IOException(ex);
+        }
     }
 
     @Override
     public void writeProcessedDomain(ProcessedDomain domain) {
         try {
-            if (domain.documents != null) {
-                writeDocumentData(domain.domain, domain.documents.iterator());
+            try {
+                List<Callable<Void>> tasks = List.of(
+                        () -> { writeDomainData(domain); return null; },
+                        () -> { if (domain.documents != null) writeDocumentData(domain.domain, domain.documents.iterator()); return null; },
+                        () -> { writeLinkData(domain); return null; }
+                );
+                for (var outcome : writePool.invokeAll(tasks)) {
+                    if (outcome.state() == Future.State.FAILED) {
+                        throw new IOException(outcome.exceptionNow());
+                    }
+                }
             }
-            writeLinkData(domain);
-            writeDomainData(domain);
+            catch (IOException ex) {
+                throw ex;
+            }
+            catch (Exception ex) {
+                throw new IOException(ex);
+            }
         }
         catch (IOException e) {
             logger.error("Data writing job failed", e);
@@ -88,7 +119,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     }
 
     private void writeDocumentData(EdgeDomain domain,
-                                     Iterator<ProcessedDocument> documentIterator)
+                                     Iterator<ProcessedDocumentFinal> documentIterator)
             throws IOException
     {
 
@@ -102,8 +133,6 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
             if (document.details == null || document.words == null) {
                 continue;
             }
-
-            DocumentKeywords wb = document.words.build();
 
             documentWriter.write(new SlopDocumentRecord(
                     domainName,
@@ -121,11 +150,11 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     document.details.metadata.encode(),
                     document.details.languageIsoCode,
                     document.details.pubYear,
-                    wb.keywords(),
-                    wb.metadata(),
-                    wb.positions(),
-                    wb.spanCodes(),
-                    wb.spanSequences()
+                    document.words.keywords(),
+                    document.words.metadata(),
+                    document.words.positions(),
+                    document.words.spanCodes(),
+                    document.words.spanSequences()
             ));
         }
 
