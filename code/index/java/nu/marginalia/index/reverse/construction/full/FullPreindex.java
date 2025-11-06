@@ -217,7 +217,7 @@ public class FullPreindex {
 
         LongArray wordIdsFile = LongArrayFactory.mmapForWritingConfined(segmentWordsFile, segmentsSize);
 
-        mergeArrays(wordIdsFile, left.wordIds, right.wordIds,
+        mergeArraysN(1, wordIdsFile, left.wordIds, right.wordIds,
                 0,
                 0, left.wordIds.size(),
                 0, right.wordIds.size());

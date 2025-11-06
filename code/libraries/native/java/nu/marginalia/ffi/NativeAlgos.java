@@ -159,7 +159,7 @@ public class NativeAlgos {
                     a.asSlice(aStart * JAVA_LONG.byteSize()),
                     b.asSlice(bStart * JAVA_LONG.byteSize()),
                     aEnd - aStart,
-                    bEnd - bStart) - outStart;
+                    bEnd - bStart);
         }
         catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);

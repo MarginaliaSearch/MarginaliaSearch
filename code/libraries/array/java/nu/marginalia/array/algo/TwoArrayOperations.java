@@ -8,20 +8,38 @@ import nu.marginalia.ffi.NativeAlgos;
  */
 public class TwoArrayOperations {
 
+
+    public static long mergeArraysN(int n,
+                                    LongArray out, LongArray a, LongArray b,
+                                    long outStart,
+                                    long aStart, long aEnd,
+                                    long bStart, long bEnd) {
+
+        if (NativeAlgos.isAvailable) {
+            if (n == 1)
+                return NativeAlgos.mergeArrays1(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 2)
+                return NativeAlgos.mergeArrays2(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 3)
+                return NativeAlgos.mergeArrays3(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
+        }
+        else {
+            if (n == 1)
+                return mergeArrays1(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 2)
+                return mergeArrays2(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
+            if (n == 3)
+                return mergeArrays3(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
+        }
+        throw new UnsupportedOperationException("Implement a merge(n)");
+    }
+
+
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
      */
-    public static long mergeArrays(LongArray out, LongArray a, LongArray b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
+    public static long mergeArrays1(LongArray out, LongArray a, LongArray b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
 
-        if (NativeAlgos.isAvailable) {
-            return NativeAlgos.mergeArrays1(
-                    out.getMemorySegment(),
-                    a.getMemorySegment(),
-                    b.getMemorySegment(),
-                    outStart,
-                    aStart, aEnd,
-                    bStart, bEnd);
-        }
         // Ensure that the arrays are sorted and that the output array is large enough
         if (TwoArrayOperations.class.desiredAssertionStatus()) {
             assert (a.isSorted(aStart, aEnd));
@@ -81,30 +99,6 @@ public class TwoArrayOperations {
         return outPos - outStart;
     }
 
-    public static long mergeArraysN(int n,
-                                    LongArray out, LongArray a, LongArray b,
-                                    long outStart,
-                                    long aStart, long aEnd,
-                                    long bStart, long bEnd) {
-
-        if (NativeAlgos.isAvailable) {
-            if (n == 1)
-                return NativeAlgos.mergeArrays1(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
-            if (n == 2)
-                return NativeAlgos.mergeArrays2(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
-            if (n == 3)
-                return NativeAlgos.mergeArrays3(out.getMemorySegment(), a.getMemorySegment(), b.getMemorySegment(), outStart, aStart, aEnd, bStart, bEnd);
-        }
-        else {
-            if (n == 1)
-                return mergeArrays(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-            if (n == 2)
-                return mergeArrays2(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-            if (n == 3)
-                return mergeArrays3(out, a, b, outStart, aStart, aEnd, bStart, bEnd);
-        }
-        throw new UnsupportedOperationException("Implement a merge(n)");
-    }
 
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
@@ -297,7 +291,7 @@ public class TwoArrayOperations {
             return NativeAlgos.countDistinct(a.getMemorySegment(), b.getMemorySegment(), aStart, aEnd, bStart, bEnd);
         }
         else {
-            return countDistinctElementsDirect(a, b, aStart, aEnd, bStart, bEnd);
+            return countDistinctElementsJava(a, b, aStart, aEnd, bStart, bEnd);
         }
     }
 
@@ -311,7 +305,7 @@ public class TwoArrayOperations {
             assert (b.isSortedN(stepSize, bStart, bEnd));
         }
 
-        return countDistinctElementsDirectN(stepSize,
+        return countDistinctElementsJavaN(stepSize,
                 a,
                 b,
                 aStart,
@@ -320,7 +314,7 @@ public class TwoArrayOperations {
                 bEnd);
     }
 
-    private static long countDistinctElementsDirect(LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {
+    public static long countDistinctElementsJava(LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {
         long aPos = aStart;
         long bPos = bStart;
 
@@ -372,7 +366,7 @@ public class TwoArrayOperations {
         return distinct;
     }
 
-    private static long countDistinctElementsDirectN(int stepSize, LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {
+    private static long countDistinctElementsJavaN(int stepSize, LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {
         long aPos = aStart;
         long bPos = bStart;
 

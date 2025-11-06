@@ -1,5 +1,6 @@
 package nu.marginalia.array;
 
+import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.SegmentLongArray;
 import nu.marginalia.array.page.UnsafeLongArray;
 
@@ -19,11 +20,39 @@ public class LongArrayFactory {
             return SegmentLongArray.onHeap(Arena.ofConfined(), size);
     }
 
+    public static LongArray onHeapConfined(long[] values) {
+        var array = onHeapConfined(values.length);
+        array.set(0, values);
+        return array;
+    }
+
+    public static LongArray onHeapConfined(LongList values) {
+        var array = onHeapConfined(values.size());
+        for (int i = 0; i < values.size(); i++) {
+            array.set(i, values.getLong(i));
+        }
+        return array;
+    }
+
     public static LongArray onHeapShared(long size) {
         if (useUnsafe)
             return UnsafeLongArray.onHeap(Arena.ofShared(), size);
         else
             return SegmentLongArray.onHeap(Arena.ofShared(), size);
+    }
+
+    public static LongArray onHeapShared(long[] values) {
+        var array = onHeapShared(values.length);
+        array.set(0, values);
+        return array;
+    }
+
+    public static LongArray onHeapShared(LongList values) {
+        var array = onHeapShared(values.size());
+        for (int i = 0; i < values.size(); i++) {
+            array.set(i, values.getLong(i));
+        }
+        return array;
     }
 
     public static LongArray onHeapManaged(Arena arena, long size) {

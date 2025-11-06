@@ -16,8 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import static nu.marginalia.array.algo.TwoArrayOperations.countDistinctElements;
-import static nu.marginalia.array.algo.TwoArrayOperations.mergeArrays;
+import static nu.marginalia.array.algo.TwoArrayOperations.*;
 
 /** Contains the data that would go into a reverse index,
  * that is, a mapping from words to documents, minus the actual
@@ -211,7 +210,7 @@ public class PrioPreindex {
 
         LongArray wordIdsFile = LongArrayFactory.mmapForWritingConfined(segmentWordsFile, segmentsSize);
 
-        mergeArrays(wordIdsFile, left.wordIds, right.wordIds,
+        mergeArraysN(1, wordIdsFile, left.wordIds, right.wordIds,
                 0,
                 0, left.wordIds.size(),
                 0, right.wordIds.size());
@@ -253,7 +252,7 @@ public class PrioPreindex {
                                       LongArray dest,
                                       PrioPreindexWordSegments.SegmentConstructionIterator destIter)
     {
-        long segSize = mergeArrays(dest,
+        long segSize = mergeArraysN(1, dest,
                 left.documents,
                 right.documents,
                 destIter.startOffset,
