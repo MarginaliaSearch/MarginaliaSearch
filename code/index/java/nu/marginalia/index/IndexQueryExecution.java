@@ -25,6 +25,9 @@ public class IndexQueryExecution {
     private static final int indexPreparationThreads = Integer.getInteger("index.preparationThreads", 2);
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
 
+    private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 4);
+    private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
+
     // Since most NVMe drives have a maximum read size of 128 KB, and most small reads are 512B
     // this should probably be 128*1024 / 512 = 256 to reduce queue depth and optimize tail latency
     private static final int evaluationBatchSize = 256;
@@ -32,8 +35,7 @@ public class IndexQueryExecution {
     private static final int lookupBatchSize = SkipListConstants.MAX_RECORDS_PER_BLOCK;
 
     private static final ExecutorService threadPool =
-            new ThreadPoolExecutor(indexValuationThreads, 256,
-                    60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+            new ThreadPoolExecutor(indexValuationThreads, 256, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
@@ -81,7 +83,18 @@ public class IndexQueryExecution {
             .help("Number of documents ranked")
             .register();
 
+    private static final Gauge index_execution_rejected_queries = Gauge.build()
+            .labelNames("node")
+            .name("index_execution_rejected_queries")
+            .help("Number of queries rejected to avoid backpressure")
+            .register();
 
+    public static class TooManySimultaneousQueriesException extends Exception {
+        @Override
+        public StackTraceElement[] getStackTrace() {
+            return new StackTraceElement[0];
+        }
+    }
 
     public IndexQueryExecution(CombinedIndexReader currentIndex,
                                IndexResultRankingService rankingService,
@@ -104,26 +117,37 @@ public class IndexQueryExecution {
         rankingCountdown = new CountDownLatch(indexValuationThreads * 2);
     }
 
-    public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
-        for (IndexQuery query : queries) {
-            threadPool.submit(() -> lookup(query));
-        }
+    public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException, TooManySimultaneousQueriesException {
 
-        for (int i = 0; i < indexPreparationThreads; i++) {
-            threadPool.submit(() -> prepare(priorityPreparationQueue, priorityEvaluationQueue));
-            threadPool.submit(() -> prepare(fullPreparationQueue, fullEvaluationQueue));
-        }
 
-        // Spawn lookup tasks for each query
-        for (int i = 0; i < indexValuationThreads; i++) {
-            threadPool.submit(() -> evaluate(priorityEvaluationQueue));
-            threadPool.submit(() -> evaluate(fullEvaluationQueue));
+        if (!simultaneousRequests.tryAcquire(budget.timeLeft() / 2, TimeUnit.MILLISECONDS)) {
+            index_execution_rejected_queries.inc();
+            throw new TooManySimultaneousQueriesException();
         }
+        try {
+            for (IndexQuery query : queries) {
+                threadPool.submit(() -> lookup(query));
+            }
 
-        // Await lookup task termination
-        lookupCountdown.await();
-        preparationCountdown.await();
-        rankingCountdown.await();
+            for (int i = 0; i < indexPreparationThreads; i++) {
+                threadPool.submit(() -> prepare(priorityPreparationQueue, priorityEvaluationQueue));
+                threadPool.submit(() -> prepare(fullPreparationQueue, fullEvaluationQueue));
+            }
+
+            // Spawn lookup tasks for each query
+            for (int i = 0; i < indexValuationThreads; i++) {
+                threadPool.submit(() -> evaluate(priorityEvaluationQueue));
+                threadPool.submit(() -> evaluate(fullEvaluationQueue));
+            }
+
+            // Await lookup task termination
+            lookupCountdown.await();
+            preparationCountdown.await();
+            rankingCountdown.await();
+        }
+        finally {
+            simultaneousRequests.release();
+        }
 
         // Deallocate any leftover ranking data buffers
         for (var data : priorityEvaluationQueue) {
@@ -145,6 +169,7 @@ public class IndexQueryExecution {
 
         // Final result selection
         return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
+
     }
 
     private List<Future<?>> lookup(IndexQuery query) {

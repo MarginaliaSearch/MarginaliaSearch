@@ -109,6 +109,10 @@ public class IndexGrpcService
 
                             return queryExecution.run();
                         }
+                        catch (IndexQueryExecution.TooManySimultaneousQueriesException ex) {
+                            logger.error("Rejected request execution due to overload");
+                            return List.of();
+                        }
                         catch (Exception ex) {
                             logger.error("Error in handling request", ex);
                             return List.of();
