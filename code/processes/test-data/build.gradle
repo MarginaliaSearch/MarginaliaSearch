@@ -10,7 +10,5 @@ java {
 }
 
 
-apply from: "$rootProject.projectDir/srcsets.gradle"
-
 dependencies {
 }

@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.0"
     id "me.champeau.jmh" version "0.7.3"
+    id 'com.gradleup.shadow' version "9.2.2"
 
     // This is a workaround for a bug in the Jib plugin that causes it to stall randomly
     // https://github.com/GoogleContainerTools/jib/issues/3347
@@ -10,7 +11,7 @@ plugins {
 }
 
 group 'marginalia'
-version 'SNAPSHOT'
+version '1.1'
 
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"

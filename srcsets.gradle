@@ -6,6 +6,8 @@
  * */
 apply plugin: 'java'
 apply plugin: 'com.adarshr.test-logger'
+apply plugin: 'com.gradleup.shadow'
+apply plugin: 'application'
 
 test {
     maxHeapSize = "8G"
@@ -20,6 +22,34 @@ tasks.register('fastTests', Test) {
     useJUnitPlatform {
         excludeTags("slow", "flaky")
     }
+}
+
+if (project.plugins.hasPlugin('application')) {
+    if (!application.mainClass.isPresent() || !application.applicationName.endsWith("-service")) {
+        tasks.shadowJar.enabled = false
+    }
+    else {
+    }
+
+    shadowJar {
+        archiveBaseName = application.applicationName
+        archiveClassifier = ''
+        archiveVersion = project.version
+        zip64 true
+        // Manifest for executable JAR
+        manifest {
+            attributes(
+                    'Main-Class': application.mainClass,
+                    'Implementation-Version': project.version
+            )
+        }
+
+        // Minimize JAR size by excluding unnecessary files
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+    }
+
 }
 
 dependencies {

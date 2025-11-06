@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.gradleup.shadow'
     id 'jvm-test-suite'
     id 'gg.jte.gradle' version '3.1.15'
     id 'com.google.cloud.tools.jib' version '3.4.5'

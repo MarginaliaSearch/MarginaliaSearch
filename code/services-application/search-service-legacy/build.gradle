@@ -3,6 +3,7 @@ plugins {
     id 'io.freefair.sass-base' version '8.4'
     id 'io.freefair.sass-java' version '8.4'
     id 'application'
+    id 'com.gradleup.shadow'
     id 'jvm-test-suite'
 
     id 'com.google.cloud.tools.jib' version '3.4.5'
