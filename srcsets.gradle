@@ -31,7 +31,10 @@ if (project.plugins.hasPlugin('application')) {
     else {
     }
 
+
     shadowJar {
+        mergeServiceFiles()
+
         archiveBaseName = application.applicationName
         archiveClassifier = ''
         archiveVersion = project.version
