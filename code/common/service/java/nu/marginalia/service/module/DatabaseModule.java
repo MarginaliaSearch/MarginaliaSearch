@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.WmsaHome;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.Location;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +38,10 @@ public class DatabaseModule extends AbstractModule {
                 logger.info("Flyway disabled");
             }
             else {
-                var config = Flyway.configure()
-                        .dataSource(getMariaDB())
-                        .locations("classpath:db/migration")
-                        .load();
-
-                new Flyway(config.getConfiguration()).migrate();
+                Flyway.configure()
+                    .dataSource(getMariaDB())
+                    .load()
+                    .migrate();
             }
         }
     }
