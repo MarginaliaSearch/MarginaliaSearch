@@ -66,7 +66,7 @@ flyway {
     password = 'wmsa'
     schemas = ['WMSA_prod']
     configurations = [ 'compileClasspath', 'flywayMigration' ]
-    locations = ['filesystem:src/main/resources/db/migration']
+    locations = ['filesystem:resources/db/migration']
     cleanDisabled = false
 }
 
