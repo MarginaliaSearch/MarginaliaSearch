@@ -40,6 +40,7 @@ public class DatabaseModule extends AbstractModule {
             else {
                 Flyway.configure()
                     .dataSource(getMariaDB())
+                    .locations("classpath:db/migrations")
                     .load()
                     .migrate();
             }
