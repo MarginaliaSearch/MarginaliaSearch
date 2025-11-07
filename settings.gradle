@@ -205,8 +205,8 @@ dependencyResolutionManagement {
             library('lz4','org.lz4','lz4-java').version('1.8.0')
             library('xz','org.tukaani','xz').version('1.9')
 
-            library('flyway.core','org.flywaydb','flyway-core').version('10.4.1')
-            library('flyway.mysql','org.flywaydb','flyway-mysql').version('10.4.1')
+            library('flyway.core','org.flywaydb','flyway-core').version('11.16.0')
+            library('flyway.mysql','org.flywaydb','flyway-mysql').version('11.16.0')
 
             library('jsoup','org.jsoup','jsoup').version('1.15.3')
             library('snakeyaml','org.yaml','snakeyaml').version('1.33') // Known CVE, but this library only parses internal config files so it's fine
