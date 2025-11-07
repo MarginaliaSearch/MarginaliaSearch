@@ -39,6 +39,7 @@ dependencies {
     implementation libs.bundles.slf4j
     implementation libs.bucket4j
     implementation libs.notnull
+    implementation libs.gson
     implementation libs.bundles.curator
     implementation libs.bundles.flyway
 
