@@ -22,6 +22,7 @@ public class BangCommand implements SearchCommandInterface {
         bangsToPattern.put("!w", "/search?query=%s+site:en.wikipedia.org");
         bangsToPattern.put("!w2", "/search?query=%s+site:en.wikipedia.org");
         bangsToPattern.put("!w3", "/search?query=%s+site:en.wikipedia.org");
+        bangsToPattern.put("!w4", "/search?query=%s+site:en.wikipedia.org");
     }
 
     @Override
