@@ -110,11 +110,12 @@ dependencyResolutionManagement {
 
     repositories {
         mavenLocal()
-        maven { url "https://artifactory.cronapp.io/public-release/" }
+        mavenCentral()
         maven { url "https://repo1.maven.org/maven2/" }
         maven { url "https://www2.ph.ed.ac.uk/maven2/" }
         maven { url "https://jitpack.io/" }
         maven { url "https://artifacts.marginalia.nu/snapshots" }
+      //  maven { url "https://artifactory.cronapp.io/public-release/" }
 
         exclusiveContent {
             forRepository {
