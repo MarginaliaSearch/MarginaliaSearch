@@ -1,5 +1,6 @@
 package nu.marginalia.skiplist;
 
+import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -198,6 +199,8 @@ public class SkipListReader {
 
         long lastValueBlock = -1;
 
+        LongArrayFIFOQueue prefetchBlocks = enableValuePrefetching ? new LongArrayFIFOQueue() : null;
+
         while (pos < keys.length) {
             try (var page = indexPool.get(currentBlock)) {
                 MemorySegment ms = page.getMemorySegment();
@@ -239,7 +242,12 @@ public class SkipListReader {
                                 long valBlock = val & -VALUE_BLOCK_SIZE;
                                 if (valBlock != lastValueBlock) {
                                     lastValueBlock = valBlock;
-                                    valuesPool.prefetch(valBlock);
+
+                                    if (prefetchBlocks.isEmpty()) {
+                                        valuesPool.prefetch(valBlock);
+                                    }
+
+                                    prefetchBlocks.enqueue(valBlock);
                                 }
                             }
 
@@ -288,7 +296,16 @@ public class SkipListReader {
             else {
                 long valBlock = vals[i] & -VALUE_BLOCK_SIZE;
 
+                while (enableValuePrefetching && !prefetchBlocks.isEmpty()) {
+                    long nextBlock = prefetchBlocks.dequeueLong();
+                    if (nextBlock >= valBlock) {
+                        valuesPool.prefetch(nextBlock);
+                        break;
+                    }
+                }
+
                 try (var page = valuesPool.get(valBlock)) {
+
                     for (; i < keys.length; i++) {
                         if (vals[i] < 0) {
                             vals[i] = 0;
