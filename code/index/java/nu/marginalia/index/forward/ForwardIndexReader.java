@@ -18,6 +18,7 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.BitSet;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeoutException;
 
 import static nu.marginalia.index.config.ForwardIndexParameters.*;
@@ -148,16 +149,30 @@ public class ForwardIndexReader {
 
     private int idxForDoc(long combinedDocId) {
 
+        final long strippedId = UrlIdCodec.removeRank(combinedDocId);
+
         if (idsMap != null) {
-            return idsMap.getOrDefault(combinedDocId, -1);
+            int ret = idsMap.getOrDefault(strippedId, -1);
+
+            if (ret == -1) {
+                logger.warn("Could not find offset for doc {} ({}:{}:{})", combinedDocId,
+                        UrlIdCodec.getRank(combinedDocId),
+                        UrlIdCodec.getDomainId(combinedDocId),
+                        UrlIdCodec.getDocumentOrdinal(combinedDocId));
+            }
+
+            return ret;
         }
 
-        long offset = ids.binarySearch2(combinedDocId, 0, ids.size());
+        long offset = ids.binarySearch2(strippedId, 0, ids.size());
 
-        if (offset >= ids.size() || offset < 0 || ids.get(offset) != combinedDocId) {
-            if (getClass().desiredAssertionStatus()) {
-                logger.warn("Could not find offset for doc {}", combinedDocId);
-            }
+        if (offset >= ids.size() || offset < 0 || ids.get(offset) != strippedId) {
+
+            logger.warn("Could not find offset for doc {} ({}:{}:{})", combinedDocId,
+                    UrlIdCodec.getRank(combinedDocId),
+                    UrlIdCodec.getDomainId(combinedDocId),
+                    UrlIdCodec.getDocumentOrdinal(combinedDocId));
+
             return -1;
         }
 

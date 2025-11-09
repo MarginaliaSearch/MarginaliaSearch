@@ -99,4 +99,8 @@ public class DomainRankings {
     public int size() {
         return rankings.size();
     }
+
+    public void updateInUnitTest(int domainId, short value) {
+        rankings.put(domainId, value);
+    }
 }

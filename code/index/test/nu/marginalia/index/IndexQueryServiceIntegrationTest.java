@@ -379,7 +379,7 @@ public class IndexQueryServiceIntegrationTest {
 
         assertEquals(1, rsp.size());
         assertEquals(d(2,2).docId(),
-                rsp.get(0).getRawItem().getCombinedId());
+                UrlIdCodec.removeRank(rsp.get(0).getRawItem().getCombinedId()));
     }
 
     SearchSpecification basicQuery(Function<SearchSpecification.SearchSpecificationBuilder, SearchSpecification.SearchSpecificationBuilder> mutator)
@@ -528,8 +528,9 @@ public class IndexQueryServiceIntegrationTest {
                         MockDocumentMeta meta,
                         MockDataKeyword... words)
         {
-            long id = UrlIdCodec.encodeId(0x3F, document.domainId, document.ordinal);
+            long id = UrlIdCodec.encodeId(0, document.domainId, document.ordinal);
 
+            domainRankings.updateInUnitTest(document.domainId, (short) 0x01);
             allData.computeIfAbsent(id, l -> new ArrayList<>()).addAll(List.of(words));
             metaByDoc.put(id, meta);
 
@@ -554,10 +555,13 @@ public class IndexQueryServiceIntegrationTest {
                     positions.add(VarintCodedSequence.generate(words.get(i).positions));
                 }
 
+                System.out.println(doc);
+
+
                 indexJournalWriter.put(doc,
                         new SlopDocumentRecord.KeywordsProjection(
                                 "",
-                                -1,
+                                UrlIdCodec.getDocumentOrdinal(doc),
                                 meta.features,
                                 meta.documentMetadata.encode(),
                                 100,
@@ -573,9 +577,9 @@ public class IndexQueryServiceIntegrationTest {
             var linkdbWriter = new DocumentDbWriter(
                     IndexLocations.getLinkdbLivePath(fileStorageService).resolve(DOCDB_FILE_NAME)
             );
-            for (Long key : allData.keySet()) {
+            for (Long docId : allData.keySet()) {
                 linkdbWriter.add(new DocdbUrlDetail(
-                        UrlIdCodec.removeRank(key),
+                        docId,
                         new EdgeUrl("https://www.example.com"),
                         "test",
                         "test",
@@ -584,11 +588,12 @@ public class IndexQueryServiceIntegrationTest {
                         "HTML5",
                         0,
                         null,
-                        key.hashCode(),
+                        docId.hashCode(),
                         5
                 ));
             }
             linkdbWriter.close();
+
 
             indexJournalWriter.close();
             constructIndex();
@@ -599,7 +604,7 @@ public class IndexQueryServiceIntegrationTest {
 
     record MockDataDocument(int domainId, int ordinal) {
         public long docId() {
-            return UrlIdCodec.encodeId(0x3F, domainId, ordinal);
+            return UrlIdCodec.encodeId( domainId, ordinal);
         }
 
     }
