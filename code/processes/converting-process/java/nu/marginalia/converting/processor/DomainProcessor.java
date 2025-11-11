@@ -199,7 +199,7 @@ public class DomainProcessor {
         Set<DomSampleClassification> classifications;
 
         private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
-                Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
+                Integer.getInteger("converter.poolSize", Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors()))
         );
 
         SimpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws Exception {
