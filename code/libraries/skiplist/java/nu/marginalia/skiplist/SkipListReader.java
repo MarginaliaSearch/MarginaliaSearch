@@ -237,17 +237,18 @@ public class SkipListReader {
                             long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE-1);
                             vals[pos] = val;
 
-                            // will be C2:ed out of existence if this is set to false
                             if (enableValuePrefetching) {
                                 long valBlock = val & -VALUE_BLOCK_SIZE;
                                 if (valBlock != lastValueBlock) {
-                                    lastValueBlock = valBlock;
-
-                                    if (prefetchBlocks.isEmpty()) {
+                                    if (lastValueBlock < 0) { // prefetch the first block immediately
                                         valuesPool.prefetch(valBlock);
                                     }
+                                    else {
+                                        prefetchBlocks.enqueue(valBlock);
+                                    }
 
-                                    prefetchBlocks.enqueue(valBlock);
+                                    lastValueBlock = valBlock;
+
                                 }
                             }
 
@@ -296,11 +297,9 @@ public class SkipListReader {
             else {
                 long valBlock = vals[i] & -VALUE_BLOCK_SIZE;
 
-                while (enableValuePrefetching && !prefetchBlocks.isEmpty()) {
-                    long nextBlock = prefetchBlocks.dequeueLong();
-                    if (nextBlock >= valBlock) {
-                        valuesPool.prefetch(nextBlock);
-                        break;
+                if (enableValuePrefetching && !prefetchBlocks.isEmpty()) {
+                    for (int prefetchIter = 0; prefetchIter < 2 && !prefetchBlocks.isEmpty(); prefetchIter++) {
+                        valuesPool.prefetch(prefetchBlocks.dequeueLong());
                     }
                 }
 
