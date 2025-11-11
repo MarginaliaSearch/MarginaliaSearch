@@ -54,6 +54,10 @@ public class ConverterWriter implements AutoCloseable {
         }
     }
 
+    public boolean isAlreadyProcessed(String id) {
+        return workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id);
+    }
+
     private void writerThread() {
         try {
             IntervalAction switcher = new IntervalAction(this::switchBatch, switchInterval);
@@ -73,7 +77,7 @@ public class ConverterWriter implements AutoCloseable {
 
                 String id = data.id();
 
-                if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
+                if (isAlreadyProcessed(id)) {
                     logger.warn("Skipping already logged item {}", id);
                 }
                 else {

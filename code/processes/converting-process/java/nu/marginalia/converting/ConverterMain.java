@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 
@@ -214,7 +215,7 @@ public class ConverterMain extends ProcessMainClass {
 
             // First process the small items
             for (var dataPath : WorkLog.iterableMap(crawlDir.getLogFile(),
-                    new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog)))
+                    new CrawlDataLocator(crawlDir.getDir(), batchingWorkLog, id -> !converterWriter.isAlreadyProcessed(id))))
             {
                 if (SerializableCrawlDataStream.getSizeHint(dataPath) >= SIDELOAD_THRESHOLD) {
                     bigTasks.add(dataPath);
@@ -278,10 +279,12 @@ public class ConverterMain extends ProcessMainClass {
 
         private final Path crawlRootDir;
         private final BatchingWorkLog batchingWorkLog;
+        private final Predicate<String> idFilter;
 
-        CrawlDataLocator(Path crawlRootDir, BatchingWorkLog workLog) {
+        CrawlDataLocator(Path crawlRootDir, BatchingWorkLog workLog, Predicate<String> idFilter) {
             this.crawlRootDir = crawlRootDir;
             this.batchingWorkLog = workLog;
+            this.idFilter = idFilter;
         }
 
         @Override
@@ -291,6 +294,10 @@ public class ConverterMain extends ProcessMainClass {
             }
 
             var path = getCrawledFilePath(crawlRootDir, entry.path());
+
+            if (!idFilter.test(entry.id())) {
+                return Optional.empty();
+            }
 
             if (!Files.exists(path)) {
                 logger.warn("File not found: {}", path);
