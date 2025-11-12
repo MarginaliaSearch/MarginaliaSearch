@@ -16,7 +16,7 @@
                 <MarkerFilter marker="PROCESS" onMatch="ALLOW" onMismatch="DENY" />
             </Filters>
         </Console>
-        <RollingFile name="LogToFileService" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
+        <RollingFile name="LogToFileService" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="${env:WMSA_LOG_DIR:-/var/log/wmsa}/wmsa-${sys:service-name}-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
                      ignoreExceptions="false">
             <JSONLayout compact="true" eventEol="true" properties="true" stacktraceAsString="true" includeTimeMillis="true"/>
             <Filters>
@@ -28,7 +28,7 @@
             </Filters>
             <SizeBasedTriggeringPolicy size="10MB" />
         </RollingFile>
-        <RollingFile name="LogToFileCrawler" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/crawler-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
+        <RollingFile name="LogToFileCrawler" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
                      ignoreExceptions="false">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss,SSS}: %msg{nolookups}%n</Pattern>
@@ -38,7 +38,7 @@
                 <MarkerFilter marker="CRAWLER" onMatch="ALLOW" onMismatch="DENY" />
             </Filters>
         </RollingFile>
-        <RollingFile name="LogToFileConverter" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/converter-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="/var/log/wmsa/converter-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
+        <RollingFile name="LogToFileConverter" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/converter-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="${env:WMSA_LOG_DIR:-/var/log/wmsa}/converter-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
                      ignoreExceptions="false">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss,SSS}: %msg{nolookups}%n</Pattern>
