@@ -29,6 +29,7 @@ public class DomainCrawlFrontier {
     // A value of false signifies the url is known but not visited
     // A value of true signifies the url is visited
     private final Long2BooleanOpenHashMap visited;
+    private int visitedCnt = 0;
 
     private final EdgeDomain thisDomain;
     private final UrlBlocklist urlBlocklist;
@@ -76,7 +77,7 @@ public class DomainCrawlFrontier {
     }
 
     public boolean isCrawlDepthReached() {
-        return visited.size() >= depth;
+        return visitedCnt >= depth;
     }
 
     public boolean isEmpty() {
@@ -111,7 +112,11 @@ public class DomainCrawlFrontier {
     }
 
     public boolean addVisited(EdgeUrl url) {
-        return !visited.put(hashUrl(url), true);
+        if (!visited.put(hashUrl(url), true)) {
+            visitedCnt++;
+            return true;
+        }
+        return false;
     }
 
     public boolean addKnown(EdgeUrl url) {
