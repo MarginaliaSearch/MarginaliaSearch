@@ -66,7 +66,7 @@ public class DomainCrawlFrontier {
     public void increaseDepth(double depthIncreaseFactor,
                               int maxDepthIncreaseAbsolute
                               ) {
-        int base = Math.max(visited.size(), depth);
+        int base = Math.max(visitedCnt, depth);
         int scaledUp = (int)(base * depthIncreaseFactor);
 
         depth = Math.min(base + maxDepthIncreaseAbsolute, scaledUp);
@@ -162,7 +162,7 @@ public class DomainCrawlFrontier {
             return;
 
         // reduce memory usage by not growing queue huge when crawling large sites
-        if (queue.size() + visited.size() >= depth + 10_000)
+        if (queue.size() + visitedCnt >= depth + 10_000)
             return;
 
         url = correctSchema(url);
@@ -207,7 +207,7 @@ public class DomainCrawlFrontier {
     public int queueSize() {
         return queue.size();
     }
-    public int visitedSize() { return visited.size(); }
+    public int visitedSize() { return visitedCnt; }
 
     public void enqueueLinksFromDocument(EdgeUrl baseUrl, Document parsed) {
         baseUrl = linkParser.getBaseLink(parsed, baseUrl);
