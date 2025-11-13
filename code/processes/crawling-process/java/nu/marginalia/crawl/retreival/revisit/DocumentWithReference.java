@@ -51,8 +51,19 @@ public record DocumentWithReference(
             }
         }
 
-        return CrawlDataReference.isContentBodySame(doc.documentBodyBytes, resultOk.bytesRaw());
+        if (hasIdenticalHeader("Last-Modified", doc, resultOk))
+            return true;
+        if (hasIdenticalHeader("ETag", doc, resultOk))
+            return true;
+
+        return CrawlDataReference.isContentBodySame(doc.documentBodyBytes, resultOk.getBodyBytes());
     }
+
+    private boolean hasIdenticalHeader(String header, CrawledDocument doc, HttpFetchResult.ResultOk ok) {
+        String newHeader = ok.header(header);
+        return newHeader != null && !newHeader.isBlank() && newHeader.equals(doc.getHeader(header));
+    }
+
 
     public ContentTags getContentTags() {
         if (null == doc)
