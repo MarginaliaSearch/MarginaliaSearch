@@ -173,12 +173,14 @@ class SearchFilterParserTest {
                     <year type="lt" value="1996" />
                     <quality type="eq" value="5" />
                     <size type="gt" value="100" />
+                    <rank type="gt" value="20" />
                 </filter>
                 """);
 
         Assertions.assertEquals(SpecificationLimit.lessThan(1996), filter.year());
         Assertions.assertEquals(SpecificationLimit.equals(5), filter.quality());
         Assertions.assertEquals(SpecificationLimit.greaterThan(100), filter.size());
+        Assertions.assertEquals(SpecificationLimit.greaterThan(20), filter.rank());
     }
 
     @Test

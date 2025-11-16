@@ -74,7 +74,7 @@ public class QueryFactory {
         SpecificationLimit qualityLimit = searchFilter.quality();
         SpecificationLimit year = searchFilter.year();
         SpecificationLimit size = searchFilter.size();
-        SpecificationLimit rank = SpecificationLimit.none();
+        SpecificationLimit rank = searchFilter.rank();
         QueryStrategy queryStrategy = QueryStrategy.AUTO;
 
         String domain = null;

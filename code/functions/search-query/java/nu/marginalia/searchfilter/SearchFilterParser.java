@@ -43,6 +43,7 @@ public class SearchFilterParser {
         final SpecificationLimit year;
         final SpecificationLimit size;
         final SpecificationLimit quality;
+        final SpecificationLimit rank;
 
         final String temporalBias;
 
@@ -81,6 +82,7 @@ public class SearchFilterParser {
             year = parseSpecificationLimit(filters.getElementsByTagName("year"), "year");
             size = parseSpecificationLimit(filters.getElementsByTagName("size"), "size");
             quality = parseSpecificationLimit(filters.getElementsByTagName("quality"), "quality");
+            rank = parseSpecificationLimit(filters.getElementsByTagName("rank"), "rank");
 
             var temporalBiasTags = filters.getElementsByTagName("temporal-bias");
             if (temporalBiasTags.getLength() == 0) {
@@ -110,6 +112,7 @@ public class SearchFilterParser {
                     year,
                     size,
                     quality,
+                    rank,
                     temporalBias
             );
         }

@@ -25,6 +25,7 @@ public record SearchFilterSpec(String userId,
                                SpecificationLimit year,
                                SpecificationLimit size,
                                SpecificationLimit quality,
+                               SpecificationLimit rank,
                                String temporalBias
                                )
 {
@@ -64,6 +65,7 @@ public record SearchFilterSpec(String userId,
                 year,
                 size,
                 quality,
+                rank,
                 temporalBias);
     }
 

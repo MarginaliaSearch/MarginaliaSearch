@@ -20,6 +20,7 @@ public record CompiledSearchFilterSpec(String userId,
                                        SpecificationLimit year,
                                        SpecificationLimit size,
                                        SpecificationLimit quality,
+                                       SpecificationLimit rank,
                                        String temporalBias
                                        )
 {
