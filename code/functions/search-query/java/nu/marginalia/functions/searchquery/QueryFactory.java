@@ -8,8 +8,10 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.api.searchquery.RpcQsQuerySimple;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
+import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.*;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
@@ -161,7 +163,6 @@ public class QueryFactory {
 
         queryBuilder.promoteNonRankingTerms();
 
-
         var limits = request.getQueryLimits();
         // Disable limits on number of results per domain if we're searching with a site:-type term
         if (domain != null) {
@@ -180,8 +181,18 @@ public class QueryFactory {
 
         // add a pseudo-constraint for the full query
         queryBuilder.phraseConstraint(SearchPhraseConstraint.full(expansion.fullPhraseConstraint()));
-
         queryBuilder.compiledQuery(expansion.compiledQuery());
+
+        if (!"NONE".equals(searchFilter.temporalBias())) {
+            if (rankingParams == null) {
+                rankingParams = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults())
+                        .setTemporalBias(RpcTemporalBias.newBuilder().setBias(RpcTemporalBias.Bias.valueOf(searchFilter.temporalBias()))).build();
+            }
+            else {
+                rankingParams = RpcResultRankingParameters.newBuilder(rankingParams)
+                        .setTemporalBias(RpcTemporalBias.newBuilder().setBias(RpcTemporalBias.Bias.valueOf(searchFilter.temporalBias()))).build();
+            }
+        }
 
         var specsBuilder = SearchSpecification.builder()
                 .query(queryBuilder.build())
@@ -191,7 +202,7 @@ public class QueryFactory {
                 .rank(rank)
                 .rankingParams(rankingParams)
                 .domains(domainIds)
-                .excludedDomains(List.of()) // TBI
+                .excludedDomains(searchFilter.domainsExclude())
                 .queryLimits(limits)
                 .searchSetIdentifier(searchFilter.searchSetIdentifier())
                 .queryStrategy(queryStrategy);

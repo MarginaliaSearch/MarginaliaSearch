@@ -62,6 +62,57 @@ class SearchFilterParserTest {
         Assertions.assertEquals("BLOGS", filter.searchSetIdentifier());
     }
 
+
+    @Test
+    public void temporalBiasTest() throws SearchFilterParser.SearchFilterParserException {
+        var filter = parser.parse("test", "test", """
+                <?xml version="1.0"?>
+                <filter>
+                </filter>
+                """);
+        Assertions.assertEquals("NONE", filter.temporalBias());
+
+        filter = parser.parse("test", "test", """
+                <?xml version="1.0"?>
+                <filter>
+                   <temporal-bias> Recent </temporal-bias>
+                </filter>
+                """);
+        Assertions.assertEquals("RECENT", filter.temporalBias());
+
+
+        filter = parser.parse("test", "test", """
+                <?xml version="1.0"?>
+                <filter>
+                   <temporal-bias> old </temporal-bias>
+                </filter>
+                """);
+        Assertions.assertEquals("OLD", filter.temporalBias());
+
+        try {
+            parser.parse("test", "test", """
+                <?xml version="1.0"?>
+                <filter>
+                   <temporal-bias> Dog </temporal-bias>
+                </filter>
+                """);
+            Assertions.fail("Expected exception");
+        }
+        catch (SearchFilterParser.SearchFilterParserException ex) {}
+
+        try {
+            parser.parse("test", "test", """
+                <?xml version="1.0"?>
+                <filter>
+                   <temporal-bias> OLD </temporal-bias>
+                   <temporal-bias> RECENT </temporal-bias>
+                </filter>
+                """);
+            Assertions.fail("Expected exception");
+        }
+        catch (SearchFilterParser.SearchFilterParserException ex) {}
+    }
+
     @Test
     public void parseSearchSetAndIncludes() {
         try {

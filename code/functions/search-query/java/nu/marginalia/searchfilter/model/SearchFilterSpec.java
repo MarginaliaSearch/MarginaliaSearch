@@ -24,7 +24,9 @@ public record SearchFilterSpec(String userId,
                                List<Map.Entry<String, Float>> termsPromote,
                                SpecificationLimit year,
                                SpecificationLimit size,
-                               SpecificationLimit quality)
+                               SpecificationLimit quality,
+                               String temporalBias
+                               )
 {
 
     public CompiledSearchFilterSpec compile(DbDomainQueries domainQueries) {
@@ -61,7 +63,8 @@ public record SearchFilterSpec(String userId,
                 FloatLists.unmodifiable(newTermsPromoteAmount),
                 year,
                 size,
-                quality);
+                quality,
+                temporalBias);
     }
 
     private static void remapDomainIds(IntList destDomainIds,

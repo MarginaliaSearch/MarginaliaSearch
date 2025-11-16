@@ -44,6 +44,8 @@ public class SearchFilterParser {
         final SpecificationLimit size;
         final SpecificationLimit quality;
 
+        final String temporalBias;
+
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(new ByteArrayInputStream(xml.getBytes()));
@@ -80,6 +82,21 @@ public class SearchFilterParser {
             size = parseSpecificationLimit(filters.getElementsByTagName("size"), "size");
             quality = parseSpecificationLimit(filters.getElementsByTagName("quality"), "quality");
 
+            var temporalBiasTags = filters.getElementsByTagName("temporal-bias");
+            if (temporalBiasTags.getLength() == 0) {
+                temporalBias = "NONE";
+            }
+            else if (temporalBiasTags.getLength() == 1 && temporalBiasTags.item(0) instanceof Element e) {
+                String val = e.getTextContent().strip().toUpperCase();
+                temporalBias = switch(val) {
+                    case "RECENT", "OLD", "NONE" -> val;
+                    default -> throw new SearchFilterParserException("Unknown temporal bias value");
+                };
+            }
+            else {
+                throw new SearchFilterParserException("Expected 0 or 1 temporal-bias tags");
+            }
+
             return new SearchFilterSpec(
                     userId,
                     identifier,
@@ -92,7 +109,8 @@ public class SearchFilterParser {
                     termsPromote,
                     year,
                     size,
-                    quality
+                    quality,
+                    temporalBias
             );
         }
         catch (ParserConfigurationException | IOException | SAXException e) {

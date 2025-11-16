@@ -156,7 +156,9 @@ public class QueryGRPCService
 
     public record DetailedDirectResult(ProcessedQuery processedQuery,
                                        List<DecoratedSearchResultItem> result,
-                                       int totalResults) {}
+                                       int totalResults) {
+
+    }
 
     /** Local query execution, without GRPC. */
     public DetailedDirectResult executeDirect(

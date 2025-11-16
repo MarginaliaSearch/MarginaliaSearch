@@ -19,7 +19,9 @@ public record CompiledSearchFilterSpec(String userId,
                                        FloatList termsPromoteAmounts,
                                        SpecificationLimit year,
                                        SpecificationLimit size,
-                                       SpecificationLimit quality)
+                                       SpecificationLimit quality,
+                                       String temporalBias
+                                       )
 {
 
 }
