@@ -1,6 +1,7 @@
 package nu.marginalia.api.searchquery;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
@@ -24,7 +25,7 @@ public class QueryProtobufCodec {
         var builder = RpcIndexQuery.newBuilder();
 
         builder.addAllRequiredDomainIds(query.specs.domains);
-        builder.addAllExcludedDomainIds(request.getExcludedDomainIdsList());
+        builder.addAllExcludedDomainIds(query.specs.excludedDomains);
 
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
@@ -63,6 +64,46 @@ public class QueryProtobufCodec {
                 );
             }
         } else if (query.specs.rankingParams != null) {
+            builder.setParameters(query.specs.rankingParams);
+        }
+        // else {
+        // if we have no ranking params, we don't need to set them, the client check and use the default values
+        // so we don't need to send this huge object over the wire
+        // }
+
+        return builder.build();
+    }
+
+    public static RpcIndexQuery convertQuery(RpcQsQuerySimple request, ProcessedQuery query) {
+        var builder = RpcIndexQuery.newBuilder();
+
+        builder.addAllRequiredDomainIds(query.specs.domains);
+        builder.addAllExcludedDomainIds(query.specs.excludedDomains);
+
+        builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
+
+        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
+        builder.setHumanQuery(request.getHumanQuery());
+        builder.setLangIsoCode(query.langIsoCode);
+
+        builder.setNsfwFilterTierValue(request.getNsfwFilterTierValue());
+
+        builder.setQuality(IndexProtobufCodec.convertSpecLimit(query.specs.quality));
+        builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
+        builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
+        builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
+
+
+        builder.setQueryLimits(query.specs.queryLimits);
+
+        // Query strategy may be overridden by the query, but if not, use the one from the request
+        if (query.specs.queryStrategy != null && query.specs.queryStrategy != QueryStrategy.AUTO)
+            builder.setQueryStrategy(query.specs.queryStrategy.name());
+        else
+            builder.setQueryStrategy(QueryStrategy.AUTO.name());
+
+        // FIXME: Temporal bias goes where?
+        if (query.specs.rankingParams != null) {
             builder.setParameters(query.specs.rankingParams);
         }
         // else {

@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.searchfilter.model.CompiledSearchFilterSpec;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;

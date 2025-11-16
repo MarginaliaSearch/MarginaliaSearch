@@ -6,6 +6,7 @@ import io.prometheus.client.Counter;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcQsQueryPagination;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.nsfw.NsfwDomainFilter;
@@ -57,7 +58,12 @@ public class IndexClient {
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
-    public record Pagination(int page, int pageSize) {}
+    public record Pagination(int page, int pageSize) {
+        public Pagination(RpcQsQueryPagination pagination) {
+            this(pagination.getPage(), pagination.getPageSize());
+        }
+
+    }
 
     public record AggregateQueryResponse(List<RpcDecoratedResultItem> results,
                                          int page,
