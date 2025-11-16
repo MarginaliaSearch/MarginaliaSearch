@@ -1,5 +1,10 @@
 package nu.marginalia.api.searchquery.model.query;
 
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.floats.FloatList;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,16 +37,28 @@ public class SearchQuery {
     public final List<String> searchTermsPriority;
 
     /**
+     * Weight for searchTermsPriority
+     */
+    public final FloatList searchTermsPriorityWeight;
+
+    /**
      * Terms that we require to be in the same sentence
      */
     public final List<SearchPhraseConstraint> phraseConstraints;
 
-    public SearchQuery(String compiledQuery, List<String> searchTermsInclude, List<String> searchTermsExclude, List<String> searchTermsAdvice, List<String> searchTermsPriority, List<SearchPhraseConstraint> phraseConstraints) {
+    public SearchQuery(String compiledQuery,
+                       List<String> searchTermsInclude,
+                       List<String> searchTermsExclude,
+                       List<String> searchTermsAdvice,
+                       List<String> searchTermsPriority,
+                       FloatList searchTermsPriorityWeight,
+                       List<SearchPhraseConstraint> phraseConstraints) {
         this.compiledQuery = compiledQuery;
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.searchTermsAdvice = searchTermsAdvice;
         this.searchTermsPriority = searchTermsPriority;
+        this.searchTermsPriorityWeight = searchTermsPriorityWeight;
         this.phraseConstraints = phraseConstraints;
     }
 
@@ -55,6 +72,7 @@ public class SearchQuery {
         this.searchTermsExclude = new ArrayList<>();
         this.searchTermsAdvice = new ArrayList<>();
         this.searchTermsPriority = new ArrayList<>();
+        this.searchTermsPriorityWeight = new FloatArrayList();
         this.phraseConstraints = new ArrayList<>();
     }
 
@@ -128,6 +146,7 @@ public class SearchQuery {
         public final List<String> searchTermsExclude = new ArrayList<>();
         public final List<String> searchTermsAdvice = new ArrayList<>();
         public final List<String> searchTermsPriority = new ArrayList<>();
+        public final FloatList searchTermsPriorityWeight = new FloatArrayList();
         public final List<SearchPhraseConstraint> searchPhraseConstraints = new ArrayList<>();
 
         private SearchQueryBuilder() {
@@ -153,8 +172,9 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQueryBuilder priority(String... terms) {
-            searchTermsPriority.addAll(List.of(terms));
+        public SearchQueryBuilder priority(String term, float weight) {
+            searchTermsPriority.add(term);
+            searchTermsPriorityWeight.add(weight);
             return this;
         }
 
@@ -164,7 +184,7 @@ public class SearchQuery {
         }
 
         public SearchQuery build() {
-            return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchPhraseConstraints);
+            return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermsPriorityWeight, searchPhraseConstraints);
         }
 
         /**

@@ -1,5 +1,6 @@
 package nu.marginalia.api.searchquery;
 
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
@@ -76,7 +77,7 @@ public class QueryProtobufCodec {
         var builder = RpcIndexQuery.newBuilder();
 
         builder.addAllRequiredDomainIds(query.specs.domains);
-        builder.addAllExcludedDomainIds(List.of()); // TODO: Hook in
+        builder.addAllExcludedDomainIds(query.specs.excludedDomains);
         builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
 
         builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
@@ -109,6 +110,7 @@ public class QueryProtobufCodec {
                 request.getTacitIncludesList(),
                 request.getTacitExcludesList(),
                 request.getTacitPriorityList(),
+                new FloatArrayList(request.getTacitPriorityWeightList()),
                 request.getTacitAdviceList(),
                 IndexProtobufCodec.convertSpecLimit(request.getQuality()),
                 IndexProtobufCodec.convertSpecLimit(request.getYear()),
@@ -159,7 +161,7 @@ public class QueryProtobufCodec {
                     results.getUrlQuality(),
                     results.getFormat(),
                     results.getFeatures(),
-                    results.getPubYear(), // ??,
+                    results.getPubYear(),
                     results.getDataHash(),
                     results.getWordsTotal(),
                     results.getBestPositions(),

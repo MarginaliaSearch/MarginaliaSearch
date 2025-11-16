@@ -1,5 +1,6 @@
 package nu.marginalia.index.client;
 
+import it.unimi.dsi.fastutil.floats.FloatList;
 import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
@@ -28,6 +29,7 @@ class IndexProtobufCodecTest {
                 List.of("c", "d"),
                 List.of("e", "f"),
                 List.of("g", "h"),
+                FloatList.of(1.0f, 1.0f),
                 List.of(
                         SearchPhraseConstraint.mandatory(List.of("i", "j")),
                         SearchPhraseConstraint.optional(List.of("k")))

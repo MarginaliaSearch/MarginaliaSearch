@@ -100,7 +100,7 @@ public class QueryFactory {
                         queryBuilder.include(parts);
 
                         // Prefer that the actual n-gram is present
-                        queryBuilder.priority(str);
+                        queryBuilder.priority(str, 1.0f);
                     } else {
                         // If the quoted word is a single word, we don't need to do more than include it in the search
                         queryBuilder.include(str);
@@ -115,7 +115,7 @@ public class QueryFactory {
                 }
 
                 case QueryToken.ExcludeTerm(String str, _) -> queryBuilder.exclude(str);
-                case QueryToken.PriorityTerm(String str, _) -> queryBuilder.priority(str);
+                case QueryToken.PriorityTerm(String str, _) -> queryBuilder.priority(str, 1.0f);
                 case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:*.") -> {
                     String prefix = "site:*.";
                     domain = str.substring(prefix.length());
@@ -194,6 +194,7 @@ public class QueryFactory {
 
         specs.query.searchTermsAdvice.addAll(params.tacitAdvice());
         specs.query.searchTermsPriority.addAll(params.tacitPriority());
+        specs.query.searchTermsPriorityWeight.addAll(params.tacitPriorityWeights());
         specs.query.searchTermsExclude.addAll(params.tacitExcludes());
 
         return new ProcessedQuery(specs, searchTermsHuman, domain, params.langIsoCode());

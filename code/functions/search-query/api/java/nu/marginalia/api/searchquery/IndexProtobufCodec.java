@@ -1,5 +1,6 @@
 package nu.marginalia.api.searchquery;
 
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import nu.marginalia.api.searchquery.model.query.SearchPhraseConstraint;
 import nu.marginalia.api.searchquery.model.query.SearchQuery;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
@@ -49,6 +50,7 @@ public class IndexProtobufCodec {
                 query.getExcludeList(),
                 query.getAdviceList(),
                 query.getPriorityList(),
+                new FloatArrayList(query.getPriorityWeightList()),
                 phraseConstraints
         );
     }
@@ -60,7 +62,9 @@ public class IndexProtobufCodec {
                         .addAllInclude(searchQuery.getSearchTermsInclude())
                         .addAllAdvice(searchQuery.getSearchTermsAdvice())
                         .addAllExclude(searchQuery.getSearchTermsExclude())
-                        .addAllPriority(searchQuery.getSearchTermsPriority());
+                        .addAllPriority(searchQuery.getSearchTermsPriority())
+                        .addAllPriorityWeight(searchQuery.searchTermsPriorityWeight)
+                    ;
 
         for (var constraint : searchQuery.phraseConstraints) {
             switch (constraint) {

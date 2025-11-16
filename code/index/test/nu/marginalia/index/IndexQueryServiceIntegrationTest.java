@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
@@ -144,6 +145,7 @@ public class IndexQueryServiceIntegrationTest {
                         List.of(),
                         List.of(),
                         List.of("missing"),
+                        FloatList.of(),
                         List.of())
                         ));
 
@@ -157,6 +159,7 @@ public class IndexQueryServiceIntegrationTest {
                                 List.of(),
                                 List.of("missing"),
                                 List.of(),
+                                FloatList.of(),
                                 List.of()
                         )));
 
@@ -170,6 +173,7 @@ public class IndexQueryServiceIntegrationTest {
                                 List.of(),
                                 List.of(),
                                 List.of(),
+                                FloatList.of(),
                                 List.of(SearchPhraseConstraint.mandatory(List.of("missing", "hello")))
                         )));
 
@@ -412,6 +416,7 @@ public class IndexQueryServiceIntegrationTest {
                 List.of(),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of()
         );
     }
@@ -423,6 +428,7 @@ public class IndexQueryServiceIntegrationTest {
                 excludes,
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of()
         );
     }
@@ -434,6 +440,7 @@ public class IndexQueryServiceIntegrationTest {
                 List.of(exclude),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of()
         );
     }
@@ -445,6 +452,7 @@ public class IndexQueryServiceIntegrationTest {
                 List.of(),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of(SearchPhraseConstraint.mandatory(List.of(includes)))
         );
     }

@@ -36,6 +36,7 @@ message RpcQsQuery {
   NSFW_FILTER_TIER nsfwFilterTier = 18;
   string langIsoCode = 19;
   repeated int32 excludedDomainIds = 20;
+  repeated float tacitPriorityWeight = 21;
 
   enum NSFW_FILTER_TIER {
     NONE = 0;
@@ -223,6 +224,7 @@ message RpcQuery {
   repeated string priority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
   repeated RpcPhrases phrases = 5; // Groups of terms that must exist in proximity of each other
   string compiledQuery = 6;  // Compiled query in infix notation
+  repeated float priorityWeight = 7;
 }
 
 /* Defines a group of search terms that must exist in the the specified order within the document */

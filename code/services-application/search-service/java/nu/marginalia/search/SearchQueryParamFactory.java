@@ -1,5 +1,6 @@
 package nu.marginalia.search;
 
+import it.unimi.dsi.fastutil.floats.FloatList;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.*;
@@ -39,6 +40,7 @@ public class SearchQueryParamFactory {
                 prototype.searchTermsInclude,
                 prototype.searchTermsExclude,
                 prototype.searchTermsPriority,
+                prototype.searchTermsPriorityWeight,
                 prototype.searchTermsAdvice,
                 profile.getQualityLimit(),
                 userParams.yearLimit(),
@@ -62,6 +64,7 @@ public class SearchQueryParamFactory {
                 List.of(),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
@@ -89,6 +92,7 @@ public class SearchQueryParamFactory {
                 List.of(),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
@@ -111,6 +115,7 @@ public class SearchQueryParamFactory {
                 List.of(),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),

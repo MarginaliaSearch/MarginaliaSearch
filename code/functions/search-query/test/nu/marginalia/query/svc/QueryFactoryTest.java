@@ -1,5 +1,6 @@
 package nu.marginalia.query.svc;
 
+import it.unimi.dsi.fastutil.floats.FloatList;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
@@ -51,6 +52,7 @@ public class QueryFactoryTest {
                         List.of(),
                         List.of(),
                         List.of(),
+                        FloatList.of(),
                         List.of(),
                         SpecificationLimit.none(),
                         SpecificationLimit.none(),
@@ -77,6 +79,7 @@ public class QueryFactoryTest {
                         List.of(),
                         List.of(),
                         List.of(),
+                        FloatList.of(),
                         List.of(),
                         SpecificationLimit.none(),
                         SpecificationLimit.none(),
