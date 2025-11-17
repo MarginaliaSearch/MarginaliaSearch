@@ -74,7 +74,7 @@ public class QueryProtobufCodec {
         return builder.build();
     }
 
-    public static RpcIndexQuery convertQuery(RpcQsQuerySimple request, ProcessedQuery query) {
+    public static RpcIndexQuery convertQuery(RpcQsQueryNew request, ProcessedQuery query) {
         var builder = RpcIndexQuery.newBuilder();
 
         builder.addAllRequiredDomainIds(query.specs.domains);

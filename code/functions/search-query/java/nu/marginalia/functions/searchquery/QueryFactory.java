@@ -2,10 +2,9 @@ package nu.marginalia.functions.searchquery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.api.searchquery.RpcQsQuerySimple;
+import nu.marginalia.api.searchquery.RpcQsQueryNew;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
@@ -47,7 +46,7 @@ public class QueryFactory {
     }
 
 
-    public ProcessedQuery createQuery(RpcQsQuerySimple request,
+    public ProcessedQuery createQuery(RpcQsQueryNew request,
                                       CompiledSearchFilterSpec searchFilter,
                                       @Nullable RpcResultRankingParameters rankingParams) {
 

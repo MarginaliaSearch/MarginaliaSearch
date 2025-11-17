@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
@@ -57,7 +58,26 @@ public class QueryGRPCService
         this.searchFilterCache = searchFilterCache;
     }
 
-    public void querySimple(RpcQsQuerySimple request,
+    Optional<CompiledSearchFilterSpec> getFilter(RpcQsQueryNew request) {
+        if (request.hasFilterSpec()) {
+            return Optional.of(new CompiledSearchFilterSpec(request.getFilterSpec()));
+        }
+        else {
+            try {
+                var identifier = request.getFilterIdentifier();
+
+                return Optional.of(searchFilterCache.get(
+                        identifier.getUserId(),
+                        identifier.getIdentifier()
+                ));
+            }
+            catch (ExecutionException ex) {
+                return Optional.empty();
+            }
+
+        }
+    }
+    public void queryNew(RpcQsQueryNew request,
                             io.grpc.stub.StreamObserver<RpcQsResponse> responseObserver) {
         try {
             wmsa_qs_query_time_grpc
@@ -65,19 +85,13 @@ public class QueryGRPCService
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
 
-                        CompiledSearchFilterSpec filterSpec;
-                        try {
-                            filterSpec = searchFilterCache.get(
-                                    request.getSearchFilterUser(),
-                                    request.getSearchFilterIdentifier()
-                            );
-                        }
-                        catch (ExecutionException ex) {
-                            responseObserver.onError(Status.NOT_FOUND.withCause(ex).asRuntimeException());
+                        Optional<CompiledSearchFilterSpec> filterSpecMaybe = getFilter(request);
+                        if (filterSpecMaybe.isEmpty()) {
+                            responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
                             return;
                         }
 
-                        ProcessedQuery query = queryFactory.createQuery(request, filterSpec, PrototypeRankingParameters.sensibleDefaults());
+                        ProcessedQuery query = queryFactory.createQuery(request, filterSpecMaybe.get(), null);
 
                         RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
                         IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
@@ -109,6 +123,8 @@ public class QueryGRPCService
             responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }
+
+
     /** GRPC endpoint that parses a query, delegates it to the index partitions, and then collects the results.
      */
     public void query(RpcQsQuery request, StreamObserver<RpcQsResponse> responseObserver)

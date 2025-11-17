@@ -6,7 +6,7 @@ option java_multiple_files=true;
 
 service QueryApi {
   rpc query(RpcQsQuery) returns (RpcQsResponse) {}
-  rpc querySimple(RpcQsQuerySimple) returns (RpcQsResponse) {}
+  rpc queryNew(RpcQsQueryNew) returns (RpcQsResponse) {}
 }
 service IndexApi {
   rpc query(RpcIndexQuery) returns (stream RpcDecoratedResultItem) {}
@@ -46,10 +46,10 @@ message RpcQsQuery {
   };
 }
 
-message RpcQsQuerySimple {
+message RpcQsQueryNew {
   string humanQuery = 1;
-  string searchFilterUser = 2;
-  string searchFilterIdentifier = 3;
+  RpcQsFilterIdentifier filterIdentifier = 2;
+  RpcQsAdHocFilter filterSpec = 3;
   string langIsoCode = 4;
   NSFW_FILTER_TIER nsfwFilterTier = 5;
   RpcQueryLimits queryLimits = 6;
@@ -60,6 +60,32 @@ message RpcQsQuerySimple {
     DANGER = 1;
     PORN_AND_GAMBLING = 2;
   };
+}
+
+message RpcQsFilterIdentifier {
+  string userId = 1;
+  string identifier = 2;
+}
+
+message RpcQsAdHocFilter {
+  int64 hash = 1;
+
+  repeated int32 domainsInclude = 2;
+  repeated int32 domainsExclude = 3;
+  repeated int32 domainsPromote = 4;
+  repeated float domainsPromoteAmounts = 5;
+  string searchSetIdentifier = 6;
+  repeated string termsRequire = 7;
+  repeated string termsExclude = 8;
+  repeated string termsPromote = 9;
+  repeated float termsPromoteAmounts = 10;
+
+  RpcSpecLimit quality = 11;
+  RpcSpecLimit year = 12;
+  RpcSpecLimit size = 13;
+  RpcSpecLimit rank = 14;
+
+  RpcTemporalBias bias = 15;
 }
 
 /* Query service query response */
