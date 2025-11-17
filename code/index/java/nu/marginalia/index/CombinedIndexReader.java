@@ -7,10 +7,7 @@ import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.spans.DocumentSpans;
-import nu.marginalia.index.model.CombinedDocIdList;
-import nu.marginalia.index.model.QueryParams;
-import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.model.TermMetadataList;
+import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
@@ -224,9 +221,9 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
-    public TermMetadataList[] getTermMetadata(Arena arena,
-                                              SearchContext searchContext,
-                                              CombinedDocIdList docIds)
+    public CombinedTermMetadata getTermMetadata(Arena arena,
+                                                SearchContext searchContext,
+                                                CombinedDocIdList docIds)
     throws TimeoutException
     {
         return reverseIndexFullReader.getTermData(arena, searchContext, docIds);

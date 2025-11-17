@@ -12,6 +12,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 
 import static nu.marginalia.skiplist.SkipListConstants.*;
@@ -323,6 +324,87 @@ public class SkipListReader {
             }
         }
         return vals;
+    }
+
+    public BitSet getAllPresentValues(long[] keys) {
+        int pos = 0;
+        BitSet ret = new BitSet(keys.length);
+
+        if (getClass().desiredAssertionStatus()) {
+            for (int i = 1; i < keys.length; i++) {
+                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
+            }
+        }
+
+        while (pos < keys.length) {
+            try (var page = indexPool.get(currentBlock)) {
+                MemorySegment ms = page.getMemorySegment();
+                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                if (n == 0) {
+                    throw new IllegalStateException("Reading null memory!");
+                }
+
+                int dataOffset = pageDataOffset(currentBlockOffset, fc);
+
+                int remainingToRead = n - currentBlockIdx;
+                if (remainingToRead <= 0)
+                    break;
+
+                int searchStart = currentBlockIdx;
+
+                outer:
+                while (pos < keys.length) {
+                    long kv = keys[pos];
+
+                    for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
+                        if (kv < pv) {
+                            pos++;
+                            continue outer;
+                        }
+                        else if (kv == pv) {
+                            ret.set(pos);
+                            pos++;
+                            continue outer;
+                        }
+                    }
+                    break;
+                }
+
+                if (currentBlockIdx >= n) {
+                    atEnd = (flags & FLAG_END_BLOCK) != 0;
+                    if (atEnd) {
+                        break;
+                    }
+
+                    if (pos >= keys.length) {
+                        currentBlock += BLOCK_STRIDE;
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                    }
+                    else {
+                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+                        long currentValue = keys[pos];
+                        for (int i = 0; i < fc; i++) {
+                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
+                            if (blockMaxValue >= currentValue) {
+                                break;
+                            }
+                        }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                        currentBlock = nextBlock;
+                    }
+                }
+            }
+        }
+
+        return ret;
     }
 
     /** The retain operation keeps all keys in the provided LongQueryBuffer that also

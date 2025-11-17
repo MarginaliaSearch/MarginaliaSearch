@@ -5,9 +5,9 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.model.CombinedTermMetadata;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import nu.marginalia.index.reverse.query.*;
 import nu.marginalia.index.reverse.query.filter.QueryFilterLetThrough;
@@ -185,9 +185,9 @@ public class FullReverseIndexReader {
      * @throws TimeoutException if the read could not be queued in a timely manner;
      *                          (the read itself may still exceed the budgeted time)
      */
-    public TermMetadataList[] getTermData(Arena arena,
-                                          SearchContext searchContext,
-                                          CombinedDocIdList docIds)
+    public CombinedTermMetadata getTermData(Arena arena,
+                                            SearchContext searchContext,
+                                            CombinedDocIdList docIds)
             throws TimeoutException
     {
         // Gather all termdata to be retrieved into a single array,
@@ -197,12 +197,12 @@ public class FullReverseIndexReader {
 
         WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
         if (null == lexicon) {
-            TermMetadataList[] ret = new TermMetadataList[termIds.length];
+            CombinedTermMetadata.TermMetadataList[] ret = new CombinedTermMetadata.TermMetadataList[termIds.length];
             for (int i = 0; i < termIds.length; i++) {
-                ret[i] = new TermMetadataList(new CodedSequence[docIds.size()], new byte[docIds.size()], new BitSet(docIds.size()));
+                ret[i] = new CombinedTermMetadata.TermMetadataList(new CodedSequence[docIds.size()], new byte[docIds.size()]);
             }
 
-            return ret;
+            return new CombinedTermMetadata(ret, new BitSet[searchContext.termIdsPriority.size()], new BitSet(docIds.size()));
         }
 
 
@@ -245,11 +245,25 @@ public class FullReverseIndexReader {
             }
         }
 
+        BitSet[] priorityTermsPresent = new BitSet[docIds.size()];
+
+        for (int i = 0; i < searchContext.termIdsPriority.size(); i++) {
+            long termId = searchContext.termIdsPriority.getLong(i);
+            long offset = lexicon.wordOffset(termId);
+
+            if (offset < 0) {
+                priorityTermsPresent[i] = new BitSet();
+            }
+            else {
+                priorityTermsPresent[i] = getReader(offset).getAllPresentValues(docIds.array());
+            }
+        }
+
         // Perform the read
         CodedSequence[] termDataCombined = positionsFileReader.getTermData(arena, searchContext.budget, offsetsAll);
 
         // Break the result data into separate arrays by termId again
-        TermMetadataList[] ret = new TermMetadataList[termIds.length];
+        CombinedTermMetadata.TermMetadataList[] ret = new CombinedTermMetadata.TermMetadataList[termIds.length];
         for (int i = 0; i < termIds.length; i++) {
 
             // Extract the term flags
@@ -264,14 +278,13 @@ public class FullReverseIndexReader {
             }
 
             // Build the return array
-            ret[i] = new TermMetadataList(
+            ret[i] = new CombinedTermMetadata.TermMetadataList(
                     Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size()),
-                    flags,
-                    viableDocuments
+                    flags
             );
         }
 
-        return ret;
+        return new CombinedTermMetadata(ret, priorityTermsPresent, viableDocuments);
     }
 
     /** Find all docIds with non-flagged terms adjacent in the document */

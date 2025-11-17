@@ -1,5 +1,6 @@
 package nu.marginalia.index.model;
 
+import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -75,6 +76,7 @@ public class SearchContext {
     public final LongList termIdsAdvice;
     public final LongList termIdsExcludes;
     public final LongList termIdsPriority;
+    public final FloatList termIdsPriorityWeights;
 
     public final IndexLanguageContext languageContext;
 
@@ -184,6 +186,7 @@ public class SearchContext {
         this.termIdsExcludes = new LongArrayList();
         this.termIdsPriority = new LongArrayList();
         this.termIdsAdvice = new LongArrayList();
+        this.termIdsPriorityWeights = searchQuery.searchTermsPriorityWeight;
 
         for (var word : searchQuery.searchTermsAdvice) {
             termIdsAdvice.add(keywordHasher.hashKeyword(word));
@@ -210,7 +213,6 @@ public class SearchContext {
             long id = keywordHasher.hashKeyword(term);
             if (termIdToString.containsKey(id))
                 continue;
-            termIdsList.add(id);
             termIdToString.put(id, term);
         }
 
