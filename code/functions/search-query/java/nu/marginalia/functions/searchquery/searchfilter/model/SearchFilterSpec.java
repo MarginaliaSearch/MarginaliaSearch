@@ -1,4 +1,4 @@
-package nu.marginalia.searchfilter.model;
+package nu.marginalia.functions.searchquery.searchfilter.model;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;

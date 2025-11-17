@@ -14,7 +14,7 @@ import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.nsfw.NsfwDomainFilter;
-import nu.marginalia.searchfilter.SearchFilterCache;
+import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 @Singleton
 public class QueryGRPCService

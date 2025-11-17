@@ -4,7 +4,7 @@ import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.model.LanguageDefinition;
-import nu.marginalia.util.transform_list.TransformList;
+import nu.marginalia.functions.searchquery.transform_list.TransformList;
 
 import java.util.ArrayList;
 import java.util.List;

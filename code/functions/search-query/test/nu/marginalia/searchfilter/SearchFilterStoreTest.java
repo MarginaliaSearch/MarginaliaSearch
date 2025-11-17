@@ -2,7 +2,9 @@ package nu.marginalia.searchfilter;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.searchfilter.model.SearchFilterSpec;
+import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
+import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
+import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.Assertions;
@@ -20,8 +22,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 @Execution(ExecutionMode.SAME_THREAD)

@@ -1,7 +1,7 @@
-package nu.marginalia.searchfilter;
+package nu.marginalia.functions.searchquery.searchfilter;
 
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
-import nu.marginalia.searchfilter.model.SearchFilterSpec;
+import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

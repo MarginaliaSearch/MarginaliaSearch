@@ -1,7 +1,7 @@
-package nu.marginalia.searchfilter;
+package nu.marginalia.functions.searchquery.searchfilter;
 
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.searchfilter.model.SearchFilterSpec;
+import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

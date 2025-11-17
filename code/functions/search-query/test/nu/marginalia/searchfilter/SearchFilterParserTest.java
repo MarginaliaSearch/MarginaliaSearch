@@ -1,6 +1,7 @@
 package nu.marginalia.searchfilter;
 
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

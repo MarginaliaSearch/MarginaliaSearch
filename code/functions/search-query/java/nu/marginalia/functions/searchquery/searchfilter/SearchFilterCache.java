@@ -1,4 +1,4 @@
-package nu.marginalia.searchfilter;
+package nu.marginalia.functions.searchquery.searchfilter;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
