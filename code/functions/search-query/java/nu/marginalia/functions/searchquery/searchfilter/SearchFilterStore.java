@@ -1,14 +1,19 @@
 package nu.marginalia.functions.searchquery.searchfilter;
 
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+
+import static nu.marginalia.api.searchquery.model.SearchFilterDefaults.SYSTEM_USER_ID;
 
 public class SearchFilterStore {
     private final HikariDataSource dataSource;
@@ -16,11 +21,30 @@ public class SearchFilterStore {
 
     private static final Logger logger = LoggerFactory.getLogger(SearchFilterStore.class);
 
-    public static String SYSTEM_USER_ID = "SYSTEM";
-
     public SearchFilterStore(HikariDataSource dataSource, SearchFilterParser parser) {
         this.dataSource = dataSource;
         this.parser = parser;
+    }
+
+    public void loadDefaultConfigs() {
+        for (SearchFilterDefaults defaultConfig : SearchFilterDefaults.values()) {
+            try (var resourceStream = ClassLoader.getSystemResourceAsStream("filters" + "/" + defaultConfig.fileName)) {
+                if (resourceStream == null) {
+                    logger.error("Missing default config spec {}", defaultConfig.fileName);
+                    continue;
+                }
+
+                String xml = new String(resourceStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                parser.parse(SYSTEM_USER_ID, defaultConfig.name(), xml);
+
+                saveFilter(SYSTEM_USER_ID, defaultConfig.name(), xml);
+            } catch (SearchFilterParser.SearchFilterParserException e) {
+                logger.error("Default config spec {} failed to parse, refusing to insert", defaultConfig.name(), e);
+            } catch (IOException | SQLException e) {
+                logger.error("Error when setting up default search filter configs", e);
+            }
+        }
     }
 
     public Optional<SearchFilterSpec> getFilter(String userId, String specName) {
