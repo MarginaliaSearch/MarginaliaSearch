@@ -2,10 +2,13 @@ package nu.marginalia.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
@@ -50,17 +53,28 @@ public class SearchOperator {
     private final MathClient mathClient;
     private final DbDomainQueries domainQueries;
     private final QueryClient queryClient;
-    private final SearchQueryParamFactory paramFactory;
     private final WebsiteUrl websiteUrl;
     private final SearchUnitConversionService searchUnitConversionService;
     private final SearchQueryCountService searchVisitorCount;
 
+    static final RpcQueryLimits shallowLimit = RpcQueryLimits.newBuilder()
+            .setResultsTotal(100)
+            .setResultsByDomain(100)
+            .setTimeoutMs(100)
+            .setFetchSize(512)
+            .build();
+
+    static final RpcQueryLimits defaultLimits = RpcQueryLimits.newBuilder()
+            .setResultsTotal(100)
+            .setResultsByDomain(5)
+            .setTimeoutMs(250)
+            .setFetchSize(8192)
+            .build();
 
     @Inject
     public SearchOperator(MathClient mathClient,
                           DbDomainQueries domainQueries,
                           QueryClient queryClient,
-                          SearchQueryParamFactory paramFactory,
                           WebsiteUrl websiteUrl,
                           SearchUnitConversionService searchUnitConversionService,
                           SearchQueryCountService searchVisitorCount
@@ -70,7 +84,6 @@ public class SearchOperator {
         this.mathClient = mathClient;
         this.domainQueries = domainQueries;
         this.queryClient = queryClient;
-        this.paramFactory = paramFactory;
         this.websiteUrl = websiteUrl;
         this.searchUnitConversionService = searchUnitConversionService;
         this.searchVisitorCount = searchVisitorCount;
@@ -80,23 +93,47 @@ public class SearchOperator {
                                         int domainId,
                                         int count) throws TimeoutException {
 
-        var queryParams = paramFactory.forSiteSearch(domain, domainId, count);
-        var queryResponse = queryClient.search(queryParams);
+        var queryResponse = queryClient.search(
+                QueryFilterSpec.FilterAdHoc.builder().domainsInclude(IntList.of(domainId)).build(),
+                "site:"+domain,
+                "en",
+                NsfwFilterTier.DANGER,
+                RpcQueryLimits.newBuilder()
+                        .setResultsTotal(count)
+                        .setResultsByDomain(count)
+                        .setTimeoutMs(100)
+                        .setFetchSize(512)
+                        .build(),
+                1
+        );
+
 
         return getResultsFromQuery(queryResponse);
     }
 
     public List<UrlDetails> doBacklinkSearch(String domain) throws TimeoutException {
 
-        var queryParams = paramFactory.forBacklinkSearch(domain);
-        var queryResponse = queryClient.search(queryParams);
+        var queryResponse = queryClient.search(
+                new QueryFilterSpec.NoFilter(),
+                "links:"+domain,
+                "en",
+                NsfwFilterTier.DANGER,
+                shallowLimit,
+                1
+        );
 
         return getResultsFromQuery(queryResponse);
     }
 
     public List<UrlDetails> doLinkSearch(String source, String dest) throws TimeoutException {
-        var queryParams = paramFactory.forLinkSearch(source, dest);
-        var queryResponse = queryClient.search(queryParams);
+        var queryResponse = queryClient.search(
+                new QueryFilterSpec.NoFilter(),
+                "site:" + source + " links:" + dest,
+                "en",
+                NsfwFilterTier.DANGER,
+                shallowLimit,
+                1
+        );
 
         return getResultsFromQuery(queryResponse);
     }
@@ -109,8 +146,15 @@ public class SearchOperator {
 
         // Perform the regular search
 
-        var queryParams = paramFactory.forRegularSearch(userParams);
-        QueryResponse queryResponse = queryClient.search(queryParams);
+        QueryResponse queryResponse = queryClient.search(
+                userParams.asFilterSpec(),
+                userParams.query(),
+                "en",
+                userParams.filterTier(),
+                defaultLimits,
+                userParams.page()
+        );
+
         var queryResults = getResultsFromQuery(queryResponse);
 
         // Cluster the results based on the query response

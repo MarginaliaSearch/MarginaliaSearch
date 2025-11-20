@@ -7,9 +7,8 @@ import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.model.idx.WordFlags;
 
@@ -37,7 +36,20 @@ public class ApiSearchOperator {
                                   String langIsoCode)
             throws TimeoutException
     {
-        var rsp = queryClient.search(createParams(query, count, domainCount, index, filterTier, langIsoCode));
+
+
+        var rsp = queryClient.search(
+                selectFilter(index).asFilterSpec(),
+                query,
+                langIsoCode,
+                filterTier,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
+                        .setResultsTotal(Math.min(100, count))
+                        .setTimeoutMs(150)
+                        .setFetchSize(8192)
+                        .build(),
+                1);
 
         return new ApiSearchResults("RESTRICTED", query,
                 rsp.results()
@@ -48,35 +60,12 @@ public class ApiSearchOperator {
                 .collect(Collectors.toList()));
     }
 
-    private QueryParams createParams(String query,
-                                     int count,
-                                     int domainCount,
-                                     int index,
-                                     NsfwFilterTier filterTirer,
-                                     String langIsoCode) {
-        SearchSetIdentifier searchSet = selectSearchSet(index);
-
-        return new QueryParams(
-                query,
-                RpcQueryLimits.newBuilder()
-                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
-                        .setResultsTotal(Math.min(100, count))
-                        .setTimeoutMs(150)
-                        .setFetchSize(8192)
-                        .build(),
-                searchSet.name(),
-                filterTirer,
-                langIsoCode);
-    }
-
-    private SearchSetIdentifier selectSearchSet(int index) {
+    private SearchFilterDefaults selectFilter(int index) {
         return switch (index) {
-            case 0 -> SearchSetIdentifier.NONE;
-            case 1 -> SearchSetIdentifier.SMALLWEB;
-            case 2 -> SearchSetIdentifier.POPULAR;
-            case 3 -> SearchSetIdentifier.NONE;
-            case 5 -> SearchSetIdentifier.NONE;
-            default -> SearchSetIdentifier.NONE;
+            case 0 -> SearchFilterDefaults.NO_FILTER;
+            case 1 -> SearchFilterDefaults.SMALLWEB;
+            case 2 -> SearchFilterDefaults.POPULAR;
+            default -> SearchFilterDefaults.NO_FILTER;
         };
     }
 

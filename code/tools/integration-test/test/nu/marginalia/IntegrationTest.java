@@ -2,11 +2,8 @@ package nu.marginalia;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
-import nu.marginalia.api.searchquery.QueryProtobufCodec;
-import nu.marginalia.api.searchquery.RpcQsQuery;
-import nu.marginalia.api.searchquery.RpcQueryLimits;
-import nu.marginalia.api.searchquery.RpcResultRankingParameters;
-import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
+import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.crawl.fetcher.ContentTags;
@@ -238,19 +235,13 @@ public class IntegrationTest {
                             .setFetchSize(1000)
                             .build())
                     .setLangIsoCode("en")
-                    .setQueryStrategy("AUTO")
                     .setHumanQuery("\"is that there is\"")
                     .build();
 
-            var params = QueryProtobufCodec.convertRequest(request);
-            var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
-            var query = queryFactory.createQuery(params, p);
+            var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
+            System.out.println(query);
 
-            var indexRequest = QueryProtobufCodec.convertQuery(request, query);
-
-            System.out.println(indexRequest);
-
-            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -265,19 +256,14 @@ public class IntegrationTest {
                             .setFetchSize(1000)
                             .build())
                     .setLangIsoCode("sv")
-                    .setQueryStrategy("AUTO")
                     .setHumanQuery("härigenom förordnas")
                     .build();
 
-            var params = QueryProtobufCodec.convertRequest(request);
-            var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
-            var query = queryFactory.createQuery(params, p);
+            var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
 
-            var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+            System.out.println(query);
 
-            System.out.println(indexRequest);
-
-            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -382,19 +368,14 @@ public class IntegrationTest {
                             .setFetchSize(1000)
                             .build())
                     .setLangIsoCode("en")
-                    .setQueryStrategy("AUTO")
                     .setHumanQuery("when was captain james cook born")
                     .build();
 
-            var params = QueryProtobufCodec.convertRequest(request);
-            var p = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults()).setExportDebugData(true).build();
-            var query = queryFactory.createQuery(params, p);
+            var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
 
-            var indexRequest = QueryProtobufCodec.convertQuery(request, query);
+            System.out.println(query);
 
-            System.out.println(indexRequest);
-
-            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), indexRequest, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
 

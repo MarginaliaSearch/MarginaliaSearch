@@ -3,7 +3,7 @@ package nu.marginalia.api.searchquery;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.prometheus.client.Summary;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
@@ -40,15 +40,35 @@ public class QueryClient  {
     }
 
     @CheckReturnValue
-    public QueryResponse search(QueryParams params) throws TimeoutException  {
-        var query = QueryProtobufCodec.convertQueryParams(params);
+    public QueryResponse search(QueryFilterSpec filterSpec,
+                                String humanQuery,
+                                String languageIsoCode,
+                                NsfwFilterTier filterTier,
+                                RpcQueryLimits limits,
+                                int page) throws TimeoutException
+    {
+        RpcQsQuery.Builder queryBuilder = RpcQsQuery.newBuilder();
+
+        filterSpec.configure(queryBuilder);
+
+        var query = queryBuilder.setHumanQuery(humanQuery)
+                .setLangIsoCode(languageIsoCode)
+                .setNsfwFilterTierValue(filterTier.getCodedValue())
+                .setQueryLimits(limits)
+                .setPagination(
+                        RpcQsQueryPagination.newBuilder()
+                                .setPage(page)
+                                .setPageSize(Math.min(100, limits.getResultsTotal()))
+                                .build()
+                )
+                .build();
 
         return wmsa_qs_api_search_time.time(() ->
-            queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query)
-                    .async(virtualThreadService)
-                    .run(query)
-                    .thenApply(QueryProtobufCodec::convertQueryResponse)
-                    .get(params.limits().getTimeoutMs()*2, TimeUnit.MILLISECONDS)
+                queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query)
+                        .async(virtualThreadService)
+                        .run(query)
+                        .thenApply(QueryProtobufCodec::convertQueryResponse)
+                        .get(limits.getTimeoutMs()* 2L, TimeUnit.MILLISECONDS)
         );
     }
 

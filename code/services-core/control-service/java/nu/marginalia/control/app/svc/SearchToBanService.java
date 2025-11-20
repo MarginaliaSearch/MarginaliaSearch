@@ -2,9 +2,9 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
@@ -74,18 +74,17 @@ public class SearchToBanService {
     }
 
     private Object executeQuery(String query) throws TimeoutException {
-        return queryClient.search(new QueryParams(
+        return queryClient.search(
+                new QueryFilterSpec.NoFilter(),
                 query,
+                "en",
+                NsfwFilterTier.OFF,
                 RpcQueryLimits.newBuilder()
                         .setResultsTotal(100)
                         .setResultsByDomain(2)
                         .setTimeoutMs(200)
                         .setFetchSize(8192)
-                        .build()
-                ,
-                "NONE",
-                NsfwFilterTier.OFF,
-                "en"
-        ));
+                        .build(),
+                1);
     }
 }

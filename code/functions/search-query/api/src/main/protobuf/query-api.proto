@@ -6,7 +6,6 @@ option java_multiple_files=true;
 
 service QueryApi {
   rpc query(RpcQsQuery) returns (RpcQsResponse) {}
-  rpc queryNew(RpcQsQueryNew) returns (RpcQsResponse) {}
 }
 service IndexApi {
   rpc query(RpcIndexQuery) returns (stream RpcDecoratedResultItem) {}
@@ -14,39 +13,7 @@ service IndexApi {
 
 message Empty {}
 
-/* Query Service query request */
 message RpcQsQuery {
-  string humanQuery = 1;
-  string nearDomain = 2;
-  repeated string tacitIncludes = 3;
-  repeated string tacitExcludes = 4;
-  repeated string tacitPriority = 5;
-  repeated string tacitAdvice = 6;
-  RpcSpecLimit quality = 7;
-  RpcSpecLimit year = 8;
-  RpcSpecLimit size = 9;
-  RpcSpecLimit rank = 10;
-  repeated int32 requiredDomainIds = 12;
-  RpcQueryLimits queryLimits = 13;
-  string searchSetIdentifier = 14;
-  string queryStrategy = 15;      // Named query configuration
-  RpcTemporalBias temporalBias = 16;
-
-  RpcQsQueryPagination pagination = 17;
-
-  NSFW_FILTER_TIER nsfwFilterTier = 18;
-  string langIsoCode = 19;
-  repeated int32 excludedDomainIds = 20;
-  repeated float tacitPriorityWeight = 21;
-
-  enum NSFW_FILTER_TIER {
-    NONE = 0;
-    DANGER = 1;
-    PORN_AND_GAMBLING = 2;
-  };
-}
-
-message RpcQsQueryNew {
   string humanQuery = 1;
   RpcQsFilterIdentifier filterIdentifier = 2;
   RpcQsAdHocFilter filterSpec = 3;
@@ -86,6 +53,7 @@ message RpcQsAdHocFilter {
   RpcSpecLimit rank = 14;
 
   RpcTemporalBias bias = 15;
+  string queryStrategy = 16;
 }
 
 /* Query service query response */
@@ -136,6 +104,8 @@ message RpcIndexQuery {
   NSFW_FILTER_TIER nsfwFilterTier = 13;
   string langIsoCode = 14;
   repeated int32 excludedDomainIds = 15;
+  repeated int32 priorityDomainIds = 16;
+  repeated float priorityDomainIdsWeights = 17;
 
   enum NSFW_FILTER_TIER {
     NONE = 0;

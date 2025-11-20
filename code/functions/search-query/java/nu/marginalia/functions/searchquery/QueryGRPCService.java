@@ -4,14 +4,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Histogram;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
+import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
@@ -56,26 +54,56 @@ public class QueryGRPCService
         this.searchFilterCache = searchFilterCache;
     }
 
-    Optional<CompiledSearchFilterSpec> getFilter(RpcQsQueryNew request) {
-        if (request.hasFilterSpec()) {
-            return Optional.of(new CompiledSearchFilterSpec(request.getFilterSpec()));
-        }
-        else {
+    private Optional<CompiledSearchFilterSpec> getFilter(RpcQsQuery request) {
+        final CompiledSearchFilterSpec identifierFilter;
+        final CompiledSearchFilterSpec adHocFilter;
+
+        // A filter identifier is provided
+        if (request.hasFilterIdentifier()) {
             try {
                 var identifier = request.getFilterIdentifier();
 
-                return Optional.of(searchFilterCache.get(
+                identifierFilter = searchFilterCache.get(
                         identifier.getUserId(),
                         identifier.getIdentifier()
-                ));
+                );
+
             }
             catch (ExecutionException ex) {
                 return Optional.empty();
             }
-
         }
+        else {
+            identifierFilter = null;
+        }
+
+        // An ad-hoc filter is provided
+        if (request.hasFilterSpec()) {
+            adHocFilter = new CompiledSearchFilterSpec(request.getFilterSpec());
+        }
+        else {
+            adHocFilter = null;
+        }
+
+        if (identifierFilter != null && adHocFilter != null) {
+            CompiledSearchFilterSpec combinedFilter =
+                    CompiledSearchFilterSpec.merge(identifierFilter, adHocFilter);
+
+            return Optional.of(combinedFilter);
+        }
+        else if (identifierFilter != null) return Optional.of(identifierFilter);
+        else if (adHocFilter != null) return Optional.of(adHocFilter);
+
+        // Neither a filter identifier, or an ad-hoc filter is provided
+        try {
+            return Optional.of(searchFilterCache.get(SearchFilterDefaults.SYSTEM_USER_ID, SearchFilterDefaults.SYSTEM_DEFAULT_FILTER));
+        }
+        catch (Exception ex) {
+            throw new IllegalStateException("This should not happen (TM)", ex);
+        }
+
     }
-    public void queryNew(RpcQsQueryNew request,
+    public void query(RpcQsQuery request,
                             io.grpc.stub.StreamObserver<RpcQsResponse> responseObserver) {
         try {
             wmsa_qs_query_time_grpc
@@ -91,11 +119,10 @@ public class QueryGRPCService
 
                         ProcessedQuery query = queryFactory.createQuery(request, filterSpecMaybe.get(), null);
 
-                        RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
                         IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
 
                         // Execute the query on the index partitions
-                        IndexClient.AggregateQueryResponse response = indexClient.executeQueries(indexRequest, pagination);
+                        IndexClient.AggregateQueryResponse response = indexClient.executeQueries(query.indexQuery, pagination);
 
                         // Convert results to response and send it back
                         var responseBuilder = RpcQsResponse.newBuilder()
@@ -106,7 +133,7 @@ public class QueryGRPCService
                                                 .setPageSize(pagination.pageSize())
                                                 .setTotalResults(response.totalResults())
                                 )
-                                .setSpecs(indexRequest)
+                                .setSpecs(query.indexQuery)
                                 .addAllSearchTermsHuman(query.searchTermsHuman);
 
                         if (query.domain != null) {
@@ -122,52 +149,6 @@ public class QueryGRPCService
         }
     }
 
-
-    /** GRPC endpoint that parses a query, delegates it to the index partitions, and then collects the results.
-     */
-    public void query(RpcQsQuery request, StreamObserver<RpcQsResponse> responseObserver)
-    {
-        try {
-            wmsa_qs_query_time_grpc
-                    .labels(Integer.toString(request.getQueryLimits().getTimeoutMs()),
-                            Integer.toString(request.getQueryLimits().getResultsTotal()))
-                    .time(() -> {
-
-                var params = QueryProtobufCodec.convertRequest(request);
-
-                ProcessedQuery query = queryFactory.createQuery(params, PrototypeRankingParameters.sensibleDefaults());
-
-                RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
-                IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
-
-                // Execute the query on the index partitions
-                IndexClient.AggregateQueryResponse response = indexClient.executeQueries(indexRequest, pagination);
-
-                 // Convert results to response and send it back
-                var responseBuilder = RpcQsResponse.newBuilder()
-                        .addAllResults(response.results())
-                        .setPagination(
-                                RpcQsResultPagination.newBuilder()
-                                        .setPage(pagination.page())
-                                        .setPageSize(pagination.pageSize())
-                                        .setTotalResults(response.totalResults())
-                        )
-                        .setSpecs(indexRequest)
-                        .addAllSearchTermsHuman(query.searchTermsHuman);
-
-                if (query.domain != null) {
-                    responseBuilder.setDomain(query.domain);
-                }
-
-                responseObserver.onNext(responseBuilder.build());
-                responseObserver.onCompleted();
-            });
-        } catch (Exception e) {
-            logger.error("Exception", e);
-            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
-        }
-    }
-
     public record DetailedDirectResult(ProcessedQuery processedQuery,
                                        List<DecoratedSearchResultItem> result,
                                        int totalResults) {
@@ -177,12 +158,27 @@ public class QueryGRPCService
     /** Local query execution, without GRPC. */
     public DetailedDirectResult executeDirect(
             String originalQuery,
-            QueryParams params,
+            RpcQueryLimits limits,
+            String set,
+            String langIsoCode,
             IndexClient.Pagination pagination,
             RpcResultRankingParameters rankingParameters) {
 
-        var query = queryFactory.createQuery(params, rankingParameters);
-        IndexClient.AggregateQueryResponse response = indexClient.executeQueries(QueryProtobufCodec.convertQuery(originalQuery, query), pagination);
+        var mockQsQuery = RpcQsQuery.newBuilder()
+                .setQueryLimits(limits)
+                .setLangIsoCode(langIsoCode)
+                .setHumanQuery(originalQuery)
+                .build();
+
+        var query = queryFactory.createQuery(mockQsQuery,
+                CompiledSearchFilterSpec
+                        .builder("AD-HOC", "set:"+set)
+                        .searchSetIdentifier(set)
+                        .build(),
+                rankingParameters);
+
+        IndexClient.AggregateQueryResponse response
+                = indexClient.executeQueries(query.indexQuery, pagination);
 
         return new DetailedDirectResult(query,
                 Lists.transform(response.results(), QueryProtobufCodec::convertQueryResult),

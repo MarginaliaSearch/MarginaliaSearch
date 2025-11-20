@@ -1,6 +1,7 @@
 package nu.marginalia.search.model;
 
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
@@ -9,6 +10,8 @@ import nu.marginalia.model.EdgeDomain;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -148,30 +151,32 @@ public record SearchParameters(WebsiteUrl url,
         return pathBuilder.toString();
     }
 
-    public RpcTemporalBias.Bias temporalBias() {
-        if (recent == RECENT) {
-            return RpcTemporalBias.Bias.RECENT;
-        }
-        else if (profile == SearchProfile.VINTAGE) {
-            return RpcTemporalBias.Bias.OLD;
-        }
+    public QueryFilterSpec asFilterSpec() {
+        var namedFilter = profile.defaultFilter.asFilterSpec();
 
-        return RpcTemporalBias.Bias.NONE;
-    }
+        List<String> excludeTerms = new ArrayList<>();
 
-    public QueryStrategy strategy() {
-        if (searchTitle == SearchTitleParameter.TITLE) {
-            return QueryStrategy.REQUIRE_FIELD_TITLE;
-        }
+        excludeTerms.addAll(List.of(js.implictExcludeSearchTerms));
+        excludeTerms.addAll(List.of(adtech.implictExcludeSearchTerms));
 
-        return QueryStrategy.AUTO;
-    }
+        if (excludeTerms.isEmpty()
+            && recent == SearchRecentParameter.DEFAULT
+            && searchTitle == SearchTitleParameter.DEFAULT)
+            return namedFilter;
 
-    public SpecificationLimit yearLimit() {
-        if (recent == RECENT)
-            return SpecificationLimit.greaterThan(2018);
+        var adHocFilter = QueryFilterSpec.FilterAdHoc.builder()
+                .termsExclude(excludeTerms)
+                .temporalBias(switch (recent) {
+                            case RECENT -> RpcTemporalBias.Bias.RECENT;
+                            default -> RpcTemporalBias.Bias.NONE;
+                        })
+                .queryStrategy(switch (searchTitle) {
+                    case TITLE -> QueryStrategy.REQUIRE_FIELD_TITLE;
+                    default -> QueryStrategy.AUTO;
+                })
+                .build();
 
-        return profile.getYearLimit();
+        return new QueryFilterSpec.CombinedFilter(namedFilter, adHocFilter);
     }
 
 }

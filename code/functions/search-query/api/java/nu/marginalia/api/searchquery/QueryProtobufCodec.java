@@ -1,10 +1,7 @@
 package nu.marginalia.api.searchquery;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
-import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.api.searchquery.model.results.debug.DebugFactor;
@@ -20,153 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 public class QueryProtobufCodec {
-
-    public static RpcIndexQuery convertQuery(RpcQsQuery request, ProcessedQuery query) {
-        var builder = RpcIndexQuery.newBuilder();
-
-        builder.addAllRequiredDomainIds(query.specs.domains);
-        builder.addAllExcludedDomainIds(query.specs.excludedDomains);
-
-        builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
-
-        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
-        builder.setHumanQuery(request.getHumanQuery());
-        builder.setLangIsoCode(query.langIsoCode);
-
-        builder.setNsfwFilterTierValue(request.getNsfwFilterTierValue());
-
-        builder.setQuality(IndexProtobufCodec.convertSpecLimit(query.specs.quality));
-        builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
-        builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
-        builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
-
-
-        builder.setQueryLimits(query.specs.queryLimits);
-
-        // Query strategy may be overridden by the query, but if not, use the one from the request
-        if (query.specs.queryStrategy != null && query.specs.queryStrategy != QueryStrategy.AUTO)
-            builder.setQueryStrategy(query.specs.queryStrategy.name());
-        else
-            builder.setQueryStrategy(request.getQueryStrategy());
-
-        if (request.getTemporalBias().getBias() != RpcTemporalBias.Bias.NONE) {
-            if (query.specs.rankingParams != null) {
-                builder.setParameters(
-                        RpcResultRankingParameters.newBuilder(query.specs.rankingParams)
-                                .setTemporalBias(request.getTemporalBias())
-                                .build()
-                );
-            } else {
-                builder.setParameters(
-                        RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults())
-                                .setTemporalBias(request.getTemporalBias())
-                                .build()
-                );
-            }
-        } else if (query.specs.rankingParams != null) {
-            builder.setParameters(query.specs.rankingParams);
-        }
-        // else {
-        // if we have no ranking params, we don't need to set them, the client check and use the default values
-        // so we don't need to send this huge object over the wire
-        // }
-
-        return builder.build();
-    }
-
-    public static RpcIndexQuery convertQuery(RpcQsQueryNew request, ProcessedQuery query) {
-        var builder = RpcIndexQuery.newBuilder();
-
-        builder.addAllRequiredDomainIds(query.specs.domains);
-        builder.addAllExcludedDomainIds(query.specs.excludedDomains);
-
-        builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
-
-        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
-        builder.setHumanQuery(request.getHumanQuery());
-        builder.setLangIsoCode(query.langIsoCode);
-
-        builder.setNsfwFilterTierValue(request.getNsfwFilterTierValue());
-
-        builder.setQuality(IndexProtobufCodec.convertSpecLimit(query.specs.quality));
-        builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
-        builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
-        builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
-
-
-        builder.setQueryLimits(query.specs.queryLimits);
-
-        // Query strategy may be overridden by the query, but if not, use the one from the request
-        if (query.specs.queryStrategy != null && query.specs.queryStrategy != QueryStrategy.AUTO)
-            builder.setQueryStrategy(query.specs.queryStrategy.name());
-        else
-            builder.setQueryStrategy(QueryStrategy.AUTO.name());
-
-        // FIXME: Temporal bias goes where?
-        if (query.specs.rankingParams != null) {
-            builder.setParameters(query.specs.rankingParams);
-        }
-        // else {
-        // if we have no ranking params, we don't need to set them, the client check and use the default values
-        // so we don't need to send this huge object over the wire
-        // }
-
-        return builder.build();
-    }
-
-    public static RpcIndexQuery convertQuery(String humanQuery, ProcessedQuery query) {
-        var builder = RpcIndexQuery.newBuilder();
-
-        builder.addAllRequiredDomainIds(query.specs.domains);
-        builder.addAllExcludedDomainIds(query.specs.excludedDomains);
-        builder.setQuery(IndexProtobufCodec.convertRpcQuery(query.specs.query));
-
-        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
-        builder.setHumanQuery(humanQuery);
-        builder.setLangIsoCode(query.langIsoCode);
-
-        builder.setNsfwFilterTier(RpcIndexQuery.NSFW_FILTER_TIER.DANGER);
-
-        builder.setQuality(IndexProtobufCodec.convertSpecLimit(query.specs.quality));
-        builder.setYear(IndexProtobufCodec.convertSpecLimit(query.specs.year));
-        builder.setSize(IndexProtobufCodec.convertSpecLimit(query.specs.size));
-        builder.setRank(IndexProtobufCodec.convertSpecLimit(query.specs.rank));
-
-        builder.setQueryLimits(query.specs.queryLimits);
-
-        // Query strategy may be overridden by the query, but if not, use the one from the request
-        builder.setQueryStrategy(query.specs.queryStrategy.name());
-
-        if (query.specs.rankingParams != null) {
-            builder.setParameters(query.specs.rankingParams);
-        }
-
-        return builder.build();
-    }
-
-    public static QueryParams convertRequest(RpcQsQuery request) {
-        return new QueryParams(
-                request.getHumanQuery(),
-                request.getNearDomain(),
-                request.getTacitIncludesList(),
-                request.getTacitExcludesList(),
-                request.getTacitPriorityList(),
-                new FloatArrayList(request.getTacitPriorityWeightList()),
-                request.getTacitAdviceList(),
-                IndexProtobufCodec.convertSpecLimit(request.getQuality()),
-                IndexProtobufCodec.convertSpecLimit(request.getYear()),
-                IndexProtobufCodec.convertSpecLimit(request.getSize()),
-                IndexProtobufCodec.convertSpecLimit(request.getRank()),
-                request.getRequiredDomainIdsList(),
-                request.getQueryLimits(),
-                request.getSearchSetIdentifier(),
-                QueryStrategy.valueOf(request.getQueryStrategy()),
-                RpcTemporalBias.Bias.valueOf(request.getTemporalBias().getBias().name()),
-                NsfwFilterTier.fromCodedValue(request.getNsfwFilterTierValue()),
-                request.getLangIsoCode(),
-                request.getPagination().getPage()
-        );
-    }
 
 
     public static QueryResponse convertQueryResponse(RpcQsResponse query) {
@@ -363,37 +213,6 @@ public class QueryProtobufCodec {
                 QueryStrategy.valueOf(specs.getQueryStrategy()),
                 specs.hasParameters() ? specs.getParameters() : null
         );
-    }
-
-    public static RpcQsQuery convertQueryParams(QueryParams params) {
-        var builder = RpcQsQuery.newBuilder()
-                .addAllRequiredDomainIds(params.domainIds())
-                .addAllExcludedDomainIds(List.of()) // TODO: Hook in
-                .addAllTacitAdvice(params.tacitAdvice())
-                .addAllTacitExcludes(params.tacitExcludes())
-                .addAllTacitPriority(params.tacitPriority())
-                .setHumanQuery(params.humanQuery())
-                .setQueryLimits(params.limits())
-                .setQuality(IndexProtobufCodec.convertSpecLimit(params.quality()))
-                .setYear(IndexProtobufCodec.convertSpecLimit(params.year()))
-                .setSize(IndexProtobufCodec.convertSpecLimit(params.size()))
-                .setRank(IndexProtobufCodec.convertSpecLimit(params.rank()))
-                .setSearchSetIdentifier(params.identifier())
-                .setQueryStrategy(params.queryStrategy().name())
-                .setNsfwFilterTierValue(params.filterTier().getCodedValue())
-                .setTemporalBias(RpcTemporalBias.newBuilder()
-                        .setBias(RpcTemporalBias.Bias.valueOf(params.temporalBias().name()))
-                        .build())
-                .setPagination(RpcQsQueryPagination.newBuilder()
-                        .setPage(params.page())
-                        .setPageSize(Math.min(100, params.limits().getResultsTotal()))
-                        .build())
-                .setLangIsoCode(params.langIsoCode());
-
-        if (params.nearDomain() != null)
-            builder.setNearDomain(params.nearDomain());
-
-        return builder.build();
     }
 
     public static DecoratedSearchResultItem convertQueryResult(RpcDecoratedResultItem rpcDecoratedResultItem) {

@@ -2,6 +2,7 @@ package nu.marginalia.searchfilter;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
@@ -53,18 +54,24 @@ class SearchFilterStoreTest {
     }
 
     @Test
+    public void testDefaultConfig() {
+        SearchFilterStore store = new SearchFilterStore(dataSource, new SearchFilterParser());
+        store.loadDefaultConfigs();
+    }
+
+    @Test
     public void testSaveLoad() throws SQLException {
         SearchFilterStore store = new SearchFilterStore(dataSource, new SearchFilterParser());
-        store.saveFilter(SearchFilterStore.SYSTEM_USER_ID, "test", """
+        store.saveFilter(SearchFilterDefaults.SYSTEM_USER_ID, "test", """
                 <?xml version="1.0"?>
                 <filter>
                     <search-set>BLOGS</search-set>
                 </filter>
                 """);
-        Optional<SearchFilterSpec> filter = store.getFilter(SearchFilterStore.SYSTEM_USER_ID, "test");
+        Optional<SearchFilterSpec> filter = store.getFilter(SearchFilterDefaults.SYSTEM_USER_ID, "test");
         Assertions.assertTrue(filter.isPresent());
         var spec = filter.get();
-        Assertions.assertEquals(SearchFilterStore.SYSTEM_USER_ID, spec.userId());
+        Assertions.assertEquals(SearchFilterDefaults.SYSTEM_USER_ID, spec.userId());
         Assertions.assertEquals("test", spec.identifier());
         Assertions.assertEquals("BLOGS", spec.searchSetIdentifier());
     }

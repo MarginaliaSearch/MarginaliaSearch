@@ -1,5 +1,6 @@
 package nu.marginalia.functions.searchquery.searchfilter;
 
+import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import org.w3c.dom.Document;
@@ -45,6 +46,8 @@ public class SearchFilterParser {
         final SpecificationLimit quality;
         final SpecificationLimit rank;
 
+        final QueryStrategy queryStrategy;
+
         final String temporalBias;
 
         try {
@@ -79,10 +82,12 @@ public class SearchFilterParser {
             if (searchSetIdentifier != null && !domainsInclude.isEmpty())
                 throw new SearchFilterParserException("Search set identifier and domainLists can not both be specified");
 
-            year = parseSpecificationLimit(filters.getElementsByTagName("year"), "year");
-            size = parseSpecificationLimit(filters.getElementsByTagName("size"), "size");
-            quality = parseSpecificationLimit(filters.getElementsByTagName("quality"), "quality");
-            rank = parseSpecificationLimit(filters.getElementsByTagName("rank"), "rank");
+            var limits = filters.getElementsByTagName("limit");
+
+            year = parseSpecificationLimit(limits, "year");
+            size = parseSpecificationLimit(limits, "size");
+            quality = parseSpecificationLimit(limits, "quality");
+            rank = parseSpecificationLimit(limits, "rank");
 
             var temporalBiasTags = filters.getElementsByTagName("temporal-bias");
             if (temporalBiasTags.getLength() == 0) {
@@ -99,6 +104,22 @@ public class SearchFilterParser {
                 throw new SearchFilterParserException("Expected 0 or 1 temporal-bias tags");
             }
 
+            var qsTags = filters.getElementsByTagName("query-strategy");
+            if (qsTags.getLength() == 0) queryStrategy = QueryStrategy.AUTO;
+            else if (qsTags.getLength() == 1 && qsTags.item(0) instanceof Element e) {
+                String val = e.getTextContent().strip().toUpperCase();
+                try {
+                    queryStrategy = QueryStrategy.valueOf(val);
+                }
+                catch (IllegalArgumentException ex) {
+                    throw new SearchFilterParserException("Unknown query strategy value");
+                }
+            }
+            else {
+                throw new SearchFilterParserException("Expected 0 or 1 query-strategy tags");
+            }
+
+
             return new SearchFilterSpec(
                     userId,
                     identifier,
@@ -113,7 +134,8 @@ public class SearchFilterParser {
                     size,
                     quality,
                     rank,
-                    temporalBias
+                    temporalBias,
+                    queryStrategy
             );
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
@@ -164,9 +186,15 @@ public class SearchFilterParser {
     }
 
     private static SpecificationLimit parseSpecificationLimit(NodeList list, String name) throws SearchFilterParserException {
-        if (list.getLength() == 0) return SpecificationLimit.none();
-        if (list.getLength() > 1) throw new SearchFilterParserException("Multiple " + name + " tags!");
-        var elem = (Element) list.item(0);
+        Element elem = null;
+        for (int i = 0; i < list.getLength(); i++) {
+            var maybeElem = (Element) list.item(i);
+            if (name.equalsIgnoreCase(maybeElem.getAttribute("param"))) {
+                elem = maybeElem;
+                break;
+            }
+        }
+        if (elem == null) return SpecificationLimit.none();
 
         String type = elem.getAttribute("type");
 

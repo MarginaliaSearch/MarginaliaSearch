@@ -171,10 +171,10 @@ class SearchFilterParserTest {
         var filter = parser.parse("test", "test", """
                 <?xml version="1.0"?>
                 <filter>
-                    <year type="lt" value="1996" />
-                    <quality type="eq" value="5" />
-                    <size type="gt" value="100" />
-                    <rank type="gt" value="20" />
+                    <limit param="year" type="lt" value="1996" />
+                    <limit param="quality" type="eq" value="5" />
+                    <limit param="size" type="gt" value="100" />
+                    <limit param="rank" type="gt" value="20" />
                 </filter>
                 """);
 
@@ -190,7 +190,7 @@ class SearchFilterParserTest {
             var ret = parser.parse("test", "test", """
                     <?xml version="1.0"?>
                     <filter>
-                        <year value="1996" />
+                        <limit param="year" value="1996" />
                     </filter>
                     """);
             Assertions.fail("Expected exception, got " + ret);
@@ -204,7 +204,7 @@ class SearchFilterParserTest {
             var ret = parser.parse("test", "test", """
                     <?xml version="1.0"?>
                     <filter>
-                        <year type="dog" value="1996" />
+                        <limit param="year" type="dog" value="1996" />
                     </filter>
                     """);
             Assertions.fail("Expected exception, got " + ret);
@@ -218,7 +218,7 @@ class SearchFilterParserTest {
             var ret = parser.parse("test", "test", """
                     <?xml version="1.0"?>
                     <filter>
-                        <year type="eq" value="cat" />
+                        <limit param="year" type="eq" value="cat" />
                     </filter>
                     """);
             Assertions.fail("Expected exception, got " + ret);
@@ -232,7 +232,7 @@ class SearchFilterParserTest {
             var ret = parser.parse("test", "test", """
                     <?xml version="1.0"?>
                     <filter>
-                        <year type="eq" value="" />
+                        <limit param="year" type="eq" value="" />
                     </filter>
                     """);
             Assertions.fail("Expected exception, got " + ret);
@@ -246,7 +246,7 @@ class SearchFilterParserTest {
             var ret = parser.parse("test", "test", """
                     <?xml version="1.0"?>
                     <filter>
-                        <year type="eq" />
+                        <limit param="year" type="eq" />
                     </filter>
                     """);
             Assertions.fail("Expected exception, got " + ret);

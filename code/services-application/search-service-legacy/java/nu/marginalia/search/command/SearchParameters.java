@@ -1,18 +1,18 @@
 package nu.marginalia.search.command;
 
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.search.model.SearchProfile;
 import spark.Request;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-
-import static nu.marginalia.search.command.SearchRecentParameter.RECENT;
 
 public record SearchParameters(String query,
                                SearchProfile profile,
@@ -23,6 +23,19 @@ public record SearchParameters(String query,
                                boolean newFilter,
                                int page
                                ) {
+
+    public static SearchParameters defaultsForQuery(String query, int page) {
+        return new SearchParameters(
+                query,
+                SearchProfile.NO_FILTER,
+                SearchJsParameter.DEFAULT,
+                SearchRecentParameter.DEFAULT,
+                SearchTitleParameter.DEFAULT,
+                SearchAdtechParameter.DEFAULT,
+                false,
+                page
+        );
+    }
 
     public NsfwFilterTier filterTier() {
         return NsfwFilterTier.DANGER;
@@ -83,29 +96,31 @@ public record SearchParameters(String query,
         return baseUrl.withPath(path);
     }
 
-    public RpcTemporalBias.Bias temporalBias() {
-        if (recent == RECENT) {
-            return RpcTemporalBias.Bias.RECENT;
-        }
-        else if (profile == SearchProfile.VINTAGE) {
-            return RpcTemporalBias.Bias.OLD;
-        }
+    public QueryFilterSpec asFilterSpec() {
+        var namedFilter = profile.defaultFilter.asFilterSpec();
 
-        return RpcTemporalBias.Bias.NONE;
-    }
+        List<String> excludeTerms = new ArrayList<>();
 
-    public QueryStrategy strategy() {
-        if (searchTitle == SearchTitleParameter.TITLE) {
-            return QueryStrategy.REQUIRE_FIELD_TITLE;
-        }
+        excludeTerms.addAll(List.of(js.implictExcludeSearchTerms));
+        excludeTerms.addAll(List.of(adtech.implictExcludeSearchTerms));
 
-        return QueryStrategy.AUTO;
-    }
+        if (excludeTerms.isEmpty()
+                && recent == SearchRecentParameter.DEFAULT
+                && searchTitle == SearchTitleParameter.DEFAULT)
+            return namedFilter;
 
-    public SpecificationLimit yearLimit() {
-        if (recent == RECENT)
-            return SpecificationLimit.greaterThan(2018);
+        var adHocFilter = QueryFilterSpec.FilterAdHoc.builder()
+                .termsExclude(excludeTerms)
+                .temporalBias(switch (recent) {
+                            case RECENT -> RpcTemporalBias.Bias.RECENT;
+                            default -> RpcTemporalBias.Bias.NONE;
+                        })
+                .queryStrategy(switch (searchTitle) {
+                    case TITLE -> QueryStrategy.REQUIRE_FIELD_TITLE;
+                    default -> QueryStrategy.AUTO;
+                })
+                .build();
 
-        return profile.getYearLimit();
+        return new QueryFilterSpec.CombinedFilter(namedFilter, adHocFilter);
     }
 }
