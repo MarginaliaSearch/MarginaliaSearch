@@ -70,7 +70,7 @@ public class SearchFilterParser {
             NodeList searchSetIdentifierList = filters.getElementsByTagName("search-set");
 
             searchSetIdentifier = switch(searchSetIdentifierList.getLength()) {
-                case 0 -> null;
+                case 0 -> "NONE";
                 case 1 -> searchSetIdentifierList.item(0).getTextContent();
                 default -> throw new SearchFilterParserException("Multiple search-set tags");
             };
@@ -79,7 +79,7 @@ public class SearchFilterParser {
             termsExclude = extractContentList(filters.getElementsByTagName("terms-exclude"));
             termsPromote = extractPromoteList(filters.getElementsByTagName("terms-promote"), "amount");
 
-            if (searchSetIdentifier != null && !domainsInclude.isEmpty())
+            if ("NONE".equals(searchSetIdentifier) && !domainsInclude.isEmpty())
                 throw new SearchFilterParserException("Search set identifier and domainLists can not both be specified");
 
             var limits = filters.getElementsByTagName("limit");

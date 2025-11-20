@@ -1,5 +1,7 @@
 package nu.marginalia.api.searchquery.model;
 
+import nu.marginalia.api.searchquery.QueryFilterSpec;
+
 public enum SearchFilterDefaults {
     POPULAR("default.xml"),
     SMALLWEB("small-web.xml"),
@@ -22,4 +24,8 @@ public enum SearchFilterDefaults {
 
     public static final String SYSTEM_USER_ID = "SYSTEM";
     public static final String SYSTEM_DEFAULT_FILTER = NO_FILTER.name();
+
+    public QueryFilterSpec.FilterByName asFilterSpec() {
+        return new QueryFilterSpec.FilterByName(SYSTEM_USER_ID, name());
+    }
 }

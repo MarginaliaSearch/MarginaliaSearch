@@ -88,11 +88,10 @@ public class SearchSetsService {
 
     public SearchSet getSearchSetByName(String searchSetIdentifier) {
 
-        if (null == searchSetIdentifier) {
-            return anySet;
-        }
-
-        if ("NONE".equals(searchSetIdentifier) || searchSetIdentifier.isEmpty()) {
+        if (null == searchSetIdentifier
+           || searchSetIdentifier.isBlank()
+           || "NONE".equals(searchSetIdentifier))
+        {
             return anySet;
         }
 

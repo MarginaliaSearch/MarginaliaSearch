@@ -103,6 +103,19 @@ public class QueryGRPCService
         }
 
     }
+
+    Optional<ProcessedQuery> createQuery(RpcQsQuery request) {
+
+        return getFilter(request)
+                .map(compiledSearchFilterSpec ->
+                        queryFactory.createQuery(
+                                request,
+                                compiledSearchFilterSpec,
+                                null)
+                );
+
+    }
+
     public void query(RpcQsQuery request,
                             io.grpc.stub.StreamObserver<RpcQsResponse> responseObserver) {
         try {
@@ -111,15 +124,15 @@ public class QueryGRPCService
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
 
-                        Optional<CompiledSearchFilterSpec> filterSpecMaybe = getFilter(request);
-                        if (filterSpecMaybe.isEmpty()) {
+                        IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
+
+                        Optional<ProcessedQuery> maybeQuery = createQuery(request);
+                        if (maybeQuery.isEmpty()) {
                             responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
                             return;
                         }
 
-                        ProcessedQuery query = queryFactory.createQuery(request, filterSpecMaybe.get(), null);
-
-                        IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
+                        ProcessedQuery query = maybeQuery.get();
 
                         // Execute the query on the index partitions
                         IndexClient.AggregateQueryResponse response = indexClient.executeQueries(query.indexQuery, pagination);

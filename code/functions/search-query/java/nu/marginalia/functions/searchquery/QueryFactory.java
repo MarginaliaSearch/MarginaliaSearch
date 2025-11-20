@@ -201,14 +201,17 @@ public class QueryFactory {
                 .addAllExcludedDomainIds(searchFilter.domainsExclude())
                 .addAllPriorityDomainIds(searchFilter.domainsPromote())
                 .addAllPriorityDomainIdsWeights(searchFilter.domainsPromoteAmounts())
-                .setSearchSetIdentifier(searchFilter.searchSetIdentifier())
                 .setLangIsoCode(request.getLangIsoCode())
-                .setNsfwFilterTierValue(request.getNsfwFilterTierValue())
-                .setQuality(IndexProtobufCodec.convertSpecLimit(qualityLimit))
-                .setYear(IndexProtobufCodec.convertSpecLimit(year))
-                .setSize(IndexProtobufCodec.convertSpecLimit(size))
-                .setRank(IndexProtobufCodec.convertSpecLimit(rank))
-                .setQueryStrategy(queryStrategy.name())
+                .setNsfwFilterTierValue(request.getNsfwFilterTierValue());
+
+        if (!qualityLimit.isNone()) indexQueryBuilder.setQuality(IndexProtobufCodec.convertSpecLimit(qualityLimit));
+        if (!year.isNone()) indexQueryBuilder.setYear(IndexProtobufCodec.convertSpecLimit(year));
+        if (!size.isNone()) indexQueryBuilder.setSize(IndexProtobufCodec.convertSpecLimit(size));
+        if (!rank.isNone()) indexQueryBuilder.setRank(IndexProtobufCodec.convertSpecLimit(rank));
+        if (!QueryStrategy.AUTO.equals(queryStrategy)) indexQueryBuilder.setQueryStrategy(queryStrategy.name());
+        if (null != searchFilter.searchSetIdentifier() && !"NONE".equals(searchFilter.searchSetIdentifier())) indexQueryBuilder.setSearchSetIdentifier(searchFilter.searchSetIdentifier());
+
+        indexQueryBuilder
                 .setQueryLimits(limits)
                 .setQuery(IndexProtobufCodec.convertRpcQuery(queryBuilder.build()));
 
