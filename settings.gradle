@@ -103,7 +103,7 @@ include 'third-party:rssreader'
 include 'third-party:encyclopedia-marginalia-nu'
 
 ext {
-    joobyVersion = '3.5.5'
+    joobyVersion = '3.11.5'
 }
 
 dependencyResolutionManagement {
