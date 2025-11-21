@@ -110,8 +110,8 @@ class QueryGRPCServiceTest {
 
         System.out.println(query);
 
-        Assertions.assertEquals(List.of("test"), query.getQuery().getIncludeList());
-        Assertions.assertEquals(List.of("generator:docs"), query.getQuery().getAdviceList());
+        Assertions.assertEquals(List.of("test"), query.getTerms().getTermsQueryList());
+        Assertions.assertEquals(List.of("generator:docs"), query.getTerms().getTermsRequireList());
         Assertions.assertEquals(defaultLimits, query.getQueryLimits());
         Assertions.assertEquals("en", query.getLangIsoCode());
         Assertions.assertEquals("test", query.getHumanQuery());
@@ -137,10 +137,10 @@ class QueryGRPCServiceTest {
 
         System.out.println(query);
 
-        Assertions.assertEquals(List.of("test"), query.getQuery().getIncludeList());
-        Assertions.assertEquals(List.of("test2", "generator:docs"), query.getQuery().getAdviceList());
-        Assertions.assertEquals(List.of("test3"), query.getQuery().getPriorityList());
-        Assertions.assertEquals(List.of("test4"), query.getQuery().getExcludeList());
+        Assertions.assertEquals(List.of("test"), query.getTerms().getTermsQueryList());
+        Assertions.assertEquals(List.of("test2", "generator:docs"), query.getTerms().getTermsRequireList());
+        Assertions.assertEquals(List.of("test3"), query.getTerms().getTermsPriorityList());
+        Assertions.assertEquals(List.of("test4"), query.getTerms().getTermsExcludeList());
 
         Assertions.assertEquals(defaultLimits, query.getQueryLimits());
         Assertions.assertEquals("en", query.getLangIsoCode());

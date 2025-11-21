@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.hash.MurmurHash3_128;
@@ -17,6 +17,7 @@ import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.searchset.DomainRankings;
+import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
@@ -34,6 +35,7 @@ import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,7 +110,7 @@ public class IndexQueryServiceIntegrationTest {
                 w("world", WordFlags.Title)
         ).load();
 
-        var query = basicQuery(builder -> builder.query(justInclude("hello", "world")));
+        var query = basicQuery(builder -> builder.setTerms(justInclude("hello", "world")));
 
         executeSearch(query)
                 .expectDocumentsInOrder(d(1,1));
@@ -127,55 +129,39 @@ public class IndexQueryServiceIntegrationTest {
         ).load();
 
         var queryMissingExclude = basicQuery(builder ->
-                builder.query(includeAndExclude("hello", "missing")));
+                builder.setTerms(includeAndExclude("hello", "missing")));
 
         executeSearch(queryMissingExclude)
                 .expectDocumentsInOrder(d(1,1));
 
         var queryMissingInclude = basicQuery(builder ->
-                builder.query(justInclude("missing")));
+                builder.setTerms(justInclude("missing")));
 
         executeSearch(queryMissingInclude)
                 .expectCount(0);
 
         var queryMissingPriority = basicQuery(builder ->
-                builder.query(new SearchQuery(
-                        "hello",
-                        List.of("hello"),
-                        List.of(),
-                        List.of(),
-                        List.of("missing"),
-                        FloatList.of(),
-                        List.of())
-                        ));
+                builder.setTerms(
+                        RpcQueryTerms.newBuilder()
+                                .setCompiledQuery("hello")
+                                .addTermsQuery("hello")
+                                .addTermsPriority("missing")
+                                .addTermsPriorityWeight(1.f)
+                                .build()));
 
         executeSearch(queryMissingPriority)
                 .expectCount(1);
 
         var queryMissingAdvice = basicQuery(builder ->
-                builder.query(
-                        new SearchQuery("hello",
-                                List.of("hello"),
-                                List.of(),
-                                List.of("missing"),
-                                List.of(),
-                                FloatList.of(),
-                                List.of()
-                        )));
+                builder.setTerms(includeWithCohere(List.of("hello"), List.of("missing")))
+        );
 
         executeSearch(queryMissingAdvice)
                 .expectCount(0);
 
         var queryMissingCoherence = basicQuery(builder ->
-                builder.query(
-                        new SearchQuery("hello",
-                                List.of("hello"),
-                                List.of(),
-                                List.of(),
-                                List.of(),
-                                FloatList.of(),
-                                List.of(SearchPhraseConstraint.mandatory(List.of("missing", "hello")))
-                        )));
+                builder.setTerms(includeWithCohere(List.of("hello"), List.of("hello", "missing")))
+            );
 
         executeSearch(queryMissingCoherence)
                 .expectCount(0);
@@ -207,16 +193,16 @@ public class IndexQueryServiceIntegrationTest {
 
 
         var beforeY2K = basicQuery(builder ->
-                builder.query(justInclude("hello", "world"))
-                       .year(SpecificationLimit.lessThan(2000))
+                builder.setTerms(justInclude("hello", "world"))
+                       .setYear(RpcSpecLimit.newBuilder().setType(RpcSpecLimit.TYPE.LESS_THAN).setValue(2000))
         );
         var atY2K = basicQuery(builder ->
-                builder.query(justInclude("hello", "world"))
-                        .year(SpecificationLimit.equals(2000))
+                builder.setTerms(justInclude("hello", "world"))
+                        .setYear(RpcSpecLimit.newBuilder().setType(RpcSpecLimit.TYPE.EQUALS).setValue(2000))
         );
         var afterY2K = basicQuery(builder ->
-                builder.query(justInclude("hello", "world"))
-                        .year(SpecificationLimit.greaterThan(2000))
+                builder.setTerms(justInclude("hello", "world"))
+                        .setYear(RpcSpecLimit.newBuilder().setType(RpcSpecLimit.TYPE.GREATER_THAN).setValue(2000))
         );
 
         executeSearch(beforeY2K)
@@ -269,12 +255,12 @@ public class IndexQueryServiceIntegrationTest {
 
 
         var domain1 = basicQuery(builder ->
-                builder.query(justInclude("hello", "world"))
-                        .domains(List.of(1))
+                builder.setTerms(justInclude("hello", "world"))
+                        .addRequiredDomainIds(1)
         );
         var domain2 = basicQuery(builder ->
-                builder.query(justInclude("hello", "world"))
-                        .domains(List.of(2))
+                builder.setTerms(justInclude("hello", "world"))
+                        .addRequiredDomainIds(2)
         );
 
         executeSearch(domain1)
@@ -307,7 +293,7 @@ public class IndexQueryServiceIntegrationTest {
                 ).load();
 
         var query = basicQuery(builder ->
-                builder.query(includeAndExclude("hello", "my_darling"))
+                builder.setTerms(includeAndExclude("hello", "my_darling"))
         );
 
         executeSearch(query)
@@ -339,7 +325,7 @@ public class IndexQueryServiceIntegrationTest {
     }
 
     @CheckReturnValue
-    ResultWrapper executeSearch(SearchSpecification searchSpecification) {
+    ResultWrapper executeSearch(RpcIndexQuery searchSpecification) {
         var rsp = queryService.justQuery(searchSpecification);
 
         List<MockDataDocument> actual = new ArrayList<>();
@@ -376,7 +362,7 @@ public class IndexQueryServiceIntegrationTest {
         .load();
 
         var rsp = queryService.justQuery(
-                basicQuery(builder -> builder.query(
+                basicQuery(builder -> builder.setTerms(
                         // note coherence requriement
                         includeAndCohere("hello", "world")
                 )));
@@ -386,10 +372,10 @@ public class IndexQueryServiceIntegrationTest {
                 UrlIdCodec.removeRank(rsp.get(0).getRawItem().getCombinedId()));
     }
 
-    SearchSpecification basicQuery(Function<SearchSpecification.SearchSpecificationBuilder, SearchSpecification.SearchSpecificationBuilder> mutator)
+    RpcIndexQuery basicQuery(Function<RpcIndexQuery.Builder, RpcIndexQuery.Builder> mutator)
     {
-        var builder = SearchSpecification.builder()
-                .queryLimits(
+        RpcIndexQuery.Builder builder = RpcIndexQuery.newBuilder()
+                .setQueryLimits(
                         RpcQueryLimits.newBuilder()
                                 .setResultsByDomain(10)
                                 .setResultsTotal(10)
@@ -397,65 +383,60 @@ public class IndexQueryServiceIntegrationTest {
                                 .setFetchSize(4000)
                                 .build()
                 )
-                .queryStrategy(QueryStrategy.SENTENCE)
-                .year(SpecificationLimit.none())
-                .quality(SpecificationLimit.none())
-                .size(SpecificationLimit.none())
-                .rank(SpecificationLimit.none())
-                .rankingParams(PrototypeRankingParameters.sensibleDefaults())
-                .domains(new ArrayList<>())
-                .searchSetIdentifier("NONE");
+                .setLangIsoCode("en");
 
         return mutator.apply(builder).build();
     }
 
-    SearchQuery justInclude(String... includes) {
-        return new SearchQuery(
-                Strings.join(List.of(includes), ' '),
-                List.of(includes),
-                List.of(),
-                List.of(),
-                List.of(),
-                FloatList.of(),
-                List.of()
-        );
+    RpcQueryTerms justInclude(String... includes) {
+        return RpcQueryTerms.newBuilder()
+                .setCompiledQuery(StringUtils.join(includes, " "))
+                .addAllTermsQuery(List.of(includes)).build();
     }
 
-    SearchQuery includeAndExclude(List<String> includes, List<String> excludes) {
-        return new SearchQuery(
-                Strings.join(List.of(includes), ' '),
-                includes,
-                excludes,
-                List.of(),
-                List.of(),
-                FloatList.of(),
-                List.of()
-        );
+    RpcQueryTerms includeAndExclude(List<String> includes, List<String> excludes) {
+        return RpcQueryTerms.newBuilder()
+                .setCompiledQuery(StringUtils.join(includes, " "))
+                .addAllTermsQuery(includes)
+                .addAllTermsExclude(excludes)
+                .build();
     }
 
-    SearchQuery includeAndExclude(String include, String exclude) {
-        return new SearchQuery(
-                include,
-                List.of(include),
-                List.of(exclude),
-                List.of(),
-                List.of(),
-                FloatList.of(),
-                List.of()
-        );
+    RpcQueryTerms includeAndExclude(String include, String exclude) {
+        return RpcQueryTerms.newBuilder()
+                .setCompiledQuery(include)
+                .addTermsQuery(include)
+                .addTermsExclude(exclude)
+                .build();
     }
 
-    SearchQuery includeAndCohere(String... includes) {
-        return new SearchQuery(
-                Strings.join(List.of(includes), ' '),
-                List.of(includes),
-                List.of(),
-                List.of(),
-                List.of(),
-                FloatList.of(),
-                List.of(SearchPhraseConstraint.mandatory(List.of(includes)))
-        );
+    RpcQueryTerms includeAndCohere(String... includes) {
+        return RpcQueryTerms.newBuilder()
+                .setCompiledQuery(StringUtils.join(includes, " "))
+                .addAllTermsQuery(Arrays.asList(includes))
+                .addPhrases(
+                        RpcPhrases.newBuilder()
+                                .setType(RpcPhrases.TYPE.MANDATORY)
+                                .addAllTerms(Arrays.asList(includes))
+                                .build()
+                )
+                .build();
     }
+
+    RpcQueryTerms includeWithCohere(List<String> includes, List<String> coherences) {
+        return RpcQueryTerms.newBuilder()
+                .setCompiledQuery(StringUtils.join(includes, " "))
+                .addAllTermsExclude(includes)
+                .addPhrases(
+                        RpcPhrases.newBuilder()
+                                .setType(RpcPhrases.TYPE.MANDATORY)
+                                .addAllTerms(coherences)
+                                .build()
+                )
+                .build();
+    }
+
+
     private MockDataDocument d(int domainId, int ordinal) {
         return new MockDataDocument(domainId, ordinal);
     }

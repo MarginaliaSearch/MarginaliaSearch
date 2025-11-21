@@ -89,7 +89,8 @@ message RpcTemporalBias {
 
 /* Index service query request */
 message RpcIndexQuery {
-  RpcQuery query = 1;
+  RpcQueryTerms terms = 1;
+
   repeated int32 requiredDomainIds = 2;     // (optional) A list of domain IDs to consider
   string searchSetIdentifier = 3; // (optional) A named set of domains to consider
   string humanQuery = 4;          // The search query as the user entered it
@@ -230,14 +231,14 @@ message RpcResultTermRankingOutputs {
 }
 
 /* Defines a single subquery */
-message RpcQuery {
-  repeated string include = 1;  // These terms must be present
-  repeated string exclude = 2;  // These terms must be absent
-  repeated string advice = 3;   // These terms must be present, but do not affect ranking
-  repeated string priority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
+message RpcQueryTerms {
+  repeated string termsQuery = 1;     // These terms must be present and are ranked
+  repeated string termsExclude = 2;   // These terms must be absent
+  repeated string termsRequire = 3;   // These terms must be present, but do not affect ranking
+  repeated string termsPriority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
   repeated RpcPhrases phrases = 5; // Groups of terms that must exist in proximity of each other
   string compiledQuery = 6;  // Compiled query in infix notation
-  repeated float priorityWeight = 7;
+  repeated float termsPriorityWeight = 7;
 }
 
 /* Defines a group of search terms that must exist in the the specified order within the document */

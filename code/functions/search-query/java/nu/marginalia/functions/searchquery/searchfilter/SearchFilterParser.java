@@ -79,7 +79,7 @@ public class SearchFilterParser {
             termsExclude = extractContentList(filters.getElementsByTagName("terms-exclude"));
             termsPromote = extractPromoteList(filters.getElementsByTagName("terms-promote"), "amount");
 
-            if ("NONE".equals(searchSetIdentifier) && !domainsInclude.isEmpty())
+            if (!"NONE".equals(searchSetIdentifier) && !domainsInclude.isEmpty())
                 throw new SearchFilterParserException("Search set identifier and domainLists can not both be specified");
 
             var limits = filters.getElementsByTagName("limit");

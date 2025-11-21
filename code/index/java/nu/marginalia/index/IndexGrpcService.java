@@ -155,7 +155,7 @@ public class IndexGrpcService
 
 
     // exists for test access
-    public List<RpcDecoratedResultItem> justQuery(SearchSpecification specsSet) {
+    public List<RpcDecoratedResultItem> justQuery(RpcIndexQuery request) {
         try {
             if (!statefulIndex.isLoaded()) {
                 // Short-circuit if the index is not loaded, as we trivially know that there can be no results
@@ -165,7 +165,7 @@ public class IndexGrpcService
             CombinedIndexReader currentIndex = statefulIndex.get();
 
             SearchContext context = SearchContext.create(currentIndex,
-                    keywordHasherByLangIso.get("en"), specsSet, getSearchSet(specsSet));
+                    keywordHasherByLangIso.get("en"), request, getSearchSet(request));
 
             return new IndexQueryExecution(currentIndex, rankingService, context, 1).run();
         }
@@ -190,7 +190,8 @@ public class IndexGrpcService
             return new SmallSearchSet(request.getRequiredDomainIdsList());
         }
 
-        return searchSetsService.getSearchSetByName(request.getSearchSetIdentifier());
+        String identifier = request.getSearchSetIdentifier();
+        return searchSetsService.getSearchSetByName(identifier);
     }
 
 

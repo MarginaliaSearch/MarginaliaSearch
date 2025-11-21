@@ -136,8 +136,8 @@ public class CombinedIndexReader {
             if (mandatoryDocumentRanges != null) query.requiringDomains(mandatoryDocumentRanges);
             if (excludedDocumentRanges != null) query.rejectingDomains(excludedDocumentRanges);
 
-            // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
-            for (long termId : context.termIdsAdvice) {
+            // Require terms are a special case, mandatory but not ranked, and exempt from re-writing
+            for (long termId : context.termIdsRequire) {
                 query = query.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
             }
 

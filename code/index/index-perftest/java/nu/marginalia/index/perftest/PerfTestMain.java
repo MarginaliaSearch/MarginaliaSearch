@@ -147,7 +147,7 @@ public class PerfTestMain {
                 CompiledSearchFilterSpec.builder("test", "test").build(),
                 PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.getQuery().getCompiledQuery());
+        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
         var rankingContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
         List<IndexQuery> queries = indexReader.createQueries(rankingContext);
@@ -226,7 +226,7 @@ public class PerfTestMain {
                 CompiledSearchFilterSpec.builder("test", "test").build(),
                 PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.getQuery().getCompiledQuery());
+        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
         System.out.println("Running warmup loop!");
         int sum = 0;
@@ -287,7 +287,7 @@ public class PerfTestMain {
                 CompiledSearchFilterSpec.builder("test", "test").build(),
                 PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.getQuery().getCompiledQuery());
+        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
         SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
 

@@ -101,13 +101,13 @@ public class QueryFactory {
                         queryBuilder.phraseConstraint(SearchPhraseConstraint.mandatory(parts));
 
                         // Construct a regular query from the parts in the quoted string
-                        queryBuilder.include(parts);
+                        queryBuilder.queryTerms(parts);
 
                         // Prefer that the actual n-gram is present
                         queryBuilder.priority(str, 1.0f);
                     } else {
                         // If the quoted word is a single word, we don't need to do more than include it in the search
-                        queryBuilder.include(str);
+                        queryBuilder.queryTerms(str);
                     }
                 }
 
@@ -115,7 +115,7 @@ public class QueryFactory {
                     analyzeSearchTerm(problems, str, displayStr);
                     searchTermsHuman.addAll(Arrays.asList(displayStr.split("\\s+")));
 
-                    queryBuilder.include(str);
+                    queryBuilder.queryTerms(str);
                 }
 
                 case QueryToken.ExcludeTerm(String str, _) -> queryBuilder.exclude(str);
@@ -124,7 +124,7 @@ public class QueryFactory {
                     String prefix = "site:*.";
                     domain = str.substring(prefix.length());
 
-                    queryBuilder.advice("site:" + domain);
+                    queryBuilder.require("site:" + domain);
                 }
                 case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:") -> {
                     domain = str.substring("site:".length());
@@ -140,10 +140,10 @@ public class QueryFactory {
                         // Ensure we can enumerate documents from a website by adding this dummy term
                         // when this is the only token in the query
 
-                        queryBuilder.advice("site:" + domain);
+                        queryBuilder.require("site:" + domain);
                     }
                 }
-                case QueryToken.AdviceTerm(String str, _) -> queryBuilder.advice(str);
+                case QueryToken.AdviceTerm(String str, _) -> queryBuilder.require(str);
 
                 case QueryToken.YearTerm(SpecificationLimit limit, _) -> year = limit;
                 case QueryToken.SizeTerm(SpecificationLimit limit, _) -> size = limit;
@@ -157,7 +157,7 @@ public class QueryFactory {
             }
         }
 
-        queryBuilder.searchTermsAdvice.addAll(searchFilter.termsRequire());
+        queryBuilder.searchTermsRequire.addAll(searchFilter.termsRequire());
         queryBuilder.searchTermsPriority.addAll(searchFilter.termsPromote());
         queryBuilder.searchTermsPriorityWeight.addAll(searchFilter.termsPromoteAmounts());
         queryBuilder.searchTermsExclude.addAll(searchFilter.termsExclude());
@@ -172,7 +172,7 @@ public class QueryFactory {
                     .build();
         }
 
-        var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsInclude);
+        var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsQuery);
 
         // Query expansion may produce suggestions for phrase constraints,
         // add these to the query
@@ -213,7 +213,7 @@ public class QueryFactory {
 
         indexQueryBuilder
                 .setQueryLimits(limits)
-                .setQuery(IndexProtobufCodec.convertRpcQuery(queryBuilder.build()));
+                .setTerms(queryBuilder.build());
 
         if (null != rankingParams)
             indexQueryBuilder.setParameters(rankingParams);

@@ -32,7 +32,8 @@ public class QueryProtobufCodec {
         int totalPages = (totalResults + pageSize - 1) / pageSize;
 
         return new QueryResponse(
-                convertSearchSpecification(query.getSpecs()),
+                query.getSpecs().getQueryLimits(),
+                query.getSpecs().getTerms(),
                 results,
                 query.getSearchTermsHumanList(),
                 query.getProblemsList(),
@@ -196,22 +197,6 @@ public class QueryProtobufCodec {
                 -1, // termId is internal to index service
                 (byte) keywordScores.getFlags(),
                 keywordScores.getPositions()
-        );
-    }
-
-    private static SearchSpecification convertSearchSpecification(RpcIndexQuery specs) {
-        return new SearchSpecification(
-                IndexProtobufCodec.convertRpcQuery(specs.getQuery()),
-                specs.getRequiredDomainIdsList(),
-                specs.getExcludedDomainIdsList(),
-                specs.getSearchSetIdentifier(),
-                IndexProtobufCodec.convertSpecLimit(specs.getQuality()),
-                IndexProtobufCodec.convertSpecLimit(specs.getYear()),
-                IndexProtobufCodec.convertSpecLimit(specs.getSize()),
-                IndexProtobufCodec.convertSpecLimit(specs.getRank()),
-                specs.getQueryLimits(),
-                QueryStrategy.valueOf(specs.getQueryStrategy()),
-                specs.hasParameters() ? specs.getParameters() : null
         );
     }
 

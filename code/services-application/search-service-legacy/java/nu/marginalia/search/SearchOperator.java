@@ -200,7 +200,7 @@ public class SearchOperator {
 
 
     public List<UrlDetails> getResultsFromQuery(QueryResponse queryResponse) {
-        final RpcQueryLimits limits = queryResponse.specs().queryLimits;
+        final RpcQueryLimits limits = queryResponse.limits();
         final UrlDeduplicator deduplicator = new UrlDeduplicator(limits.getResultsByDomain());
 
         // Update the query count (this is what you see on the front page)

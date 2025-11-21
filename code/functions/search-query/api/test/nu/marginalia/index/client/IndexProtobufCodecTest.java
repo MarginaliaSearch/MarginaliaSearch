@@ -21,22 +21,6 @@ class IndexProtobufCodecTest {
         verifyIsIdentityTransformation(SpecificationLimit.lessThan(1), l -> IndexProtobufCodec.convertSpecLimit(IndexProtobufCodec.convertSpecLimit(l)));
     }
 
-    @Test
-    public void testSubqery() {
-        verifyIsIdentityTransformation(new SearchQuery(
-                "qs",
-                List.of("a", "b"),
-                List.of("c", "d"),
-                List.of("e", "f"),
-                List.of("g", "h"),
-                FloatList.of(1.0f, 1.0f),
-                List.of(
-                        SearchPhraseConstraint.mandatory(List.of("i", "j")),
-                        SearchPhraseConstraint.optional(List.of("k")))
-                ),
-                s -> IndexProtobufCodec.convertRpcQuery(IndexProtobufCodec.convertRpcQuery(s))
-        );
-    }
     private <T> void verifyIsIdentityTransformation(T val, Function<T,T> transformation) {
         assertEquals(val, transformation.apply(val), val.toString());
     }

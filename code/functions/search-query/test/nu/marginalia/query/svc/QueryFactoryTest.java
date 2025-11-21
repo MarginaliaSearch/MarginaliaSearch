@@ -77,7 +77,7 @@ public class QueryFactoryTest {
                 String[] parts = line.split("\t");
                 if (parts.length == 2) {
                     System.out.println(parts[1]);
-                    System.out.println(parseAndGetQuery(parts[1]).getQuery().getCompiledQuery());
+                    System.out.println(parseAndGetQuery(parts[1]).getTerms().getCompiledQuery());
                 }
             });
         } catch (IOException e) {
@@ -100,8 +100,8 @@ public class QueryFactoryTest {
     public void testParseSite() {
         var query = parse("plato site:en.wikipedia.org");
         Assertions.assertEquals("en.wikipedia.org", query.domain);
-        Assertions.assertEquals(List.of(), query.indexQuery.getQuery().getAdviceList());
-        Assertions.assertEquals(List.of("plato"), query.indexQuery.getQuery().getIncludeList());
+        Assertions.assertEquals(List.of(), query.indexQuery.getTerms().getTermsRequireList());
+        Assertions.assertEquals(List.of("plato"), query.indexQuery.getTerms().getTermsQueryList());
         Assertions.assertEquals(List.of(451), query.indexQuery.getRequiredDomainIdsList());
     }
 
@@ -111,8 +111,8 @@ public class QueryFactoryTest {
 
         var query = parse("site:en.wikipedia.org");
         Assertions.assertEquals("en.wikipedia.org", query.domain);
-        Assertions.assertEquals(List.of(), query.indexQuery.getQuery().getAdviceList());
-        Assertions.assertEquals(List.of("site:en.wikipedia.org"), query.indexQuery.getQuery().getIncludeList());
+        Assertions.assertEquals(List.of(), query.indexQuery.getTerms().getTermsRequireList());
+        Assertions.assertEquals(List.of("site:en.wikipedia.org"), query.indexQuery.getTerms().getTermsQueryList());
         Assertions.assertEquals(List.of(451), query.indexQuery.getRequiredDomainIdsList());
     }
 
@@ -120,8 +120,8 @@ public class QueryFactoryTest {
     public void testParseSiteWildcard() {
         var query = parse("plato site:*.wikipedia.org");
         Assertions.assertEquals("wikipedia.org", query.domain);
-        Assertions.assertEquals(List.of("site:wikipedia.org"), query.indexQuery.getQuery().getAdviceList());
-        Assertions.assertEquals(List.of("plato"), query.indexQuery.getQuery().getIncludeList());
+        Assertions.assertEquals(List.of("site:wikipedia.org"), query.indexQuery.getTerms().getTermsRequireList());
+        Assertions.assertEquals(List.of("plato"), query.indexQuery.getTerms().getTermsQueryList());
         Assertions.assertTrue(query.indexQuery.getRequiredDomainIdsList().isEmpty());
     }
 
@@ -131,8 +131,8 @@ public class QueryFactoryTest {
 
         var query = parse("site:*.wikipedia.org");
         Assertions.assertEquals("wikipedia.org", query.domain);
-        Assertions.assertEquals(List.of(), query.indexQuery.getQuery().getAdviceList());
-        Assertions.assertEquals(List.of("site:wikipedia.org"), query.indexQuery.getQuery().getIncludeList());
+        Assertions.assertEquals(List.of(), query.indexQuery.getTerms().getTermsRequireList());
+        Assertions.assertEquals(List.of("site:wikipedia.org"), query.indexQuery.getTerms().getTermsQueryList());
         Assertions.assertTrue(query.indexQuery.getRequiredDomainIdsList().isEmpty());
     }
 
@@ -201,20 +201,20 @@ public class QueryFactoryTest {
 
     @Test
     public void testPriorityTerm() {
-        var subquery = parseAndGetQuery("physics ?tld:edu").getQuery();
-        assertEquals(List.of("tld:edu"), subquery.getPriorityList());
+        var subquery = parseAndGetQuery("physics ?tld:edu").getTerms();
+        assertEquals(List.of("tld:edu"), subquery.getTermsPriorityList());
         assertEquals("physics", subquery.getCompiledQuery());
     }
 
     @Test
     public void testExpansion() {
-        var subquery = parseAndGetQuery("elden ring mechanical keyboard slackware linux duke nukem 3d").getQuery();
+        var subquery = parseAndGetQuery("elden ring mechanical keyboard slackware linux duke nukem 3d").getTerms();
         System.out.println(subquery.getCompiledQuery());
     }
 
     @Test
     public void testExpansion2() {
-        var subquery = parseAndGetQuery("need for speed").getQuery();
+        var subquery = parseAndGetQuery("need for speed").getTerms();
         System.out.println(subquery);
 
     }
@@ -266,10 +266,10 @@ public class QueryFactoryTest {
     public void testContractionWordNum() {
         var subquery = parseAndGetQuery("glove 80");
 
-        Assertions.assertTrue(subquery.getQuery().getCompiledQuery().contains(" glove "));
-        Assertions.assertTrue(subquery.getQuery().getCompiledQuery().contains(" 80 "));
-        Assertions.assertTrue(subquery.getQuery().getCompiledQuery().contains(" glove-80 "));
-        Assertions.assertTrue(subquery.getQuery().getCompiledQuery().contains(" glove80 "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" glove "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" 80 "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" glove-80 "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" glove80 "));
     }
 
 
@@ -285,33 +285,33 @@ public class QueryFactoryTest {
 
         System.out.println(subquery);
 
-        Assertions.assertTrue(subquery.getQuery().getCompiledQuery().contains(" bob "));
-        Assertions.assertFalse(subquery.getQuery().getCompiledQuery().contains(" bob's "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" bob "));
+        Assertions.assertFalse(subquery.getTerms().getCompiledQuery().contains(" bob's "));
     }
 
     @Test
     public void testExpansion9() {
         var subquery = parseAndGetQuery("pie recipe");
 
-        Assertions.assertTrue(subquery.getQuery().getCompiledQuery().contains(" category:food "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" category:food "));
 
         subquery = parseAndGetQuery("recipe pie");
 
-        Assertions.assertFalse(subquery.getQuery().getCompiledQuery().contains(" category:food "));
+        Assertions.assertFalse(subquery.getTerms().getCompiledQuery().contains(" category:food "));
     }
 
     @Test
     public void testParsing() {
         var subquery = parseAndGetQuery("strlen()");
-        assertEquals("strlen", subquery.getQuery().getCompiledQuery());
+        assertEquals("strlen", subquery.getTerms().getCompiledQuery());
         System.out.println(subquery);
     }
 
     @Test
     public void testAdvice() {
         var subquery = parseAndGetQuery("mmap (strlen)");
-        assertEquals("mmap", subquery.getQuery().getCompiledQuery());
-        assertEquals(List.of("strlen"), subquery.getQuery().getAdviceList());
+        assertEquals("mmap", subquery.getTerms().getCompiledQuery());
+        assertEquals(List.of("strlen"), subquery.getTerms().getTermsRequireList());
         System.out.println(subquery);
     }
 }
