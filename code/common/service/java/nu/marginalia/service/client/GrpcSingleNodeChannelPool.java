@@ -240,7 +240,25 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         public CallBuilderAsync<T, I> async(Executor executor) {
             return new CallBuilderAsync<>(executor, method);
         }
+
+        /** Send message to all partitions */
+        public CallBuilderBroadcast<T, I> broadcast() {
+            return new CallBuilderBroadcast<>(method);
+        }
     }
+
+    public class CallBuilderBroadcast<T, I> {
+        private final BiFunction<STUB, I, T> method;
+        private CallBuilderBroadcast(BiFunction<STUB, I, T> method) {
+            this.method = method;
+        }
+
+        /** Execute the call in a blocking manner */
+        public List<Future<T>> run(I arg) {
+            return broadcast(method, arg);
+        }
+    }
+
     public class CallBuilderAsync<T, I> {
         private final Executor executor;
         private final BiFunction<STUB, I, T> method;

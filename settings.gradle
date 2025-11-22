@@ -153,6 +153,7 @@ dependencyResolutionManagement {
             library('protobuf', 'com.google.protobuf', 'protobuf-java').version('3.16.3')
             library('grpc-protobuf', 'io.grpc', 'grpc-protobuf').version('1.73.0')
             library('grpc-stub', 'io.grpc', 'grpc-stub').version('1.73.0')
+            library('grpc-inprocess', 'io.grpc', 'grpc-inprocess').version('1.73.0')
             library('grpc-netty', 'io.grpc', 'grpc-netty').version('1.73.0')
 
             library('prometheus', 'io.prometheus', 'simpleclient').version('0.16.0')
@@ -253,7 +254,7 @@ dependencyResolutionManagement {
             bundle('nlp', ['stanford.corenlp', 'opennlp', 'fasttext'])
             bundle('selenium', ['selenium.chrome', 'selenium.java'])
             bundle('handlebars', ['handlebars', 'handlebars.markdown'])
-            bundle('grpc', ['protobuf', 'grpc-stub', 'grpc-protobuf', 'grpc-netty'])
+            bundle('grpc', ['protobuf', 'grpc-stub', 'grpc-protobuf', 'grpc-netty', 'grpc-inprocess'])
             bundle('protobuf', ['protobuf', 'javax.annotation'])
             bundle('gson', ['gson', 'gson-type-adapter'])
             bundle('httpcomponents', ['httpcore', 'httpclient'])
