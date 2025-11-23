@@ -64,7 +64,6 @@ public class QueryBasicInterface {
                         .setResultsByDomain(domainCount)
                         .setResultsTotal(min(100, count * 10))
                         .setTimeoutMs(250)
-                        .setFetchSize(8192)
                         .build(),
                 set,
                 langIsoCode,
@@ -117,7 +116,6 @@ public class QueryBasicInterface {
                         .setResultsByDomain(domainCount)
                         .setResultsTotal(min(100, count * 10))
                         .setTimeoutMs(250)
-                        .setFetchSize(8192)
                         .build(),
                 set,
                 langIsoCode,

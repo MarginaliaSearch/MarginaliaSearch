@@ -140,7 +140,6 @@ public class PerfTestMain {
                                         .setTimeoutMs(10_000)
                                         .setResultsTotal(1000)
                                         .setResultsByDomain(10)
-                                        .setFetchSize(4096)
                                         .build()
                         )
                         .build(),
@@ -220,7 +219,6 @@ public class PerfTestMain {
                                         .setTimeoutMs(50)
                                         .setResultsTotal(1000)
                                         .setResultsByDomain(10)
-                                        .setFetchSize(4096)
                         )
                         .build(),
                 CompiledSearchFilterSpec.builder("test", "test").build(),
@@ -281,7 +279,6 @@ public class PerfTestMain {
                                         .setTimeoutMs(1_000_000_000)
                                         .setResultsTotal(1000)
                                         .setResultsByDomain(10)
-                                        .setFetchSize(4096)
                         )
                         .build(),
                 CompiledSearchFilterSpec.builder("test", "test").build(),

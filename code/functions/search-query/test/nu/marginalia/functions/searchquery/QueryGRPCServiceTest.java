@@ -85,7 +85,6 @@ class QueryGRPCServiceTest {
     }
 
     final RpcQueryLimits defaultLimits = RpcQueryLimits.newBuilder()
-            .setFetchSize(100)
             .setResultsTotal(5)
             .setResultsByDomain(1)
             .setTimeoutMs(1000)

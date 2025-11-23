@@ -93,7 +93,6 @@ public class QueryServiceApiTest {
                 NsfwFilterTier.DANGER,
                 RpcQueryLimits.newBuilder()
                         .setTimeoutMs(150)
-                        .setFetchSize(1024)
                         .setResultsByDomain(100)
                         .setResultsTotal(100)
                         .build(), 1);
@@ -121,7 +120,6 @@ public class QueryServiceApiTest {
                     NsfwFilterTier.DANGER,
                     RpcQueryLimits.newBuilder()
                             .setTimeoutMs(150)
-                            .setFetchSize(1024)
                             .setResultsByDomain(100)
                             .setResultsTotal(100)
                             .build(), 1);

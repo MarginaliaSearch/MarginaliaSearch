@@ -181,7 +181,6 @@ message RpcQueryLimits {
   int32 resultsByDomain = 1;
   int32 resultsTotal = 2;
   int32 timeoutMs = 3;
-  int32 fetchSize = 4; // Size of the fetch buffer in the index service
 }
 
 /** Parameters for the result ranking function */

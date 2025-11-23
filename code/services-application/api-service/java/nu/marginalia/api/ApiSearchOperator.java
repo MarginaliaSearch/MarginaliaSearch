@@ -48,7 +48,6 @@ public class ApiSearchOperator {
                         .setResultsByDomain(Math.clamp(domainCount, 1, 100))
                         .setResultsTotal(Math.min(100, count))
                         .setTimeoutMs(150)
-                        .setFetchSize(8192)
                         .build(),
                 1);
 
@@ -81,7 +80,6 @@ public class ApiSearchOperator {
                         .setResultsByDomain(Math.clamp(domainCount, 1, 100))
                         .setResultsTotal(Math.min(100, count))
                         .setTimeoutMs(150)
-                        .setFetchSize(8192)
                         .build(),
                 1);
 

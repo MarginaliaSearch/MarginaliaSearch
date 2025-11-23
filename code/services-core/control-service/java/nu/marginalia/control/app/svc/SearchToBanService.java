@@ -83,7 +83,6 @@ public class SearchToBanService {
                         .setResultsTotal(100)
                         .setResultsByDomain(2)
                         .setTimeoutMs(200)
-                        .setFetchSize(8192)
                         .build(),
                 1);
     }

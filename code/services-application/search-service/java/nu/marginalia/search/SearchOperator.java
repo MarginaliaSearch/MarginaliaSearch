@@ -56,14 +56,12 @@ public class SearchOperator {
             .setResultsTotal(100)
             .setResultsByDomain(100)
             .setTimeoutMs(100)
-            .setFetchSize(512)
             .build();
 
     static final RpcQueryLimits defaultLimits = RpcQueryLimits.newBuilder()
             .setResultsTotal(100)
             .setResultsByDomain(5)
             .setTimeoutMs(250)
-            .setFetchSize(8192)
             .build();
 
     @Inject
@@ -95,7 +93,6 @@ public class SearchOperator {
                         .setResultsTotal(count)
                         .setResultsByDomain(count)
                         .setTimeoutMs(100)
-                        .setFetchSize(512)
                         .build(),
                 page
         );

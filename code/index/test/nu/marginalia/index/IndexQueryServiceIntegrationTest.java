@@ -380,7 +380,6 @@ public class IndexQueryServiceIntegrationTest {
                                 .setResultsByDomain(10)
                                 .setResultsTotal(10)
                                 .setTimeoutMs(Integer.MAX_VALUE)
-                                .setFetchSize(4000)
                                 .build()
                 )
                 .setLangIsoCode("en");

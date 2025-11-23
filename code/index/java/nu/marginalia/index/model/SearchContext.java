@@ -35,7 +35,6 @@ public class SearchContext {
 
     public final IndexSearchBudget budget;
 
-    public final int fetchSize;
     public final int limitByDomain;
     public final int limitTotal;
 
@@ -129,7 +128,6 @@ public class SearchContext {
         this.mandatoryDomainIds = queryParams.searchSet().domainIds();
         this.excludedDomainIds = new IntArrayList(excludedDomainIdsList);
 
-        this.fetchSize = limits.getFetchSize();
         this.limitByDomain = limits.getResultsByDomain();
         this.limitTotal = limits.getResultsTotal();
 
