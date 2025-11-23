@@ -138,15 +138,10 @@ public class ApiV1 {
 
         logger.info(queryMarker, "{} Search {}", license.key, query);
 
-        long startNanos = System.nanoTime();
-        try {
-            ApiSearchResults ret = searchOperator
-                    .query(query, count, domainCount, index, nsfwFilterTier, langIsoCode)
-                    .withLicense(license.getLicense());
-            ApiMetrics.wmsa_api_query_time
-                    .labels(license.key)
-                    .observe((System.nanoTime() - startNanos) / 1_000_000_000L);
-            return ret;
+        try (var _ = ApiMetrics.wmsa_api_query_time.labels(license.key).startTimer())
+        {
+            return searchOperator
+                    .v1query(query, count, domainCount, index, nsfwFilterTier, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);

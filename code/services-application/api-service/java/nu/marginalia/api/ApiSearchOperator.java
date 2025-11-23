@@ -2,6 +2,7 @@ package nu.marginalia.api;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiSearchResult;
 import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
@@ -29,12 +30,13 @@ public class ApiSearchOperator {
         this.queryClient = queryClient;
     }
 
-    public ApiSearchResults query(String query,
-                                  int count,
-                                  int domainCount,
-                                  QueryFilterSpec filterSpec,
-                                  NsfwFilterTier filterTier,
-                                  String langIsoCode)
+    public ApiSearchResults v2query(String query,
+                                    int count,
+                                    int domainCount,
+                                    QueryFilterSpec filterSpec,
+                                    NsfwFilterTier filterTier,
+                                    String langIsoCode,
+                                    ApiLicense license)
             throws TimeoutException
     {
 
@@ -51,7 +53,7 @@ public class ApiSearchOperator {
                         .build(),
                 1);
 
-        return new ApiSearchResults("RESTRICTED", query,
+        return new ApiSearchResults(license.getLicense(), query,
                 rsp.results()
                         .stream()
                         .map(this::convert)
@@ -61,12 +63,13 @@ public class ApiSearchOperator {
     }
 
 
-    public ApiSearchResults query(String query,
-                                  int count,
-                                  int domainCount,
-                                  int index,
-                                  NsfwFilterTier filterTier,
-                                  String langIsoCode)
+    public ApiSearchResults v1query(String query,
+                                    int count,
+                                    int domainCount,
+                                    int index,
+                                    NsfwFilterTier filterTier,
+                                    String langIsoCode,
+                                    ApiLicense license)
             throws TimeoutException
     {
 
@@ -83,7 +86,7 @@ public class ApiSearchOperator {
                         .build(),
                 1);
 
-        return new ApiSearchResults("RESTRICTED", query,
+        return new ApiSearchResults(license.getLicense(), query,
                 rsp.results()
                 .stream()
                 .map(this::convert)

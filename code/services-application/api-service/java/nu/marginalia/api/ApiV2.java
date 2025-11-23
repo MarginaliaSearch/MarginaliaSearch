@@ -162,6 +162,13 @@ public class ApiV2 {
             return "Filter ID should match [a-zA-Z\\-_0-9]+";
         }
 
+        // Apply rate limit to filter updates as this isn't zero cost
+        if (!rateLimiterService.isAllowed(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labels(license.key).inc();
+            ctx.setResponseCode(503);
+            return ctx;
+        }
+
         String filterDefinition = ctx.body().value();
 
         var problems = filtersService.updateFilter(license, filterId, filterDefinition);
@@ -311,20 +318,17 @@ public class ApiV2 {
 
         logger.info(queryMarker, "{} Search {}", license.key, query);
 
-        QueryFilterSpec filter =
-                (filterName == null)
-                        ? SearchFilterDefaults.NO_FILTER.asFilterSpec()
-                        : new QueryFilterSpec.FilterByName(license.key, filterName);
+        final QueryFilterSpec filter;
 
-        long startNanos = System.nanoTime();
-        try {
-            ApiSearchResults ret = searchOperator
-                    .query(query, count, domainCount, filter, nsfwFilterTier, langIsoCode)
-                    .withLicense(license.getLicense());
-            ApiMetrics.wmsa_api_query_time
-                    .labels(license.key)
-                    .observe((System.nanoTime() - startNanos) / 1_000_000_000L);
-            return ret;
+        if (filterName == null)
+            filter = SearchFilterDefaults.NO_FILTER.asFilterSpec();
+        else
+            filter = new QueryFilterSpec.FilterByName(license.key, filterName);
+
+        try (var _ = ApiMetrics.wmsa_api_query_time.labels(license.key).startTimer())
+        {
+            return searchOperator
+                    .v2query(query, count, domainCount, filter, nsfwFilterTier, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);
