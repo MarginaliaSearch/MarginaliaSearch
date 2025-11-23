@@ -9,7 +9,6 @@ import io.jooby.StatusCode;
 import io.jooby.test.MockContext;
 import io.jooby.test.MockRouter;
 import nu.marginalia.api.searchquery.*;
-import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.TestGrpcChannelPoolFactory;
 import nu.marginalia.test.TestMigrationLoader;
@@ -22,7 +21,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 

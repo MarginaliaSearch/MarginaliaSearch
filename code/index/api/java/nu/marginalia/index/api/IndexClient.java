@@ -11,6 +11,7 @@ import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
@@ -44,7 +45,7 @@ public class IndexClient {
     private static final ExecutorService executor = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool();
 
     @Inject
-    public IndexClient(GrpcChannelPoolFactory channelPoolFactory,
+    public IndexClient(GrpcChannelPoolFactoryIf channelPoolFactory,
                        DomainBlacklistImpl blacklist,
                        NsfwDomainFilter nsfwDomainFilter
                        ) {

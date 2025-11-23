@@ -10,6 +10,8 @@ import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
 import java.time.Duration;
@@ -19,6 +21,7 @@ import java.util.concurrent.*;
 @Singleton
 public class QueryClient  {
 
+    private static final Logger log = LoggerFactory.getLogger(QueryClient.class);
     private final ExecutorService virtualThreadService = Executors.newVirtualThreadPerTaskExecutor();
 
     private static final Summary wmsa_qs_api_search_time = Summary.build()
@@ -62,13 +65,16 @@ public class QueryClient  {
                 )
                 .build();
 
-        return wmsa_qs_api_search_time.time(() ->
-                queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query)
-                        .async(virtualThreadService)
-                        .run(query)
-                        .thenApply(QueryProtobufCodec::convertQueryResponse)
-                        .get(limits.getTimeoutMs()* 2L, TimeUnit.MILLISECONDS)
-        );
+        try (var _ = wmsa_qs_api_search_time.startTimer()) {
+            return queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query)
+                    .async(virtualThreadService)
+                    .run(query)
+                    .thenApply(QueryProtobufCodec::convertQueryResponse)
+                    .get(limits.getTimeoutMs() * 2L, TimeUnit.MILLISECONDS);
+        }
+        catch (InterruptedException|ExecutionException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public boolean invalidateFilterCache(String userId, String filterId) {
