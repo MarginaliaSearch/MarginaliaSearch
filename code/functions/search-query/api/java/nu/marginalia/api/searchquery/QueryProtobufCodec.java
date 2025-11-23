@@ -8,7 +8,6 @@ import nu.marginalia.api.searchquery.model.results.debug.DebugFactor;
 import nu.marginalia.api.searchquery.model.results.debug.DebugFactorGroup;
 import nu.marginalia.api.searchquery.model.results.debug.DebugTermFactorGroup;
 import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
-import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class QueryProtobufCodec {
         var requestPagination = query.getPagination();
         int totalResults = requestPagination.getTotalResults();
         int pageSize = requestPagination.getPageSize();
-        int totalPages = (totalResults + pageSize - 1) / pageSize;
+        int totalPages = (totalResults + pageSize - 1) / Math.max(1, pageSize);
 
         return new QueryResponse(
                 query.getSpecs().getQueryLimits(),

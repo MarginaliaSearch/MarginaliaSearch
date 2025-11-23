@@ -52,7 +52,7 @@ public class ApiV1 {
 
         jooby.get("/api/v1/{key}", this::keyInfo);
         jooby.get("/api/v1/{key}/", this::keyInfo);
-        jooby.get("/api/v1/{key}/*", this::search);
+        jooby.get("/api/v1/{key}/search/*", this::search);
     }
 
 

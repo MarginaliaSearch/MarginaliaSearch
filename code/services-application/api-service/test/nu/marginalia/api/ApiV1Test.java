@@ -1,32 +1,25 @@
 package nu.marginalia.api;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.jooby.Jooby;
 import io.jooby.StatusCode;
 import io.jooby.test.MockRouter;
-import nu.marginalia.api.model.ApiSearchResults;
-import nu.marginalia.api.svc.LicenseService;
-import nu.marginalia.api.svc.RateLimiterService;
-import nu.marginalia.api.svc.ResponseCache;
+import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
+import nu.marginalia.service.client.TestGrpcChannelPoolFactory;
 import nu.marginalia.test.TestMigrationLoader;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.ArgumentMatchers.anyInt;
+import java.util.List;
 
 @Testcontainers
 @Execution(ExecutionMode.SAME_THREAD)
@@ -40,12 +33,13 @@ public class ApiV1Test {
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
-    static LicenseService licenseService;
     static Jooby jooby;
     static MockRouter router;
+    static TestGrpcChannelPoolFactory testGrpcChannelPoolFactory;
+    static QueryApiMock queryApiMock = new QueryApiMock();
 
     @BeforeAll
-    public static void setup() throws SQLException, TimeoutException {
+    public static void setup() throws SQLException, IOException {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(mariaDBContainer.getJdbcUrl());
         config.setUsername("wmsa");
@@ -62,24 +56,36 @@ public class ApiV1Test {
                     """);
         }
 
-        licenseService = new LicenseService(dataSource);
+        testGrpcChannelPoolFactory = new TestGrpcChannelPoolFactory(List.of(queryApiMock));
 
-        ApiSearchOperator operatorMock = Mockito.mock(ApiSearchOperator.class);
-        Mockito.when(operatorMock.query(ArgumentMatchers.any(), anyInt(), anyInt(), anyInt(), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                .thenReturn(new ApiSearchResults("test", "test", new ArrayList<>()));
-        jooby = new Jooby() {
-            {
-                new ApiV1(
-                        new ResponseCache(),
-                        licenseService,
-                        new RateLimiterService(),
-                        operatorMock
-                ).registerApi(this);
+        ApiV1 apiV1 = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(HikariDataSource.class).toInstance(dataSource);
+                bind(GrpcChannelPoolFactoryIf.class).toInstance(testGrpcChannelPoolFactory);
             }
-        };
+        }).getInstance(ApiV1.class);
+
+        jooby = new Jooby();
+
+        apiV1.registerApi(jooby);
 
         router = new MockRouter(jooby);
+        router.setFullExecution(true);
+    }
 
+    @AfterEach
+    public void shutDown() throws SQLException {
+        queryApiMock.reset();
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.createStatement()) {
+            stmt.executeQuery("TRUNCATE TABLE SEARCH_FILTER");
+        }
+    }
+
+    @AfterAll
+    public static void shutDownAll() {
+        testGrpcChannelPoolFactory.close();
     }
 
     @Test
@@ -106,6 +112,8 @@ public class ApiV1Test {
             System.out.println(rsp.getStatusCode());
             System.out.println(rsp.value());
             Assertions.assertEquals(StatusCode.OK, rsp.getStatusCode());
+            Assertions.assertEquals(1, queryApiMock.getSentQueries().size());
+            Assertions.assertEquals("query", queryApiMock.getSentQueries().getFirst().getHumanQuery());
         });
     }
 

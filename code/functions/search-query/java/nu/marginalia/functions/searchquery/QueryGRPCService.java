@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Histogram;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
@@ -117,7 +118,7 @@ public class QueryGRPCService
     }
 
     public void query(RpcQsQuery request,
-                            io.grpc.stub.StreamObserver<RpcQsResponse> responseObserver) {
+                            StreamObserver<RpcQsResponse> responseObserver) {
         try {
             wmsa_qs_query_time_grpc
                     .labels(Integer.toString(request.getQueryLimits().getTimeoutMs()),
@@ -198,4 +199,12 @@ public class QueryGRPCService
                 response.totalResults());
     }
 
+    public void invalidateFilterCache(RpcQsInvalidateFilter request,
+                                      StreamObserver<Empty> responseObserver) {
+
+        searchFilterCache.invalidate(request.getUserId(), request.getFilterId());
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
 }

@@ -29,6 +29,7 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:config')
     implementation project(':code:functions:search-query:api')
+    implementation project(':code:functions:search-query')
 
     implementation libs.bundles.slf4j
 
@@ -53,6 +54,7 @@ dependencies {
     implementation libs.bundles.mariadb
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
+    testImplementation libs.bundles.grpc
     testImplementation libs.mockito
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
     testImplementation libs.commons.codec

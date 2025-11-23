@@ -6,16 +6,15 @@ import io.prometheus.client.Summary;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 
 import javax.annotation.CheckReturnValue;
 import java.time.Duration;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
+import java.util.concurrent.*;
 
 @Singleton
 public class QueryClient  {
@@ -30,7 +29,7 @@ public class QueryClient  {
     private final GrpcSingleNodeChannelPool<QueryApiGrpc.QueryApiBlockingStub> queryApiPool;
 
     @Inject
-    public QueryClient(GrpcChannelPoolFactory channelPoolFactory) throws InterruptedException {
+    public QueryClient(GrpcChannelPoolFactoryIf channelPoolFactory) throws InterruptedException {
         this.queryApiPool = channelPoolFactory.createSingle(
                 ServiceKey.forGrpcApi(QueryApiGrpc.class, ServicePartition.any()),
                 QueryApiGrpc::newBlockingStub);
@@ -70,6 +69,25 @@ public class QueryClient  {
                         .thenApply(QueryProtobufCodec::convertQueryResponse)
                         .get(limits.getTimeoutMs()* 2L, TimeUnit.MILLISECONDS)
         );
+    }
+
+    public boolean invalidateFilterCache(String userId, String filterId) {
+        List<Future<Empty>> ret = queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::invalidateFilterCache)
+                .broadcast()
+                .run(
+                    RpcQsInvalidateFilter.newBuilder()
+                        .setUserId(userId)
+                        .setFilterId(filterId)
+                        .build()
+                );
+
+        for (var fut : ret) {
+            if (fut.state() != Future.State.SUCCESS)
+                return false;
+        }
+
+        return true;
+
     }
 
 }

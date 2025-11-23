@@ -6,6 +6,7 @@ import nu.marginalia.api.model.ApiSearchResult;
 import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
@@ -27,6 +28,39 @@ public class ApiSearchOperator {
     public ApiSearchOperator(QueryClient queryClient) {
         this.queryClient = queryClient;
     }
+
+    public ApiSearchResults query(String query,
+                                  int count,
+                                  int domainCount,
+                                  QueryFilterSpec filterSpec,
+                                  NsfwFilterTier filterTier,
+                                  String langIsoCode)
+            throws TimeoutException
+    {
+
+
+        var rsp = queryClient.search(
+                filterSpec,
+                query,
+                langIsoCode,
+                filterTier,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
+                        .setResultsTotal(Math.min(100, count))
+                        .setTimeoutMs(150)
+                        .setFetchSize(8192)
+                        .build(),
+                1);
+
+        return new ApiSearchResults("RESTRICTED", query,
+                rsp.results()
+                        .stream()
+                        .map(this::convert)
+                        .sorted(Comparator.comparing(ApiSearchResult::getQuality))
+                        .limit(count)
+                        .collect(Collectors.toList()));
+    }
+
 
     public ApiSearchResults query(String query,
                                   int count,

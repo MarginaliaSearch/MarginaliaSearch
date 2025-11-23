@@ -23,6 +23,7 @@ import static nu.marginalia.api.searchquery.model.SearchFilterDefaults.SYSTEM_US
 
 @Singleton
 public class SearchFilterCache {
+
     record SearchFilterKey(String user, String identifier) {}
 
     private final LoadingCache<SearchFilterKey, CompiledSearchFilterSpec> compiledSpecCache = CacheBuilder
@@ -47,6 +48,7 @@ public class SearchFilterCache {
     private final SearchFilterStore store;
     private final DbDomainQueries dbQueries;
 
+
     @Inject
     public SearchFilterCache(SearchFilterStore store, DbDomainQueries dbQueries) {
         this.store = store;
@@ -56,4 +58,9 @@ public class SearchFilterCache {
     public CompiledSearchFilterSpec get(String user, String identifier) throws ExecutionException {
         return compiledSpecCache.get(new SearchFilterKey(user, identifier));
     }
+
+    public void invalidate(String userId, String filterId) {
+        compiledSpecCache.refresh(new SearchFilterKey(userId, filterId));
+    }
+
 }
