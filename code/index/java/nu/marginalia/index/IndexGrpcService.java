@@ -175,15 +175,6 @@ public class IndexGrpcService
         }
     }
 
-    private SearchSet getSearchSet(SearchSpecification specsSet) {
-
-        if (specsSet.domains != null && !specsSet.domains.isEmpty()) {
-            return new SmallSearchSet(specsSet.domains);
-        }
-
-        return searchSetsService.getSearchSetByName(specsSet.searchSetIdentifier);
-    }
-
     private SearchSet getSearchSet(RpcIndexQuery request) {
 
         if (request.getRequiredDomainIdsCount() > 0) {

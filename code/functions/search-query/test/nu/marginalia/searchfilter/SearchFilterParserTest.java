@@ -12,6 +12,55 @@ class SearchFilterParserTest {
     SearchFilterParser parser = new SearchFilterParser();
 
     @Test
+    public void testParseRenderParse() throws SearchFilterParser.SearchFilterParserException {
+        var filter = parser.parse("test", "test", """
+                <?xml version="1.0"?>
+                <filter>
+                    <domains-include>
+                        www.google.com
+                        *.youtube.com
+                    </domains-include>
+                
+                    <domains-exclude>
+                        www.yandex.ru
+                    </domains-exclude>
+                
+                    <domains-promote amount="-1.0">
+                        www.bing.com
+                        www.yahoo.com
+                    </domains-promote>
+
+                    <domains-promote amount="1.0">
+                        www.mojeek.com
+                    </domains-promote>
+                    <temporal-bias>OLD</temporal-bias>
+                    <query-strategy>TOPIC</query-strategy>
+                    <terms-require>
+                        foo
+                        bar
+                    </terms-require>
+                
+                    <terms-exclude>
+                        baz
+                    </terms-exclude>
+                
+                    <terms-promote amount="5.0">
+                        quux
+                    </terms-promote>
+                    <limit param="year" type="lt" value="1996" />
+                    <limit param="quality" type="eq" value="5" />
+                    <limit param="size" type="gt" value="100" />
+                    <limit param="rank" type="gt" value="20" />
+                </filter>
+                """);
+
+        String xml = parser.renderToXml(filter);
+        System.out.println(xml);
+        var reparsedFilter = parser.parse("test", "test", xml);
+
+        Assertions.assertEquals(reparsedFilter, filter);
+    }
+    @Test
     public void parseDomainLists() throws SearchFilterParser.SearchFilterParserException {
         var filter = parser.parse("test", "test", """
                 <?xml version="1.0"?>

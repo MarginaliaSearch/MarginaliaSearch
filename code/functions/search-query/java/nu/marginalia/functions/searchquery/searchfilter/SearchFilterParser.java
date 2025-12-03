@@ -2,7 +2,9 @@ package nu.marginalia.functions.searchquery.searchfilter;
 
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -27,6 +29,101 @@ public class SearchFilterParser {
 
     public SearchFilterParser() {
 
+    }
+
+    public String renderToXml(SearchFilterSpec spec) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
+                <?xml version="1.0"?>
+                <!-- Feel free to make your own changes directly in this file.
+                 There are some additional fields you can set, but they honestly
+                 aren't very useful for permanent filters, otherwise they'd be
+                 in the GUI too. -->
+                """);
+
+        sb.append("<filter>\n");
+
+        if (!spec.termsRequire().isEmpty()) {
+            sb.append("\t<terms-require>\n");
+            for (String term : spec.termsRequire()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(term)).append('\n');
+            }
+            sb.append("\t</terms-require>\n");
+        }
+
+        if (!spec.termsExclude().isEmpty()) {
+            sb.append("\t<terms-exclude>\n");
+            for (String term : spec.termsExclude()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(term)).append('\n');
+            }
+            sb.append("\t</terms-exclude>\n");
+        }
+
+        for (Map.Entry<String, Float> termAndAmount : spec.termsPromote()) {
+            sb.append(
+                String.format("\t<terms-promote amount=\"%.1f\">%s</terms-promote>\n",
+                    termAndAmount.getValue(),
+                    StringEscapeUtils.escapeXml10(termAndAmount.getKey()))
+            );
+        }
+
+        if (!spec.domainsInclude().isEmpty()) {
+            sb.append("\t<domains-include>\n");
+            for (String domain : spec.domainsInclude()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(domain)).append('\n');
+            }
+            sb.append("\t</domains-include>\n");
+        }
+
+        if (!spec.domainsExclude().isEmpty()) {
+            sb.append("\t<domains-exclude>\n");
+            for (String domain : spec.domainsExclude()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(domain)).append('\n');
+            }
+            sb.append("\t</domains-exclude>\n");
+        }
+
+        for (Map.Entry<String, Float> domainsAndAmounts : spec.domainsPromote()) {
+            sb.append(
+                    String.format("\t<domains-promote amount=\"%.1f\">%s</domains-promote>\n",
+                            domainsAndAmounts.getValue(),
+                            StringEscapeUtils.escapeXml10(domainsAndAmounts.getKey()))
+            );
+        }
+
+        if (!spec.size().isNone()) sb.append('\t').append(renderLimit(spec.size(), "size")).append('\n');
+        if (!spec.year().isNone()) sb.append('\t').append(renderLimit(spec.year(), "year")).append('\n');
+        if (!spec.quality().isNone()) sb.append('\t').append(renderLimit(spec.quality(), "quality")).append('\n');
+        if (!spec.rank().isNone()) sb.append('\t').append(renderLimit(spec.rank(), "rank")).append('\n');
+
+        if (!spec.searchSetIdentifier().isBlank() && !"NONE".equalsIgnoreCase(spec.searchSetIdentifier())) {
+            sb.append("\t<search-set>").append(
+                    StringEscapeUtils.escapeXml10(spec.searchSetIdentifier())
+            ).append("\t</search-set>\n");
+        }
+        if (!spec.temporalBias().isBlank() && !"NONE".equalsIgnoreCase(spec.temporalBias())) {
+            sb.append("\t<temporal-bias>").append(
+                    StringEscapeUtils.escapeXml10(spec.temporalBias())
+            ).append("</temporal-bias>\n");
+        }
+        if (QueryStrategy.AUTO != spec.queryStrategy()) {
+            sb.append("\t<query-strategy>").append(spec.queryStrategy()).append("</query-strategy>\n");
+        }
+
+        sb.append("</filter>\n");
+        return sb.toString();
+    }
+
+    private String renderLimit(SpecificationLimit limit, String name) {
+        String type = switch(limit.type()) {
+            case NONE -> "none";
+            case EQUALS -> "eq";
+            case LESS_THAN -> "lt";
+            case GREATER_THAN -> "gt";
+        };
+
+        return String.format("<limit param=\"%s\" type=\"%s\" value=\"%d\" />",
+                name, type, limit.value());
     }
 
     public SearchFilterSpec parse(String userId, String identifier, String xml)

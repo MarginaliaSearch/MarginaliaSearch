@@ -6,6 +6,7 @@ import gg.jte.TemplateEngine;
 import gg.jte.output.StringOutput;
 import gg.jte.resolve.DirectoryCodeResolver;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.rendering.MockedSearchResults;
@@ -69,6 +70,14 @@ public class JtePaperDoll {
         Spark.get("/",
                 (rq, rs) -> MockedSearchResults.mockRegularSearchResults(),
                 ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH, "languageDefinitions", languageConfiguration.languagesMap()))
+        );
+        Spark.get("/filter",
+                (rq, rs) -> new Object(),
+                ret -> this.render("filter/main.jte",
+                        Map.of("navbar", NavbarModel.SEARCH,
+                                "languageDefinitions", languageConfiguration.languagesMap(),
+                                "filter", SearchFilterSpec.defaultForUser("WEB", "ADHOC")
+                                ))
         );
         Spark.get("/site-focus",
                 (rq, rs) -> MockedSearchResults.mockSiteFocusResults(),

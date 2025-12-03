@@ -31,6 +31,25 @@ public record SearchFilterSpec(String userId,
                                QueryStrategy queryStrategy
                                )
 {
+    public static SearchFilterSpec defaultForUser(String userId, String identifier) {
+        return new SearchFilterSpec(
+                userId,
+                identifier,
+                List.of(),
+                List.of(),
+                List.of(),
+                "NONE",
+                List.of(),
+                List.of(),
+                List.of(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                "NONE",
+                QueryStrategy.AUTO
+        );
+    }
 
     public CompiledSearchFilterSpec compile(DbDomainQueries domainQueries) {
         IntList domainIdsRequire = new IntArrayList();
