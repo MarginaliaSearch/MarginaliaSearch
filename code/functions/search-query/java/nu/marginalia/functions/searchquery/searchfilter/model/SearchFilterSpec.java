@@ -98,7 +98,7 @@ public record SearchFilterSpec(String userId,
     {
         for (String domain : sourceDomainNames) {
             if (domain.startsWith("*.")) {
-                destTerms.add(domain.substring("*.".length()));
+                destTerms.add("site:" + domain.substring("*.".length()));
             }
             else {
                 EdgeDomain ed = new EdgeDomain(domain);
@@ -121,7 +121,7 @@ public record SearchFilterSpec(String userId,
             String domain = item.getKey();
 
             if (domain.startsWith("*.")) {
-                destTerms.add(domain.substring("*.".length()));
+                destTerms.add("site:" + domain.substring("*.".length()));
                 destPromoteTermAmounts.add(item.getValue().floatValue());
             }
             else {

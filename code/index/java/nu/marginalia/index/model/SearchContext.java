@@ -68,6 +68,7 @@ public class SearchContext {
     public final TermIdList termIdsAll;
     public final PhraseConstraintGroupList phraseConstraints;
 
+    public final LongList termIdsDomain;
     public final LongList termIdsRequire;
     public final LongList termIdsExcludes;
     public final LongList termIdsPriority;
@@ -159,9 +160,17 @@ public class SearchContext {
         this.termIdsPriority = new LongArrayList();
         this.termIdsPriorityWeights = new FloatArrayList(queryTerms.getTermsPriorityWeightList());
         this.termIdsRequire = new LongArrayList();
+        this.termIdsDomain = new LongArrayList();
 
         for (var word : queryTerms.getTermsRequireList()) {
-            termIdsRequire.add(keywordHasher.hashKeyword(word));
+            if (word.startsWith("site:")) {
+                // We want an OR-condition between these guys,
+                // so they go in a different bin
+                termIdsDomain.add(keywordHasher.hashKeyword(word));
+            }
+            else {
+                termIdsRequire.add(keywordHasher.hashKeyword(word));
+            }
         }
 
         for (var word : queryTerms.getTermsExcludeList()) {
