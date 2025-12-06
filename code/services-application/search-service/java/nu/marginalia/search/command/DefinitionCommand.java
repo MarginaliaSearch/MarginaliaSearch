@@ -49,6 +49,8 @@ public class DefinitionCommand implements SearchCommandInterface {
                 Map.of("parameters", parameters,
                         "result", result,
                         "languageDefinitions", languageConfiguration.languagesMap(),
+                        "requestMethod", parameters.requestMethod(),
+                        "displayUrl", parameters.renderUrl(),
                         "navbar", NavbarModel.SEARCH)
         ));
     }

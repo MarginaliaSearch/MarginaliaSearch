@@ -59,6 +59,8 @@ public class SearchFilters {
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
                 "en",
+                "GET",
+                null,
                 false,
                 1));
     }
@@ -77,18 +79,17 @@ public class SearchFilters {
                             List.of(
                                     new Filter("All", "fa-globe", SearchProfile.NO_FILTER, parameters),
                                     new Filter("Blogs", "fa-blog", SearchProfile.BLOGOSPHERE, parameters),
-                                    new Filter("Academia", "fa-university", SearchProfile.ACADEMIA, parameters)
-                            ),
-                            List.of(
+                                    new Filter("Academia", "fa-university", SearchProfile.ACADEMIA, parameters),
                                     new Filter("Vintage", "fa-clock-rotate-left", SearchProfile.VINTAGE, parameters),
-                                    new Filter("Small Web", "fa-minus", SearchProfile.SMALLWEB, parameters),
-                                    new Filter("Plain Text", "fa-file", SearchProfile.PLAIN_TEXT, parameters),
-                                    new Filter("Tilde", "fa-house", SearchProfile.TILDE, parameters)
+                                    new Filter("Small Web", "fa-minus", SearchProfile.SMALLWEB, parameters)
                             ),
                             List.of(
-                                new Filter("Wikis", "fa-pencil", SearchProfile.WIKI, parameters),
+                                new Filter("Wikis", "fa-book", SearchProfile.WIKI, parameters),
                                 new Filter("Forums", "fa-comments", SearchProfile.FORUM, parameters),
                                 new Filter("Recipes", "fa-utensils", SearchProfile.FOOD, parameters)
+                            ),
+                            List.of(
+                                    new Filter("Custom Filter", "fa-pencil", SearchProfile.CUSTOM, parameters)
                             )
                         );
 
@@ -101,7 +102,7 @@ public class SearchFilters {
         public final String url;
 
         public String value() {
-            return this.value.name();
+            return this.value.value;
         }
 
         public String getUrl() {
@@ -140,7 +141,7 @@ public class SearchFilters {
         public final String url;
 
         public String value() {
-            return this.value.name();
+            return this.value.value;
         }
 
         public String id() {
@@ -179,7 +180,7 @@ public class SearchFilters {
         private final String icon = "fa-baby";
 
         public String value() {
-            return this.value.name();
+            return this.value.value;
         }
 
         public final String url;
@@ -220,7 +221,7 @@ public class SearchFilters {
         public final String url;
 
         public String value() {
-            return this.value.name();
+            return this.value.value;
         }
 
         public String id() {

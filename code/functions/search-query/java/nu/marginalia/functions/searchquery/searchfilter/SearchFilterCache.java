@@ -41,7 +41,7 @@ public class SearchFilterCache {
 
                     return store.getFilter(key.user(), key.identifier())
                             .map(spec -> spec.compile(dbQueries))
-                            .orElseThrow(NoSuchElementException::new);
+                            .orElseThrow(() -> new NoSuchElementException("Could not find filter " + key));
                 }
             });
 

@@ -17,6 +17,7 @@ public enum SearchProfile {
     FORUM("forum", SearchFilterDefaults.FORUM),
     WIKI("wiki", SearchFilterDefaults.WIKI),
     DOCS("docs", SearchFilterDefaults.DOCS),
+    CUSTOM("custom", SearchFilterDefaults.NO_FILTER), // gets special handling
     ;
 
 

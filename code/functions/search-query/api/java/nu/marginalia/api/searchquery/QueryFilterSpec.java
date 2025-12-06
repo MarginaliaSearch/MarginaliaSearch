@@ -2,10 +2,13 @@ package nu.marginalia.api.searchquery;
 
 import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public sealed interface QueryFilterSpec {
     void configure(RpcQsQuery.Builder query);
@@ -17,11 +20,11 @@ public sealed interface QueryFilterSpec {
         }
     }
 
-    record CombinedFilter(FilterByName byName, FilterAdHoc adHoc) implements QueryFilterSpec {
+    record CombinedFilter(QueryFilterSpec firstLayer, FilterAdHoc overrides) implements QueryFilterSpec {
         @Override
         public void configure(RpcQsQuery.Builder query) {
-            byName.configure(query);
-            adHoc.configure(query);
+            firstLayer.configure(query);
+            overrides.configure(query);
         }
 
     }
@@ -57,6 +60,28 @@ public sealed interface QueryFilterSpec {
             QueryStrategy queryStrategy
             ) implements QueryFilterSpec
     {
+        public FilterAdHoc(CompiledSearchFilterSpec filterSpec) {
+            Objects.requireNonNull(filterSpec);
+
+            this(
+                    filterSpec.domainsInclude(),
+                    filterSpec.domainsExclude(),
+                    filterSpec.domainsPromote(),
+                    filterSpec.domainsPromoteAmounts(),
+                    filterSpec.searchSetIdentifier(),
+                    filterSpec.termsRequire(),
+                    filterSpec.termsExclude(),
+                    filterSpec.termsPromote(),
+                    filterSpec.termsPromoteAmounts(),
+                    filterSpec.quality(),
+                    filterSpec.year(),
+                    filterSpec.size(),
+                    filterSpec.rank(),
+                    RpcTemporalBias.Bias.valueOf(filterSpec.temporalBias()),
+                    filterSpec.queryStrategy()
+            );
+        }
+
         public boolean isNoOp() {
             if (!domainsInclude.isEmpty())
                 return false;

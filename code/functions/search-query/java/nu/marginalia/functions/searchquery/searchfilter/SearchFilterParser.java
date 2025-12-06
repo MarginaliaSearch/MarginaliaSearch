@@ -35,10 +35,6 @@ public class SearchFilterParser {
         StringBuilder sb = new StringBuilder();
         sb.append("""
                 <?xml version="1.0"?>
-                <!-- Feel free to make your own changes directly in this file.
-                 There are some additional fields you can set, but they honestly
-                 aren't very useful for permanent filters, otherwise they'd be
-                 in the GUI too. -->
                 """);
 
         sb.append("<filter>\n");

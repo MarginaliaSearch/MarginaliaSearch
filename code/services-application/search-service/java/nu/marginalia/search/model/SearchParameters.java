@@ -3,10 +3,11 @@ package nu.marginalia.search.model;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.model.EdgeDomain;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -14,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
-
-import static nu.marginalia.search.model.SearchRecentParameter.RECENT;
 
 public record SearchParameters(WebsiteUrl url,
                                String query,
@@ -25,6 +24,8 @@ public record SearchParameters(WebsiteUrl url,
                                SearchTitleParameter searchTitle,
                                SearchAdtechParameter adtech,
                                String languageIsoCode,
+                               String requestMethod,
+                               @Nullable CompiledSearchFilterSpec filterSpec,
                                boolean newFilter,
                                int page
                                ) {
@@ -43,6 +44,8 @@ public record SearchParameters(WebsiteUrl url,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
                 "en",
+                "GET",
+                null,
                 false,
                 page);
     }
@@ -52,34 +55,34 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, true, page);
+        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
 
     public SearchParameters withLanguage(String languageIsoCode) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
 
     public SearchParameters withPage(int page) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, false, page);
     }
 
     public SearchParameters withQuery(String query) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, false, page);
     }
 
     public String renderUrlWithoutSiteFocus() {
@@ -152,7 +155,19 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public QueryFilterSpec asFilterSpec() {
-        var namedFilter = profile.defaultFilter.asFilterSpec();
+        QueryFilterSpec baseFilter;
+        if (filterSpec != null) {
+            try {
+                baseFilter = new QueryFilterSpec.FilterAdHoc(filterSpec);
+            }
+            catch (Exception ex) {
+                throw new IllegalArgumentException("Bad filter specification", ex);
+            }
+
+        }
+        else {
+            baseFilter = profile.defaultFilter.asFilterSpec();
+        }
 
         List<String> excludeTerms = new ArrayList<>();
 
@@ -162,7 +177,7 @@ public record SearchParameters(WebsiteUrl url,
         if (excludeTerms.isEmpty()
             && recent == SearchRecentParameter.DEFAULT
             && searchTitle == SearchTitleParameter.DEFAULT)
-            return namedFilter;
+            return baseFilter;
 
         var adHocFilter = QueryFilterSpec.FilterAdHoc.builder()
                 .termsExclude(excludeTerms)
@@ -176,7 +191,7 @@ public record SearchParameters(WebsiteUrl url,
                 })
                 .build();
 
-        return new QueryFilterSpec.CombinedFilter(namedFilter, adHocFilter);
+        return new QueryFilterSpec.CombinedFilter(baseFilter, adHocFilter);
     }
 
 }
