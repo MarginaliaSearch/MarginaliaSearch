@@ -1,5 +1,10 @@
 package nu.marginalia.api.searchquery.model.query;
 
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.floats.FloatList;
+import nu.marginalia.api.searchquery.RpcPhrases;
+import nu.marginalia.api.searchquery.RpcQueryTerms;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,16 +37,28 @@ public class SearchQuery {
     public final List<String> searchTermsPriority;
 
     /**
+     * Weight for searchTermsPriority
+     */
+    public final FloatList searchTermsPriorityWeight;
+
+    /**
      * Terms that we require to be in the same sentence
      */
     public final List<SearchPhraseConstraint> phraseConstraints;
 
-    public SearchQuery(String compiledQuery, List<String> searchTermsInclude, List<String> searchTermsExclude, List<String> searchTermsAdvice, List<String> searchTermsPriority, List<SearchPhraseConstraint> phraseConstraints) {
+    public SearchQuery(String compiledQuery,
+                       List<String> searchTermsInclude,
+                       List<String> searchTermsExclude,
+                       List<String> searchTermsAdvice,
+                       List<String> searchTermsPriority,
+                       FloatList searchTermsPriorityWeight,
+                       List<SearchPhraseConstraint> phraseConstraints) {
         this.compiledQuery = compiledQuery;
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.searchTermsAdvice = searchTermsAdvice;
         this.searchTermsPriority = searchTermsPriority;
+        this.searchTermsPriorityWeight = searchTermsPriorityWeight;
         this.phraseConstraints = phraseConstraints;
     }
 
@@ -55,6 +72,7 @@ public class SearchQuery {
         this.searchTermsExclude = new ArrayList<>();
         this.searchTermsAdvice = new ArrayList<>();
         this.searchTermsPriority = new ArrayList<>();
+        this.searchTermsPriorityWeight = new FloatArrayList();
         this.phraseConstraints = new ArrayList<>();
     }
 
@@ -124,10 +142,11 @@ public class SearchQuery {
 
     public static class SearchQueryBuilder {
         private String compiledQuery;
-        public final List<String> searchTermsInclude = new ArrayList<>();
+        public final List<String> searchTermsQuery = new ArrayList<>();
         public final List<String> searchTermsExclude = new ArrayList<>();
-        public final List<String> searchTermsAdvice = new ArrayList<>();
+        public final List<String> searchTermsRequire = new ArrayList<>();
         public final List<String> searchTermsPriority = new ArrayList<>();
+        public final FloatList searchTermsPriorityWeight = new FloatArrayList();
         public final List<SearchPhraseConstraint> searchPhraseConstraints = new ArrayList<>();
 
         private SearchQueryBuilder() {
@@ -138,8 +157,8 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQueryBuilder include(String... terms) {
-            searchTermsInclude.addAll(List.of(terms));
+        public SearchQueryBuilder queryTerms(String... terms) {
+            searchTermsQuery.addAll(List.of(terms));
             return this;
         }
 
@@ -148,13 +167,14 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQueryBuilder advice(String... terms) {
-            searchTermsAdvice.addAll(List.of(terms));
+        public SearchQueryBuilder require(String... terms) {
+            searchTermsRequire.addAll(List.of(terms));
             return this;
         }
 
-        public SearchQueryBuilder priority(String... terms) {
-            searchTermsPriority.addAll(List.of(terms));
+        public SearchQueryBuilder priority(String term, float weight) {
+            searchTermsPriority.add(term);
+            searchTermsPriorityWeight.add(weight);
             return this;
         }
 
@@ -163,17 +183,45 @@ public class SearchQuery {
             return this;
         }
 
-        public SearchQuery build() {
-            return new SearchQuery(compiledQuery, searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchPhraseConstraints);
+        public RpcQueryTerms.Builder build() {
+
+            var termsBuilder =
+                    RpcQueryTerms.newBuilder()
+                            .setCompiledQuery(compiledQuery)
+                            .addAllTermsQuery(searchTermsQuery)
+                            .addAllTermsRequire(searchTermsRequire)
+                            .addAllTermsExclude(searchTermsExclude)
+                            .addAllTermsPriority(searchTermsPriority)
+                            .addAllTermsPriorityWeight(searchTermsPriorityWeight)
+                    ;
+
+            for (var constraint : searchPhraseConstraints) {
+                switch (constraint) {
+                    case SearchPhraseConstraint.Optional(List<String> terms) ->
+                            termsBuilder.addPhrasesBuilder()
+                                    .addAllTerms(terms)
+                                    .setType(RpcPhrases.TYPE.OPTIONAL);
+                    case SearchPhraseConstraint.Mandatory(List<String> terms) ->
+                            termsBuilder.addPhrasesBuilder()
+                                    .addAllTerms(terms)
+                                    .setType(RpcPhrases.TYPE.MANDATORY);
+                    case SearchPhraseConstraint.Full(List<String> terms) ->
+                            termsBuilder.addPhrasesBuilder()
+                                    .addAllTerms(terms)
+                                    .setType(RpcPhrases.TYPE.FULL);
+                }
+            }
+
+            return termsBuilder;
         }
 
         /**
          * If there are no ranking terms, promote the advice terms to ranking terms
          */
         public void promoteNonRankingTerms() {
-            if (searchTermsInclude.isEmpty() && !searchTermsAdvice.isEmpty()) {
-                searchTermsInclude.addAll(searchTermsAdvice);
-                searchTermsAdvice.clear();
+            if (searchTermsQuery.isEmpty() && !searchTermsRequire.isEmpty()) {
+                searchTermsQuery.addAll(searchTermsRequire);
+                searchTermsRequire.clear();
             }
         }
     }

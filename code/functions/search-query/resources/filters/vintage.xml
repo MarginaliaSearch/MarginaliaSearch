@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<filter>
+    <terms-promote amount="1">format:html123</terms-promote>
+    <terms-promote amount="1">js:false</terms-promote>
+    <temporal-bias>OLD</temporal-bias>
+    <limit param="year" type="lt" value="2003"/>
+</filter>

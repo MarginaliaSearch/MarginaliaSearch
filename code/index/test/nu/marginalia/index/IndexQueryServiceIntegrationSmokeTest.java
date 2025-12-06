@@ -3,8 +3,7 @@ package nu.marginalia.index;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
-import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
-import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.config.IndexFileName;
@@ -93,6 +92,13 @@ public class IndexQueryServiceIntegrationSmokeTest {
         testModule.cleanUp();
     }
 
+    final RpcQueryLimits defaultLimits =
+            RpcQueryLimits.newBuilder()
+                .setResultsByDomain(10)
+                .setResultsTotal(10)
+                .setTimeoutMs(Integer.MAX_VALUE)
+                .build();
+
     @Test
     public void willItBlend() throws Exception {
         var linkdbWriter = new DocumentDbWriter(
@@ -110,26 +116,25 @@ public class IndexQueryServiceIntegrationSmokeTest {
         statefulIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                SearchSpecification.builder()
-                        .queryLimits(
-                                RpcQueryLimits.newBuilder()
-                                        .setResultsByDomain(10)
-                                        .setResultsTotal(10)
-                                        .setTimeoutMs(Integer.MAX_VALUE)
-                                        .setFetchSize(4000)
-                                        .build()
+                RpcIndexQuery.newBuilder()
+                        .setQueryLimits(defaultLimits)
+                        .setLangIsoCode("en")
+                        .setSearchSetIdentifier("NONE")
+                        .setHumanQuery("2 3 5 -4")
+                        .setTerms(RpcQueryTerms.newBuilder()
+                                .setCompiledQuery("2 3 5")
+                                .addAllTermsQuery(List.of("5", "3", "2"))
+                                .addTermsExclude("4")
+                                .addPhrases(RpcPhrases
+                                        .newBuilder()
+                                        .setType(RpcPhrases.TYPE.FULL)
+                                        .addTerms("2")
+                                        .addTerms("3")
+                                        .addTerms("5")
+                                )
                         )
-                        .queryStrategy(QueryStrategy.SENTENCE)
-                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
-                        .domains(new ArrayList<>())
-                        .searchSetIdentifier("NONE")
-                        .query(
-                            SearchQuery.builder()
-                                    .compiledQuery("2 3 5")
-                                    .include("3", "5", "2")
-                                    .exclude("4")
-                                    .build()
-                        ).build());
+                        .build()
+        );
 
         long[] actual = rsp
                 .stream()
@@ -173,26 +178,21 @@ public class IndexQueryServiceIntegrationSmokeTest {
         statefulIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                SearchSpecification.builder()
-                        .queryLimits(
-                                RpcQueryLimits.newBuilder()
-                                        .setResultsByDomain(10)
-                                        .setResultsTotal(10)
-                                        .setTimeoutMs(Integer.MAX_VALUE)
-                                        .setFetchSize(4000)
-                                        .build()
+                RpcIndexQuery.newBuilder()
+                        .setQueryLimits(defaultLimits)
+                        .setLangIsoCode("en")
+                        .setSearchSetIdentifier("NONE")
+                        .setHumanQuery("2")
+                        .setTerms(RpcQueryTerms.newBuilder()
+                                .setCompiledQuery("2")
+                                .addAllTermsQuery(List.of("2"))
+                                .addPhrases(RpcPhrases
+                                        .newBuilder()
+                                        .setType(RpcPhrases.TYPE.FULL)
+                                        .addTerms("2")
+                                )
                         )
-                        .queryStrategy(QueryStrategy.SENTENCE)
-                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
-                        .domains(new ArrayList<>())
-                        .searchSetIdentifier("NONE")
-                        .query(
-                            SearchQuery.builder()
-                                .compiledQuery("2")
-                                .include("2")
-                                .phraseConstraint(new SearchPhraseConstraint.Full("2"))
-                                .build()
-                        ).build()
+                        .build()
         );
 
         long[] actual = rsp
@@ -234,26 +234,27 @@ public class IndexQueryServiceIntegrationSmokeTest {
         statefulIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                SearchSpecification.builder()
-                        .queryLimits(
-                                RpcQueryLimits.newBuilder()
-                                        .setResultsByDomain(10)
-                                        .setResultsTotal(10)
-                                        .setTimeoutMs(Integer.MAX_VALUE)
-                                        .setFetchSize(4000)
-                                        .build()
+                RpcIndexQuery.newBuilder()
+                        .setQueryLimits(defaultLimits)
+                        .setLangIsoCode("en")
+                        .setSearchSetIdentifier("NONE")
+                        .setHumanQuery("2")
+                        .addRequiredDomainIds(2)
+                        .setTerms(RpcQueryTerms.newBuilder()
+                                .setCompiledQuery("2 3 5")
+                                .addAllTermsQuery(List.of("5", "3", "2"))
+                                .addTermsExclude("4")
+                                .addPhrases(RpcPhrases
+                                        .newBuilder()
+                                        .setType(RpcPhrases.TYPE.FULL)
+                                        .addTerms("2")
+                                        .addTerms("3")
+                                        .addTerms("5")
+                                )
                         )
-                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
-                        .queryStrategy(QueryStrategy.SENTENCE)
-                        .domains(List.of(2))
-                        .query(
-                            SearchQuery.builder()
-                                .compiledQuery("2 3 5")
-                                .include("3", "5", "2")
-                                .exclude("4")
-                                .phraseConstraint(new SearchPhraseConstraint.Full("2", "3", "5"))
-                                .build()
-                        ).build());
+                        .build()
+        );
+
         long[] ids = new long[] {  210, 270 };
         long[] actual = rsp.stream()
                 .sorted(Comparator.comparing(RpcDecoratedResultItem::getRankingScore))
@@ -298,27 +299,28 @@ public class IndexQueryServiceIntegrationSmokeTest {
         statefulIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                SearchSpecification.builder()
-                        .queryLimits(
-                                RpcQueryLimits.newBuilder()
-                                        .setResultsByDomain(10)
-                                        .setResultsTotal(10)
-                                        .setTimeoutMs(Integer.MAX_VALUE)
-                                        .setFetchSize(4000)
-                                        .build()
-                        )
-                        .year(SpecificationLimit.equals(1998))
-                        .queryStrategy(QueryStrategy.SENTENCE)
-                        .searchSetIdentifier("NONE")
-                        .rankingParams(PrototypeRankingParameters.sensibleDefaults())
-                        .query(
-                            SearchQuery.builder()
-                                .compiledQuery("4")
-                                .include("4")
-                                .phraseConstraint(new SearchPhraseConstraint.Full("4"))
+                RpcIndexQuery.newBuilder()
+                        .setQueryLimits(defaultLimits)
+                        .setLangIsoCode("en")
+                        .setSearchSetIdentifier("NONE")
+                        .setHumanQuery("4")
+                        .setYear(
+                            RpcSpecLimit.newBuilder()
+                                .setType(RpcSpecLimit.TYPE.EQUALS)
+                                .setValue(1998)
                                 .build()
-                        ).build());
-
+                        )
+                        .setTerms(RpcQueryTerms.newBuilder()
+                                .setCompiledQuery("4")
+                                .addAllTermsQuery(List.of("4"))
+                                .addPhrases(RpcPhrases
+                                        .newBuilder()
+                                        .setType(RpcPhrases.TYPE.FULL)
+                                        .addTerms("4")
+                                )
+                        )
+                        .build()
+        );
 
         Set<Integer> years = new HashSet<>();
 

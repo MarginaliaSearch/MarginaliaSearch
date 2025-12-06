@@ -1,5 +1,7 @@
 package nu.marginalia.api.searchquery.model.query;
 
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import it.unimi.dsi.fastutil.floats.FloatList;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 
@@ -13,6 +15,7 @@ public record QueryParams(
         List<String> tacitIncludes,
         List<String> tacitExcludes,
         List<String> tacitPriority,
+        FloatList tacitPriorityWeights,
         List<String> tacitAdvice,
         SpecificationLimit quality,
         SpecificationLimit year,
@@ -33,6 +36,7 @@ public record QueryParams(
                 List.of(),
                 List.of(),
                 List.of(),
+                FloatList.of(),
                 List.of(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),

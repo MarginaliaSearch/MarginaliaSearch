@@ -1,6 +1,5 @@
 package nu.marginalia.api.svc;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
@@ -8,7 +7,6 @@ import nu.marginalia.api.model.ApiLicense;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Spark;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,16 +23,19 @@ public class LicenseService {
         this.dataSource = dataSource;
     }
 
-    @NotNull
-    public ApiLicense getLicense(String key) {
-        if (Strings.isNullOrEmpty(key)) {
-            Spark.halt(400, "Bad key");
-        }
+    public static class NoSuchKeyException extends Exception {}
 
-        return licenseCache.computeIfAbsent(key, this::getFromDb);
+    @NotNull
+    public ApiLicense getLicense(String key) throws NoSuchKeyException {
+        var cachedLicense = licenseCache.get(key);
+        if (cachedLicense != null) return cachedLicense;
+
+        var dbLicense = getFromDb(key);
+        licenseCache.put(key, dbLicense);
+        return dbLicense;
     }
 
-    private ApiLicense getFromDb(String key) {
+    private ApiLicense getFromDb(String key) throws NoSuchKeyException {
         try (var conn = dataSource.getConnection();
             var stmt = conn.prepareStatement("SELECT LICENSE,NAME,RATE FROM EC_API_KEY WHERE LICENSE_KEY=?")) {
 
@@ -49,12 +50,10 @@ public class LicenseService {
         }
         catch (Exception ex) {
             logger.error("Bad request", ex);
-            Spark.halt(500);
+            throw new IllegalArgumentException();
         }
 
-        Spark.halt(401, "Invalid license key");
-
-        throw new IllegalStateException("This is unreachable");
+        throw new NoSuchKeyException();
     }
 
     public void flushCache() {

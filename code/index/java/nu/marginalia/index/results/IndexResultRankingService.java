@@ -70,10 +70,12 @@ public class IndexResultRankingService {
     public final class RankingData implements AutoCloseable {
         final Arena arena;
         private static final DocumentSpans emptySpansInstance = new DocumentSpans();
+        private final int numPriorityTerms;
 
-        private final TermMetadataList[] termsForDocs;
+        private final CombinedTermMetadata termMetadata;
         private final DocumentSpans[] documentSpans;
         private final long[] flags;
+        private final BitSet priorityTermsPresent;
         private final CodedSequence[] positions;
         private final CombinedDocIdList resultIds;
 
@@ -84,8 +86,10 @@ public class IndexResultRankingService {
             this.resultIds = resultIds;
             this.arena = Arena.ofShared();
 
+            this.numPriorityTerms = rankingContext.termIdsPriority.size();
             final int termCount = rankingContext.termIdsAll.size();
 
+            this.priorityTermsPresent = new BitSet(rankingContext.termIdsPriority.size());
             this.flags = new long[termCount];
             this.positions = new CodedSequence[termCount];
 
@@ -97,10 +101,10 @@ public class IndexResultRankingService {
             // Perform expensive I/O operations
 
             try {
-                this.termsForDocs = currentIndex.getTermMetadata(arena, rankingContext, resultIds);
+                this.termMetadata = currentIndex.getTermMetadata(arena, rankingContext, resultIds);
 
                 @NotNull
-                BitSet documentMask = termsForDocs[0].viableDocuments();
+                BitSet documentMask = termMetadata.viableDocuments();
 
                 this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds, documentMask);
             }
@@ -116,6 +120,7 @@ public class IndexResultRankingService {
         public long[] flags() {
             return flags;
         }
+        public BitSet priorityTermsPresent() { return priorityTermsPresent; }
         public long resultId() {
             return resultIds.at(pos);
         }
@@ -124,7 +129,7 @@ public class IndexResultRankingService {
         }
 
         public boolean next() {
-            BitSet viableDocuments = termsForDocs[0].viableDocuments();
+            BitSet viableDocuments = termMetadata.viableDocuments();
 
             do {
                 if (++pos >= resultIds.size()) {
@@ -132,8 +137,9 @@ public class IndexResultRankingService {
                 }
             } while (!viableDocuments.get(pos));
 
+
             for (int ti = 0; ti < flags.length; ti++) {
-                var tfd = termsForDocs[ti];
+                var tfd = termMetadata.termMetadata(ti);
 
                 assert tfd != null : "No term data for term " + ti;
 
@@ -141,11 +147,19 @@ public class IndexResultRankingService {
                 positions[ti] = tfd.position(pos);
             }
 
+            priorityTermsPresent.clear();
+
+            for (int ti = 0; ti < numPriorityTerms; ti++) {
+                if (termMetadata.priorityTermsPresent(ti, pos)) {
+                    priorityTermsPresent.set(pos);
+                }
+            }
+
             return true;
         }
 
         public int size() {
-            return termsForDocs[0].viableDocuments().cardinality();
+            return termMetadata.viableDocuments().cardinality();
         }
 
         public void close() {
@@ -428,8 +442,16 @@ public class IndexResultRankingService {
 
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
 
+        double priorityTermAdjustment = 0.;
+        BitSet priorityTermsPresent = rankingData.priorityTermsPresent();
+
+        for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
+            if (priorityTermsPresent.get(i))
+                priorityTermAdjustment *= rankingContext.termIdsPriorityWeights.getFloat(i);
+        }
+
         double score = normalize(
-                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags),
+                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags + priorityTermAdjustment),
                 -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
         );
 

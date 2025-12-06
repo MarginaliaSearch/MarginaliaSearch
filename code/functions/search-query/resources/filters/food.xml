@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<filter>
+    <terms-require>category:food</terms-require>
+    <terms-exclude>special:ads</terms-exclude>
+</filter>

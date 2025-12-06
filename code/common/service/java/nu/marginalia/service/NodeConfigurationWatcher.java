@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class NodeConfigurationWatcher {
+public class NodeConfigurationWatcher implements NodeConfigurationWatcherIf {
     private static final Logger logger = LoggerFactory.getLogger(NodeConfigurationWatcher.class);
     private final HikariDataSource dataSource;
 
@@ -54,6 +54,7 @@ public class NodeConfigurationWatcher {
         }
     }
 
+    @Override
     public List<Integer> getQueryNodes() {
         return queryNodes;
     }

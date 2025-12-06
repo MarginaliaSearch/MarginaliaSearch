@@ -7,7 +7,6 @@ import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import spark.HaltException;
 
 import java.sql.SQLException;
 
@@ -66,7 +65,7 @@ class LicenseServiceTest {
     }
 
     @Test
-    void testLicense() {
+    void testLicense() throws LicenseService.NoSuchKeyException {
         var publicLicense = service.getLicense("public");
         var limitedLicense = service.getLicense("limited");
 
@@ -83,7 +82,7 @@ class LicenseServiceTest {
     }
 
     @Test
-    void testLicenseCache() {
+    void testLicenseCache() throws LicenseService.NoSuchKeyException {
         var publicLicense = service.getLicense("public");
         var publicLicenseAgain = service.getLicense("public");
 
@@ -92,24 +91,25 @@ class LicenseServiceTest {
 
     @Test
     void testUnknownLiecense() {
-        assertHaltsWithErrorCode(401, () -> service.getLicense("invalid code"));
+        try {
+            service.getLicense("invalid code");
+            Assertions.fail();
+        }
+        catch (LicenseService.NoSuchKeyException ex) {}
     }
 
     @Test
     public void testBadKey() {
-        assertHaltsWithErrorCode(400, () -> service.getLicense(""));
-        assertHaltsWithErrorCode(400, () -> service.getLicense(null));
-    }
-
-    public void assertHaltsWithErrorCode(int expectedCode, Runnable runnable) {
         try {
-            runnable.run();
-
-            Assertions.fail("Expected HaltException with status code " + expectedCode + " but no exception was thrown.");
-        } catch (HaltException e) {
-            assertEquals(expectedCode, e.statusCode(), "Expected HaltException with status code " + expectedCode + " but got " + e.statusCode() + " instead.");
+            service.getLicense("");
+            Assertions.fail();
         }
-
+        catch (LicenseService.NoSuchKeyException ex) {}
+        try {
+            service.getLicense("null");
+            Assertions.fail();
+        }
+        catch (LicenseService.NoSuchKeyException ex) {}
     }
 
     public static HikariDataSource getConnection(String connString) {

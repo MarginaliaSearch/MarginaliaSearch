@@ -2,10 +2,10 @@ package nu.marginalia.index.perftest;
 
 import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcQsQuery;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
-import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.functions.searchquery.QueryFactory;
@@ -131,15 +131,22 @@ public class PerfTestMain {
         QueryFactory queryFactory = createQueryFactory(homeDir);
         IndexResultRankingService rankingService = createIndexResultRankingService(indexDir, indexReader);
 
-        var queryLimits = RpcQueryLimits.newBuilder()
-                .setTimeoutMs(10_000)
-                .setResultsTotal(1000)
-                .setResultsByDomain(10)
-                .setFetchSize(4096)
-                .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
+        RpcIndexQuery parsedQuery = queryFactory.createQuery(
+                RpcQsQuery.newBuilder()
+                        .setHumanQuery(rawQuery)
+                        .setLangIsoCode("en")
+                        .setQueryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setTimeoutMs(10_000)
+                                        .setResultsTotal(1000)
+                                        .setResultsByDomain(10)
+                                        .build()
+                        )
+                        .build(),
+                CompiledSearchFilterSpec.builder("test", "test").build(),
+                PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
+        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
         var rankingContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
         List<IndexQuery> queries = indexReader.createQueries(rankingContext);
@@ -203,14 +210,21 @@ public class PerfTestMain {
         QueryFactory queryFactory = createQueryFactory(homeDir);
         IndexResultRankingService rankingService = createIndexResultRankingService(indexDir, indexReader);
 
-        var queryLimits = RpcQueryLimits.newBuilder()
-                .setTimeoutMs(50)
-                .setResultsTotal(1000)
-                .setResultsByDomain(10)
-                .setFetchSize(4096)
-                .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
-        System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
+        RpcIndexQuery parsedQuery = queryFactory.createQuery(
+                RpcQsQuery.newBuilder()
+                        .setHumanQuery(rawQuery)
+                        .setLangIsoCode("en")
+                        .setQueryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setTimeoutMs(50)
+                                        .setResultsTotal(1000)
+                                        .setResultsByDomain(10)
+                        )
+                        .build(),
+                CompiledSearchFilterSpec.builder("test", "test").build(),
+                PrototypeRankingParameters.sensibleDefaults()).indexQuery;
+
+        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
         System.out.println("Running warmup loop!");
         int sum = 0;
@@ -256,15 +270,21 @@ public class PerfTestMain {
         CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
         QueryFactory queryFactory = createQueryFactory(homeDir);
 
-        var queryLimits = RpcQueryLimits.newBuilder()
-                .setTimeoutMs(1_000_000_000)
-                .setResultsTotal(1000)
-                .setResultsByDomain(10)
-                .setFetchSize(4096)
-                .build();
-        SearchSpecification parsedQuery = queryFactory.createQuery(new QueryParams(rawQuery, queryLimits, "NONE", NsfwFilterTier.OFF, "en"), PrototypeRankingParameters.sensibleDefaults()).specs;
+        RpcIndexQuery parsedQuery = queryFactory.createQuery(
+                RpcQsQuery.newBuilder()
+                        .setHumanQuery(rawQuery)
+                        .setLangIsoCode("en")
+                        .setQueryLimits(
+                                RpcQueryLimits.newBuilder()
+                                        .setTimeoutMs(1_000_000_000)
+                                        .setResultsTotal(1000)
+                                        .setResultsByDomain(10)
+                        )
+                        .build(),
+                CompiledSearchFilterSpec.builder("test", "test").build(),
+                PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.query.compiledQuery);
+        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
         SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
 

@@ -7,10 +7,7 @@ import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.spans.DocumentSpans;
-import nu.marginalia.index.model.CombinedDocIdList;
-import nu.marginalia.index.model.QueryParams;
-import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.model.TermMetadataList;
+import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
@@ -97,8 +94,14 @@ public class CombinedIndexReader {
 
         @Nullable
         SkipListValueRanges mandatoryDocumentRanges = context.mandatoryDomainIds.isEmpty() ? null : getDocumentRangesForDomains(context.mandatoryDomainIds);
+
         @Nullable
         SkipListValueRanges excludedDocumentRanges = context.excludedDomainIds.isEmpty() ? null : getDocumentRangesForDomains(context.excludedDomainIds);
+
+        List<String> domainTerms = new ArrayList<>(context.termIdsDomain.size());
+        for (long id : context.termIdsDomain) {
+            domainTerms.add(termIdToString.getOrDefault(id, "???"));
+        }
 
         for (var path : paths) {
             LongList elements = new LongArrayList(path);
@@ -113,22 +116,49 @@ public class CombinedIndexReader {
                 return 0;
             });
 
-            var head = findFullWord(languageContext, mandatoryDocumentRanges, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
-            if (!head.isNoOp()) {
-                for (int i = 1; i < elements.size(); i++) {
-                    head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+            if (mandatoryDocumentRanges != null || context.termIdsDomain.isEmpty()) {
+                IndexQueryBuilder head = findFullWord(languageContext, mandatoryDocumentRanges, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+                if (!head.isNoOp()) {
+                    for (int i = 1; i < elements.size(); i++) {
+                        head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                    }
+                    queryHeads.add(head);
                 }
-                queryHeads.add(head);
+            }
+            if (!context.termIdsDomain.isEmpty()) {
+                IndexQueryBuilder head = findFullWord(languageContext, null, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+                if (!head.isNoOp()) {
+                    for (int i = 1; i < elements.size(); i++) {
+                        head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                    }
+                    head.addInclusionFilter(hasAnyWordFull(languageContext, domainTerms, context.termIdsDomain, context.budget));
+                    queryHeads.add(head);
+                }
             }
 
             // If there are few paths, we can afford to check the priority index as well
-            if (paths.size() < 4) {
-                var prioHead = findPriorityWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
-                if (!prioHead.isNoOp()) {
-                    for (int i = 1; i < elements.size(); i++) {
-                        prioHead.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+            if (paths.size() < 4 && context.termIdsDomain.size() < 4) {
+                if (mandatoryDocumentRanges != null || context.termIdsDomain.isEmpty()) {
+                    IndexQueryBuilder prioHead = findPriorityWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+                    if (!prioHead.isNoOp()) {
+                        for (int i = 1; i < elements.size(); i++) {
+                            prioHead.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                        }
+                        if (mandatoryDocumentRanges != null) {
+                            prioHead.requiringDomains(mandatoryDocumentRanges);
+                        }
+                        queryHeads.add(prioHead);
                     }
-                    queryHeads.add(prioHead);
+                }
+                if (!context.termIdsDomain.isEmpty()) {
+                    IndexQueryBuilder head = findPriorityWord(languageContext, termIdToString.getOrDefault(elements.getLong(0), "???"), elements.getLong(0));
+                    if (!head.isNoOp()) {
+                        for (int i = 1; i < elements.size(); i++) {
+                            head.addInclusionFilter(hasWordFull(languageContext, termIdToString.getOrDefault(elements.getLong(i), "???"), elements.getLong(i), context.budget));
+                        }
+                        head.addInclusionFilter(hasAnyWordFull(languageContext, domainTerms, context.termIdsDomain, context.budget));
+                        queryHeads.add(head);
+                    }
                 }
             }
         }
@@ -136,11 +166,10 @@ public class CombinedIndexReader {
         // Add additional conditions to the query heads
         for (var query : queryHeads) {
 
-            if (mandatoryDocumentRanges != null) query.requiringDomains(mandatoryDocumentRanges);
             if (excludedDocumentRanges != null) query.rejectingDomains(excludedDocumentRanges);
 
-            // Advice terms are a special case, mandatory but not ranked, and exempt from re-writing
-            for (long termId : context.termIdsAdvice) {
+            // Require terms are a special case, mandatory but not ranked, and exempt from re-writing
+            for (long termId : context.termIdsRequire) {
                 query = query.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
             }
 
@@ -177,6 +206,10 @@ public class CombinedIndexReader {
 
     public QueryFilterStepIf hasWordFull(IndexLanguageContext languageContext, String term, long termId, IndexSearchBudget budget) {
         return reverseIndexFullReader.also(languageContext, term, termId, budget);
+    }
+
+    public QueryFilterStepIf hasAnyWordFull(IndexLanguageContext languageContext, List<String> terms, LongList termIds, IndexSearchBudget budget) {
+        return reverseIndexFullReader.any(languageContext, terms, termIds, budget);
     }
 
     /** Creates a query builder for terms in the priority index */
@@ -224,9 +257,9 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
-    public TermMetadataList[] getTermMetadata(Arena arena,
-                                              SearchContext searchContext,
-                                              CombinedDocIdList docIds)
+    public CombinedTermMetadata getTermMetadata(Arena arena,
+                                                SearchContext searchContext,
+                                                CombinedDocIdList docIds)
     throws TimeoutException
     {
         return reverseIndexFullReader.getTermData(arena, searchContext, docIds);

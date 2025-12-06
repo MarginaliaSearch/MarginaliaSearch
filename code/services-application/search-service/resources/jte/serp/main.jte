@@ -3,12 +3,13 @@
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.ResultsPage
-@import java.util.List
 @import java.util.Map
 @import java.util.Optional
 
 @param DecoratedSearchResults results
 @param NavbarModel navbar
+@param String requestMethod
+@param String displayUrl
 @param Map<String, LanguageDefinition> languageDefinitions
 
 <!DOCTYPE html>
@@ -19,13 +20,12 @@
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 @template.part.navbar(navbar = navbar)
 
-<div>
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto px-4 py-2 sm:py-4">
         <div class="flex items-center">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
             <div class="w-full p-2 border-none backdrop-blur-sm">
-                @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters(), languageIsoCode = results.getLanguageIsoCode())
+                @template.serp.part.searchform(query = results.getParams().query(), profile = results.getProfile(), filters = results.getFilters(), languageIsoCode = results.getLanguageIsoCode(), requestMethod = requestMethod, displayUrl = displayUrl)
             </div>
             <div class="grow"></div>
             <button class="fixed bottom-10 right-5 finepointer:hidden md:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="filter-button">
@@ -47,6 +47,12 @@
 
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
+
+        @if ("custom".equals(results.getProfile()))
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+                <a href="/filters" class="underline text-liteblue dark:text-blue-200" target="_blank">Edit Custom Filter</a>
+            </div>
+        @endif
 
         @if (results.hasFocusDomain())
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
@@ -92,8 +98,6 @@
             </div>
         @endif
     </main>
-</div>
-
 </div>
 
 @template.serp.part.footerHowto()

@@ -28,6 +28,7 @@ public class SearchService extends JoobyService {
     private final SearchSiteSubscriptionService siteSubscriptionService;
     private final FaviconClient faviconClient;
     private final DbDomainQueries domainQueries;
+    private final SearchFilterService searchFilterService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     private static final Histogram wmsa_search_service_request_time = Histogram.build()
@@ -55,6 +56,7 @@ public class SearchService extends JoobyService {
                          SearchBrowseService searchBrowseService,
                          FaviconClient faviconClient,
                          DbDomainQueries domainQueries,
+                         SearchFilterService searchFilterService,
                          SearchQueryService searchQueryService)
     throws Exception {
         super(params,
@@ -65,6 +67,7 @@ public class SearchService extends JoobyService {
                         new SearchSiteInfoService_(siteInfoService),
                         new SearchCrosstalkService_(crosstalkService),
                         new SearchAddToCrawlQueueService_(addToCrawlQueueService),
+                        new SearchFilterService_(searchFilterService),
                         new SearchBrowseService_(searchBrowseService)
                 ));
         this.websiteUrl = websiteUrl;
@@ -72,6 +75,7 @@ public class SearchService extends JoobyService {
         this.siteSubscriptionService = siteSubscriptionService;
         this.faviconClient = faviconClient;
         this.domainQueries = domainQueries;
+        this.searchFilterService = searchFilterService;
 
         try (var is = ClassLoader.getSystemResourceAsStream("static/opensearch.xml")) {
             openSearchXML = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -91,6 +95,8 @@ public class SearchService extends JoobyService {
 
         jooby.get("/site/https://*", this::handleSiteUrlRedirect);
         jooby.get("/site/http://*", this::handleSiteUrlRedirect);
+
+        jooby.post("/filters/format", searchFilterService::saveFilter);
 
         jooby.get("/opensearch.xml", ctx -> {
             ctx.setResponseType(MediaType.valueOf("application/opensearchdescription+xml"));

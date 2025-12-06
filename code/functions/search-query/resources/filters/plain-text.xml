@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<filter>
+    <terms-require>format:plain</terms-require>
+</filter>

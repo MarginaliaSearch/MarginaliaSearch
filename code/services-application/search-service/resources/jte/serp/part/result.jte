@@ -1,4 +1,3 @@
-@import nu.marginalia.language.model.LanguageDefinition
 @import nu.marginalia.model.idx.DocumentFlags
 @import nu.marginalia.search.model.SearchParameters
 @import nu.marginalia.search.model.ClusteredUrlDetails
