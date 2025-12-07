@@ -20,6 +20,17 @@ import java.util.List;
 import java.util.Map;
 
 public class SearchFilterParser {
+
+    private static final int MAX_TERM_COUNT = 6;
+
+    private static final int MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT = 4;
+    private static final int MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT = 25;
+    private static final int MAX_WILDCARD_DOMAIN_COUNT = 4;
+    private static final int MAX_SPECIFIC_DOMAIN_COUNT = 25;
+
+    private static final int MAX_PROMOTE_DOMAIN_COUNT = 6;
+
+
     private final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
     public static class SearchFilterParserException extends Exception {
@@ -212,6 +223,26 @@ public class SearchFilterParser {
                 throw new SearchFilterParserException("Expected 0 or 1 query-strategy tags");
             }
 
+            if (termsRequire.size() >= MAX_TERM_COUNT)
+                throw new SearchFilterParserException("Too many term requirements, will allow at most + " + MAX_TERM_COUNT);
+            if (termsExclude.size() >= MAX_TERM_COUNT)
+                throw new SearchFilterParserException("Too many term exclusions, will allow at most + " + MAX_TERM_COUNT);
+            if (termsPromote.size() >= MAX_TERM_COUNT)
+                throw new SearchFilterParserException("Too many weighted terms, will allow at most + " + MAX_TERM_COUNT);
+
+            if (domainsPromote.size() >= MAX_PROMOTE_DOMAIN_COUNT)
+                throw new SearchFilterParserException("Too many promoted domains, will allow at most + " + MAX_PROMOTE_DOMAIN_COUNT);
+
+            if (!validatedDomainsIncludeWildcard(domainsExclude, MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT))
+                throw new SearchFilterParserException("Too many wildcard domain exclusions, will allow at most + " + MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT);
+            if (!validatedDomainsIncludeSpecific(domainsExclude, MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT))
+                throw new SearchFilterParserException("Too many domain exclusions, will allow at most + " + MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT);
+
+            if (!validatedDomainsIncludeWildcard(domainsInclude, MAX_WILDCARD_DOMAIN_COUNT))
+                throw new SearchFilterParserException("Too many wildcard domain requirements, will allow at most + " + MAX_WILDCARD_DOMAIN_COUNT);
+            if (!validatedDomainsIncludeSpecific(domainsInclude, MAX_SPECIFIC_DOMAIN_COUNT))
+                throw new SearchFilterParserException("Too many domain requirements, will allow at most " + MAX_SPECIFIC_DOMAIN_COUNT);
+
 
             return new SearchFilterSpec(
                     userId,
@@ -234,6 +265,29 @@ public class SearchFilterParser {
         catch (ParserConfigurationException | IOException | SAXException e) {
             throw new SearchFilterParserException("Technical parser error", e);
         }
+    }
+
+    private boolean validatedDomainsIncludeWildcard(List<String> domainsInclude, int max) {
+        int domains = 0;
+
+        for (String domain : domainsInclude) {
+            if (domain.startsWith("*."))
+                domains++;
+        }
+
+        return domains < max;
+    }
+
+
+    private boolean validatedDomainsIncludeSpecific(List<String> domainsInclude, int max) {
+        int domains = 0;
+
+        for (String domain : domainsInclude) {
+            if (!domain.startsWith("*."))
+                domains++;
+        }
+
+        return domains < max;
     }
 
     private static List<String> extractContentList(NodeList nodeList) {
