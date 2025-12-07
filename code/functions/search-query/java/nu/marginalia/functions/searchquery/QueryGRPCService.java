@@ -11,6 +11,7 @@ import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
+import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
@@ -47,12 +48,14 @@ public class QueryGRPCService
     public QueryGRPCService(QueryFactory queryFactory,
                             NsfwDomainFilter nsfwDomainFilter,
                             IndexClient indexClient,
+                            SearchFilterStore searchFilterStore,
                             SearchFilterCache searchFilterCache)
     {
         this.queryFactory = queryFactory;
         this.nsfwDomainFilter = nsfwDomainFilter;
         this.indexClient = indexClient;
         this.searchFilterCache = searchFilterCache;
+        searchFilterStore.loadDefaultConfigs();
     }
 
     private Optional<CompiledSearchFilterSpec> getFilter(RpcQsQuery request) {
