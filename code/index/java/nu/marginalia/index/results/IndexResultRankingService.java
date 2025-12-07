@@ -151,7 +151,7 @@ public class IndexResultRankingService {
 
             for (int ti = 0; ti < numPriorityTerms; ti++) {
                 if (termMetadata.priorityTermsPresent(ti, pos)) {
-                    priorityTermsPresent.set(pos);
+                    priorityTermsPresent.set(ti);
                 }
             }
 
@@ -444,14 +444,18 @@ public class IndexResultRankingService {
 
         double priorityTermAdjustment = 0.;
         BitSet priorityTermsPresent = rankingData.priorityTermsPresent();
+        if (!priorityTermsPresent.isEmpty())
+            logger.info("PTP: {}, {}", priorityTermsPresent, rankingContext.termIdsPriorityWeights);
 
         for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
             if (priorityTermsPresent.get(i))
-                priorityTermAdjustment *= rankingContext.termIdsPriorityWeights.getFloat(i);
+                priorityTermAdjustment += rankingContext.termIdsPriorityWeights.getFloat(i);
         }
 
+        priorityTermAdjustment += rankingContext.priorityDomainIds.getOrDefault(UrlIdCodec.getDomainId(combinedId), 0.f);
+
         double score = normalize(
-                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags + priorityTermAdjustment),
+                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags) * Math.exp(priorityTermAdjustment/5),
                 -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
         );
 

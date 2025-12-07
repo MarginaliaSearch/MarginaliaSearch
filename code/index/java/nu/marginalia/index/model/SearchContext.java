@@ -2,8 +2,7 @@ package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparator;
@@ -79,6 +78,7 @@ public class SearchContext {
     public final Long2ObjectOpenHashMap<String> termIdToString;
     public final IntList mandatoryDomainIds;
     public final IntList excludedDomainIds;
+    public final Int2FloatMap priorityDomainIds;
 
     public static SearchContext create(CombinedIndexReader currentIndex,
                                        KeywordHasher keywordHasher,
@@ -105,6 +105,8 @@ public class SearchContext {
                 queryTerms,
                 rankingParams,
                 request.getExcludedDomainIdsList(),
+                request.getPriorityDomainIdsList(),
+                request.getPriorityDomainIdsWeightsList(),
                 limits);
     }
 
@@ -117,6 +119,8 @@ public class SearchContext {
             RpcQueryTerms query,
             RpcResultRankingParameters rankingParams,
             List<Integer> excludedDomainIdsList,
+            List<Integer> priorityDomainIdsList,
+            List<Float> priorityDomainIdsAmountsList,
             RpcQueryLimits limits)
     {
         this.docCount = currentIndex.totalDocCount();
@@ -128,6 +132,16 @@ public class SearchContext {
         this.queryParams = queryParams;
         this.mandatoryDomainIds = queryParams.searchSet().domainIds();
         this.excludedDomainIds = new IntArrayList(excludedDomainIdsList);
+
+        if (priorityDomainIdsList.isEmpty()) {
+            this.priorityDomainIds = Int2FloatMaps.EMPTY_MAP;
+        }
+        else {
+            this.priorityDomainIds = new Int2FloatArrayMap(priorityDomainIdsList.size());
+            for (int i = 0; i < priorityDomainIdsList.size(); i++) {
+                priorityDomainIds.put(priorityDomainIdsList.get(i).intValue(), priorityDomainIdsAmountsList.get(i).floatValue());
+            }
+        }
 
         this.limitByDomain = limits.getResultsByDomain();
         this.limitTotal = limits.getResultsTotal();
