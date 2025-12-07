@@ -373,7 +373,7 @@
                             console.log(error)
                             return false
                         }">
-                <div class="flex flex-row px-5">
+                <div class="flex flex-row px-5 gap-1">
                     <input id="priority-term-text" type="text" pattern="[\w\d\:_\.]+" placeholder="term, e.g. birds"
                            class="invalid:border-red-400 shadow-inner flex-grow dark:bg-black dark:text-gray-100 bg-gray-50 border dark:border-gray-600 border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"
                     />
@@ -382,7 +382,7 @@
                     />
                     <button type="submit"
                             title="Add term"
-                            class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                            class="flex-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
                 </div>
                 <div id="priority-term-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
@@ -718,7 +718,7 @@
                             return false;
                         }
                     ">
-                <div class="flex flex-row px-5">
+                <div class="flex flex-row px-5 gap-1">
                     <input id="priority-domain-text" type="text" pattern="[*]?[\w\d\.\-]+" placeholder="e.g. en.wikipedia.org or *.neocities.org"
                            class="invalid:border-red-400 shadow-inner flex-grow dark:bg-black dark:text-gray-100 bg-gray-50 border dark:border-gray-600 border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"
                     />
@@ -727,7 +727,7 @@
                     />
                     <button
                             title="Add term"
-                            class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                            class="flex-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
                 </div>
                 <div id="priority-domain-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
