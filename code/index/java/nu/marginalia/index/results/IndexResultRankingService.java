@@ -444,8 +444,6 @@ public class IndexResultRankingService {
 
         double priorityTermAdjustment = 0.;
         BitSet priorityTermsPresent = rankingData.priorityTermsPresent();
-        if (!priorityTermsPresent.isEmpty())
-            logger.info("PTP: {}, {}", priorityTermsPresent, rankingContext.termIdsPriorityWeights);
 
         for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
             if (priorityTermsPresent.get(i))
