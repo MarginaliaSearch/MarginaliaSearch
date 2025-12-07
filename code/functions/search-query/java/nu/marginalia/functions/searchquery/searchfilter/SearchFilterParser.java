@@ -2,7 +2,6 @@ package nu.marginalia.functions.searchquery.searchfilter;
 
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.w3c.dom.Document;
@@ -21,14 +20,14 @@ import java.util.Map;
 
 public class SearchFilterParser {
 
-    private static final int MAX_TERM_COUNT = 6;
+    public static final int MAX_TERM_COUNT = 6;
 
-    private static final int MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT = 4;
-    private static final int MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT = 25;
-    private static final int MAX_WILDCARD_DOMAIN_COUNT = 4;
-    private static final int MAX_SPECIFIC_DOMAIN_COUNT = 25;
+    public static final int MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT = 4;
+    public static final int MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT = 25;
+    public static final int MAX_WILDCARD_DOMAIN_COUNT = 4;
+    public static final int MAX_SPECIFIC_DOMAIN_COUNT = 25;
 
-    private static final int MAX_PROMOTE_DOMAIN_COUNT = 6;
+    public static final int MAX_PROMOTE_DOMAIN_COUNT = 6;
 
 
     private final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -223,28 +222,7 @@ public class SearchFilterParser {
                 throw new SearchFilterParserException("Expected 0 or 1 query-strategy tags");
             }
 
-            if (termsRequire.size() >= MAX_TERM_COUNT)
-                throw new SearchFilterParserException("Too many term requirements, will allow at most + " + MAX_TERM_COUNT);
-            if (termsExclude.size() >= MAX_TERM_COUNT)
-                throw new SearchFilterParserException("Too many term exclusions, will allow at most + " + MAX_TERM_COUNT);
-            if (termsPromote.size() >= MAX_TERM_COUNT)
-                throw new SearchFilterParserException("Too many weighted terms, will allow at most + " + MAX_TERM_COUNT);
-
-            if (domainsPromote.size() >= MAX_PROMOTE_DOMAIN_COUNT)
-                throw new SearchFilterParserException("Too many promoted domains, will allow at most + " + MAX_PROMOTE_DOMAIN_COUNT);
-
-            if (!validatedDomainsIncludeWildcard(domainsExclude, MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT))
-                throw new SearchFilterParserException("Too many wildcard domain exclusions, will allow at most + " + MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT);
-            if (!validatedDomainsIncludeSpecific(domainsExclude, MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT))
-                throw new SearchFilterParserException("Too many domain exclusions, will allow at most + " + MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT);
-
-            if (!validatedDomainsIncludeWildcard(domainsInclude, MAX_WILDCARD_DOMAIN_COUNT))
-                throw new SearchFilterParserException("Too many wildcard domain requirements, will allow at most + " + MAX_WILDCARD_DOMAIN_COUNT);
-            if (!validatedDomainsIncludeSpecific(domainsInclude, MAX_SPECIFIC_DOMAIN_COUNT))
-                throw new SearchFilterParserException("Too many domain requirements, will allow at most " + MAX_SPECIFIC_DOMAIN_COUNT);
-
-
-            return new SearchFilterSpec(
+            var spec = new SearchFilterSpec(
                     userId,
                     identifier,
                     domainsInclude,
@@ -261,10 +239,36 @@ public class SearchFilterParser {
                     temporalBias,
                     queryStrategy
             );
+
+            validateConstraints(spec);
+
+            return spec;
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
             throw new SearchFilterParserException("Technical parser error", e);
         }
+    }
+
+    public void validateConstraints(SearchFilterSpec spec) throws SearchFilterParserException {
+        if (spec.termsRequire().size() > MAX_TERM_COUNT)
+            throw new SearchFilterParserException("Too many term requirements, will allow at most " + MAX_TERM_COUNT);
+        if (spec.termsExclude().size() > MAX_TERM_COUNT)
+            throw new SearchFilterParserException("Too many term exclusions, will allow at most " + MAX_TERM_COUNT);
+        if (spec.termsPromote().size() > MAX_TERM_COUNT)
+            throw new SearchFilterParserException("Too many weighted terms, will allow at most " + MAX_TERM_COUNT);
+
+        if (spec.domainsPromote().size() > MAX_PROMOTE_DOMAIN_COUNT)
+            throw new SearchFilterParserException("Too many promoted domains, will allow at most " + MAX_PROMOTE_DOMAIN_COUNT);
+
+        if (!validatedDomainsIncludeWildcard(spec.domainsExclude(), MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many wildcard domain exclusions, will allow at most " + MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT);
+        if (!validatedDomainsIncludeSpecific(spec.domainsExclude(), MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many domain exclusions, will allow at most " + MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT);
+
+        if (!validatedDomainsIncludeWildcard(spec.domainsInclude(), MAX_WILDCARD_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many wildcard domain requirements, will allow at most " + MAX_WILDCARD_DOMAIN_COUNT);
+        if (!validatedDomainsIncludeSpecific(spec.domainsInclude(), MAX_SPECIFIC_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many domain requirements, will allow at most " + MAX_SPECIFIC_DOMAIN_COUNT);
     }
 
     private boolean validatedDomainsIncludeWildcard(List<String> domainsInclude, int max) {
@@ -275,7 +279,7 @@ public class SearchFilterParser {
                 domains++;
         }
 
-        return domains < max;
+        return domains <= max;
     }
 
 
@@ -287,7 +291,7 @@ public class SearchFilterParser {
                 domains++;
         }
 
-        return domains < max;
+        return domains <= max;
     }
 
     private static List<String> extractContentList(NodeList nodeList) {

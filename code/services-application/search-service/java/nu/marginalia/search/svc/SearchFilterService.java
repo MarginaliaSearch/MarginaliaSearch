@@ -153,6 +153,14 @@ public class SearchFilterService {
                     model.temporalBias,
                     QueryStrategy.AUTO
             );
+
+            try {
+                filterParser.validateConstraints(spec);
+            }
+            catch (SearchFilterParser.SearchFilterParserException e) {
+                context.setResponseCode(500);
+                return e.getMessage();
+            }
         }
         else {
             log.info("Got unexpected CT {}", requestType);

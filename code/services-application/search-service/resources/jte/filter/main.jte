@@ -1,4 +1,5 @@
 @import nu.marginalia.api.searchquery.model.query.SpecificationLimitType
+@import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser
 @import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec
 @import nu.marginalia.search.model.NavbarModel
 @import java.util.Map
@@ -133,8 +134,7 @@
                         alert('Changed saved to web browser storage.')
                     }
                     else {
-                        console.log(rsp)
-                        alert('Something went wrong')
+                        alert('Something went wrong: ' + await rsp.text())
                     }
                     return false
                 } catch (error) {
@@ -198,6 +198,7 @@
                         @raw
                         const existingTerm = terms.querySelector(`term[data-term='${CSS.escape(newTerm)}']`)
                         @endraw
+                        const existingTermCount = terms.querySelectorAll(`term`).length
 
                         if (!textElem.checkValidity() || newTerm === '') {
                             errorElem.classList.remove('hidden')
@@ -209,6 +210,12 @@
                         if (existingTerm !== null) {
                             errorElem.classList.remove('hidden')
                             errorElem.textContent = 'Term is already in the list'
+                            return false;
+                        }
+                        
+                        if (existingTermCount >= ${SearchFilterParser.MAX_TERM_COUNT}) {
+                            errorElem.classList.remove('hidden')
+                            errorElem.textContent = 'Too many terms in list'
                             return false;
                         }
 
@@ -261,36 +268,41 @@
             </script>
 
             <form onsubmit="try {
-                            const terms = document.getElementById('forbidden-terms');
-                            const textElem = document.getElementById('forbidden-term-text');
-                            const errorElem = document.getElementById('remove-term-error');
-                            const newTerm = textElem.value;
+                        const terms = document.getElementById('forbidden-terms');
+                        const textElem = document.getElementById('forbidden-term-text');
+                        const errorElem = document.getElementById('remove-term-error');
+                        const newTerm = textElem.value;
 
-                            @raw
-                            const existingTerm = terms.querySelector(`term[data-term='${CSS.escape(newTerm)}']`)
-                            @endraw
+                        @raw
+                        const existingTerm = terms.querySelector(`term[data-term='${CSS.escape(newTerm)}']`)
+                        @endraw
+                        const existingTermCount = terms.querySelectorAll(`term`).length
 
-                            if (!textElem.checkValidity() || newTerm === '') {
-                                errorElem.classList.remove('hidden')
-                                errorElem.textContent = 'Term must not contain spaces'
+                        if (!textElem.checkValidity() || newTerm === '') {
+                            errorElem.classList.remove('hidden')
+                            errorElem.textContent = 'Term must not contain spaces'
 
-                                return false;
-                            }
-
-                            if (existingTerm !== null) {
-                                errorElem.classList.remove('hidden')
-                                errorElem.textContent = 'Term is already in the list'
-                                return false;
-                            }
-
-                            addForbiddenTerm(textElem.value)
-
-                            errorElem.classList.add('hidden')
                             return false;
-                        } catch (error) {
-                            console.log(error)
+                        }
+
+                        if (existingTerm !== null) {
+                            errorElem.classList.remove('hidden')
+                            errorElem.textContent = 'Term is already in the list'
                             return false;
-                        }">
+                        }
+                        if (existingTermCount >= ${SearchFilterParser.MAX_TERM_COUNT}) {
+                            errorElem.classList.remove('hidden')
+                            errorElem.textContent = 'Too many terms in list'
+                            return false;
+                        }
+                        addForbiddenTerm(textElem.value)
+
+                        errorElem.classList.add('hidden')
+                        return false;
+                    } catch (error) {
+                        console.log(error)
+                        return false;
+                    }">
             <div class="flex flex-row px-5">
                 <input id="forbidden-term-text" type="text" pattern="[\w\d:_\.]+" placeholder="term, e.g. dogs"
                        class="invalid:border-red-400 shadow-inner flex-grow dark:bg-black dark:text-gray-100 bg-gray-50 border dark:border-gray-600 border-gray-300 text-gray-900 text-sm rounded-sm block w-full p-2.5"
@@ -344,6 +356,7 @@
                             @raw
                             const existingTerm = terms.querySelector(`term[data-term='${CSS.escape(newTerm)}']`)
                             @endraw
+                            const existingTermCount = terms.querySelectorAll(`term`).length
 
                             if (!textElem.checkValidity()) {
                                 errorElem.classList.remove('hidden')
@@ -362,6 +375,12 @@
                                 existingTerm.setAttribute('data-val', prioElem.value)
                                 existingTerm.firstChild.textContent = textElem.value + '(' + prioElem.value + ')';
                                 errorElem.classList.add('hidden')
+                                return false;
+                            }
+
+                            if (existingTermCount >= ${SearchFilterParser.MAX_TERM_COUNT}) {
+                                errorElem.classList.remove('hidden')
+                                errorElem.textContent = 'Too many terms in list'
                                 return false;
                             }
 
@@ -533,6 +552,8 @@
                     @raw
                             const existingDomain = domains.querySelector(`domain[data-domain='${CSS.escape(newDomain)}']`)
                     @endraw
+                            const existingWildcardCount = domains.querySelectorAll(`domain[data-domain^='*.']`).length
+                            const existingRegularCount = domains.querySelectorAll(`domain`).length - existingWildcardCount
 
                             if (!textElem.checkValidity() || newDomain === '') {
                                 errorElem.classList.remove('hidden')
@@ -546,6 +567,21 @@
                                 errorElem.textContent = 'Domain is already in the list'
 
                                 return false;
+                            }
+
+                            if (newDomain.startsWith('*.')) {
+                                if (existingWildcardCount >= ${SearchFilterParser.MAX_WILDCARD_DOMAIN_COUNT}) {
+                                    errorElem.classList.remove('hidden')
+                                    errorElem.textContent = 'Too many wildcard domains in list'
+                                    return false;
+                                }
+                            }
+                            else {
+                                if (existingRegularCount >= ${SearchFilterParser.MAX_SPECIFIC_DOMAIN_COUNT}) {
+                                    errorElem.classList.remove('hidden')
+                                    errorElem.textContent = 'Too many domains in list'
+                                    return false;
+                                }
                             }
 
                             addRequiredDomain(newDomain)
@@ -608,6 +644,8 @@
                     @raw
                             const existingDomain = domains.querySelector(`domain[data-domain='${CSS.escape(newDomain)}']`)
                     @endraw
+                            const existingWildcardCount = domains.querySelectorAll(`domain[data-domain^='*.']`).length
+                            const existingRegularCount = domains.querySelectorAll(`domain`).length - existingWildcardCount
 
                             if (!textElem.checkValidity() || newDomain === '') {
                                 errorElem.classList.remove('hidden')
@@ -623,7 +661,23 @@
                                 return false;
                             }
 
-                            addExcludedDomain(newDomain)
+                             if (newDomain.startsWith('*.')) {
+                                 if (existingWildcardCount >= ${SearchFilterParser.MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT}) {
+                                     errorElem.classList.remove('hidden')
+                                     errorElem.textContent = 'Too many wildcard domains in list'
+                                     return false;
+                                 }
+                             }
+                             else {
+                                 if (existingRegularCount >= ${SearchFilterParser.MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT}) {
+                                     errorElem.classList.remove('hidden')
+                                     errorElem.textContent = 'Too many domains in list'
+                                     return false;
+                                 }
+                             }
+
+
+                     addExcludedDomain(newDomain)
 
                             errorElem.classList.add('hidden')
 
@@ -687,6 +741,8 @@
                             @raw
                             const existingTerm = domains.querySelector(`domain[data-domain='${CSS.escape(newDomain)}']`)
                             @endraw
+                            const existingWildcardCount = domains.querySelectorAll(`domain[data-domain^='*.']`).length
+                            const existingRegularCount = domains.querySelectorAll(`domain`).length - existingWildcardCount
 
                             if (!textElem.checkValidity()) {
                                 errorElem.classList.remove('hidden')
@@ -706,6 +762,21 @@
                                 existingTerm.firstChild.textContent = textElem.value + '(' + prioElem.value + ')';
                                 errorElem.classList.add('hidden')
                                 return false;
+                            }
+
+                            if (newDomain.startsWith('*.')) {
+                                if (existingWildcardCount >= ${SearchFilterParser.MAX_WILDCARD_DOMAIN_COUNT}) {
+                                    errorElem.classList.remove('hidden')
+                                    errorElem.textContent = 'Too many wildcard domains in list'
+                                    return false;
+                                }
+                            }
+                            else {
+                                if (existingRegularCount >= ${SearchFilterParser.MAX_PROMOTE_DOMAIN_COUNT}) {
+                                    errorElem.classList.remove('hidden')
+                                    errorElem.textContent = 'Too many domains in list'
+                                    return false;
+                                }
                             }
 
                             addPriorityDomain(textElem.value, prioElem.value)
