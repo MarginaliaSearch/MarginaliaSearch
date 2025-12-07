@@ -54,6 +54,13 @@
 @if (isCustom)
 <script lang="javascript">
     document.getElementById('filter-spec').textContent = localStorage.getItem('custom-filter');
+
+    // we also add this as an event handler to catch config changes that have happened since page load
+    document.getElementById('search-form').addEventListener('submit', evt => {
+        document.getElementById('filter-spec').textContent = localStorage.getItem('custom-filter');
+        return true;
+    });
+
 @if ("GET".equalsIgnoreCase(requestMethod))
     document.getElementById('search-form').submit()
 @elseif (displayUrl != null)
