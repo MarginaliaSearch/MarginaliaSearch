@@ -21,7 +21,7 @@
         <div class="flex place-items-baseline md:space-x-2">
             <div class="hidden md:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
             <span class="text-gray-900 dark:text-white break-none text-sm sm:text-md rounded-sm block md:p-2.5">
-                Filter&nbsp;Settings
+                Filter<span class="hidden md:inline">&nbsp;Settings</span>
             </span>
             <span class="grow"></span>
             <span>
@@ -74,7 +74,7 @@
                         title="Export as XML file"
                         class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                     <i class="fas fa-download"></i>
-                    <span>Export&nbsp;<span class="collapse md:visible">XML</span></span>
+                    <span>Export&nbsp;<span class="hidden md:inline">XML</span></span>
                 </button>
 
             </span>
@@ -82,7 +82,7 @@
                     <label for="upload-field" title="Upload XML representation of filter"
                         class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                     <i class="fas fa-upload" onclick=""></i>
-                    <span>Import&nbsp;<span class="collapse md:visible">XML</span></span>
+                    <span>Import&nbsp;<span class="hidden md:inline">XML</span></span>
                     </label>
                     <input id="upload-field" type="file" title="Import from XML file" class="sr-only"
                             onchange="(async (event) => { try {
