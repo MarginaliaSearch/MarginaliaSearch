@@ -268,7 +268,7 @@ public class FullReverseIndexReader {
             }
         }
 
-        BitSet[] priorityTermsPresent = new BitSet[docIds.size()];
+        BitSet[] priorityTermsPresent = new BitSet[searchContext.termIdsPriority.size()];
 
         for (int i = 0; i < searchContext.termIdsPriority.size(); i++) {
             long termId = searchContext.termIdsPriority.getLong(i);
