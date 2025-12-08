@@ -4,7 +4,6 @@
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.SearchFilters
 @import nu.marginalia.api.math.model.DictionaryResponse
-@import java.util.List
 @import java.util.Map
 
 @param SearchParameters parameters

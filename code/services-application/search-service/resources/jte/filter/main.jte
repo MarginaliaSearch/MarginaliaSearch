@@ -72,7 +72,7 @@
                     return false
                 }})();"
                         title="Export as XML file"
-                        class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                        class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                     <i class="fas fa-download"></i>
                     Export XML
                 </button>
@@ -80,7 +80,7 @@
             </span>
             <span>
                     <label for="upload-field" title="Upload XML representation of filter"
-                        class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                        class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                     <i class="fas fa-upload" onclick=""></i> Import XML
                     </label>
                     <input id="upload-field" type="file" title="Import from XML file" class="sr-only"
@@ -142,7 +142,7 @@
                     return false
                 }})();"
                         title="Save Changes"
-                        class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-green-50 dark:hover:bg-green-950 bg-white dark:bg-green-900 dark:border dark:border-green-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                        class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-green-200 dark:hover:bg-green-950 bg-green-100 dark:bg-green-900 border dark:border-green-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                     Save
                 </button>
 
@@ -232,7 +232,7 @@
             />
             <button type="submit"
                     title="Add term"
-                    class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                    class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                 Add
             </button>
             </div>
@@ -309,7 +309,7 @@
                 />
                 <button
                         title="Add term"
-                        class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                        class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
             </div>
                 <div id="remove-term-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
@@ -401,7 +401,7 @@
                     />
                     <button type="submit"
                             title="Add term"
-                            class="flex-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                            class="flex-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
                 </div>
                 <div id="priority-term-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
@@ -601,7 +601,7 @@
                     />
                     <button type="submit"
                             title="Add domain"
-                            class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                            class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
                 </div>
                 <div id="required-domain-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
@@ -694,7 +694,7 @@
                     />
                     <button
                             title="Add term"
-                            class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                            class="flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
                  </div>
                  <div id="excluded-domain-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
@@ -798,7 +798,7 @@
                     />
                     <button
                             title="Add term"
-                            class="flex-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
+                            class="flex-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">Add</button>
                 </div>
                 <div id="priority-domain-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
@@ -820,20 +820,94 @@
             </div>
 
             <div class="flex gap-2 flex-row mx-5">
-            <label for="temporal-old" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+            <label for="temporal-old" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
             <input value="old" type="radio" id="temporal-old" name="temporal" title="Prefer Old" class="sr-only" checked="${"OLD".equalsIgnoreCase(filter.temporalBias())}">
                 Old
             </label>
 
-            <label for="temporal-none" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+            <label for="temporal-none" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                 <input value="none" type="radio" id="temporal-none" name="temporal" title="No Preference" class="sr-only"  checked="${"NONE".equalsIgnoreCase(filter.temporalBias())}">
                 None
             </label>
 
-            <label for="temporal-recent" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+            <label for="temporal-recent" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                 <input value="recent" type="radio" id="temporal-recent" name="temporal" title="Prefer Recent" class="sr-only" checked="${"RECENT".equalsIgnoreCase(filter.temporalBias())}">
                 Recent
             </label>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+<div class="max-w-[1000px] mx-auto columns-1 gap-1">
+    <div class="flex-1 p-4 space-y-4 mx-auto w-full">
+        <div class="flex border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex-col space-y-4 pb-4 overflow-hidden" >
+            <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
+                Special Term Reference
+            </div>
+
+            <div class="grid md:grid-cols-4 grid-cols-2 gap-1 p-1">
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:ads</div>
+                    <div class="font-sans text-sm select-none">Communicates with an ad-broker</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:adtech</div>
+                    <div class="font-sans text-sm select-none">Contains ad-adjacent scripts</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:tracking</div>
+                    <div class="font-sans text-sm select-none">Contains tracking scripts</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:scripts</div>
+                    <div class="font-sans text-sm select-none">Contains JavaScript</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:affiliate</div>
+                    <div class="font-sans text-sm select-none">Contains likely affiliate link</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:popover</div>
+                    <div class="font-sans text-sm select-none">Found popover</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:consent</div>
+                    <div class="font-sans text-sm select-none">Likely consent popover</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:cloud</div>
+                    <div class="font-sans text-sm select-none">Cloud hosted</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">generator:forum</div>
+                    <div class="font-sans text-sm select-none">Forum software</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">generator:wiki</div>
+                    <div class="font-sans text-sm select-none">Wiki software</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">tld:<i>edu</i></div>
+                    <div class="font-sans text-sm select-none">Top level domain <i>edu</i></div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">asn:<i>123</i></div>
+                    <div class="font-sans text-sm select-none">ASN <i>123</i></div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">links:<i>example.com</i></div>
+                    <div class="font-sans text-sm select-none">Has link to <i>example.com</i></div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:feed</div>
+                    <div class="font-sans text-sm select-none">Has RSS or Atom Feed</div>
+                </div>
+                <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
+                    <div class="font-mono text-xl">special:opengraph</div>
+                    <div class="font-sans text-sm select-none">Has opengraph metadata</div>
+                </div>
             </div>
         </div>
     </div>
