@@ -29,7 +29,6 @@ public class SearchAddToCrawlQueueService {
     }
 
     public Object suggestCrawling(Request request, Response response) throws SQLException {
-        logger.info("{}", request.queryParams());
         int id = Integer.parseInt(request.queryParams("id"));
         boolean nomisclick = "on".equals(request.queryParams("nomisclick"));
 

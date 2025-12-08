@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 @Singleton
-public class GrpcChannelPoolFactory {
+public class GrpcChannelPoolFactory implements GrpcChannelPoolFactoryIf {
 
     private final NodeConfigurationWatcher nodeConfigurationWatcher;
     private final ServiceRegistryIf serviceRegistryIf;
@@ -40,6 +40,7 @@ public class GrpcChannelPoolFactory {
     }
 
     /** Create a new multi-node channel pool for the given service. */
+    @Override
     public <STUB> GrpcMultiNodeChannelPool<STUB> createMulti(ServiceKey<ServicePartition.Multi> key,
                                                              Function<ManagedChannel, STUB> stubConstructor)
     {
@@ -51,8 +52,9 @@ public class GrpcChannelPoolFactory {
     }
 
     /** Create a new single-node channel pool for the given service. */
+    @Override
     public <STUB> GrpcSingleNodeChannelPool<STUB> createSingle(ServiceKey<? extends PartitionTraits.Unicast> key,
-                                                             Function<ManagedChannel, STUB> stubConstructor)
+                                                               Function<ManagedChannel, STUB> stubConstructor)
     {
         try {
             return new GrpcSingleNodeChannelPool<>(serviceRegistryIf, key, this::createChannel, stubConstructor);

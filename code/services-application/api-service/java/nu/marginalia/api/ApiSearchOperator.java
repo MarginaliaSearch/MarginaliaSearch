@@ -2,14 +2,15 @@ package nu.marginalia.api;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiSearchResult;
 import nu.marginalia.api.model.ApiSearchResultQueryDetails;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.QueryClient;
+import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
-import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.model.idx.WordFlags;
 
@@ -29,17 +30,63 @@ public class ApiSearchOperator {
         this.queryClient = queryClient;
     }
 
-    public ApiSearchResults query(String query,
-                                  int count,
-                                  int domainCount,
-                                  int index,
-                                  NsfwFilterTier filterTier,
-                                  String langIsoCode)
+    public ApiSearchResults v2query(String query,
+                                    int count,
+                                    int domainCount,
+                                    QueryFilterSpec filterSpec,
+                                    NsfwFilterTier filterTier,
+                                    String langIsoCode,
+                                    ApiLicense license)
             throws TimeoutException
     {
-        var rsp = queryClient.search(createParams(query, count, domainCount, index, filterTier, langIsoCode));
 
-        return new ApiSearchResults("RESTRICTED", query,
+
+        var rsp = queryClient.search(
+                filterSpec,
+                query,
+                langIsoCode,
+                filterTier,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
+                        .setResultsTotal(Math.min(100, count))
+                        .setTimeoutMs(150)
+                        .build(),
+                1);
+
+        return new ApiSearchResults(license.getLicense(), query,
+                rsp.results()
+                        .stream()
+                        .map(this::convert)
+                        .sorted(Comparator.comparing(ApiSearchResult::getQuality))
+                        .limit(count)
+                        .collect(Collectors.toList()));
+    }
+
+
+    public ApiSearchResults v1query(String query,
+                                    int count,
+                                    int domainCount,
+                                    int index,
+                                    NsfwFilterTier filterTier,
+                                    String langIsoCode,
+                                    ApiLicense license)
+            throws TimeoutException
+    {
+
+
+        var rsp = queryClient.search(
+                selectFilter(index).asFilterSpec(),
+                query,
+                langIsoCode,
+                filterTier,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
+                        .setResultsTotal(Math.min(100, count))
+                        .setTimeoutMs(150)
+                        .build(),
+                1);
+
+        return new ApiSearchResults(license.getLicense(), query,
                 rsp.results()
                 .stream()
                 .map(this::convert)
@@ -48,35 +95,12 @@ public class ApiSearchOperator {
                 .collect(Collectors.toList()));
     }
 
-    private QueryParams createParams(String query,
-                                     int count,
-                                     int domainCount,
-                                     int index,
-                                     NsfwFilterTier filterTirer,
-                                     String langIsoCode) {
-        SearchSetIdentifier searchSet = selectSearchSet(index);
-
-        return new QueryParams(
-                query,
-                RpcQueryLimits.newBuilder()
-                        .setResultsByDomain(Math.clamp(domainCount, 1, 100))
-                        .setResultsTotal(Math.min(100, count))
-                        .setTimeoutMs(150)
-                        .setFetchSize(8192)
-                        .build(),
-                searchSet.name(),
-                filterTirer,
-                langIsoCode);
-    }
-
-    private SearchSetIdentifier selectSearchSet(int index) {
+    private SearchFilterDefaults selectFilter(int index) {
         return switch (index) {
-            case 0 -> SearchSetIdentifier.NONE;
-            case 1 -> SearchSetIdentifier.SMALLWEB;
-            case 2 -> SearchSetIdentifier.POPULAR;
-            case 3 -> SearchSetIdentifier.NONE;
-            case 5 -> SearchSetIdentifier.NONE;
-            default -> SearchSetIdentifier.NONE;
+            case 0 -> SearchFilterDefaults.NO_FILTER;
+            case 1 -> SearchFilterDefaults.SMALLWEB;
+            case 2 -> SearchFilterDefaults.POPULAR;
+            default -> SearchFilterDefaults.NO_FILTER;
         };
     }
 

@@ -1,5 +1,7 @@
 package nu.marginalia.api.searchquery.model.query;
 
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcQueryTerms;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 
 import javax.annotation.Nullable;
@@ -7,7 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public record QueryResponse(SearchSpecification specs,
+public record QueryResponse(RpcQueryLimits limits,
+                            RpcQueryTerms terms,
                             List<DecoratedSearchResultItem> results,
                             List<String> searchTermsHuman,
                             List<String> problems,
@@ -16,6 +19,6 @@ public record QueryResponse(SearchSpecification specs,
                             @Nullable String domain)
 {
     public Set<String> getAllKeywords() {
-        return new HashSet<>(specs.query.searchTermsInclude);
+        return new HashSet<>(terms.getTermsQueryList());
     }
 }

@@ -104,7 +104,7 @@ public class IndexQueryExecution {
         this.rankingService = rankingService;
         this.rankingContext = rankingContext;
 
-        resultHeap = new ResultPriorityQueue(rankingContext.fetchSize);
+        resultHeap = new ResultPriorityQueue(rankingContext.limitTotal * 2);
 
         budget = rankingContext.budget;
         limitByDomain = rankingContext.limitByDomain;

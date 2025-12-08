@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -218,6 +219,33 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         throw new ServiceNotAvailableException(serviceKey);
     }
 
+    private <T, I> List<Future<T>> broadcast(BiFunction<STUB, I, T> call, I arg) throws RuntimeException {
+        final List<Exception> exceptions = new ArrayList<>();
+        List<Future<T>> ret = new ArrayList<>();
+
+        for (var channel : channels.values()) {
+            try {
+                ret.add(CompletableFuture.completedFuture(call.apply(stubConstructor.apply(channel.get()), arg)));
+            }
+            catch (Exception e) {
+                ret.add(CompletableFuture.failedFuture(e));
+                channel.flagError();
+                exceptions.add(e);
+            }
+        }
+
+        for (var e : exceptions) {
+            if (e instanceof StatusRuntimeException se) {
+                throw se; // Re-throw SRE as-is
+            }
+
+            // If there are other exceptions, log them
+            logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
+        }
+
+        return ret;
+    }
+
     /** Create a call for the given method on the given node.
      * This is a fluent method, so you can chain it with other
      * methods to specify the node and arguments */
@@ -240,7 +268,25 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         public CallBuilderAsync<T, I> async(Executor executor) {
             return new CallBuilderAsync<>(executor, method);
         }
+
+        /** Send message to all partitions */
+        public CallBuilderBroadcast<T, I> broadcast() {
+            return new CallBuilderBroadcast<>(method);
+        }
     }
+
+    public class CallBuilderBroadcast<T, I> {
+        private final BiFunction<STUB, I, T> method;
+        private CallBuilderBroadcast(BiFunction<STUB, I, T> method) {
+            this.method = method;
+        }
+
+        /** Execute the call in a blocking manner */
+        public List<Future<T>> run(I arg) {
+            return broadcast(method, arg);
+        }
+    }
+
     public class CallBuilderAsync<T, I> {
         private final Executor executor;
         private final BiFunction<STUB, I, T> method;

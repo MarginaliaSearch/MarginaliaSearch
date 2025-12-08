@@ -6,10 +6,12 @@ import io.prometheus.client.Counter;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcQsQueryPagination;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.nsfw.NsfwDomainFilter;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
+import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
@@ -43,7 +45,7 @@ public class IndexClient {
     private static final ExecutorService executor = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool();
 
     @Inject
-    public IndexClient(GrpcChannelPoolFactory channelPoolFactory,
+    public IndexClient(GrpcChannelPoolFactoryIf channelPoolFactory,
                        DomainBlacklistImpl blacklist,
                        NsfwDomainFilter nsfwDomainFilter
                        ) {
@@ -57,7 +59,12 @@ public class IndexClient {
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
-    public record Pagination(int page, int pageSize) {}
+    public record Pagination(int page, int pageSize) {
+        public Pagination(RpcQsQueryPagination pagination) {
+            this(pagination.getPage(), pagination.getPageSize());
+        }
+
+    }
 
     public record AggregateQueryResponse(List<RpcDecoratedResultItem> results,
                                          int page,

@@ -56,20 +56,17 @@ public class QueryBasicInterface {
         String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
         String set = requireNonNullElse(request.queryParams("set"), "");
 
-        var params = new QueryParams(queryString,
-                RpcQueryLimits.newBuilder()
-                        .setResultsByDomain(domainCount)
-                        .setResultsTotal(min(100, count * 10))
-                        .setTimeoutMs(250)
-                        .setFetchSize(8192)
-                        .build()
-        , set, NsfwFilterTier.OFF, langIsoCode);
-
         var pagination = new IndexClient.Pagination(page, count);
 
         var detailedDirectResult = queryGRPCService.executeDirect(
                 queryString,
-                params,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(domainCount)
+                        .setResultsTotal(min(100, count * 10))
+                        .setTimeoutMs(250)
+                        .build(),
+                set,
+                langIsoCode,
                 pagination,
                 PrototypeRankingParameters.sensibleDefaults()
         );
@@ -109,22 +106,19 @@ public class QueryBasicInterface {
         String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
         String set = requireNonNullElse(request.queryParams("set"), "");
 
-        var queryParams = new QueryParams(queryString,
-                RpcQueryLimits.newBuilder()
-                    .setResultsByDomain(domainCount)
-                    .setResultsTotal(min(100, count * 10))
-                    .setTimeoutMs(250)
-                    .setFetchSize(8192)
-                    .build(),
-                set, NsfwFilterTier.OFF, langIsoCode);
-
         var pagination = new IndexClient.Pagination(page, count);
 
         var rankingParams = debugRankingParamsFromRequest(request);
 
         var detailedDirectResult = queryGRPCService.executeDirect(
                 queryString,
-                queryParams,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(domainCount)
+                        .setResultsTotal(min(100, count * 10))
+                        .setTimeoutMs(250)
+                        .build(),
+                set,
+                langIsoCode,
                 pagination,
                 rankingParams
         );
@@ -133,7 +127,7 @@ public class QueryBasicInterface {
 
         return qdebugRenderer.render(
                 Map.of("query", queryString,
-                        "specs", detailedDirectResult.processedQuery().specs,
+                        //"specs", detailedDirectResult.processedQuery().specs, FIXME: What was in this?
                         "rankingParams", rankingParams, // we can't grab this from the specs as it will null the object if it's the default values
                         "results", results)
         );

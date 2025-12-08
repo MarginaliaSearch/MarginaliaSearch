@@ -1,0 +1,372 @@
+package nu.marginalia.functions.searchquery.searchfilter;
+
+import nu.marginalia.api.searchquery.model.query.QueryStrategy;
+import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class SearchFilterParser {
+
+    public static final int MAX_TERM_COUNT = 6;
+
+    public static final int MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT = 4;
+    public static final int MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT = 25;
+    public static final int MAX_WILDCARD_DOMAIN_COUNT = 4;
+    public static final int MAX_SPECIFIC_DOMAIN_COUNT = 25;
+
+    public static final int MAX_PROMOTE_DOMAIN_COUNT = 6;
+
+
+    private final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+    public static class SearchFilterParserException extends Exception {
+        public SearchFilterParserException(String message) { super(message); }
+        public SearchFilterParserException(String message, Throwable cause) { super(message, cause); }
+    }
+
+    public SearchFilterParser() {
+
+    }
+
+    public String renderToXml(SearchFilterSpec spec) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
+                <?xml version="1.0"?>
+                """);
+
+        sb.append("<filter>\n");
+
+        if (!spec.termsRequire().isEmpty()) {
+            sb.append("\t<terms-require>\n");
+            for (String term : spec.termsRequire()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(term)).append('\n');
+            }
+            sb.append("\t</terms-require>\n");
+        }
+
+        if (!spec.termsExclude().isEmpty()) {
+            sb.append("\t<terms-exclude>\n");
+            for (String term : spec.termsExclude()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(term)).append('\n');
+            }
+            sb.append("\t</terms-exclude>\n");
+        }
+
+        for (Map.Entry<String, Float> termAndAmount : spec.termsPromote()) {
+            sb.append(
+                String.format("\t<terms-promote amount=\"%.1f\">%s</terms-promote>\n",
+                    termAndAmount.getValue(),
+                    StringEscapeUtils.escapeXml10(termAndAmount.getKey()))
+            );
+        }
+
+        if (!spec.domainsInclude().isEmpty()) {
+            sb.append("\t<domains-include>\n");
+            for (String domain : spec.domainsInclude()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(domain)).append('\n');
+            }
+            sb.append("\t</domains-include>\n");
+        }
+
+        if (!spec.domainsExclude().isEmpty()) {
+            sb.append("\t<domains-exclude>\n");
+            for (String domain : spec.domainsExclude()) {
+                sb.append("\t\t").append(StringEscapeUtils.escapeXml10(domain)).append('\n');
+            }
+            sb.append("\t</domains-exclude>\n");
+        }
+
+        for (Map.Entry<String, Float> domainsAndAmounts : spec.domainsPromote()) {
+            sb.append(
+                    String.format("\t<domains-promote amount=\"%.1f\">%s</domains-promote>\n",
+                            domainsAndAmounts.getValue(),
+                            StringEscapeUtils.escapeXml10(domainsAndAmounts.getKey()))
+            );
+        }
+
+        if (!spec.size().isNone()) sb.append('\t').append(renderLimit(spec.size(), "size")).append('\n');
+        if (!spec.year().isNone()) sb.append('\t').append(renderLimit(spec.year(), "year")).append('\n');
+        if (!spec.quality().isNone()) sb.append('\t').append(renderLimit(spec.quality(), "quality")).append('\n');
+        if (!spec.rank().isNone()) sb.append('\t').append(renderLimit(spec.rank(), "rank")).append('\n');
+
+        if (!spec.searchSetIdentifier().isBlank() && !"NONE".equalsIgnoreCase(spec.searchSetIdentifier())) {
+            sb.append("\t<search-set>").append(
+                    StringEscapeUtils.escapeXml10(spec.searchSetIdentifier())
+            ).append("\t</search-set>\n");
+        }
+        if (!spec.temporalBias().isBlank() && !"NONE".equalsIgnoreCase(spec.temporalBias())) {
+            sb.append("\t<temporal-bias>").append(
+                    StringEscapeUtils.escapeXml10(spec.temporalBias())
+            ).append("</temporal-bias>\n");
+        }
+        if (QueryStrategy.AUTO != spec.queryStrategy()) {
+            sb.append("\t<query-strategy>").append(spec.queryStrategy()).append("</query-strategy>\n");
+        }
+
+        sb.append("</filter>\n");
+        return sb.toString();
+    }
+
+    private String renderLimit(SpecificationLimit limit, String name) {
+        String type = switch(limit.type()) {
+            case NONE -> "none";
+            case EQUALS -> "eq";
+            case LESS_THAN -> "lt";
+            case GREATER_THAN -> "gt";
+        };
+
+        return String.format("<limit param=\"%s\" type=\"%s\" value=\"%d\" />",
+                name, type, limit.value());
+    }
+
+    public SearchFilterSpec parse(String userId, String identifier, String xml)
+            throws SearchFilterParserException
+    {
+        final List<String> domainsInclude;
+        final List<String> domainsExclude;
+        final List<Map.Entry<String, Float>> domainsPromote;
+        final List<Map.Entry<String, Float>> termsPromote;
+        final List<String> termsRequire;
+        final List<String> termsExclude;
+
+        final String searchSetIdentifier;
+
+        final SpecificationLimit year;
+        final SpecificationLimit size;
+        final SpecificationLimit quality;
+        final SpecificationLimit rank;
+
+        final QueryStrategy queryStrategy;
+
+        final String temporalBias;
+
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new ByteArrayInputStream(xml.getBytes()));
+
+            NodeList filterTag = doc.getElementsByTagName("filter");
+
+            if (filterTag.getLength() == 0)
+                throw new SearchFilterParserException("Missing filter tag");
+            else if (filterTag.getLength() != 1)
+                throw new SearchFilterParserException("Multiple filter tags");
+
+            var filters = (Element) filterTag.item(0);
+
+            domainsInclude = extractContentList(filters.getElementsByTagName("domains-include"));
+            domainsExclude = extractContentList(filters.getElementsByTagName("domains-exclude"));
+            domainsPromote = extractPromoteList(filters.getElementsByTagName("domains-promote"), "amount");
+
+            NodeList searchSetIdentifierList = filters.getElementsByTagName("search-set");
+
+            searchSetIdentifier = switch(searchSetIdentifierList.getLength()) {
+                case 0 -> "NONE";
+                case 1 -> searchSetIdentifierList.item(0).getTextContent();
+                default -> throw new SearchFilterParserException("Multiple search-set tags");
+            };
+
+            termsRequire = extractContentList(filters.getElementsByTagName("terms-require"));
+            termsExclude = extractContentList(filters.getElementsByTagName("terms-exclude"));
+            termsPromote = extractPromoteList(filters.getElementsByTagName("terms-promote"), "amount");
+
+            if (!"NONE".equals(searchSetIdentifier) && !domainsInclude.isEmpty())
+                throw new SearchFilterParserException("Search set identifier and domainLists can not both be specified");
+
+            var limits = filters.getElementsByTagName("limit");
+
+            year = parseSpecificationLimit(limits, "year");
+            size = parseSpecificationLimit(limits, "size");
+            quality = parseSpecificationLimit(limits, "quality");
+            rank = parseSpecificationLimit(limits, "rank");
+
+            var temporalBiasTags = filters.getElementsByTagName("temporal-bias");
+            if (temporalBiasTags.getLength() == 0) {
+                temporalBias = "NONE";
+            }
+            else if (temporalBiasTags.getLength() == 1 && temporalBiasTags.item(0) instanceof Element e) {
+                String val = e.getTextContent().strip().toUpperCase();
+                temporalBias = switch(val) {
+                    case "RECENT", "OLD", "NONE" -> val;
+                    default -> throw new SearchFilterParserException("Unknown temporal bias value");
+                };
+            }
+            else {
+                throw new SearchFilterParserException("Expected 0 or 1 temporal-bias tags");
+            }
+
+            var qsTags = filters.getElementsByTagName("query-strategy");
+            if (qsTags.getLength() == 0) queryStrategy = QueryStrategy.AUTO;
+            else if (qsTags.getLength() == 1 && qsTags.item(0) instanceof Element e) {
+                String val = e.getTextContent().strip().toUpperCase();
+                try {
+                    queryStrategy = QueryStrategy.valueOf(val);
+                }
+                catch (IllegalArgumentException ex) {
+                    throw new SearchFilterParserException("Unknown query strategy value");
+                }
+            }
+            else {
+                throw new SearchFilterParserException("Expected 0 or 1 query-strategy tags");
+            }
+
+            var spec = new SearchFilterSpec(
+                    userId,
+                    identifier,
+                    domainsInclude,
+                    domainsExclude,
+                    domainsPromote,
+                    searchSetIdentifier,
+                    termsRequire,
+                    termsExclude,
+                    termsPromote,
+                    year,
+                    size,
+                    quality,
+                    rank,
+                    temporalBias,
+                    queryStrategy
+            );
+
+            validateConstraints(spec);
+
+            return spec;
+        }
+        catch (ParserConfigurationException | IOException | SAXException e) {
+            throw new SearchFilterParserException("Technical parser error", e);
+        }
+    }
+
+    public void validateConstraints(SearchFilterSpec spec) throws SearchFilterParserException {
+        if (spec.termsRequire().size() > MAX_TERM_COUNT)
+            throw new SearchFilterParserException("Too many term requirements, will allow at most " + MAX_TERM_COUNT);
+        if (spec.termsExclude().size() > MAX_TERM_COUNT)
+            throw new SearchFilterParserException("Too many term exclusions, will allow at most " + MAX_TERM_COUNT);
+        if (spec.termsPromote().size() > MAX_TERM_COUNT)
+            throw new SearchFilterParserException("Too many weighted terms, will allow at most " + MAX_TERM_COUNT);
+
+        if (spec.domainsPromote().size() > MAX_PROMOTE_DOMAIN_COUNT)
+            throw new SearchFilterParserException("Too many promoted domains, will allow at most " + MAX_PROMOTE_DOMAIN_COUNT);
+
+        if (!validatedDomainsIncludeWildcard(spec.domainsExclude(), MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many wildcard domain exclusions, will allow at most " + MAX_WILDCARD_EXCLUDE_DOMAIN_COUNT);
+        if (!validatedDomainsIncludeSpecific(spec.domainsExclude(), MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many domain exclusions, will allow at most " + MAX_SPECIFIC_EXCLUDE_DOMAIN_COUNT);
+
+        if (!validatedDomainsIncludeWildcard(spec.domainsInclude(), MAX_WILDCARD_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many wildcard domain requirements, will allow at most " + MAX_WILDCARD_DOMAIN_COUNT);
+        if (!validatedDomainsIncludeSpecific(spec.domainsInclude(), MAX_SPECIFIC_DOMAIN_COUNT))
+            throw new SearchFilterParserException("Too many domain requirements, will allow at most " + MAX_SPECIFIC_DOMAIN_COUNT);
+    }
+
+    private boolean validatedDomainsIncludeWildcard(List<String> domainsInclude, int max) {
+        int domains = 0;
+
+        for (String domain : domainsInclude) {
+            if (domain.startsWith("*."))
+                domains++;
+        }
+
+        return domains <= max;
+    }
+
+
+    private boolean validatedDomainsIncludeSpecific(List<String> domainsInclude, int max) {
+        int domains = 0;
+
+        for (String domain : domainsInclude) {
+            if (!domain.startsWith("*."))
+                domains++;
+        }
+
+        return domains <= max;
+    }
+
+    private static List<String> extractContentList(NodeList nodeList) {
+        List<String> ret = new ArrayList<>();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            String tagsList = nodeList.item(i).getTextContent();
+
+            for (String item : tagsList.split("\\s+")) {
+                if (item.isBlank()) continue;
+                ret.add(item.toLowerCase());
+            }
+        }
+        return ret;
+    }
+
+    private static List<Map.Entry<String, Float>> extractPromoteList(NodeList nodeList, String attrName) throws SearchFilterParserException {
+        List<Map.Entry<String, Float>> ret = new ArrayList<>();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+
+            Element item = (Element) nodeList.item(i);
+
+            if (!item.hasAttribute(attrName)) {
+                throw new SearchFilterParserException("Element " + item.getTagName() + " missing attribute " + attrName);
+            }
+
+            float amount;
+            try {
+                amount = Float.parseFloat(item.getAttribute(attrName));
+            }
+            catch (NumberFormatException ex) {
+                throw new SearchFilterParserException(
+                        "Element " + item.getTagName() + "'s attribute "
+                                + attrName + " failed to parse as a floating point number",
+                        ex);
+            }
+
+            for (String entry : item.getTextContent().split("\\s+")) {
+                if (entry.isBlank()) continue;
+                ret.add(Map.entry(entry.toLowerCase(), amount));
+            }
+        }
+        return ret;
+    }
+
+    private static SpecificationLimit parseSpecificationLimit(NodeList list, String name) throws SearchFilterParserException {
+        Element elem = null;
+        for (int i = 0; i < list.getLength(); i++) {
+            var maybeElem = (Element) list.item(i);
+            if (name.equalsIgnoreCase(maybeElem.getAttribute("param"))) {
+                elem = maybeElem;
+                break;
+            }
+        }
+        if (elem == null) return SpecificationLimit.none();
+
+        String type = elem.getAttribute("type");
+
+        String valueStr = elem.getAttribute("value");
+        if (valueStr.isBlank())
+            throw new SearchFilterParserException("Specification limit " + name + "is missing a type attribute");
+
+        int value;
+        try {
+            value = Integer.parseInt(valueStr);
+        } catch (NumberFormatException ex) {
+            throw new SearchFilterParserException("Specification limit " + name + " has an invalid value (should be an integer)", ex);
+        }
+
+        return switch (type) {
+            case "lt" -> SpecificationLimit.lessThan(value);
+            case "gt" -> SpecificationLimit.greaterThan(value);
+            case "eq" -> SpecificationLimit.equals(value);
+            default -> throw new SearchFilterParserException("Specification limit " + name + " has missing or invalid 'type' attribute (should be 'lt', 'eq', or 'gt')");
+        };
+    }
+
+
+}

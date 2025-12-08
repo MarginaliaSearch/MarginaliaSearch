@@ -1,13 +1,14 @@
 package nu.marginalia.index.reverse;
 
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.model.CombinedTermMetadata;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.SearchContext;
-import nu.marginalia.index.model.TermMetadataList;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import nu.marginalia.index.reverse.query.*;
 import nu.marginalia.index.reverse.query.filter.QueryFilterLetThrough;
@@ -27,10 +28,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -146,6 +144,31 @@ public class FullReverseIndexReader {
         return new ReverseIndexRetainFilter(getReader(offset), name, term, budget);
     }
 
+    /** Create a filter step requiring the specified termId to exist in the documents */
+    public QueryFilterStepIf any(IndexLanguageContext languageContext, List<String> terms, LongList termIds, IndexSearchBudget budget) {
+        var lexicon = languageContext.wordLexiconFull;
+        if (null == lexicon)
+            return new QueryFilterNoPass();
+
+        List<SkipListReader> ranges = new ArrayList<>(terms.size());
+        List<String> actualTerms = new ArrayList<>(terms.size());
+
+        for (int i = 0; i < termIds.size(); i++) {
+            long termId = termIds.getLong(i);
+            long offset = lexicon.wordOffset(termId);
+            if (offset < 0) // No documents
+                continue;
+            ranges.add(getReader(offset));
+            actualTerms.add(terms.get(i));
+        }
+
+        if (ranges.isEmpty()) {
+            return new QueryFilterNoPass();
+        }
+
+        return new ReverseIndexMultiTermRetainFilter(ranges, name, actualTerms, budget);
+    }
+
     /** Create a filter step requiring the specified termId to be absent from the documents */
     public QueryFilterStepIf not(IndexLanguageContext languageContext, String term, long termId, IndexSearchBudget budget) {
         var lexicon = languageContext.wordLexiconFull;
@@ -185,9 +208,9 @@ public class FullReverseIndexReader {
      * @throws TimeoutException if the read could not be queued in a timely manner;
      *                          (the read itself may still exceed the budgeted time)
      */
-    public TermMetadataList[] getTermData(Arena arena,
-                                          SearchContext searchContext,
-                                          CombinedDocIdList docIds)
+    public CombinedTermMetadata getTermData(Arena arena,
+                                            SearchContext searchContext,
+                                            CombinedDocIdList docIds)
             throws TimeoutException
     {
         // Gather all termdata to be retrieved into a single array,
@@ -197,12 +220,12 @@ public class FullReverseIndexReader {
 
         WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
         if (null == lexicon) {
-            TermMetadataList[] ret = new TermMetadataList[termIds.length];
+            CombinedTermMetadata.TermMetadataList[] ret = new CombinedTermMetadata.TermMetadataList[termIds.length];
             for (int i = 0; i < termIds.length; i++) {
-                ret[i] = new TermMetadataList(new CodedSequence[docIds.size()], new byte[docIds.size()], new BitSet(docIds.size()));
+                ret[i] = new CombinedTermMetadata.TermMetadataList(new CodedSequence[docIds.size()], new byte[docIds.size()]);
             }
 
-            return ret;
+            return new CombinedTermMetadata(ret, new BitSet[searchContext.termIdsPriority.size()], new BitSet(docIds.size()));
         }
 
 
@@ -245,11 +268,25 @@ public class FullReverseIndexReader {
             }
         }
 
+        BitSet[] priorityTermsPresent = new BitSet[docIds.size()];
+
+        for (int i = 0; i < searchContext.termIdsPriority.size(); i++) {
+            long termId = searchContext.termIdsPriority.getLong(i);
+            long offset = lexicon.wordOffset(termId);
+
+            if (offset < 0) {
+                priorityTermsPresent[i] = new BitSet();
+            }
+            else {
+                priorityTermsPresent[i] = getReader(offset).getAllPresentValues(docIds.array());
+            }
+        }
+
         // Perform the read
         CodedSequence[] termDataCombined = positionsFileReader.getTermData(arena, searchContext.budget, offsetsAll);
 
         // Break the result data into separate arrays by termId again
-        TermMetadataList[] ret = new TermMetadataList[termIds.length];
+        CombinedTermMetadata.TermMetadataList[] ret = new CombinedTermMetadata.TermMetadataList[termIds.length];
         for (int i = 0; i < termIds.length; i++) {
 
             // Extract the term flags
@@ -264,14 +301,13 @@ public class FullReverseIndexReader {
             }
 
             // Build the return array
-            ret[i] = new TermMetadataList(
+            ret[i] = new CombinedTermMetadata.TermMetadataList(
                     Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size()),
-                    flags,
-                    viableDocuments
+                    flags
             );
         }
 
-        return ret;
+        return new CombinedTermMetadata(ret, priorityTermsPresent, viableDocuments);
     }
 
     /** Find all docIds with non-flagged terms adjacent in the document */

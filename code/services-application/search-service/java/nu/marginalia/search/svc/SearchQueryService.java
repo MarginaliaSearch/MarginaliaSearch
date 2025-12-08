@@ -1,22 +1,28 @@
 package nu.marginalia.search.svc;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
+import io.jooby.Context;
 import io.jooby.ModelAndView;
-import io.jooby.annotation.GET;
-import io.jooby.annotation.Path;
-import io.jooby.annotation.QueryParam;
+import io.jooby.annotation.*;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
+import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
 import nu.marginalia.search.command.*;
 import nu.marginalia.search.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class SearchQueryService {
 
+    private final DbDomainQueries domainQueries;
     private final WebsiteUrl websiteUrl;
     private final SearchErrorPageService errorPageService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -24,8 +30,15 @@ public class SearchQueryService {
     private final List<SearchCommandInterface> specialCommands = new ArrayList<>();
     private final SearchCommand defaultCommand;
 
+    private static final SearchFilterParser parser = new SearchFilterParser();
+    private static final Cache<String, CompiledSearchFilterSpec> filterSpecCache = CacheBuilder.newBuilder()
+            .maximumSize(5000)
+            .expireAfterAccess(Duration.ofHours(24))
+            .build();
+
     @Inject
     public SearchQueryService(
+            DbDomainQueries domainQueries,
             WebsiteUrl websiteUrl,
             SearchErrorPageService errorPageService,
             BrowseRedirectCommand redirectCommand,
@@ -36,6 +49,7 @@ public class SearchQueryService {
             SiteRedirectCommand siteRedirectCommand,
             SearchCommand searchCommand
     ) {
+        this.domainQueries = domainQueries;
         this.websiteUrl = websiteUrl;
         this.errorPageService = errorPageService;
 
@@ -59,7 +73,8 @@ public class SearchQueryService {
             @QueryParam String searchTitle,
             @QueryParam String adtech,
             @QueryParam String lang,
-            @QueryParam Integer page
+            @QueryParam Integer page,
+            Context context
     ) {
         try {
             SearchParameters parameters = new SearchParameters(websiteUrl,
@@ -70,6 +85,8 @@ public class SearchQueryService {
                     SearchTitleParameter.parse(searchTitle),
                     SearchAdtechParameter.parse(adtech),
                     Objects.requireNonNullElse(lang, "en"),
+                    context.getMethod(),
+                    null,
                     false,
                     Objects.requireNonNullElse(page,1));
 
@@ -89,4 +106,52 @@ public class SearchQueryService {
         }
     }
 
+    @POST
+    @Path("/search")
+    public ModelAndView<?> pathSearchPOST(
+            @FormParam String query,
+            @FormParam String profile,
+            @FormParam String js,
+            @FormParam String recent,
+            @FormParam String searchTitle,
+            @FormParam String adtech,
+            @FormParam String lang,
+            @FormParam String filterSpec,
+            @FormParam Integer page,
+            Context context
+    ) {
+        try {
+            CompiledSearchFilterSpec filter = filterSpecCache.get(filterSpec,
+                    () ->
+                        parser.parse("WEB", "AD-HOC", filterSpec).compile(domainQueries)
+                    );
+
+            SearchParameters parameters = new SearchParameters(websiteUrl,
+                    Objects.requireNonNullElse(query, ""),
+                    SearchProfile.getSearchProfile(profile),
+                    SearchJsParameter.parse(js),
+                    SearchRecentParameter.parse(recent),
+                    SearchTitleParameter.parse(searchTitle),
+                    SearchAdtechParameter.parse(adtech),
+                    Objects.requireNonNullElse(lang, "en"),
+                    context.getMethod(),
+                    filter,
+                    false,
+                    Objects.requireNonNullElse(page,1));
+
+            for (var cmd : specialCommands) {
+                var maybe = cmd.process(parameters);
+                if (maybe.isPresent())
+                    return maybe.get();
+            }
+
+            return defaultCommand.process(parameters).orElseThrow();
+        }
+        catch (Exception ex) {
+            logger.error("Error", ex);
+            return errorPageService.serveError(
+                    SearchParameters.defaultsForQuery(websiteUrl, query, Objects.requireNonNullElse(page, 1))
+            );
+        }
+    }
 }

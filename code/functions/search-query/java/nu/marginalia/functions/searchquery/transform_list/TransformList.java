@@ -1,4 +1,4 @@
-package nu.marginalia.util.transform_list;
+package nu.marginalia.functions.searchquery.transform_list;
 
 import nu.marginalia.functions.searchquery.query_parser.token.QueryToken;
 

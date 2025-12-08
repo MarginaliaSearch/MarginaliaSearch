@@ -2,9 +2,12 @@ package nu.marginalia.functions.searchquery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.api.searchquery.RpcQueryLimits;
-import nu.marginalia.api.searchquery.RpcResultRankingParameters;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.*;
+import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.query_parser.QueryParser;
@@ -29,7 +32,6 @@ public class QueryFactory {
     private final DbDomainQueries domainQueries;
     private final LanguageConfiguration languageConfiguration;
 
-
     @Inject
     public QueryFactory(QueryExpansion queryExpansion,
                         DbDomainQueries domainQueries,
@@ -40,12 +42,14 @@ public class QueryFactory {
         this.languageConfiguration = languageConfiguration;
     }
 
-    public ProcessedQuery createQuery(QueryParams params,
+
+    public ProcessedQuery createQuery(RpcQsQuery request,
+                                      CompiledSearchFilterSpec searchFilter,
                                       @Nullable RpcResultRankingParameters rankingParams) {
 
-        LanguageDefinition languageDefinition = languageConfiguration.getLanguage(params.langIsoCode());
+        LanguageDefinition languageDefinition = languageConfiguration.getLanguage(request.getLangIsoCode());
 
-        final var query = params.humanQuery();
+        final var query = request.getHumanQuery();
 
         if (query.length() > 1000) {
             throw new IllegalArgumentException("Query too long");
@@ -63,15 +67,15 @@ public class QueryFactory {
 
         SearchQuery.SearchQueryBuilder queryBuilder = SearchQuery.builder();
 
-        SpecificationLimit qualityLimit = SpecificationLimit.none();
-        SpecificationLimit year = SpecificationLimit.none();
-        SpecificationLimit size = SpecificationLimit.none();
-        SpecificationLimit rank = SpecificationLimit.none();
-        QueryStrategy queryStrategy = QueryStrategy.AUTO;
+        SpecificationLimit qualityLimit = searchFilter.quality();
+        SpecificationLimit year = searchFilter.year();
+        SpecificationLimit size = searchFilter.size();
+        SpecificationLimit rank = searchFilter.rank();
+        QueryStrategy queryStrategy = searchFilter.queryStrategy();
 
         String domain = null;
 
-        List<Integer> domainIds = params.domainIds();
+        IntList domainIds = new IntArrayList(searchFilter.domainsInclude());
 
         for (QueryToken t : basicQuery) {
             switch (t) {
@@ -97,13 +101,13 @@ public class QueryFactory {
                         queryBuilder.phraseConstraint(SearchPhraseConstraint.mandatory(parts));
 
                         // Construct a regular query from the parts in the quoted string
-                        queryBuilder.include(parts);
+                        queryBuilder.queryTerms(parts);
 
                         // Prefer that the actual n-gram is present
-                        queryBuilder.priority(str);
+                        queryBuilder.priority(str, 1.0f);
                     } else {
                         // If the quoted word is a single word, we don't need to do more than include it in the search
-                        queryBuilder.include(str);
+                        queryBuilder.queryTerms(str);
                     }
                 }
 
@@ -111,35 +115,35 @@ public class QueryFactory {
                     analyzeSearchTerm(problems, str, displayStr);
                     searchTermsHuman.addAll(Arrays.asList(displayStr.split("\\s+")));
 
-                    queryBuilder.include(str);
+                    queryBuilder.queryTerms(str);
                 }
 
                 case QueryToken.ExcludeTerm(String str, _) -> queryBuilder.exclude(str);
-                case QueryToken.PriorityTerm(String str, _) -> queryBuilder.priority(str);
+                case QueryToken.PriorityTerm(String str, _) -> queryBuilder.priority(str, 1.0f);
                 case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:*.") -> {
                     String prefix = "site:*.";
                     domain = str.substring(prefix.length());
 
-                    queryBuilder.advice("site:" + domain);
+                    queryBuilder.require("site:" + domain);
                 }
                 case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:") -> {
                     domain = str.substring("site:".length());
 
                     OptionalInt domainIdMaybe = domainQueries.tryGetDomainId(new EdgeDomain(domain));
                     if (domainIdMaybe.isPresent()) {
-                        domainIds = List.of(domainIdMaybe.getAsInt());
+                        domainIds = IntList.of(domainIdMaybe.getAsInt());
                     } else {
-                        domainIds = List.of(-1);
+                        domainIds = IntList.of(-1);
                     }
 
                     if (basicQuery.size() == 1) {
                         // Ensure we can enumerate documents from a website by adding this dummy term
                         // when this is the only token in the query
-                        
-                        queryBuilder.advice("site:" + domain);
+
+                        queryBuilder.require("site:" + domain);
                     }
                 }
-                case QueryToken.AdviceTerm(String str, _) -> queryBuilder.advice(str);
+                case QueryToken.AdviceTerm(String str, _) -> queryBuilder.require(str);
 
                 case QueryToken.YearTerm(SpecificationLimit limit, _) -> year = limit;
                 case QueryToken.SizeTerm(SpecificationLimit limit, _) -> size = limit;
@@ -153,10 +157,14 @@ public class QueryFactory {
             }
         }
 
+        queryBuilder.searchTermsRequire.addAll(searchFilter.termsRequire());
+        queryBuilder.searchTermsPriority.addAll(searchFilter.termsPromote());
+        queryBuilder.searchTermsPriorityWeight.addAll(searchFilter.termsPromoteAmounts());
+        queryBuilder.searchTermsExclude.addAll(searchFilter.termsExclude());
+
         queryBuilder.promoteNonRankingTerms();
 
-
-        var limits = params.limits();
+        var limits = request.getQueryLimits();
         // Disable limits on number of results per domain if we're searching with a site:-type term
         if (domain != null) {
             limits = RpcQueryLimits.newBuilder(limits)
@@ -164,7 +172,7 @@ public class QueryFactory {
                     .build();
         }
 
-        var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsInclude);
+        var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsQuery);
 
         // Query expansion may produce suggestions for phrase constraints,
         // add these to the query
@@ -174,29 +182,44 @@ public class QueryFactory {
 
         // add a pseudo-constraint for the full query
         queryBuilder.phraseConstraint(SearchPhraseConstraint.full(expansion.fullPhraseConstraint()));
-
         queryBuilder.compiledQuery(expansion.compiledQuery());
 
-        var specsBuilder = SearchSpecification.builder()
-                .query(queryBuilder.build())
-                .quality(qualityLimit)
-                .year(year)
-                .size(size)
-                .rank(rank)
-                .rankingParams(rankingParams)
-                .domains(domainIds)
-                .excludedDomains(List.of()) // TBI
-                .queryLimits(limits)
-                .searchSetIdentifier(params.identifier())
-                .queryStrategy(queryStrategy);
+        if (!"NONE".equals(searchFilter.temporalBias())) {
+            if (rankingParams == null) {
+                rankingParams = RpcResultRankingParameters.newBuilder(PrototypeRankingParameters.sensibleDefaults())
+                        .setTemporalBias(RpcTemporalBias.newBuilder().setBias(RpcTemporalBias.Bias.valueOf(searchFilter.temporalBias()))).build();
+            }
+            else {
+                rankingParams = RpcResultRankingParameters.newBuilder(rankingParams)
+                        .setTemporalBias(RpcTemporalBias.newBuilder().setBias(RpcTemporalBias.Bias.valueOf(searchFilter.temporalBias()))).build();
+            }
+        }
 
-        SearchSpecification specs = specsBuilder.build();
+        RpcIndexQuery.Builder indexQueryBuilder = RpcIndexQuery.newBuilder()
+                .setHumanQuery(request.getHumanQuery())
+                .addAllRequiredDomainIds(domainIds)
+                .addAllExcludedDomainIds(searchFilter.domainsExclude())
+                .addAllPriorityDomainIds(searchFilter.domainsPromote())
+                .addAllPriorityDomainIdsWeights(searchFilter.domainsPromoteAmounts())
+                .setLangIsoCode(request.getLangIsoCode())
+                .setNsfwFilterTierValue(request.getNsfwFilterTierValue());
 
-        specs.query.searchTermsAdvice.addAll(params.tacitAdvice());
-        specs.query.searchTermsPriority.addAll(params.tacitPriority());
-        specs.query.searchTermsExclude.addAll(params.tacitExcludes());
+        if (!qualityLimit.isNone()) indexQueryBuilder.setQuality(IndexProtobufCodec.convertSpecLimit(qualityLimit));
+        if (!year.isNone()) indexQueryBuilder.setYear(IndexProtobufCodec.convertSpecLimit(year));
+        if (!size.isNone()) indexQueryBuilder.setSize(IndexProtobufCodec.convertSpecLimit(size));
+        if (!rank.isNone()) indexQueryBuilder.setRank(IndexProtobufCodec.convertSpecLimit(rank));
+        if (!QueryStrategy.AUTO.equals(queryStrategy)) indexQueryBuilder.setQueryStrategy(queryStrategy.name());
+        if (null != searchFilter.searchSetIdentifier() && !"NONE".equals(searchFilter.searchSetIdentifier())) indexQueryBuilder.setSearchSetIdentifier(searchFilter.searchSetIdentifier());
 
-        return new ProcessedQuery(specs, searchTermsHuman, domain, params.langIsoCode());
+        indexQueryBuilder
+                .setQueryLimits(limits)
+                .setTerms(queryBuilder.build());
+
+        if (null != rankingParams)
+            indexQueryBuilder.setParameters(rankingParams);
+
+
+        return new ProcessedQuery(indexQueryBuilder.build(), searchTermsHuman, domain, request.getLangIsoCode());
     }
 
     private void analyzeSearchTerm(List<String> problems, String str, String displayStr) {

@@ -2,6 +2,7 @@ package nu.marginalia.service.client;
 
 import io.grpc.ManagedChannel;
 import nu.marginalia.service.NodeConfigurationWatcher;
+import nu.marginalia.service.NodeConfigurationWatcherIf;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.property.PartitionTraits;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
@@ -27,13 +28,13 @@ public class GrpcMultiNodeChannelPool<STUB> {
     private final ServiceKey<? extends PartitionTraits.Multicast> serviceKey;
     private final Function<ServiceEndpoint.InstanceAddress, ManagedChannel> channelConstructor;
     private final Function<ManagedChannel, STUB> stubConstructor;
-    private final NodeConfigurationWatcher nodeConfigurationWatcher;
+    private final NodeConfigurationWatcherIf nodeConfigurationWatcher;
 
     public GrpcMultiNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                     ServiceKey<ServicePartition.Multi> serviceKey,
                                     Function<ServiceEndpoint.InstanceAddress, ManagedChannel> channelConstructor,
                                     Function<ManagedChannel, STUB> stubConstructor,
-                                    NodeConfigurationWatcher nodeConfigurationWatcher) {
+                                    NodeConfigurationWatcherIf nodeConfigurationWatcher) {
         this.serviceRegistryIf = serviceRegistryIf;
         this.serviceKey = serviceKey;
         this.channelConstructor = channelConstructor;

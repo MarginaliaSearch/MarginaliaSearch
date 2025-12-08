@@ -42,6 +42,7 @@ dependencies {
     implementation project(':code:functions:math:api')
     implementation project(':code:functions:favicon:api')
     implementation project(':code:functions:domain-info:api')
+    implementation project(':code:functions:search-query')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:processes:converting-process:ft-dom-classifier')
 

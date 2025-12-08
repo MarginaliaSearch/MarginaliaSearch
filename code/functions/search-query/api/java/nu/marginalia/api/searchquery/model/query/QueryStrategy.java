@@ -11,5 +11,11 @@ public enum QueryStrategy {
     REQUIRE_FIELD_DOMAIN,
     REQUIRE_FIELD_LINK,
 
-    AUTO
+    AUTO;
+
+    public static QueryStrategy parse(String queryStategyString) {
+        if (queryStategyString.isBlank())
+            return AUTO;
+        return valueOf(queryStategyString);
+    }
 }
