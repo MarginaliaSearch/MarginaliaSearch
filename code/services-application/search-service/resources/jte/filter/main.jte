@@ -336,7 +336,7 @@
 
                 setTimeout(() => {
                     @for (Map.Entry<String, Float> term : filter.termsPromote())
-                    addPriorityTerm("${term.getKey()}", $unsafe{term.getValue()});
+                    addPriorityTerm("${term.getKey()}", $unsafe{term.getValue().toString()});
                     @endfor
                 });
 
@@ -722,7 +722,7 @@
 
                 setTimeout(() => {
                     @for (Map.Entry<String, Float> domain : filter.domainsPromote())
-                    addPriorityDomain("${domain.getKey()}", $unsafe{domain.getValue()});
+                    addPriorityDomain("${domain.getKey()}", $unsafe{domain.getValue().toString()});
                     @endfor
                 });
             </script>
