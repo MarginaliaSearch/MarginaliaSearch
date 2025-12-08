@@ -10,6 +10,7 @@ import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
+import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import nu.marginalia.search.command.*;
 import nu.marginalia.search.model.*;
 import org.slf4j.Logger;
@@ -122,9 +123,14 @@ public class SearchQueryService {
     ) {
         try {
             CompiledSearchFilterSpec filter = filterSpecCache.get(filterSpec,
-                    () ->
-                        parser.parse("WEB", "AD-HOC", filterSpec).compile(domainQueries)
-                    );
+                    () -> {
+                        if (filterSpec.isBlank()) {
+                            return SearchFilterSpec.defaultForUser("WEB", "AD-HOC").compile(domainQueries);
+                        }
+                        else {
+                            return parser.parse("WEB", "AD-HOC", filterSpec).compile(domainQueries);
+                        }
+                    });
 
             SearchParameters parameters = new SearchParameters(websiteUrl,
                     Objects.requireNonNullElse(query, ""),
