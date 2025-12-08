@@ -18,9 +18,9 @@
 
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto p-4">
-        <div class="flex place-items-baseline space-x-2">
+        <div class="flex md:place-items-baseline md:space-x-2">
             <div class="hidden sm:block md:w-32 md:mr-16 md:ml-16"><h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1></div>
-            <span class="text-gray-900 dark:text-white break-none text-sm sm:text-md rounded-sm block p-2.5">
+            <span class="text-gray-900 dark:text-white break-none text-sm sm:text-md rounded-sm block md:p-2.5">
                 Filter Settings
             </span>
             <span class="grow"></span>
@@ -74,14 +74,14 @@
                         title="Export as XML file"
                         class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                     <i class="fas fa-download"></i>
-                    Export XML
+                    Export <span class="hidden md:visible">XML</span>
                 </button>
 
             </span>
             <span>
                     <label for="upload-field" title="Upload XML representation of filter"
                         class="flex gap-2 place-items-baseline flex-1 ml-1 py-2 px-2 rounded flex space-x-2 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
-                    <i class="fas fa-upload" onclick=""></i> Import XML
+                    <i class="fas fa-upload" onclick=""></i> Import <span class="hidden md:visible">XML</span>
                     </label>
                     <input id="upload-field" type="file" title="Import from XML file" class="sr-only"
                             onchange="(async (event) => { try {
@@ -849,63 +849,63 @@
 
             <div class="grid md:grid-cols-4 grid-cols-2 gap-1 p-1">
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:ads</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:ads</div>
                     <div class="font-sans text-sm select-none">Communicates with an ad-broker</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:adtech</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:adtech</div>
                     <div class="font-sans text-sm select-none">Contains ad-adjacent scripts</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:tracking</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:tracking</div>
                     <div class="font-sans text-sm select-none">Contains tracking scripts</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:scripts</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:scripts</div>
                     <div class="font-sans text-sm select-none">Contains JavaScript</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:affiliate</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:affiliate</div>
                     <div class="font-sans text-sm select-none">Contains likely affiliate link</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:popover</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:popover</div>
                     <div class="font-sans text-sm select-none">Found popover</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:consent</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:consent</div>
                     <div class="font-sans text-sm select-none">Likely consent popover</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:cloud</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:cloud</div>
                     <div class="font-sans text-sm select-none">Cloud hosted</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">generator:forum</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">generator:forum</div>
                     <div class="font-sans text-sm select-none">Forum software</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">generator:wiki</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">generator:wiki</div>
                     <div class="font-sans text-sm select-none">Wiki software</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">tld:<i>edu</i></div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">tld:<i>edu</i></div>
                     <div class="font-sans text-sm select-none">Top level domain <i>edu</i></div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">asn:<i>123</i></div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">asn:<i>123</i></div>
                     <div class="font-sans text-sm select-none">ASN <i>123</i></div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">links:<i>example.com</i></div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">links:<i>example.com</i></div>
                     <div class="font-sans text-sm select-none">Has link to <i>example.com</i></div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:feed</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:feed</div>
                     <div class="font-sans text-sm select-none">Has RSS or Atom Feed</div>
                 </div>
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
-                    <div class="font-mono text-xl">special:opengraph</div>
+                    <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:opengraph</div>
                     <div class="font-sans text-sm select-none">Has opengraph metadata</div>
                 </div>
             </div>
