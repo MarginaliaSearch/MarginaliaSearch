@@ -5,8 +5,8 @@ import io.jooby.Context;
 import io.jooby.Jooby;
 import io.jooby.MediaType;
 import io.jooby.StatusCode;
-import io.prometheus.client.Counter;
-import io.prometheus.client.Histogram;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.favicon.FaviconClient;
 import nu.marginalia.db.DbDomainQueries;
@@ -31,13 +31,13 @@ public class SearchService extends JoobyService {
     private final SearchFilterService searchFilterService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
-    private static final Histogram wmsa_search_service_request_time = Histogram.build()
+    private static final Histogram wmsa_search_service_request_time = Histogram.builder()
             .name("wmsa_search_service_request_time")
-            .linearBuckets(0.05, 0.05, 15)
+            .classicLinearUpperBounds(0.05, 0.05, 15)
             .labelNames("matchedPath", "method")
             .help("Search service request time (seconds)")
             .register();
-    private static final Counter wmsa_search_service_error_count = Counter.build()
+    private static final Counter wmsa_search_service_error_count = Counter.builder()
             .name("wmsa_search_service_error_count")
             .labelNames("matchedPath", "method")
             .help("Search service error count")
@@ -134,12 +134,12 @@ public class SearchService extends JoobyService {
 
         jooby.after((Context ctx, Object result, Throwable failure) -> {
             if  (failure != null) {
-                wmsa_search_service_error_count.labels(ctx.getRoute().getPattern(), ctx.getMethod()).inc();
+                wmsa_search_service_error_count.labelValues(ctx.getRoute().getPattern(), ctx.getMethod()).inc();
             }
             else {
                 Long startTime = ctx.getAttribute(startTimeAttribute);
                 if (startTime != null) {
-                    wmsa_search_service_request_time.labels(ctx.getRoute().getPattern(), ctx.getMethod())
+                    wmsa_search_service_request_time.labelValues(ctx.getRoute().getPattern(), ctx.getMethod())
                             .observe((System.nanoTime() - startTime) / 1e9);
                 }
             }

@@ -1,6 +1,6 @@
 package nu.marginalia.status;
 
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,10 +14,10 @@ public class StatusMetric {
 
     // We also push the metrics to Prometheus for additional statistics and monitoring
 
-    private static final Counter successCounter = Counter.build("external_status_metric_success", "Status Metric Success")
+    private static final Counter successCounter = Counter.builder().name("external_status_metric_success").help("Status Metric Success")
             .labelNames("name")
             .register();
-    private static final Counter failureCounter = Counter.build("external_status_metric_failure", "Status Metric Failure")
+    private static final Counter failureCounter = Counter.builder().name("external_status_metric_failure").help("Status Metric Failure")
             .labelNames("name")
             .register();
 
@@ -39,14 +39,14 @@ public class StatusMetric {
         try {
             if (checker.get()) {
                 long endTime = System.nanoTime();
-                successCounter.labels(name).inc();
+                successCounter.labelValues(name).inc();
                 return new MeasurementResult.Success(name, now, Duration.ofNanos(endTime - startTime));
             }
         } catch (Exception e) {
             logger.error("Failed to check status metric: " + name, e);
         }
 
-        failureCounter.labels(name).inc();
+        failureCounter.labelValues(name).inc();
 
         return new MeasurementResult.Failure(name, now);
     }

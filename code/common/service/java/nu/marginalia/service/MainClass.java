@@ -1,6 +1,6 @@
 package nu.marginalia.service;
 
-import io.prometheus.client.hotspot.DefaultExports;
+import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public abstract class MainClass {
     }
 
     private static void initPrometheus() {
-        DefaultExports.initialize();
+        JvmMetrics.builder().register();
     }
 
     /** Ensure that the services boot in the correct order, so that the control service

@@ -2,10 +2,9 @@ package nu.marginalia.api.searchquery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.prometheus.client.Summary;
+import io.prometheus.metrics.core.metrics.Summary;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
-import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -24,7 +23,7 @@ public class QueryClient  {
     private static final Logger log = LoggerFactory.getLogger(QueryClient.class);
     private final ExecutorService virtualThreadService = Executors.newVirtualThreadPerTaskExecutor();
 
-    private static final Summary wmsa_qs_api_search_time = Summary.build()
+    private static final Summary wmsa_qs_api_search_time = Summary.builder()
             .name("wmsa_qs_api_search_time")
             .help("query service search time")
             .register();

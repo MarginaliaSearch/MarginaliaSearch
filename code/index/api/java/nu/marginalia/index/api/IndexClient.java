@@ -2,7 +2,7 @@ package nu.marginalia.index.api;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
@@ -10,7 +10,6 @@ import nu.marginalia.api.searchquery.RpcQsQueryPagination;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.nsfw.NsfwDomainFilter;
-import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -34,7 +33,7 @@ public class IndexClient {
     private final DomainBlacklistImpl blacklist;
     private final NsfwDomainFilter nsfwDomainFilter;
 
-    Counter wmsa_index_query_count = Counter.build()
+    Counter wmsa_index_query_count = Counter.builder()
             .name("wmsa_nsfw_filter_result_count")
             .labelNames("tier")
             .help("Count of results filtered by NSFW tier")
@@ -131,7 +130,7 @@ public class IndexClient {
             return true;
         }
         if (nsfwDomainFilter.isBlocked(domainId, filterTier)) {
-            wmsa_index_query_count.labels(tierNames[filterTier]).inc();
+            wmsa_index_query_count.labelValues(tierNames[filterTier]).inc();
             return true;
         }
         return false;

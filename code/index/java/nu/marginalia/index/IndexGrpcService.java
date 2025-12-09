@@ -4,12 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.prometheus.client.Counter;
-import io.prometheus.client.Histogram;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
-import nu.marginalia.api.searchquery.model.query.SearchSpecification;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;
@@ -42,14 +41,14 @@ public class IndexGrpcService
     // so that they can be filtered out in the production logging configuration
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
-    private static final Counter wmsa_query_timeouts = Counter.build()
+    private static final Counter wmsa_query_timeouts = Counter.builder()
             .name("wmsa_index_query_timeouts")
             .help("Query timeout counter")
             .labelNames("node", "api")
             .register();
-    private static final Histogram wmsa_query_time = Histogram.build()
+    private static final Histogram wmsa_query_time = Histogram.builder()
             .name("wmsa_index_query_time")
-            .linearBuckets(0.05, 0.05, 15)
+            .classicLinearUpperBounds(0.05, 0.05, 15)
             .labelNames("node", "api")
             .help("Index-side query time")
             .register();
@@ -90,7 +89,7 @@ public class IndexGrpcService
             KeywordHasher hasher = findHasher(request);
 
             List<RpcDecoratedResultItem> results = wmsa_query_time
-                    .labels(nodeName, "GRPC")
+                    .labelValues(nodeName, "GRPC")
                     .time(() -> {
                         // Perform the search
                         try {
@@ -121,7 +120,7 @@ public class IndexGrpcService
 
             if (System.currentTimeMillis() >= endTime) {
                 wmsa_query_timeouts
-                        .labels(nodeName, "GRPC")
+                        .labelValues(nodeName, "GRPC")
                         .inc();
             }
 

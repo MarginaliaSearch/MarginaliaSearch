@@ -164,7 +164,7 @@ public class ApiV2 {
 
         // Apply rate limit to filter updates as this isn't zero cost
         if (!rateLimiterService.isAllowed(license)) {
-            ApiMetrics.wmsa_api_timeout_count.labels(license.key).inc();
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key).inc();
             ctx.setResponseCode(503);
             return ctx;
         }
@@ -284,12 +284,12 @@ public class ApiV2 {
         var cachedResponse = responseCache.getResults(license, query, ctx.queryString());
 
         if (cachedResponse.isPresent()) {
-            ApiMetrics.wmsa_api_cache_hit_count.labels(license.key).inc();
+            ApiMetrics.wmsa_api_cache_hit_count.labelValues(license.key).inc();
             return gson.toJson(cachedResponse.get());
         }
 
         if (!rateLimiterService.isAllowed(license)) {
-            ApiMetrics.wmsa_api_timeout_count.labels(license.key).inc();
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key).inc();
             ctx.setResponseCode(503);
             return ctx;
         }
@@ -325,7 +325,7 @@ public class ApiV2 {
         else
             filter = new QueryFilterSpec.FilterByName(license.key, filterName);
 
-        try (var _ = ApiMetrics.wmsa_api_query_time.labels(license.key).startTimer())
+        try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key).startTimer())
         {
             return searchOperator
                     .v2query(query, count, domainCount, filter, nsfwFilterTier, langIsoCode, license);
