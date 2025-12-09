@@ -34,7 +34,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Marker grpcMarker = MarkerFactory.getMarker("GRPC");
     private static final Logger logger = LoggerFactory.getLogger(GrpcSingleNodeChannelPool.class);
 
-    private static final Counter requestCounter = Counter.builder().name("wmsa_rpc_errors")
+    private static final Counter requestCounter = Counter.builder().name("wmsa_rpc_requests")
             .help("Request count")
             .labelNames("serviceKey")
             .build();
