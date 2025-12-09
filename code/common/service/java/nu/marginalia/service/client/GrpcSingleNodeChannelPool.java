@@ -3,6 +3,7 @@ package nu.marginalia.service.client;
 import com.google.common.collect.Sets;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
+import io.prometheus.metrics.core.metrics.Counter;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.discovery.monitor.ServiceChangeMonitor;
 import nu.marginalia.service.discovery.property.PartitionTraits;
@@ -32,6 +33,16 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
     private final Marker grpcMarker = MarkerFactory.getMarker("GRPC");
     private static final Logger logger = LoggerFactory.getLogger(GrpcSingleNodeChannelPool.class);
+
+    private static final Counter requestCounter = Counter.builder().name("wmsa_rpc_errors")
+            .help("Request count")
+            .labelNames("serviceKey")
+            .build();
+
+    private static final Counter errorCounter = Counter.builder().name("wmsa_rpc_errors")
+            .help("Error count")
+            .labelNames("serviceKey")
+            .build();
 
     private final ServiceRegistryIf serviceRegistryIf;
     private final Function<InstanceAddress, ManagedChannel> channelConstructor;
@@ -196,12 +207,19 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         // while preferring channels that have not errored recently
         Collections.sort(connectionHolders);
 
+        final String serviceKeyStr = serviceKey.toString();
+
         for (var channel : connectionHolders) {
             try {
-                return call.apply(stubConstructor.apply(channel.get()), arg);
+                var ret = call.apply(stubConstructor.apply(channel.get()), arg);
+
+                requestCounter.labelValues(serviceKeyStr).inc();
+
+                return ret;
             }
             catch (Exception e) {
                 channel.flagError();
+                errorCounter.labelValues(serviceKeyStr).inc();
 
                 exceptions.add(e);
             }
@@ -216,6 +234,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
         }
 
+
         throw new ServiceNotAvailableException(serviceKey);
     }
 
@@ -223,9 +242,11 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         final List<Exception> exceptions = new ArrayList<>();
         List<Future<T>> ret = new ArrayList<>();
 
+        String serviceKeyStr = serviceKey.toString();
         for (var channel : channels.values()) {
             try {
                 ret.add(CompletableFuture.completedFuture(call.apply(stubConstructor.apply(channel.get()), arg)));
+                requestCounter.labelValues(serviceKeyStr).inc();
             }
             catch (Exception e) {
                 ret.add(CompletableFuture.failedFuture(e));
@@ -238,6 +259,8 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             if (e instanceof StatusRuntimeException se) {
                 throw se; // Re-throw SRE as-is
             }
+
+            errorCounter.labelValues(serviceKey.toString()).inc();
 
             // If there are other exceptions, log them
             logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
