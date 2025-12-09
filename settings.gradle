@@ -156,10 +156,10 @@ dependencyResolutionManagement {
             library('grpc-inprocess', 'io.grpc', 'grpc-inprocess').version('1.73.0')
             library('grpc-netty', 'io.grpc', 'grpc-netty').version('1.73.0')
 
-            library('prometheus', 'io.prometheus', 'simpleclient').version('0.16.0')
-            library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
-            library('prometheus-server', 'io.prometheus', 'simpleclient_httpserver').version('0.16.0')
-            library('prometheus-hotspot', 'io.prometheus', 'simpleclient_hotspot').version('0.16.0')
+            library('prometheus', 'io.prometheus', 'prometheus-metrics-core').version('1.4.3')
+            library('prometheus-server', 'io.prometheus', 'prometheus-metrics-exporter-httpserver').version('1.4.3')
+            library('prometheus-client', 'io.prometheus', 'client_java_parent').version('1.4.3')
+            library('prometheus-jvm', 'io.prometheus', 'prometheus-metrics-instrumentation-jvm').version('1.4.3')
 
             library('slf4j.api', 'org.slf4j', 'slf4j-api').version('2.0.3')
             library('slf4j.jdk14', 'org.slf4j', 'slf4j-jdk14').version('2.0.3')
@@ -249,7 +249,7 @@ dependencyResolutionManagement {
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
             bundle('slf4j.test', ['slf4j.jdk14'])
-            bundle('prometheus', ['prometheus', 'prometheus-servlet', 'prometheus-server', 'prometheus-hotspot'])
+            bundle('prometheus', ['prometheus', 'prometheus-server', 'prometheus-client', 'prometheus-jvm'])
             bundle('mariadb', ['mariadb-client', 'hikaricp'])
             bundle('nlp', ['stanford.corenlp', 'opennlp', 'fasttext'])
             bundle('selenium', ['selenium.chrome', 'selenium.java'])

@@ -1,6 +1,6 @@
 package nu.marginalia.index;
 
-import io.prometheus.client.Gauge;
+import io.prometheus.metrics.core.metrics.Gauge;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.model.CombinedDocIdList;
@@ -59,31 +59,31 @@ public class IndexQueryExecution {
     private final int limitTotal;
     private final int limitByDomain;
 
-    private static final Gauge metric_index_lookup_time_s = Gauge.build()
+    private static final Gauge metric_index_lookup_time_s = Gauge.builder()
             .labelNames("node")
             .name("index_exec_lookup_time_s")
             .help("Time in query spent on lookups")
             .register();
 
-    private static final Gauge metric_index_prep_time_s = Gauge.build()
+    private static final Gauge metric_index_prep_time_s = Gauge.builder()
             .labelNames("node")
             .name("index_exec_prep_time_s")
             .help("Time in query spent retrieving positions and spans")
             .register();
 
-    private static final Gauge metric_index_rank_time_s = Gauge.build()
+    private static final Gauge metric_index_rank_time_s = Gauge.builder()
             .labelNames("node")
             .name("index_exec_ranking_time_s")
             .help("Time in query spent on ranking")
             .register();
 
-    private static final Gauge metric_index_documents_ranked = Gauge.build()
+    private static final Gauge metric_index_documents_ranked = Gauge.builder()
             .labelNames("node")
             .name("index_exec_documents_ranked")
             .help("Number of documents ranked")
             .register();
 
-    private static final Gauge index_execution_rejected_queries = Gauge.build()
+    private static final Gauge index_execution_rejected_queries = Gauge.builder()
             .labelNames("node")
             .name("index_execution_rejected_queries")
             .help("Number of queries rejected to avoid backpressure")
@@ -164,7 +164,7 @@ public class IndexQueryExecution {
         }
 
         metric_index_documents_ranked
-                .labels(nodeName)
+                .labelValues(nodeName)
                 .inc(1000. * resultHeap.getItemsProcessed() / budget.getLimitTime());
 
         // Final result selection
@@ -184,7 +184,7 @@ public class IndexQueryExecution {
                 query.getMoreResults(buffer);
                 long et = System.nanoTime();
                 metric_index_lookup_time_s
-                        .labels(nodeName)
+                        .labelValues(nodeName)
                         .inc((et - st)/1_000_000_000.);
 
                 if (buffer.isEmpty())
@@ -233,7 +233,7 @@ public class IndexQueryExecution {
                 var preparedData = rankingService.prepareRankingData(rankingContext, docIds);
                 long et = System.nanoTime();
                 metric_index_prep_time_s
-                        .labels(nodeName)
+                        .labelValues(nodeName)
                         .inc((et - st)/1_000_000_000.);
 
                 if (!outputQueue.offer(preparedData, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS))
@@ -262,7 +262,7 @@ public class IndexQueryExecution {
                     long et = System.nanoTime();
 
                     metric_index_rank_time_s
-                            .labels(nodeName)
+                            .labelValues(nodeName)
                             .inc((et - st)/1_000_000_000.);
                 }
             }

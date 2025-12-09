@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.prometheus.client.Histogram;
+import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
@@ -31,10 +31,10 @@ public class QueryGRPCService
 
     private final Logger logger = LoggerFactory.getLogger(QueryGRPCService.class);
 
-    private static final Histogram wmsa_qs_query_time_grpc = Histogram.build()
+    private static final Histogram wmsa_qs_query_time_grpc = Histogram.builder()
             .name("wmsa_qs_query_time_grpc")
             .labelNames("timeout", "count")
-            .linearBuckets(0.05, 0.05, 15)
+            .classicLinearUpperBounds(0.05, 0.05, 15)
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
@@ -124,7 +124,7 @@ public class QueryGRPCService
                             StreamObserver<RpcQsResponse> responseObserver) {
         try {
             wmsa_qs_query_time_grpc
-                    .labels(Integer.toString(request.getQueryLimits().getTimeoutMs()),
+                    .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()),
                             Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> {
 

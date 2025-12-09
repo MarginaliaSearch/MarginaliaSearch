@@ -1,6 +1,6 @@
 package nu.marginalia.service.server;
 
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -24,16 +24,16 @@ public class SparkService {
 
     private final Initialization initialization;
 
-    private final static Counter request_counter = Counter.build("wmsa_request_counter", "Request Counter")
+    private final static Counter request_counter = Counter.builder().name("wmsa_request_counter").help("Request Counter")
             .labelNames("service", "node")
             .register();
-    private final static Counter request_counter_good = Counter.build("wmsa_request_counter_good", "Good Requests")
+    private final static Counter request_counter_good = Counter.builder().name("wmsa_request_counter_good").help("Good Requests")
             .labelNames("service", "node")
             .register();
-    private final static Counter request_counter_bad = Counter.build("wmsa_request_counter_bad", "Bad Requests")
+    private final static Counter request_counter_bad = Counter.builder().name("wmsa_request_counter_bad").help("Bad Requests")
             .labelNames("service", "node")
             .register();
-    private final static Counter request_counter_err = Counter.build("wmsa_request_counter_err", "Error Requests")
+    private final static Counter request_counter_err = Counter.builder().name("wmsa_request_counter_err").help("Error Requests")
             .labelNames("service", "node")
             .register();
     private final String serviceName;
@@ -83,7 +83,7 @@ public class SparkService {
             else {
                 logger.error("Uncaught exception", e);
             }
-            request_counter_err.labels(serviceName, Integer.toString(node)).inc();
+            request_counter_err.labelValues(serviceName, Integer.toString(node)).inc();
         });
 
         if (!initialization.isReady() && ! initialized ) {
@@ -175,15 +175,15 @@ public class SparkService {
     }
 
     private void auditRequestIn(Request request, Response response) {
-        request_counter.labels(serviceName, Integer.toString(node)).inc();
+        request_counter.labelValues(serviceName, Integer.toString(node)).inc();
     }
 
     private void auditRequestOut(Request request, Response response) {
         if (response.status() < 400) {
-            request_counter_good.labels(serviceName, Integer.toString(node)).inc();
+            request_counter_good.labelValues(serviceName, Integer.toString(node)).inc();
         }
         else {
-            request_counter_bad.labels(serviceName, Integer.toString(node)).inc();
+            request_counter_bad.labelValues(serviceName, Integer.toString(node)).inc();
         }
 
         logResponse(request, response);

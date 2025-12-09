@@ -1,15 +1,12 @@
 package nu.marginalia.service.server;
 
 import com.google.inject.Inject;
-import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.metrics.exporter.httpserver.HTTPServer;
 import nu.marginalia.service.module.ServiceConfiguration;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
+import java.net.InetAddress;
 
 public class MetricsServer {
 
@@ -22,17 +19,12 @@ public class MetricsServer {
             return;
 
         try {
-            Server server = new Server(new InetSocketAddress(configuration.bindAddress(), configuration.metricsPort()));
-
-            ServletContextHandler context = new ServletContextHandler();
-            context.setContextPath("/");
-            server.setHandler(context);
-
-            context.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
+            HTTPServer server = HTTPServer.builder()
+                    .inetAddress(InetAddress.getByName(configuration.bindAddress()))
+                    .port(configuration.metricsPort())
+                    .buildAndStart();
 
             logger.info("MetricsServer listening on {}:{}", configuration.bindAddress(), configuration.metricsPort());
-
-            server.start();
         }
         catch (Exception|NoSuchMethodError ex) {
             logger.error("Failed to set up metrics server", ex);
