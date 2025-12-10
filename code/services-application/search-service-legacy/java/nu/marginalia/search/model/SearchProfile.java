@@ -1,10 +1,6 @@
 package nu.marginalia.search.model;
 
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
-import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.api.searchquery.model.query.SearchQuery;
-import nu.marginalia.api.searchquery.model.query.SearchSetIdentifier;
 
 import java.util.Objects;
 

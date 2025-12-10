@@ -9,6 +9,7 @@ import io.jooby.annotation.POST;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
+import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
 import nu.marginalia.model.gson.GsonFactory;
@@ -26,11 +27,21 @@ public class SearchFilterService {
     private final Gson gson = GsonFactory.get();
 
     private final SearchFilterParser filterParser = new SearchFilterParser();
-    private final WebsiteUrl websiteUrl;
+
+    private final DomainRankingSetsService domainRankingSetsService;
+    private volatile List<DomainRankingSetsService.DomainRankingSet> searchSets = null;
 
     @Inject
-    public SearchFilterService(WebsiteUrl websiteUrl) {
-        this.websiteUrl = websiteUrl;
+    public SearchFilterService(DomainRankingSetsService domainRankingSetsService)
+    {
+        this.domainRankingSetsService = domainRankingSetsService;
+    }
+
+    private List<DomainRankingSetsService.DomainRankingSet> getSearchSets() {
+        if (null != searchSets)
+            return searchSets;
+
+        return (searchSets = domainRankingSetsService.getAll());
     }
 
     @GET("/filters")
@@ -39,6 +50,7 @@ public class SearchFilterService {
 
         return new MapModelAndView("filter/loader.jte",
                 Map.of("navbar", NavbarModel.LIMBO,
+                        "searchSets", getSearchSets(),
                         "problems", List.of(),
                         "filter", currentFilter)
         );
@@ -67,6 +79,7 @@ public class SearchFilterService {
 
         return new MapModelAndView("filter/main.jte",
                 Map.of("navbar", NavbarModel.LIMBO,
+                        "searchSets", getSearchSets(),
                         "problems", problems,
                         "filter", currentFilter)
         );
@@ -89,6 +102,7 @@ public class SearchFilterService {
             List<String> domainsPriority,
             List<Float> domainsPriorityWeights,
             String temporalBias,
+            String searchSetIdentifier,
             String yearLimitType,
             String yearLimitValue,
             String sizeLimitType,
@@ -142,7 +156,7 @@ public class SearchFilterService {
                     model.domainsRequired,
                     model.domainsExcluded,
                     domainsPromote,
-                    "NONE",
+                    model.searchSetIdentifier,
                     model.termsRequired,
                     model.termsExcluded,
                     termsPromote,

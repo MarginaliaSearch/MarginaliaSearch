@@ -105,7 +105,7 @@ public class SearchFilterParser {
         if (!spec.searchSetIdentifier().isBlank() && !"NONE".equalsIgnoreCase(spec.searchSetIdentifier())) {
             sb.append("\t<search-set>").append(
                     StringEscapeUtils.escapeXml10(spec.searchSetIdentifier())
-            ).append("\t</search-set>\n");
+            ).append("</search-set>\n");
         }
         if (!spec.temporalBias().isBlank() && !"NONE".equalsIgnoreCase(spec.temporalBias())) {
             sb.append("\t<temporal-bias>").append(
@@ -174,7 +174,7 @@ public class SearchFilterParser {
 
             searchSetIdentifier = switch(searchSetIdentifierList.getLength()) {
                 case 0 -> "NONE";
-                case 1 -> searchSetIdentifierList.item(0).getTextContent();
+                case 1 -> searchSetIdentifierList.item(0).getTextContent().strip();
                 default -> throw new SearchFilterParserException("Multiple search-set tags");
             };
 

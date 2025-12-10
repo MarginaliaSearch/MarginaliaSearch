@@ -1,11 +1,15 @@
 @import nu.marginalia.api.searchquery.model.query.SpecificationLimitType
+@import nu.marginalia.db.DomainRankingSetsService
 @import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser
 @import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec
 @import nu.marginalia.search.model.NavbarModel
+@import java.util.Comparator
+@import java.util.List
 @import java.util.Map
 
 @param NavbarModel navbar
 @param SearchFilterSpec filter
+@param List<DomainRankingSetsService.DomainRankingSet> searchSets
 
 <!DOCTYPE html>
 <html lang="en">
@@ -163,7 +167,7 @@
                   class="border hidden border dark:border-gray-600 border-gray-300 px-2 py-1 rounded-sm bg-gray-900 flex place-items-baseline gap-2"><span class="font-mono">&nbsp;</span><i class="fas fa-remove cursor-pointer"></i></term>
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-plus"></i>
                 <span class="grow">Required Terms</span>
             </div>
 
@@ -240,7 +244,7 @@
                 <div id="add-term-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-minus"></i>
                 <span class="grow">Forbidden Terms</span>
             </div>
 
@@ -315,7 +319,7 @@
                 <div id="remove-term-error" class="hidden text-red-500 text-sm px-4"></div>
             </form>
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-scale-unbalanced"></i>
                 <span class="grow">Weighted Terms</span>
             </div>
 
@@ -414,7 +418,7 @@
                 Limits
             </div>
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-filter"></i>
                 <span class="grow">Year</span>
             </div>
             <div class="text-sm px-5">
@@ -437,7 +441,7 @@
             </form>
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-filter"></i>
                 <span class="grow">Size</span>
             </div>
             <div class="text-sm px-5">
@@ -460,7 +464,7 @@
 
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-filter"></i>
                 <span class="grow">Rank</span>
             </div>
             <div class="text-sm px-5">
@@ -483,7 +487,7 @@
 
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-filter"></i>
                 <span class="grow">Quality</span>
             </div>
             <div class="text-sm px-5">
@@ -518,7 +522,7 @@
 
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-plus"></i>
                 <span class="grow">Search Domains</span>
             </div>
 
@@ -609,7 +613,7 @@
 
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-minus"></i>
                 <span class="grow">Excluded Domains</span>
             </div>
 
@@ -701,7 +705,7 @@
             </form>
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-scale-unbalanced"></i>
                 <span class="grow">Weighted Domains</span>
             </div>
 
@@ -805,6 +809,7 @@
             </form>
         </div>
     </div>
+
     <div class="flex-1 p-4 space-y-4 mx-auto w-full">
         <div class="flex border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex-col space-y-4 pb-4 overflow-hidden md:max-w-lg" >
             <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
@@ -812,7 +817,7 @@
             </div>
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-clock"></i>
                 <span class="grow">Temporal Bias</span>
             </div>
 
@@ -836,9 +841,33 @@
                 Recent
             </label>
             </div>
+
+
+
+            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
+                <i class="fas fa-filter"></i>
+                <span class="grow">Search Set Identifier</span>
+            </div>
+
+
+            <div class="text-sm px-5">
+                Limit results to a predefined set of domains,
+                using one of these may improve the quality of the results,
+                at the expense of recall.
+            </div>
+            <div class="text-sm px-5">
+                This does nothing if search domains are explicitly specified.
+            </div>
+            <div class="flex gap-2 flex-col mx-5">
+                @for (DomainRankingSetsService.DomainRankingSet set : searchSets.stream().sorted(Comparator.comparing(set -> !set.name().equals("NONE"))).toList())
+                <label for="search-set-${set.name()}" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+                    <input value="old" type="radio" id="search-set-${set.name()}" data-value="${set.name()}" name="search-set" class="sr-only" checked="${set.name().equalsIgnoreCase(filter.searchSetIdentifier())}">
+                    ${set.name()}
+                </label>
+                @endfor
+            </div>
         </div>
     </div>
-
 
 </div>
 <div class="max-w-[1000px] mx-auto columns-1 gap-1">
@@ -848,7 +877,7 @@
                 Special Term Reference
             </div>
 
-            <div class="grid md:grid-cols-4 grid-cols-2 gap-1 p-1">
+            <div class="grid md:grid-cols-3 grid-cols-2 gap-1 p-1">
                 <div class="border-gray-300  dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex block break-inside-avoid flex-col border rounded p-1 place-items-center">
                     <div class="font-mono text-sm md:text-xl md:py-0 py-1">special:ads</div>
                     <div class="font-sans text-sm select-none">Communicates with an ad-broker</div>
@@ -959,6 +988,15 @@
             ?.getAttribute('value')
             ??'none';
 
+        let searchSetValue = document
+            .querySelector('input:checked[type="radio"][name="search-set"]')
+            ?.getAttribute('data-value')
+            ?? 'none';
+
+        if (domainsRequired.length !== 0) {
+            searchSetValue = 'NONE'
+        }
+
         const yearLimitType = document.getElementById('limit-year-type').value;
         const yearLimitValue = document.getElementById('limit-year-val').value ?? 0;
         
@@ -981,6 +1019,7 @@
             "domainsPriority": domainsPriority,
             "domainsPriorityWeights": domainsPriorityWeights,
             "temporalBias": temporalValue,
+            "searchSetIdentifier": searchSetValue,
             "yearLimitType": yearLimitType,
             "yearLimitValue": yearLimitValue,
             "sizeLimitType": sizeLimitType,
