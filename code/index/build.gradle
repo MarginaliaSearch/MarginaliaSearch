@@ -72,10 +72,10 @@ dependencies {
     testImplementation libs.commons.lang3
     testImplementation project(':code:libraries:array')
 
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
     testImplementation libs.commons.codec
-    testImplementation 'org.testcontainers:mariadb:1.17.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation 'org.testcontainers:mariadb:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
     testImplementation project(':code:libraries:test-helpers')
     testImplementation project(':code:functions:language-processing')
     testImplementation project(':code:libraries:braille-block-punch-cards')
