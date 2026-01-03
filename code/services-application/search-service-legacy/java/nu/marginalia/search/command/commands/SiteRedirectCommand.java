@@ -9,13 +9,14 @@ import spark.Response;
 
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SiteRedirectCommand implements SearchCommandInterface {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Predicate<String> queryPatternPredicate = Pattern.compile("^(site|links):[.A-Za-z\\-0-9]+$").asPredicate();
+    private final Predicate<String> queryPatternPredicate = Pattern.compile("^(?:site|links):[.A-Za-z\\-0-9:/]+$").asPredicate();
 
     @Inject
     public SiteRedirectCommand() {
@@ -30,6 +31,14 @@ public class SiteRedirectCommand implements SearchCommandInterface {
         int idx = parameters.query().indexOf(':');
         String prefix = parameters.query().substring(0, idx);
         String domain = parameters.query().substring(idx + 1).toLowerCase();
+
+        // looks like an URL and not a domain name
+        if (domain.indexOf(':') >= 0) {
+            domain = domain.substring(domain.indexOf("://") + 3);
+            if (domain.indexOf('/') > 0) {
+                domain = domain.substring(0, domain.indexOf('/'));
+            }
+        }
 
         // Use an HTML redirect here, so we can use relative URLs
         String view = switch (prefix) {
