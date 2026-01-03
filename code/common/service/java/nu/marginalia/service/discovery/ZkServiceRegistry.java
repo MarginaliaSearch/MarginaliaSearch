@@ -6,10 +6,11 @@ import nu.marginalia.service.discovery.monitor.ServiceMonitorIf;
 import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.CuratorCache;
+import org.apache.curator.framework.recipes.cache.CuratorCacheListener;
 import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreV2;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +38,12 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     private static final Logger logger = LoggerFactory.getLogger(ZkServiceRegistry.class);
     private volatile boolean stopped = false;
 
+    private final List<CuratorCache> curatorCaches = new ArrayList<>();
     private final List<String> livenessPaths = new ArrayList<>();
-
     @Inject
     public ZkServiceRegistry(CuratorFramework curatorFramework) {
         try {
             this.curatorFramework = curatorFramework;
-
             curatorFramework.start();
             if (!curatorFramework.blockUntilConnected(30, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("Failed to connect to zookeeper after 30s");
@@ -219,42 +219,30 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
         }
     }
 
-    public void registerMonitor(ServiceMonitorIf monitor) throws Exception {
+
+    public void registerMonitor(ServiceMonitorIf monitor) {
         if (stopped)
             logger.info("Not registering monitor for {} because the registry is stopped", monitor.getKey());
 
-        String path = monitor.getKey().toPath();
 
-        curatorFramework.watchers().add()
-                .usingWatcher((Watcher) change -> {
-                    Watcher.Event.EventType type = change.getType();
+        CuratorCache pathCache = CuratorCache.builder(curatorFramework, monitor.getKey().toPath()).build();
+        curatorCaches.add(pathCache);
 
-                    if (type == Watcher.Event.EventType.NodeCreated) {
-                        monitor.onChange();
-                    }
-                    if (type == Watcher.Event.EventType.NodeDeleted) {
-                        monitor.onChange();
-                    }
-                })
-                .forPath(path);
+        pathCache.listenable()
+                .addListener(CuratorCacheListener.builder()
+                        .forDeletes((_) -> monitor.onChange())
+                        .forCreatesAndChanges((_,_) -> monitor.onChange())
+                        .build()
+                );
 
-        // Also register for updates to the running-instances list,
-        // as this will have an effect on the result of getEndpoints()
-        curatorFramework.watchers().add()
-                .usingWatcher((Watcher) change -> {
-                    Watcher.Event.EventType type = change.getType();
-
-                    if ("/running-instances".equals(change.getPath()))
-                        return;
-
-                    if (type == Watcher.Event.EventType.NodeCreated) {
-                        monitor.onChange();
-                    }
-                    if (type == Watcher.Event.EventType.NodeDeleted) {
-                        monitor.onChange();
-                    }
-                })
-                .forPath("/running-instances");
+        CuratorCache instanceCache = CuratorCache.builder(curatorFramework, "/running-instances").build();
+        curatorCaches.add(instanceCache);
+        instanceCache.listenable().addListener(
+                CuratorCacheListener.builder()
+                        .forDeletes(_ -> monitor.onChange())
+                        .forCreates(_ -> monitor.onChange())
+                        .build()
+        );
     }
 
     @Override
@@ -299,6 +287,10 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
             return;
 
         stopped = true;
+
+        for (var cache: curatorCaches) {
+            cache.close();
+        }
 
         // Delete all liveness paths
         for (var path : livenessPaths) {
