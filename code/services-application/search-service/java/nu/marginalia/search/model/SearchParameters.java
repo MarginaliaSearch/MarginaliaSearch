@@ -56,6 +56,14 @@ public record SearchParameters(WebsiteUrl url,
         return profile.filterId;
     }
 
+    public boolean requiresPOST() {
+        if (profile == SearchProfile.CUSTOM)
+            return true;
+        if (filterSpec != null)
+            return true;
+        return false;
+    }
+
     public SearchParameters withProfile(SearchProfile profile) {
         return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
     }
