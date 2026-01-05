@@ -28,9 +28,6 @@ include 'code:functions:link-graph:api'
 include 'code:functions:search-query'
 include 'code:functions:search-query:api'
 
-include 'code:functions:live-capture'
-include 'code:functions:live-capture:api'
-
 include 'code:execution'
 include 'code:execution:api'
 
@@ -38,6 +35,9 @@ include 'code:index'
 include 'code:index:api'
 include 'code:index:index-journal'
 include 'code:index:index-perftest'
+include 'code:index:live-capture'
+include 'code:index:live-capture:api'
+
 
 include 'code:libraries:array'
 include 'code:libraries:native'

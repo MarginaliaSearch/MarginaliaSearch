@@ -51,7 +51,7 @@ dependencies {
     implementation project(':code:processes:crawling-process:ft-link-parser')
     implementation project(':code:processes:crawling-process:ft-content-type')
 
-    implementation project(':code:functions:live-capture:api')
+    implementation project(':code:index:live-capture:api')
 
     testImplementation project(':code:functions:language-processing')
 

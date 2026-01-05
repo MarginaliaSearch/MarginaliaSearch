@@ -15,7 +15,7 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation project(':code:functions:live-capture:api')
+    implementation project(':code:index:live-capture:api')
 
     implementation project(':code:common:config')
     implementation project(':code:common:service')

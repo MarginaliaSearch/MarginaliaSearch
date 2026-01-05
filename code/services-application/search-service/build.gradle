@@ -38,7 +38,7 @@ dependencies {
     implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:braille-block-punch-cards')
 
-    implementation project(':code:functions:live-capture:api')
+    implementation project(':code:index:live-capture:api')
     implementation project(':code:functions:math:api')
     implementation project(':code:functions:favicon:api')
     implementation project(':code:functions:domain-info:api')
