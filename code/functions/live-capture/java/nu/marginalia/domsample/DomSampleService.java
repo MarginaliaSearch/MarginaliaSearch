@@ -3,6 +3,7 @@ package nu.marginalia.domsample;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.inject.Named;
+import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.livecapture.BrowserlessClient;
@@ -36,8 +37,8 @@ public class DomSampleService {
                             HikariDataSource mariadbDataSource,
                             @Named("browserless-uri") String browserlessAddress,
                             @Named("browserless-sample-threads") int sampleThreads,
-                            DomainCoordinator domainCoordinator,
-                            ServiceConfiguration serviceConfiguration)
+                            LiveCaptureConfig liveCaptureConfig,
+                            DomainCoordinator domainCoordinator)
             throws URISyntaxException
     {
         this.db = db;
@@ -45,7 +46,7 @@ public class DomSampleService {
         this.sampleThreads = sampleThreads;
         this.domainCoordinator = domainCoordinator;
 
-        if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
+        if (StringUtils.isEmpty(browserlessAddress) || !liveCaptureConfig.isEnabled()) {
             logger.warn("Live capture service will not run");
             browserlessURI = null;
         }

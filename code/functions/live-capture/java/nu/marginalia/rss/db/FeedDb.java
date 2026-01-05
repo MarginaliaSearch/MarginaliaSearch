@@ -3,6 +3,7 @@ package nu.marginalia.rss.db;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItems;
@@ -38,8 +39,8 @@ public class FeedDb {
     private final boolean feedDbEnabled;
 
     @Inject
-    public FeedDb(ServiceConfiguration serviceConfiguration) {
-        feedDbEnabled = serviceConfiguration.node() <= 1;
+    public FeedDb(LiveCaptureConfig liveCaptureConfig) {
+        feedDbEnabled = liveCaptureConfig.isEnabled();
         readerDbPath = WmsaHome.getDataPath().resolve(dbFileName);
 
         if (!feedDbEnabled) {

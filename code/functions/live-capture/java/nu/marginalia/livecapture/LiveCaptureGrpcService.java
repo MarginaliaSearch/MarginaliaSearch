@@ -6,8 +6,10 @@ import io.grpc.stub.StreamObserver;
 import jakarta.inject.Named;
 import nu.marginalia.api.livecapture.Empty;
 import nu.marginalia.api.livecapture.LiveCaptureApiGrpc;
+import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import org.apache.commons.lang3.StringUtils;
@@ -49,12 +51,12 @@ public class LiveCaptureGrpcService
                                   @Named("browserless-uri") String browserlessAddress,
                                   @Named("browserless-agent-threads") int threads,
                                   DomainCoordinator domainCoordinator,
-                                  ServiceConfiguration serviceConfiguration
+                                  LiveCaptureConfig liveCaptureConfig
                                   ) throws URISyntaxException {
         this.dataSource = dataSource;
         this.domainCoordinator = domainCoordinator;
 
-        if (StringUtils.isEmpty(browserlessAddress) || serviceConfiguration.node() > 1) {
+        if (StringUtils.isEmpty(browserlessAddress) || !liveCaptureConfig.isEnabled()) {
             logger.warn("Live capture service will not run");
             serviceEnabled = false;
             browserlessURI = null; // satisfy final

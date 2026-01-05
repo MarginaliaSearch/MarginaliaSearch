@@ -3,6 +3,7 @@ package nu.marginalia.index;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.livecapture.LivecaptureModule;
 import nu.marginalia.nsfw.NsfwFilterModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
@@ -34,6 +35,7 @@ public class IndexMain extends MainClass {
                 new DatabaseModule(false),
                 new ServiceDiscoveryModule(),
                 new NsfwFilterModule(),
+                new LivecaptureModule(),
                 new ServiceConfigurationModule(ServiceId.Index)
         );
 

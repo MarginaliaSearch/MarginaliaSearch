@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.feeds.*;
+import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.persistence.MqPersistence;

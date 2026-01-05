@@ -2,12 +2,16 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.domsample.DomSampleGrpcService;
+import nu.marginalia.domsample.DomSampleService;
 import nu.marginalia.execution.*;
 import nu.marginalia.functions.favicon.FaviconGrpcService;
 import nu.marginalia.index.api.IndexMqEndpoints;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkgraph.DomainLinks;
 import nu.marginalia.linkgraph.PartitionLinkGraphService;
+import nu.marginalia.livecapture.LiveCaptureGrpcService;
+import nu.marginalia.rss.svc.FeedsGrpcService;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -56,6 +60,10 @@ public class IndexService extends SparkService {
                         ExecutorCrawlGrpcService executorCrawlGrpcService,
                         ExecutorSideloadGrpcService executorSideloadGrpcService,
                         ExecutorExportGrpcService executorExportGrpcService,
+                        LiveCaptureGrpcService liveCaptureGrpcService,
+                        DomSampleService domSampleService,
+                        DomSampleGrpcService domSampleGrpcService,
+                        FeedsGrpcService feedsGrpcService,
                         FaviconGrpcService faviconGrpcService,
                         ExecutionInit executionInit,
                         ExecutorFileTransferService fileTransferService,
@@ -66,6 +74,9 @@ public class IndexService extends SparkService {
                 ServicePartition.partition(params.configuration.node()),
                 List.of(indexQueryService,
                         partitionLinkGraphService,
+                        liveCaptureGrpcService,
+                        domSampleGrpcService,
+                        feedsGrpcService,
                         executorGrpcService,
                         executorCrawlGrpcService,
                         executorSideloadGrpcService,
@@ -87,6 +98,8 @@ public class IndexService extends SparkService {
         Spark.head("/transfer/file/:fid", fileTransferService::transferFile);
 
         Thread.ofPlatform().name("initialize-index").start(this::initialize);
+
+        domSampleService.start();
     }
 
     volatile boolean initialized = false;

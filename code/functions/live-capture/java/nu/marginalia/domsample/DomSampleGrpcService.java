@@ -6,6 +6,7 @@ import com.google.protobuf.ByteString;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.domsample.*;
+import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
@@ -21,11 +22,20 @@ public class DomSampleGrpcService
     private static final Logger logger = LoggerFactory.getLogger(DomSampleGrpcService.class);
 
     private final DomSampleDb domSampleDb;
+    private final boolean isEnabled;
 
     @Inject
-    public DomSampleGrpcService(DomSampleDb domSampleDb) {
+    public DomSampleGrpcService(DomSampleDb domSampleDb,
+                                LiveCaptureConfig liveCaptureConfig
+                                ) {
+        this.isEnabled = liveCaptureConfig.isEnabled();
         this.domSampleDb = domSampleDb;
     }
+
+    @Override
+    public boolean shouldRegisterService() {
+    return isEnabled;
+}
 
     @Override
     public void getSample(RpcDomainName request, StreamObserver<RpcDomainSample> responseObserver) {
