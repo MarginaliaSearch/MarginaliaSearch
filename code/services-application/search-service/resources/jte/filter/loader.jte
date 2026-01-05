@@ -8,7 +8,7 @@
 <html lang="en">
 
 @template.part.head(title =  "Filter Settings - Marginalia Search")
-
+<body bgcolor="black"></body>
 <script lang="javascript">
 (async () => {
     const rsp = await fetch('/filters', {
@@ -46,4 +46,5 @@
     }
 })();
 </script>
+
 </html>

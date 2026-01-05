@@ -65,10 +65,6 @@
         return true;
     });
 
-@if ("GET".equalsIgnoreCase(requestMethod))
-    document.getElementById('search-form').submit()
-@elseif (displayUrl != null)
     window.history.replaceState(null, window.title, "${displayUrl}")
-@endif
 </script>
 @endif

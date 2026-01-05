@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import io.jooby.*;
 import io.jooby.annotation.GET;
 import io.jooby.annotation.POST;
-import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.db.DomainRankingSetsService;
@@ -62,7 +61,6 @@ public class SearchFilterService {
         List<String> problems = new ArrayList<>();
         SearchFilterSpec currentFilter;
 
-        log.info("Recovered cookie");
         try {
             currentFilter = filterParser.parse("WEB", "ADHOC", body.value());
         }

@@ -842,13 +842,10 @@
             </label>
             </div>
 
-
-
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-filter"></i>
                 <span class="grow">Search Set Identifier</span>
             </div>
-
 
             <div class="text-sm px-5">
                 Limit results to a predefined set of domains,
