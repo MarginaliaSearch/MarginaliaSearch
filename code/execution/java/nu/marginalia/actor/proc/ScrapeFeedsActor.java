@@ -47,7 +47,7 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
 
     private final Path feedPath = WmsaHome.getHomePath().resolve("data/scrape-urls.txt");
 
-    private static boolean insertFoundDomains = Boolean.getBoolean("loader.insertFoundDomains");
+    private static boolean insertFoundDomains = (System.getProperty("loader.insertFoundDomains") == null) || Boolean.getBoolean("loader.insertFoundDomains");
 
     public record Initial() implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
