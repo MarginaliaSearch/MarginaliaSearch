@@ -58,11 +58,12 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 // Sleep initially in case this is during start-up
                 for (;;) {
                     try {
-                        Thread.sleep(Duration.ofMinutes(15));
+                        Thread.sleep(Duration.ofMinutes(1));
                         String currentHash = feedFetcherService.getFeedDataHash();
                         if (!Objects.equals(currentHash, feedsHash)) {
                             yield new LiveCrawl(currentHash);
                         }
+                        Thread.sleep(Duration.ofMinutes(14));
                     }
                     catch (RuntimeException ex) {
                         logger.error("Failed to fetch feed data hash");
