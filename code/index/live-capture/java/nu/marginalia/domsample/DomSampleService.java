@@ -8,7 +8,6 @@ import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.livecapture.BrowserlessClient;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.service.module.ServiceConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,11 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +34,9 @@ public class DomSampleService {
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
     private final ArrayBlockingQueue<EdgeDomain> samplingQueue = new ArrayBlockingQueue<>(4);
     private final Set<String> httpOnlyDomains = new HashSet<>(10_000);
+
+    private final List<Thread> threads = new ArrayList<>();
+    private volatile boolean running = false;
 
     @Inject
     public DomSampleService(DomSampleDb db,
@@ -62,11 +68,34 @@ public class DomSampleService {
             return;
         }
 
-        Thread.ofPlatform().daemon().start(this::mainThread);
+
+        if (running)
+            return;
+
+        running = true;
+
+        threads.add(Thread.ofPlatform().daemon().start(this::mainThread));
         for (int i = 0; i < sampleThreads; i++) {
-            Thread.ofPlatform().daemon().start(this::samplingThread);
+            threads.add(Thread.ofPlatform().daemon().start(this::samplingThread));
         }
+
     }
+
+    public boolean isRunning() { return running; }
+
+    public void stop() throws InterruptedException {
+        if (!running)
+            return;
+
+        for (var thread: threads) {
+            thread.interrupt();
+            thread.join();
+        }
+        threads.clear();
+
+        running = false;
+    }
+
 
     public void syncDomains() {
         Set<String> dbDomains = new HashSet<>();
@@ -76,7 +105,7 @@ public class DomSampleService {
         try (var conn = mariadbDataSource.getConnection();
             var stmt = conn.prepareStatement("""
                 SELECT DOMAIN_NAME, HTTP_SCHEMA
-                FROM EC_DOMAIN 
+                FROM EC_DOMAIN
                 INNER JOIN DOMAIN_AVAILABILITY_INFORMATION
                 ON EC_DOMAIN.ID=DOMAIN_ID
                 WHERE NODE_AFFINITY>0
@@ -103,21 +132,31 @@ public class DomSampleService {
         logger.info("Synced domains to sqlite");
     }
 
-    public void mainThread() {
+    private void mainThread() {
 
         try (var client = new BrowserlessClient(browserlessURI)) {
 
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.interrupted() && running) {
 
                 try {
-                    // Grace sleep in case we're operating on an empty domain list
-                    TimeUnit.SECONDS.sleep(15);
+                    Instant nextPollWindow = Instant.now().plus(14, ChronoUnit.DAYS);
 
                     syncDomains();
-                    var domains = db.getScheduledDomains();
 
-                    for (String domain : domains) {
-                        samplingQueue.put(new EdgeDomain(domain));
+                    for (String domain : db.getScheduledDomains()) {
+                        var ed = new EdgeDomain(domain);
+                        while (!samplingQueue.offer(ed, 15, TimeUnit.SECONDS)) {
+                            if (Thread.interrupted() || !running) {
+                                return;
+                            }
+                        }
+                    }
+
+                    long sleepDuration = Duration.between(Instant.now(), nextPollWindow).toHours();
+
+                    // Grace sleep in case we're operating on a small or empty domain list
+                    if (sleepDuration > 0) {
+                        TimeUnit.HOURS.sleep(sleepDuration);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -130,11 +169,14 @@ public class DomSampleService {
         }
     }
 
-    void samplingThread() {
+    private void samplingThread() {
         try (var client = new BrowserlessClient(browserlessURI)) {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted() && running) {
                 try {
-                    EdgeDomain domain = samplingQueue.take();
+                    EdgeDomain domain = samplingQueue.poll(15, TimeUnit.SECONDS);
+                    if (domain == null)
+                        continue;
+
                     try (var lock = domainCoordinator.lockDomain(domain)) {
                         updateDomain(client, domain.toString());
                     } catch (Exception e) {

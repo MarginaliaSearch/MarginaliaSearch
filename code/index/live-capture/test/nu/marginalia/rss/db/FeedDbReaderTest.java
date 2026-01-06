@@ -17,9 +17,7 @@ class FeedDbReaderTest {
     @Test
     void getLinksUpdatedSince() throws SQLException {
         var reader = new FeedDbReader(Path.of("/home/vlofgren/rss-feeds.db"));
-        Map<String, List<String>> links = new HashMap<>();
-
-        reader.getLinksUpdatedSince(Instant.now().minus(10, ChronoUnit.DAYS), links::put);
+        Map<String, List<String>> links = reader.getLinksUpdatedSince(Instant.now().minus(10, ChronoUnit.DAYS));
 
         System.out.println(links.size());
         for (var link : links.values()) {

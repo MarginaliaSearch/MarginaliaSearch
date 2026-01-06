@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.name.Names;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.coordination.LocalDomainCoordinator;
 import nu.marginalia.model.EdgeDomain;
@@ -84,6 +85,7 @@ class FeedFetcherServiceTest extends AbstractModule {
     }
 
     public void configure() {
+        bind(LiveCaptureConfig.class).toInstance(new LiveCaptureConfig(true));
         bind(DomainCoordinator.class).to(LocalDomainCoordinator.class);
         bind(HikariDataSource.class).toInstance(dataSource);
         bind(ServiceRegistryIf.class).toInstance(Mockito.mock(ServiceRegistryIf.class));
@@ -99,7 +101,7 @@ class FeedFetcherServiceTest extends AbstractModule {
             feedDb.switchDb(writer);
         }
 
-        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        feedFetcherService.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
 
         var result = feedDb.getFeed(new EdgeDomain("www.marginalia.nu"));
         System.out.println(result);
@@ -114,11 +116,11 @@ class FeedFetcherServiceTest extends AbstractModule {
             feedDb.switchDb(writer);
         }
 
-        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        feedFetcherService.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
         Assertions.assertNotNull(feedDb.getEtag(new EdgeDomain("www.marginalia.nu")));
-        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        feedFetcherService.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
         Assertions.assertNotNull(feedDb.getEtag(new EdgeDomain("www.marginalia.nu")));
-        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        feedFetcherService.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
         Assertions.assertNotNull(feedDb.getEtag(new EdgeDomain("www.marginalia.nu")));
 
         var result = feedDb.getFeed(new EdgeDomain("www.marginalia.nu"));
@@ -134,7 +136,7 @@ class FeedFetcherServiceTest extends AbstractModule {
             feedDb.switchDb(writer);
         }
 
-        feedFetcherService.updateFeeds(FeedFetcherService.UpdateMode.REFRESH);
+        feedFetcherService.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
 
         // We forget the feed on a 404 error
         Assertions.assertEquals(FeedItems.none(), feedDb.getFeed(new EdgeDomain("www.marginalia.nu")));

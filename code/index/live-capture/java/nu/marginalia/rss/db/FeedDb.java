@@ -7,7 +7,6 @@ import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItems;
-import nu.marginalia.service.module.ServiceConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -20,12 +19,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.security.MessageDigest;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
 
 @Singleton
 public class FeedDb {
@@ -48,11 +46,16 @@ public class FeedDb {
         }
         else {
             try {
-                reader = new FeedDbReader(readerDbPath);
+                reader = FeedDb.createReader();
             } catch (Exception e) {
                 reader = null;
             }
         }
+    }
+
+    public static FeedDbReader createReader() throws SQLException {
+        Path readerDbPath = WmsaHome.getDataPath().resolve(dbFileName);
+        return new FeedDbReader(readerDbPath);
     }
 
     /** Constructor for testing */
@@ -149,25 +152,6 @@ public class FeedDb {
         return null;
     }
 
-    public Optional<String> getFeedAsJson(String domain) {
-        if (!feedDbEnabled) {
-            throw new IllegalStateException("Feed database is disabled on this node");
-        }
-
-        // Capture the current reader to avoid concurrency issues
-        FeedDbReader reader = this.reader;
-
-        try {
-            if (reader != null) {
-                return reader.getFeedAsJson(domain);
-            }
-        }
-        catch (Exception e) {
-            logger.error("Error getting feed for " + domain, e);
-        }
-        return Optional.empty();
-    }
-
     public FeedDbWriter createWriter() {
         if (!feedDbEnabled) {
             throw new IllegalStateException("Feed database is disabled on this node");
@@ -217,21 +201,6 @@ public class FeedDb {
         }
 
         return Base64.getEncoder().encodeToString(digest.digest());
-    }
-
-    public void getLinksUpdatedSince(Instant since, BiConsumer<String, List<String>> consumer) throws Exception {
-        if (!feedDbEnabled) {
-            throw new IllegalStateException("Feed database is disabled on this node");
-        }
-
-        // Capture the current reader to avoid concurrency issues
-        FeedDbReader reader = this.reader;
-
-        if (reader == null) {
-            throw new NullPointerException("Reader is not available");
-        }
-
-        reader.getLinksUpdatedSince(since, consumer);
     }
 
     public Instant getFetchTime() {

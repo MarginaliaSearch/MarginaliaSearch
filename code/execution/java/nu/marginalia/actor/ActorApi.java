@@ -10,7 +10,6 @@ import nu.marginalia.process.ProcessSpawnerService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Spark;
 
 @Singleton
 public class ActorApi {
@@ -76,8 +75,7 @@ public class ActorApi {
         }
         catch (IllegalArgumentException ex) {
             logger.error("Unknown actor {}", name);
-            Spark.halt(400, "Unknown actor name provided");
-            return null;
+            throw new IllegalArgumentException("Bad actor provided");
         }
     }
 }

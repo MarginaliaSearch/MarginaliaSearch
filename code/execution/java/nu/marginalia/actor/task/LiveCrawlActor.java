@@ -16,6 +16,8 @@ import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.LiveCrawlRequest;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessSpawnerService;
+import nu.marginalia.rss.svc.FeedFetcherService;
+import nu.marginalia.rss.svc.FeedsGrpcService;
 import nu.marginalia.storage.FileStorageService;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -33,7 +35,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqLiveCrawlerOutbox;
     private final ExecutorActorStateMachines executorActorStateMachines;
-    private final FeedsClient feedsClient;
+    private final FeedFetcherService feedFetcherService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final FileStorageService fileStorageService;
@@ -57,7 +59,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 for (;;) {
                     try {
                         Thread.sleep(Duration.ofMinutes(15));
-                        String currentHash = feedsClient.getFeedDataHash();
+                        String currentHash = feedFetcherService.getFeedDataHash();
                         if (!Objects.equals(currentHash, feedsHash)) {
                             yield new LiveCrawl(currentHash);
                         }
@@ -101,7 +103,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
     @Inject
     public LiveCrawlActor(ActorProcessWatcher processWatcher,
                           ProcessOutboxes processOutboxes,
-                          FeedsClient feedsClient,
+                          FeedFetcherService feedFetcherService,
                           Gson gson,
                           ExecutorActorStateMachines executorActorStateMachines, FileStorageService fileStorageService)
     {
@@ -109,7 +111,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
         this.processWatcher = processWatcher;
         this.mqLiveCrawlerOutbox = processOutboxes.getLiveCrawlerOutbox();
         this.executorActorStateMachines = executorActorStateMachines;
-        this.feedsClient = feedsClient;
+        this.feedFetcherService = feedFetcherService;
         this.fileStorageService = fileStorageService;
     }
 

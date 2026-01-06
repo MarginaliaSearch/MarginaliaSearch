@@ -30,6 +30,7 @@ import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.rss.db.FeedDb;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import nu.marginalia.storage.FileStorageService;
@@ -44,7 +45,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Security;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -59,7 +59,6 @@ public class LiveCrawlerMain extends ProcessMainClass {
     private static final Logger logger =
             LoggerFactory.getLogger(LiveCrawlerMain.class);
 
-    private final FeedsClient feedsClient;
     private final ProcessHeartbeat heartbeat;
     private final DbDomainQueries domainQueries;
     private final DomainBlacklist domainBlacklist;
@@ -72,8 +71,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
     private final HikariDataSource dataSource;
 
     @Inject
-    public LiveCrawlerMain(FeedsClient feedsClient,
-                           Gson gson,
+    public LiveCrawlerMain(Gson gson,
                            ProcessConfiguration config,
                            ProcessHeartbeat heartbeat,
                            DbDomainQueries domainQueries,
@@ -90,7 +88,6 @@ public class LiveCrawlerMain extends ProcessMainClass {
     {
         super(messageQueueFactory, config, gson, LIVE_CRAWLER_INBOX);
 
-        this.feedsClient = feedsClient;
         this.heartbeat = heartbeat;
         this.domainQueries = domainQueries;
         this.domainBlacklist = domainBlacklist;
@@ -125,7 +122,7 @@ public class LiveCrawlerMain extends ProcessMainClass {
         try {
             Injector injector = Guice.createInjector(
                     new LiveCrawlerModule(),
-                    new DomainCoordinationModule(), // 2 hours lease timeout is enough for the live crawler
+                    new DomainCoordinationModule(),
                     new ProcessConfigurationModule("crawler"),
                     new ConverterModule(),
                     new ServiceDiscoveryModule(),
@@ -185,12 +182,11 @@ public class LiveCrawlerMain extends ProcessMainClass {
             /* ------------------------------------------------ */
 
             processHeartbeat.progress(LiveCrawlState.FETCH_LINKS);
+            Map<String, List<String>> urlsPerDomain;
 
-            Map<String, List<String>> urlsPerDomain = new HashMap<>(10_000);
-            if (!feedsClient.waitReady(Duration.ofHours(1))) {
-                throw new RuntimeException("Feeds client never became ready, cannot proceed with live crawling");
+            try (var reader = FeedDb.createReader()) {
+                urlsPerDomain = reader.getLinksUpdatedSince(cutoff);
             }
-            feedsClient.getUpdatedDomains(cutoff, urlsPerDomain::put);
 
             logger.info("Fetched data for {} domains", urlsPerDomain.size());
 

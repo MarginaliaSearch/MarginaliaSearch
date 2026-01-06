@@ -56,38 +56,5 @@ public class FeedsClient {
         }
     }
 
-    public void getUpdatedDomains(Instant since, BiConsumer<String, List<String>> consumer) throws ExecutionException, InterruptedException {
-        channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getUpdatedLinks)
-                .run(RpcUpdatedLinksRequest.newBuilder().setSinceEpochMillis(since.toEpochMilli()).build())
-                .forEachRemaining(rsp -> consumer.accept(rsp.getDomain(), new ArrayList<>(rsp.getUrlList())));
-    }
-
-    public boolean waitReady(Duration duration) throws InterruptedException {
-        return channelPool.awaitChannel(duration);
-    }
-
-
-    /** Get the hash of the feed data, for identifying when the data has been updated */
-    public String getFeedDataHash() {
-        return channelPool.call(FeedApiGrpc.FeedApiBlockingStub::getFeedDataHash)
-                .run(Empty.getDefaultInstance())
-                .getHash();
-    }
-
-    /** Update the feeds, return a message ID for the update */
-    @CheckReturnValue
-    public long updateFeeds(RpcFeedUpdateMode mode) throws Exception {
-        // Create a message for the {@link MqLongRunningTask} paradigm to use for tracking the task
-        long msgId = updateFeedsOutbox.sendAsync("updateFeeds", "");
-
-        channelPool.call(FeedApiGrpc.FeedApiBlockingStub::updateFeeds)
-                .run(RpcUpdateRequest.newBuilder()
-                        .setMode(mode)
-                        .setMsgId(msgId)
-                        .build()
-                );
-
-        return msgId;
-    }
 
 }

@@ -32,6 +32,10 @@ public class LiveCaptureConfig {
         enableLiveCapture = isEnabled;
     }
 
+    public LiveCaptureConfig(boolean enabled) {
+        enableLiveCapture = enabled;
+    }
+
     public boolean isEnabled() {
         return enableLiveCapture;
     }

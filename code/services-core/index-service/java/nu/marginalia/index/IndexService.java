@@ -1,9 +1,9 @@
 package nu.marginalia.index;
 
 import com.google.inject.Inject;
+import io.jooby.Jooby;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.domsample.DomSampleGrpcService;
-import nu.marginalia.domsample.DomSampleService;
 import nu.marginalia.execution.*;
 import nu.marginalia.functions.favicon.FaviconGrpcService;
 import nu.marginalia.index.api.IndexMqEndpoints;
@@ -16,14 +16,13 @@ import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.SparkService;
+import nu.marginalia.service.server.JoobyService;
 import nu.marginalia.service.server.mq.MqRequest;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.svc.ExecutorFileTransferService;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Spark;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +31,7 @@ import java.util.List;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
 
-public class IndexService extends SparkService {
+public class IndexService extends JoobyService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @NotNull
@@ -43,6 +42,7 @@ public class IndexService extends SparkService {
     private final DocumentDbReader documentDbReader;
 
     private final DomainLinks domainLinks;
+    private final ExecutorFileTransferService fileTransferService;
     private final ServiceEventLog eventLog;
 
     private final ExecutionInit executionInit;
@@ -61,7 +61,6 @@ public class IndexService extends SparkService {
                         ExecutorSideloadGrpcService executorSideloadGrpcService,
                         ExecutorExportGrpcService executorExportGrpcService,
                         LiveCaptureGrpcService liveCaptureGrpcService,
-                        DomSampleService domSampleService,
                         DomSampleGrpcService domSampleGrpcService,
                         FeedsGrpcService feedsGrpcService,
                         FaviconGrpcService faviconGrpcService,
@@ -81,7 +80,8 @@ public class IndexService extends SparkService {
                         executorCrawlGrpcService,
                         executorSideloadGrpcService,
                         executorExportGrpcService,
-                        faviconGrpcService)
+                        faviconGrpcService),
+                List.of()
         );
 
         this.opsService = opsService;
@@ -90,16 +90,21 @@ public class IndexService extends SparkService {
         this.documentDbReader = documentDbReader;
         this.domainLinks = domainLinks;
         this.executionInit = executionInit;
+        this.fileTransferService = fileTransferService;
         this.eventLog = eventLog;
 
         this.init = params.initialization;
 
-        Spark.get("/transfer/file/:fid", fileTransferService::transferFile);
-        Spark.head("/transfer/file/:fid", fileTransferService::transferFile);
-
         Thread.ofPlatform().name("initialize-index").start(this::initialize);
+    }
 
-        domSampleService.start();
+    @Override
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
+
+        jooby.get("/transfer/file/{fid}", fileTransferService::transferFile);
+        jooby.head("/transfer/file/{fid}", fileTransferService::transferFile);
+
     }
 
     volatile boolean initialized = false;

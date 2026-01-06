@@ -45,6 +45,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -74,7 +75,11 @@ public class FeedFetcherService {
 
     private final HttpClient httpClient;
 
-    private volatile boolean updating;
+    private volatile boolean updating = false;
+    private volatile boolean requestStop = false;
+    private Thread updateThread;
+
+    private volatile String feedDataHash;
 
     @Inject
     public FeedFetcherService(FeedDb feedDb,
@@ -162,7 +167,39 @@ public class FeedFetcherService {
         REFRESH
     }
 
-    public void updateFeeds(UpdateMode updateMode) throws IOException {
+    public String getFeedDataHash() throws Exception {
+        if (!feedDb.isEnabled()) {
+            throw new UnsupportedOperationException("FeedDB disabled on this node");
+        }
+
+        if (feedDataHash != null)
+            return feedDataHash;
+
+        return (feedDataHash = feedDb.getDataHash());
+    }
+
+    public void start(UpdateMode updateMode) {
+        if (updating) {
+            return;
+        }
+        requestStop = false;
+        updateThread = Thread.ofPlatform().name("Feed update").start(() -> updateFeedsSynchronous(updateMode));
+
+    }
+
+    public boolean isRunning() {
+        return updating;
+    }
+
+    public void stop() throws InterruptedException {
+        if (updating)
+            updateThread.interrupt();
+        if (updateThread != null)
+            updateThread.join();
+        updateThread = null;
+    }
+
+    public void updateFeedsSynchronous(UpdateMode updateMode) {
         if (updating) // Prevent concurrent updates
         {
             throw new IllegalStateException("Already updating feeds, refusing to start another update");
@@ -184,7 +221,7 @@ public class FeedFetcherService {
 
             // If we didn't get any definitions, or a clean update is requested, read the definitions from the system
             // instead
-            if (definitions == null || updateMode == UpdateMode.CLEAN) {
+            if (definitions == null || definitions.isEmpty() || updateMode == UpdateMode.CLEAN) {
                 definitions = readDefinitionsFromSystem();
             }
 
@@ -196,6 +233,9 @@ public class FeedFetcherService {
             SimpleBlockingThreadPool executor = new SimpleBlockingThreadPool("FeedFetcher", 64, 4);
 
             for (var feed : definitions) {
+                if (Thread.interrupted() || requestStop)
+                    break;
+
                 executor.submitQuietly(() -> {
                     try {
                         EdgeDomain domain = new EdgeDomain(feed.domain());
@@ -255,22 +295,31 @@ public class FeedFetcherService {
                 });
             }
 
-            executor.shutDown();
-            // Wait for the executor to finish, but give up after 60 minutes to avoid hanging indefinitely
-            for (int waitedMinutes = 0; waitedMinutes < 60; waitedMinutes++) {
-                if (executor.awaitTermination(1, TimeUnit.MINUTES)) break;
+
+            if (!requestStop) { // Graceful shutdown
+                executor.shutDown();
+                // Wait for the executor to finish, but give up after 60 minutes to avoid hanging indefinitely
+                for (int waitedMinutes = 0; waitedMinutes < 60; waitedMinutes++) {
+                    if (executor.awaitTermination(1, TimeUnit.MINUTES)) break;
+                }
+                executor.shutDownNow();
+
+                // Wait for any in-progress writes to finish before switching the database
+                // in case we ended up murdering the writer with shutDownNow.  It's a very
+                // slim chance but this increases the odds of a clean switch over.
+
+                TimeUnit.SECONDS.sleep(5);
+
+                feedDb.switchDb(writer);
+                feedDataHash = null; // invalidate hash
             }
-            executor.shutDownNow();
+            else { // Manual termination
+                executor.shutDownNow();
+                writer.close();
+                Files.deleteIfExists(writer.getDbPath());
+            }
 
-            // Wait for any in-progress writes to finish before switching the database
-            // in case we ended up murdering the writer with shutDownNow.  It's a very
-            // slim chance but this increases the odds of a clean switch over.
-
-            TimeUnit.SECONDS.sleep(5);
-
-            feedDb.switchDb(writer);
-
-        } catch (SQLException|InterruptedException e) {
+        } catch (SQLException|InterruptedException|IOException e) {
             logger.error("Error updating feeds", e);
         }
         finally {
@@ -380,6 +429,7 @@ public class FeedFetcherService {
 
         for (var storage : storages) {
             var url = executorClient.remoteFileURL(storage, "feeds.csv.gz");
+            logger.info("Fetching from {}", url);
 
             try (var feedStream = new GZIPInputStream(url.openStream())) {
                 CSVReader reader = new CSVReader(new java.io.InputStreamReader(feedStream));

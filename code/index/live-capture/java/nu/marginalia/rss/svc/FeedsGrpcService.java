@@ -46,68 +46,6 @@ public class FeedsGrpcService extends FeedApiGrpc.FeedApiImplBase implements Dis
     }
 
     @Override
-    public void updateFeeds(RpcUpdateRequest request,
-                            StreamObserver<Empty> responseObserver)
-    {
-        FeedFetcherService.UpdateMode updateMode = switch(request.getMode()) {
-            case CLEAN -> FeedFetcherService.UpdateMode.CLEAN;
-            case REFRESH -> FeedFetcherService.UpdateMode.REFRESH;
-            default -> throw new IllegalStateException("Unexpected value: " + request.getMode());
-        };
-
-        // Start a long-running task to update the feeds
-        MqLongRunningTask
-                .of(request.getMsgId(), "updateFeeds", mqPersistence)
-                .asThread(() -> {
-                            feedFetcherService.updateFeeds(updateMode);
-                            return new MqTaskResult.Success();
-                        })
-                .start();
-
-        responseObserver.onNext(Empty.getDefaultInstance());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void getFeedDataHash(Empty request, StreamObserver<RpcFeedDataHash> responseObserver) {
-        if (!feedDb.isEnabled()) {
-            responseObserver.onError(Status.INTERNAL.withDescription("Feed database is disabled on this node").asRuntimeException());
-            return;
-        }
-
-        try {
-            String hash = feedDb.getDataHash();
-            responseObserver.onNext(RpcFeedDataHash.newBuilder().setHash(hash).build());
-            responseObserver.onCompleted();
-        }
-        catch (Exception e) {
-            logger.error("Error getting feed data hash", e);
-            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
-        }
-    }
-
-    @Override
-    public void getUpdatedLinks(RpcUpdatedLinksRequest request, StreamObserver<RpcUpdatedLinksResponse> responseObserver) {
-        Instant since = Instant.ofEpochMilli(request.getSinceEpochMillis());
-
-        try {
-            feedDb.getLinksUpdatedSince(since, (String domain, List<String> urls) -> {
-                RpcUpdatedLinksResponse rsp = RpcUpdatedLinksResponse.newBuilder()
-                        .setDomain(domain)
-                        .addAllUrl(urls)
-                        .build();
-                responseObserver.onNext(rsp);
-            });
-
-            responseObserver.onCompleted();
-        }
-        catch (Exception e) {
-            logger.error("Error getting updated links", e);
-            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
-        }
-    }
-
-    @Override
     public void getFeed(RpcDomainId request,
                         StreamObserver<RpcFeed> responseObserver) {
         if (!feedDb.isEnabled()) {

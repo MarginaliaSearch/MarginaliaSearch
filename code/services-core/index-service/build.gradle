@@ -38,6 +38,8 @@ dependencies {
     implementation project(':code:index:live-capture')
     implementation project(':code:index:live-capture:api')
 
+    implementation project(':code:libraries:domain-lock')
+
     implementation project(':code:index')
     implementation project(':code:functions:link-graph:partition')
     implementation project(':code:functions:link-graph:api')
@@ -48,11 +50,9 @@ dependencies {
     testImplementation project(path: ':code:services-core:control-service')
 
     implementation libs.bundles.slf4j
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
     implementation libs.bundles.jetty
     implementation libs.prometheus
+    implementation libs.bundles.jooby
     implementation libs.notnull
     implementation libs.guava
     implementation dependencies.create(libs.guice.get()) {

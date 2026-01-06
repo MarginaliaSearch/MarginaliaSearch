@@ -134,7 +134,8 @@ public class FeedDbReader implements AutoCloseable {
     }
 
 
-    public void getLinksUpdatedSince(Instant since, BiConsumer<String, List<String>> consumer) {
+    public Map<String, List<String>> getLinksUpdatedSince(Instant since) {
+        Map<String, List<String>> ret = new HashMap<>(10_000);
         try (var stmt = connection.prepareStatement("SELECT FEED FROM feed")) {
             var rs = stmt.executeQuery();
 
@@ -149,13 +150,15 @@ public class FeedDbReader implements AutoCloseable {
                 }
 
                 if (!urls.isEmpty()) {
-                    consumer.accept(items.domain(), new ArrayList<>(urls));
+                    ret.put(items.domain(), new ArrayList<>(urls));
                     urls.clear();
                 }
             }
         } catch (SQLException e) {
             logger.error("Error getting updated links", e);
         }
+
+        return ret;
     }
 
 
