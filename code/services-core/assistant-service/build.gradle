@@ -31,8 +31,6 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:config')
 
-    implementation project(':code:functions:live-capture')
-    implementation project(':code:functions:live-capture:api')
     implementation project(':code:functions:math')
     implementation project(':code:functions:math:api')
     implementation project(':code:functions:domain-info')

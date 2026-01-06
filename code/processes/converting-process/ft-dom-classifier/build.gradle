@@ -17,7 +17,7 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
-    implementation project(':code:functions:live-capture:api')
+    implementation project(':code:index:live-capture:api')
 
 
     implementation libs.bundles.slf4j

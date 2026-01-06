@@ -7,60 +7,44 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.api.feeds.FeedsClient;
-import nu.marginalia.api.feeds.RpcFeedUpdateMode;
-import nu.marginalia.mq.MqMessage;
-import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
+import nu.marginalia.rss.svc.FeedFetcherService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 public class UpdateRssActor extends RecordActorPrototype {
 
-    private final FeedsClient feedsClient;
-    private final int nodeId;
+    private final FeedFetcherService feedFetcherService;
 
-    private final Duration initialDelay = Duration.ofMinutes(5);
     private final Duration updateInterval = Duration.ofHours(24);
     private final int cleanInterval = 60;
+    private final int nodeId;
 
     private final NodeConfigurationService nodeConfigurationService;
-    private final MqPersistence persistence;
     private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
 
     @Inject
     public UpdateRssActor(Gson gson,
-                          FeedsClient feedsClient,
-                          ServiceConfiguration serviceConfiguration,
-                          NodeConfigurationService nodeConfigurationService,
-                          MqPersistence persistence) {
+                          ServiceConfiguration serviceConfiguration, FeedFetcherService feedFetcherService,
+                          NodeConfigurationService nodeConfigurationService) {
         super(gson);
-        this.feedsClient = feedsClient;
+        this.feedFetcherService = feedFetcherService;
         this.nodeId = serviceConfiguration.node();
         this.nodeConfigurationService = nodeConfigurationService;
-        this.persistence = persistence;
     }
 
     public record Initial() implements ActorStep {}
-    @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Wait(String ts, int refreshCount) implements ActorStep {}
-    @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record UpdateRefresh(int refreshCount, long msgId) implements ActorStep {
-        public UpdateRefresh(int refreshCount) {
-            this(refreshCount, -1);
-        }
-    }
-    @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record UpdateClean(long msgId) implements ActorStep {
-        public UpdateClean() {
-            this(-1);
-        }
-    }
+    @Resume(behavior=ActorResumeBehavior.RESTART)
+    public record Run(int refreshCount) implements ActorStep {}
+    public record Update(FeedFetcherService.UpdateMode mode, int refreshCount) implements ActorStep {}
+    public record Wait(String untilTs, int count) implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
@@ -70,8 +54,7 @@ public class UpdateRssActor extends RecordActorPrototype {
                     yield new Error("Invalid node profile for RSS update");
                 }
                 else {
-                    // Wait for 5 minutes before starting the first update, to give the system time to start up properly
-                    yield new Wait(LocalDateTime.now().plus(initialDelay).toString(), 0);
+                    yield new Update(FeedFetcherService.UpdateMode.REFRESH,0);
                 }
             }
             case Wait(String untilTs, int count) -> {
@@ -89,49 +72,29 @@ public class UpdateRssActor extends RecordActorPrototype {
                     // Once every `cleanInterval` updates, do a clean update;
                     // otherwise do a refresh update
                     if (count > cleanInterval) {
-                        yield new UpdateClean();
+                        yield new Update(FeedFetcherService.UpdateMode.CLEAN, 0);
                     }
                     else {
-                        yield new UpdateRefresh(count);
+                        yield new Update(FeedFetcherService.UpdateMode.REFRESH, count);
                     }
 
                 }
             }
-            case UpdateRefresh(int count, long msgId) when msgId < 0 -> {
-                long messageId = feedsClient.updateFeeds(RpcFeedUpdateMode.REFRESH);
-                yield new UpdateRefresh(count, messageId);
+            case Update(FeedFetcherService.UpdateMode mode, int count) -> {
+                feedFetcherService.start(mode);
+                yield new Run(count);
             }
-            case UpdateRefresh(int count, long msgId) -> {
-                MqMessage msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(10), Duration.ofHours(12));
-                if (msg == null) {
-                    logger.warn("UpdateRefresh is taking a very long time");
-                    yield new UpdateRefresh(count, msgId);
-                } else if (msg.state() != MqMessageState.OK) {
-                    // Retry the update
-                    yield new Error("Failed to update feeds: " + msg.state());
+            case Run(int refreshCount) -> {
+                while (feedFetcherService.isRunning()) {
+                    TimeUnit.SECONDS.sleep(15);
                 }
-                else {
-                    // Increment the refresh count
-                    yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), count + 1);
-                }
+                yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), refreshCount + 1);
             }
-            case UpdateClean(long msgId) when msgId < 0 -> {
-                long messageId = feedsClient.updateFeeds(RpcFeedUpdateMode.CLEAN);
-                yield new UpdateClean(messageId);
-            }
-            case UpdateClean(long msgId) -> {
-                MqMessage msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(10), Duration.ofHours(12));
-                if (msg == null) {
-                    logger.warn("UpdateClean is taking a very long time");
-                    yield new UpdateClean(msgId);
-                } else if (msg.state() != MqMessageState.OK) {
-                    // Retry the update
-                    yield new Error("Failed to update feeds: " + msg.state());
+            case End() -> {
+                if (feedFetcherService.isRunning()) {
+                    feedFetcherService.stop();
                 }
-                else {
-                    // Reset the refresh count after a successful update
-                    yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), 0);
-                }
+                yield new End(); // will not loop, terminal state
             }
             default -> new Error("Unknown actor step: " + self);
         };

@@ -39,7 +39,8 @@ public enum ExecutorActor {
     LIVE_CRAWL(NodeProfile.REALTIME),
     PROC_LIVE_CRAWL_SPAWNER(NodeProfile.REALTIME),
     SCRAPE_FEEDS(NodeProfile.REALTIME),
-    UPDATE_RSS(NodeProfile.REALTIME)
+    UPDATE_RSS(NodeProfile.REALTIME),
+    DOM_SAMPLE_ACTOR(NodeProfile.REALTIME),
     ;
 
     public String id() {

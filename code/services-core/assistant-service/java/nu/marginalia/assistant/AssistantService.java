@@ -5,13 +5,9 @@ import com.google.inject.Inject;
 import io.jooby.Context;
 import io.jooby.Jooby;
 import nu.marginalia.assistant.suggest.Suggestions;
-import nu.marginalia.domsample.DomSampleGrpcService;
-import nu.marginalia.domsample.DomSampleService;
 import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
-import nu.marginalia.livecapture.LiveCaptureGrpcService;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.rss.svc.FeedsGrpcService;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
@@ -30,27 +26,17 @@ public class AssistantService extends JoobyService {
     public AssistantService(BaseServiceParams params,
                             ScreenshotService screenshotService,
                             DomainInfoGrpcService domainInfoGrpcService,
-                            LiveCaptureGrpcService liveCaptureGrpcService,
-                            DomSampleService domSampleService,
-                            DomSampleGrpcService domSampleGrpcService,
-                            FeedsGrpcService feedsGrpcService,
                             MathGrpcService mathGrpcService,
                             Suggestions suggestions)
             throws Exception
     {
         super(params, ServicePartition.any(),
                 List.of(domainInfoGrpcService,
-                        mathGrpcService,
-                        liveCaptureGrpcService,
-                        feedsGrpcService,
-                        domSampleGrpcService
-                        ),
+                        mathGrpcService),
                 List.of());
 
         this.screenshotService = screenshotService;
         this.suggestions = suggestions;
-
-        domSampleService.start();
     }
 
     public void startJooby(Jooby jooby) {

@@ -281,6 +281,9 @@ public class ActorStateMachine {
                 }
             }
             else {
+                // Execute transition for side effects only to be able to add custom clean up logic on stop or error
+                state.next(msg.payload());
+
                 // On terminal transition, we expect any message
                 expectedMessage = ExpectedMessage.anyUnrelated();
             }
