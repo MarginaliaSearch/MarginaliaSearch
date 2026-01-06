@@ -1,5 +1,9 @@
 package nu.marginalia.service.control;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+
 /** Dummy implementation of ServiceHeartbeat that does nothing */
 public class FakeServiceHeartbeat implements ServiceHeartbeat {
     @Override
@@ -17,6 +21,12 @@ public class FakeServiceHeartbeat implements ServiceHeartbeat {
         return new ServiceAdHocTaskHeartbeat() {
             @Override
             public void progress(String step, int stepProgress, int stepCount) {}
+
+            @Override
+            public <T> Iterable<T> wrap(String step, Collection<T> collection) {
+                return List.of();
+            }
+
             @Override
             public void close() {}
         };

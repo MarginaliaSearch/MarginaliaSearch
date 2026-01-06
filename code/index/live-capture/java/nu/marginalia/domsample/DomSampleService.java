@@ -8,6 +8,7 @@ import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.domsample.db.DomSampleDb;
 import nu.marginalia.livecapture.BrowserlessClient;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ public class DomSampleService {
     private final DomSampleDb db;
     private final HikariDataSource mariadbDataSource;
     private final int sampleThreads;
+    private final ServiceHeartbeat serviceHeartbeat;
     private final DomainCoordinator domainCoordinator;
     private final URI browserlessURI;
 
@@ -43,6 +45,7 @@ public class DomSampleService {
                             HikariDataSource mariadbDataSource,
                             @Named("browserless-uri") String browserlessAddress,
                             @Named("browserless-sample-threads") int sampleThreads,
+                            ServiceHeartbeat serviceHeartbeat,
                             LiveCaptureConfig liveCaptureConfig,
                             DomainCoordinator domainCoordinator)
             throws URISyntaxException
@@ -50,6 +53,7 @@ public class DomSampleService {
         this.db = db;
         this.mariadbDataSource = mariadbDataSource;
         this.sampleThreads = sampleThreads;
+        this.serviceHeartbeat = serviceHeartbeat;
         this.domainCoordinator = domainCoordinator;
 
         if (StringUtils.isEmpty(browserlessAddress) || !liveCaptureConfig.isEnabled()) {
@@ -138,12 +142,14 @@ public class DomSampleService {
 
             while (!Thread.interrupted() && running) {
 
-                try {
+                try (var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("DomSample")) {
                     Instant nextPollWindow = Instant.now().plus(14, ChronoUnit.DAYS);
 
+                    heartbeat.progress("Sync", 0, 1);
                     syncDomains();
+                    heartbeat.progress("Sync", 1, 1);
 
-                    for (String domain : db.getScheduledDomains()) {
+                    for (String domain : heartbeat.wrap("Sample", db.getScheduledDomains())) {
                         var ed = new EdgeDomain(domain);
                         while (!samplingQueue.offer(ed, 15, TimeUnit.SECONDS)) {
                             if (Thread.interrupted() || !running) {
@@ -156,7 +162,9 @@ public class DomSampleService {
 
                     // Grace sleep in case we're operating on a small or empty domain list
                     if (sleepDuration > 0) {
+                        heartbeat.progress("Pause", 0, 1);
                         TimeUnit.HOURS.sleep(sleepDuration);
+                        heartbeat.progress("Pause", 1, 1);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -79,6 +81,35 @@ public class ServiceAdHocTaskHeartbeatImpl implements AutoCloseable, ServiceAdHo
         catch (InterruptedException|SQLException ex) {
             logger.warn("ServiceHeartbeat shutdown failed", ex);
         }
+    }
+
+    /** Wrap a collection to provide heartbeat progress updates as it's iterated through */
+    @Override
+    public <T> Iterable<T> wrap(String step, Collection<T> collection) {
+        return () -> new Iterator<>() {
+            private final Iterator<T> base = collection.iterator();
+            private final int size = collection.size();
+            private final int updateInterval = Math.max(1, size / 100); // update every 1% of the collection, or at least once
+            private int pos = 0;
+
+            @Override
+            public boolean hasNext() {
+                boolean ret = base.hasNext();
+                if (!ret) {
+                    progress(step, size, size);
+                }
+                return ret;
+            }
+
+            @Override
+            public T next() {
+                // update every 1% of the collection, to avoid hammering the database with updates
+                if (pos++ % updateInterval == 0) {
+                    progress(step, pos, size);
+                }
+                return base.next();
+            }
+        };
     }
 
     private void run() {
