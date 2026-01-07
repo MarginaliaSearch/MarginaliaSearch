@@ -41,10 +41,15 @@ public class UpdateRssActor extends RecordActorPrototype {
     }
 
     public record Initial() implements ActorStep {}
+
     @Resume(behavior=ActorResumeBehavior.RESTART)
     public record Run(int refreshCount) implements ActorStep {}
-    public record Update(FeedFetcherService.UpdateMode mode, int refreshCount) implements ActorStep {}
+
+    @Resume(behavior=ActorResumeBehavior.RETRY)
     public record Wait(String untilTs, int count) implements ActorStep {}
+    
+    @Resume(behavior=ActorResumeBehavior.RETRY)
+    public record Update(FeedFetcherService.UpdateMode mode, int refreshCount) implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
