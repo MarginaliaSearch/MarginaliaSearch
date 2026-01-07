@@ -182,9 +182,9 @@ public class FeedFetcherService {
         if (updating) {
             return;
         }
+        updating = true;
         requestStop = false;
         updateThread = Thread.ofPlatform().name("Feed update").start(() -> updateFeedsSynchronous(updateMode));
-
     }
 
     public boolean isRunning() {
@@ -197,21 +197,15 @@ public class FeedFetcherService {
         if (updateThread != null)
             updateThread.join();
         updateThread = null;
+        updating = false;
     }
 
-    public void updateFeedsSynchronous(UpdateMode updateMode) {
-        if (updating) // Prevent concurrent updates
-        {
-            throw new IllegalStateException("Already updating feeds, refusing to start another update");
-        }
-
-
+    void updateFeedsSynchronous(UpdateMode updateMode) {
         try (FeedDbWriter writer = feedDb.createWriter();
              ExecutorService fetchExecutor = Executors.newVirtualThreadPerTaskExecutor();
              FeedJournal feedJournal = FeedJournal.create();
              var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
         ) {
-            updating = true;
 
             // Read the feed definitions from the database, if they are not available, read them from the system's
             // RSS exports instead
