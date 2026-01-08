@@ -11,6 +11,7 @@ java {
 dependencies {
     implementation libs.bundles.slf4j
     implementation libs.fastutil
+    implementation("com.lmax:disruptor:4.0.0")
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
