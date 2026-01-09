@@ -51,6 +51,51 @@ public class SequenceOperations {
         return true;
     }
 
+    /** Return true if the sequences intersect, false otherwise.
+     * */
+    public static boolean intersectOffsetSequences(IntIterator[] sequences, int[] offsets) {
+
+        if (sequences.length <= 1)
+            return true;
+
+        // Initialize values and find the maximum value
+        int[] values = new int[sequences.length];
+
+        for (int i = 0; i < sequences.length; i++) {
+            if (sequences[i].hasNext())
+                values[i] = sequences[i].nextInt() + offsets[i];
+            else
+                return false;
+        }
+
+        // Intersect the sequences by advancing all values smaller than the maximum seen so far
+        // until they are equal to the maximum value, or until the end of the sequence is reached
+        int max = Integer.MIN_VALUE;
+        int successes = 0;
+        for (int i = 0; successes < sequences.length; i = (i + 1) % sequences.length)
+        {
+            if (values[i] == max) {
+                successes++;
+            } else {
+                successes = 1;
+
+                // Discard values until we reach the maximum value seen so far,
+                // or until the end of the sequence is reached
+                while (values[i] < max) {
+                    if (sequences[i].hasNext())
+                        values[i] = sequences[i].nextInt() + offsets[i];
+                    else
+                        return false;
+                }
+
+                // Update the maximum value, if necessary
+                max = Math.max(max, values[i]);
+            }
+        }
+
+        return true;
+    }
+
     /** Find any intersections between the given positions lists, and return the list of intersections.
      * If any of the lists are empty, return an empty list.
      * <p></p>

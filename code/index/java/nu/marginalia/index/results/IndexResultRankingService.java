@@ -63,155 +63,23 @@ public class IndexResultRankingService {
         this.domainRankingOverrides = domainRankingOverrides;
     }
 
-    public RankingData prepareRankingData(SearchContext rankingContext, CombinedDocIdList resultIds) throws TimeoutException {
-        return new RankingData(rankingContext, resultIds);
-    }
-
-    public final class RankingData implements AutoCloseable {
-        final Arena arena;
-        private static final DocumentSpans emptySpansInstance = new DocumentSpans();
-        private final int numPriorityTerms;
-
-        private final CombinedTermMetadata termMetadata;
-        private final DocumentSpans[] documentSpans;
-        private final long[] flags;
-        private final BitSet priorityTermsPresent;
-        private final CodedSequence[] positions;
-        private final CombinedDocIdList resultIds;
-
-        private AtomicBoolean closed = new AtomicBoolean(false);
-        int pos = -1;
-
-        public RankingData(SearchContext rankingContext, CombinedDocIdList resultIds) throws TimeoutException {
-            this.resultIds = resultIds;
-            this.arena = Arena.ofShared();
-
-            this.numPriorityTerms = rankingContext.termIdsPriority.size();
-            final int termCount = rankingContext.termIdsAll.size();
-
-            this.priorityTermsPresent = new BitSet(rankingContext.termIdsPriority.size());
-            this.flags = new long[termCount];
-            this.positions = new CodedSequence[termCount];
-
-            // Get the current index reader, which is the one we'll use for this calculation,
-            // this may change during the calculation, but we don't want to switch over mid-calculation
-
-            final CombinedIndexReader currentIndex = statefulIndex.get();
-
-            // Perform expensive I/O operations
-
-            try {
-                this.termMetadata = currentIndex.getTermMetadata(arena, rankingContext, resultIds);
-
-                @NotNull
-                BitSet documentMask = termMetadata.viableDocuments();
-
-                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds, documentMask);
-            }
-            catch (TimeoutException|RuntimeException ex) {
-                arena.close();
-                throw ex;
-            }
-        }
-
-        public CodedSequence[] positions() {
-            return positions;
-        }
-        public long[] flags() {
-            return flags;
-        }
-        public BitSet priorityTermsPresent() { return priorityTermsPresent; }
-        public long resultId() {
-            return resultIds.at(pos);
-        }
-        public DocumentSpans documentSpans() {
-            return Objects.requireNonNullElse(documentSpans[pos], emptySpansInstance);
-        }
-
-        public boolean next() {
-            BitSet viableDocuments = termMetadata.viableDocuments();
-
-            do {
-                if (++pos >= resultIds.size()) {
-                    return false;
-                }
-            } while (!viableDocuments.get(pos));
-
-
-            for (int ti = 0; ti < flags.length; ti++) {
-                var tfd = termMetadata.termMetadata(ti);
-
-                assert tfd != null : "No term data for term " + ti;
-
-                flags[ti] = tfd.flag(pos);
-                positions[ti] = tfd.position(pos);
-            }
-
-            priorityTermsPresent.clear();
-
-            for (int ti = 0; ti < numPriorityTerms; ti++) {
-                if (termMetadata.priorityTermsPresent(ti, pos)) {
-                    priorityTermsPresent.set(ti);
-                }
-            }
-
-            return true;
-        }
-
-        public int size() {
-            return termMetadata.viableDocuments().cardinality();
-        }
-
-        public void close() {
-            if (closed.compareAndSet(false, true)) {
-                arena.close();
-            }
-        }
-
-    }
-
-    public List<SearchResultItem> rankResults(
-            SearchContext rankingContext,
-            RankingData rankingData)
-    {
-        List<SearchResultItem> results = new ArrayList<>(rankingData.size());
-        CombinedIndexReader index = statefulIndex.get();
-
-        // Iterate over documents by their index in the combinedDocIds, as we need the index for the
-        // term data arrays as well
-
-        while (rankingData.next() && rankingContext.budget.hasTimeLeft()) {
-
-            // Ignore documents that don't match the mandatory constraints
-            if (!rankingContext.phraseConstraints.testMandatory(rankingData.positions())) {
-                continue;
-            }
-
-            SearchResultItem score = calculateScore(null, index, rankingData.resultId(), rankingContext, rankingData);
-            if (score != null) {
-                results.add(score);
-            }
-        }
-
-        return results;
-    }
 
     public List<RpcDecoratedResultItem> selectBestResults(int limitByDomain,
                                                           int limitTotal,
                                                           SearchContext searchContext,
-                                                          List<SearchResultItem> results) throws SQLException {
+                                                          List<RankableDocument> results) throws SQLException {
 
 
-        List<SearchResultItem> resultsList = new ArrayList<>(results.size());
+        List<RankableDocument> resultsList = new ArrayList<>(results.size());
         TLongList idsList = new TLongArrayList(limitTotal);
 
         IndexResultDomainDeduplicator domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
         for (var item : results) {
-            if (domainCountFilter.test(item)) {
+            if (domainCountFilter.test(item.item)) {
 
                 if (resultsList.size() < limitTotal) {
                     resultsList.add(item);
-                    idsList.add(item.getDocumentId());
+                    idsList.add(item.item.getDocumentId());
                 }
                 //
                 // else { break; } <-- don't add this even though it looks like it should be present!
@@ -228,34 +96,17 @@ public class IndexResultRankingService {
         // discard along the way
 
         if (searchContext.params.getExportDebugData()) {
-            var combinedIdsList = new LongArrayList(resultsList.size());
-            for (var item : resultsList) {
-                combinedIdsList.add(item.combinedId);
-            }
-            combinedIdsList.sort(Long::compareTo);
-
-            resultsList.clear();
-
             // Re-rank the results while gathering debugging data
-            try (RankingData rankingData = prepareRankingData(searchContext,  new CombinedDocIdList(combinedIdsList))) {
-                CombinedIndexReader index = statefulIndex.get();
+            CombinedIndexReader index = statefulIndex.get();
 
-                // Iterate over documents by their index in the combinedDocIds, as we need the index for the
-                // term data arrays as well
+            // Iterate over documents by their index in the combinedDocIds, as we need the index for the
+            // term data arrays as well
 
-                while (rankingData.next()) {
-                    if (!searchContext.phraseConstraints.testMandatory(rankingData.positions())) {
-                        continue;
-                    }
-
-                    SearchResultItem score = calculateScore(new DebugRankingFactors(), index, rankingData.resultId(), searchContext, rankingData);
-                    if (score != null) {
-                        resultsList.add(score);
-                    }
+            for (var doc : results) {
+                SearchResultItem score = calculateScore(new DebugRankingFactors(), index, searchContext, doc);
+                if (score != null) {
+                    doc.item = score;
                 }
-            }
-            catch (TimeoutException ex) {
-                // this won't happen since we passed null for budget
             }
 
         }
@@ -271,7 +122,8 @@ public class IndexResultRankingService {
         LongOpenHashSet seenDocumentHashes = new LongOpenHashSet(resultsList.size());
 
         // Decorate the results with the document details
-        for (SearchResultItem result : resultsList) {
+        for (RankableDocument doc : resultsList) {
+            var result = doc.item;
             final long id = result.getDocumentId();
             final DocdbUrlDetail docData = detailsById.get(id);
 
@@ -368,18 +220,23 @@ public class IndexResultRankingService {
     @Nullable
     public SearchResultItem calculateScore(@Nullable DebugRankingFactors debugRankingFactors,
                                            CombinedIndexReader index,
-                                           long combinedId,
                                            SearchContext rankingContext,
-                                           IndexResultRankingService.RankingData rankingData)
+                                           RankableDocument document)
     {
-        long[] wordFlags = rankingData.flags();
-        CodedSequence[] positions = rankingData.positions();
-        DocumentSpans spans = rankingData.documentSpans();
+        final long combinedId = document.combinedDocumentId;
+
+        if (!rankingContext.phraseConstraints.testMandatory(document.positions)) {
+            return null;
+        }
+
+        long[] wordFlags = document.termFlags;
+        IntList[] positions = document.positions;
+        DocumentSpans spans = document.documentSpans;
 
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
 
-        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.forData(positions);
+        CompiledQuery<IntList> positionsQuery = compiledQuery.forData(positions);
 
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
@@ -391,7 +248,7 @@ public class IndexResultRankingService {
 
         boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
         int minFlagsCount = intMaxMinAggregate(wordFlagsQuery, flags -> Long.bitCount(flags & 0xff));
-        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.valueCount());
+        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.size());
 
         if (minFlagsCount == 0 && !allSynthetic && minPositionsCount == 0) {
             return null;
@@ -411,15 +268,7 @@ public class IndexResultRankingService {
 
         // Decode the coded positions lists into plain IntLists as at this point we will be
         // going over them multiple times
-        IntList[] decodedPositions = new IntList[positions.length];
-        for (int i = 0; i < positions.length; i++) {
-            if (positions[i] != null) {
-                decodedPositions[i] = positions[i].values();
-            }
-            else {
-                decodedPositions[i] = IntList.of();
-            }
-        }
+        IntList[] decodedPositions = positions;
 
         var params = rankingContext.params;
 
@@ -443,7 +292,7 @@ public class IndexResultRankingService {
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
 
         double priorityTermAdjustment = 0.;
-        BitSet priorityTermsPresent = rankingData.priorityTermsPresent();
+        BitSet priorityTermsPresent = document.priorityTermsPresent;
 
         for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
             if (priorityTermsPresent.get(i))

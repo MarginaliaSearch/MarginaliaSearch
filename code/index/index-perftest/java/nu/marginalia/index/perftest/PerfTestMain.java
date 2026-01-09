@@ -127,79 +127,79 @@ public class PerfTestMain {
                                     Path indexDir,
                                     String rawQuery) throws Exception {
 
-        CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
-        QueryFactory queryFactory = createQueryFactory(homeDir);
-        IndexResultRankingService rankingService = createIndexResultRankingService(indexDir, indexReader);
-
-        RpcIndexQuery parsedQuery = queryFactory.createQuery(
-                RpcQsQuery.newBuilder()
-                        .setHumanQuery(rawQuery)
-                        .setLangIsoCode("en")
-                        .setQueryLimits(
-                                RpcQueryLimits.newBuilder()
-                                        .setTimeoutMs(10_000)
-                                        .setResultsTotal(1000)
-                                        .setResultsByDomain(10)
-                                        .build()
-                        )
-                        .build(),
-                CompiledSearchFilterSpec.builder("test", "test").build(),
-                PrototypeRankingParameters.sensibleDefaults()).indexQuery;
-
-        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
-
-        var rankingContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
-        List<IndexQuery> queries = indexReader.createQueries(rankingContext);
-
-        TLongArrayList allResults = new TLongArrayList();
-        LongQueryBuffer buffer = new LongQueryBuffer(512);
-
-        for (var query : queries) {
-            while (query.hasMore() && allResults.size() < 512 ) {
-                query.getMoreResults(buffer);
-                allResults.addAll(buffer.copyData());
-            }
-            if (allResults.size() >= 512)
-                break;
-        }
-        allResults.sort();
-        if (allResults.size() > 512) {
-            allResults.subList(512,  allResults.size()).clear();
-        }
-
-        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()));
-
-        int sum = 0;
-
-        Instant runEndTime = Instant.now().plus(runTime);
-        Instant runStartTime =  Instant.now();
-        int sum2 = 0;
-        List<Double> times = new ArrayList<>();
-
-        int iter;
-        for (iter = 0;; iter++) {
-            long start = System.nanoTime();
-            sum2 += rankingService.rankResults(rankingContext, rankingData).size();
-            long end = System.nanoTime();
-            times.add((end - start)/1_000_000.);
-
-            if ((iter % 100) == 0) {
-                if (Instant.now().isAfter(runEndTime)) {
-                    break;
-                }
-                if (times.size() > 100) {
-                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
-                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
-                }
-                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
-            }
-        }
-        System.out.println("Benchmark complete after " + iter + " iters!");
-
-        System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
-        System.out.println("Warmup sum: " + sum);
-        System.out.println("Main sum: " + sum2);
-        System.out.println(rankingData.size());
+//        CombinedIndexReader indexReader = createCombinedIndexReader(indexDir);
+//        QueryFactory queryFactory = createQueryFactory(homeDir);
+//        IndexResultRankingService rankingService = createIndexResultRankingService(indexDir, indexReader);
+//
+//        RpcIndexQuery parsedQuery = queryFactory.createQuery(
+//                RpcQsQuery.newBuilder()
+//                        .setHumanQuery(rawQuery)
+//                        .setLangIsoCode("en")
+//                        .setQueryLimits(
+//                                RpcQueryLimits.newBuilder()
+//                                        .setTimeoutMs(10_000)
+//                                        .setResultsTotal(1000)
+//                                        .setResultsByDomain(10)
+//                                        .build()
+//                        )
+//                        .build(),
+//                CompiledSearchFilterSpec.builder("test", "test").build(),
+//                PrototypeRankingParameters.sensibleDefaults()).indexQuery;
+//
+//        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
+//
+//        var rankingContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
+//        List<IndexQuery> queries = indexReader.createQueries(rankingContext);
+//
+//        TLongArrayList allResults = new TLongArrayList();
+//        LongQueryBuffer buffer = new LongQueryBuffer(512);
+//
+//        for (var query : queries) {
+//            while (query.hasMore() && allResults.size() < 512 ) {
+//                query.getMoreResults(buffer);
+//                allResults.addAll(buffer.copyData());
+//            }
+//            if (allResults.size() >= 512)
+//                break;
+//        }
+//        allResults.sort();
+//        if (allResults.size() > 512) {
+//            allResults.subList(512,  allResults.size()).clear();
+//        }
+//
+//        var rankingData = rankingService.prepareRankingData(rankingContext, new CombinedDocIdList(allResults.toArray()));
+//
+//        int sum = 0;
+//
+//        Instant runEndTime = Instant.now().plus(runTime);
+//        Instant runStartTime =  Instant.now();
+//        int sum2 = 0;
+//        List<Double> times = new ArrayList<>();
+//
+//        int iter;
+//        for (iter = 0;; iter++) {
+//            long start = System.nanoTime();
+//            sum2 += rankingService.rankResults(rankingContext, rankingData).size();
+//            long end = System.nanoTime();
+//            times.add((end - start)/1_000_000.);
+//
+//            if ((iter % 100) == 0) {
+//                if (Instant.now().isAfter(runEndTime)) {
+//                    break;
+//                }
+//                if (times.size() > 100) {
+//                    double[] timesSample = times.stream().mapToDouble(Double::doubleValue).skip(times.size() - 100).sorted().toArray();
+//                    System.out.format("P1: %f P10: %f, P90: %f, P99: %f\n", timesSample[1], timesSample[10], timesSample[90], timesSample[99]);
+//                }
+//                System.out.println(Duration.between(runStartTime, Instant.now()).toMillis() / 1000. + " best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+//            }
+//        }
+//        System.out.println("Benchmark complete after " + iter + " iters!");
+//
+//        System.out.println("Best times: " + (allResults.size() / 512.) *  times.stream().mapToDouble(Double::doubleValue).sorted().limit(3).average().orElse(-1));
+//        System.out.println("Warmup sum: " + sum);
+//        System.out.println("Main sum: " + sum2);
+//        System.out.println(rankingData.size());
     }
 
     public static void runExecution(Path homeDir,

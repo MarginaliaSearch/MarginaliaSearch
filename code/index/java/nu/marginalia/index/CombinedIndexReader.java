@@ -16,6 +16,7 @@ import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListValueRanges;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
@@ -257,12 +259,11 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the term metadata for the specified word for the provided documents */
-    public CombinedTermMetadata getTermMetadata(Arena arena,
-                                                SearchContext searchContext,
+    public CombinedTermMetadata getTermMetadata(SearchContext searchContext,
                                                 CombinedDocIdList docIds)
     throws TimeoutException
     {
-        return reverseIndexFullReader.getTermData(arena, searchContext, docIds);
+        return reverseIndexFullReader.getTermData(searchContext, docIds);
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -286,12 +287,12 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public DocumentSpans[] getDocumentSpans(Arena arena,
-                                            IndexSearchBudget budget,
-                                            CombinedDocIdList docIds,
-                                            BitSet docIdsMask
-                                            ) throws TimeoutException {
-        return forwardIndexReader.getDocumentSpans(arena, budget, docIds, docIdsMask);
+    public CompletableFuture<DocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
+        return forwardIndexReader.getDocumentSpans(documentId);
+    }
+
+    public CompletableFuture<IntList[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
+        return reverseIndexFullReader.getTermPositions(codedOffsets);
     }
 
     /** Close the indexes (this is not done immediately)

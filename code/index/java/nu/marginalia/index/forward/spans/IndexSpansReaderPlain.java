@@ -1,6 +1,10 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import nu.marginalia.asyncio.AsyncReadRequest;
+import nu.marginalia.asyncio.UringExecutionQueue;
+import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.ffi.NativeAlgos;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.uring.UringFileReader;
 
@@ -11,62 +15,32 @@ import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 public class IndexSpansReaderPlain implements IndexSpansReader {
-    private final UringFileReader uringReader;
-
+    private final UringExecutionQueue executionQueue;
+    private int fileDescriptor;
     public IndexSpansReaderPlain(Path spansFile) throws IOException {
-        if (Boolean.getBoolean("index.directModePositionsSpans")) {
-            if ((Files.size(spansFile) & 4095) != 0) {
-                throw new IllegalArgumentException("Spans file is not block aligned in size: " + Files.size(spansFile));
-            }
-
-            uringReader = new UringFileReader(spansFile,  true);
-        }
-        else {
-            uringReader = new UringFileReader(spansFile,  false);
-            uringReader.fadviseWillneed();
-        }
-
+        executionQueue = new UringExecutionQueue(16);
+        fileDescriptor = LinuxSystemCalls.openBuffered(spansFile);
+        LinuxSystemCalls.fadviseWillneed(fileDescriptor);
     }
 
     @Override
-    public DocumentSpans[] readSpans(Arena arena, IndexSearchBudget budget, long[] encodedOffsets) throws TimeoutException {
+    public CompletableFuture<DocumentSpans> readSpan(Arena arena, long encodedOffset) throws InterruptedException {
 
-        int readCnt = 0;
-        for (long offset : encodedOffsets) {
-            if (offset < 0) continue;
-            readCnt ++;
+        if (encodedOffset < 0) {
+            return CompletableFuture.completedFuture(new DocumentSpans());
         }
+        long offset = SpansCodec.decodeStartOffset(encodedOffset);
+        int size = SpansCodec.decodeSize(encodedOffset);
 
-        if (readCnt == 0) {
-            return new DocumentSpans[encodedOffsets.length];
-        }
+        MemorySegment segment = arena.allocate(size, 8);
 
-        long[] offsets = new long[readCnt];
-        int[] sizes = new int[readCnt];
-
-        for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
-            if (encodedOffsets[idx] < 0)
-                continue;
-            long offset = encodedOffsets[idx];
-
-            offsets[j] = SpansCodec.decodeStartOffset(offset);
-            sizes[j] = SpansCodec.decodeSize(offset);
-            j++;
-        }
-
-        List<MemorySegment> buffers = uringReader.readUnaligned(arena, budget.timeLeft(), offsets, sizes, 4096);
-        DocumentSpans[] ret = new DocumentSpans[encodedOffsets.length];
-
-        for (int idx = 0, j = 0; idx < encodedOffsets.length; idx++) {
-            if (encodedOffsets[idx] < 0)
-                continue;
-            ret[idx] = decode(buffers.get(j++));
-        }
-
-        return ret;
+        return executionQueue
+                .submit(segment, new AsyncReadRequest(fileDescriptor, segment, offset))
+                .thenApply(this::decode);
     }
 
     public DocumentSpans decode(MemorySegment ms) {
@@ -94,7 +68,13 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
 
     @Override
     public void close() throws IOException {
-        uringReader.close();
+        try {
+            executionQueue.close();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            LinuxSystemCalls.closeFd(fileDescriptor);
+        }
     }
 
 }

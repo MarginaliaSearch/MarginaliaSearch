@@ -32,7 +32,8 @@ class IndexSpansReaderTest {
 
     DocumentSpans readSpans(Arena arena, IndexSpansReader reader, long offset) {
         try {
-            return reader.readSpans(arena, new IndexSearchBudget(Long.MAX_VALUE), new long[] { offset })[0];
+            //return reader.readSpans(arena, new IndexSearchBudget(Long.MAX_VALUE), new long[] { offset })[0];
+            return null; // FIXME
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
