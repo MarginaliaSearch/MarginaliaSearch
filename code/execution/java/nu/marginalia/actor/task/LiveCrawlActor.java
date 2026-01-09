@@ -11,6 +11,8 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.api.feeds.FeedsClient;
+import nu.marginalia.index.journal.IndexJournal;
+import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.LiveCrawlRequest;
@@ -23,9 +25,12 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Singleton
@@ -37,7 +42,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
     private final ExecutorActorStateMachines executorActorStateMachines;
     private final FeedFetcherService feedFetcherService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
+    private final LanguageConfiguration languageConfiguration;
     private final FileStorageService fileStorageService;
 
     public record Initial() implements ActorStep {}
@@ -71,10 +76,20 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 }
             }
             case LiveCrawl(String feedsHash, long msgId) when msgId < 0 -> {
-                // Clear the index journal before starting the crawl
-                Path indexJournalLocation = IndexLocations.getIndexConstructionArea(fileStorageService).resolve("index-journal");
-                if (Files.isDirectory(indexJournalLocation)) {
-                    FileUtils.deleteDirectory(indexJournalLocation.toFile());
+                // Clear the index journals before starting the crawl
+                Path indexConstructionArea = IndexLocations.getIndexConstructionArea(fileStorageService);
+
+                for (var languageDefinition : languageConfiguration.languages()) {
+                    Path dir = IndexJournal.allocateName(indexConstructionArea, languageDefinition.isoCode());
+
+                    List<Path> indexDirContents = new ArrayList<>();
+                    try (var contentsStream = Files.list(dir)) {
+                        contentsStream.filter(Files::isRegularFile).forEach(indexDirContents::add);
+                    }
+
+                    for (var junkFile: indexDirContents) {
+                        Files.deleteIfExists(junkFile);
+                    }
                 }
 
                 long id = mqLiveCrawlerOutbox.sendAsync(new LiveCrawlRequest());
@@ -106,13 +121,14 @@ public class LiveCrawlActor extends RecordActorPrototype {
                           ProcessOutboxes processOutboxes,
                           FeedFetcherService feedFetcherService,
                           Gson gson,
-                          ExecutorActorStateMachines executorActorStateMachines, FileStorageService fileStorageService)
+                          ExecutorActorStateMachines executorActorStateMachines, LanguageConfiguration languageConfiguration, FileStorageService fileStorageService)
     {
         super(gson);
         this.processWatcher = processWatcher;
         this.mqLiveCrawlerOutbox = processOutboxes.getLiveCrawlerOutbox();
         this.executorActorStateMachines = executorActorStateMachines;
         this.feedFetcherService = feedFetcherService;
+        this.languageConfiguration = languageConfiguration;
         this.fileStorageService = fileStorageService;
     }
 

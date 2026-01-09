@@ -258,10 +258,6 @@ public class LiveCrawlerMain extends ProcessMainClass {
 
                 processHeartbeat.progress(LiveCrawlState.LOADING);
 
-                // Normally this is done automatically, but we need to trigger it manually to avoid
-                // creating weird amalgams of mixed historical index data
-                cleanIndexDir();
-
                 LoaderInputData lid = new LoaderInputData(tempPath, 1);
                 DomainIdRegistry domainIdRegistry = new DbDomainIdRegistry(dataSource);
 
@@ -287,23 +283,5 @@ public class LiveCrawlerMain extends ProcessMainClass {
         }
     }
 
-    /** Remove the contents of the temporary index construction area
-     */
-    private void cleanIndexDir() throws IOException {
-        Path indexConstructionArea = IndexLocations.getIndexConstructionArea(fileStorageService);
-
-        for (var languageDefinition : languageConfiguration.languages()) {
-            Path dir = IndexJournal.allocateName(indexConstructionArea, languageDefinition.isoCode());
-
-            List<Path> indexDirContents = new ArrayList<>();
-            try (var contentsStream = Files.list(dir)) {
-                contentsStream.filter(Files::isRegularFile).forEach(indexDirContents::add);
-            }
-
-            for (var junkFile: indexDirContents) {
-                Files.deleteIfExists(junkFile);
-            }
-        }
-    }
 
 }
