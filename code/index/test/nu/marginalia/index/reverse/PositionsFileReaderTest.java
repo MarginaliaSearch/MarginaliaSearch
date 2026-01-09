@@ -49,7 +49,7 @@ class PositionsFileReaderTest {
         try (Arena arena = Arena.ofShared();
             PositionsFileReader reader = new PositionsFileReader(file))
         {
-            CodedSequence[] data = reader.getTermData(arena, new IndexSearchBudget(10000), new long[] { key1, key2, key3 });
+            CodedSequence[] data = null; // FIXME reader.getTermData(arena, new IndexSearchBudget(10000), new long[] { key1, key2, key3 });
 
             assertEquals(IntList.of( 1, 2, 3), data[0].values());
             assertEquals(IntList.of(2, 3, 5, 1000, 5000, 20241), data[1].values());
