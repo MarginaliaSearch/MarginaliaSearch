@@ -8,8 +8,18 @@ public class RingBufferSPNC<T> {
     final AtomicInteger writePos = new AtomicInteger(0);
     final AtomicInteger readPos = new AtomicInteger(0);
 
+    volatile boolean closed = false;
+
     public RingBufferSPNC(int len) {
         items = new Object[len];
+    }
+
+    public void close() {
+        closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 
     @SuppressWarnings("unchecked")
