@@ -1,5 +1,7 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 
@@ -13,6 +15,9 @@ public interface CodedSequence  {
     IntIterator offsetIterator(int offset);
 
     IntList values();
+
+    IntList values(Int2ObjectFunction<IntArrayList> allocator);
+
 
     ByteBuffer buffer();
 

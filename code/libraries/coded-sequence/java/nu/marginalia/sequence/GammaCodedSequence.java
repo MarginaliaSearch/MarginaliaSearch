@@ -1,5 +1,6 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -93,13 +94,18 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
     }
 
     public IntList values() {
+        return values(IntArrayList::new);
+    }
+
+    public IntList values(Int2ObjectFunction<IntArrayList> allocator) {
         var intItr = new EliasGammaSequenceIterator(buffer());
-        IntArrayList ret = new IntArrayList(intItr.rem);
+        IntArrayList ret = allocator.get(intItr.rem);
         while (intItr.hasNext()) {
             ret.add(intItr.nextInt());
         }
         return ret;
     }
+
 
     public int hashCode() {
         return values().hashCode();

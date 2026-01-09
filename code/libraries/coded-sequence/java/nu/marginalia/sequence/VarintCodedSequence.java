@@ -1,5 +1,6 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -145,14 +146,18 @@ public class VarintCodedSequence implements CodedSequence {
         return new VarintSequenceIterator(raw, startPos, offset);
     }
 
-    @Override
     public IntList values() {
+        return values(IntArrayList::new);
+    }
+
+    @Override
+    public IntList values(Int2ObjectFunction<IntArrayList> allocator) {
         var buffer = buffer();
 
         int val = 0;
         int count = decodeValue(buffer) - 1;
 
-        IntArrayList list = new IntArrayList(count);
+        IntArrayList list = allocator.get(count);
 
         while (buffer.hasRemaining()) {
             val += decodeValue(buffer);

@@ -312,7 +312,7 @@ public class IntegrationTest {
 
         var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataParquet));
 
-        System.out.println(processedDomain);
+//        System.out.println(processedDomain);
 
         /** WRITE PROCESSED DATA */
 
@@ -360,7 +360,7 @@ public class IntegrationTest {
         {
             var request = RpcQsQuery.newBuilder()
                     .setQueryLimits(RpcQueryLimits.newBuilder()
-                            .setTimeoutMs(10000000)
+                            .setTimeoutMs(10_000_000)
                             .setResultsTotal(100)
                             .setResultsByDomain(10)
                             .build())
@@ -370,7 +370,7 @@ public class IntegrationTest {
 
             var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
 
-            System.out.println(query);
+//            System.out.println(query);
 
             var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 

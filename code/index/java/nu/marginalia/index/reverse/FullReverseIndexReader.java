@@ -1,19 +1,18 @@
 package nu.marginalia.index.reverse;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.model.*;
-import nu.marginalia.index.reverse.positions.PositionsFileReader;
+import nu.marginalia.index.reverse.positions.PositionCodec;
 import nu.marginalia.index.reverse.query.*;
 import nu.marginalia.index.reverse.query.filter.QueryFilterLetThrough;
 import nu.marginalia.index.reverse.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
-import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
 import nu.marginalia.skiplist.SkipListValueRanges;
@@ -21,14 +20,15 @@ import nu.marginalia.skiplist.SkipListWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class FullReverseIndexReader {
@@ -37,7 +37,7 @@ public class FullReverseIndexReader {
     private final Map<String, WordLexicon> wordLexiconMap;
 
     private final LongArray documents;
-    private final PositionsFileReader positionsFileReader;
+    private final int positionsFileFd;
     private final BufferPool dataPool;
     private final BufferPool valuesPool;
     private final String name;
@@ -55,7 +55,7 @@ public class FullReverseIndexReader {
             this.documents = null;
             this.dataPool = null;
             this.valuesPool = null;
-            this.positionsFileReader = null;
+            this.positionsFileFd = -1;
             this.wordLexiconMap = Map.of();
 
             wordLexicons.forEach(WordLexicon::close);
@@ -64,7 +64,7 @@ public class FullReverseIndexReader {
         }
 
         this.wordLexiconMap = wordLexicons.stream().collect(Collectors.toUnmodifiableMap(lexicon -> lexicon.languageIsoCode, v->v));
-        this.positionsFileReader = new PositionsFileReader(positionsFile);
+        this.positionsFileFd = LinuxSystemCalls.openBuffered(positionsFile);
 
         logger.info("Switching reverse index");
 
@@ -201,155 +201,31 @@ public class FullReverseIndexReader {
         return new SkipListReader(dataPool, valuesPool, offset);
     }
 
-    /** Get term metadata for each document, return an array of TermMetadataList of the same
-     * length and order as termIds, with each list of the same length and order as docIds
-     *
-     * @throws TimeoutException if the read could not be queued in a timely manner;
-     *                          (the read itself may still exceed the budgeted time)
-     */
-    public CombinedTermMetadata getTermData(SearchContext searchContext,
-                                            CombinedDocIdList docIds)
-            throws TimeoutException
-    {
-        // Gather all termdata to be retrieved into a single array,
-        // to help cluster related disk accesses and get better I/O performance
-
-        long[] termIds = searchContext.termIdsAll.array;
-
+    @Nullable
+    @CheckReturnValue
+    public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
+                                                               long termId,
+                                                               CombinedDocIdList keys) {
         WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
         if (null == lexicon) {
-            return new CombinedTermMetadata(
-                    new PositionDataOffsets(docIds, termIds),
-                    new DocumentTermFlags(termIds.length, docIds.size()),
-                    new BitSet[searchContext.termIdsPriority.size()],
-                    new BitSet(docIds.size()));
+            return null;
         }
 
-        long[][] valuesForTerm = new long[termIds.length][];
-        for (int i = 0; i < termIds.length; i++) {
-            long termId = termIds[i];
-            long offset = lexicon.wordOffset(termId);
+        long offset = lexicon.wordOffset(termId);
+        if (offset < 0)
+            return null;
 
-            if (offset < 0) {
-                // Likely optional term that is missing from the index
-                logger.debug("Missing offset for word {}", termId);
-                continue;
-            }
-
-            // Read the size and offset of the position data, as well as their metadata masks
-            valuesForTerm[i] = getReader(offset).getAllValues(docIds.array());
-        }
-
-        BitSet viableDocuments = preselectViableDocuments(searchContext, docIds.size(), valuesForTerm);
-
-        long[] offsetsAll = new long[termIds.length * docIds.size()];
-
-        for (int i = 0; i < termIds.length; i++) {
-            // Add to the big array of term data offsets
-            long[] values = valuesForTerm[i];
-            if (null == values)
-                continue;
-
-            for (int di = 0; di < docIds.size(); di++) {
-                if (!viableDocuments.get(di))
-                    continue;
-
-                // We can omit the position data retrieval if the position mask is zero
-                // (likely a synthetic keyword, n-gram, etc.)
-                long positionMask = values[docIds.size() + di] & ~0xFFL;
-                if (positionMask == 0)
-                    continue;
-
-                offsetsAll[i * docIds.size() + di] = values[di];
-            }
-        }
-
-        BitSet[] priorityTermsPresent = new BitSet[searchContext.termIdsPriority.size()];
-
-        for (int i = 0; i < searchContext.termIdsPriority.size(); i++) {
-            long termId = searchContext.termIdsPriority.getLong(i);
-            long offset = lexicon.wordOffset(termId);
-
-            if (offset < 0) {
-                priorityTermsPresent[i] = new BitSet();
-            }
-            else {
-                priorityTermsPresent[i] = getReader(offset).getAllPresentValues(docIds.array());
-            }
-        }
-
-        return new CombinedTermMetadata(
-                new PositionDataOffsets(docIds, viableDocuments, termIds, valuesForTerm),
-                new DocumentTermFlags(valuesForTerm, docIds.size()),
-                priorityTermsPresent,
-                viableDocuments);
+        return getReader(offset).getValueReader(keys.array());
     }
 
+    public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {
+        WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
+        if (null == lexicon) return new BitSet(keys.size());
 
-    /** Find all docIds with non-flagged terms adjacent in the document */
-    BitSet preselectViableDocuments(SearchContext context, int nDocIds, long[][] valuesForTerm) {
+        long offset = lexicon.wordOffset(termId);
+        if (offset < 0) return new BitSet(keys.size());
 
-        BitSet ret = new BitSet(nDocIds);
-
-        // Operate in slices of 16 documents.  This should line up with 2 cache lines for L1 for the long arrays,
-        // and reduces the allocation overhead significantly for expected nDocIds values.
-
-        final int sliceStep = 16;
-
-
-        long[] combinedMasks = new long[sliceStep];
-        long[] thisMask = new long[sliceStep];
-
-        int[] bestFlagsCount = new int[sliceStep];
-        int[] minFlagCount = new int[sliceStep];
-
-        for (int sliceStart = 0; sliceStart < nDocIds; sliceStart += sliceStep) {
-            int sliceEnd = Math.min(sliceStart + sliceStep, nDocIds);
-            int sliceSize = sliceEnd - sliceStart;
-
-            final int valueStartOffset = nDocIds + sliceStart;
-
-            outer:
-            for (IntList path : context.compiledQueryIds.paths) {
-                Arrays.fill(thisMask, ~0L);
-                Arrays.fill(minFlagCount, Integer.MAX_VALUE);
-
-                for (int pathIdx : path) {
-                    long[] values = valuesForTerm[pathIdx];
-
-                    if (null == values) continue outer; // We can skip this branch
-                    if (values.length != 2 * nDocIds)
-                        throw new IllegalArgumentException("values.length had unexpected value");
-
-                    for (int i = 0; i < sliceSize; i++) {
-                        long value = values[valueStartOffset + i];
-
-                        minFlagCount[i] = Math.min(minFlagCount[i], Long.bitCount((value & 0xFF)));
-
-                        if (WordFlags.Synthetic.isPresent((byte) value))
-                            continue;
-
-                        if ((value & 0xFF) == 0)
-                            thisMask[i] &= value;
-                    }
-                }
-
-                // combine values of alternative evaluation paths
-                for (int i = 0; i < sliceSize; i++) {
-                    combinedMasks[i] |= thisMask[i];
-                }
-                for (int i = 0; i < sliceSize; i++) {
-                    bestFlagsCount[i] = Math.max(minFlagCount[i], bestFlagsCount[i]);
-                }
-            }
-
-            for (int i = 0; i < sliceSize; i++) {
-                if (combinedMasks[i] != 0L || minFlagCount[i] > 0)
-                    ret.set(sliceStart + i);
-            }
-        }
-
-        return ret;
+        return getReader(offset).getAllPresentValues(keys.array());
     }
 
     public void close() {
@@ -374,12 +250,8 @@ public class FullReverseIndexReader {
 
         wordLexiconMap.values().forEach(WordLexicon::close);
 
-        if (positionsFileReader != null) {
-            try {
-                positionsFileReader.close();
-            } catch (IOException e) {
-                logger.error("Failed to close positions file reader", e);
-            }
+        if (positionsFileFd > 0) {
+            LinuxSystemCalls.closeFd(positionsFileFd);
         }
     }
 
@@ -388,7 +260,29 @@ public class FullReverseIndexReader {
         return wordLexiconMap.get(languageIsoCode);
     }
 
-    public CompletableFuture<IntList[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
-        return positionsFileReader.getTermData(codedOffsets);
+    public CodedSequence[] getTermPositions(Arena arena, long[] offsets) {
+        MemorySegment[] segments = new MemorySegment[offsets.length];
+
+        for (int i = 0; i < offsets.length; i++) {
+            long encodedOffset = offsets[i];
+            if (encodedOffset == 0) continue;
+
+            int size = PositionCodec.decodeSize(encodedOffset);
+            long offest = PositionCodec.decodeOffset(encodedOffset);
+
+            var segment = arena.allocate(size, 8);
+            segments[i] = segment;
+
+            LinuxSystemCalls.readAt(positionsFileFd, segment, offest);
+        }
+
+        CodedSequence[] ret = new CodedSequence[segments.length];
+        for (int i = 0; i < segments.length; i++) {
+            if (segments[i] != null) {
+                ByteBuffer buffer = segments[i].asByteBuffer();
+                ret[i] = new VarintCodedSequence(buffer, 0, buffer.capacity());
+            }
+        }
+        return ret;
     }
 }

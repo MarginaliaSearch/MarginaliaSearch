@@ -1,5 +1,6 @@
 package nu.marginalia.array.pool;
 
+import nu.marginalia.buffering.LongRingBuffer;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
@@ -107,7 +108,7 @@ public class BufferPool implements AutoCloseable {
             }
         });
 
-        this.prefetcher = new Prefetcher(Math.max(1, 128*1024/pageSizeBytes));
+        this.prefetcher = new Prefetcher(2);
     }
 
     public void close() {
@@ -178,17 +179,6 @@ public class BufferPool implements AutoCloseable {
         prefetcher.requestPrefetch(address);
     }
 
-    private void prefetchNow(long address) {
-        // Look through available pages for the one we're looking for
-        MemoryPage buffer = poolLru.get(address);
-
-        if (buffer != null) // already cached
-            return;
-
-        // buffer is read unacquired, no need to close the return value
-        read(address, false);
-
-    }
 
 
     private MemoryPage read(long address, boolean acquire) {
@@ -247,6 +237,12 @@ public class BufferPool implements AutoCloseable {
             return;
         }
 
+        for (int iter = 0; iter < 1000; iter++) {
+            if (!page.dirty())
+                return;
+            Thread.yield();
+        }
+
         synchronized (page) {
             while (page.dirty()) {
                 try {
@@ -262,11 +258,11 @@ public class BufferPool implements AutoCloseable {
     class Prefetcher {
         private final List<Thread> threads;
         private final int nThreads;
-        private final ArrayBlockingQueue<Long> prefetchQueue;
+        private final LongRingBuffer prefetchQueue;
 
         public Prefetcher(int nThreads) {
             this.threads = new ArrayList<>(nThreads);
-            this.prefetchQueue = new ArrayBlockingQueue<>(4*nThreads);
+            this.prefetchQueue = new LongRingBuffer(nThreads);
             this.nThreads = nThreads;
 
             start(nThreads);
@@ -294,22 +290,37 @@ public class BufferPool implements AutoCloseable {
         }
 
         private void prefetchThread() {
-            try {
-                for (;;) {
-                    Long address = prefetchQueue.poll(1, TimeUnit.SECONDS);
-                    if (null == address) {
-                        continue;
-                    }
-                    prefetchNow(address);
+            int idleCycles = 0;
+
+            long[] vals = new long[1];
+            while (!Thread.interrupted()) {
+                int n = prefetchQueue.takeNonBlock(vals);
+                if (n == 0) {
+                    idleCycles++;
+                    if (idleCycles < 128)
+                        Thread.onSpinWait();
+                    else
+                        LockSupport.parkNanos(10_000);
                 }
-            }
-            catch (InterruptedException ex) {
-                //
+                else {
+                    idleCycles = 0;
+                    long address = vals[0];
+
+                    // Look through available pages for the one we're looking for
+                    MemoryPage buffer = poolLru.get(address);
+
+                    if (buffer == null)
+                        read(address, false);
+                }
             }
         }
 
         public void requestPrefetch(long address) {
-            prefetchQueue.offer(address);
+            prefetchQueue.putNP(address);
+
+            for (var thread: threads) {
+                LockSupport.unpark(thread);
+            }
         }
     }
 
