@@ -291,7 +291,7 @@ public class CombinedIndexReader {
         return forwardIndexReader.getDocumentSpans(documentId);
     }
 
-    public CompletableFuture<IntList[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
+    public CompletableFuture<CodedSequence[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
         return reverseIndexFullReader.getTermPositions(codedOffsets);
     }
 

@@ -229,6 +229,7 @@ public class IndexQueryExecution {
                     throw new RuntimeException(e);
                 }
             }
+
             lookupCountdown.countDown();
         }
 

@@ -49,7 +49,7 @@ public class PositionsFileReader implements AutoCloseable {
 
     /** Get the positions for a keywords in the index, as pointed out by the encoded offsets;
      * intermediate buffers are allocated from the provided arena allocator. */
-    public CompletableFuture<IntList[]> getTermData(long[] offsets) throws InterruptedException {
+    public CompletableFuture<CodedSequence[]> getTermData(long[] offsets) throws InterruptedException {
 
         MemorySegment[] segments = new MemorySegment[offsets.length];
         List<AsyncReadRequest> requests = new ArrayList<>(offsets.length);
@@ -68,11 +68,11 @@ public class PositionsFileReader implements AutoCloseable {
 
         return executionQueue.submit(segments, requests).thenApply(
                 seg -> {
-                    IntList[] ret = new IntList[seg.length];
+                    CodedSequence[] ret = new CodedSequence[seg.length];
                     for (int i = 0; i < seg.length; i++) {
                         if (seg[i] != null) {
                             ByteBuffer buffer = seg[i].asByteBuffer();
-                            ret[i] = new VarintCodedSequence(buffer, 0, buffer.capacity()).values();
+                            ret[i] = new VarintCodedSequence(buffer, 0, buffer.capacity());
                         }
                     }
                     return ret;

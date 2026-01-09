@@ -230,13 +230,13 @@ public class IndexResultRankingService {
         }
 
         long[] wordFlags = document.termFlags;
-        IntList[] positions = document.positions;
+        CodedSequence[] positions = document.positions;
         DocumentSpans spans = document.documentSpans;
 
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
 
-        CompiledQuery<IntList> positionsQuery = compiledQuery.forData(positions);
+        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.forData(positions);
 
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
@@ -248,7 +248,7 @@ public class IndexResultRankingService {
 
         boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
         int minFlagsCount = intMaxMinAggregate(wordFlagsQuery, flags -> Long.bitCount(flags & 0xff));
-        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.size());
+        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.valueCount());
 
         if (minFlagsCount == 0 && !allSynthetic && minPositionsCount == 0) {
             return null;
@@ -268,7 +268,16 @@ public class IndexResultRankingService {
 
         // Decode the coded positions lists into plain IntLists as at this point we will be
         // going over them multiple times
-        IntList[] decodedPositions = positions;
+        IntList[] decodedPositions = new IntList[positions.length];
+        for (int i = 0; i < positions.length; i++) {
+            if (positions[i] != null) {
+                decodedPositions[i] = positions[i].values();
+            }
+            else {
+                decodedPositions[i] = IntList.of();
+            }
+        }
+
 
         var params = rankingContext.params;
 

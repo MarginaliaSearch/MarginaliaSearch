@@ -388,7 +388,7 @@ public class FullReverseIndexReader {
         return wordLexiconMap.get(languageIsoCode);
     }
 
-    public CompletableFuture<IntList[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
+    public CompletableFuture<CodedSequence[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
         return positionsFileReader.getTermData(codedOffsets);
     }
 }
