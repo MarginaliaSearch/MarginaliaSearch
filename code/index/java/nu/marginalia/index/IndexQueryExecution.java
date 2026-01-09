@@ -220,6 +220,15 @@ public class IndexQueryExecution {
             log.error("Exception in lookup thread", ex);
         } finally {
             buffer.dispose();
+
+            long graceTime = Math.min(15, budget.timeLeft());
+            if (graceTime > 0) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(graceTime);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             lookupCountdown.countDown();
         }
 
@@ -355,7 +364,7 @@ public class IndexQueryExecution {
             if (rankableDocument != null)
                 return rankableDocument;
         }
-        for (int i = 0; i < 4096; i++) {
+        for (int i = 0; i < 1024; i++) {
             RankableDocument rankableDocument = queue.tryTake();
             if (rankableDocument != null)
                 return rankableDocument;

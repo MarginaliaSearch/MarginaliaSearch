@@ -220,10 +220,7 @@ public class UringExecutionQueue implements AutoCloseable {
 
             for (int i = 0; i < 128; i++) {
                 int n = completionQueue.takeNonBlock(completions);
-                if (n == 0) {
-                    continue;
-                }
-                else {
+                if (n != 0) {
                     finalizeCompletions(completions, n);
                     continue main;
                 }
