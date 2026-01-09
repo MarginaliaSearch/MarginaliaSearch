@@ -25,12 +25,16 @@ public class UringExecutionQueue implements AutoCloseable {
     private final RingBufferSPNC<SubmittedReadRequest<? extends Object>> inputQueue;
     private final LongRingBufferSPSC completionQueue;
 
-    public UringExecutionQueue(int queueSize) throws Throwable {
+    public UringExecutionQueue(int queueSize) throws IOException {
         this.inputQueue = new RingBufferSPNC<>(4);
         this.completionQueue = new LongRingBufferSPSC(queueSize);
         this.queueSize = queueSize;
-        this.uringQueue = (MemorySegment) ioUringInstance.uringInitUnregistered.invoke(queueSize);
-
+        try {
+            this.uringQueue = (MemorySegment) ioUringInstance.uringInitUnregistered.invoke(queueSize);
+        }
+        catch (Throwable ex) {
+            throw new IOException("Error initializing io_uring", ex);
+        }
         String id = UUID.randomUUID().toString();
         executor = Thread.ofPlatform()
                 .name("UringExecutionQueue[%s]$executionPipe".formatted(id))
@@ -56,10 +60,25 @@ public class UringExecutionQueue implements AutoCloseable {
         if (relatedRequests.size() > queueSize) {
             throw new IllegalArgumentException("Request batches may not exceed the queue size!");
         }
+
+        if (relatedRequests.isEmpty())
+            return CompletableFuture.completedFuture(context);
+
         long id = requestIdCounter.incrementAndGet();
         CompletableFuture<T> future = new CompletableFuture<>();
 
         var item = new SubmittedReadRequest<>(context, relatedRequests, future, id);
+        while (!inputQueue.put(item))
+            Thread.yield();
+
+        return future;
+    }
+
+    public <T> CompletableFuture<T> submit(T context, AsyncReadRequest request) throws InterruptedException {
+        long id = requestIdCounter.incrementAndGet();
+        CompletableFuture<T> future = new CompletableFuture<>();
+
+        var item = new SubmittedReadRequest<>(context, List.of(request), future, id);
         while (!inputQueue.put(item))
             Thread.yield();
 

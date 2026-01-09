@@ -3,6 +3,7 @@ package nu.marginalia.index;
 import com.google.common.collect.MinMaxPriorityQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.index.model.RankableDocument;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -15,36 +16,34 @@ import java.util.*;
  * this scenario, and does not implement other mutating methods
  * than addAll().
  */
-public class ResultPriorityQueue implements Iterable<SearchResultItem> {
+public class ResultPriorityQueue implements Iterable<RankableDocument> {
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
-    private final MinMaxPriorityQueue<SearchResultItem> queue;
+    private final MinMaxPriorityQueue<RankableDocument> queue;
 
     private int itemsProcessed = 0;
 
     public ResultPriorityQueue(int limit) {
-        this.queue = MinMaxPriorityQueue.<SearchResultItem>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
+        this.queue = MinMaxPriorityQueue.<RankableDocument>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
     }
 
-    public @NotNull Iterator<SearchResultItem> iterator() {
+    public @NotNull Iterator<RankableDocument> iterator() {
         return queue.iterator();
     }
 
     /** Adds all items to the queue, and returns true if any items were added.
      * This is a thread-safe operation.
      */
-    public synchronized boolean addAll(@NotNull Collection<? extends SearchResultItem> items) {
-        itemsProcessed+=items.size();
+    public synchronized boolean add(@NotNull RankableDocument item) {
+        itemsProcessed++;
 
-        for (var item : items) {
-            if (idsInSet.add(item.getDocumentId())) {
-                queue.add(item);
-            }
+        if (idsInSet.add(item.combinedDocumentId)) {
+            queue.add(item);
         }
 
         return true;
     }
 
-    public synchronized List<SearchResultItem> toList() {
+    public synchronized List<RankableDocument> toList() {
         return new ArrayList<>(queue);
     }
 

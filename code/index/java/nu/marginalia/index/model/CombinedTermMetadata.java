@@ -6,14 +6,17 @@ import javax.annotation.Nullable;
 import java.util.BitSet;
 
 public class CombinedTermMetadata {
-    private final TermMetadataList[] termMetadataLists;
+    private final PositionDataOffsets positionDataOffsets;
+    private final DocumentTermFlags flags;
     private final BitSet[] priorityTermsPresent;
     private final BitSet viableDocuments;
 
-    public CombinedTermMetadata(TermMetadataList[] termMetadataLists,
+    public CombinedTermMetadata(PositionDataOffsets positionDataOffsets,
+                                DocumentTermFlags flags,
                                 BitSet[] priorityTermsPresent,
                                 BitSet viableDocuments) {
-        this.termMetadataLists = termMetadataLists;
+        this.positionDataOffsets = positionDataOffsets;
+        this.flags = flags;
         this.priorityTermsPresent = priorityTermsPresent;
         this.viableDocuments = viableDocuments;
     }
@@ -23,44 +26,20 @@ public class CombinedTermMetadata {
         return viableDocuments;
     }
 
-    public boolean priorityTermsPresent(int priorityTermId, int pos) {
-        var bs = priorityTermsPresent[priorityTermId];
-        if (bs == null)
-            return false;
-        return bs.get(pos);
+    public BitSet priorityTermsPresent(int pos) {
+        BitSet ret = new BitSet(priorityTermsPresent.length);
+        for (int i = 0; i < priorityTermsPresent.length; i++) {
+            if (priorityTermsPresent[i].get(pos))
+                ret.set(i);
+        }
+        return ret;
     }
 
-
-    public TermMetadataList termMetadata(int termId) {
-        return termMetadataLists[termId];
+    public long[] flagsForDoc(int docIdx) {
+        return flags.get(docIdx);
     }
 
-    public static final class TermMetadataList {
-        private final CodedSequence[] positions;
-        private final byte[] flags;
-
-        public TermMetadataList(CodedSequence[] positions,
-                                byte[] flags)
-        {
-            this.positions = positions;
-            this.flags = flags;
-        }
-
-        public long flag(int i) {
-            return flags[i];
-        }
-
-        /** Returns the position data for the given document index,
-         * may be null if the term is not in the document
-         */
-        @Nullable
-        public CodedSequence position(int i) {
-            if (positions[i] == null)
-                return null;
-
-            return positions[i];
-        }
-
-
+    public long[] positionOffsetsForDoc(int docIdx) {
+        return positionDataOffsets.offsetsForDoc(docIdx, null);
     }
 }

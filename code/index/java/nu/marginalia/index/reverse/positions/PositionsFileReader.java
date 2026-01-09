@@ -1,5 +1,11 @@
 package nu.marginalia.index.reverse.positions;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.asyncio.AsyncReadRequest;
+import nu.marginalia.asyncio.UringExecutionQueue;
+import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.ffi.NativeAlgos;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.VarintCodedSequence;
@@ -10,77 +16,70 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 /** Reads positions data from the positions file */
 public class PositionsFileReader implements AutoCloseable {
 
-    private final UringFileReader uringFileReader;
+    private final UringExecutionQueue executionQueue;
+    private final int fileDescriptor;
     private static final Logger logger = LoggerFactory.getLogger(PositionsFileReader.class);
 
     public PositionsFileReader(Path positionsFile) throws IOException {
-        if (Boolean.getBoolean("index.directModePositionsFile")) {
-            if ((Files.size(positionsFile) & 4095) != 0) {
-                throw new IllegalArgumentException("Positions file is not block aligned in size: " + Files.size(positionsFile));
-            }
-
-            uringFileReader = new UringFileReader(positionsFile, true);
-        }
-        else {
-            uringFileReader = new UringFileReader(positionsFile, false);
-        }
+        fileDescriptor = LinuxSystemCalls.openBuffered(positionsFile);
+        executionQueue = new UringExecutionQueue(16);
     }
 
     @Override
     public void close() throws IOException {
-        uringFileReader.close();
+        try {
+            executionQueue.close();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            LinuxSystemCalls.closeFd(fileDescriptor);
+        }
     }
 
     /** Get the positions for a keywords in the index, as pointed out by the encoded offsets;
      * intermediate buffers are allocated from the provided arena allocator. */
-    public CodedSequence[] getTermData(Arena arena, IndexSearchBudget budget, long[] offsets) throws TimeoutException {
+    public CompletableFuture<IntList[]> getTermData(long[] offsets) throws InterruptedException {
 
-        int cnt = 0;
-
+        MemorySegment[] segments = new MemorySegment[offsets.length];
+        List<AsyncReadRequest> requests = new ArrayList<>(offsets.length);
         for (int i = 0; i < offsets.length; i++) {
             long encodedOffset = offsets[i];
             if (encodedOffset == 0) continue;
-            cnt++;
+
+            int size = PositionCodec.decodeSize(encodedOffset);
+            long offest = PositionCodec.decodeOffset(encodedOffset);
+
+            var segment = Arena.ofAuto().allocate(size, 8);
+            segments[i] = segment;
+
+            requests.add(new AsyncReadRequest(fileDescriptor, segment, offest));
         }
 
-        if (cnt == 0) {
-            return new CodedSequence[offsets.length];
-        }
-
-        long[] readOffsets = new long[cnt];
-        int[] readSizes = new int[cnt];
-
-        for (int i = 0, j = 0; i < offsets.length; i++) {
-            long encodedOffset = offsets[i];
-            if (encodedOffset == 0) continue;
-
-            readSizes[j] = PositionCodec.decodeSize(encodedOffset);
-            readOffsets[j] = PositionCodec.decodeOffset(encodedOffset);
-            j++;
-        }
-
-        List<MemorySegment> buffers = uringFileReader.readUnaligned(arena, budget.timeLeft(), readOffsets, readSizes, 4096);
-
-        CodedSequence[] ret = new CodedSequence[offsets.length];
-
-        for (int i = 0, j=0; i < offsets.length; i++) {
-            long encodedOffset = offsets[i];
-            if (encodedOffset == 0) continue;
-
-            var buffer = buffers.get(j++).asByteBuffer();
-
-            ret[i] = new VarintCodedSequence(buffer, 0, buffer.capacity());
-        }
-
-        return ret;
+        System.out.println("A: " + requests.size());
+        return executionQueue.submit(segments, requests).thenApply(
+                seg -> {
+                    System.out.println("B");
+                    IntList[] ret = new IntList[seg.length];
+                    for (int i = 0; i < seg.length; i++) {
+                        if (seg[i] != null) {
+                            ByteBuffer buffer = seg[i].asByteBuffer();
+                            ret[i] = new VarintCodedSequence(buffer, 0, buffer.capacity()).values();
+                        }
+                    }
+                    return ret;
+                }
+        );
     }
 
 }

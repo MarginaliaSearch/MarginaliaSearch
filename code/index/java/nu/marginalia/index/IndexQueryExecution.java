@@ -3,7 +3,10 @@ package nu.marginalia.index;
 import io.prometheus.metrics.core.metrics.Gauge;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.asyncio.RingBufferSPNC;
 import nu.marginalia.index.model.CombinedDocIdList;
+import nu.marginalia.index.model.CombinedTermMetadata;
+import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.reverse.query.IndexQuery;
@@ -39,6 +42,7 @@ public class IndexQueryExecution {
 
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
+    private final CombinedIndexReader currentIndex;
     private final String nodeName;
     private final IndexResultRankingService rankingService;
 
@@ -49,12 +53,15 @@ public class IndexQueryExecution {
 
     private final CountDownLatch lookupCountdown;
     private final CountDownLatch preparationCountdown;
+    private final CountDownLatch spansCountdown;
+    private final CountDownLatch termsCountdown;
     private final CountDownLatch rankingCountdown;
 
-    private final ArrayBlockingQueue<CombinedDocIdList> fullPreparationQueue = new ArrayBlockingQueue<>(1);
-    private final ArrayBlockingQueue<CombinedDocIdList> priorityPreparationQueue = new ArrayBlockingQueue<>(1);
-    private final ArrayBlockingQueue<IndexResultRankingService.RankingData> fullEvaluationQueue = new ArrayBlockingQueue<>(32);
-    private final ArrayBlockingQueue<IndexResultRankingService.RankingData> priorityEvaluationQueue = new ArrayBlockingQueue<>(32);
+    private final ArrayBlockingQueue<CombinedDocIdList> preparationQueue = new ArrayBlockingQueue<>(2);
+
+    private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(32);
+    private final RingBufferSPNC<RankableDocument> spanRetrievalQueue  = new RingBufferSPNC<>(32);
+    private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(32);
 
     private final int limitTotal;
     private final int limitByDomain;
@@ -100,6 +107,7 @@ public class IndexQueryExecution {
                                IndexResultRankingService rankingService,
                                SearchContext rankingContext,
                                int serviceNode) {
+        this.currentIndex = currentIndex;
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
         this.rankingContext = rankingContext;
@@ -113,8 +121,10 @@ public class IndexQueryExecution {
         queries = currentIndex.createQueries(rankingContext);
 
         lookupCountdown = new CountDownLatch(queries.size());
-        preparationCountdown = new CountDownLatch(indexPreparationThreads * 2);
         rankingCountdown = new CountDownLatch(indexValuationThreads * 2);
+        spansCountdown = new CountDownLatch(1);
+        preparationCountdown = new CountDownLatch(1);
+        termsCountdown = new CountDownLatch(1);
     }
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException, TooManySimultaneousQueriesException {
@@ -129,32 +139,24 @@ public class IndexQueryExecution {
                 threadPool.submit(() -> lookup(query));
             }
 
-            for (int i = 0; i < indexPreparationThreads; i++) {
-                threadPool.submit(() -> prepare(priorityPreparationQueue, priorityEvaluationQueue));
-                threadPool.submit(() -> prepare(fullPreparationQueue, fullEvaluationQueue));
-            }
+            threadPool.submit(this::prepare);
+            threadPool.submit(this::getSpans);
+            threadPool.submit(this::getPositions);
 
             // Spawn lookup tasks for each query
-            for (int i = 0; i < indexValuationThreads; i++) {
-                threadPool.submit(() -> evaluate(priorityEvaluationQueue));
-                threadPool.submit(() -> evaluate(fullEvaluationQueue));
+            for (int i = 0; i < rankingCountdown.getCount(); i++) {
+                threadPool.submit(this::evaluate);
             }
 
             // Await lookup task termination
             lookupCountdown.await();
             preparationCountdown.await();
+            spansCountdown.await();
+            termsCountdown.await();
             rankingCountdown.await();
         }
         finally {
             simultaneousRequests.release();
-        }
-
-        // Deallocate any leftover ranking data buffers
-        for (var data : priorityEvaluationQueue) {
-            data.close();
-        }
-        for (var data : fullEvaluationQueue) {
-            data.close();
         }
 
         if (printDebugSummary) {
@@ -190,12 +192,11 @@ public class IndexQueryExecution {
                 if (buffer.isEmpty())
                     continue;
 
-                var queue = query.isPrioritized() ? priorityPreparationQueue : fullPreparationQueue;
 
                 if (buffer.end <= evaluationBatchSize) {
                     var docIds = new CombinedDocIdList(buffer);
 
-                    if (!queue.offer(docIds, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS))
+                    if (!preparationQueue.offer(docIds, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS))
                         break;
                 }
                 else {
@@ -207,9 +208,8 @@ public class IndexQueryExecution {
 
                         var docIds = new CombinedDocIdList(slice);
 
-                        if (!queue.offer(docIds, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS))
+                        if (!preparationQueue.offer(docIds, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS))
                             break;
-
                     }
                 }
             }
@@ -223,21 +223,35 @@ public class IndexQueryExecution {
         return evaluationJobs;
     }
 
-    private void prepare(ArrayBlockingQueue<CombinedDocIdList> inputQueue, ArrayBlockingQueue<IndexResultRankingService.RankingData> outputQueue) {
+    private void prepare() {
         try {
-            while (budget.hasTimeLeft() && (lookupCountdown.getCount() > 0 || !inputQueue.isEmpty())) {
-                var docIds = inputQueue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
+            while (budget.hasTimeLeft() && (lookupCountdown.getCount() > 0 || !preparationQueue.isEmpty())) {
+                var docIds = preparationQueue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
                 if (docIds == null) continue;
 
                 long st = System.nanoTime();
-                var preparedData = rankingService.prepareRankingData(rankingContext, docIds);
+
+                CombinedTermMetadata termMetadata = currentIndex.getTermMetadata(rankingContext, docIds);
+
                 long et = System.nanoTime();
                 metric_index_prep_time_s
                         .labelValues(nodeName)
                         .inc((et - st)/1_000_000_000.);
 
-                if (!outputQueue.offer(preparedData, Math.max(1, budget.timeLeft()), TimeUnit.MILLISECONDS))
-                    preparedData.close();
+                boolean abort = false;
+
+                for (int i = 0; i < docIds.size() && !abort; i++) {
+                    long docId = docIds.at(i);
+
+                    RankableDocument item = new RankableDocument(docId);
+
+                    item.priorityTermsPresent = termMetadata.priorityTermsPresent(i);
+                    item.termFlags = termMetadata.flagsForDoc(i);
+                    item.positionOffsets = termMetadata.positionOffsetsForDoc(i);
+
+                    if (!enqueue(item, spanRetrievalQueue))
+                        break;
+                }
             }
         } catch (TimeoutException ex) {
             // This is normal
@@ -250,21 +264,74 @@ public class IndexQueryExecution {
         }
     }
 
-    private void evaluate(ArrayBlockingQueue<IndexResultRankingService.RankingData> queue) {
+    private void getSpans() {
         try {
-            while (budget.hasTimeLeft() && (preparationCountdown.getCount() > 0 || !queue.isEmpty())) {
-                var rankingData = queue.poll(Math.clamp(budget.timeLeft(), 1, 5), TimeUnit.MILLISECONDS);
-                if (rankingData == null) continue;
+            for (;;) {
+                RankableDocument rankableDocument = getFromQueue(spanRetrievalQueue);
 
-                try (rankingData) {
-                    long st =  System.nanoTime();
-                    resultHeap.addAll(rankingService.rankResults(rankingContext, rankingData));
-                    long et = System.nanoTime();
-
-                    metric_index_rank_time_s
-                            .labelValues(nodeName)
-                            .inc((et - st)/1_000_000_000.);
+                if (rankableDocument == null) {
+                    if (preparationCountdown.getCount() == 0)
+                        return;
+                    else
+                        continue;
                 }
+
+                currentIndex.getDocumentSpans(rankableDocument.combinedDocumentId)
+                        .thenAccept(spans -> {
+                            rankableDocument.documentSpans = spans;
+                            enqueue(rankableDocument, termPositionRetrievalQueue);
+                        });
+            }
+        } catch (Exception ex) {
+            if (!(ex.getCause() instanceof InterruptedException)) {
+                log.error("Exception in lookup thread", ex);
+            }  // suppress logging for interrupted ex
+        } finally {
+            spansCountdown.countDown();
+        }
+    }
+
+    private void getPositions() {
+        try {
+            for (;;) {
+                RankableDocument rankableDocument = getFromQueue(termPositionRetrievalQueue);
+
+                if (rankableDocument == null) {
+                    if (spansCountdown.getCount() == 0)
+                        return;
+                    else
+                        continue;
+                }
+
+                currentIndex.getTermPositions(rankableDocument.positionOffsets)
+                        .thenAccept(positions -> {
+                            rankableDocument.positions = positions;
+                            enqueue(rankableDocument, rankingQueue);
+                        });
+            }
+        } catch (Exception ex) {
+            if (!(ex.getCause() instanceof InterruptedException)) {
+                log.error("Exception in lookup thread", ex);
+            }  // suppress logging for interrupted ex
+        } finally {
+            termsCountdown.countDown();
+        }
+    }
+
+    private void evaluate() {
+        try {
+            for (;;) {
+                RankableDocument rankableDocument = getFromQueue(rankingQueue);
+
+                if (rankableDocument == null) {
+                    if ((termsCountdown.getCount() == 0))
+                        return;
+                    else
+                        continue;
+                }
+
+                if (null != (rankableDocument.item = rankingService.calculateScore(null, currentIndex, rankingContext, rankableDocument)))
+                    resultHeap.add(rankableDocument);
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
@@ -273,6 +340,28 @@ public class IndexQueryExecution {
         } finally {
             rankingCountdown.countDown();
         }
+    }
+
+    private RankableDocument getFromQueue(RingBufferSPNC<RankableDocument> queue) {
+        RankableDocument rankableDocument = null;
+        for (int i = 0; rankableDocument == null && i < 1000; i++) {
+            rankableDocument = queue.tryTake();
+        }
+        for (int i = 0; rankableDocument == null && i < 100_000; i++) {
+            rankableDocument = queue.tryTake();
+            Thread.yield();
+        }
+        return rankableDocument;
+    }
+
+    private boolean enqueue(RankableDocument item, RingBufferSPNC<RankableDocument> queue) {
+        for (int iter = 0; !queue.put(item); iter++) {
+            if (iter > 1000) {
+                if ((iter & 0x100) != 0 && !budget.hasTimeLeft()) return false;
+                Thread.yield();
+            }
+        }
+        return true;
     }
 
     public int itemsProcessed() {

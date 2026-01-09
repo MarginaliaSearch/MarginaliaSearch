@@ -6,9 +6,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.ffi.LinuxSystemCalls;
-import nu.marginalia.index.model.CombinedTermMetadata;
-import nu.marginalia.index.model.CombinedDocIdList;
-import nu.marginalia.index.model.SearchContext;
+import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.positions.PositionsFileReader;
 import nu.marginalia.index.reverse.query.*;
 import nu.marginalia.index.reverse.query.filter.QueryFilterLetThrough;
@@ -29,6 +27,7 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -208,8 +207,7 @@ public class FullReverseIndexReader {
      * @throws TimeoutException if the read could not be queued in a timely manner;
      *                          (the read itself may still exceed the budgeted time)
      */
-    public CombinedTermMetadata getTermData(Arena arena,
-                                            SearchContext searchContext,
+    public CombinedTermMetadata getTermData(SearchContext searchContext,
                                             CombinedDocIdList docIds)
             throws TimeoutException
     {
@@ -220,14 +218,12 @@ public class FullReverseIndexReader {
 
         WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
         if (null == lexicon) {
-            CombinedTermMetadata.TermMetadataList[] ret = new CombinedTermMetadata.TermMetadataList[termIds.length];
-            for (int i = 0; i < termIds.length; i++) {
-                ret[i] = new CombinedTermMetadata.TermMetadataList(new CodedSequence[docIds.size()], new byte[docIds.size()]);
-            }
-
-            return new CombinedTermMetadata(ret, new BitSet[searchContext.termIdsPriority.size()], new BitSet(docIds.size()));
+            return new CombinedTermMetadata(
+                    new PositionDataOffsets(docIds, termIds),
+                    new DocumentTermFlags(termIds.length, docIds.size()),
+                    new BitSet[searchContext.termIdsPriority.size()],
+                    new BitSet(docIds.size()));
         }
-
 
         long[][] valuesForTerm = new long[termIds.length][];
         for (int i = 0; i < termIds.length; i++) {
@@ -282,33 +278,13 @@ public class FullReverseIndexReader {
             }
         }
 
-        // Perform the read
-        CodedSequence[] termDataCombined = positionsFileReader.getTermData(arena, searchContext.budget, offsetsAll);
-
-        // Break the result data into separate arrays by termId again
-        CombinedTermMetadata.TermMetadataList[] ret = new CombinedTermMetadata.TermMetadataList[termIds.length];
-        for (int i = 0; i < termIds.length; i++) {
-
-            // Extract the term flags
-
-            byte[] flags = new byte[docIds.size()];
-            long[] values = valuesForTerm[i];
-
-            if (null != values) {
-                for (int di = 0; di < flags.length; di++) {
-                    flags[di] = (byte) (values[di + docIds.size()] & 0xFFL);
-                }
-            }
-
-            // Build the return array
-            ret[i] = new CombinedTermMetadata.TermMetadataList(
-                    Arrays.copyOfRange(termDataCombined, i*docIds.size(), (i+1)*docIds.size()),
-                    flags
-            );
-        }
-
-        return new CombinedTermMetadata(ret, priorityTermsPresent, viableDocuments);
+        return new CombinedTermMetadata(
+                new PositionDataOffsets(docIds, viableDocuments, termIds, valuesForTerm),
+                new DocumentTermFlags(valuesForTerm, docIds.size()),
+                priorityTermsPresent,
+                viableDocuments);
     }
+
 
     /** Find all docIds with non-flagged terms adjacent in the document */
     BitSet preselectViableDocuments(SearchContext context, int nDocIds, long[][] valuesForTerm) {
@@ -410,5 +386,9 @@ public class FullReverseIndexReader {
     @Nullable
     public WordLexicon getWordLexicon(String languageIsoCode) {
         return wordLexiconMap.get(languageIsoCode);
+    }
+
+    public CompletableFuture<IntList[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
+        return positionsFileReader.getTermData(codedOffsets);
     }
 }

@@ -16,7 +16,7 @@ public class RingBufferSPNC<T> {
     public T take() {
         int rp;
         for (int iter = 0;;iter++) {
-            while ((rp = readPos.get()) != writePos.get()) {
+            if ((rp = readPos.get()) != writePos.get()) {
                 Object ret = items[rp];
                 if (readPos.compareAndSet(rp, (rp + 1) % items.length)) {
                     return (T) ret;
@@ -25,6 +25,20 @@ public class RingBufferSPNC<T> {
             if (iter > 1000)
                 Thread.yield();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public T tryTake() {
+        int rp;
+
+        if ((rp = readPos.get()) != writePos.get()) {
+            Object ret = items[rp];
+            if (readPos.compareAndSet(rp, (rp + 1) % items.length)) {
+                return (T) ret;
+            }
+        }
+
+        return null;
     }
 
     @SuppressWarnings("unchecked")

@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.BitSet;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 import static nu.marginalia.index.config.ForwardIndexParameters.*;
@@ -179,32 +180,16 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-    public DocumentSpans[] getDocumentSpans(Arena arena, IndexSearchBudget budget, CombinedDocIdList combinedIds, BitSet docIdsMask) throws TimeoutException {
-        long[] offsets = new long[combinedIds.size()];
 
-        for (int i = 0; i < offsets.length; i++) {
+    public CompletableFuture<DocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
 
-            if (!docIdsMask.get(i)) {
-                offsets[i] = -1;
-                continue;
-            }
-
-            long offset = idxForDoc(combinedIds.at(i));
-            if (offset >= 0) {
-                offsets[i] = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
-            }
-            else {
-                offsets[i] = -1;
-            }
+        long offset = idxForDoc(documentId);
+        if (offset < 0) {
+            return CompletableFuture.completedFuture(new DocumentSpans());
         }
 
-        try {
-            return spansReader.readSpans(arena, budget, offsets);
-        }
-        catch (IOException ex) {
-            logger.error("Failed to read spans for docIds", ex);
-            return new DocumentSpans[offsets.length];
-        }
+        long dataOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
+        return spansReader.readSpan(Arena.ofAuto(), dataOffset);
     }
 
     public int totalDocCount() {

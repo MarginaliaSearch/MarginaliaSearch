@@ -53,6 +53,16 @@ public class PhraseConstraintGroupList {
         return true;
     }
 
+    public boolean testMandatory(IntList[] positions) {
+
+        for (var constraint : mandatoryGroups) {
+            if (!constraint.test(positions)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
     public static final class PhraseConstraintGroup {
         private final int[] offsets;
         private final BitSet present;
@@ -118,6 +128,34 @@ public class PhraseConstraintGroupList {
             }
 
             return SequenceOperations.intersectSequences(sequences);
+        }
+
+        public boolean test(IntList[] positions) {
+            int[] offsets = new int[positions.length];
+            IntIterator[] sequences = new IntIterator[presentCardinality];
+
+            for (int oi = 0, si = 0; oi < offsets.length; oi++) {
+                if (!present.get(oi)) {
+                    continue;
+                }
+                int offset = this.offsets[oi];
+                if (offset < 0)
+                    return false;
+
+                // Create iterators that are offset by their relative position in the
+                // sequence.  This is done by subtracting the index from the offset,
+                // so that when we intersect them, an overlap means that the terms are
+                // in the correct order.  Note the offset is negative!
+
+                var posForTerm = positions[offset];
+                if (posForTerm == null) {
+                    return false;
+                }
+                sequences[si] = posForTerm.iterator();
+                offsets[si++] = -oi;
+            }
+
+            return SequenceOperations.intersectOffsetSequences(sequences, offsets);
         }
 
 
