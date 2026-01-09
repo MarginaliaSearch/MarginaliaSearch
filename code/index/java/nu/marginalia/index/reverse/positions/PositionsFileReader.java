@@ -66,10 +66,8 @@ public class PositionsFileReader implements AutoCloseable {
             requests.add(new AsyncReadRequest(fileDescriptor, segment, offest));
         }
 
-        System.out.println("A: " + requests.size());
         return executionQueue.submit(segments, requests).thenApply(
                 seg -> {
-                    System.out.println("B");
                     IntList[] ret = new IntList[seg.length];
                     for (int i = 0; i < seg.length; i++) {
                         if (seg[i] != null) {
