@@ -100,8 +100,8 @@ public class SequenceOperations {
      * If any of the lists are empty, return an empty list.
      * <p></p>
      */
-    public static IntList findIntersections(IntList... positions) {
-        return findIntersections(positions, new int[positions.length], Integer.MAX_VALUE);
+    public static IntList findIntersections(IntArrayList ret, IntList... positions) {
+        return findIntersections(ret, positions, new int[positions.length], Integer.MAX_VALUE);
     }
 
     /** Find any intersections between the given positions lists, and return the list of intersections.

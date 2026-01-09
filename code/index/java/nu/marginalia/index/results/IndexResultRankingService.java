@@ -350,13 +350,13 @@ public class IndexResultRankingService {
 
                 if (positions[i] != null) {
                     debugRankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(intListPool.get(), spans.title.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(intListPool.get(), spans.heading.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(intListPool.get(), spans.anchor.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(intListPool.get(), spans.code.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(intListPool.get(), spans.nav.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(intListPool.get(), spans.body.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(intListPool.get(), spans.externalLinkText.positionValues(), decodedPositions[i]).iterator());
                 }
             }
         }
