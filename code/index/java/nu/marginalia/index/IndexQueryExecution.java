@@ -15,6 +15,7 @@ import nu.marginalia.skiplist.SkipListConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -347,20 +348,26 @@ public class IndexQueryExecution {
         }
     }
 
+    @Nullable
     private RankableDocument getFromQueue(RingBufferSPNC<RankableDocument> queue) {
-        RankableDocument rankableDocument = null;
-        for (int i = 0; rankableDocument == null && i < 256; i++) {
-            rankableDocument = queue.tryTake();
+        for (int i = 0; i < 256; i++) {
+            RankableDocument rankableDocument = queue.tryTake();
+            if (rankableDocument != null)
+                return rankableDocument;
         }
-        for (int i = 0; rankableDocument == null && i < 4096; i++) {
-            rankableDocument = queue.tryTake();
+        for (int i = 0; i < 4096; i++) {
+            RankableDocument rankableDocument = queue.tryTake();
+            if (rankableDocument != null)
+                return rankableDocument;
             Thread.yield();
         }
-        for (int i = 0; rankableDocument == null && i < 4096; i++) {
-            rankableDocument = queue.tryTake();
+        for (int i = 0; i < 128; i++) {
+            RankableDocument rankableDocument = queue.tryTake();
+            if (rankableDocument != null)
+                return rankableDocument;
             LockSupport.parkNanos(1);
         }
-        return rankableDocument;
+        return null;
     }
 
     private boolean enqueue(RankableDocument item, RingBufferSPNC<RankableDocument> queue) {
@@ -371,6 +378,8 @@ public class IndexQueryExecution {
         for (int iter = 0; iter < 2048; iter++) {
             if (queue.put(item))
                 return true;
+            if (queue.isClosed())
+                return false;
             Thread.yield();
         }
         for (;;) {
