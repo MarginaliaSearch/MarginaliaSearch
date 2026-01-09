@@ -182,6 +182,195 @@ public class SkipListReader {
         return currentBlockIdx >= n;
     }
 
+    public class ValueReader {
+        private final int entrySize = (SkipListConstants.RECORD_SIZE - 1);
+
+        private final long[] inputKeys;
+        private int iPos = -1;
+        private int offsetPos = 0;
+
+        private final long[] valueOffsets;
+        private int vPos = 0;
+        private int vLen = 0;
+
+        private final long[] outValues;
+        private int oPos = -entrySize;
+        private int oLen = 0;
+
+        ValueReader() {
+            inputKeys = new long[0];
+            valueOffsets = new long[0];
+            outValues = new long[0];
+        }
+
+        ValueReader(long[] inputKeys) {
+            this.inputKeys = inputKeys;
+            this.valueOffsets = new long[inputKeys.length];
+            this.outValues = new long[inputKeys.length * (RECORD_SIZE-1)];
+
+        }
+
+        public boolean advance() {
+            oPos += entrySize;
+            iPos++;
+
+            if (oPos < oLen) return true;
+
+            oPos = oLen = 0;
+
+            if (vPos == vLen) readOffsets();
+            if (vPos != vLen) {
+                copyValuesFromBlock();
+
+                return oLen > 0;
+            }
+            else {
+                return false;
+            }
+        }
+
+        public long getValue(int idx) {
+            assert idx >= 0;
+            assert idx < entrySize;
+
+            return outValues[oPos + idx];
+        }
+
+        public int getIndex() {
+            return iPos;
+        }
+
+        private void copyValuesFromBlock() {
+            while (vPos < vLen && oLen == 0) {
+                if (valueOffsets[vPos] < 0) {
+                    Arrays.fill(outValues, oLen, oLen + entrySize, 0);
+                    oLen+=entrySize;
+                    vPos++;
+                }
+                else {
+                    long valBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
+
+                    try (var page = valuesPool.get(valBlock)) {
+
+                        for (; vPos < vLen; vPos++) {
+                            if (valueOffsets[vPos] < 0) {
+                                Arrays.fill(outValues, oLen, oLen + entrySize, 0);
+                                oLen+=entrySize;
+                            }
+                            else {
+                                long nextBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
+                                if (nextBlock != valBlock) {
+                                    if (enableValuePrefetching) {
+                                        valuesPool.prefetch(nextBlock);
+                                    }
+                                    break;
+                                }
+
+                                int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
+                                for (int j = 0; j < RECORD_SIZE - 1; j++) {
+                                    outValues[oLen + j] = page.getLong(offsetBase + 8*j);
+                                }
+                                oLen+=entrySize;
+                            }
+                        }
+                    }
+
+                }
+            }
+
+        }
+
+        private void readOffsets() {
+
+            final int vLen0 = vLen;
+            while (vLen == vLen0 && offsetPos < inputKeys.length && !atEnd) {
+                try (var page = indexPool.get(currentBlock)) {
+                    MemorySegment ms = page.getMemorySegment();
+                    assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
+                    int n = headerNumRecords(page, currentBlockOffset);
+                    int fc = headerForwardCount(page, currentBlockOffset);
+                    byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                    long valuesOffset = headerValueOffset(page, currentBlockOffset);
+
+                    if (n == 0) {
+                        throw new IllegalStateException("Reading null memory!");
+                    }
+
+                    int dataOffset = pageDataOffset(currentBlockOffset, fc);
+
+                    int remainingToRead = n - currentBlockIdx;
+                    if (remainingToRead <= 0)
+                        return;
+
+                    int searchStart = currentBlockIdx;
+
+                    outer:
+                    while (offsetPos < inputKeys.length) {
+                        long kv = inputKeys[offsetPos];
+
+                        for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                            long pv = page.getLong(dataOffset + currentBlockIdx * 8);
+                            if (kv < pv) {
+                                offsetPos++;
+                                valueOffsets[vLen++] = -1;
+                                continue outer;
+                            } else if (kv == pv) {
+                                long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
+                                valueOffsets[vLen++] = val;
+                                offsetPos++;
+
+                                continue outer;
+                            }
+                        }
+                        break;
+                    }
+
+                    if (currentBlockIdx >= n) {
+                        atEnd = (flags & FLAG_END_BLOCK) != 0;
+                        if (atEnd) {
+                            return;
+                        }
+
+                        if (offsetPos >= inputKeys.length) {
+                            currentBlock += BLOCK_STRIDE;
+                            currentBlockOffset = 0;
+                            currentBlockIdx = 0;
+                        } else {
+                            long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+                            long currentValue = inputKeys[offsetPos];
+                            for (int i = 0; i < fc; i++) {
+                                long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                                nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i - 1));
+                                if (blockMaxValue >= currentValue) {
+                                    break;
+                                }
+                            }
+
+                            currentBlockOffset = 0;
+                            currentBlockIdx = 0;
+                            currentBlock = nextBlock;
+                        }
+                    }
+
+                }
+            }
+
+            if (!atEnd && offsetPos < inputKeys.length && enableIndexPrefetching) {
+                indexPool.prefetch(currentBlock);
+            }
+        }
+
+    }
+
+    public ValueReader getValueReader(long[] keys) {
+        return new ValueReader(keys);
+    }
+
+    public ValueReader getEmptyValueReader() {
+        return new ValueReader();
+    }
+
     /** Gets all of the values associated with the keys provided as input.
      * Values that are not found in the skip list index are set to zero.
      *
@@ -190,142 +379,14 @@ public class SkipListReader {
      * the result array will look like [ 1, 2, 3, 4, ..., 1, 2, 3, 4, ... ]
      * */
     public long[] getAllValues(long[] keys) {
-        int pos = 0;
-
+        var reader = getValueReader(keys);
         long[] vals = new long[keys.length * (RECORD_SIZE-1)];
-        Arrays.fill(vals, 0, keys.length, -1L);
 
-        if (getClass().desiredAssertionStatus()) {
-            for (int i = 1; i < keys.length; i++) {
-                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
-            }
+        while (reader.advance()) {
+            vals[reader.getIndex()] = reader.getValue(0);
+            vals[keys.length + reader.getIndex()] = reader.getValue(1);
         }
 
-        long lastValueBlock = -1;
-
-        LongArrayFIFOQueue prefetchBlocks = enableValuePrefetching ? new LongArrayFIFOQueue() : null;
-
-        while (pos < keys.length) {
-            try (var page = indexPool.get(currentBlock)) {
-                MemorySegment ms = page.getMemorySegment();
-                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
-                int n = headerNumRecords(page, currentBlockOffset);
-                int fc = headerForwardCount(page, currentBlockOffset);
-                byte flags = (byte) headerFlags(page, currentBlockOffset);
-
-                long valuesOffset = headerValueOffset(page, currentBlockOffset);
-
-                if (n == 0) {
-                    throw new IllegalStateException("Reading null memory!");
-                }
-
-                int dataOffset = pageDataOffset(currentBlockOffset, fc);
-
-                int remainingToRead = n - currentBlockIdx;
-                if (remainingToRead <= 0)
-                    break;
-
-                int searchStart = currentBlockIdx;
-
-                outer:
-                while (pos < keys.length) {
-                    long kv = keys[pos];
-
-                    for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
-                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                        if (kv < pv) {
-                            pos++;
-                            continue outer;
-                        }
-                        else if (kv == pv) {
-                            long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE-1);
-                            vals[pos] = val;
-
-                            if (enableValuePrefetching) {
-                                long valBlock = val & -VALUE_BLOCK_SIZE;
-                                if (valBlock != lastValueBlock) {
-                                    if (lastValueBlock < 0) { // prefetch the first block immediately
-                                        valuesPool.prefetch(valBlock);
-                                    }
-                                    else {
-                                        prefetchBlocks.enqueue(valBlock);
-                                    }
-
-                                    lastValueBlock = valBlock;
-
-                                }
-                            }
-
-                            pos++;
-                            continue outer;
-                        }
-                    }
-                    break;
-                }
-
-                if (currentBlockIdx >= n) {
-                    atEnd = (flags & FLAG_END_BLOCK) != 0;
-                    if (atEnd) {
-                        break;
-                    }
-
-                    if (pos >= keys.length) {
-                        currentBlock += BLOCK_STRIDE;
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                    }
-                    else {
-                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                        long currentValue = keys[pos];
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock = nextBlock;
-                    }
-                }
-            }
-        }
-
-        int i = 0;
-        while (i < keys.length) {
-            if (vals[i] < 0) {
-                vals[i] = 0;
-                i++;
-            }
-            else {
-                long valBlock = vals[i] & -VALUE_BLOCK_SIZE;
-
-                if (enableValuePrefetching && !prefetchBlocks.isEmpty()) {
-                    for (int prefetchIter = 0; prefetchIter < 2 && !prefetchBlocks.isEmpty(); prefetchIter++) {
-                        valuesPool.prefetch(prefetchBlocks.dequeueLong());
-                    }
-                }
-
-                try (var page = valuesPool.get(valBlock)) {
-
-                    for (; i < keys.length; i++) {
-                        if (vals[i] < 0) {
-                            vals[i] = 0;
-                        }
-                        else {
-                            if ((vals[i] & -VALUE_BLOCK_SIZE) != valBlock)
-                                break;
-
-                            int offsetBase = (int) (vals[i] & (VALUE_BLOCK_SIZE - 1));
-                            for (int j = 0; j < RECORD_SIZE - 1; j++) {
-                                vals[i + j * keys.length] = page.getLong(offsetBase + 8*j);
-                            }
-                        }
-                    }
-                }
-            }
-        }
         return vals;
     }
 

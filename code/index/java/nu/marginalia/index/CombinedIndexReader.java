@@ -6,23 +6,27 @@ import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggre
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.ForwardIndexReader;
+import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
+import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.skiplist.SkipListReader;
 import nu.marginalia.skiplist.SkipListValueRanges;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import java.lang.foreign.Arena;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -258,12 +262,16 @@ public class CombinedIndexReader {
         return new ParamMatchingQueryFilter(params, forwardIndexReader);
     }
 
-    /** Retrieves the term metadata for the specified word for the provided documents */
-    public CombinedTermMetadata getTermMetadata(SearchContext searchContext,
-                                                CombinedDocIdList docIds)
-    throws TimeoutException
-    {
-        return reverseIndexFullReader.getTermData(searchContext, docIds);
+    @Nullable
+    @CheckReturnValue
+    public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
+                                                     long termId,
+                                                     CombinedDocIdList keys) {
+        return reverseIndexFullReader.getValueReader(searchContext, termId, keys);
+    }
+
+    public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {
+        return reverseIndexFullReader.getValuePresence(searchContext, termId, keys);
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -287,12 +295,12 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public CompletableFuture<DocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
-        return forwardIndexReader.getDocumentSpans(documentId);
+    public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
+        return forwardIndexReader.getDocumentSpans(arena, documentId);
     }
 
-    public CompletableFuture<IntList[]> getTermPositions(long[] codedOffsets) throws InterruptedException {
-        return reverseIndexFullReader.getTermPositions(codedOffsets);
+    public CodedSequence[] getTermPositions(Arena arena, long[] codedOffsets) {
+        return reverseIndexFullReader.getTermPositions(arena, codedOffsets);
     }
 
     /** Close the indexes (this is not done immediately)

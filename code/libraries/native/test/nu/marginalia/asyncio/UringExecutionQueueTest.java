@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 class UringExecutionQueueTest {
     @Test
     public void test() {
-        int fd = LinuxSystemCalls.openDirect(Path.of("/home/vlofgren/Downloads/pycharm-2025.3.tar.gz"));
+        int fd = LinuxSystemCalls.openBuffered(Path.of("/home/vlofgren/Downloads/pycharm-2025.3.tar.gz"));
 
         List<MemorySegment> buffers = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -31,9 +31,7 @@ class UringExecutionQueueTest {
                     start = Instant.now();
                 }
 
-                eq.submit(i, List.of(
-                        new AsyncReadRequest(fd, buffers.get(i % 1000), ThreadLocalRandom.current().nextInt(0, 262144)*4096L)
-                ));
+                eq.submit(i, new AsyncReadRequest(fd, buffers.get(i % 1000), ThreadLocalRandom.current().nextInt(0, 262144)*4096L));
 
             }
         } catch (Throwable e) {

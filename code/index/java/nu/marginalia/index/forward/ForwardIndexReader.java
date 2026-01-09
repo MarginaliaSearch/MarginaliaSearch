@@ -4,10 +4,8 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
-import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
-import nu.marginalia.index.model.CombinedDocIdList;
-import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
@@ -17,10 +15,6 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.BitSet;
-import java.util.NoSuchElementException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 
 import static nu.marginalia.index.config.ForwardIndexParameters.*;
 
@@ -181,15 +175,15 @@ public class ForwardIndexReader {
     }
 
 
-    public CompletableFuture<DocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
+    public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
 
         long offset = idxForDoc(documentId);
         if (offset < 0) {
-            return CompletableFuture.completedFuture(new DocumentSpans());
+            return null;
         }
 
         long dataOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
-        return spansReader.readSpan(Arena.ofAuto(), dataOffset);
+        return spansReader.readSpan(arena, dataOffset);
     }
 
     public int totalDocCount() {

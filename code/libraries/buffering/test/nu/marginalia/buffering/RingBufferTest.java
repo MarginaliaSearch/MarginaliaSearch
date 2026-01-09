@@ -1,7 +1,6 @@
-package nu.marginalia;
+package nu.marginalia.buffering;
 
-import nu.marginalia.asyncio.LongRingBufferSPSC;
-import nu.marginalia.asyncio.RingBufferNPNC;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -13,23 +12,21 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class RingBufferTest {
 
     @Test
-    public void test() throws InterruptedException {
-        RingBufferNPNC<Long> buffer = new RingBufferNPNC<>(16);
+    public void test1PNC() throws InterruptedException {
+        RingBuffer<Long> buffer = new RingBuffer<>(16);
 
         Instant start = Instant.now();
 
         Thread a = Thread.ofPlatform().start(() -> {
-            long lock = buffer.lockWrite();
-            for (int i = 0; i < 1_000_000; i++) {
-                while (!buffer.put((long) i, lock));
+            for (int i = 0; i < 100_000_000; i++) {
+                while (!buffer.put((long) i));
             };
-            buffer.unlockWrite(lock);
         });
 
 
         Thread b = Thread.ofPlatform().start(() -> {
-            for (int i = 0; i < 1_000_000; i++) {
-                buffer.take();
+            for (int i = 0; i < 100_000_000; i++) {
+                buffer.takeNC();
             };
         });
 
@@ -40,23 +37,46 @@ public class RingBufferTest {
     }
 
     @Test
-    public void test3() throws InterruptedException {
-        RingBufferNPNC<Long> buffer = new RingBufferNPNC<>(16);
+    public void test1P1C() throws InterruptedException {
+        RingBuffer<Long> buffer = new RingBuffer<>(16);
 
         Instant start = Instant.now();
 
         Thread a = Thread.ofPlatform().start(() -> {
-            long lock = buffer.lockWrite();
-            for (int i = 0; i < 1_000_000; i++) {
-                while (!buffer.put(null, lock));
+            for (int i = 0; i < 100_000_000; i++) {
+                while (!buffer.put((long) i));
             };
-            buffer.unlockWrite(lock);
         });
 
 
         Thread b = Thread.ofPlatform().start(() -> {
-            for (int i = 0; i < 1_000_000; i++) {
-                buffer.take();
+            for (int i = 0; i < 100_000_000; i++) {
+                buffer.take1C();
+            };
+        });
+
+        a.join();
+        b.join();
+
+        System.out.println(Duration.between(start, Instant.now()));
+    }
+
+    @Test
+    public void testNPNC() throws InterruptedException {
+        RingBuffer<Long> buffer = new RingBuffer<>(16);
+
+        Instant start = Instant.now();
+
+        Thread a = Thread.ofPlatform().start(() -> {
+            for (int i = 0; i < 100_000_000; i++) {
+                while (!buffer.putNP(null));
+            };
+        });
+
+
+        Thread b = Thread.ofPlatform().start(() -> {
+            for (int i = 0; i < 100_000_000; i++) {
+                buffer.takeNC();
             };
         });
 
@@ -69,7 +89,7 @@ public class RingBufferTest {
 
     @Test
     public void testLong() throws InterruptedException {
-        LongRingBufferSPSC buffer = new LongRingBufferSPSC(256);
+        LongRingBuffer buffer = new LongRingBuffer(256);
 
         Instant start = Instant.now();
 
@@ -91,8 +111,10 @@ public class RingBufferTest {
 
         System.out.println(Duration.between(start, Instant.now()));
     }
+
+    @Disabled
     @Test
-    public void test2() throws InterruptedException {
+    public void testABQ() throws InterruptedException {
         ArrayBlockingQueue<Long> buffer = new ArrayBlockingQueue<>(16);
 
         Instant start = Instant.now();

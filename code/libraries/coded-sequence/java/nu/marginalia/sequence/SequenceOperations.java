@@ -100,8 +100,8 @@ public class SequenceOperations {
      * If any of the lists are empty, return an empty list.
      * <p></p>
      */
-    public static IntList findIntersections(IntList... positions) {
-        return findIntersections(positions, new int[positions.length], Integer.MAX_VALUE);
+    public static IntList findIntersections(IntArrayList ret, IntList... positions) {
+        return findIntersections(ret, positions, new int[positions.length], Integer.MAX_VALUE);
     }
 
     /** Find any intersections between the given positions lists, and return the list of intersections.
@@ -116,24 +116,12 @@ public class SequenceOperations {
      *                the return value will have a smaller size than this if it is cheaper to return back e.g.
      *                an input list.
      * */
-    public static IntList findIntersections(IntList[] positions, int[] offsets, int n) {
+    public static IntList findIntersections(IntArrayList ret, IntList[] positions, int[] offsets, int n) {
 
         // Trivial cases
         if (positions.length < 1) { // n = 0
-            return IntList.of();
+            return ret;
         }
-//        else if (positions.length == 1) { // n = 1
-//            if (offsets[0] == 0) { // with zero offset, we'll just return the input back
-//                return positions[0];
-//            }
-//
-//            // Calculate an offset input array
-//            IntList ret = new IntArrayList(positions[0].size());
-//            for (int i = 0; i < positions[0].size() && i < n; i++) {
-//                ret.add(positions[0].getInt(i) + offsets[0]);
-//            }
-//            return ret;
-//        }
 
         int[] indexes = new int[positions.length];
         // Initialize values and find the maximum value
@@ -159,7 +147,7 @@ public class SequenceOperations {
         int listMatches = 0;
         int foundIntersections = 0;
 
-        IntList ret = new IntArrayList(Math.min(n, Math.max(1, minLength)));
+        ret.ensureCapacity(Math.min(n, Math.max(1, minLength)));
 
         outer:
         for (int i = 0; currentMax <= largestValue; i = (i + 1) % positions.length)

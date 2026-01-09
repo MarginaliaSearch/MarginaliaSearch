@@ -42,7 +42,7 @@ public class SequenceBenchmarks {
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public IntList intersect(SequenceState state) {
-        return SequenceOperations.findIntersections(state.a, state.b, state.c);
+        return SequenceOperations.findIntersections(new IntArrayList(), state.a, state.b, state.c);
     }
 
     @Fork(value = 1, warmups = 1)
@@ -50,7 +50,7 @@ public class SequenceBenchmarks {
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public IntList intersect1(SequenceState state) {
-        return SequenceOperations.findIntersections(state.a);
+        return SequenceOperations.findIntersections(new IntArrayList(), state.a);
     }
 
 

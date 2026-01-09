@@ -40,6 +40,7 @@ include 'code:index:live-capture:api'
 
 
 include 'code:libraries:array'
+include 'code:libraries:buffering'
 include 'code:libraries:native'
 include 'code:libraries:coded-sequence'
 include 'code:libraries:geo-ip'

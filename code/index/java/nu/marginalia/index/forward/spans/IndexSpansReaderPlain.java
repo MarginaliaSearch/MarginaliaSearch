@@ -28,42 +28,19 @@ public class IndexSpansReaderPlain implements IndexSpansReader {
     }
 
     @Override
-    public CompletableFuture<DocumentSpans> readSpan(Arena arena, long encodedOffset) throws InterruptedException {
+    public DecodableDocumentSpans readSpan(Arena arena, long encodedOffset) {
 
         if (encodedOffset < 0) {
-            return CompletableFuture.completedFuture(new DocumentSpans());
+            return null;
         }
         long offset = SpansCodec.decodeStartOffset(encodedOffset);
         int size = SpansCodec.decodeSize(encodedOffset);
 
         MemorySegment segment = arena.allocate(size, 8);
 
-        return executionQueue
-                .submit(segment, new AsyncReadRequest(fileDescriptor, segment, offset))
-                .thenApply(this::decode);
-    }
+        LinuxSystemCalls.readAt(fileDescriptor, segment, offset);
 
-    public DocumentSpans decode(MemorySegment ms) {
-        int count = ms.get(ValueLayout.JAVA_INT, 0);
-        int pos = 4;
-        DocumentSpans ret = new DocumentSpans();
-
-        // Decode each span
-        for (int spanIdx = 0; spanIdx < count; spanIdx++) {
-            byte code = ms.get(ValueLayout.JAVA_BYTE, pos);
-            short len = ms.get(ValueLayout.JAVA_SHORT, pos+2);
-
-            IntArrayList values = new IntArrayList(len);
-
-            pos += 4;
-            for (int i = 0; i < len; i++) {
-                values.add(ms.get(ValueLayout.JAVA_INT, pos + 4*i));
-            }
-            ret.accept(code, values);
-            pos += 4*len;
-        }
-
-        return ret;
+        return new DecodableDocumentSpans(segment);
     }
 
     @Override

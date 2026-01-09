@@ -1,5 +1,6 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import org.junit.jupiter.api.Test;
 
@@ -72,7 +73,7 @@ class SequenceOperationsTest {
         GammaCodedSequence seq2 = GammaCodedSequence.generate(wa, 2, 5, 8, 10, 14);
         GammaCodedSequence seq3 = GammaCodedSequence.generate(wa, 1, 5, 8, 9, 10);
 
-        assertEquals(IntList.of(8, 10), SequenceOperations.findIntersections(seq1.values(), seq2.values(), seq3.values()));
+        assertEquals(IntList.of(8, 10), SequenceOperations.findIntersections(new IntArrayList(), seq1.values(), seq2.values(), seq3.values()));
     }
 
 

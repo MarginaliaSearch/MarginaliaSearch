@@ -1,15 +1,17 @@
-package nu.marginalia.asyncio;
+package nu.marginalia.buffering;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LongRingBufferSPSC {
+public class LongRingBuffer {
     final long[] items;
     final int mask;
 
     final AtomicInteger writePos = new AtomicInteger(0);
     final AtomicInteger readPos = new AtomicInteger(0);
+    final AtomicBoolean writeStage = new AtomicBoolean();
 
-    public LongRingBufferSPSC(int len) {
+    public LongRingBuffer(int len) {
         items = new long[len];
         mask = items.length - 1;
         assert (len & mask) == 0;
@@ -53,7 +55,7 @@ public class LongRingBufferSPSC {
             if (iter > 1000) Thread.yield();
         }
         items[writePos.get()] = value;
-        writePos.lazySet(nextPos);
+        writePos.set(nextPos);
     }
 
     public void put(long[] values, int n) {
@@ -67,9 +69,30 @@ public class LongRingBufferSPSC {
         for (i = 0; i < batchSize; i++) {
             items[(wp+i)%items.length] = values[i];
         }
-        writePos.lazySet((wp + i) & mask);
+        writePos.set((wp + i) & mask);
 
         for (; i < n; i++)
             put(values[i]);
+    }
+
+
+    public boolean putNP(long value) {
+        if (!writeStage.weakCompareAndSetRelease(false, true)) {
+            return false;
+        }
+
+        int wp = writePos.get();
+        int nextPos = (wp + 1) % items.length;
+        if (nextPos == readPos.get()) {
+            writeStage.setRelease(false);
+            return false;
+        }
+
+        items[wp] = value;
+
+        writePos.set(nextPos);
+        writeStage.setRelease(false);
+
+        return true;
     }
 }

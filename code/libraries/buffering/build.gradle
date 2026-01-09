@@ -21,9 +21,6 @@ dependencies {
     implementation libs.lz4
     implementation libs.guava
 
-    implementation project(':code:libraries:native')
-    implementation project(':code:libraries:buffering')
-
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito

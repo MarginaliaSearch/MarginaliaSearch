@@ -2,7 +2,6 @@ package nu.marginalia.index;
 
 import com.google.common.collect.MinMaxPriorityQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.index.model.RankableDocument;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +18,6 @@ import java.util.*;
 public class ResultPriorityQueue implements Iterable<RankableDocument> {
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
     private final MinMaxPriorityQueue<RankableDocument> queue;
-
     private int itemsProcessed = 0;
 
     public ResultPriorityQueue(int limit) {
@@ -30,14 +28,16 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
         return queue.iterator();
     }
 
-    /** Adds all items to the queue, and returns true if any items were added.
-     * This is a thread-safe operation.
-     */
-    public synchronized boolean add(@NotNull RankableDocument item) {
-        itemsProcessed++;
+    public boolean add(@NotNull RankableDocument document) {
+        if (document.item == null)
+            return false;
 
-        if (idsInSet.add(item.combinedDocumentId)) {
-            queue.add(item);
+
+        synchronized (this) {
+            itemsProcessed++;
+            if (idsInSet.add(document.combinedDocumentId)) {
+                queue.add(document);
+            }
         }
 
         return true;

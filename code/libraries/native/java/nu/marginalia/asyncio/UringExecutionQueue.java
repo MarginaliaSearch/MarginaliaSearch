@@ -1,5 +1,7 @@
 package nu.marginalia.asyncio;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
+import nu.marginalia.buffering.RingBuffer;
 import nu.marginalia.ffi.IoUring;
 
 import java.io.IOException;
@@ -7,8 +9,9 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 
 import static java.lang.foreign.ValueLayout.*;
 
@@ -19,15 +22,18 @@ public class UringExecutionQueue implements AutoCloseable {
     private final int queueSize;
 
     private final Thread executor;
+    private final Thread completionThread;
     private volatile boolean running = true;
     private final MemorySegment uringQueue;
 
-    private final RingBufferSPNC<SubmittedReadRequest<? extends Object>> inputQueue;
-    private final LongRingBufferSPSC completionQueue;
+    private final RingBuffer<SubmittedReadRequest<?>> inputQueue;
+    private final RingBuffer<SubmittedReadRequest<?>> completionQueue;
+    private final AtomicReference<Thread> waitingSubmitter = new AtomicReference<>();
 
     public UringExecutionQueue(int queueSize) throws IOException {
-        this.inputQueue = new RingBufferSPNC<>(4);
-        this.completionQueue = new LongRingBufferSPSC(queueSize);
+        this.inputQueue = new RingBuffer<>(4);
+        this.completionQueue = new RingBuffer(16);
+
         this.queueSize = queueSize;
         try {
             this.uringQueue = (MemorySegment) ioUringInstance.uringInitUnregistered.invoke(queueSize);
@@ -40,7 +46,7 @@ public class UringExecutionQueue implements AutoCloseable {
                 .name("UringExecutionQueue[%s]$executionPipe".formatted(id))
                 .daemon().start(this::executionPipe);
 
-        Thread.ofPlatform()
+        completionThread = Thread.ofPlatform()
                 .name("UringExecutionQueue[%s]$completionHandler".formatted(id))
                 .daemon().start(this::completionHandler);
     }
@@ -48,6 +54,7 @@ public class UringExecutionQueue implements AutoCloseable {
     public void close() throws InterruptedException {
         running = false;
         executor.join();
+        completionThread.join();
 
         try {
             ioUringInstance.uringClose.invoke(uringQueue);
@@ -67,10 +74,7 @@ public class UringExecutionQueue implements AutoCloseable {
         long id = requestIdCounter.incrementAndGet();
         CompletableFuture<T> future = new CompletableFuture<>();
 
-        var item = new SubmittedReadRequest<>(context, relatedRequests, future, id);
-        while (!inputQueue.put(item))
-            Thread.yield();
-
+        enqueueRequest(new SubmittedReadRequestMulti<>(context, relatedRequests, future, id));
         return future;
     }
 
@@ -78,11 +82,37 @@ public class UringExecutionQueue implements AutoCloseable {
         long id = requestIdCounter.incrementAndGet();
         CompletableFuture<T> future = new CompletableFuture<>();
 
-        var item = new SubmittedReadRequest<>(context, List.of(request), future, id);
-        while (!inputQueue.put(item))
-            Thread.yield();
-
+        enqueueRequest(new SubmittedReadRequestSingle<>(context, request, future, id));
         return future;
+    }
+
+    private void enqueueRequest(SubmittedReadRequest<?> item) {
+        for (int iter = 0; iter < 128; iter++) {
+            if (inputQueue.put(item)) {
+                LockSupport.unpark(executor);
+                return;
+            }
+            Thread.onSpinWait();
+        }
+        for (int iter = 0; iter < 1024; iter++) {
+            if (inputQueue.put(item)) {
+                LockSupport.unpark(executor);
+                return;
+            }
+            Thread.yield();
+        }
+        for (;;) {
+            if (inputQueue.put(item)) {
+                LockSupport.unpark(executor);
+                return;
+            }
+            if (!running) {
+                CompletableFuture.failedFuture(new IllegalStateException("Already closed"));
+            }
+            waitingSubmitter.setRelease(Thread.currentThread());
+            LockSupport.parkNanos(10_000);
+        }
+
     }
 
     static class UringDispatcher implements AutoCloseable {
@@ -190,35 +220,58 @@ public class UringExecutionQueue implements AutoCloseable {
         }
     }
 
-    private final Map<Long, SubmittedReadRequest<?>> requestsToId = new ConcurrentHashMap<>();
-
     public void completionHandler() {
-        long[] completions = new long[32];
+        SubmittedReadRequest[] completions = new SubmittedReadRequest[32];
+        main:
         while (running) {
-            int n = completionQueue.takeNonBlock(completions);
-            if (n == 0) {
-                Thread.yield();
-            }
-            else {
-                for (int i = 0; i < n; i++) {
-                    long id = completions[i];
-                    Long absid = Math.abs(id);
-                    var req = requestsToId.get(absid);
-                    if (req != null && req.partFinished(id > 0)) {
-                        requestsToId.remove(absid);
-                    }
+
+            for (int i = 0; i < 128; i++) {
+                int n = completionQueue.tryTake1C(completions);
+                if (n != 0) {
+                    finalizeCompletions(completions, n);
+                    continue main;
                 }
             }
+            for (int i = 0; i < 1024; i++) {
+                int n = completionQueue.tryTake1C(completions);
+                if (n == 0) {
+                    Thread.yield();
+                }
+                else {
+                    finalizeCompletions(completions, n);
+                    continue main;
+                }
+            }
+            for (;;) {
+                int n = completionQueue.tryTake1C(completions);
+                if (n == 0) {
+                    LockSupport.parkNanos(10_000);
+                }
+                else {
+                    finalizeCompletions(completions, n);
+                    continue main;
+                }
+            }
+        }
+    }
 
+    private void finalizeCompletions(SubmittedReadRequest<?>[] completions, int n) {
+        for (int i = 0; i < n; i++) {
+            completions[i].finalizeRequest();
         }
     }
 
     public void executionPipe() {
+
+        final Long2ObjectArrayMap<SubmittedReadRequest<?>> requestsToId = new Long2ObjectArrayMap<>();
+
         try (var uringDispatcher = new UringDispatcher(queueSize, uringQueue)) {
             int ongoingRequests = 0;
 
             // recycle between iterations to avoid allocation churn
             List<SubmittedReadRequest<?>> batchesToSend = new ArrayList<>();
+
+            int idleCycles = 0;
 
             while (running) {
                 batchesToSend.clear();
@@ -228,10 +281,9 @@ public class UringExecutionQueue implements AutoCloseable {
                 SubmittedReadRequest<?> request;
 
                 // Find batches to send that will not exceed the queue size
-                while ((request = inputQueue.peek()) != null) {
+                while ((request = inputQueue.tryTake1C()) != null) {
                     if (remainingRequests >= request.count()) {
                         remainingRequests -= request.count();
-                        inputQueue.take();
 
                         batchesToSend.add(request);
                     }
@@ -240,9 +292,31 @@ public class UringExecutionQueue implements AutoCloseable {
                     }
                 }
 
+                if (batchesToSend.isEmpty() && ongoingRequests == 0) {
+                    idleCycles++;
+                    if (idleCycles < 32) {
+                        Thread.onSpinWait();
+                    }
+                    else if (idleCycles < 256) {
+                        Thread.yield();
+                    }
+                    else {
+                        LockSupport.parkNanos(10_000);
+                    }
+                }
+                else {
+                    var waitingThread = waitingSubmitter.getAcquire();
+                    if (waitingThread != null) {
+                        LockSupport.unpark(waitingThread);
+                    }
+                    waitingSubmitter.compareAndSet(waitingThread, null);
+
+                    idleCycles = 0;
+                }
+
                 // Arrange requests from the batches into arrays to send to FFI call
 
-                int requestsToSend = 0;
+
                 for (var batch : batchesToSend) {
                     requestsToId.put(batch.id, batch);
 
@@ -254,19 +328,31 @@ public class UringExecutionQueue implements AutoCloseable {
                                 read.offset());
                     }
                 }
-
+                final int requestsToSend = uringDispatcher.getRequestsToSend();
                 try {
-                    ongoingRequests += uringDispatcher.getRequestsToSend();
-
                     int results;
-                    if (uringDispatcher.getRequestsToSend() > 0) {
+                    if (requestsToSend > 0) {
+                        ongoingRequests += uringDispatcher.getRequestsToSend();
                         results = uringDispatcher.dispatchRead(ongoingRequests);
                     }
                     else {
                         results = uringDispatcher.poll();
                     }
 
-                    completionQueue.put(uringDispatcher.getResultBuffer(), results);
+                    long[] resultBuffer = uringDispatcher.getResultBuffer();
+                    for (int i = 0; i < results; i++) {
+                        long id = resultBuffer[i];
+                        long absid = Math.abs(id);
+                        var req = requestsToId.get(absid);
+                        if (req != null && req.partFinished(id > 0)) {
+                            completionQueue.put(req);
+                            requestsToId.remove(absid);
+                        }
+                    }
+
+                    if (results > 0)
+                        LockSupport.unpark(completionThread);
+
                     ongoingRequests-=results;
                 }
                 catch (IOException ex) {
