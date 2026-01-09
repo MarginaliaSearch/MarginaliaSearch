@@ -6,7 +6,6 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
@@ -17,6 +16,7 @@ import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.CombinedIndexReader;
+import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
@@ -31,16 +31,12 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
@@ -102,8 +98,10 @@ public class IndexResultRankingService {
             // Iterate over documents by their index in the combinedDocIds, as we need the index for the
             // term data arrays as well
 
+            ScratchIntListPool pool = new ScratchIntListPool(128);
             for (var doc : results) {
-                SearchResultItem score = calculateScore(new DebugRankingFactors(), index, searchContext, doc);
+                pool.reset();
+                SearchResultItem score = calculateScore(new DebugRankingFactors(), pool, index, searchContext, doc);
                 if (score != null) {
                     doc.item = score;
                 }
@@ -219,6 +217,7 @@ public class IndexResultRankingService {
 
     @Nullable
     public SearchResultItem calculateScore(@Nullable DebugRankingFactors debugRankingFactors,
+                                           ScratchIntListPool intListPool,
                                            CombinedIndexReader index,
                                            SearchContext rankingContext,
                                            RankableDocument document)
@@ -283,7 +282,7 @@ public class IndexResultRankingService {
 
         double documentBonus = calculateDocumentBonus(docMetadata, htmlFeatures, docSize, params, debugRankingFactors);
 
-        VerbatimMatches verbatimMatches = new VerbatimMatches(decodedPositions, rankingContext.phraseConstraints, spans);
+        VerbatimMatches verbatimMatches = new VerbatimMatches(intListPool, decodedPositions, rankingContext.phraseConstraints, spans);
         UnorderedMatches unorderedMatches = new UnorderedMatches(decodedPositions, compiledQuery, rankingContext.regularMask, spans);
 
         float proximitiyFac = getProximitiyFac(decodedPositions, rankingContext.phraseConstraints, verbatimMatches, unorderedMatches, spans);
@@ -366,7 +365,7 @@ public class IndexResultRankingService {
                 docMetadata,
                 htmlFeatures,
                 score,
-                calculatePositionsMask(decodedPositions, rankingContext.phraseConstraints)
+                calculatePositionsMask(intListPool, decodedPositions, rankingContext.phraseConstraints)
         );
 
         if (null != debugRankingFactors) {
@@ -415,12 +414,12 @@ public class IndexResultRankingService {
     /** Calculate a bitmask illustrating the intersected positions of the search terms in the document.
      *  This is used in the GUI.
      * */
-    private long calculatePositionsMask(IntList[] positions, PhraseConstraintGroupList phraseConstraints) {
+    private long calculatePositionsMask(ScratchIntListPool intListPool, IntList[] positions, PhraseConstraintGroupList phraseConstraints) {
 
         long result = 0;
         int bit = 0;
 
-        IntIterator intersection = phraseConstraints.getFullGroup().findIntersections(positions, 64).intIterator();
+        IntIterator intersection = phraseConstraints.getFullGroup().findIntersections(intListPool, positions, 64).intIterator();
 
         while (intersection.hasNext() && bit < 64) {
             bit = (int) (Math.sqrt(intersection.nextInt()));
@@ -570,11 +569,11 @@ public class IndexResultRankingService {
             }
         }
 
-        public VerbatimMatches(IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
+        public VerbatimMatches(ScratchIntListPool intListPool, IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
             matches = new BitSet(HtmlTag.includedTags.length);
 
             PhraseConstraintGroupList.PhraseConstraintGroup fullGroup = constraints.getFullGroup();
-            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
+            IntList fullGroupIntersections = fullGroup.findIntersections(intListPool, positions);
 
             if (fullGroup.size == 1) {
                 var titleSpan = spans.getSpan(HtmlTag.TITLE);
@@ -629,7 +628,7 @@ public class IndexResultRankingService {
             for (PhraseConstraintGroupList.PhraseConstraintGroup optionalGroup : constraints.getOptionalGroups()) {
                 float sizeScalingFactor = (float) Math.sqrt(optionalGroup.size / (float) fullGroup.size);
 
-                IntList intersections = optionalGroup.findIntersections(positions);
+                IntList intersections = optionalGroup.findIntersections(intListPool, positions);
 
                 if (intersections.isEmpty())
                     continue;

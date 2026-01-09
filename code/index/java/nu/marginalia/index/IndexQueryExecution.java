@@ -335,6 +335,7 @@ public class IndexQueryExecution {
 
     private void evaluate() {
         try {
+            ScratchIntListPool pool = new ScratchIntListPool(128);
             for (;;) {
                 RankableDocument rankableDocument = getFromQueue(rankingQueue);
 
@@ -345,8 +346,10 @@ public class IndexQueryExecution {
                         continue;
                 }
 
-                if (null != (rankableDocument.item = rankingService.calculateScore(null, currentIndex, rankingContext, rankableDocument)))
+
+                if (null != (rankableDocument.item = rankingService.calculateScore(null, pool, currentIndex, rankingContext, rankableDocument)))
                     resultHeap.add(rankableDocument);
+                pool.reset();
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
