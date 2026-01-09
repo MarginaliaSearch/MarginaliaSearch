@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 
 import static java.lang.foreign.ValueLayout.*;
 
@@ -68,10 +69,20 @@ public class UringExecutionQueue implements AutoCloseable {
         CompletableFuture<T> future = new CompletableFuture<>();
 
         var item = new SubmittedReadRequest<>(context, relatedRequests, future, id);
-        while (!inputQueue.put(item))
-            Thread.yield();
 
-        return future;
+        for (int iter = 0; iter < 128; iter++)
+            if (inputQueue.put(item)) return future;
+        for (int iter = 0; iter < 1024; iter++) {
+            if (inputQueue.put(item)) return future;
+            Thread.yield();
+        }
+        for (;;) {
+            if (inputQueue.put(item)) return future;
+            if (!running) {
+                CompletableFuture.failedFuture(new IllegalStateException("Already closed"));
+            }
+            LockSupport.parkNanos(1);
+        }
     }
 
     public <T> CompletableFuture<T> submit(T context, AsyncReadRequest request) throws InterruptedException {
@@ -79,10 +90,20 @@ public class UringExecutionQueue implements AutoCloseable {
         CompletableFuture<T> future = new CompletableFuture<>();
 
         var item = new SubmittedReadRequest<>(context, List.of(request), future, id);
-        while (!inputQueue.put(item))
-            Thread.yield();
 
-        return future;
+        for (int iter = 0; iter < 128; iter++)
+            if (inputQueue.put(item)) return future;
+        for (int iter = 0; iter < 1024; iter++) {
+            if (inputQueue.put(item)) return future;
+            Thread.yield();
+        }
+        for (;;) {
+            if (inputQueue.put(item)) return future;
+            if (!running) {
+                CompletableFuture.failedFuture(new IllegalStateException("Already closed"));
+            }
+            LockSupport.parkNanos(1);
+        }
     }
 
     static class UringDispatcher implements AutoCloseable {
@@ -194,22 +215,50 @@ public class UringExecutionQueue implements AutoCloseable {
 
     public void completionHandler() {
         long[] completions = new long[32];
+        main:
         while (running) {
-            int n = completionQueue.takeNonBlock(completions);
-            if (n == 0) {
-                Thread.yield();
-            }
-            else {
-                for (int i = 0; i < n; i++) {
-                    long id = completions[i];
-                    Long absid = Math.abs(id);
-                    var req = requestsToId.get(absid);
-                    if (req != null && req.partFinished(id > 0)) {
-                        requestsToId.remove(absid);
-                    }
+
+            for (int i = 0; i < 128; i++) {
+                int n = completionQueue.takeNonBlock(completions);
+                if (n == 0) {
+                    continue;
+                }
+                else {
+                    finalizeCompletions(completions, n);
+                    continue main;
                 }
             }
+            for (int i = 0; i < 1024; i++) {
+                int n = completionQueue.takeNonBlock(completions);
+                if (n == 0) {
+                    Thread.yield();
+                }
+                else {
+                    finalizeCompletions(completions, n);
+                    continue main;
+                }
+            }
+            for (;;) {
+                int n = completionQueue.takeNonBlock(completions);
+                if (n == 0) {
+                    LockSupport.parkNanos(1);
+                }
+                else {
+                    finalizeCompletions(completions, n);
+                    continue main;
+                }
+            }
+        }
+    }
 
+    private void finalizeCompletions(long[] completions, int n) {
+        for (int i = 0; i < n; i++) {
+            long id = completions[i];
+            Long absid = Math.abs(id);
+            var req = requestsToId.get(absid);
+            if (req != null && req.partFinished(id > 0)) {
+                requestsToId.remove(absid);
+            }
         }
     }
 
@@ -219,6 +268,8 @@ public class UringExecutionQueue implements AutoCloseable {
 
             // recycle between iterations to avoid allocation churn
             List<SubmittedReadRequest<?>> batchesToSend = new ArrayList<>();
+
+            int idleCycles = 0;
 
             while (running) {
                 batchesToSend.clear();
@@ -238,6 +289,22 @@ public class UringExecutionQueue implements AutoCloseable {
                     else {
                         break;
                     }
+                }
+
+                if (batchesToSend.isEmpty() && ongoingRequests == 0) {
+                    idleCycles++;
+                    if (idleCycles < 128) {
+                        // No-op
+                    }
+                    else if (idleCycles < 1024) {
+                        Thread.yield();
+                    }
+                    else {
+                        LockSupport.parkNanos(0);
+                    }
+                }
+                else {
+                    idleCycles = 0;
                 }
 
                 // Arrange requests from the batches into arrays to send to FFI call
