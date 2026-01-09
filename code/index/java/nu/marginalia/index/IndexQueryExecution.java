@@ -59,8 +59,8 @@ public class IndexQueryExecution {
 
     private final ArrayBlockingQueue<CombinedDocIdList> preparationQueue = new ArrayBlockingQueue<>(2);
 
-    private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(32);
-    private final RingBufferSPNC<RankableDocument> spanRetrievalQueue  = new RingBufferSPNC<>(32);
+    private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(4);
+    private final RingBufferSPNC<RankableDocument> spanRetrievalQueue  = new RingBufferSPNC<>(4);
     private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(32);
 
     private final int limitTotal;
@@ -150,6 +150,7 @@ public class IndexQueryExecution {
 
             // Await lookup task termination
             lookupCountdown.await();
+
             preparationCountdown.await();
             spansCountdown.await();
             termsCountdown.await();
@@ -288,6 +289,7 @@ public class IndexQueryExecution {
             }  // suppress logging for interrupted ex
         } finally {
             spansCountdown.countDown();
+            spanRetrievalQueue.close();
         }
     }
 
@@ -315,6 +317,7 @@ public class IndexQueryExecution {
             }  // suppress logging for interrupted ex
         } finally {
             termsCountdown.countDown();
+            termPositionRetrievalQueue.close();
         }
     }
 
@@ -339,6 +342,7 @@ public class IndexQueryExecution {
             }  // suppress logging for interrupted ex
         } finally {
             rankingCountdown.countDown();
+            rankingQueue.close();
         }
     }
 
@@ -357,7 +361,7 @@ public class IndexQueryExecution {
     private boolean enqueue(RankableDocument item, RingBufferSPNC<RankableDocument> queue) {
         for (int iter = 0; !queue.put(item); iter++) {
             if (iter > 1000) {
-                if ((iter & 0x100) != 0 && !budget.hasTimeLeft()) return false;
+                if ((iter & 0x100) != 0 && (queue.isClosed() || !budget.hasTimeLeft())) return false;
                 Thread.yield();
             }
         }
