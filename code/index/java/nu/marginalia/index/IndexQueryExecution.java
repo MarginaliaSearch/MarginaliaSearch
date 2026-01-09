@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.LockSupport;
 
 /** Performs an index query */
 public class IndexQueryExecution {
@@ -348,24 +349,38 @@ public class IndexQueryExecution {
 
     private RankableDocument getFromQueue(RingBufferSPNC<RankableDocument> queue) {
         RankableDocument rankableDocument = null;
-        for (int i = 0; rankableDocument == null && i < 1000; i++) {
+        for (int i = 0; rankableDocument == null && i < 256; i++) {
             rankableDocument = queue.tryTake();
         }
-        for (int i = 0; rankableDocument == null && i < 100_000; i++) {
+        for (int i = 0; rankableDocument == null && i < 4096; i++) {
             rankableDocument = queue.tryTake();
             Thread.yield();
+        }
+        for (int i = 0; rankableDocument == null && i < 4096; i++) {
+            rankableDocument = queue.tryTake();
+            LockSupport.parkNanos(1);
         }
         return rankableDocument;
     }
 
     private boolean enqueue(RankableDocument item, RingBufferSPNC<RankableDocument> queue) {
-        for (int iter = 0; !queue.put(item); iter++) {
-            if (iter > 1000) {
-                if ((iter & 0x100) != 0 && (queue.isClosed() || !budget.hasTimeLeft())) return false;
-                Thread.yield();
-            }
+        for (int iter = 0; iter < 256; iter++) {
+            if (queue.put(item))
+                return true;
         }
-        return true;
+        for (int iter = 0; iter < 2048; iter++) {
+            if (queue.put(item))
+                return true;
+            Thread.yield();
+        }
+        for (;;) {
+            if (queue.put(item))
+                return true;
+            if (queue.isClosed() || !budget.hasTimeLeft())
+                return false;
+            LockSupport.parkNanos(1);
+        }
+
     }
 
     public int itemsProcessed() {
