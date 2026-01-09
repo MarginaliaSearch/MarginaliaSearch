@@ -60,9 +60,9 @@ public class IndexQueryExecution {
 
     private final ArrayBlockingQueue<CombinedDocIdList> preparationQueue = new ArrayBlockingQueue<>(2);
 
-    private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(4);
-    private final RingBufferSPNC<RankableDocument> spanRetrievalQueue  = new RingBufferSPNC<>(4);
-    private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(32);
+    private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(128);
+    private final RingBufferSPNC<RankableDocument> spanRetrievalQueue  = new RingBufferSPNC<>(128);
+    private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(128);
 
     private final int limitTotal;
     private final int limitByDomain;
