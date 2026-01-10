@@ -1,7 +1,6 @@
 package nu.marginalia.index;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 
 public class ScratchIntListPool {
     private final IntArrayList[] pool;

@@ -12,10 +12,10 @@ public class RankableDocument implements Comparable<RankableDocument> {
     public long[] termFlags;
     public BitSet priorityTermsPresent;
 
-    public DecodableDocumentSpans documentSpans;
-    public long[] positionOffsets;
-    public CodedSequence[] positions;
-    public SearchResultItem item;
+    public volatile DecodableDocumentSpans documentSpans;
+    public volatile long[] positionOffsets;
+    public volatile CodedSequence[] positions;
+    public volatile SearchResultItem item;
 
     public RankableDocument(long combinedDocumentId) {
         this.combinedDocumentId = combinedDocumentId;
