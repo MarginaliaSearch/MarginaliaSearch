@@ -292,8 +292,10 @@ public class IndexQueryExecution {
                 if (rankableDocument == null) {
                     if (preparationCountdown.getCount() == 0)
                         return;
-                    else
+                    else {
+                        LockSupport.parkNanos(1);
                         continue;
+                    }
                 }
 
                 currentIndex.getDocumentSpans(rankableDocument.combinedDocumentId)
@@ -320,8 +322,10 @@ public class IndexQueryExecution {
                 if (rankableDocument == null) {
                     if (spansCountdown.getCount() == 0)
                         return;
-                    else
+                    else {
+                        LockSupport.parkNanos(1);
                         continue;
+                    }
                 }
 
                 currentIndex.getTermPositions(rankableDocument.positionOffsets)
@@ -348,8 +352,10 @@ public class IndexQueryExecution {
                 if (rankableDocument == null) {
                     if ((termsCountdown.getCount() == 0))
                         return;
-                    else
+                    else {
+                        LockSupport.parkNanos(1);
                         continue;
+                    }
                 }
 
                 if (null != (rankableDocument.item = rankingService.calculateScore(null, pool, currentIndex, rankingContext, rankableDocument)))
@@ -376,8 +382,10 @@ public class IndexQueryExecution {
                 if (rankableDocument == null) {
                     if ((rankingCountdown.getCount() == 0))
                         return;
-                    else
+                    else {
+                        LockSupport.parkNanos(1);
                         continue;
+                    }
                 }
 
                 resultHeap.add(rankableDocument);
@@ -404,12 +412,6 @@ public class IndexQueryExecution {
                 return rankableDocument;
             Thread.yield();
         }
-        for (int i = 0; i < 128; i++) {
-            RankableDocument rankableDocument = queue.tryTake();
-            if (rankableDocument != null)
-                return rankableDocument;
-            LockSupport.parkNanos(1);
-        }
         return null;
     }
 
@@ -425,12 +427,6 @@ public class IndexQueryExecution {
             if (rankableDocument != null)
                 return rankableDocument;
             Thread.yield();
-        }
-        for (int i = 0; i < 128; i++) {
-            RankableDocument rankableDocument = queue.tryTake();
-            if (rankableDocument != null)
-                return rankableDocument;
-            LockSupport.parkNanos(1);
         }
         return null;
     }
