@@ -18,60 +18,33 @@ import java.util.*;
  */
 public class ResultPriorityQueue implements Iterable<RankableDocument> {
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
-    private final ArrayList<RankableDocument> queue;
-    private final int limit;
+    private final MinMaxPriorityQueue<RankableDocument> queue;
+
     private int itemsProcessed = 0;
 
-    private double worstScore = 0;
-
     public ResultPriorityQueue(int limit) {
-        this.queue = new ArrayList<>(limit);
-        this.limit = limit;
+        this.queue = MinMaxPriorityQueue.<RankableDocument>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
     }
 
     public @NotNull Iterator<RankableDocument> iterator() {
         return queue.iterator();
     }
 
-    /** Adds all items to the queue, and returns true if any items were added.
-     * This is a thread-safe operation.
-     */
-    public boolean add(@NotNull RankableDocument item) {
+    public boolean add(@NotNull RankableDocument document) {
+        if (document.item == null)
+            return false;
+
         itemsProcessed++;
 
-        double newScore = item.item.getScore();
-
-        if (queue.size() < limit) {
-            if (idsInSet.add(item.combinedDocumentId)) {
-                queue.add(item);
-            }
-            else {
-                return false;
-            }
-
-            if (newScore < worstScore)
-                queue.sort(Comparator.naturalOrder());
-            else
-                worstScore = newScore;
-        }
-        else if (newScore > worstScore) {
-            return false;
-        }
-
-        if (idsInSet.add(item.combinedDocumentId)) {
-            queue.add(item);
-        }
-        queue.sort(Comparator.naturalOrder());
-        if (queue.size() > limit) {
-            idsInSet.remove(queue.removeLast().combinedDocumentId);
-            worstScore = queue.getLast().item.getScore();
+        if (idsInSet.add(document.combinedDocumentId)) {
+            queue.add(document);
         }
 
         return true;
     }
 
     public synchronized List<RankableDocument> toList() {
-        return queue;
+        return new ArrayList<>(queue);
     }
 
     public int size() {
