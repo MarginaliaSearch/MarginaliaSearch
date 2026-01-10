@@ -241,29 +241,6 @@ public class FullReverseIndexReader {
         }
 
         BitSet viableDocuments = preselectViableDocuments(searchContext, docIds.size(), valuesForTerm);
-
-        long[] offsetsAll = new long[termIds.length * docIds.size()];
-
-        for (int i = 0; i < termIds.length; i++) {
-            // Add to the big array of term data offsets
-            long[] values = valuesForTerm[i];
-            if (null == values)
-                continue;
-
-            for (int di = 0; di < docIds.size(); di++) {
-                if (!viableDocuments.get(di))
-                    continue;
-
-                // We can omit the position data retrieval if the position mask is zero
-                // (likely a synthetic keyword, n-gram, etc.)
-                long positionMask = values[docIds.size() + di] & ~0xFFL;
-                if (positionMask == 0)
-                    continue;
-
-                offsetsAll[i * docIds.size() + di] = values[di];
-            }
-        }
-
         BitSet[] priorityTermsPresent = new BitSet[searchContext.termIdsPriority.size()];
 
         for (int i = 0; i < searchContext.termIdsPriority.size(); i++) {

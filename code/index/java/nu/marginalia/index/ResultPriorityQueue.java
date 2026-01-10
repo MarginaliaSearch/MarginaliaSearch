@@ -18,12 +18,14 @@ import java.util.*;
  */
 public class ResultPriorityQueue implements Iterable<RankableDocument> {
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
-    private final MinMaxPriorityQueue<RankableDocument> queue;
+    private final ArrayList<RankableDocument> queue;
+    private final int limit;
 
     private int itemsProcessed = 0;
 
     public ResultPriorityQueue(int limit) {
-        this.queue = MinMaxPriorityQueue.<RankableDocument>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
+        this.queue = new ArrayList<>(limit);
+        this.limit = limit;
     }
 
     public @NotNull Iterator<RankableDocument> iterator() {
@@ -39,12 +41,15 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
         if (idsInSet.add(item.combinedDocumentId)) {
             queue.add(item);
         }
+        queue.sort(Comparator.naturalOrder());
+        if (queue.size() > limit)
+            queue.removeLast();
 
         return true;
     }
 
     public synchronized List<RankableDocument> toList() {
-        return new ArrayList<>(queue);
+        return queue;
     }
 
     public int size() {
