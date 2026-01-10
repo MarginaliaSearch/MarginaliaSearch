@@ -1,5 +1,6 @@
 package nu.marginalia.asyncio;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LongRingBufferSPSC {
@@ -8,6 +9,7 @@ public class LongRingBufferSPSC {
 
     final AtomicInteger writePos = new AtomicInteger(0);
     final AtomicInteger readPos = new AtomicInteger(0);
+    final AtomicBoolean writeStage = new AtomicBoolean();
 
     public LongRingBufferSPSC(int len) {
         items = new long[len];
@@ -71,5 +73,26 @@ public class LongRingBufferSPSC {
 
         for (; i < n; i++)
             put(values[i]);
+    }
+
+
+    public boolean putNP(long value) {
+        if (!writeStage.weakCompareAndSetRelease(false, true)) {
+            return false;
+        }
+
+        int wp = writePos.get();
+        int nextPos = (wp + 1) % items.length;
+        if (nextPos == readPos.get()) {
+            writeStage.setRelease(false);
+            return false;
+        }
+
+        items[wp] = value;
+
+        writePos.set(nextPos);
+        writeStage.setRelease(false);
+
+        return true;
     }
 }

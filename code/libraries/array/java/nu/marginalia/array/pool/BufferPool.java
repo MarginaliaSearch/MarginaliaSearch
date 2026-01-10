@@ -1,6 +1,7 @@
 package nu.marginalia.array.pool;
 
 import nu.marginalia.asyncio.LongRingBufferNPSC;
+import nu.marginalia.asyncio.LongRingBufferSPSC;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -259,11 +260,11 @@ public class BufferPool implements AutoCloseable {
     class Prefetcher {
         private final List<Thread> threads;
         private final int nThreads;
-        private final LongRingBufferNPSC prefetchQueue;
+        private final LongRingBufferSPSC prefetchQueue;
 
         public Prefetcher(int nThreads) {
             this.threads = new ArrayList<>(nThreads);
-            this.prefetchQueue = new LongRingBufferNPSC(4*nThreads);
+            this.prefetchQueue = new LongRingBufferSPSC(4*nThreads);
             this.nThreads = nThreads;
 
             start(nThreads);
@@ -317,9 +318,7 @@ public class BufferPool implements AutoCloseable {
         }
 
         public void requestPrefetch(long address) {
-            long lock = prefetchQueue.lockWrite();
-            prefetchQueue.tryPut(address, lock);
-            prefetchQueue.unlockWrite(lock);
+            prefetchQueue.putNP(address);
         }
     }
 
