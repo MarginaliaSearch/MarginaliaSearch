@@ -42,8 +42,9 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
             queue.add(item);
         }
         queue.sort(Comparator.naturalOrder());
-        if (queue.size() > limit)
-            queue.removeLast();
+        if (queue.size() > limit) {
+            idsInSet.remove(queue.removeLast().combinedDocumentId);
+        }
 
         return true;
     }
