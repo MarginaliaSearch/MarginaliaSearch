@@ -69,7 +69,7 @@ public class LongRingBufferNPSC {
             }
         }
         items[writePos.get()] = value;
-        writePos.lazySet(nextPos);
+        writePos.set(nextPos);
     }
 
     public boolean tryPut(long value, long lock) {
@@ -80,7 +80,7 @@ public class LongRingBufferNPSC {
         if (nextPos == readPos.get())
             return false;
         items[writePos.get()] = value;
-        writePos.lazySet(nextPos);
+        writePos.set(nextPos);
         return true;
     }
 
@@ -95,7 +95,7 @@ public class LongRingBufferNPSC {
         for (i = 0; i < batchSize; i++) {
             items[(wp+i)%items.length] = values[i];
         }
-        writePos.lazySet((wp + i) & mask);
+        writePos.set((wp + i) & mask);
 
         for (; i < n; i++)
             put(values[i], lock);

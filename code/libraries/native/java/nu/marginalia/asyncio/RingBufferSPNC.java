@@ -66,8 +66,7 @@ public class RingBufferSPNC<T> {
             return false;
         }
         items[writePos.get()] = item;
-        // single producer, safe
-        writePos.lazySet(nextPos);
+        writePos.set(nextPos);
         return true;
     }
 }

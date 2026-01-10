@@ -53,7 +53,7 @@ public class LongRingBufferSPSC {
             if (iter > 1000) Thread.yield();
         }
         items[writePos.get()] = value;
-        writePos.lazySet(nextPos);
+        writePos.set(nextPos);
     }
 
     public void put(long[] values, int n) {
@@ -67,7 +67,7 @@ public class LongRingBufferSPSC {
         for (i = 0; i < batchSize; i++) {
             items[(wp+i)%items.length] = values[i];
         }
-        writePos.lazySet((wp + i) & mask);
+        writePos.set((wp + i) & mask);
 
         for (; i < n; i++)
             put(values[i]);
