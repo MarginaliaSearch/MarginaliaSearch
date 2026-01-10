@@ -346,7 +346,7 @@ public class IndexQueryExecution {
                 RankableDocument rankableDocument = getFromQueue(rankingQueue);
 
                 if (rankableDocument == null) {
-                    if ((rankingCountdown.getCount() == 0))
+                    if ((termsCountdown.getCount() == 0))
                         return;
                     else
                         continue;
