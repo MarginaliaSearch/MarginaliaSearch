@@ -281,8 +281,8 @@ public class IndexQueryExecution {
 
     private void getSpans() {
         try {
+            RankableDocument[] docs = new RankableDocument[16];
             for (;;) {
-                RankableDocument[] docs = new RankableDocument[16];
                 int n = getFromQueue(spanRetrievalQueue, docs);
 
                 if (n == 0) {
@@ -315,8 +315,8 @@ public class IndexQueryExecution {
 
     private void getPositions() {
         try {
+            RankableDocument[] docs = new RankableDocument[16];
             for (;;) {
-                RankableDocument[] docs = new RankableDocument[16];
                 int n = getFromQueue(termPositionRetrievalQueue, docs);
 
                 if (n == 0) {
@@ -350,8 +350,8 @@ public class IndexQueryExecution {
 
     private void evaluate() {
         try {
+            RankableDocument[] docs = new RankableDocument[16];
             for (ScratchIntListPool pool = new ScratchIntListPool(128);;pool.reset()) {
-                RankableDocument[] docs = new RankableDocument[16];
                 int n = getFromQueue(rankingQueue, docs);
 
                 if (n == 0) {
@@ -384,8 +384,8 @@ public class IndexQueryExecution {
 
     private void sortResults() {
         try {
+            RankableDocument[] docs = new RankableDocument[16];
             for (;;) {
-                RankableDocument[] docs = new RankableDocument[16];
                 int n = getFromQueue(sortingQueue, docs);
 
                 if (n == 0) {
