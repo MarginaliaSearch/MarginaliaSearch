@@ -27,8 +27,6 @@ import java.util.concurrent.locks.LockSupport;
 /** Performs an index query */
 public class IndexQueryExecution {
 
-    private static final int indexValuationThreads = Integer.getInteger("index.valuationThreads", 8);
-    private static final int indexPreparationThreads = Integer.getInteger("index.preparationThreads", 2);
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
 
     private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 4);
@@ -41,7 +39,7 @@ public class IndexQueryExecution {
     private static final int lookupBatchSize = SkipListConstants.MAX_RECORDS_PER_BLOCK;
 
     private static final ExecutorService threadPool =
-            new ThreadPoolExecutor(indexValuationThreads, 256, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+            new ThreadPoolExecutor(16, 256, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
@@ -66,7 +64,7 @@ public class IndexQueryExecution {
     private final RingBufferNPNC<RankableDocument> spanRetrievalQueue  = new RingBufferNPNC<>(128);
     private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(128);
     private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(128);
-    private final RingBufferNPNC<RankableDocument> sortingQueue  = new RingBufferNPNC<>(128);
+    private final RingBufferSPNC<RankableDocument> sortingQueue  = new RingBufferSPNC<>(128);
 
     private final int limitTotal;
     private final int limitByDomain;
@@ -126,7 +124,7 @@ public class IndexQueryExecution {
         queries = currentIndex.createQueries(rankingContext);
 
         lookupCountdown = new CountDownLatch(queries.size());
-        rankingCountdown = new CountDownLatch(indexValuationThreads * 2);
+        rankingCountdown = new CountDownLatch(1);
         spansCountdown = new CountDownLatch(1);
         preparationCountdown = new CountDownLatch(2);
         termsCountdown = new CountDownLatch(1);
@@ -149,12 +147,8 @@ public class IndexQueryExecution {
             threadPool.submit(this::prepare);
             threadPool.submit(this::getSpans);
             threadPool.submit(this::getPositions);
+            threadPool.submit(this::evaluate);
             threadPool.submit(this::sortResults);
-
-            // Spawn lookup tasks for each query
-            for (int i = 0; i < rankingCountdown.getCount(); i++) {
-                threadPool.submit(this::evaluate);
-            }
 
             // Await lookup task termination
             lookupCountdown.await();
