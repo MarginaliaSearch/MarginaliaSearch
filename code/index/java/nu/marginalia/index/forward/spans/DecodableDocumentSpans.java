@@ -1,5 +1,6 @@
 package nu.marginalia.index.forward.spans;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import javax.annotation.Nonnull;
@@ -19,7 +20,7 @@ public class DecodableDocumentSpans {
         this.segment = null;
     }
 
-    public DocumentSpans decode() {
+    public DocumentSpans decode(Int2ObjectFunction<IntArrayList> allocator) {
         if (segment == null)
             return new DocumentSpans();
 
@@ -32,7 +33,7 @@ public class DecodableDocumentSpans {
             byte code = segment.get(ValueLayout.JAVA_BYTE, pos);
             short len = segment.get(ValueLayout.JAVA_SHORT, pos+2);
 
-            IntArrayList values = new IntArrayList(len);
+            IntArrayList values = allocator.get(len);
 
             pos += 4;
             for (int i = 0; i < len; i++) {

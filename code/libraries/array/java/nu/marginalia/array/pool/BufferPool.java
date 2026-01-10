@@ -180,17 +180,6 @@ public class BufferPool implements AutoCloseable {
         prefetcher.requestPrefetch(address);
     }
 
-    private void prefetchNow(long address) {
-        // Look through available pages for the one we're looking for
-        MemoryPage buffer = poolLru.get(address);
-
-        if (buffer != null) // already cached
-            return;
-
-        // buffer is read unacquired, no need to close the return value
-        read(address, false);
-
-    }
 
 
     private MemoryPage read(long address, boolean acquire) {
@@ -316,7 +305,13 @@ public class BufferPool implements AutoCloseable {
                 }
                 else {
                     idleCycles = 0;
-                    prefetchNow(vals[0]);
+                    long address = vals[0];
+
+                    // Look through available pages for the one we're looking for
+                    MemoryPage buffer = poolLru.get(address);
+
+                    if (buffer == null)
+                        read(address, false);
                 }
             }
         }

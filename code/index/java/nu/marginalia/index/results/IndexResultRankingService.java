@@ -230,7 +230,7 @@ public class IndexResultRankingService {
 
         long[] wordFlags = document.termFlags;
         CodedSequence[] positions = document.positions;
-        DocumentSpans spans = document.documentSpans.decode();
+        DocumentSpans spans = document.documentSpans.decode(intListPool::get);
 
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
