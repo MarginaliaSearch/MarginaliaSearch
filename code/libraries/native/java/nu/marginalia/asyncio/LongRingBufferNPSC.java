@@ -72,15 +72,16 @@ public class LongRingBufferNPSC {
         writePos.lazySet(nextPos);
     }
 
-    public void tryPut(long value) {
+    public boolean tryPut(long value, long lock) {
         if (closed.get())
-            return;
+            return false;
 
         int nextPos = (writePos.get() + 1) & mask;
         if (nextPos == readPos.get())
-            return;
+            return false;
         items[writePos.get()] = value;
         writePos.lazySet(nextPos);
+        return true;
     }
 
     public void put(long[] values, long lock, int n) {
@@ -113,7 +114,4 @@ public class LongRingBufferNPSC {
             throw new IllegalStateException("Lock not held");
     }
 
-    public void tryPut(long address, long lock) {
-
-    }
 }
