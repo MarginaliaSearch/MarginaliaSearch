@@ -1,5 +1,6 @@
 package nu.marginalia.array.pool;
 
+import nu.marginalia.asyncio.LongRingBufferNPSC;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
@@ -268,11 +270,11 @@ public class BufferPool implements AutoCloseable {
     class Prefetcher {
         private final List<Thread> threads;
         private final int nThreads;
-        private final ArrayBlockingQueue<Long> prefetchQueue;
+        private final LongRingBufferNPSC prefetchQueue;
 
         public Prefetcher(int nThreads) {
             this.threads = new ArrayList<>(nThreads);
-            this.prefetchQueue = new ArrayBlockingQueue<>(4*nThreads);
+            this.prefetchQueue = new LongRingBufferNPSC(4*nThreads);
             this.nThreads = nThreads;
 
             start(nThreads);
@@ -300,22 +302,29 @@ public class BufferPool implements AutoCloseable {
         }
 
         private void prefetchThread() {
-            try {
-                for (;;) {
-                    Long address = prefetchQueue.poll(1, TimeUnit.SECONDS);
-                    if (null == address) {
-                        continue;
-                    }
-                    prefetchNow(address);
+            int idleCycles = 0;
+
+            while (!Thread.interrupted()) {
+                long[] vals = new long[1];
+                int n = prefetchQueue.takeNonBlock(vals);
+                if (n == 0) {
+                    idleCycles++;
+                    if (idleCycles < 10_000)
+                        Thread.yield();
+                    else
+                        LockSupport.parkNanos(1);
                 }
-            }
-            catch (InterruptedException ex) {
-                //
+                else {
+                    idleCycles = 0;
+                    prefetchNow(vals[0]);
+                }
             }
         }
 
         public void requestPrefetch(long address) {
-            prefetchQueue.offer(address);
+            long lock = prefetchQueue.lockWrite();
+            prefetchQueue.tryPut(address, lock);
+            prefetchQueue.unlockWrite(lock);
         }
     }
 
