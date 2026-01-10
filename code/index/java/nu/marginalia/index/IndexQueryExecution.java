@@ -264,7 +264,7 @@ public class IndexQueryExecution {
                     item.termFlags = termMetadata.flagsForDoc(i);
                     item.positionOffsets = termMetadata.positionOffsetsForDoc(i);
 
-                    if (!enqueue(item, spanRetrievalQueue))
+                    if (!enqueueMulti(item, spanRetrievalQueue))
                         break;
                 }
             }
@@ -410,22 +410,6 @@ public class IndexQueryExecution {
     }
 
     @Nullable
-    private RankableDocument getFromQueue(RingBufferSPNC<RankableDocument> queue) {
-        for (int i = 0; i < 256; i++) {
-            RankableDocument rankableDocument = queue.tryTake();
-            if (rankableDocument != null)
-                return rankableDocument;
-        }
-        for (int i = 0; i < 1024; i++) {
-            RankableDocument rankableDocument = queue.tryTake();
-            if (rankableDocument != null)
-                return rankableDocument;
-            Thread.yield();
-        }
-        return null;
-    }
-
-    @Nullable
     private int getFromQueue(RingBufferSPSC<RankableDocument> queue, RankableDocument[] ret) {
         for (int i = 0; i < 256; i++) {
             int rv = queue.tryTake(ret);
@@ -455,6 +439,28 @@ public class IndexQueryExecution {
         }
         for (;;) {
             if (queue.put(item))
+                return true;
+            if (queue.isClosed() || !budget.hasTimeLeft())
+                return false;
+            LockSupport.parkNanos(1);
+        }
+
+    }
+
+    private boolean enqueueMulti(RankableDocument item, RingBufferSPSC<RankableDocument> queue) {
+        for (int iter = 0; iter < 256; iter++) {
+            if (queue.putNP(item))
+                return true;
+        }
+        for (int iter = 0; iter < 2048; iter++) {
+            if (queue.putNP(item))
+                return true;
+            if (queue.isClosed())
+                return false;
+            Thread.yield();
+        }
+        for (;;) {
+            if (queue.putNP(item))
                 return true;
             if (queue.isClosed() || !budget.hasTimeLeft())
                 return false;

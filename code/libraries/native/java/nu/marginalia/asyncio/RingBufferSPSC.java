@@ -1,12 +1,14 @@
 package nu.marginalia.asyncio;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RingBufferSPSC<T> {
     final Object[] items;
 
     final AtomicInteger writePos = new AtomicInteger(0);
     final AtomicInteger readPos = new AtomicInteger(0);
+    final AtomicReference<T> toWrite = new AtomicReference<T>();
 
     volatile boolean closed = false;
 
@@ -66,6 +68,26 @@ public class RingBufferSPSC<T> {
         items[wp] = item;
         if (!writePos.compareAndSet(wp, nextPos))
             throw new IllegalStateException("write pos changed, multiple readers?");
+
+        return true;
+    }
+
+    public boolean putNP(T item) {
+        if (!toWrite.weakCompareAndSetRelease(null, item)) {
+            return false;
+        }
+
+        int wp = writePos.get();
+        int nextPos = (wp + 1) % items.length;
+        if (nextPos == readPos.get()) {
+            toWrite.set(null);
+            return false;
+        }
+
+        items[wp] = item;
+
+        writePos.lazySet(nextPos);
+        toWrite.setRelease(null);
 
         return true;
     }
