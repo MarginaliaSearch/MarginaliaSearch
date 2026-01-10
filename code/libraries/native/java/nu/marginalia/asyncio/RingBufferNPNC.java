@@ -10,9 +10,17 @@ public class RingBufferNPNC<T> {
     final AtomicInteger readPos = new AtomicInteger(0);
     final AtomicLong writerCtr = new AtomicLong(0);
     final AtomicLong writeMutex = new AtomicLong(0);
+    volatile boolean closed = false;
 
     public RingBufferNPNC(int len) {
         items = new Object[len];
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+    public void close() {
+        closed = true;
     }
 
     @SuppressWarnings("unchecked")
@@ -31,11 +39,16 @@ public class RingBufferNPNC<T> {
     }
 
     @SuppressWarnings("unchecked")
-    T peek() {
+    public T tryTake() {
         int rp;
+
         if ((rp = readPos.get()) != writePos.get()) {
-            return (T) items[rp];
+            Object ret = items[rp];
+            if (readPos.compareAndSet(rp, (rp + 1) % items.length)) {
+                return (T) ret;
+            }
         }
+
         return null;
     }
 

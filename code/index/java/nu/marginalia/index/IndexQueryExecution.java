@@ -3,6 +3,7 @@ package nu.marginalia.index;
 import io.prometheus.metrics.core.metrics.Gauge;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.asyncio.RingBufferNPNC;
 import nu.marginalia.asyncio.RingBufferSPNC;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.CombinedTermMetadata;
@@ -61,8 +62,8 @@ public class IndexQueryExecution {
 
     private final ArrayBlockingQueue<CombinedDocIdList> preparationQueue = new ArrayBlockingQueue<>(2);
 
+    private final RingBufferNPNC<RankableDocument> spanRetrievalQueue  = new RingBufferNPNC<>(128);
     private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(128);
-    private final RingBufferSPNC<RankableDocument> spanRetrievalQueue  = new RingBufferSPNC<>(128);
     private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(128);
 
     private final int limitTotal;
@@ -125,7 +126,7 @@ public class IndexQueryExecution {
         lookupCountdown = new CountDownLatch(queries.size());
         rankingCountdown = new CountDownLatch(indexValuationThreads * 2);
         spansCountdown = new CountDownLatch(1);
-        preparationCountdown = new CountDownLatch(1);
+        preparationCountdown = new CountDownLatch(2);
         termsCountdown = new CountDownLatch(1);
     }
 
@@ -141,6 +142,7 @@ public class IndexQueryExecution {
                 threadPool.submit(() -> lookup(query));
             }
 
+            threadPool.submit(this::prepare);
             threadPool.submit(this::prepare);
             threadPool.submit(this::getSpans);
             threadPool.submit(this::getPositions);
@@ -383,6 +385,27 @@ public class IndexQueryExecution {
         return null;
     }
 
+    @Nullable
+    private RankableDocument getFromQueue(RingBufferNPNC<RankableDocument> queue) {
+        for (int i = 0; i < 256; i++) {
+            RankableDocument rankableDocument = queue.tryTake();
+            if (rankableDocument != null)
+                return rankableDocument;
+        }
+        for (int i = 0; i < 1024; i++) {
+            RankableDocument rankableDocument = queue.tryTake();
+            if (rankableDocument != null)
+                return rankableDocument;
+            Thread.yield();
+        }
+        for (int i = 0; i < 128; i++) {
+            RankableDocument rankableDocument = queue.tryTake();
+            if (rankableDocument != null)
+                return rankableDocument;
+            LockSupport.parkNanos(1);
+        }
+        return null;
+    }
     private boolean enqueue(RankableDocument item, RingBufferSPNC<RankableDocument> queue) {
         for (int iter = 0; iter < 256; iter++) {
             if (queue.put(item))
@@ -397,6 +420,41 @@ public class IndexQueryExecution {
         }
         for (;;) {
             if (queue.put(item))
+                return true;
+            if (queue.isClosed() || !budget.hasTimeLeft())
+                return false;
+            LockSupport.parkNanos(1);
+        }
+
+    }
+
+    private boolean enqueue(RankableDocument item, RingBufferNPNC<RankableDocument> queue) {
+        long lock = queue.lockWrite();
+        for (int iter = 0; iter < 256; iter++) {
+            if (queue.put(item, lock)) {
+                queue.unlockWrite(lock);
+                return true;
+            }
+        }
+        queue.unlockWrite(lock);
+
+        for (int iter = 0; iter < 2048; iter++) {
+            lock = queue.lockWrite();
+            boolean ret = queue.put(item, lock);
+            queue.unlockWrite(lock);
+
+            if (ret)
+                return true;
+            if (queue.isClosed())
+                return false;
+            Thread.yield();
+        }
+        for (;;) {
+            lock = queue.lockWrite();
+            boolean ret = queue.put(item, lock);
+            queue.unlockWrite(lock);
+
+            if (ret)
                 return true;
             if (queue.isClosed() || !budget.hasTimeLeft())
                 return false;

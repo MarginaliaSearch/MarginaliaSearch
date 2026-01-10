@@ -1,9 +1,6 @@
 package nu.marginalia.index.model;
-
-import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
-import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.sequence.CodedSequence;
 import org.jetbrains.annotations.NotNull;
 
