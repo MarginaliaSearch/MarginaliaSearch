@@ -66,7 +66,7 @@ public class IndexQueryExecution {
     private final RingBufferNPNC<RankableDocument> spanRetrievalQueue  = new RingBufferNPNC<>(128);
     private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(128);
     private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(128);
-    private final RingBufferSPNC<RankableDocument> sortingQueue  = new RingBufferSPNC<>(128);
+    private final RingBufferNPNC<RankableDocument> sortingQueue  = new RingBufferNPNC<>(128);
 
     private final int limitTotal;
     private final int limitByDomain;
