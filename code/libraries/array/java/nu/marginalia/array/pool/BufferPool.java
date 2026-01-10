@@ -304,8 +304,8 @@ public class BufferPool implements AutoCloseable {
         private void prefetchThread() {
             int idleCycles = 0;
 
+            long[] vals = new long[1];
             while (!Thread.interrupted()) {
-                long[] vals = new long[1];
                 int n = prefetchQueue.takeNonBlock(vals);
                 if (n == 0) {
                     idleCycles++;
