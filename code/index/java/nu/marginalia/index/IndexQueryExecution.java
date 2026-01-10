@@ -5,6 +5,7 @@ import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.asyncio.RingBufferNPNC;
 import nu.marginalia.asyncio.RingBufferSPNC;
+import nu.marginalia.asyncio.RingBufferSPSC;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.CombinedTermMetadata;
 import nu.marginalia.index.model.RankableDocument;
@@ -61,10 +62,10 @@ public class IndexQueryExecution {
 
     private final ArrayBlockingQueue<CombinedDocIdList> preparationQueue = new ArrayBlockingQueue<>(2);
 
-    private final RingBufferNPNC<RankableDocument> spanRetrievalQueue  = new RingBufferNPNC<>(128);
-    private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(128);
-    private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(128);
-    private final RingBufferSPNC<RankableDocument> sortingQueue  = new RingBufferSPNC<>(128);
+    private final RingBufferSPSC<RankableDocument> spanRetrievalQueue  = new RingBufferSPSC<>(128);
+    private final RingBufferSPSC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPSC<>(128);
+    private final RingBufferSPSC<RankableDocument> rankingQueue  = new RingBufferSPSC<>(128);
+    private final RingBufferSPSC<RankableDocument> sortingQueue  = new RingBufferSPSC<>(128);
 
     private final int limitTotal;
     private final int limitByDomain;
@@ -281,9 +282,10 @@ public class IndexQueryExecution {
     private void getSpans() {
         try {
             for (;;) {
-                RankableDocument rankableDocument = getFromQueue(spanRetrievalQueue);
+                RankableDocument[] docs = new RankableDocument[16];
+                int n = getFromQueue(spanRetrievalQueue, docs);
 
-                if (rankableDocument == null) {
+                if (n == 0) {
                     if (preparationCountdown.getCount() == 0)
                         return;
                     else {
@@ -292,11 +294,14 @@ public class IndexQueryExecution {
                     }
                 }
 
-                currentIndex.getDocumentSpans(rankableDocument.combinedDocumentId)
-                        .thenAccept(spans -> {
-                            rankableDocument.documentSpans = spans;
-                            enqueue(rankableDocument, termPositionRetrievalQueue);
-                        });
+                for (int i = 0; i < n; i++) {
+                    RankableDocument rankableDocument = docs[i];
+                    currentIndex.getDocumentSpans(rankableDocument.combinedDocumentId)
+                            .thenAccept(spans -> {
+                                rankableDocument.documentSpans = spans;
+                                enqueue(rankableDocument, termPositionRetrievalQueue);
+                            });
+                }
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
@@ -311,9 +316,10 @@ public class IndexQueryExecution {
     private void getPositions() {
         try {
             for (;;) {
-                RankableDocument rankableDocument = getFromQueue(termPositionRetrievalQueue);
+                RankableDocument[] docs = new RankableDocument[16];
+                int n = getFromQueue(termPositionRetrievalQueue, docs);
 
-                if (rankableDocument == null) {
+                if (n == 0) {
                     if (spansCountdown.getCount() == 0)
                         return;
                     else {
@@ -322,11 +328,15 @@ public class IndexQueryExecution {
                     }
                 }
 
-                currentIndex.getTermPositions(rankableDocument.positionOffsets)
-                        .thenAccept(positions -> {
-                            rankableDocument.positions = positions;
-                            enqueue(rankableDocument, rankingQueue);
-                        });
+                for (int i = 0; i < n; i++) {
+                    RankableDocument rankableDocument = docs[i];
+
+                    currentIndex.getTermPositions(rankableDocument.positionOffsets)
+                            .thenAccept(positions -> {
+                                rankableDocument.positions = positions;
+                                enqueue(rankableDocument, rankingQueue);
+                            });
+                }
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
@@ -341,9 +351,10 @@ public class IndexQueryExecution {
     private void evaluate() {
         try {
             for (ScratchIntListPool pool = new ScratchIntListPool(128);;pool.reset()) {
-                RankableDocument rankableDocument = getFromQueue(rankingQueue);
+                RankableDocument[] docs = new RankableDocument[16];
+                int n = getFromQueue(rankingQueue, docs);
 
-                if (rankableDocument == null) {
+                if (n == 0) {
                     if ((termsCountdown.getCount() == 0))
                         return;
                     else {
@@ -352,8 +363,11 @@ public class IndexQueryExecution {
                     }
                 }
 
-                if (null != (rankableDocument.item = rankingService.calculateScore(null, pool, currentIndex, rankingContext, rankableDocument)))
-                    enqueue(rankableDocument, sortingQueue);
+                for (int i = 0; i < n; i++) {
+                    RankableDocument rankableDocument = docs[i];
+                    if (null != (rankableDocument.item = rankingService.calculateScore(null, pool, currentIndex, rankingContext, rankableDocument)))
+                        enqueue(rankableDocument, sortingQueue);
+                }
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
@@ -371,9 +385,10 @@ public class IndexQueryExecution {
     private void sortResults() {
         try {
             for (;;) {
-                RankableDocument rankableDocument = getFromQueue(sortingQueue);
+                RankableDocument[] docs = new RankableDocument[16];
+                int n = getFromQueue(sortingQueue, docs);
 
-                if (rankableDocument == null) {
+                if (n == 0) {
                     if ((rankingCountdown.getCount() == 0))
                         return;
                     else {
@@ -382,7 +397,8 @@ public class IndexQueryExecution {
                     }
                 }
 
-                resultHeap.add(rankableDocument);
+                for (int i = 0; i < n; i++)
+                    resultHeap.add(docs[i]);
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
@@ -410,21 +426,22 @@ public class IndexQueryExecution {
     }
 
     @Nullable
-    private RankableDocument getFromQueue(RingBufferNPNC<RankableDocument> queue) {
+    private int getFromQueue(RingBufferSPSC<RankableDocument> queue, RankableDocument[] ret) {
         for (int i = 0; i < 256; i++) {
-            RankableDocument rankableDocument = queue.tryTake();
-            if (rankableDocument != null)
-                return rankableDocument;
+            int rv = queue.tryTake(ret);
+            if (rv != 0)
+                return rv;
         }
         for (int i = 0; i < 1024; i++) {
-            RankableDocument rankableDocument = queue.tryTake();
-            if (rankableDocument != null)
-                return rankableDocument;
+            int rv = queue.tryTake(ret);
+            if (rv != 0)
+                return rv;
             Thread.yield();
         }
-        return null;
+        return 0;
     }
-    private boolean enqueue(RankableDocument item, RingBufferSPNC<RankableDocument> queue) {
+
+    private boolean enqueue(RankableDocument item, RingBufferSPSC<RankableDocument> queue) {
         for (int iter = 0; iter < 256; iter++) {
             if (queue.put(item))
                 return true;
@@ -446,40 +463,6 @@ public class IndexQueryExecution {
 
     }
 
-    private boolean enqueue(RankableDocument item, RingBufferNPNC<RankableDocument> queue) {
-        long lock = queue.lockWrite();
-        for (int iter = 0; iter < 256; iter++) {
-            if (queue.put(item, lock)) {
-                queue.unlockWrite(lock);
-                return true;
-            }
-        }
-        queue.unlockWrite(lock);
-
-        for (int iter = 0; iter < 2048; iter++) {
-            lock = queue.lockWrite();
-            boolean ret = queue.put(item, lock);
-            queue.unlockWrite(lock);
-
-            if (ret)
-                return true;
-            if (queue.isClosed())
-                return false;
-            Thread.yield();
-        }
-        for (;;) {
-            lock = queue.lockWrite();
-            boolean ret = queue.put(item, lock);
-            queue.unlockWrite(lock);
-
-            if (ret)
-                return true;
-            if (queue.isClosed() || !budget.hasTimeLeft())
-                return false;
-            LockSupport.parkNanos(1);
-        }
-
-    }
 
     public int itemsProcessed() {
         return resultHeap.getItemsProcessed();
