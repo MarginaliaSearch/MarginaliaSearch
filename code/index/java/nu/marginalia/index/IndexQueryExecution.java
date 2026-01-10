@@ -387,10 +387,7 @@ public class IndexQueryExecution {
                 log.error("Exception in lookup thread", ex);
             }  // suppress logging for interrupted ex
         } finally {
-            rankingCountdown.countDown();
-            if (rankingCountdown.getCount() == 0) {
-                sortingQueue.close();
-            }
+            sortingCountdown.countDown();
         }
     }
 
