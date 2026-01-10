@@ -53,8 +53,7 @@ public class RingBufferSPSC<T> {
             ret[i++] = (T) items[nrp];
         }
 
-        if (!readPos.compareAndSet(rp, (rp+i) % items.length))
-            throw new IllegalStateException("read pos changed, multiple readers?");
+        readPos.lazySet((rp+i) % items.length);
 
         return i;
     }
@@ -86,7 +85,7 @@ public class RingBufferSPSC<T> {
 
         items[wp] = item;
 
-        writePos.lazySet(nextPos);
+        writePos.set(nextPos);
         toWrite.setRelease(null);
 
         return true;
