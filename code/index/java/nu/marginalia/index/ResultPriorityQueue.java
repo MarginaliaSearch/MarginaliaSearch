@@ -20,8 +20,9 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
     private final LongOpenHashSet idsInSet = new LongOpenHashSet();
     private final ArrayList<RankableDocument> queue;
     private final int limit;
-
     private int itemsProcessed = 0;
+
+    private double worstScore = 0;
 
     public ResultPriorityQueue(int limit) {
         this.queue = new ArrayList<>(limit);
@@ -38,12 +39,32 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
     public synchronized boolean add(@NotNull RankableDocument item) {
         itemsProcessed++;
 
+        double newScore = item.item.getScore();
+
+        if (queue.size() < limit) {
+            if (idsInSet.add(item.combinedDocumentId)) {
+                queue.add(item);
+            }
+            else {
+                return false;
+            }
+
+            if (newScore < worstScore)
+                queue.sort(Comparator.naturalOrder());
+            else
+                worstScore = newScore;
+        }
+        else if (newScore > worstScore) {
+            return false;
+        }
+
         if (idsInSet.add(item.combinedDocumentId)) {
             queue.add(item);
         }
         queue.sort(Comparator.naturalOrder());
         if (queue.size() > limit) {
             idsInSet.remove(queue.removeLast().combinedDocumentId);
+            worstScore = queue.getLast().item.getScore();
         }
 
         return true;
