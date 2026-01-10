@@ -142,7 +142,7 @@ public class PoolLru {
             int targetQueueSize = freeQueue.length / 2;
 
             if (queueSize >= targetQueueSize) {
-                LockSupport.parkNanos(100_000);
+                LockSupport.parkNanos(10_000);
                 continue;
             }
 

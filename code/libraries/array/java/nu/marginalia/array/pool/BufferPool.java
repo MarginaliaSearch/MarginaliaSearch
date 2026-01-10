@@ -237,9 +237,9 @@ public class BufferPool implements AutoCloseable {
         assert buffer.getMemorySegment().get(ValueLayout.JAVA_INT, 0) != 9999;
         buffer.dirty(false);
 
-        synchronized (buffer) {
-            buffer.notifyAll();
-        }
+//        synchronized (buffer) {
+//            buffer.notifyAll();
+//        }
     }
 
     private void waitForPageWrite(MemoryPage page) {
@@ -247,16 +247,19 @@ public class BufferPool implements AutoCloseable {
             return;
         }
 
-        synchronized (page) {
-            while (page.dirty()) {
-                try {
-                    page.wait(0, 1000);
-                }
-                catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
+        while (page.dirty()) {
+            Thread.yield();
         }
+//        synchronized (page) {
+//            while (page.dirty()) {
+//                try {
+//                    page.wait(0, 1000);
+//                }
+//                catch (InterruptedException ex) {
+//                    throw new RuntimeException(ex);
+//                }
+//            }
+//        }
     }
 
     class Prefetcher {
