@@ -2,6 +2,7 @@ package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.sequence.CodedSequence;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +15,7 @@ public class RankableDocument implements Comparable<RankableDocument> {
     public long[] termFlags;
     public BitSet priorityTermsPresent;
 
-    public DocumentSpans documentSpans;
+    public DecodableDocumentSpans documentSpans;
     public long[] positionOffsets;
     public CodedSequence[] positions;
     public SearchResultItem item;

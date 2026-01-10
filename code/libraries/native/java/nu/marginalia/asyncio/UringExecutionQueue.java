@@ -68,37 +68,27 @@ public class UringExecutionQueue implements AutoCloseable {
         long id = requestIdCounter.incrementAndGet();
         CompletableFuture<T> future = new CompletableFuture<>();
 
-        var item = new SubmittedReadRequest<>(context, relatedRequests, future, id);
-
-        for (int iter = 0; iter < 128; iter++)
-            if (inputQueue.put(item)) return future;
-        for (int iter = 0; iter < 1024; iter++) {
-            if (inputQueue.put(item)) return future;
-            Thread.yield();
-        }
-        for (;;) {
-            if (inputQueue.put(item)) return future;
-            if (!running) {
-                CompletableFuture.failedFuture(new IllegalStateException("Already closed"));
-            }
-            LockSupport.parkNanos(1);
-        }
+        enqueueRequest(new SubmittedReadRequestMulti<>(context, relatedRequests, future, id));
+        return future;
     }
 
     public <T> CompletableFuture<T> submit(T context, AsyncReadRequest request) throws InterruptedException {
         long id = requestIdCounter.incrementAndGet();
         CompletableFuture<T> future = new CompletableFuture<>();
 
-        var item = new SubmittedReadRequest<>(context, List.of(request), future, id);
+        enqueueRequest(new SubmittedReadRequestSingle<>(context, request, future, id));
+        return future;
+    }
 
-        for (int iter = 0; iter < 128; iter++)
-            if (inputQueue.put(item)) return future;
-        for (int iter = 0; iter < 1024; iter++) {
-            if (inputQueue.put(item)) return future;
+    private void enqueueRequest(SubmittedReadRequest<?> item) {
+        for (int iter = 0; iter < 1024; iter++)
+            if (inputQueue.put(item)) return;
+        for (int iter = 0; iter < 8192; iter++) {
+            if (inputQueue.put(item)) return;
             Thread.yield();
         }
         for (;;) {
-            if (inputQueue.put(item)) return future;
+            if (inputQueue.put(item)) return;
             if (!running) {
                 CompletableFuture.failedFuture(new IllegalStateException("Already closed"));
             }
@@ -218,14 +208,14 @@ public class UringExecutionQueue implements AutoCloseable {
         main:
         while (running) {
 
-            for (int i = 0; i < 128; i++) {
+            for (int i = 0; i < 1024; i++) {
                 int n = completionQueue.takeNonBlock(completions);
                 if (n != 0) {
                     finalizeCompletions(completions, n);
                     continue main;
                 }
             }
-            for (int i = 0; i < 1024; i++) {
+            for (int i = 0; i < 8192; i++) {
                 int n = completionQueue.takeNonBlock(completions);
                 if (n == 0) {
                     Thread.yield();
@@ -290,14 +280,11 @@ public class UringExecutionQueue implements AutoCloseable {
 
                 if (batchesToSend.isEmpty() && ongoingRequests == 0) {
                     idleCycles++;
-                    if (idleCycles < 128) {
-                        // No-op
-                    }
-                    else if (idleCycles < 1024) {
+                    if (idleCycles > 128 && idleCycles < 1024) {
                         Thread.yield();
                     }
                     else {
-                        LockSupport.parkNanos(0);
+                        LockSupport.parkNanos(1);
                     }
                 }
                 else {

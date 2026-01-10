@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.forward.spans.IndexSpansReader;
 import nu.marginalia.index.model.CombinedDocIdList;
@@ -181,11 +182,11 @@ public class ForwardIndexReader {
     }
 
 
-    public CompletableFuture<DocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
+    public CompletableFuture<DecodableDocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
 
         long offset = idxForDoc(documentId);
         if (offset < 0) {
-            return CompletableFuture.completedFuture(new DocumentSpans());
+            return CompletableFuture.completedFuture(new DecodableDocumentSpans());
         }
 
         long dataOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);

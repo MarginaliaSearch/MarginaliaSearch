@@ -6,6 +6,7 @@ import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggre
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.ForwardIndexReader;
+import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
@@ -287,7 +288,7 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public CompletableFuture<DocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
+    public CompletableFuture<DecodableDocumentSpans> getDocumentSpans(long documentId) throws InterruptedException {
         return forwardIndexReader.getDocumentSpans(documentId);
     }
 
