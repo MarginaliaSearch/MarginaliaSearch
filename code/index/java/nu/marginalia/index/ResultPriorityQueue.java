@@ -36,7 +36,7 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
     /** Adds all items to the queue, and returns true if any items were added.
      * This is a thread-safe operation.
      */
-    public synchronized boolean add(@NotNull RankableDocument item) {
+    public boolean add(@NotNull RankableDocument item) {
         itemsProcessed++;
 
         double newScore = item.item.getScore();

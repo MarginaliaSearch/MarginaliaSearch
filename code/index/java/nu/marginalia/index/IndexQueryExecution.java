@@ -59,12 +59,14 @@ public class IndexQueryExecution {
     private final CountDownLatch spansCountdown;
     private final CountDownLatch termsCountdown;
     private final CountDownLatch rankingCountdown;
+    private final CountDownLatch sortingCountdown;
 
     private final ArrayBlockingQueue<CombinedDocIdList> preparationQueue = new ArrayBlockingQueue<>(2);
 
     private final RingBufferNPNC<RankableDocument> spanRetrievalQueue  = new RingBufferNPNC<>(128);
     private final RingBufferSPNC<RankableDocument> termPositionRetrievalQueue = new RingBufferSPNC<>(128);
     private final RingBufferSPNC<RankableDocument> rankingQueue  = new RingBufferSPNC<>(128);
+    private final RingBufferSPNC<RankableDocument> sortingQueue  = new RingBufferSPNC<>(128);
 
     private final int limitTotal;
     private final int limitByDomain;
@@ -128,6 +130,7 @@ public class IndexQueryExecution {
         spansCountdown = new CountDownLatch(1);
         preparationCountdown = new CountDownLatch(2);
         termsCountdown = new CountDownLatch(1);
+        sortingCountdown = new CountDownLatch(1);
     }
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException, TooManySimultaneousQueriesException {
@@ -146,6 +149,7 @@ public class IndexQueryExecution {
             threadPool.submit(this::prepare);
             threadPool.submit(this::getSpans);
             threadPool.submit(this::getPositions);
+            threadPool.submit(this::sortResults);
 
             // Spawn lookup tasks for each query
             for (int i = 0; i < rankingCountdown.getCount(); i++) {
@@ -159,6 +163,7 @@ public class IndexQueryExecution {
             spansCountdown.await();
             termsCountdown.await();
             rankingCountdown.await();
+            sortingCountdown.await();
         }
         finally {
             simultaneousRequests.release();
@@ -337,21 +342,18 @@ public class IndexQueryExecution {
 
     private void evaluate() {
         try {
-            ScratchIntListPool pool = new ScratchIntListPool(128);
-            for (;;) {
+            for (ScratchIntListPool pool = new ScratchIntListPool(128);;pool.reset()) {
                 RankableDocument rankableDocument = getFromQueue(rankingQueue);
 
                 if (rankableDocument == null) {
-                    if ((termsCountdown.getCount() == 0))
+                    if ((rankingCountdown.getCount() == 0))
                         return;
                     else
                         continue;
                 }
 
-
                 if (null != (rankableDocument.item = rankingService.calculateScore(null, pool, currentIndex, rankingContext, rankableDocument)))
-                    resultHeap.add(rankableDocument);
-                pool.reset();
+                    enqueue(rankableDocument, sortingQueue);
             }
         } catch (Exception ex) {
             if (!(ex.getCause() instanceof InterruptedException)) {
@@ -359,7 +361,36 @@ public class IndexQueryExecution {
             }  // suppress logging for interrupted ex
         } finally {
             rankingCountdown.countDown();
-            rankingQueue.close();
+            if (rankingCountdown.getCount() == 0) {
+                sortingQueue.close();
+            }
+        }
+    }
+
+
+    private void sortResults() {
+        try {
+            for (;;) {
+                RankableDocument rankableDocument = getFromQueue(sortingQueue);
+
+                if (rankableDocument == null) {
+                    if ((rankingCountdown.getCount() == 0))
+                        return;
+                    else
+                        continue;
+                }
+
+                resultHeap.add(rankableDocument);
+            }
+        } catch (Exception ex) {
+            if (!(ex.getCause() instanceof InterruptedException)) {
+                log.error("Exception in lookup thread", ex);
+            }  // suppress logging for interrupted ex
+        } finally {
+            rankingCountdown.countDown();
+            if (rankingCountdown.getCount() == 0) {
+                sortingQueue.close();
+            }
         }
     }
 
