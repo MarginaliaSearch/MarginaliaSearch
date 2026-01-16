@@ -31,7 +31,6 @@ public class SkipListWriter implements AutoCloseable {
 
     private long valueBlockOffset;
 
-
     public SkipListWriter(Path dataFileName, Path valuesFileName) throws IOException {
         documentsChannel = (FileChannel) Files.newByteChannel(dataFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
         documentsChannel.position(documentsChannel.size());
@@ -64,7 +63,7 @@ public class SkipListWriter implements AutoCloseable {
         valuesChannel.close();
 
         // Pad docs file to block size alignment
-
+        System.out.println("Size0: " + documentsChannel.position());
         blockRemaining = (int) (BLOCK_SIZE - (documentsChannel.position() & (BLOCK_SIZE - 1)));
         docsBuffer.position(0);
         docsBuffer.limit(blockRemaining);
@@ -76,6 +75,7 @@ public class SkipListWriter implements AutoCloseable {
         if ((documentsChannel.position() & (BLOCK_SIZE-1)) != 0) {
             throw new IllegalStateException("Wrote a documents file that was not aligned with block size " + BLOCK_SIZE);
         }
+        System.out.println("Size: " + documentsChannel.position());
         documentsChannel.close();
     }
 
@@ -222,7 +222,7 @@ public class SkipListWriter implements AutoCloseable {
         assert input.isSortedN(RECORD_SIZE, 0,  RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(0, n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
         maxValuesList.clear();
 
-        StaggeredCompressorInput compressorInput = new StaggeredCompressorInput(input, n);
+        StaggeredCompressorInput compressorInput = new StaggeredCompressorInput(input.range(0, (long) RECORD_SIZE*n), n);
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
         int dataSpaceRemaining = blockRemaining - DATA_BLOCK_HEADER_SIZE;
@@ -244,6 +244,7 @@ public class SkipListWriter implements AutoCloseable {
                 documentsChannel.write(docsBuffer);
             }
 
+            assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
             return startPos;
         }
         else if (dataSpaceRemaining >= n * JAVA_LONG.byteSize()) {
@@ -266,6 +267,7 @@ public class SkipListWriter implements AutoCloseable {
                 documentsChannel.write(docsBuffer);
             }
 
+            assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
             return startPos;
         }
 
@@ -390,6 +392,8 @@ public class SkipListWriter implements AutoCloseable {
                 documentsChannel.write(docsBuffer);
             }
         }
+
+        assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
 
         return startPos;
     }

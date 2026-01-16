@@ -31,7 +31,7 @@ class StaggeredCompressorInput implements CompressorInput {
 
     public void setBounds(int start, int n) {
         this.start = Math.clamp(start, 0, (int) array.size() / RECORD_SIZE);
-        this.n = Math.clamp(n, 0, (int) (array.size() / RECORD_SIZE - start));
+        this.n = Math.clamp(n, 0, (int) (array.size() / RECORD_SIZE) - start);
     }
 
     public void moveBounds(int offset) {
