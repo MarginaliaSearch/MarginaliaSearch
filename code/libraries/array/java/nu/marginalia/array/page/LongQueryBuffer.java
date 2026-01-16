@@ -73,6 +73,15 @@ public class LongQueryBuffer {
         return n;
     }
 
+    public int addData(long[] newData, int start, int nMax) {
+        int n = Math.min(nMax, (int) data.size() - end);
+
+        MemorySegment.copy(newData, start, data.getMemorySegment(), ValueLayout.JAVA_LONG, 8L*end, n);
+
+        end += n;
+
+        return n;
+    }
     /** Dispose of the buffer and release resources */
     public void dispose() {
         data.close();

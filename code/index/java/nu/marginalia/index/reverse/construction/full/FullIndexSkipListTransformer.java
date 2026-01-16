@@ -30,7 +30,7 @@ public class FullIndexSkipListTransformer implements LongArrayTransformations.Lo
             return -1;
         }
 
-        long offset = writer.writeList(documentsArray, start, size);
+        long offset = writer.writeList(documentsArray.shifted(start), size);
         start = end;
         return offset;
     }
