@@ -2,9 +2,10 @@ package nu.marginalia.skiplist;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.skiplist.compression.DocIdCompressor;
+import nu.marginalia.skiplist.compression.output.CompressorBuffer;
 
 import java.io.IOException;
-import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static nu.marginalia.skiplist.SkipListConstants.*;
 
 public class SkipListWriter implements AutoCloseable {
@@ -28,7 +30,6 @@ public class SkipListWriter implements AutoCloseable {
     private final LongArrayList maxValuesList = new LongArrayList();
 
     private long valueBlockOffset;
-
 
     public SkipListWriter(Path dataFileName, Path valuesFileName) throws IOException {
         documentsChannel = (FileChannel) Files.newByteChannel(dataFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
@@ -62,7 +63,7 @@ public class SkipListWriter implements AutoCloseable {
         valuesChannel.close();
 
         // Pad docs file to block size alignment
-
+        System.out.println("Size0: " + documentsChannel.position());
         blockRemaining = (int) (BLOCK_SIZE - (documentsChannel.position() & (BLOCK_SIZE - 1)));
         docsBuffer.position(0);
         docsBuffer.limit(blockRemaining);
@@ -74,6 +75,7 @@ public class SkipListWriter implements AutoCloseable {
         if ((documentsChannel.position() & (BLOCK_SIZE-1)) != 0) {
             throw new IllegalStateException("Wrote a documents file that was not aligned with block size " + BLOCK_SIZE);
         }
+        System.out.println("Size: " + documentsChannel.position());
         documentsChannel.close();
     }
 
@@ -184,7 +186,7 @@ public class SkipListWriter implements AutoCloseable {
 
     private void writeCompactBlockHeader(ByteBuffer buffer, int nItems, byte fc, byte flags) {
         assert nItems >= 0;
-        assert nItems <= MAX_RECORDS_PER_BLOCK;
+        // assert nItems <= MAX_RECORDS_PER_BLOCK;
         assert fc >= 0;
 
         buffer.putInt(nItems);
@@ -220,16 +222,38 @@ public class SkipListWriter implements AutoCloseable {
         }
     }
 
-    public long writeList(LongArray input, long inputOffset, int n) throws IOException {
+    public long writeList(LongArray input, int n) throws IOException {
         long startPos = documentsChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
-        assert input.isSortedN(RECORD_SIZE, inputOffset, inputOffset + RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(inputOffset, inputOffset+n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
+        assert input.isSortedN(RECORD_SIZE, 0,  RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(0, n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
         maxValuesList.clear();
 
+        StaggeredCompressorInput compressorInput = new StaggeredCompressorInput(input.range(0, (long) RECORD_SIZE*n), n);
 
         int blockRemaining = (int) (BLOCK_SIZE - (startPos % BLOCK_SIZE));
+        int dataSpaceRemaining = blockRemaining - DATA_BLOCK_HEADER_SIZE;
 
-        if (blockRemaining >= (DATA_BLOCK_HEADER_SIZE + n * ValueLayout.JAVA_LONG.byteSize())) {
+        int maxEntries = DocIdCompressor.calcMaxEntries(compressorInput, dataSpaceRemaining);
+        if (maxEntries == n) {
+            docsBuffer.clear();
+
+            /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK */
+
+            writeCompactBlockHeader(docsBuffer, n, (byte) 0, (byte) (FLAG_END_BLOCK | FLAG_COMPRESSED_BLOCK | FLAG_COMPACT_BLOCK));
+
+            writeDocIds(compressorInput, n);
+            copyValues(input, 0, n);
+
+            docsBuffer.flip();
+
+            while (docsBuffer.hasRemaining()) {
+                documentsChannel.write(docsBuffer);
+            }
+
+            assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
+            return startPos;
+        }
+        else if (dataSpaceRemaining >= n * JAVA_LONG.byteSize()) {
             docsBuffer.clear();
 
             /** THE ENTIRE DATA FITS IN THE CURRENT BLOCK */
@@ -238,10 +262,10 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write the keys
             for (int i = 0; i < n; i++) {
-                docsBuffer.putLong(input.get(inputOffset + RECORD_SIZE * i));
+                docsBuffer.putLong(input.get((long) RECORD_SIZE * i));
             }
 
-            copyValues(input, inputOffset, n);
+            copyValues(input, 0, n);
 
             docsBuffer.flip();
 
@@ -249,6 +273,7 @@ public class SkipListWriter implements AutoCloseable {
                 documentsChannel.write(docsBuffer);
             }
 
+            assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
             return startPos;
         }
 
@@ -271,28 +296,26 @@ public class SkipListWriter implements AutoCloseable {
         }
 
         int writtenRecords = 0;
-        int numBlocks = calculateActualNumBlocks(blockRemaining, n);
+        long valueOffset = 0L;
+        int numBlocks = calculateActualNumBlocks(blockRemaining, compressorInput);
 
         {
             docsBuffer.clear();
 
-            int rootBlockCapacity = rootBlockCapacity(blockRemaining, n);
-            int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, n);
+            int rootBlockCapacity = rootBlockCapacity(blockRemaining, compressorInput);
+            int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, compressorInput);
 
             /** WRITE THE ROOT BLOCK **/
 
             boolean isLastBlock = numBlocks == 1;
 
-            byte flags = 0;
+            byte flags = FLAG_COMPRESSED_BLOCK;
 
             if (isLastBlock) flags |= FLAG_END_BLOCK;
 
             writeCompactBlockHeader(docsBuffer, rootBlockCapacity, (byte) rootBlockPointerCount, flags);
 
-            findBlockHighestValues(input, maxValuesList,
-                    inputOffset + (long) RECORD_SIZE * rootBlockCapacity,
-                    numBlocks,
-                    n - rootBlockCapacity);
+            findBlockHighestValues(compressorInput, maxValuesList,  rootBlockCapacity, numBlocks, n - rootBlockCapacity);
 
             // Write skip pointers
             for (int pi = 0; pi < rootBlockPointerCount; pi++) {
@@ -303,17 +326,13 @@ public class SkipListWriter implements AutoCloseable {
                 docsBuffer.putLong(maxValuesList.getLong(skipBlocks));
             }
 
-            // Write the keys
-            for (int i = 0; i < rootBlockCapacity; i++) {
-                long docId = input.get(inputOffset + RECORD_SIZE * i);
-                docsBuffer.putLong(docId);
-            }
+            writeDocIds(compressorInput, rootBlockCapacity);
 
             // Write the values
-            copyValues(input, inputOffset, rootBlockCapacity);
+            copyValues(input, valueOffset, rootBlockCapacity);
 
             // Move offset to next block's data
-            inputOffset += RECORD_SIZE * rootBlockCapacity;
+            valueOffset += RECORD_SIZE * rootBlockCapacity;
             writtenRecords += rootBlockCapacity;
 
             // Align block with page size
@@ -335,11 +354,10 @@ public class SkipListWriter implements AutoCloseable {
             docsBuffer.clear();
 
             int nRemaining = n - writtenRecords;
-            int blockCapacity = nonRootBlockCapacity(blockIdx);
+            int blockCapacity = nonRootBlockCapacity(compressorInput);
 
-            int maxPointers = numPointersForBlock(blockIdx);
             int forwardPointers;
-            for (forwardPointers = 0; forwardPointers < maxPointers; forwardPointers++) {
+            for (forwardPointers = 0; forwardPointers < POINTER_TARGET_COUNT; forwardPointers++) {
                 if (blockIdx + skipOffsetForPointer(forwardPointers) + 1 >= maxValuesList.size())
                     break;
             }
@@ -348,7 +366,7 @@ public class SkipListWriter implements AutoCloseable {
 
             int blockSize = Math.min(nRemaining, blockCapacity);
 
-            byte flags = 0;
+            byte flags = FLAG_COMPRESSED_BLOCK;
 
             if (isLastBlock) flags |= FLAG_END_BLOCK;
 
@@ -359,16 +377,13 @@ public class SkipListWriter implements AutoCloseable {
             }
 
             // Write the keys
-            for (int i = 0; i < blockSize; i++) {
-                long docId = input.get(inputOffset + RECORD_SIZE * i);
-                docsBuffer.putLong(docId);
-            }
+            writeDocIds(compressorInput, blockSize);
 
             // Write the values
-            copyValues(input, inputOffset, blockSize);
+            copyValues(input, valueOffset, blockSize);
 
             // Move offset to next block's data
-            inputOffset += (long) RECORD_SIZE * blockSize;
+            valueOffset += (long) RECORD_SIZE * blockSize;
             writtenRecords += blockSize;
 
             // Align block with page size everywhere but the last, unless this is a compact block
@@ -384,12 +399,22 @@ public class SkipListWriter implements AutoCloseable {
             }
         }
 
+        assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
+
         return startPos;
     }
 
-    private void findBlockHighestValues(LongArray input,
+    private void writeDocIds(StaggeredCompressorInput compressorInput, int n) {
+        var cb = new CompressorBuffer(docsBuffer);
+        DocIdCompressor.compress(compressorInput, n, cb);
+        cb.padToLong();
+
+        compressorInput.moveBounds(n);
+    }
+
+    private void findBlockHighestValues(StaggeredCompressorInput originalInput,
                                LongArrayList output,
-                               long offsetStart,
+                               int offsetStart,
                                int numBlocks,
                                int n)
     {
@@ -397,27 +422,33 @@ public class SkipListWriter implements AutoCloseable {
 
         output.add(-1); // Add a dummy value for the root block
 
+        StaggeredCompressorInput compressorInput = StaggeredCompressorInput.copyOfShifted(originalInput, offsetStart);
+
         for (int i = 1; i < numBlocks; i++) {
-            assert n >= 0;
+            assert n >= 0 : "n should be positive, was " + n;
 
-            int blockCapacity = nonRootBlockCapacity(i);
-            long offsetEnd =  offsetStart + RECORD_SIZE * Math.min(n, blockCapacity) - RECORD_SIZE;
-            offsetStart += RECORD_SIZE * Math.min(n, blockCapacity);
+            int blockSize = Math.min(n, nonRootBlockCapacity(compressorInput));
+            output.add(compressorInput.at(blockSize - 1));
+            compressorInput.moveBounds(blockSize);
 
-            n -= blockCapacity;
-            output.add(input.get(offsetEnd));
+            n -= blockSize;
         }
     }
 
 
-    static int calculateActualNumBlocks(int rootBlockSize, int n) {
-        assert n >= 1;
+    static int calculateActualNumBlocks(int rootBlockSize, StaggeredCompressorInput originalInput) {
+        assert originalInput.size() >= 1;
 
         int blocks = 1; // We always generate a root block
-        n-=rootBlockCapacity(rootBlockSize, n);
+        StaggeredCompressorInput input = StaggeredCompressorInput.copyOf(originalInput);
 
-        for (int i = 1; n > 0; i++) {
-            n-= nonRootBlockCapacity(i);
+        input.moveBounds(rootBlockCapacity(rootBlockSize, input));
+
+        while (input.size() > 0) {
+            int size = input.size();
+            int capacity = nonRootBlockCapacity(input);
+
+            input.moveBounds(capacity);
             blocks++;
         }
 

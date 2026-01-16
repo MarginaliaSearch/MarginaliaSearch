@@ -110,7 +110,7 @@ public class SkipListFuzzTests {
             try (var writer = new SkipListWriter(docsFile, valuesFile);
                  Arena arena = Arena.ofConfined()
             ) {
-                writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
@@ -163,7 +163,7 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
-                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                off = writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
@@ -211,7 +211,7 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
-                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                off = writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
@@ -274,7 +274,7 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(r.nextInt(0, 4096/8) * 8);
-                blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                blockStart = writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
@@ -339,7 +339,7 @@ public class SkipListFuzzTests {
             ) {
                 writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
                 for (var block : keysForBlocks) {
-                    offsets.add(writer.writeList(createArray(arena, block, block), 0, block.length));
+                    offsets.add(writer.writeList(createArray(arena, block, block),  block.length));
                 }
             }
 
@@ -349,6 +349,7 @@ public class SkipListFuzzTests {
                     var reader = new SkipListReader(indexPool, valuePool, offset);
                     reader.parseBlocks(indexPool, offset);
                 }
+                System.out.println("OK");
             }
         }
     }
@@ -359,7 +360,7 @@ public class SkipListFuzzTests {
         long[] vals = LongStream.range(0, 32000).map(v -> -2*v).toArray();
 
         try (var writer = new SkipListWriter(docsFile, valuesFile)) {
-            writer.writeList(createArray(keys, vals), 0, keys.length);
+            writer.writeList(createArray(keys, vals), keys.length);
         }
 
         Random r = new Random();
@@ -400,7 +401,7 @@ public class SkipListFuzzTests {
             Files.deleteIfExists(docsFile);
 
             try (var writer = new SkipListWriter(docsFile, valuesFile)) {
-                writer.writeList(createArray(keys, vals), 0, keys.length);
+                writer.writeList(createArray(keys, vals), keys.length);
             }
 
 
@@ -456,7 +457,7 @@ public class SkipListFuzzTests {
             Files.deleteIfExists(valuesFile);
 
             try (var writer = new SkipListWriter(docsFile, valuesFile); Arena a = Arena.ofConfined()) {
-                writer.writeList(createArray2v(a, keys, vals1, vals2), 0, keys.length);
+                writer.writeList(createArray2v(a, keys, vals1, vals2), keys.length);
             }
 
 
