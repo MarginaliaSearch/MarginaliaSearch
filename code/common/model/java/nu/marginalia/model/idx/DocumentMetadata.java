@@ -107,7 +107,7 @@ public record DocumentMetadata(int avgSentLength,
     }
 
     public static boolean hasFlags(long encoded, long metadataBitMask) {
-        return ((encoded & 0xFF) & metadataBitMask) == metadataBitMask;
+        return (encoded & metadataBitMask) == metadataBitMask;
     }
 
     public long encode() {
