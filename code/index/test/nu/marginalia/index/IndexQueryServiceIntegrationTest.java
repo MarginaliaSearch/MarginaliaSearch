@@ -467,7 +467,7 @@ public class IndexQueryServiceIntegrationTest {
                 DocIdRewriter.identity(),
                 tmpDir);
 
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, "en").orElseThrow(), workDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, "en").orElseThrow());
 
     }
 

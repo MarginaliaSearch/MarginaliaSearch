@@ -45,8 +45,7 @@ public class FullIndexConstructor {
 
     public void createReverseIndex(ProcessHeartbeat processHeartbeat,
                                    String processName,
-                                   IndexJournal journal,
-                                   Path sourceBaseDir) throws IOException
+                                   IndexJournal journal) throws IOException
     {
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName);
              var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
