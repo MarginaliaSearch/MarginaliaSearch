@@ -407,7 +407,7 @@ public class IntegrationTest {
                     this::addRankToIdEncoding,
                     tmpDir);
 
-            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, lang).orElseThrow(), workDir);
+            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, lang).orElseThrow());
         }
     }
 

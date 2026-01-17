@@ -145,7 +145,7 @@ public class IndexConstructorMain extends ProcessMainClass {
 
             String processName = "createReverseIndexFull[%s]".formatted(languageIsoCode);
 
-            constructor.createReverseIndex(heartbeat, processName, entry.getValue(), workDir);
+            constructor.createReverseIndex(heartbeat, processName, entry.getValue());
         }
 
         cleanWorkDir(tmpDir);
