@@ -52,7 +52,7 @@ public class PositionsFileConstructor implements AutoCloseable {
             workBuffer.limit(workBuffer.capacity());
             int pos = 0;
             while (workBuffer.hasRemaining()) {
-                pos += channel.write(workBuffer, this.position + pos + workBuffer.position());
+                pos += channel.write(workBuffer, this.position + pos);
             }
         }
 
@@ -101,13 +101,10 @@ public class PositionsFileConstructor implements AutoCloseable {
                 block.relocate();
             }
         }
-        synchronized (file) {
-            long offset = block.position();
 
-            block.put(positionsBuffer);
-
-            return PositionCodec.encode(size, offset);
-        }
+        long offset = block.position();
+        block.put(positionsBuffer);
+        return PositionCodec.encode(size, offset);
     }
 
     public void close() throws IOException {
