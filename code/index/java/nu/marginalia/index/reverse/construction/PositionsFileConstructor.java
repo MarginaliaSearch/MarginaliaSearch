@@ -21,12 +21,9 @@ import java.nio.file.StandardOpenOption;
  * each posting in the file.
  */
 public class PositionsFileConstructor implements AutoCloseable {
-    private final Path file;
     private final FileChannel channel;
 
     public PositionsFileConstructor(Path file) throws IOException {
-        this.file = file;
-
         channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         channel.position(channel.size());
     }
@@ -37,10 +34,10 @@ public class PositionsFileConstructor implements AutoCloseable {
      * */
     public class PositionsFileBlock {
         private final ByteBuffer workBuffer = ByteBuffer.allocate(1024*1024*16);
-        private long position;
+        private long position = -1;
 
-        public PositionsFileBlock(long position) {
-            this.position = position;
+        private PositionsFileBlock() throws IOException {
+            allocateSpace();
         }
 
         public boolean fitsData(int size) {
@@ -56,12 +53,21 @@ public class PositionsFileConstructor implements AutoCloseable {
             }
         }
 
-        private void relocate() throws IOException {
+        /** Grow the file and allocate space for the new block,
+         ... we'll fill it in with the real data in commit()
+        */
+        private void allocateSpace() throws IOException {
             workBuffer.clear();
-            position = channel.position();
-            while (workBuffer.hasRemaining()) {
-                channel.write(workBuffer);
+
+            // we must synchronize this section since multiple concurrent allocations would yield
+            // incorrect positions
+            synchronized (PositionsFileConstructor.this) {
+                position = channel.position();
+                while (workBuffer.hasRemaining()) {
+                    channel.write(workBuffer);
+                }
             }
+
             workBuffer.clear();
         }
 
@@ -77,11 +83,7 @@ public class PositionsFileConstructor implements AutoCloseable {
     }
 
     public PositionsFileBlock getBlock() throws IOException {
-        synchronized (this) {
-            var block = new PositionsFileBlock(channel.position());
-            block.relocate();
-            return block;
-        }
+        return new PositionsFileBlock();
     }
 
     /** Add a term to the positions file
@@ -96,10 +98,8 @@ public class PositionsFileConstructor implements AutoCloseable {
         int size = positionsBuffer.remaining();
 
         if (!block.fitsData(size)) {
-            synchronized (this) {
-                block.commit();
-                block.relocate();
-            }
+            block.commit();
+            block.allocateSpace();
         }
 
         long offset = block.position();
