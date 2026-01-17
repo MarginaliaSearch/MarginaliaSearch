@@ -928,11 +928,7 @@ public class IndexResultRankingService {
             penalty += 2.5 * largeSiteFactor;
 
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.SHORT_DOCUMENT.getFeatureBit()))
-            penalty += 2.5  * largeSiteFactor;
-
-        if (isForum || isWiki) {
-            penalty = Math.min(0, penalty - 2);
-        }
+            penalty += 5 * largeSiteFactor;
 
         return (int) -penalty;
     }
