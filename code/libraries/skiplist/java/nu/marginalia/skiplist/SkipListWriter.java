@@ -35,7 +35,7 @@ public class SkipListWriter implements AutoCloseable {
         documentsChannel.position(documentsChannel.size());
 
         valuesChannel = (FileChannel) Files.newByteChannel(valuesFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-        valuesChannel.position(documentsChannel.size());
+        valuesChannel.position(valuesChannel.size());
         valueBlockOffset = valuesChannel.position();
     }
 
@@ -173,6 +173,12 @@ public class SkipListWriter implements AutoCloseable {
         while (buffer.hasRemaining()) {
             documentsChannel.write(buffer);
         }
+        buffer.flip();
+        buffer.limit(buffer.limit() & ~15);
+        while (buffer.hasRemaining()) {
+            valuesChannel.write(buffer);
+        }
+        valueBlockOffset = valuesChannel.position();
     }
 
 
