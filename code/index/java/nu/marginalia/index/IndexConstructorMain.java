@@ -97,6 +97,21 @@ public class IndexConstructorMain extends ProcessMainClass {
         heartbeat.shutDown();
     }
 
+    private void cleanWorkDir(Path dir) {
+        if (!Files.exists(dir)) {
+            return;
+        }
+
+        try (var filesStream = Files.list(dir).filter(Files::isRegularFile)) {
+            for (Path file : filesStream.toList()) {
+                Files.delete(file);
+            }
+        }
+        catch (IOException ex) {
+            logger.error("Failed to clean work dir", ex);
+        }
+    }
+
     private void createFullReverseIndex() throws IOException {
 
         Path outputFileDocs = findNextFile(new IndexFileName.FullDocs());
@@ -111,6 +126,7 @@ public class IndexConstructorMain extends ProcessMainClass {
         Path tmpDir = workDir.resolve("tmp");
 
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
+        else cleanWorkDir(tmpDir);
 
         Map<String, IndexJournal> journalsByLanguage = IndexJournal.findJournals(workDir, languageConfiguration.languages());
 
@@ -131,6 +147,8 @@ public class IndexConstructorMain extends ProcessMainClass {
 
             constructor.createReverseIndex(heartbeat, processName, entry.getValue(), workDir);
         }
+
+        cleanWorkDir(tmpDir);
     }
 
     private void createPrioReverseIndex() throws IOException {
@@ -140,6 +158,9 @@ public class IndexConstructorMain extends ProcessMainClass {
 
         Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
         Path tmpDir = workDir.resolve("tmp");
+
+        if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
+        else cleanWorkDir(tmpDir);
 
         Map<String, IndexJournal> journalsByLanguage = IndexJournal.findJournals(workDir, languageConfiguration.languages());
 
@@ -159,6 +180,8 @@ public class IndexConstructorMain extends ProcessMainClass {
 
             constructor.createReverseIndex(heartbeat, processName, entry.getValue(), workDir);
         }
+
+        cleanWorkDir(tmpDir);
     }
 
     private void createForwardIndex() throws IOException {
