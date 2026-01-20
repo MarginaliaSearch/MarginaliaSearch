@@ -20,6 +20,9 @@ public final class CombinedDocIdList {
     public CombinedDocIdList(long... data) {
         this.data = Arrays.copyOf(data, data.length);
     }
+    public CombinedDocIdList(long[] data, int start, int n) {
+        this.data = Arrays.copyOfRange(data, start, start + n);
+    }
     public CombinedDocIdList(LongQueryBuffer buffer) {
         this.data = buffer.copyData();
     }

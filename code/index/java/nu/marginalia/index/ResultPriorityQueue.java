@@ -16,7 +16,6 @@ import java.util.*;
  * than addAll().
  */
 public class ResultPriorityQueue implements Iterable<RankableDocument> {
-    private final LongOpenHashSet idsInSet = new LongOpenHashSet();
     private final MinMaxPriorityQueue<RankableDocument> queue;
     private int itemsProcessed = 0;
 
@@ -35,9 +34,7 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
 
         synchronized (this) {
             itemsProcessed++;
-            if (idsInSet.add(document.combinedDocumentId)) {
-                queue.add(document);
-            }
+            queue.add(document);
         }
 
         return true;

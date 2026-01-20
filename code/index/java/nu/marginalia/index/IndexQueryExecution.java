@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import io.prometheus.metrics.core.metrics.Gauge;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -100,6 +101,7 @@ public class IndexQueryExecution {
 
         processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
                 .addStage("Lookup", 32, 4, LookupStage::new)
+                .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
                 .addStage("Processing", 16, 4, PreparationStage::new)
                 .finalStage("Ranking", 16, 8, RankingStage::new);
 
@@ -169,6 +171,32 @@ public class IndexQueryExecution {
         public void cleanUp() {
             buffer.dispose();
         }
+    }
+
+
+    private class DeduplicateStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, CombinedDocIdList> {
+        // we generally expect at most about 100k items per partition per query, so this should avoid resizing
+        // while not using too much memory (~11MB at the default load factor)
+        private final LongOpenHashSet seen = new LongOpenHashSet(1_000_000);
+
+        @Override
+        public void process(CombinedDocIdList input, PipeDrain<CombinedDocIdList> output) {
+
+            if (input.isEmpty())
+                return;
+
+            long[] items = input.array();
+            int n = 0;
+            for (int in = 0; in < items.length; in++) {
+                long id = items[in];
+                if (seen.add(id)) {
+                    items[n++] = id;
+                }
+            }
+
+            output.accept(new CombinedDocIdList(items, 0, n));
+        }
+
     }
 
 
