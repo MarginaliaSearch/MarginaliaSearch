@@ -653,6 +653,11 @@ public class SkipListReader {
                                 oLen+=entrySize;
                             }
                             else {
+                                long nextBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
+                                if (nextBlock != valBlock) {
+                                    break;
+                                }
+
                                 int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
                                 for (int j = 0; j < RECORD_SIZE - 1; j++) {
                                     outValues[oLen + j] = page.getLong(offsetBase + 8*j);
