@@ -25,6 +25,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
     private final AtomicReference<Thread> idleRunner = new AtomicReference<>(null);
     private final AtomicReference<Thread> idleSubmitter = new AtomicReference<>(null);
+    private final AtomicInteger idleRunnerCount = new AtomicInteger();
 
     protected AbstractPipeStage(String stageName, int size, ExecutorService executorService) {
         this.stageName = stageName;
@@ -192,32 +193,42 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
                     Thread.yield();
                 }
 
-                for (; ; ) {
-                    T val = inputBuffer.tryTakeNC();
-                    if (val != null) {
-                        rouseSubmitter();
-                        stage.accept(val);
-                        continue outer;
-                    }
 
-                    if (stopped.getAcquire()) {
-                        instanceCount.decrementAndGet();
-                        return;
-                    }
+                try {
+                    idleRunnerCount.incrementAndGet();
 
-                    int inc = instanceCount.get();
-                    int dic = desiredInstanceCount.get();
-                    if (inc > dic && instanceCount.compareAndSet(inc, inc - 1)) {
-                        break outer;
-                    }
+                    for (; ; ) {
+                        T val = inputBuffer.tryTakeNC();
+                        if (val != null) {
+                            rouseSubmitter();
+                            stage.accept(val);
+                            continue outer;
+                        }
 
-                    idleRunner.compareAndSet(null, Thread.currentThread());
-                    LockSupport.parkNanos(10_000);
+                        if (stopped.getAcquire()) {
+                            instanceCount.decrementAndGet();
+                            return;
+                        }
 
-                    if (inputBuffer.isClosed() && inputBuffer.peek() == null) {
-                        instanceCount.decrementAndGet();
-                        return;
+                        // Test if we should terminate the instance
+                        int inc = instanceCount.get();
+                        int dic = desiredInstanceCount.get();
+                        if (inc > dic && instanceCount.compareAndSet(inc, inc - 1)) {
+                            break outer;
+                        }
+
+                        idleRunner.compareAndSet(null, Thread.currentThread());
+                        LockSupport.parkNanos(10_000);
+
+                        // Check if the input is closed and we should pack up shop
+                        if (inputBuffer.isClosed() && inputBuffer.peek() == null) {
+                            instanceCount.decrementAndGet();
+                            return;
+                        }
                     }
+                }
+                finally {
+                    idleRunnerCount.decrementAndGet();
                 }
             }
         } catch (Throwable t) {
@@ -235,6 +246,10 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             }
             Thread.currentThread().setName("IdlePipeStage");
         }
+    }
+
+    public boolean isQuiet() {
+        return inputBuffer.peek() == null && idleRunnerCount.get() == instanceCount.get();
     }
 
     protected void rouseSubmitter() {

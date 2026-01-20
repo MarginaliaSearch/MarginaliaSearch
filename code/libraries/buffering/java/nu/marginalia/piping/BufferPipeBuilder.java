@@ -3,6 +3,7 @@ package nu.marginalia.piping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unchecked")
@@ -10,15 +11,11 @@ public class BufferPipeBuilder<START, T> {
     private final List<IntermediateStage> stageList = new ArrayList<>();
     private final ExecutorService executorService;
 
-    public BufferPipeBuilder(ExecutorService executorService) {
+    BufferPipeBuilder(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
-    public static <S> BufferPipeBuilder<S, S> of(ExecutorService executorService) {
-        return new BufferPipeBuilder<S, S>(executorService);
-    }
-
-    record IntermediateStage(String name, int size, int concurrency, Supplier cons) {}
+    private record IntermediateStage(String name, int size, int concurrency, Supplier cons) {}
 
     public <T2> BufferPipeBuilder<START, T2> addStage(String name, int size, int concurrency, Supplier<BufferPipe.IntermediateFunction<T, T2>> cons) {
         stageList.add(new IntermediateStage(
@@ -29,6 +26,10 @@ public class BufferPipeBuilder<START, T> {
         ));
 
         return (BufferPipeBuilder<START, T2>) this;
+    }
+
+    public <T2> BufferPipeBuilder<START, T2> addStage(String name, int size, int concurrency, BufferPipe.IntermediateFunction<T, T2> function) {
+        return addStage(name, size, concurrency, () -> function);
     }
 
     @SuppressWarnings("unchecked")
@@ -49,4 +50,7 @@ public class BufferPipeBuilder<START, T> {
         return new BufferPipe<START>(tail);
     }
 
+    public BufferPipe<START> finalStage(String name, int size, int concurrency, BufferPipe.FinalFunction<T> function) {
+        return finalStage(name, size, concurrency, () -> function);
+    }
 }

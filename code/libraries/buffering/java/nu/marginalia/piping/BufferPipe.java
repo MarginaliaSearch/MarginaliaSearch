@@ -3,6 +3,7 @@ package nu.marginalia.piping;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 public class BufferPipe<T> {
     private final List<PipeStage<?>> stages;
@@ -17,7 +18,11 @@ public class BufferPipe<T> {
         default void cleanUp() {}
     }
 
-    public BufferPipe(PipeStage<T> firstStage) {
+    public static <S> BufferPipeBuilder<S, S> builder(ExecutorService executorService) {
+        return new BufferPipeBuilder<>(executorService);
+    }
+
+    BufferPipe(PipeStage<T> firstStage) {
         this.stages = new ArrayList<>();
         this.firstStage = firstStage;
         stages.add(firstStage);
@@ -32,10 +37,14 @@ public class BufferPipe<T> {
         }
     }
 
+    /** Provide input to the pipe, blocking if necessary */
     public void offer(T val) {
         firstStage.offer(val);
     }
 
+    /** Provide input to the pipe, blocking for up to 'duration' if necessary.
+     * Returns true if successful.
+     */
     public boolean offer(T val, Duration timeout) {
         if (timeout.isNegative())
             return false;
@@ -43,6 +52,13 @@ public class BufferPipe<T> {
         return firstStage.offer(val, timeout);
     }
 
+    /** Initiate a graceful shutdown of the pipe, which will terminate after all
+     * inputs are completely processed.  Returns immediately.  Use join() to await shutdown. */
+    public void stopFeeding() {
+        firstStage.stopFeeding();
+    }
+
+    /** Stop the pipe ASAP, remaining data will be unprocessed */
     public void stop() {
 
         for (var stage : stages) {
@@ -58,17 +74,16 @@ public class BufferPipe<T> {
         }
     }
 
-
-    public void stopFeeding() {
-        firstStage.stopFeeding();
-    }
-
+    /** Wait for the stages to shut down after stopFeeding() has been invoked  */
     public void join() throws InterruptedException {
         for (var stage : stages) {
             stage.join();
         }
     }
 
+    /** Wait for the stages to shut down after stopFeeding() has been invoked,
+     * for up to 'millis' ms.  Returns true if the pipe is shut down.
+     * */
     public boolean join(long millis) throws InterruptedException {
         long end = System.currentTimeMillis() + millis;
 

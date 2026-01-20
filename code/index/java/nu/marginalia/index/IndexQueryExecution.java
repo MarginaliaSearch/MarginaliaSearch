@@ -94,7 +94,7 @@ public class IndexQueryExecution {
 
         queries = currentIndex.createQueries(rankingContext);
 
-        processingPipe = BufferPipeBuilder.<IndexQuery>of(threadPool)
+        processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
                 .addStage("Lookup", 32, 4, LookupStage::new)
                 .addStage("Processing", 16, 4, PreparationStage::new)
                 .finalStage("Ranking", 16, 8, RankingStage::new);
@@ -121,7 +121,6 @@ public class IndexQueryExecution {
 
             if (!processingPipe.join(budget.timeLeft())) {
                 processingPipe.stop();
-                processingPipe.join();
             }
         }
         finally {
